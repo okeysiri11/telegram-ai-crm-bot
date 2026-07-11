@@ -6,8 +6,12 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton
 )
+from openrouter import ask_openrouter, extract_memory_from_message
 from config import OWNER_ID, MANAGER_ID, MANAGERS
 from database import (
+    get_user_profile,
+    save_profile_fields,
+    format_memory_context,
     create_request,
     update_request_status,
     assign_manager,
@@ -22,6 +26,8 @@ from database import (
     log_audit,
     get_ai_settings,
     save_ai_settings,
+    add_dialog_message,
+    get_dialog_history_for_llm,
     clear_dialog_history,
     format_dialog_history_text,
     format_profile_text,
@@ -77,6 +83,7 @@ buy_requests = {}
 waiting_buy_request = {}
 
 # Состояния раздела AI Assistant
+ai_assistant_active = {}
 ai_settings_flow = {}
 
 TONE_BY_LABEL = {
@@ -221,6 +228,7 @@ async def buy_product(message: Message):
 async def open_ai_assistant(message: Message):
     _init_ai_user(message)
     ai_settings_flow.pop(message.from_user.id, None)
+    ai_assistant_active[message.from_user.id] = True
 
     await message.answer(
         "Раздел AI помощника",
@@ -232,6 +240,7 @@ async def open_ai_assistant(message: Message):
 @router.message(F.text == "⬅️ К AI помощнику")
 async def back_to_ai_assistant(message: Message):
     ai_settings_flow.pop(message.from_user.id, None)
+    ai_assistant_active[message.from_user.id] = True
     await message.answer(
         "Раздел AI помощника",
         reply_markup=ai_assistant_menu(),
@@ -363,15 +372,51 @@ async def save_ai_language(message: Message):
 @router.message(F.text == "◀ Назад")
 async def ai_back_to_main(message: Message):
     ai_settings_flow.pop(message.from_user.id, None)
+    ai_assistant_active.pop(message.from_user.id, None)
     await message.answer(
         "Главное меню",
         reply_markup=owner_main_menu()
     )
 
 
+@router.message(
+    lambda m: (
+        ai_assistant_active.get(m.from_user.id)
+        and m.text not in AI_MENU_BUTTONS
+        and not ai_settings_flow.get(m.from_user.id)
+    )
+)
+async def ai_chat_message(message: Message):
+    user_id = message.from_user.id
+    _init_ai_user(message)
+
+    profile = get_user_profile(user_id)
+    extracted = await extract_memory_from_message(message.text, profile)
+    if extracted:
+        save_profile_fields(user_id, extracted)
+
+    settings = get_ai_settings(user_id)
+    memory_context = format_memory_context(user_id)
+    history = get_dialog_history_for_llm(user_id, settings["context_depth"])
+
+    history.append({"role": "user", "content": message.text})
+    add_dialog_message(user_id, "user", message.text)
+
+    answer = await ask_openrouter(
+        history,
+        user_memory=memory_context,
+        ai_settings=settings,
+    )
+
+    add_dialog_message(user_id, "assistant", answer)
+    await message.answer(answer)
+    log_audit(user_id, "chat", "ai_assistant")
+
+
 @router.message(F.text == "⬅️ Назад")
 async def back_to_main(message: Message):
     ai_settings_flow.pop(message.from_user.id, None)
+    ai_assistant_active.pop(message.from_user.id, None)
     await message.answer(
         "Главное меню",
         reply_markup=owner_main_menu()

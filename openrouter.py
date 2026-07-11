@@ -14,7 +14,6 @@ BASE_SYSTEM_PROMPT = """
 Ты персональный AI-помощник Фомы.
 
 Правила:
-- отвечай всегда на русском языке;
 - отвечай кратко, если не просят подробно;
 - хорошо разбирайся в строительстве;
 - разбирайся в криптовалюте, USDT, международных платежах;
@@ -24,6 +23,21 @@ BASE_SYSTEM_PROMPT = """
 - используй известную информацию о пользователе в ответах, если она релевантна;
 - не выдумывай факты о пользователе — опирайся только на переданную память.
 """
+
+LANGUAGE_PROMPTS = {
+    "ru": (
+        "КРИТИЧЕСКИ ВАЖНО: все твои ответы должны быть только на русском языке. "
+        "Не используй украинский, английский или другие языки."
+    ),
+    "uk": (
+        "КРИТИЧНО ВАЖЛИВО: усі твої відповіді мають бути лише українською мовою. "
+        "Не використовуй російську, англійську чи інші мови."
+    ),
+    "en": (
+        "CRITICALLY IMPORTANT: all your responses must be in English only. "
+        "Do not use Russian, Ukrainian, or other languages."
+    ),
+}
 
 
 async def _call_openrouter(messages: list) -> str:
@@ -54,20 +68,15 @@ TONE_PROMPTS = {
 
 
 def _build_system_prompt(user_memory: str = "", ai_settings: dict = None) -> str:
-    prompt = BASE_SYSTEM_PROMPT.strip()
     settings = ai_settings or {}
+    language = settings.get("language", "ru")
+    language_instruction = LANGUAGE_PROMPTS.get(language, LANGUAGE_PROMPTS["ru"])
+
+    prompt = f"{language_instruction}\n\n{BASE_SYSTEM_PROMPT.strip()}"
 
     tone = settings.get("tone", "neutral")
     if tone in TONE_PROMPTS:
         prompt += f"\n\n{TONE_PROMPTS[tone]}"
-
-    language = settings.get("language", "ru")
-    if language == "uk":
-        prompt += "\n\nОтвечай на украинском языке."
-    elif language == "en":
-        prompt += "\n\nAnswer in English."
-    else:
-        prompt += "\n\nОтвечай на русском языке."
 
     if user_memory:
         prompt += f"\n\n{user_memory.strip()}"
