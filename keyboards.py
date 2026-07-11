@@ -34,6 +34,9 @@ def owner_main_menu():
                 KeyboardButton(text="📁 Файлы и документы")
             ],
             [
+                KeyboardButton(text="🔎 Глобальный поиск")
+            ],
+            [
                 KeyboardButton(text="⚙ Администрирование")
             ]
         ],
@@ -197,6 +200,65 @@ def files_module_actions_inline(file_id: int = 0) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     text="📎 К задаче",
                     callback_data=f"fil:attach:{fid}"
+                ),
+            ],
+        ]
+    )
+
+
+def search_module_menu():
+    # TODO: future implementation — global search hub
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="🔍 Поиск по всему")
+            ],
+            [
+                KeyboardButton(text="👥 Пользователи"),
+                KeyboardButton(text="📅 Календарь")
+            ],
+            [
+                KeyboardButton(text="✅ Задачи"),
+                KeyboardButton(text="📁 Файлы")
+            ],
+            [
+                KeyboardButton(text="💰 Crypto OTC"),
+                KeyboardButton(text="🌾 Agro Trading")
+            ],
+            [
+                KeyboardButton(text="⚖️ Юриспруденция"),
+                KeyboardButton(text="🚁 Drone Engineering")
+            ],
+            [
+                KeyboardButton(text="☕ Cafe & Beauty")
+            ],
+            [
+                KeyboardButton(text="⬅ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def search_module_actions_inline(scope: str = "all") -> InlineKeyboardMarkup:
+    # TODO: future implementation — search quick actions
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🔍 Запустить поиск",
+                    callback_data=f"srch:run:{scope}"
+                ),
+                InlineKeyboardButton(
+                    text="⚙ Фильтры",
+                    callback_data="srch:filter:open"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🕒 История",
+                    callback_data="srch:history:open"
                 ),
             ],
         ]

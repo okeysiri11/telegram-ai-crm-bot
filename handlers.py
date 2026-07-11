@@ -101,6 +101,12 @@ from database import (
     format_file_search_text,
     format_file_tags_text,
     get_files_for_report,
+    SEARCH_DOMAINS,
+    SEARCH_SCOPES,
+    global_search,
+    format_search_hub_text,
+    format_global_search_text,
+    get_search_scope_for_button,
 )
 from keyboards import (
     owner_main_menu,
@@ -131,6 +137,8 @@ from keyboards import (
     tasks_module_actions_inline,
     files_module_menu,
     files_module_actions_inline,
+    search_module_menu,
+    search_module_actions_inline,
 )
 router = Router()
 
@@ -276,6 +284,33 @@ FILES_STUB_MESSAGES = {
     "🔍 Поиск": "Поиск файлов",
     "🏷 Теги": "Теги файлов",
     "🕒 Последние файлы": "Последние файлы",
+}
+
+SEARCH_MENU_BUTTONS = {
+    "🔍 Поиск по всему",
+    "👥 Пользователи",
+    "📅 Календарь",
+    "✅ Задачи",
+    "📁 Файлы",
+    "💰 Crypto OTC",
+    "🌾 Agro Trading",
+    "⚖️ Юриспруденция",
+    "🚁 Drone Engineering",
+    "☕ Cafe & Beauty",
+    "⬅ Назад",
+}
+
+SEARCH_STUB_MESSAGES = {
+    "🔍 Поиск по всему": "Поиск по всему",
+    "👥 Пользователи": "Поиск пользователей",
+    "📅 Календарь": "Поиск в календаре",
+    "✅ Задачи": "Поиск задач",
+    "📁 Файлы": "Поиск файлов",
+    "💰 Crypto OTC": "Поиск в Crypto OTC",
+    "🌾 Agro Trading": "Поиск в Agro Trading",
+    "⚖️ Юриспруденция": "Поиск в Юриспруденции",
+    "🚁 Drone Engineering": "Поиск в Drone Engineering",
+    "☕ Cafe & Beauty": "Поиск в Cafe & Beauty",
 }
 
 CALENDAR_MENU_BUTTONS = {
@@ -1073,6 +1108,57 @@ async def files_screen(message: Message):
     log_audit(user_id, "open_stub", "files", screen)
 
 
+@router.message(F.text == "🔎 Глобальный поиск")
+async def open_search_module(message: Message):
+    # TODO: future implementation — search dashboard and recent queries
+    _init_ai_user(message)
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "search"
+    log_audit(message.from_user.id, "open", "search")
+
+    domains = ", ".join(SEARCH_DOMAINS.values())
+    await message.answer(
+        f"{format_search_hub_text(message.from_user.id)}\n\n"
+        f"Модули: {', '.join(SEARCH_SCOPES.values())}\n"
+        f"Области: {domains}",
+        reply_markup=search_module_menu(),
+    )
+    await message.answer(
+        "Дополнительно:",
+        reply_markup=search_module_actions_inline("all"),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in SEARCH_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "search"
+    )
+)
+async def search_screen(message: Message):
+    screen = message.text
+    user_id = message.from_user.id
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    scope = get_search_scope_for_button(screen)
+    title = SEARCH_STUB_MESSAGES.get(screen, screen)
+    text = format_global_search_text(user_id, scope=scope)
+
+    await message.answer(
+        f"{title}\n\n{text}",
+        reply_markup=search_module_menu(),
+    )
+    await message.answer(
+        "Действия поиска:",
+        reply_markup=search_module_actions_inline(scope),
+    )
+    log_audit(user_id, "open_stub", "search", scope)
+
+
 @router.message(F.text == "📅 Календарь")
 async def open_calendar_module(message: Message):
     # TODO: future implementation — calendar dashboard and widgets
@@ -1493,6 +1579,47 @@ async def files_attach_callback(callback: CallbackQuery):
     log_audit(callback.from_user.id, "files_stub", "files", f"attach:{file_id}")
 
 
+@router.callback_query(F.data.startswith("srch:run:"))
+async def search_run_callback(callback: CallbackQuery):
+    # TODO: future implementation — execute search query
+    scope = callback.data.split(":", 2)[2]
+    user_id = callback.from_user.id
+    await callback.answer()
+    await callback.message.answer(
+        format_global_search_text(user_id, scope=scope),
+        reply_markup=search_module_menu(),
+    )
+    log_audit(user_id, "search_stub", "search", f"run:{scope}")
+
+
+@router.callback_query(F.data == "srch:filter:open")
+async def search_filter_callback(callback: CallbackQuery):
+    # TODO: future implementation — search filters UI
+    user_id = callback.from_user.id
+    await callback.answer()
+    domains = ", ".join(SEARCH_DOMAINS.values())
+    await callback.message.answer(
+        f"⚙ Фильтры поиска\n\n"
+        f"Области: {domains}\n\n"
+        "Фильтрация находится в разработке.",
+        reply_markup=search_module_menu(),
+    )
+    log_audit(user_id, "search_stub", "search", "filter")
+
+
+@router.callback_query(F.data == "srch:history:open")
+async def search_history_callback(callback: CallbackQuery):
+    # TODO: future implementation — search history
+    user_id = callback.from_user.id
+    await callback.answer()
+    await callback.message.answer(
+        "🕒 История поиска\n\n"
+        "История запросов находится в разработке.",
+        reply_markup=search_module_menu(),
+    )
+    log_audit(user_id, "search_stub", "search", "history")
+
+
 @router.callback_query(F.data.startswith("mod:calendar:"))
 async def calendar_module_callback(callback: CallbackQuery):
     action = callback.data.split(":", 2)[2]
@@ -1733,6 +1860,7 @@ async def ai_back_to_main(message: Message):
         and m.text not in NOTIFICATIONS_MENU_BUTTONS
         and m.text not in TASKS_MENU_BUTTONS
         and m.text not in FILES_MENU_BUTTONS
+        and m.text not in SEARCH_MENU_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )

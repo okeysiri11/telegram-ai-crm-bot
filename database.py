@@ -2419,3 +2419,206 @@ def format_file_tags_text(user_id: int) -> str:
 def get_files_for_report(user_id: int, module: str = None, limit: int = 50):
     # TODO: future implementation — reports module integration
     return get_system_files(user_id, scope="all", module=module, limit=limit)
+
+
+# ==========================================================
+# GLOBAL SEARCH (central hub)
+# ==========================================================
+
+SEARCH_DOMAINS = {
+    "users": "Пользователи",
+    "calendar": "Календарь",
+    "tasks": "Задачи",
+    "files": "Файлы",
+    "deals": "Сделки",
+    "projects": "Проекты",
+    "contracts": "Договоры",
+    "reports": "Отчеты",
+}
+
+SEARCH_SCOPES = {
+    "all": "Поиск по всему",
+    "users": "Пользователи",
+    "calendar": "Календарь",
+    "tasks": "Задачи",
+    "files": "Файлы",
+    "crypto_otc": "Crypto OTC",
+    "agro_trading": "Agro Trading",
+    "law": "Юриспруденция",
+    "drone": "Drone Engineering",
+    "cafe_beauty": "Cafe & Beauty",
+}
+
+
+def global_search(
+    user_id: int,
+    query: str = None,
+    domain: str = "all",
+    module: str = None,
+    limit: int = 20,
+) -> dict:
+    # TODO: future implementation — unified full-text search across all modules
+    results = {}
+    if domain in ("all", "users"):
+        results["users"] = search_users(user_id, query, limit)
+    if domain in ("all", "calendar"):
+        results["calendar"] = search_calendar_events(user_id, query, limit)
+    if domain in ("all", "tasks"):
+        results["tasks"] = search_tasks(user_id, query, limit)
+    if domain in ("all", "files"):
+        results["files"] = search_files(user_id, query, limit)
+    if domain in ("all", "deals"):
+        results["deals"] = search_deals(user_id, query, module, limit)
+    if domain in ("all", "projects"):
+        results["projects"] = search_projects(user_id, query, module, limit)
+    if domain in ("all", "contracts"):
+        results["contracts"] = search_contracts(user_id, query, module, limit)
+    if domain in ("all", "reports"):
+        results["reports"] = search_reports(user_id, query, limit)
+    return results
+
+
+def search_users(user_id: int, query: str = None, limit: int = 20):
+    # TODO: future implementation — search users by name, role, permissions
+    if not query:
+        return []
+    cursor.execute(
+        """
+        SELECT telegram_id, name, role
+        FROM users
+        WHERE name LIKE ? OR role LIKE ?
+        LIMIT ?
+        """,
+        (f"%{query}%", f"%{query}%", limit),
+    )
+    return cursor.fetchall()
+
+
+def search_calendar_events(user_id: int, query: str = None, limit: int = 20):
+    # TODO: future implementation — full calendar search integration
+    if not query:
+        return []
+    return get_calendar_events(user_id, limit=limit)
+
+
+def search_tasks(user_id: int, query: str = None, limit: int = 20):
+    # TODO: future implementation — full tasks search integration
+    if not query:
+        return []
+    return get_system_tasks(user_id, scope="all", limit=limit)
+
+
+def search_files(user_id: int, query: str = None, limit: int = 20):
+    # TODO: future implementation — full files search integration
+    if not query:
+        return []
+    return get_system_files(user_id, scope="all", search_query=query, limit=limit)
+
+
+def search_deals(
+    user_id: int,
+    query: str = None,
+    module: str = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — CRM deals search (Crypto OTC, Agro Trading)
+    return []
+
+
+def search_projects(
+    user_id: int,
+    query: str = None,
+    module: str = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — projects search across modules
+    return []
+
+
+def search_contracts(
+    user_id: int,
+    query: str = None,
+    module: str = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — contracts search (Юриспруденция and others)
+    return []
+
+
+def search_reports(user_id: int, query: str = None, limit: int = 20):
+    # TODO: future implementation — reports metadata search
+    return []
+
+
+def format_search_hub_text(user_id: int) -> str:
+    # TODO: future implementation — search dashboard with recent queries
+    domains = ", ".join(SEARCH_DOMAINS.values())
+    return (
+        "🔎 Глобальный поиск\n\n"
+        f"Области поиска: {domains}\n\n"
+        "Единый интерфейс поиска по всей системе.\n"
+        "Раздел находится в разработке."
+    )
+
+
+def format_global_search_text(
+    user_id: int,
+    scope: str = "all",
+    query: str = None,
+) -> str:
+    # TODO: future implementation — formatted unified search results
+    scope_label = SEARCH_SCOPES.get(scope, scope)
+    domains_line = ", ".join(SEARCH_DOMAINS.values())
+
+    if scope == "all":
+        header = "🔍 Поиск по всему"
+        body = (
+            f"Области: {domains_line}\n\n"
+            "Поиск по пользователям, календарю, задачам, файлам, "
+            "сделкам, проектам, договорам и отчетам.\n"
+            "Интерактивный поиск находится в разработке."
+        )
+    elif scope in {"users", "calendar", "tasks", "files"}:
+        header = scope_label
+        domain_key = scope
+        body = (
+            f"Поиск: {SEARCH_DOMAINS.get(domain_key, scope_label)}\n\n"
+            "Введите запрос для поиска.\n"
+            "Функция находится в разработке."
+        )
+    else:
+        header = scope_label
+        body = (
+            f"Модуль: {scope_label}\n\n"
+            "Поиск по сделкам, проектам и договорам модуля.\n"
+            "Функция находится в разработке."
+        )
+
+    if query:
+        results = global_search(
+            user_id,
+            query=query,
+            domain=scope if scope in SEARCH_DOMAINS else "all",
+            module=scope if scope not in SEARCH_DOMAINS and scope != "all" else None,
+        )
+        total = sum(len(v) for v in results.values())
+        body += f"\n\nЗапрос: «{query}»\nНайдено: {total} результат(ов)."
+
+    return f"{header}\n\n{body}"
+
+
+def get_search_scope_for_button(button: str) -> str:
+    # TODO: future implementation — dynamic scope mapping from UI
+    mapping = {
+        "🔍 Поиск по всему": "all",
+        "👥 Пользователи": "users",
+        "📅 Календарь": "calendar",
+        "✅ Задачи": "tasks",
+        "📁 Файлы": "files",
+        "💰 Crypto OTC": "crypto_otc",
+        "🌾 Agro Trading": "agro_trading",
+        "⚖️ Юриспруденция": "law",
+        "🚁 Drone Engineering": "drone",
+        "☕ Cafe & Beauty": "cafe_beauty",
+    }
+    return mapping.get(button, "all")
