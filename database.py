@@ -271,6 +271,31 @@ CREATE TABLE IF NOT EXISTS agro_finance (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS workflow_processes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    module TEXT,
+    trigger TEXT,
+    status TEXT DEFAULT 'ACTIVE',
+    created_by INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS workflow_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    module TEXT,
+    trigger TEXT,
+    actions_json TEXT,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
 conn.commit()
 
 ROLE_NAMES = (
@@ -3322,3 +3347,355 @@ def get_search_scope_for_button(button: str) -> str:
         "☕ Cafe & Beauty": "cafe_beauty",
     }
     return mapping.get(button, "all")
+
+
+# ==========================================================
+# WORKFLOW ENGINE (central hub)
+# ==========================================================
+
+WORKFLOW_MODULES = {
+    "agro_trading": "Agro Trading",
+    "crypto_otc": "Crypto OTC",
+    "drone": "Drone Engineering",
+    "law": "Юриспруденция",
+    "cafe_beauty": "Cafe & Beauty",
+}
+
+WORKFLOW_STATUSES = ("ACTIVE", "PAUSED", "COMPLETED", "CANCELLED")
+
+WORKFLOW_STATUS_ICONS = {
+    "ACTIVE": "▶️",
+    "PAUSED": "⏸",
+    "COMPLETED": "✅",
+    "CANCELLED": "❌",
+}
+
+WORKFLOW_ACTION_TYPES = {
+    "create_task": "Создать задачу",
+    "create_calendar_event": "Создать событие календаря",
+    "send_notification": "Отправить уведомление",
+    "create_document": "Создать документ",
+    "assign_user": "Назначить пользователя",
+    "update_status": "Обновить статус",
+}
+
+
+def create_workflow_process(
+    created_by: int,
+    name: str,
+    module: str = "agro_trading",
+    trigger: str = None,
+    status: str = "ACTIVE",
+) -> int:
+    # TODO: future implementation — validation and module-specific triggers
+    if module not in WORKFLOW_MODULES:
+        module = "agro_trading"
+    if status not in WORKFLOW_STATUSES:
+        status = "ACTIVE"
+
+    cursor.execute(
+        """
+        INSERT INTO workflow_processes (
+            name, module, trigger, status, created_by
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (name.strip(), module, trigger, status, created_by),
+    )
+    conn.commit()
+    process_id = cursor.lastrowid
+    register_module_notification(
+        created_by,
+        module,
+        title=f"Процесс #{process_id} создан",
+        message=name,
+        priority="INFO",
+    )
+    return process_id
+
+
+def register_module_workflow(
+    created_by: int,
+    module: str,
+    name: str,
+    trigger: str = None,
+) -> int:
+    # TODO: future implementation — unified entry point for all modules
+    process_id = create_workflow_process(
+        created_by=created_by,
+        name=name,
+        module=module,
+        trigger=trigger,
+    )
+    if process_id:
+        log_audit(created_by, "create_workflow", "workflow", f"{module}|{name}")
+    return process_id
+
+
+def get_workflow_process(process_id: int, user_id: int):
+    # TODO: future implementation — role-based process visibility
+    cursor.execute(
+        """
+        SELECT id, name, module, trigger, status, created_at, completed_at
+        FROM workflow_processes
+        WHERE id = ? AND (created_by = ? OR created_by IS NULL)
+        """,
+        (process_id, user_id),
+    )
+    return cursor.fetchone()
+
+
+def get_workflow_processes(
+    user_id: int,
+    status: str = None,
+    module: str = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — advanced filters and team processes
+    query = """
+        SELECT id, name, module, trigger, status, created_at, completed_at
+        FROM workflow_processes
+        WHERE created_by = ?
+    """
+    params = [user_id]
+    if status:
+        query += " AND status = ?"
+        params.append(status)
+    if module:
+        query += " AND module = ?"
+        params.append(module)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def update_workflow_status(
+    process_id: int,
+    user_id: int,
+    status: str,
+) -> bool:
+    # TODO: future implementation — status workflow validation
+    if status not in WORKFLOW_STATUSES:
+        return False
+
+    if status == "COMPLETED":
+        cursor.execute(
+            """
+            UPDATE workflow_processes
+            SET status = ?, completed_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND created_by = ?
+            """,
+            (status, process_id, user_id),
+        )
+    else:
+        cursor.execute(
+            """
+            UPDATE workflow_processes
+            SET status = ?, completed_at = NULL
+            WHERE id = ? AND created_by = ?
+            """,
+            (status, process_id, user_id),
+        )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def pause_workflow_process(process_id: int, user_id: int) -> bool:
+    # TODO: future implementation — pause hooks and notifications
+    return update_workflow_status(process_id, user_id, "PAUSED")
+
+
+def complete_workflow_process(process_id: int, user_id: int) -> bool:
+    # TODO: future implementation — completion hooks and audit
+    ok = update_workflow_status(process_id, user_id, "COMPLETED")
+    if ok:
+        register_module_notification(
+            user_id,
+            "ai_assistant",
+            title=f"Процесс #{process_id} завершен",
+            priority="INFO",
+        )
+    return ok
+
+
+def create_workflow_template(
+    created_by: int,
+    name: str,
+    module: str = "agro_trading",
+    trigger: str = None,
+    actions_json: str = None,
+) -> int:
+    # TODO: future implementation — template editor and action builder
+    if module not in WORKFLOW_MODULES:
+        module = "agro_trading"
+    cursor.execute(
+        """
+        INSERT INTO workflow_templates (
+            name, module, trigger, actions_json, created_by
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (name.strip(), module, trigger, actions_json, created_by),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_workflow_templates(
+    user_id: int,
+    module: str = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — shared templates across modules
+    query = """
+        SELECT id, name, module, trigger, actions_json, created_at
+        FROM workflow_templates
+        WHERE created_by = ?
+    """
+    params = [user_id]
+    if module:
+        query += " AND module = ?"
+        params.append(module)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def execute_workflow_action(
+    user_id: int,
+    action_type: str,
+    module: str,
+    payload: dict = None,
+) -> bool:
+    # TODO: future implementation — action pipeline and rollback
+    if action_type not in WORKFLOW_ACTION_TYPES:
+        return False
+    payload = payload or {}
+    return _integrate_workflow_action(user_id, action_type, module, payload)
+
+
+def _integrate_workflow_action(
+    user_id: int,
+    action_type: str,
+    module: str,
+    payload: dict,
+) -> bool:
+    # TODO: future implementation — deep integration with system modules
+    if action_type == "create_task":
+        create_system_task(
+            creator_id=user_id,
+            title=payload.get("title", "Workflow task"),
+            description=payload.get("description", ""),
+            module=module if module in TASK_MODULES else "ai_assistant",
+        )
+        return True
+    if action_type == "create_calendar_event":
+        register_calendar_event(
+            user_id,
+            module if module in CALENDAR_SOURCE_MODULES else "calendar",
+            title=payload.get("title", "Workflow event"),
+            start_datetime=payload.get("start_datetime"),
+            description=payload.get("description", "workflow_action"),
+        )
+        return True
+    if action_type == "send_notification":
+        register_module_notification(
+            user_id,
+            module,
+            title=payload.get("title", "Workflow notification"),
+            message=payload.get("message", ""),
+            priority=payload.get("priority", "INFO"),
+        )
+        return True
+    if action_type == "create_document":
+        register_module_file(
+            uploaded_by=user_id,
+            module=module if module in FILE_MODULES else "tasks",
+            filename=payload.get("filename", "workflow/doc"),
+            original_filename=payload.get("original_filename", "document"),
+            description=payload.get("description", "workflow document"),
+        )
+        return True
+    if action_type == "assign_user":
+        task_id = payload.get("task_id")
+        assigned_user_id = payload.get("assigned_user_id")
+        if task_id and assigned_user_id:
+            return assign_system_task(task_id, user_id, assigned_user_id)
+        return False
+    if action_type == "update_status":
+        process_id = payload.get("process_id")
+        status = payload.get("status")
+        if process_id and status:
+            return update_workflow_status(process_id, user_id, status)
+        return False
+    return False
+
+
+def format_workflow_processes_text(
+    user_id: int,
+    status: str = None,
+    module: str = None,
+    limit: int = 10,
+) -> str:
+    # TODO: future implementation — rich process cards
+    rows = get_workflow_processes(user_id, status=status, module=module, limit=limit)
+    if not rows:
+        return "Процессов нет."
+
+    lines = ["⚙️ Бизнес-процессы:\n"]
+    for row in rows:
+        pid, name, mod, trigger, nstatus, created_at, completed_at = row
+        icon = WORKFLOW_STATUS_ICONS.get(nstatus, "▶️")
+        mod_label = WORKFLOW_MODULES.get(mod, mod or "—")
+        lines.append(
+            f"{icon} #{pid} · {name}\n"
+            f"   🗂 {mod_label} · {nstatus}\n"
+            f"   ⚡ trigger: {trigger or '—'}\n"
+            f"   🕒 {created_at} · ✅ {completed_at or '—'}"
+        )
+    return "\n".join(lines)
+
+
+def format_workflow_templates_text(user_id: int, limit: int = 10) -> str:
+    # TODO: future implementation — template preview with actions
+    rows = get_workflow_templates(user_id, limit=limit)
+    actions = ", ".join(WORKFLOW_ACTION_TYPES.values())
+    if not rows:
+        return (
+            f"📋 Шаблоны процессов\n\n"
+            f"Доступные действия: {actions}\n\n"
+            "Шаблонов нет."
+        )
+    lines = [f"📋 Шаблоны процессов\n\nДействия: {actions}\n"]
+    for row in rows:
+        tid, name, mod, trigger, actions_json, created_at = row
+        mod_label = WORKFLOW_MODULES.get(mod, mod or "—")
+        lines.append(
+            f"#{tid} · {name}\n"
+            f"   🗂 {mod_label} · ⚡ {trigger or '—'}\n"
+            f"   🕒 {created_at}"
+        )
+        if actions_json:
+            lines.append(f"   ⚙ {actions_json}")
+    return "\n".join(lines)
+
+
+def format_workflow_stats_text(user_id: int) -> str:
+    # TODO: future implementation — charts and module breakdown
+    active = len(get_workflow_processes(user_id, status="ACTIVE", limit=100))
+    paused = len(get_workflow_processes(user_id, status="PAUSED", limit=100))
+    completed = len(get_workflow_processes(user_id, status="COMPLETED", limit=100))
+    templates = len(get_workflow_templates(user_id, limit=100))
+    modules = ", ".join(WORKFLOW_MODULES.values())
+    return (
+        "📊 Статистика бизнес-процессов\n\n"
+        f"▶️ Активные: {active}\n"
+        f"⏸ Приостановленные: {paused}\n"
+        f"✅ Завершенные: {completed}\n"
+        f"📋 Шаблоны: {templates}\n\n"
+        f"Модули: {modules}\n"
+        f"Действия: {', '.join(WORKFLOW_ACTION_TYPES.values())}\n\n"
+        "Детальная аналитика находится в разработке."
+    )

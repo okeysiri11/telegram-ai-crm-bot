@@ -37,6 +37,9 @@ def owner_main_menu():
                 KeyboardButton(text="🔎 Глобальный поиск")
             ],
             [
+                KeyboardButton(text="⚙️ Бизнес-процессы")
+            ],
+            [
                 KeyboardButton(text="⚙ Администрирование")
             ]
         ],
@@ -200,6 +203,59 @@ def files_module_actions_inline(file_id: int = 0) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     text="📎 К задаче",
                     callback_data=f"fil:attach:{fid}"
+                ),
+            ],
+        ]
+    )
+
+
+def workflow_module_menu():
+    # TODO: future implementation — workflow engine hub
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📋 Шаблоны процессов")
+            ],
+            [
+                KeyboardButton(text="▶️ Активные процессы"),
+                KeyboardButton(text="⏸ Приостановленные")
+            ],
+            [
+                KeyboardButton(text="✅ Завершенные"),
+                KeyboardButton(text="📊 Статистика")
+            ],
+            [
+                KeyboardButton(text="⬅ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def workflow_module_actions_inline(process_id: int = 0) -> InlineKeyboardMarkup:
+    # TODO: future implementation — workflow quick actions
+    pid = process_id or 0
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="▶️ Запустить",
+                    callback_data=f"wfl:start:{pid}"
+                ),
+                InlineKeyboardButton(
+                    text="⏸ Пауза",
+                    callback_data=f"wfl:pause:{pid}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="✅ Завершить",
+                    callback_data=f"wfl:complete:{pid}"
+                ),
+                InlineKeyboardButton(
+                    text="⚙ Действие",
+                    callback_data=f"wfl:action:menu:{pid}"
                 ),
             ],
         ]

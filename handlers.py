@@ -128,6 +128,17 @@ from database import (
     format_search_hub_text,
     format_global_search_text,
     get_search_scope_for_button,
+    WORKFLOW_MODULES,
+    WORKFLOW_STATUSES,
+    WORKFLOW_ACTION_TYPES,
+    create_workflow_process,
+    register_module_workflow,
+    get_workflow_processes,
+    format_workflow_processes_text,
+    format_workflow_templates_text,
+    format_workflow_stats_text,
+    pause_workflow_process,
+    complete_workflow_process,
 )
 from keyboards import (
     owner_main_menu,
@@ -162,6 +173,8 @@ from keyboards import (
     agro_module_actions_inline,
     search_module_menu,
     search_module_actions_inline,
+    workflow_module_menu,
+    workflow_module_actions_inline,
 )
 router = Router()
 
@@ -335,6 +348,23 @@ SEARCH_STUB_MESSAGES = {
     "⚖️ Юриспруденция": "Поиск в Юриспруденции",
     "🚁 Drone Engineering": "Поиск в Drone Engineering",
     "☕ Cafe & Beauty": "Поиск в Cafe & Beauty",
+}
+
+WORKFLOW_MENU_BUTTONS = {
+    "📋 Шаблоны процессов",
+    "▶️ Активные процессы",
+    "⏸ Приостановленные",
+    "✅ Завершенные",
+    "📊 Статистика",
+    "⬅ Назад",
+}
+
+WORKFLOW_STUB_MESSAGES = {
+    "📋 Шаблоны процессов": "Шаблоны процессов",
+    "▶️ Активные процессы": "Активные процессы",
+    "⏸ Приостановленные": "Приостановленные процессы",
+    "✅ Завершенные": "Завершенные процессы",
+    "📊 Статистика": "Статистика процессов",
 }
 
 CALENDAR_MENU_BUTTONS = {
@@ -1306,6 +1336,88 @@ async def search_screen(message: Message):
     log_audit(user_id, "open_stub", "search", scope)
 
 
+@router.message(F.text == "⚙️ Бизнес-процессы")
+async def open_workflow_module(message: Message):
+    # TODO: future implementation — workflow dashboard and triggers
+    _init_ai_user(message)
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "workflow"
+    log_audit(message.from_user.id, "open", "workflow")
+
+    modules = ", ".join(WORKFLOW_MODULES.values())
+    actions = ", ".join(WORKFLOW_ACTION_TYPES.values())
+    await message.answer(
+        f"⚙️ Бизнес-процессы\n\n"
+        f"Workflow Engine — центральный движок процессов.\n"
+        f"Модули: {modules}\n"
+        f"Статусы: {', '.join(WORKFLOW_STATUSES)}\n"
+        f"Действия: {actions}\n\n"
+        "Интеграция: задачи, календарь, уведомления, файлы.\n"
+        "Раздел находится в разработке.",
+        reply_markup=workflow_module_menu(),
+    )
+    await message.answer(
+        "Дополнительно:",
+        reply_markup=workflow_module_actions_inline(),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in WORKFLOW_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "workflow"
+    )
+)
+async def workflow_screen(message: Message):
+    screen = message.text
+    user_id = message.from_user.id
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    title = WORKFLOW_STUB_MESSAGES.get(screen, screen)
+
+    if screen == "📋 Шаблоны процессов":
+        text = format_workflow_templates_text(user_id)
+        await message.answer(f"{title}\n\n{text}", reply_markup=workflow_module_menu())
+        log_audit(user_id, "open_stub", "workflow", "templates")
+        return
+
+    if screen == "▶️ Активные процессы":
+        text = format_workflow_processes_text(user_id, status="ACTIVE")
+        await message.answer(f"{title}\n\n{text}", reply_markup=workflow_module_menu())
+        log_audit(user_id, "open_stub", "workflow", "active")
+        return
+
+    if screen == "⏸ Приостановленные":
+        text = format_workflow_processes_text(user_id, status="PAUSED")
+        await message.answer(f"{title}\n\n{text}", reply_markup=workflow_module_menu())
+        log_audit(user_id, "open_stub", "workflow", "paused")
+        return
+
+    if screen == "✅ Завершенные":
+        text = format_workflow_processes_text(user_id, status="COMPLETED")
+        await message.answer(f"{title}\n\n{text}", reply_markup=workflow_module_menu())
+        log_audit(user_id, "open_stub", "workflow", "completed")
+        return
+
+    if screen == "📊 Статистика":
+        await message.answer(
+            format_workflow_stats_text(user_id),
+            reply_markup=workflow_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "workflow", "stats")
+        return
+
+    await message.answer(
+        f"{title}\n\nРаздел находится в разработке.",
+        reply_markup=workflow_module_menu(),
+    )
+    log_audit(user_id, "open_stub", "workflow", screen)
+
+
 @router.message(F.text == "📅 Календарь")
 async def open_calendar_module(message: Message):
     # TODO: future implementation — calendar dashboard and widgets
@@ -1858,6 +1970,62 @@ async def search_history_callback(callback: CallbackQuery):
     log_audit(user_id, "search_stub", "search", "history")
 
 
+@router.callback_query(F.data.startswith("wfl:start:"))
+async def workflow_start_callback(callback: CallbackQuery):
+    # TODO: future implementation — start workflow process
+    process_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"▶️ Запустить процесс #{process_id}\n\n"
+        "Запуск процессов находится в разработке.",
+        reply_markup=workflow_module_menu(),
+    )
+    log_audit(callback.from_user.id, "workflow_stub", "workflow", f"start:{process_id}")
+
+
+@router.callback_query(F.data.startswith("wfl:pause:"))
+async def workflow_pause_callback(callback: CallbackQuery):
+    # TODO: future implementation — pause workflow process
+    process_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"⏸ Приостановить процесс #{process_id}\n\n"
+        "Приостановка процессов находится в разработке.",
+        reply_markup=workflow_module_menu(),
+    )
+    log_audit(callback.from_user.id, "workflow_stub", "workflow", f"pause:{process_id}")
+
+
+@router.callback_query(F.data.startswith("wfl:complete:"))
+async def workflow_complete_callback(callback: CallbackQuery):
+    # TODO: future implementation — complete workflow process
+    process_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"✅ Завершить процесс #{process_id}\n\n"
+        "Завершение процессов находится в разработке.",
+        reply_markup=workflow_module_menu(),
+    )
+    log_audit(callback.from_user.id, "workflow_stub", "workflow", f"complete:{process_id}")
+
+
+@router.callback_query(F.data.startswith("wfl:action:"))
+async def workflow_action_callback(callback: CallbackQuery):
+    # TODO: future implementation — execute workflow action
+    parts = callback.data.split(":")
+    action_key = parts[2] if len(parts) > 2 else "menu"
+    process_id = parts[3] if len(parts) > 3 else "0"
+    actions = ", ".join(WORKFLOW_ACTION_TYPES.values())
+    await callback.answer()
+    await callback.message.answer(
+        f"⚙ Действие · {action_key} · процесс #{process_id}\n\n"
+        f"Доступные действия: {actions}\n\n"
+        "Выполнение действий находится в разработке.",
+        reply_markup=workflow_module_menu(),
+    )
+    log_audit(callback.from_user.id, "workflow_stub", "workflow", f"action:{action_key}:{process_id}")
+
+
 @router.callback_query(F.data.startswith("mod:calendar:"))
 async def calendar_module_callback(callback: CallbackQuery):
     action = callback.data.split(":", 2)[2]
@@ -2099,6 +2267,7 @@ async def ai_back_to_main(message: Message):
         and m.text not in TASKS_MENU_BUTTONS
         and m.text not in FILES_MENU_BUTTONS
         and m.text not in SEARCH_MENU_BUTTONS
+        and m.text not in WORKFLOW_MENU_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )
