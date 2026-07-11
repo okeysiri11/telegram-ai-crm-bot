@@ -462,6 +462,40 @@ def agro_menu():
     return keyboard
 
 
+def agro_deal_actions_inline(request_number: int) -> InlineKeyboardMarkup:
+    rn = request_number
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📑 Контракт",
+                    callback_data=f"agr:deal:bind:contract:{rn}",
+                ),
+                InlineKeyboardButton(
+                    text="🚢 Логистика",
+                    callback_data=f"agr:deal:bind:logistics:{rn}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="💵 Финансы",
+                    callback_data=f"agr:deal:bind:finance:{rn}",
+                ),
+                InlineKeyboardButton(
+                    text="📊 Отчёт",
+                    callback_data=f"agr:deal:report:{rn}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏁 Закрыть сделку",
+                    callback_data=f"agr:deal:close:{rn}",
+                ),
+            ],
+        ]
+    )
+
+
 def agro_counterparties_menu():
     # TODO: future implementation — counterparty management
     keyboard = ReplyKeyboardMarkup(

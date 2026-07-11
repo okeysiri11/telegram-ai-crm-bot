@@ -8,6 +8,7 @@ from services.permissions import PermissionService
 from services.tasks import TaskService, TASK_TYPES
 from services.request_auth import RequestAuthService
 from services.workflow_triggers import WorkflowTriggers
+from services.agro_deal_lifecycle import AgroDealLifecycle
 
 __all__ = [
     "UNIFIED_STATUSES",
@@ -19,4 +20,5 @@ __all__ = [
     "TASK_TYPES",
     "RequestAuthService",
     "WorkflowTriggers",
+    "AgroDealLifecycle",
 ]

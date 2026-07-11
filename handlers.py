@@ -11,6 +11,7 @@ from config import OWNER_ID, MANAGER_ID, MANAGERS
 from services.request_auth import RequestAuthService
 from services.permissions import PermissionService
 from services.statuses import normalize_status
+from services.agro_deal_lifecycle import AgroDealLifecycle
 from database import (
     get_user_profile,
     save_profile_fields,
@@ -125,6 +126,8 @@ from database import (
     format_agro_ai_assistant_stub,
     format_agro_ai_context_stub,
     get_agro_ai_context,
+    format_agro_deal_text,
+    get_agro_deal_by_request,
     SEARCH_DOMAINS,
     SEARCH_SCOPES,
     global_search,
@@ -174,6 +177,7 @@ from keyboards import (
     files_module_actions_inline,
     agro_counterparties_menu,
     agro_module_actions_inline,
+    agro_deal_actions_inline,
     search_module_menu,
     search_module_actions_inline,
     workflow_module_menu,
@@ -1932,6 +1936,91 @@ async def agro_ai_context_callback(callback: CallbackQuery):
     log_audit(user_id, "agro_stub", "agro_trading", f"ai_context:{area}")
 
 
+@router.callback_query(F.data.startswith("agr:deal:bind:contract:"))
+async def agro_deal_bind_contract_callback(callback: CallbackQuery):
+    request_number = int(callback.data.split(":")[-1])
+    user_id = callback.from_user.id
+    request = get_request_by_number(request_number)
+    if not RequestAuthService.can_update_status(user_id, request):
+        await callback.answer(RequestAuthService.deny_message("bind"), show_alert=True)
+        return
+    contract_id = AgroDealLifecycle.bind_contract(user_id, request_number)
+    await callback.answer()
+    await callback.message.answer(
+        f"📑 Контракт #{contract_id} привязан к сделке #{request_number}\n\n"
+        f"{format_agro_deal_text(request_number)}",
+        reply_markup=agro_deal_actions_inline(request_number),
+    )
+
+
+@router.callback_query(F.data.startswith("agr:deal:bind:logistics:"))
+async def agro_deal_bind_logistics_callback(callback: CallbackQuery):
+    request_number = int(callback.data.split(":")[-1])
+    user_id = callback.from_user.id
+    request = get_request_by_number(request_number)
+    if not RequestAuthService.can_update_status(user_id, request):
+        await callback.answer(RequestAuthService.deny_message("bind"), show_alert=True)
+        return
+    logistics_id = AgroDealLifecycle.bind_logistics(user_id, request_number)
+    await callback.answer()
+    await callback.message.answer(
+        f"🚢 Логистика #{logistics_id} привязана к сделке #{request_number}\n\n"
+        f"{format_agro_deal_text(request_number)}",
+        reply_markup=agro_deal_actions_inline(request_number),
+    )
+
+
+@router.callback_query(F.data.startswith("agr:deal:bind:finance:"))
+async def agro_deal_bind_finance_callback(callback: CallbackQuery):
+    request_number = int(callback.data.split(":")[-1])
+    user_id = callback.from_user.id
+    request = get_request_by_number(request_number)
+    if not RequestAuthService.can_update_status(user_id, request):
+        await callback.answer(RequestAuthService.deny_message("bind"), show_alert=True)
+        return
+    finance_id = AgroDealLifecycle.bind_finance(user_id, request_number)
+    await callback.answer()
+    await callback.message.answer(
+        f"💵 Финансы #{finance_id} привязаны к сделке #{request_number}\n\n"
+        f"{format_agro_deal_text(request_number)}",
+        reply_markup=agro_deal_actions_inline(request_number),
+    )
+
+
+@router.callback_query(F.data.startswith("agr:deal:close:"))
+async def agro_deal_close_callback(callback: CallbackQuery):
+    request_number = int(callback.data.split(":")[-1])
+    user_id = callback.from_user.id
+    request = get_request_by_number(request_number)
+    if not RequestAuthService.can_update_status(user_id, request):
+        await callback.answer(RequestAuthService.deny_message("close"), show_alert=True)
+        return
+    update_request_status(request_number, "DONE", user_id)
+    await callback.answer("Сделка закрыта")
+    await callback.message.answer(
+        f"🏁 Сделка #{request_number} закрыта.\n\n"
+        f"{format_agro_deal_text(request_number)}",
+        reply_markup=agro_deal_actions_inline(request_number),
+    )
+
+
+@router.callback_query(F.data.startswith("agr:deal:report:"))
+async def agro_deal_report_callback(callback: CallbackQuery):
+    request_number = int(callback.data.split(":")[-1])
+    user_id = callback.from_user.id
+    request = get_request_by_number(request_number)
+    if not RequestAuthService.can_view_request(user_id, request):
+        await callback.answer(RequestAuthService.deny_message("report"), show_alert=True)
+        return
+    file_id = AgroDealLifecycle.generate_report(user_id, request_number)
+    await callback.answer()
+    await callback.message.answer(
+        f"📊 Отчёт по сделке #{request_number} сформирован (файл #{file_id}).\n\n"
+        f"{format_agro_deal_text(request_number)}",
+        reply_markup=agro_deal_actions_inline(request_number),
+    )
+
+
 @router.callback_query(F.data.startswith("srch:run:"))
 async def search_run_callback(callback: CallbackQuery):
     # TODO: future implementation — execute search query
@@ -2378,6 +2467,13 @@ async def handle_text(message: Message) -> None:
         )
 
         await message.answer(text)
+        deal_text = format_agro_deal_text(int(message.text))
+        await message.answer(deal_text)
+        if PermissionService.is_crm_operator(user_id):
+            await message.answer(
+                "Действия со сделкой:",
+                reply_markup=agro_deal_actions_inline(int(message.text)),
+            )
         return
 
     if message.from_user.id == MANAGER_ID:

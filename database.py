@@ -299,6 +299,27 @@ CREATE TABLE IF NOT EXISTS workflow_templates (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS agro_deals (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    request_number INTEGER UNIQUE NOT NULL,
+    client_id INTEGER NOT NULL,
+    product TEXT,
+    status TEXT DEFAULT 'NEW',
+    manager_id INTEGER,
+    workflow_process_id INTEGER,
+    manager_task_id INTEGER,
+    document_folder_id INTEGER,
+    calendar_event_id INTEGER,
+    contract_id INTEGER,
+    logistics_id INTEGER,
+    finance_id INTEGER,
+    report_file_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    closed_at TIMESTAMP
+)
+""")
+
 conn.commit()
 
 
@@ -324,6 +345,30 @@ def _migrate_schema():
             "UPDATE requests SET status = ? WHERE status = ?",
             (new, old),
         )
+    conn.commit()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS agro_deals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            request_number INTEGER UNIQUE NOT NULL,
+            client_id INTEGER NOT NULL,
+            product TEXT,
+            status TEXT DEFAULT 'NEW',
+            manager_id INTEGER,
+            workflow_process_id INTEGER,
+            manager_task_id INTEGER,
+            document_folder_id INTEGER,
+            calendar_event_id INTEGER,
+            contract_id INTEGER,
+            logistics_id INTEGER,
+            finance_id INTEGER,
+            report_file_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            closed_at TIMESTAMP
+        )
+        """
+    )
     conn.commit()
 
 
@@ -2344,6 +2389,178 @@ def format_agro_ai_context_stub(area: str, user_id: int) -> str:
         f"Записей: {count}.\n\n"
         "Раздел находится в разработке."
     )
+
+
+# ==========================================================
+# AGRO DEAL LIFECYCLE
+# ==========================================================
+
+def create_agro_deal(
+    request_number: int,
+    client_id: int,
+    product: str = None,
+    manager_id: int = None,
+    status: str = "NEW",
+) -> int:
+    from services.statuses import normalize_status
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO agro_deals (
+            request_number, client_id, product, manager_id, status
+        )
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (request_number, client_id, product, manager_id, normalize_status(status)),
+    )
+    conn.commit()
+    if cursor.rowcount == 0:
+        deal = get_agro_deal_by_request(request_number)
+        return deal[0] if deal else 0
+    return cursor.lastrowid
+
+
+def get_agro_deal_by_request(request_number: int):
+    cursor.execute(
+        """
+        SELECT id, request_number, client_id, product, status, manager_id,
+               workflow_process_id, manager_task_id, document_folder_id,
+               calendar_event_id, contract_id, logistics_id, finance_id,
+               report_file_id, created_at, closed_at
+        FROM agro_deals
+        WHERE request_number = ?
+        """,
+        (request_number,),
+    )
+    return cursor.fetchone()
+
+
+def update_agro_deal(request_number: int, **fields) -> bool:
+    if not fields:
+        return False
+    from services.statuses import normalize_status
+    allowed = {
+        "product", "status", "manager_id", "workflow_process_id",
+        "manager_task_id", "document_folder_id", "calendar_event_id",
+        "contract_id", "logistics_id", "finance_id", "report_file_id", "closed_at",
+    }
+    parts = []
+    params = []
+    for key, value in fields.items():
+        if key not in allowed:
+            continue
+        if key == "status":
+            value = normalize_status(value)
+        parts.append(f"{key} = ?")
+        params.append(value)
+    if not parts:
+        return False
+    params.append(request_number)
+    cursor.execute(
+        f"UPDATE agro_deals SET {', '.join(parts)} WHERE request_number = ?",
+        params,
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def bind_agro_deal_contract(request_number: int, contract_id: int) -> bool:
+    return update_agro_deal(request_number, contract_id=contract_id)
+
+
+def bind_agro_deal_logistics(request_number: int, logistics_id: int) -> bool:
+    return update_agro_deal(request_number, logistics_id=logistics_id)
+
+
+def bind_agro_deal_finance(request_number: int, finance_id: int) -> bool:
+    return update_agro_deal(request_number, finance_id=finance_id)
+
+
+def close_agro_deal(request_number: int, user_id: int) -> bool:
+    from datetime import datetime
+    from services.statuses import normalize_status
+    _ = user_id
+    return update_agro_deal(
+        request_number,
+        status=normalize_status("DONE"),
+        closed_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+    )
+
+
+def format_agro_deal_text(request_number: int) -> str:
+    deal = get_agro_deal_by_request(request_number)
+    if not deal:
+        return f"Сделка по заявке #{request_number} не зарегистрирована."
+    (
+        did, req_num, client_id, product, status, manager_id,
+        workflow_id, task_id, folder_id, cal_id, contract_id,
+        logistics_id, finance_id, report_id, created_at, closed_at,
+    ) = deal
+    return (
+        f"🌾 Agro-сделка #{did}\n\n"
+        f"📋 Заявка: #{req_num}\n"
+        f"📦 Товар: {product or '—'}\n"
+        f"📊 Статус: {status}\n"
+        f"👤 Клиент ID: {client_id}\n"
+        f"👨‍💼 Менеджер ID: {manager_id or '—'}\n\n"
+        f"⚙ Workflow: #{workflow_id or '—'}\n"
+        f"✅ Задача: #{task_id or '—'}\n"
+        f"📅 Календарь: #{cal_id or '—'}\n"
+        f"📁 Папка: #{folder_id or '—'}\n"
+        f"📑 Контракт: #{contract_id or '—'}\n"
+        f"🚢 Логистика: #{logistics_id or '—'}\n"
+        f"💵 Финансы: #{finance_id or '—'}\n"
+        f"📊 Отчёт: #{report_id or '—'}\n\n"
+        f"🕒 Создана: {created_at}\n"
+        f"🏁 Закрыта: {closed_at or '—'}"
+    )
+
+
+def generate_agro_deal_report(request_number: int, user_id: int) -> int:
+    from datetime import datetime
+
+    deal = get_agro_deal_by_request(request_number)
+    request = get_request_by_number(request_number)
+    if not deal or not request:
+        return 0
+
+    report_body = format_agro_deal_text(request_number)
+    contracts = get_agro_contracts(user_id, request_number=request_number, limit=5)
+    logistics = get_agro_logistics(user_id, request_number=request_number, limit=5)
+    finance = get_agro_finance(user_id, request_number=request_number, limit=5)
+
+    lines = [report_body, "\n--- Детали ---"]
+    if contracts:
+        lines.append(f"\nКонтрактов: {len(contracts)}")
+    if logistics:
+        lines.append(f"Логистика: {len(logistics)} зап.")
+    if finance:
+        lines.append(f"Финансы: {len(finance)} зап.")
+    summary = get_agro_report_summary(user_id)
+    lines.append(
+        f"\nСводка Agro: сделок {summary['deals_count']}, "
+        f"объём {summary['volume']}, задолженность {summary['debt']}"
+    )
+    content = "\n".join(lines)
+
+    file_id = register_module_file(
+        uploaded_by=user_id,
+        module="agro_trading",
+        filename=f"agro/reports/deal_{request_number}.txt",
+        original_filename=f"Отчёт сделка #{request_number}.txt",
+        description=content[:500],
+        tags=f"report,deal,{request_number}",
+    )
+    create_agro_document(
+        created_by=user_id,
+        doc_type="contract",
+        title=f"Отчёт сделки #{request_number}",
+        request_number=request_number,
+        file_id=file_id,
+        notes=f"generated_at:{datetime.utcnow().isoformat()}",
+    )
+    update_agro_deal(request_number, report_file_id=file_id)
+    log_audit(user_id, "agro_deal_report", "agro_trading", f"deal:{request_number}")
+    return file_id
 
 
 # ==========================================================
