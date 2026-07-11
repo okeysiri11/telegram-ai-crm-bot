@@ -3,6 +3,7 @@
 UNIFIED_STATUSES = (
     "NEW",
     "IN_PROGRESS",
+    "WAITING",
     "BLOCKED",
     "DONE",
     "CANCELLED",
@@ -16,7 +17,9 @@ LEGACY_STATUS_MAP = {
     "CANCELED": "CANCELLED",
     "CANCEL": "CANCELLED",
     "ACTIVE": "IN_PROGRESS",
-    "PAUSED": "BLOCKED",
+    "PAUSED": "WAITING",
+    "PAUSE": "WAITING",
+    "WAITING": "WAITING",
     "FULFILLED": "DONE",
     "DRAFT": "NEW",
     "SIGNED": "IN_PROGRESS",
@@ -26,7 +29,7 @@ LEGACY_STATUS_MAP = {
 }
 
 TERMINAL_STATUSES = frozenset({"DONE", "CANCELLED", "ARCHIVED"})
-ACTIVE_STATUSES = frozenset({"NEW", "IN_PROGRESS", "BLOCKED"})
+ACTIVE_STATUSES = frozenset({"NEW", "IN_PROGRESS", "WAITING", "BLOCKED"})
 
 
 def normalize_status(status: str, default: str = "NEW") -> str:

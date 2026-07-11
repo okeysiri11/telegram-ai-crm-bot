@@ -9,6 +9,7 @@ from services.tasks import TaskService, TASK_TYPES
 from services.request_auth import RequestAuthService
 from services.workflow_triggers import WorkflowTriggers
 from services.agro_deal_lifecycle import AgroDealLifecycle
+from services.calendar_service import CalendarService
 
 __all__ = [
     "UNIFIED_STATUSES",
@@ -21,4 +22,5 @@ __all__ = [
     "RequestAuthService",
     "WorkflowTriggers",
     "AgroDealLifecycle",
+    "CalendarService",
 ]

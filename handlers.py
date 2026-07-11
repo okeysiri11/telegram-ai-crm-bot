@@ -12,6 +12,7 @@ from services.request_auth import RequestAuthService
 from services.permissions import PermissionService
 from services.statuses import normalize_status
 from services.agro_deal_lifecycle import AgroDealLifecycle
+from services.tasks import TaskService
 from database import (
     get_user_profile,
     save_profile_fields,
@@ -106,6 +107,19 @@ from database import (
     format_system_tasks_text,
     format_task_filters_text,
     get_tasks_for_report,
+    create_task,
+    get_task,
+    get_tasks_by_user,
+    get_tasks_by_module,
+    update_task_status,
+    assign_task,
+    delete_task,
+    update_task_deadline,
+    update_task_fields,
+    format_task_card,
+    format_tasks_list_text,
+    parse_task_create_text,
+    TASK_MODULE_ALIASES,
     FILE_MODULES,
     create_system_file,
     register_module_file,
@@ -186,6 +200,9 @@ from keyboards import (
     notifications_module_actions_inline,
     tasks_module_menu,
     tasks_module_actions_inline,
+    tasks_list_inline,
+    task_card_inline,
+    task_delete_confirm_inline,
     files_module_menu,
     files_module_actions_inline,
     agro_counterparties_menu,
@@ -231,6 +248,7 @@ waiting_buy_request = {}
 # Состояния раздела AI Assistant
 ai_assistant_active = {}
 active_ai_project = {}
+task_flow = {}
 ai_settings_flow = {}
 active_module = {}
 active_agro_sub = {}
@@ -303,22 +321,22 @@ NOTIFICATIONS_STUB_MESSAGES = {
 }
 
 TASKS_MENU_BUTTONS = {
-    "📥 Мои задачи",
-    "🆕 Новая задача",
-    "👥 Назначенные",
-    "📅 Просроченные",
-    "🏁 Завершенные",
-    "⚙ Фильтры",
+    "📋 Мои задачи",
+    "📌 Активные",
+    "✅ Завершенные",
+    "⚠ Просроченные",
+    "👥 Все задачи",
+    "➕ Новая задача",
     "⬅ Назад",
 }
 
 TASKS_STUB_MESSAGES = {
-    "📥 Мои задачи": "Мои задачи",
-    "🆕 Новая задача": "Новая задача",
-    "👥 Назначенные": "Назначенные задачи",
-    "📅 Просроченные": "Просроченные задачи",
-    "🏁 Завершенные": "Завершенные задачи",
-    "⚙ Фильтры": "Фильтры задач",
+    "📋 Мои задачи": "Мои задачи",
+    "📌 Активные": "Активные задачи",
+    "✅ Завершенные": "Завершенные задачи",
+    "⚠ Просроченные": "Просроченные задачи",
+    "👥 Все задачи": "Все задачи",
+    "➕ Новая задача": "Новая задача",
 }
 
 FILES_MENU_BUTTONS = {
@@ -1107,10 +1125,10 @@ async def notifications_screen(message: Message):
 
 @router.message(F.text == "✅ Задачи")
 async def open_tasks_module(message: Message):
-    # TODO: future implementation — tasks dashboard and counters
     _init_ai_user(message)
     _clear_ai_state(message.from_user.id)
     active_module[message.from_user.id] = "tasks"
+    task_flow.pop(message.from_user.id, None)
     log_audit(message.from_user.id, "open", "tasks")
 
     modules = ", ".join(TASK_MODULES.values())
@@ -1120,14 +1138,26 @@ async def open_tasks_module(message: Message):
         f"Модули: {modules}\n"
         f"Статусы: {', '.join(TASK_STATUSES)}\n"
         f"Приоритеты: {', '.join(TASK_PRIORITIES)}\n\n"
-        "Интеграция: календарь, уведомления, отчеты.\n"
-        "Раздел находится в разработке.",
+        "Интеграция: календарь, уведомления, отчёты.",
         reply_markup=tasks_module_menu(),
     )
+
+
+async def _show_tasks_list(
+    message: Message,
+    title: str,
+    user_id: int,
+    audit_key: str,
+    **list_kwargs,
+):
+    limit = list_kwargs.get("limit", 15)
+    rows = TaskService.get_tasks_by_user(user_id, limit=limit, **list_kwargs)
+    text = format_tasks_list_text(user_id, limit=limit, **list_kwargs)
     await message.answer(
-        "Дополнительно:",
-        reply_markup=tasks_module_actions_inline(),
+        f"{title}\n\n{text}",
+        reply_markup=tasks_list_inline(rows) if rows else tasks_module_menu(),
     )
+    log_audit(user_id, "tasks_list", "tasks", audit_key)
 
 
 @router.message(
@@ -1142,56 +1172,47 @@ async def tasks_screen(message: Message):
 
     if screen == "⬅ Назад":
         active_module.pop(user_id, None)
+        task_flow.pop(user_id, None)
         await message.answer("Главное меню", reply_markup=owner_main_menu())
         return
 
     title = TASKS_STUB_MESSAGES.get(screen, screen)
 
-    if screen == "📥 Мои задачи":
-        text = format_system_tasks_text(user_id, scope="my")
-        await message.answer(f"{title}\n\n{text}", reply_markup=tasks_module_menu())
-        log_audit(user_id, "open_stub", "tasks", "my")
+    if screen == "📋 Мои задачи":
+        await _show_tasks_list(message, title, user_id, "my", scope="my", limit=15)
         return
 
-    if screen == "👥 Назначенные":
-        text = format_system_tasks_text(user_id, scope="assigned")
-        await message.answer(f"{title}\n\n{text}", reply_markup=tasks_module_menu())
-        log_audit(user_id, "open_stub", "tasks", "assigned")
+    if screen == "📌 Активные":
+        await _show_tasks_list(message, title, user_id, "active", scope="my", active_only=True, limit=15)
         return
 
-    if screen == "📅 Просроченные":
-        text = format_system_tasks_text(user_id, scope="all", overdue_only=True)
-        await message.answer(f"{title}\n\n{text}", reply_markup=tasks_module_menu())
-        log_audit(user_id, "open_stub", "tasks", "overdue")
+    if screen == "✅ Завершенные":
+        await _show_tasks_list(message, title, user_id, "done", scope="my", status="DONE", limit=15)
         return
 
-    if screen == "🏁 Завершенные":
-        text = format_system_tasks_text(user_id, scope="all", status="DONE")
-        await message.answer(f"{title}\n\n{text}", reply_markup=tasks_module_menu())
-        log_audit(user_id, "open_stub", "tasks", "done")
+    if screen == "⚠ Просроченные":
+        await _show_tasks_list(message, title, user_id, "overdue", scope="my", overdue_only=True, limit=15)
         return
 
-    if screen == "⚙ Фильтры":
-        await message.answer(
-            format_task_filters_text(user_id),
-            reply_markup=tasks_module_menu(),
-        )
-        log_audit(user_id, "open_stub", "tasks", "filters")
+    if screen == "👥 Все задачи":
+        scope = "all" if PermissionService.is_crm_operator(user_id) else "my"
+        await _show_tasks_list(message, title, user_id, "all", scope=scope, limit=20)
         return
 
-    if screen == "🆕 Новая задача":
+    if screen == "➕ Новая задача":
+        task_flow[user_id] = {"step": "create"}
         await message.answer(
             f"{title}\n\n"
-            "Создание задач через Telegram находится в разработке.\n"
-            "Будут доступны: создание, назначение, смена статуса, "
-            "завершение и перенос срока.",
+            "Отправьте задачу в формате:\n"
+            "Создай задачу:\n"
+            "Название: ...\n"
+            "Описание: ...\n"
+            "Модуль: AGRO | CRYPTO | DRONE | CAFE | LEGAL | AI | SYSTEM\n"
+            "Приоритет: LOW | NORMAL | HIGH | CRITICAL\n"
+            "Срок: 2026-07-15 18:00",
             reply_markup=tasks_module_menu(),
         )
-        await message.answer(
-            "Действия с задачей:",
-            reply_markup=tasks_module_actions_inline(),
-        )
-        log_audit(user_id, "open_stub", "tasks", "new")
+        log_audit(user_id, "tasks_create_prompt", "tasks", "new")
         return
 
     await message.answer(
@@ -1199,6 +1220,110 @@ async def tasks_screen(message: Message):
         reply_markup=tasks_module_menu(),
     )
     log_audit(user_id, "open_stub", "tasks", screen)
+
+
+@router.message(
+    lambda m: (
+        task_flow.get(m.from_user.id)
+        and active_module.get(m.from_user.id) == "tasks"
+        and m.text not in TASKS_MENU_BUTTONS
+    )
+)
+async def task_flow_message(message: Message):
+    user_id = message.from_user.id
+    flow = task_flow.get(user_id, {})
+    step = flow.get("step")
+    text = message.text.strip()
+
+    if step == "create":
+        parsed = parse_task_create_text(f"Создай задачу:\n{text}") or parse_task_create_text(text)
+        if not parsed or not parsed.get("title"):
+            if not text.startswith("Создай") and "\n" not in text:
+                parsed = {
+                    "title": text,
+                    "description": "",
+                    "module": "system",
+                    "priority": "NORMAL",
+                    "deadline": None,
+                }
+            else:
+                await message.answer("Укажите название задачи.", reply_markup=tasks_module_menu())
+                return
+        task_id = TaskService.create(
+            task_type=TaskService.HUMAN,
+            creator_id=user_id,
+            title=parsed["title"],
+            description=parsed.get("description", ""),
+            module=parsed.get("module", "system"),
+            priority=parsed.get("priority", "NORMAL"),
+            due_date=parsed.get("deadline"),
+        )
+        task_flow.pop(user_id, None)
+        task = get_task(task_id, user_id)
+        await message.answer(
+            f"✅ Задача #{task_id} создана.\n\n{format_task_card(task)}",
+            reply_markup=task_card_inline(task_id),
+        )
+        log_audit(user_id, "create_task", "tasks", str(task_id))
+        return
+
+    task_id = flow.get("task_id")
+    if not task_id:
+        task_flow.pop(user_id, None)
+        return
+
+    if step == "assign":
+        try:
+            assignee_id = int(text)
+        except ValueError:
+            await message.answer("Отправьте числовой Telegram ID исполнителя.")
+            return
+        if TaskService.assign_task(task_id, user_id, assignee_id):
+            task = get_task(task_id, user_id)
+            await message.answer(
+                f"👤 Задача #{task_id} назначена на {assignee_id}.\n\n{format_task_card(task)}",
+                reply_markup=task_card_inline(task_id),
+            )
+        else:
+            await message.answer("Не удалось назначить задачу.")
+        task_flow.pop(user_id, None)
+        return
+
+    if step == "deadline":
+        if TaskService.update_deadline(task_id, user_id, text):
+            task = get_task(task_id, user_id)
+            await message.answer(
+                f"📅 Срок задачи #{task_id} обновлён.\n\n{format_task_card(task)}",
+                reply_markup=task_card_inline(task_id),
+            )
+        else:
+            await message.answer("Не удалось обновить срок.")
+        task_flow.pop(user_id, None)
+        return
+
+    if step == "edit":
+        parsed = parse_task_create_text(f"Создай задачу:\n{text}")
+        fields = {}
+        if parsed:
+            if parsed.get("title"):
+                fields["title"] = parsed["title"]
+            if parsed.get("description"):
+                fields["description"] = parsed["description"]
+            if parsed.get("module"):
+                fields["module"] = parsed["module"]
+            if parsed.get("priority"):
+                fields["priority"] = parsed["priority"]
+        if not fields:
+            fields["title"] = text
+        if TaskService.update_fields(task_id, user_id, **fields):
+            task = get_task(task_id, user_id)
+            await message.answer(
+                f"✏ Задача #{task_id} обновлена.\n\n{format_task_card(task)}",
+                reply_markup=task_card_inline(task_id),
+            )
+        else:
+            await message.answer("Не удалось изменить задачу.")
+        task_flow.pop(user_id, None)
 
 
 @router.message(F.text == "📁 Файлы и документы")
@@ -1768,57 +1893,149 @@ async def notifications_settings_callback(callback: CallbackQuery):
     log_audit(user_id, "notifications_stub", "notifications", "settings")
 
 
-@router.callback_query(F.data.startswith("tsk:assign:"))
-async def tasks_assign_callback(callback: CallbackQuery):
-    # TODO: future implementation — assign task to user
-    task_id = callback.data.split(":")[-1]
+@router.callback_query(F.data.startswith("tsk:open:"))
+async def tasks_open_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    task = get_task(task_id, user_id)
+    if not task:
+        await callback.answer("Задача не найдена", show_alert=True)
+        return
     await callback.answer()
     await callback.message.answer(
-        f"👤 Назначить задачу #{task_id}\n\n"
-        "Назначение задач находится в разработке.",
-        reply_markup=tasks_module_menu(),
+        format_task_card(task),
+        reply_markup=task_card_inline(task_id),
     )
-    log_audit(callback.from_user.id, "tasks_stub", "tasks", f"assign:{task_id}")
+
+
+@router.callback_query(F.data.startswith("tsk:start:"))
+async def tasks_start_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    if TaskService.update_task_status(task_id, user_id, "IN_PROGRESS"):
+        task = get_task(task_id, user_id)
+        await callback.answer("В работе")
+        await callback.message.answer(format_task_card(task), reply_markup=task_card_inline(task_id))
+    else:
+        await callback.answer("Нет доступа", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("tsk:pause:"))
+async def tasks_pause_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    if TaskService.update_task_status(task_id, user_id, "WAITING"):
+        task = get_task(task_id, user_id)
+        await callback.answer("На паузе")
+        await callback.message.answer(format_task_card(task), reply_markup=task_card_inline(task_id))
+    else:
+        await callback.answer("Нет доступа", show_alert=True)
 
 
 @router.callback_query(F.data.startswith("tsk:complete:"))
 async def tasks_complete_callback(callback: CallbackQuery):
-    # TODO: future implementation — complete task workflow
-    task_id = callback.data.split(":")[-1]
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    if TaskService.update_task_status(task_id, user_id, "DONE"):
+        task = get_task(task_id, user_id)
+        await callback.answer("Завершена")
+        await callback.message.answer(format_task_card(task), reply_markup=task_card_inline(task_id))
+    else:
+        await callback.answer("Нет доступа", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("tsk:cancel:"))
+async def tasks_cancel_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    if TaskService.update_task_status(task_id, user_id, "CANCELLED"):
+        task = get_task(task_id, user_id)
+        await callback.answer("Отменена")
+        await callback.message.answer(format_task_card(task), reply_markup=task_card_inline(task_id))
+    else:
+        await callback.answer("Нет доступа", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("tsk:edit:"))
+async def tasks_edit_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    if not get_task(task_id, user_id):
+        await callback.answer("Задача не найдена", show_alert=True)
+        return
+    task_flow[user_id] = {"step": "edit", "task_id": task_id}
     await callback.answer()
     await callback.message.answer(
-        f"🏁 Завершить задачу #{task_id}\n\n"
-        "Завершение задач находится в разработке.",
+        f"✏ Изменение задачи #{task_id}\n\n"
+        "Отправьте новые данные:\n"
+        "Название: ...\nОписание: ...\nМодуль: AGRO\nПриоритет: HIGH",
         reply_markup=tasks_module_menu(),
     )
-    log_audit(callback.from_user.id, "tasks_stub", "tasks", f"complete:{task_id}")
 
 
-@router.callback_query(F.data.startswith("tsk:reschedule:"))
-async def tasks_reschedule_callback(callback: CallbackQuery):
-    # TODO: future implementation — reschedule task due date
-    task_id = callback.data.split(":")[-1]
+@router.callback_query(F.data.startswith("tsk:assign:"))
+async def tasks_assign_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    if not get_task(task_id, user_id):
+        await callback.answer("Задача не найдена", show_alert=True)
+        return
+    task_flow[user_id] = {"step": "assign", "task_id": task_id}
     await callback.answer()
     await callback.message.answer(
-        f"📅 Перенести срок задачи #{task_id}\n\n"
-        "Перенос срока находится в разработке.",
+        f"👤 Назначить задачу #{task_id}\n\nОтправьте Telegram ID исполнителя.",
         reply_markup=tasks_module_menu(),
     )
-    log_audit(callback.from_user.id, "tasks_stub", "tasks", f"reschedule:{task_id}")
 
 
-@router.callback_query(F.data.startswith("tsk:status:"))
-async def tasks_status_callback(callback: CallbackQuery):
-    # TODO: future implementation — change task status
-    task_id = callback.data.split(":")[-1]
+@router.callback_query(F.data.regexp(r"^tsk:deadline:\d+$"))
+async def tasks_deadline_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    if not get_task(task_id, user_id):
+        await callback.answer("Задача не найдена", show_alert=True)
+        return
+    task_flow[user_id] = {"step": "deadline", "task_id": task_id}
     await callback.answer()
     await callback.message.answer(
-        f"⚙ Статус задачи #{task_id}\n\n"
-        f"Доступные статусы: {', '.join(TASK_STATUSES)}\n\n"
-        "Изменение статуса находится в разработке.",
+        f"📅 Новый срок для задачи #{task_id}\n\n"
+        "Формат: 2026-07-15 18:00",
         reply_markup=tasks_module_menu(),
     )
-    log_audit(callback.from_user.id, "tasks_stub", "tasks", f"status:{task_id}")
+
+
+@router.callback_query(F.data.regexp(r"^tsk:del:\d+$"))
+async def tasks_delete_prompt_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    task = get_task(task_id, user_id)
+    if not task:
+        await callback.answer("Задача не найдена", show_alert=True)
+        return
+    await callback.answer()
+    await callback.message.answer(
+        f"Удалить задачу «{task[1]}» (#{task_id})?",
+        reply_markup=task_delete_confirm_inline(task_id),
+    )
+
+
+@router.callback_query(F.data.startswith("tsk:del:yes:"))
+async def tasks_delete_confirm_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    task_id = int(callback.data.split(":")[-1])
+    if TaskService.delete_task(task_id, user_id):
+        await callback.answer("Удалена")
+        await callback.message.answer(
+            f"🗑 Задача #{task_id} удалена.",
+            reply_markup=tasks_module_menu(),
+        )
+    else:
+        await callback.answer("Нет доступа", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("tsk:noop:"))
+async def tasks_noop_callback(callback: CallbackQuery):
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("fil:open:"))

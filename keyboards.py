@@ -98,20 +98,19 @@ def notifications_module_actions_inline() -> InlineKeyboardMarkup:
 
 
 def tasks_module_menu():
-    # TODO: future implementation — central tasks hub
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="📥 Мои задачи"),
-                KeyboardButton(text="🆕 Новая задача")
+                KeyboardButton(text="📋 Мои задачи"),
+                KeyboardButton(text="📌 Активные"),
             ],
             [
-                KeyboardButton(text="👥 Назначенные"),
-                KeyboardButton(text="📅 Просроченные")
+                KeyboardButton(text="✅ Завершенные"),
+                KeyboardButton(text="⚠ Просроченные"),
             ],
             [
-                KeyboardButton(text="🏁 Завершенные"),
-                KeyboardButton(text="⚙ Фильтры")
+                KeyboardButton(text="👥 Все задачи"),
+                KeyboardButton(text="➕ Новая задача"),
             ],
             [
                 KeyboardButton(text="⬅ Назад")
@@ -122,33 +121,69 @@ def tasks_module_menu():
     return keyboard
 
 
-def tasks_module_actions_inline(task_id: int = 0) -> InlineKeyboardMarkup:
-    # TODO: future implementation — task quick actions
-    tid = task_id or 0
+def tasks_list_inline(tasks_rows) -> InlineKeyboardMarkup:
+    rows = []
+    for row in tasks_rows[:15]:
+        tid, title = row[0], row[1]
+        short = title if len(title) <= 32 else title[:29] + "..."
+        rows.append([
+            InlineKeyboardButton(
+                text=f"#{tid} {short}",
+                callback_data=f"tsk:open:{tid}",
+            ),
+        ])
+    return InlineKeyboardMarkup(inline_keyboard=rows or [[
+        InlineKeyboardButton(text="—", callback_data="tsk:noop:0"),
+    ]])
+
+
+def task_card_inline(task_id: int) -> InlineKeyboardMarkup:
+    tid = task_id
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="▶ В работу", callback_data=f"tsk:start:{tid}"),
+                InlineKeyboardButton(text="⏸ Пауза", callback_data=f"tsk:pause:{tid}"),
+            ],
+            [
+                InlineKeyboardButton(text="✅ Завершить", callback_data=f"tsk:complete:{tid}"),
+                InlineKeyboardButton(text="❌ Отменить", callback_data=f"tsk:cancel:{tid}"),
+            ],
+            [
+                InlineKeyboardButton(text="✏ Изменить", callback_data=f"tsk:edit:{tid}"),
+                InlineKeyboardButton(text="👤 Назначить", callback_data=f"tsk:assign:{tid}"),
+            ],
+            [
+                InlineKeyboardButton(text="📅 Изменить срок", callback_data=f"tsk:deadline:{tid}"),
+            ],
+            [
+                InlineKeyboardButton(text="🗑 Удалить", callback_data=f"tsk:del:{tid}"),
+            ],
+        ]
+    )
+
+
+def task_delete_confirm_inline(task_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="👤 Назначить",
-                    callback_data=f"tsk:assign:{tid}"
+                    text="✅ Да, удалить",
+                    callback_data=f"tsk:del:yes:{task_id}",
                 ),
                 InlineKeyboardButton(
-                    text="🏁 Завершить",
-                    callback_data=f"tsk:complete:{tid}"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="📅 Перенести срок",
-                    callback_data=f"tsk:reschedule:{tid}"
-                ),
-                InlineKeyboardButton(
-                    text="⚙ Статус",
-                    callback_data=f"tsk:status:{tid}"
+                    text="❌ Отмена",
+                    callback_data=f"tsk:open:{task_id}",
                 ),
             ],
         ]
     )
+
+
+def tasks_module_actions_inline(task_id: int = 0) -> InlineKeyboardMarkup:
+    if task_id:
+        return task_card_inline(task_id)
+    return InlineKeyboardMarkup(inline_keyboard=[])
 
 
 def files_module_menu():

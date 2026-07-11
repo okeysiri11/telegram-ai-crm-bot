@@ -135,6 +135,25 @@ CREATE TABLE IF NOT EXISTS ai_project_messages (
 """)
 
 cursor.execute("""
+CREATE TABLE IF NOT EXISTS tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    module TEXT DEFAULT 'system',
+    project_id INTEGER,
+    creator_id INTEGER NOT NULL,
+    assignee_id INTEGER,
+    priority TEXT DEFAULT 'NORMAL',
+    status TEXT DEFAULT 'NEW',
+    deadline TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP,
+    calendar_event_id INTEGER
+)
+""")
+
+cursor.execute("""
 CREATE TABLE IF NOT EXISTS ai_tasks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,
@@ -402,6 +421,80 @@ def _migrate_schema():
         """
     )
     conn.commit()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT,
+            module TEXT DEFAULT 'system',
+            project_id INTEGER,
+            creator_id INTEGER NOT NULL,
+            assignee_id INTEGER,
+            priority TEXT DEFAULT 'NORMAL',
+            status TEXT DEFAULT 'NEW',
+            deadline TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            completed_at TIMESTAMP,
+            calendar_event_id INTEGER
+        )
+        """
+    )
+    conn.commit()
+    _migrate_legacy_tasks()
+
+
+def _migrate_legacy_tasks():
+    cursor.execute("SELECT COUNT(*) FROM tasks")
+    if cursor.fetchone()[0] > 0:
+        return
+
+    cursor.execute(
+        """
+        SELECT name FROM sqlite_master
+        WHERE type='table' AND name='system_tasks'
+        """
+    )
+    if cursor.fetchone():
+        cursor.execute(
+            """
+            INSERT INTO tasks (
+                id, title, description, module, project_id, creator_id,
+                assignee_id, priority, status, deadline, created_at, completed_at
+            )
+            SELECT
+                id, title, description,
+                COALESCE(module, 'system'), NULL, creator_id,
+                assigned_user_id, priority, status, due_date, created_at, completed_at
+            FROM system_tasks
+            """
+        )
+        conn.commit()
+
+    cursor.execute(
+        """
+        SELECT name FROM sqlite_master
+        WHERE type='table' AND name='ai_tasks'
+        """
+    )
+    if cursor.fetchone():
+        cursor.execute(
+            """
+            INSERT INTO tasks (
+                title, description, module, project_id, creator_id,
+                assignee_id, priority, status, created_at
+            )
+            SELECT
+                title, '', 'ai_assistant', project_id, user_id,
+                user_id, 'NORMAL',
+                CASE status WHEN 'done' THEN 'DONE' WHEN 'in_progress' THEN 'IN_PROGRESS' ELSE 'NEW' END,
+                created_at
+            FROM ai_tasks
+            """
+        )
+        conn.commit()
 
 
 _migrate_schema()
@@ -1288,70 +1381,43 @@ def create_ai_task(
         project = get_ai_project(user_id, project_id)
         if not project:
             return 0
-
-    cursor.execute(
-        """
-        INSERT INTO ai_tasks (user_id, project_id, title)
-        VALUES (?, ?, ?)
-        """,
-        (user_id, project_id, title.strip()),
+    return create_task(
+        creator_id=user_id,
+        title=title,
+        module="ai_assistant",
+        project_id=project_id,
+        assignee_id=user_id,
     )
-    conn.commit()
-    return cursor.lastrowid
 
 
 def get_ai_tasks(user_id: int, project_id: int = None):
+    rows = get_tasks_by_user(user_id, scope="my", limit=100)
+    rows = [r for r in rows if r[3] == "ai_assistant"]
     if project_id is not None:
-        cursor.execute(
-            """
-            SELECT id, project_id, title, status, created_at
-            FROM ai_tasks
-            WHERE user_id = ? AND project_id = ?
-            ORDER BY id DESC
-            """,
-            (user_id, project_id),
-        )
-    else:
-        cursor.execute(
-            """
-            SELECT id, project_id, title, status, created_at
-            FROM ai_tasks
-            WHERE user_id = ?
-            ORDER BY id DESC
-            """,
-            (user_id,),
-        )
-    return cursor.fetchall()
+        rows = [r for r in rows if r[4] == project_id]
+    return [(r[0], r[4], r[1], r[8], r[10]) for r in rows]
 
 
 def update_ai_task_status(user_id: int, task_id: int, status: str) -> bool:
-    cursor.execute(
-        """
-        UPDATE ai_tasks
-        SET status = ?
-        WHERE user_id = ? AND id = ?
-        """,
-        (status, user_id, task_id),
-    )
-    conn.commit()
-    return cursor.rowcount > 0
+    return update_task_status(task_id, user_id, status)
 
 
 def format_tasks_text(user_id: int, project_id: int = None) -> str:
-    tasks = get_ai_tasks(user_id, project_id)
-    if not tasks:
+    rows = get_tasks_by_user(user_id, scope="my", limit=50)
+    rows = [r for r in rows if r[3] == "ai_assistant"]
+    if project_id is not None:
+        rows = [r for r in rows if r[4] == project_id]
+    if not rows:
         return "Задач пока нет."
 
-    status_icons = {
-        "todo": "⬜",
-        "in_progress": "🔄",
-        "done": "✅",
-    }
     lines = ["✅ Ваши задачи:\n"]
-    for task_id, proj_id, title, status, created_at in tasks:
-        icon = status_icons.get(status, "⬜")
+    for tid, _title, _desc, _mod, proj_id, *_rest in rows:
+        title = _title
+        status = _rest[3]
+        created_at = _rest[5]
+        icon = TASK_STATUS_ICONS.get(status, "🆕")
         project_part = f" · проект #{proj_id}" if proj_id else ""
-        lines.append(f"{icon} #{task_id} {title}{project_part} ({created_at})")
+        lines.append(f"{icon} #{tid} {title}{project_part} ({created_at})")
     return "\n".join(lines)
 
 
@@ -1392,6 +1458,8 @@ CALENDAR_SOURCE_MODULES = (
     "law",
     "drone",
     "cafe_beauty",
+    "ai_assistant",
+    "system",
 )
 
 # TODO: future implementation — module-specific AI agents
@@ -3004,19 +3072,32 @@ def format_notification_settings_text(user_id: int) -> str:
 
 
 # ==========================================================
-# SYSTEM TASKS (central hub)
+# UNIFIED TASKS (central hub)
 # ==========================================================
 
 TASK_MODULES = {
-    "crypto_otc": "Crypto OTC",
-    "agro_trading": "Agro Trading",
-    "law": "Юриспруденция",
-    "drone": "Drone Engineering",
-    "cafe_beauty": "Cafe & Beauty",
-    "ai_assistant": "AI Assistant",
+    "agro_trading": "AGRO",
+    "crypto_otc": "CRYPTO",
+    "drone": "DRONE",
+    "cafe_beauty": "CAFE",
+    "law": "LEGAL",
+    "ai_assistant": "AI",
+    "system": "SYSTEM",
 }
 
-TASK_STATUSES = ("NEW", "IN_PROGRESS", "BLOCKED", "DONE", "CANCELLED", "ARCHIVED")
+TASK_MODULE_ALIASES = {
+    "agro": "agro_trading",
+    "crypto": "crypto_otc",
+    "drone": "drone",
+    "cafe": "cafe_beauty",
+    "beauty": "cafe_beauty",
+    "legal": "law",
+    "law": "law",
+    "ai": "ai_assistant",
+    "system": "system",
+}
+
+TASK_STATUSES = ("NEW", "IN_PROGRESS", "WAITING", "DONE", "CANCELLED")
 
 TASK_PRIORITIES = ("LOW", "NORMAL", "HIGH", "CRITICAL")
 
@@ -3030,12 +3111,401 @@ TASK_PRIORITY_ICONS = {
 TASK_STATUS_ICONS = {
     "NEW": "🆕",
     "IN_PROGRESS": "⚙️",
-    "BLOCKED": "🚫",
+    "WAITING": "⏸",
     "DONE": "✅",
     "CANCELLED": "❌",
-    "ARCHIVED": "🗄",
 }
 
+_TASK_SELECT = """
+    SELECT id, title, description, module, project_id, creator_id, assignee_id,
+           priority, status, deadline, created_at, updated_at, completed_at,
+           calendar_event_id
+    FROM tasks
+"""
+
+
+def _normalize_task_module(module: str) -> str:
+    if not module:
+        return "system"
+    key = module.strip().lower()
+    if key in TASK_MODULES:
+        return key
+    return TASK_MODULE_ALIASES.get(key, "system")
+
+
+def _normalize_task_priority(priority: str) -> str:
+    value = (priority or "NORMAL").strip().upper()
+    return value if value in TASK_PRIORITIES else "NORMAL"
+
+
+def _normalize_task_status(status: str) -> str:
+    from services.statuses import normalize_status
+    value = normalize_status(status)
+    if value in TASK_STATUSES:
+        return value
+    if value == "BLOCKED":
+        return "WAITING"
+    return "NEW"
+
+
+def create_task(
+    creator_id: int,
+    title: str,
+    description: str = "",
+    module: str = "system",
+    project_id: int = None,
+    assignee_id: int = None,
+    priority: str = "NORMAL",
+    deadline: str = None,
+    status: str = "NEW",
+) -> int:
+    module = _normalize_task_module(module)
+    priority = _normalize_task_priority(priority)
+    status = _normalize_task_status(status)
+
+    cursor.execute(
+        """
+        INSERT INTO tasks (
+            title, description, module, project_id, creator_id, assignee_id,
+            priority, status, deadline
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            title.strip(),
+            description.strip() if description else None,
+            module,
+            project_id,
+            creator_id,
+            assignee_id,
+            priority,
+            status,
+            deadline,
+        ),
+    )
+    conn.commit()
+    task_id = cursor.lastrowid
+
+    calendar_event_id = None
+    if deadline:
+        from services.calendar_service import CalendarService
+        calendar_event_id = CalendarService.sync_task_deadline(
+            task_id=task_id,
+            user_id=creator_id,
+            title=title,
+            deadline=deadline,
+            module=module,
+            assignee_id=assignee_id,
+        )
+        if calendar_event_id:
+            cursor.execute(
+                "UPDATE tasks SET calendar_event_id = ? WHERE id = ?",
+                (calendar_event_id, task_id),
+            )
+            conn.commit()
+
+    register_module_notification(
+        assignee_id or creator_id,
+        module if module in TASK_MODULES else "system",
+        title=f"Создана задача #{task_id}",
+        message=title,
+        priority="INFO",
+    )
+    log_audit(creator_id, "create_task", "tasks", f"{module}|{title}")
+    return task_id
+
+
+def get_task(task_id: int, user_id: int = None):
+    cursor.execute(f"{_TASK_SELECT} WHERE id = ?", (task_id,))
+    row = cursor.fetchone()
+    if not row or user_id is None:
+        return row
+    from config import OWNER_ID, MANAGER_ID
+    creator_id, assignee_id = row[5], row[6]
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return row
+    if user_id in (creator_id, assignee_id):
+        return row
+    from services.permissions import PermissionService
+    if PermissionService.is_crm_operator(user_id):
+        return row
+    return None
+
+
+def get_tasks_by_user(
+    user_id: int,
+    scope: str = "my",
+    status: str = None,
+    active_only: bool = False,
+    overdue_only: bool = False,
+    limit: int = 20,
+):
+    query = f"{_TASK_SELECT} WHERE 1=1"
+    params = []
+
+    if scope == "my":
+        query += " AND (creator_id = ? OR assignee_id = ?)"
+        params.extend([user_id, user_id])
+    elif scope == "assigned":
+        query += " AND assignee_id = ?"
+        params.append(user_id)
+    elif scope == "created":
+        query += " AND creator_id = ?"
+        params.append(user_id)
+    elif scope == "all":
+        pass
+    else:
+        query += " AND (creator_id = ? OR assignee_id = ?)"
+        params.extend([user_id, user_id])
+
+    if status:
+        query += " AND status = ?"
+        params.append(_normalize_task_status(status))
+    if active_only:
+        query += " AND status IN ('NEW', 'IN_PROGRESS', 'WAITING')"
+    if overdue_only:
+        query += (
+            " AND deadline IS NOT NULL AND deadline < datetime('now')"
+            " AND status NOT IN ('DONE', 'CANCELLED')"
+        )
+
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def get_tasks_by_module(
+    module: str,
+    user_id: int = None,
+    limit: int = 20,
+):
+    module = _normalize_task_module(module)
+    query = f"{_TASK_SELECT} WHERE module = ?"
+    params = [module]
+    if user_id is not None:
+        query += " AND (creator_id = ? OR assignee_id = ?)"
+        params.extend([user_id, user_id])
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def update_task_status(task_id: int, user_id: int, status: str) -> bool:
+    status = _normalize_task_status(status)
+    if status not in TASK_STATUSES:
+        return False
+
+    completed_at = "CURRENT_TIMESTAMP" if status == "DONE" else "NULL"
+    cursor.execute(
+        f"""
+        UPDATE tasks
+        SET status = ?, updated_at = CURRENT_TIMESTAMP,
+            completed_at = {completed_at}
+        WHERE id = ? AND (creator_id = ? OR assignee_id = ?)
+        """,
+        (status, task_id, user_id, user_id),
+    )
+    conn.commit()
+    if cursor.rowcount > 0:
+        register_module_notification(
+            user_id,
+            "system",
+            title=f"Задача #{task_id}: {status}",
+            priority="INFO",
+        )
+        return True
+    return False
+
+
+def assign_task(task_id: int, user_id: int, assignee_id: int) -> bool:
+    cursor.execute(
+        """
+        UPDATE tasks
+        SET assignee_id = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND (creator_id = ? OR assignee_id = ?)
+        """,
+        (assignee_id, task_id, user_id, user_id),
+    )
+    conn.commit()
+    if cursor.rowcount > 0:
+        register_module_notification(
+            assignee_id,
+            "system",
+            title=f"Вам назначена задача #{task_id}",
+            priority="INFO",
+        )
+        return True
+    return False
+
+
+def update_task_deadline(task_id: int, user_id: int, deadline: str) -> bool:
+    task = get_task(task_id, user_id)
+    if not task:
+        return False
+
+    from services.calendar_service import CalendarService
+    event_id = CalendarService.sync_task_deadline(
+        task_id=task_id,
+        user_id=user_id,
+        title=task[1],
+        deadline=deadline,
+        module=task[3],
+        assignee_id=task[6],
+        existing_event_id=task[13],
+    )
+    cursor.execute(
+        """
+        UPDATE tasks
+        SET deadline = ?, calendar_event_id = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND (creator_id = ? OR assignee_id = ?)
+        """,
+        (deadline, event_id, task_id, user_id, user_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def update_task_fields(task_id: int, user_id: int, **fields) -> bool:
+    task = get_task(task_id, user_id)
+    if not task:
+        return False
+    allowed = {"title", "description", "priority", "module"}
+    parts = []
+    params = []
+    for key, value in fields.items():
+        if key not in allowed:
+            continue
+        if key == "module":
+            value = _normalize_task_module(value)
+        if key == "priority":
+            value = _normalize_task_priority(value)
+        parts.append(f"{key} = ?")
+        params.append(value)
+    if not parts:
+        return False
+    parts.append("updated_at = CURRENT_TIMESTAMP")
+    params.extend([task_id, user_id, user_id])
+    cursor.execute(
+        f"UPDATE tasks SET {', '.join(parts)} WHERE id = ? AND (creator_id = ? OR assignee_id = ?)",
+        params,
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def delete_task(task_id: int, user_id: int) -> bool:
+    task = get_task(task_id, user_id)
+    if not task:
+        return False
+    from services.permissions import PermissionService
+    if not PermissionService.can_delete_entity(
+        user_id, "task", task_id, owner_id=task[5],
+    ):
+        return False
+    if task[13]:
+        from services.calendar_service import CalendarService
+        CalendarService.remove_task_event(task[13])
+    cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    conn.commit()
+    log_audit(user_id, "delete_task", "tasks", str(task_id))
+    return cursor.rowcount > 0
+
+
+def format_task_card(task_row) -> str:
+    if not task_row:
+        return "Задача не найдена."
+    (
+        tid, title, description, module, project_id, creator_id, assignee_id,
+        priority, status, deadline, created_at, updated_at, completed_at,
+        calendar_event_id,
+    ) = task_row
+    mod_label = TASK_MODULES.get(module, module)
+    p_icon = TASK_PRIORITY_ICONS.get(priority, "➖")
+    s_icon = TASK_STATUS_ICONS.get(status, "🆕")
+    return (
+        f"{s_icon} Задача #{tid}\n\n"
+        f"📌 {title}\n"
+        f"📝 {description or '—'}\n"
+        f"🏷 Модуль: {mod_label}\n"
+        f"📁 Проект: #{project_id or '—'}\n"
+        f"{p_icon} Приоритет: {priority}\n"
+        f"📊 Статус: {status}\n"
+        f"👤 Создатель: {creator_id}\n"
+        f"👥 Исполнитель: {assignee_id or '—'}\n"
+        f"📅 Срок: {deadline or '—'}\n"
+        f"📅 Календарь: #{calendar_event_id or '—'}\n"
+        f"🕒 Создана: {created_at}\n"
+        f"🔄 Обновлена: {updated_at}\n"
+        f"✅ Завершена: {completed_at or '—'}"
+    )
+
+
+def format_tasks_list_text(
+    user_id: int,
+    scope: str = "my",
+    status: str = None,
+    active_only: bool = False,
+    overdue_only: bool = False,
+    limit: int = 10,
+) -> str:
+    rows = get_tasks_by_user(
+        user_id,
+        scope=scope,
+        status=status,
+        active_only=active_only,
+        overdue_only=overdue_only,
+        limit=limit,
+    )
+    if not rows:
+        return "Задач нет."
+
+    lines = ["📋 Задачи:\n"]
+    for row in rows:
+        tid, title = row[0], row[1]
+        module, priority, nstatus, deadline = row[3], row[7], row[8], row[9]
+        p_icon = TASK_PRIORITY_ICONS.get(priority, "➖")
+        s_icon = TASK_STATUS_ICONS.get(nstatus, "🆕")
+        mod_label = TASK_MODULES.get(module, module)
+        lines.append(
+            f"{s_icon} #{tid} · {title}\n"
+            f"   {p_icon} {priority} · {mod_label} · {nstatus} · 📅 {deadline or '—'}"
+        )
+    return "\n".join(lines)
+
+
+def parse_task_create_text(text: str) -> dict | None:
+    import re
+    lower = text.lower().strip()
+    if not any(k in lower for k in ("новая задача", "создай задачу", "create task")):
+        return None
+    title = _extract_labeled_field(text, ("название", "title"))
+    description = _extract_labeled_field(text, ("описание", "description"))
+    module = _extract_labeled_field(text, ("модуль", "module")) or "system"
+    priority = _extract_labeled_field(text, ("приоритет", "priority")) or "NORMAL"
+    deadline = _extract_labeled_field(text, ("срок", "deadline", "дедлайн"))
+    if not title:
+        inline = re.sub(
+            r"(?i)(новая задача|создай задачу|create task)\s*[:：]?\s*",
+            "",
+            text.strip(),
+        )
+        if inline and "\n" not in inline:
+            title = inline.strip()
+    if not title:
+        return {"title": "", "description": description, "module": module,
+                "priority": priority, "deadline": deadline}
+    return {
+        "title": title,
+        "description": description,
+        "module": module,
+        "priority": priority,
+        "deadline": deadline or None,
+    }
+
+
+# --- Legacy wrappers (system_tasks / ai_tasks compatibility) ---
 
 def create_system_task(
     creator_id: int,
@@ -3047,40 +3517,16 @@ def create_system_task(
     due_date: str = None,
     task_source: str = "SYSTEM",
 ) -> int:
-    # TODO: future implementation — validation and module-specific rules
-    from services.statuses import normalize_status
-
-    if module not in TASK_MODULES:
-        module = "ai_assistant"
-    if priority not in TASK_PRIORITIES:
-        priority = "NORMAL"
-    if task_source not in ("HUMAN", "AI", "SYSTEM", "WORKFLOW"):
-        task_source = "SYSTEM"
-
-    cursor.execute(
-        """
-        INSERT INTO system_tasks (
-            title, description, creator_id, assigned_user_id,
-            module, priority, status, due_date, task_source
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            title.strip(),
-            description.strip() if description else None,
-            creator_id,
-            assigned_user_id,
-            module,
-            priority,
-            normalize_status("NEW"),
-            due_date,
-            task_source,
-        ),
+    _ = task_source
+    return create_task(
+        creator_id=creator_id,
+        title=title,
+        description=description,
+        module=module,
+        assignee_id=assigned_user_id,
+        priority=priority,
+        deadline=due_date,
     )
-    conn.commit()
-    task_id = cursor.lastrowid
-    _integrate_task_created(task_id, creator_id, title, module, due_date)
-    return task_id
 
 
 def register_module_task(
@@ -3092,58 +3538,19 @@ def register_module_task(
     assigned_user_id: int = None,
     due_date: str = None,
 ) -> int:
-    # TODO: future implementation — unified entry point for all system modules
-    task_id = create_system_task(
+    return create_task(
         creator_id=creator_id,
         title=title,
         description=description,
         module=module,
+        assignee_id=assigned_user_id,
         priority=priority,
-        assigned_user_id=assigned_user_id,
-        due_date=due_date,
-    )
-    if task_id:
-        log_audit(creator_id, "create_task", "tasks", f"{module}|{title}")
-    return task_id
-
-
-def _integrate_task_created(
-    task_id: int,
-    user_id: int,
-    title: str,
-    module: str,
-    due_date: str = None,
-):
-    # TODO: future implementation — deep calendar/notifications integration
-    if due_date:
-        register_calendar_event(
-            user_id,
-            module if module in CALENDAR_SOURCE_MODULES else "calendar",
-            title=f"Задача #{task_id}: {title}",
-            start_datetime=due_date,
-            description=f"system_task:{task_id}",
-        )
-    register_module_notification(
-        user_id,
-        module,
-        title=f"Создана задача #{task_id}",
-        message=title,
-        priority="INFO",
+        deadline=due_date,
     )
 
 
 def get_system_task(task_id: int, user_id: int):
-    # TODO: future implementation — team visibility and role-based access
-    cursor.execute(
-        """
-        SELECT id, title, description, creator_id, assigned_user_id,
-               module, priority, status, due_date, created_at, completed_at
-        FROM system_tasks
-        WHERE id = ? AND (creator_id = ? OR assigned_user_id = ?)
-        """,
-        (task_id, user_id, user_id),
-    )
-    return cursor.fetchone()
+    return get_task(task_id, user_id)
 
 
 def get_system_tasks(
@@ -3155,133 +3562,34 @@ def get_system_tasks(
     limit: int = 20,
     task_source: str = None,
 ):
-    # TODO: future implementation — advanced filters and sorting
-    from services.statuses import normalize_status
-
-    query = """
-        SELECT id, title, description, creator_id, assigned_user_id,
-               module, priority, status, due_date, created_at, completed_at,
-               task_source
-        FROM system_tasks
-        WHERE 1=1
-    """
-    params = []
-
-    if scope == "my":
-        query += " AND creator_id = ?"
-        params.append(user_id)
-    elif scope == "assigned":
-        query += " AND assigned_user_id = ?"
-        params.append(user_id)
-    elif scope == "all":
-        query += " AND (creator_id = ? OR assigned_user_id = ?)"
-        params.extend([user_id, user_id])
-    else:
-        query += " AND (creator_id = ? OR assigned_user_id = ?)"
-        params.extend([user_id, user_id])
-
-    if status:
-        query += " AND status = ?"
-        params.append(normalize_status(status))
+    _ = task_source
+    rows = get_tasks_by_user(
+        user_id,
+        scope=scope,
+        status=status,
+        overdue_only=overdue_only,
+        limit=limit,
+    )
     if module:
-        query += " AND module = ?"
-        params.append(module)
-    if task_source:
-        query += " AND task_source = ?"
-        params.append(task_source)
-    if overdue_only:
-        query += (
-            " AND due_date IS NOT NULL AND due_date < datetime('now')"
-            " AND status NOT IN ('DONE', 'CANCELLED', 'ARCHIVED')"
-        )
-
-    query += " ORDER BY id DESC LIMIT ?"
-    params.append(limit)
-
-    cursor.execute(query, params)
-    return cursor.fetchall()
+        module = _normalize_task_module(module)
+        rows = [r for r in rows if r[3] == module]
+    return rows
 
 
 def assign_system_task(task_id: int, user_id: int, assigned_user_id: int) -> bool:
-    # TODO: future implementation — assignment notifications and permissions
-    cursor.execute(
-        """
-        UPDATE system_tasks
-        SET assigned_user_id = ?
-        WHERE id = ? AND creator_id = ?
-        """,
-        (assigned_user_id, task_id, user_id),
-    )
-    conn.commit()
-    if cursor.rowcount > 0:
-        register_module_notification(
-            assigned_user_id,
-            "ai_assistant",
-            title=f"Вам назначена задача #{task_id}",
-            priority="INFO",
-        )
-        return True
-    return False
+    return assign_task(task_id, user_id, assigned_user_id)
 
 
-def update_system_task_status(
-    task_id: int,
-    user_id: int,
-    status: str,
-) -> bool:
-    # TODO: future implementation — status workflow validation
-    from services.statuses import normalize_status
-    status = normalize_status(status)
-    if status not in TASK_STATUSES:
-        return False
-
-    if status == "DONE":
-        cursor.execute(
-            """
-            UPDATE system_tasks
-            SET status = ?, completed_at = CURRENT_TIMESTAMP
-            WHERE id = ? AND (creator_id = ? OR assigned_user_id = ?)
-            """,
-            (status, task_id, user_id, user_id),
-        )
-    else:
-        cursor.execute(
-            """
-            UPDATE system_tasks
-            SET status = ?, completed_at = NULL
-            WHERE id = ? AND (creator_id = ? OR assigned_user_id = ?)
-            """,
-            (status, task_id, user_id, user_id),
-        )
-    conn.commit()
-    return cursor.rowcount > 0
+def update_system_task_status(task_id: int, user_id: int, status: str) -> bool:
+    return update_task_status(task_id, user_id, status)
 
 
 def complete_system_task(task_id: int, user_id: int) -> bool:
-    # TODO: future implementation — completion hooks for reports
-    ok = update_system_task_status(task_id, user_id, "DONE")
-    if ok:
-        register_module_notification(
-            user_id,
-            "ai_assistant",
-            title=f"Задача #{task_id} завершена",
-            priority="INFO",
-        )
-    return ok
+    return update_task_status(task_id, user_id, "DONE")
 
 
 def reschedule_system_task(task_id: int, user_id: int, due_date: str) -> bool:
-    # TODO: future implementation — calendar sync on reschedule
-    cursor.execute(
-        """
-        UPDATE system_tasks
-        SET due_date = ?
-        WHERE id = ? AND (creator_id = ? OR assigned_user_id = ?)
-        """,
-        (due_date, task_id, user_id, user_id),
-    )
-    conn.commit()
-    return cursor.rowcount > 0
+    return update_task_deadline(task_id, user_id, due_date)
 
 
 def format_system_tasks_text(
@@ -3291,33 +3599,13 @@ def format_system_tasks_text(
     overdue_only: bool = False,
     limit: int = 10,
 ) -> str:
-    # TODO: future implementation — rich task cards
-    rows = get_system_tasks(
+    return format_tasks_list_text(
         user_id,
         scope=scope,
         status=status,
         overdue_only=overdue_only,
         limit=limit,
     )
-    if not rows:
-        return "Задач нет."
-
-    lines = ["✅ Задачи:\n"]
-    for row in rows:
-        tid, title, description, creator_id, assigned_id, module, priority, nstatus, due_date, created_at, _completed = row[:11]
-        task_source = row[11] if len(row) > 11 else "SYSTEM"
-        p_icon = TASK_PRIORITY_ICONS.get(priority, "➖")
-        s_icon = TASK_STATUS_ICONS.get(nstatus, "🆕")
-        mod_label = TASK_MODULES.get(module, module)
-        lines.append(
-            f"{s_icon} #{tid} · {title}\n"
-            f"   {p_icon} {priority} · {mod_label} · {nstatus} · {task_source}\n"
-            f"   👤 creator {creator_id} → assignee {assigned_id or '—'}\n"
-            f"   📅 {due_date or '—'} · 🕒 {created_at}"
-        )
-        if description:
-            lines.append(f"   📝 {description}")
-    return "\n".join(lines)
 
 
 def format_task_filters_text(user_id: int) -> str:
