@@ -170,15 +170,21 @@ CREATE TABLE IF NOT EXISTS calendar_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     description TEXT,
-    start_datetime TEXT NOT NULL,
+    module TEXT DEFAULT 'system',
+    event_type TEXT DEFAULT 'general',
+    creator_id INTEGER NOT NULL,
+    owner_id INTEGER NOT NULL,
+    start_time TEXT NOT NULL,
+    end_time TEXT,
+    remind_before INTEGER DEFAULT 0,
+    status TEXT DEFAULT 'PLANNED',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    start_datetime TEXT,
     end_datetime TEXT,
-    module TEXT,
-    responsible_user INTEGER NOT NULL,
+    responsible_user INTEGER,
     priority TEXT DEFAULT 'normal',
     reminder_minutes INTEGER DEFAULT 0,
     repeat_rule TEXT,
-    status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 """)
@@ -444,6 +450,63 @@ def _migrate_schema():
     )
     conn.commit()
     _migrate_legacy_tasks()
+    _migrate_calendar_schema()
+
+
+def _migrate_calendar_schema():
+    new_columns = {
+        "event_type": "TEXT DEFAULT 'general'",
+        "creator_id": "INTEGER",
+        "owner_id": "INTEGER",
+        "start_time": "TEXT",
+        "end_time": "TEXT",
+        "remind_before": "INTEGER DEFAULT 0",
+    }
+    for column, definition in new_columns.items():
+        if not _column_exists("calendar_events", column):
+            cursor.execute(
+                f"ALTER TABLE calendar_events ADD COLUMN {column} {definition}"
+            )
+    if not _column_exists("calendar_events", "start_datetime"):
+        cursor.execute(
+            "ALTER TABLE calendar_events ADD COLUMN start_datetime TEXT"
+        )
+    if not _column_exists("calendar_events", "responsible_user"):
+        cursor.execute(
+            "ALTER TABLE calendar_events ADD COLUMN responsible_user INTEGER"
+        )
+    conn.commit()
+
+    cursor.execute(
+        """
+        UPDATE calendar_events SET
+            start_time = COALESCE(start_time, start_datetime),
+            end_time = COALESCE(end_time, end_datetime),
+            owner_id = COALESCE(owner_id, responsible_user),
+            creator_id = COALESCE(creator_id, responsible_user),
+            remind_before = COALESCE(remind_before, reminder_minutes, 0),
+            start_datetime = COALESCE(start_datetime, start_time),
+            end_datetime = COALESCE(end_datetime, end_time),
+            responsible_user = COALESCE(responsible_user, owner_id),
+            reminder_minutes = COALESCE(reminder_minutes, remind_before, 0),
+            module = COALESCE(module, 'system')
+        WHERE start_time IS NULL OR owner_id IS NULL OR creator_id IS NULL
+        """
+    )
+    status_map = {
+        "active": "ACTIVE",
+        "done": "DONE",
+        "cancelled": "CANCELLED",
+        "canceled": "CANCELLED",
+        "planned": "PLANNED",
+        "missed": "MISSED",
+    }
+    for old, new in status_map.items():
+        cursor.execute(
+            "UPDATE calendar_events SET status = ? WHERE lower(status) = ?",
+            (new, old),
+        )
+    conn.commit()
 
 
 def _migrate_legacy_tasks():
@@ -1451,29 +1514,442 @@ SYSTEM_MODULES = {
     "tasks": "Задачи",
 }
 
-# Modules that will register events in the central calendar
-CALENDAR_SOURCE_MODULES = (
-    "crypto_otc",
-    "agro_trading",
-    "law",
-    "drone",
-    "cafe_beauty",
-    "ai_assistant",
-    "system",
-)
+# ==========================================================
+# UNIFIED CALENDAR
+# ==========================================================
 
-# TODO: future implementation — module-specific AI agents
-MODULE_AI_AGENTS = {
-    "crypto_otc": None,
-    "agro_trading": None,
-    "law": None,
-    "drone": None,
-    "cafe_beauty": None,
-    "users": None,
-    "reports": None,
-    "calendar": None,
+CALENDAR_MODULES = {
+    "agro_trading": "AGRO",
+    "crypto_otc": "CRYPTO",
+    "drone": "DRONE",
+    "cafe_beauty": "CAFE",
+    "law": "LEGAL",
+    "ai_assistant": "AI",
+    "system": "SYSTEM",
+    "calendar": "CALENDAR",
 }
 
+CALENDAR_MODULE_ALIASES = {
+    "agro": "agro_trading",
+    "crypto": "crypto_otc",
+    "drone": "drone",
+    "cafe": "cafe_beauty",
+    "beauty": "cafe_beauty",
+    "legal": "law",
+    "law": "law",
+    "ai": "ai_assistant",
+    "system": "system",
+}
+
+CALENDAR_STATUSES = ("PLANNED", "ACTIVE", "DONE", "CANCELLED", "MISSED")
+
+CALENDAR_EVENT_TYPES = (
+    "general", "task", "meeting", "deadline", "reminder", "agro", "payment", "delivery",
+)
+
+CALENDAR_STATUS_ICONS = {
+    "PLANNED": "📋",
+    "ACTIVE": "▶️",
+    "DONE": "✅",
+    "CANCELLED": "❌",
+    "MISSED": "⚠️",
+}
+
+CALENDAR_SOURCE_MODULES = tuple(CALENDAR_MODULES.keys())
+
+_EVENT_SELECT = """
+    SELECT id, title, description, module, event_type, creator_id, owner_id,
+           start_time, end_time, remind_before, status, created_at,
+           start_datetime, end_datetime, responsible_user, priority,
+           reminder_minutes, repeat_rule, updated_at
+    FROM calendar_events
+"""
+
+
+def _normalize_calendar_module(module: str) -> str:
+    if not module:
+        return "system"
+    key = module.strip().lower()
+    if key in CALENDAR_MODULES:
+        return key
+    return CALENDAR_MODULE_ALIASES.get(key, "system")
+
+
+def _normalize_calendar_status(status: str) -> str:
+    if not status:
+        return "PLANNED"
+    value = str(status).strip().upper()
+    legacy = {
+        "ACTIVE": "ACTIVE", "DONE": "DONE", "CANCELLED": "CANCELLED",
+        "CANCELED": "CANCELLED", "PLANNED": "PLANNED", "MISSED": "MISSED",
+    }
+    return legacy.get(value, "PLANNED")
+
+
+def create_event(
+    creator_id: int,
+    title: str,
+    start_time: str,
+    description: str = "",
+    module: str = "system",
+    event_type: str = "general",
+    owner_id: int = None,
+    end_time: str = None,
+    remind_before: int = 0,
+    status: str = "PLANNED",
+) -> int:
+    module = _normalize_calendar_module(module)
+    owner_id = owner_id or creator_id
+    status = _normalize_calendar_status(status)
+    event_type = event_type if event_type in CALENDAR_EVENT_TYPES else "general"
+
+    cursor.execute(
+        """
+        INSERT INTO calendar_events (
+            title, description, module, event_type, creator_id, owner_id,
+            start_time, end_time, remind_before, status,
+            start_datetime, end_datetime, responsible_user,
+            reminder_minutes, priority
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            title.strip(),
+            description.strip() if description else None,
+            module,
+            event_type,
+            creator_id,
+            owner_id,
+            start_time,
+            end_time,
+            remind_before,
+            status,
+            start_time,
+            end_time,
+            owner_id,
+            remind_before,
+            "normal",
+        ),
+    )
+    conn.commit()
+    event_id = cursor.lastrowid
+    log_audit(creator_id, "create_event", "calendar", f"{module}|{title}|{start_time}")
+    from services.workflow_triggers import WorkflowTriggers
+    WorkflowTriggers.on_calendar_event_created(
+        creator_id, event_id, title, module=module,
+    )
+    return event_id
+
+
+def get_event(event_id: int, user_id: int = None):
+    cursor.execute(f"{_EVENT_SELECT} WHERE id = ?", (event_id,))
+    row = cursor.fetchone()
+    if not row or user_id is None:
+        return row
+    from config import OWNER_ID, MANAGER_ID
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return row
+    if user_id in (row[5], row[6]):
+        return row
+    from services.permissions import PermissionService
+    if PermissionService.is_crm_operator(user_id):
+        return row
+    return None
+
+
+def get_events_by_user(
+    user_id: int,
+    scope: str = "my",
+    status: str = None,
+    limit: int = 20,
+):
+    query = f"{_EVENT_SELECT} WHERE 1=1"
+    params = []
+
+    if scope == "my":
+        query += " AND (creator_id = ? OR owner_id = ?)"
+        params.extend([user_id, user_id])
+    elif scope == "owned":
+        query += " AND owner_id = ?"
+        params.append(user_id)
+    elif scope == "all":
+        pass
+    else:
+        query += " AND (creator_id = ? OR owner_id = ?)"
+        params.extend([user_id, user_id])
+
+    if status:
+        query += " AND status = ?"
+        params.append(_normalize_calendar_status(status))
+
+    query += " ORDER BY start_time ASC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def get_events_by_module(
+    module: str,
+    user_id: int = None,
+    limit: int = 20,
+):
+    module = _normalize_calendar_module(module)
+    query = f"{_EVENT_SELECT} WHERE module = ?"
+    params = [module]
+    if user_id is not None:
+        query += " AND (creator_id = ? OR owner_id = ?)"
+        params.extend([user_id, user_id])
+    query += " ORDER BY start_time ASC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def get_today_events(user_id: int, scope: str = "my", limit: int = 20):
+    query = f"""
+        {_EVENT_SELECT}
+        WHERE date(COALESCE(start_time, start_datetime)) = date('now')
+    """
+    params = []
+    if scope != "all":
+        query += " AND (creator_id = ? OR owner_id = ?)"
+        params.extend([user_id, user_id])
+    query += " ORDER BY start_time ASC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def get_week_events(user_id: int, scope: str = "my", limit: int = 50):
+    query = f"""
+        {_EVENT_SELECT}
+        WHERE datetime(COALESCE(start_time, start_datetime)) >= datetime('now', 'start of day')
+          AND datetime(COALESCE(start_time, start_datetime)) < datetime('now', '+7 days', 'start of day')
+    """
+    params = []
+    if scope != "all":
+        query += " AND (creator_id = ? OR owner_id = ?)"
+        params.extend([user_id, user_id])
+    query += " ORDER BY start_time ASC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def get_month_events(user_id: int, scope: str = "my", limit: int = 100):
+    query = f"""
+        {_EVENT_SELECT}
+        WHERE strftime('%Y-%m', COALESCE(start_time, start_datetime)) = strftime('%Y-%m', 'now')
+    """
+    params = []
+    if scope != "all":
+        query += " AND (creator_id = ? OR owner_id = ?)"
+        params.extend([user_id, user_id])
+    query += " ORDER BY start_time ASC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def get_reminder_events(user_id: int, limit: int = 20):
+    query = f"""
+        {_EVENT_SELECT}
+        WHERE (creator_id = ? OR owner_id = ?)
+          AND remind_before > 0
+          AND status IN ('PLANNED', 'ACTIVE')
+          AND datetime(COALESCE(start_time, start_datetime), '-' || remind_before || ' minutes')
+              <= datetime('now', '+1 day')
+        ORDER BY start_time ASC LIMIT ?
+    """
+    cursor.execute(query, (user_id, user_id, limit))
+    return cursor.fetchall()
+
+
+def get_events_needing_reminder(limit: int = 50):
+    """API for future NotificationService — events due for reminder dispatch."""
+    query = f"""
+        {_EVENT_SELECT}
+        WHERE remind_before > 0
+          AND status IN ('PLANNED', 'ACTIVE')
+          AND datetime(COALESCE(start_time, start_datetime), '-' || remind_before || ' minutes')
+              <= datetime('now')
+          AND datetime(COALESCE(start_time, start_datetime)) >= datetime('now', '-1 hour')
+        ORDER BY start_time ASC LIMIT ?
+    """
+    cursor.execute(query, (limit,))
+    return cursor.fetchall()
+
+
+def build_calendar_notification_payload(event_row: tuple) -> dict:
+    """API for future NotificationService."""
+    (
+        eid, title, description, module, event_type, creator_id, owner_id,
+        start_time, end_time, remind_before, status, created_at, *_rest,
+    ) = event_row
+    mod_label = CALENDAR_MODULES.get(module, module)
+    return {
+        "user_id": owner_id,
+        "category": "calendar",
+        "title": f"🔔 {title}",
+        "message": (
+            f"{mod_label} · {start_time}\n"
+            f"{description or ''}"
+        ).strip(),
+        "priority": "INFO",
+        "is_reminder": True,
+        "source_module": module,
+        "metadata": {
+            "event_id": eid,
+            "event_type": event_type,
+            "start_time": start_time,
+            "end_time": end_time,
+            "remind_before": remind_before,
+            "status": status,
+        },
+    }
+
+
+def update_event(event_id: int, user_id: int, **fields) -> bool:
+    event = get_event(event_id, user_id)
+    if not event:
+        return False
+    allowed = {
+        "title", "description", "module", "event_type", "owner_id",
+        "start_time", "end_time", "remind_before", "status",
+    }
+    parts = []
+    params = []
+    for key, value in fields.items():
+        if key not in allowed or value is None:
+            continue
+        if key == "module":
+            value = _normalize_calendar_module(value)
+        if key == "status":
+            value = _normalize_calendar_status(value)
+        parts.append(f"{key} = ?")
+        params.append(value)
+    if not parts:
+        return False
+    if "start_time" in fields:
+        parts.append("start_datetime = ?")
+        params.append(fields["start_time"])
+    if "end_time" in fields:
+        parts.append("end_datetime = ?")
+        params.append(fields["end_time"])
+    if "owner_id" in fields:
+        parts.append("responsible_user = ?")
+        params.append(fields["owner_id"])
+    if "remind_before" in fields:
+        parts.append("reminder_minutes = ?")
+        params.append(fields["remind_before"])
+    parts.append("updated_at = CURRENT_TIMESTAMP")
+    params.extend([event_id])
+    cursor.execute(
+        f"UPDATE calendar_events SET {', '.join(parts)} WHERE id = ?",
+        params,
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def delete_event(event_id: int, user_id: int) -> bool:
+    event = get_event(event_id, user_id)
+    if not event:
+        return False
+    from services.permissions import PermissionService
+    if not PermissionService.can_delete_entity(
+        user_id, "calendar_event", event_id, owner_id=event[6],
+    ):
+        return False
+    cursor.execute("DELETE FROM calendar_events WHERE id = ?", (event_id,))
+    conn.commit()
+    log_audit(user_id, "delete_event", "calendar", str(event_id))
+    return cursor.rowcount > 0
+
+
+def format_event_card(event_row) -> str:
+    if not event_row:
+        return "Событие не найдено."
+    (
+        eid, title, description, module, event_type, creator_id, owner_id,
+        start_time, end_time, remind_before, status, created_at, *_rest,
+    ) = event_row
+    mod_label = CALENDAR_MODULES.get(module, module)
+    icon = CALENDAR_STATUS_ICONS.get(status, "📋")
+    return (
+        f"{icon} Событие #{eid}\n\n"
+        f"📌 {title}\n"
+        f"📝 {description or '—'}\n"
+        f"🏷 Модуль: {mod_label} · тип: {event_type}\n"
+        f"📊 Статус: {status}\n"
+        f"👤 Создатель: {creator_id} · владелец: {owner_id}\n"
+        f"🕒 Начало: {start_time}\n"
+        f"🕒 Конец: {end_time or '—'}\n"
+        f"🔔 Напомнить за: {remind_before or 0} мин.\n"
+        f"📅 Создано: {created_at}"
+    )
+
+
+def format_calendar_events_text(
+    user_id: int,
+    module: str = None,
+    limit: int = 10,
+    events: list = None,
+) -> str:
+    if events is None:
+        events = get_events_by_user(user_id, scope="my", limit=limit)
+        if module:
+            module = _normalize_calendar_module(module)
+            events = [e for e in events if e[3] == module]
+    if not events:
+        return "Событий пока нет."
+
+    lines = ["📅 События:\n"]
+    for event in events:
+        eid, title = event[0], event[1]
+        mod, start_time, status = event[3], event[7], event[10]
+        mod_label = CALENDAR_MODULES.get(mod, mod)
+        icon = CALENDAR_STATUS_ICONS.get(status, "📋")
+        lines.append(
+            f"{icon} #{eid} · {title}\n"
+            f"   🕒 {start_time} · {mod_label} · {status}"
+        )
+    return "\n".join(lines)
+
+
+def parse_event_create_text(text: str) -> dict | None:
+    import re
+    lower = text.lower().strip()
+    if not any(k in lower for k in ("создать событие", "новое событие", "create event")):
+        return None
+    title = _extract_labeled_field(text, ("название", "title"))
+    description = _extract_labeled_field(text, ("описание", "description"))
+    module = _extract_labeled_field(text, ("модуль", "module")) or "system"
+    event_type = _extract_labeled_field(text, ("тип", "type", "event_type")) or "general"
+    start_time = _extract_labeled_field(text, ("начало", "start", "start_time", "время"))
+    end_time = _extract_labeled_field(text, ("конец", "end", "end_time"))
+    remind_raw = _extract_labeled_field(text, ("напомнить", "remind", "remind_before"))
+    remind_before = int(remind_raw) if remind_raw and remind_raw.isdigit() else 0
+    if not title:
+        inline = re.sub(
+            r"(?i)(создать событие|новое событие|create event)\s*[:：]?\s*",
+            "",
+            text.strip(),
+        )
+        if inline and "\n" not in inline:
+            title = inline.strip()
+    return {
+        "title": title,
+        "description": description,
+        "module": module,
+        "event_type": event_type,
+        "start_time": start_time,
+        "end_time": end_time or None,
+        "remind_before": remind_before,
+    }
+
+
+# --- Legacy calendar wrappers ---
 
 def register_calendar_event(
     user_id: int,
@@ -1486,37 +1962,22 @@ def register_calendar_event(
     reminder_minutes: int = 0,
     repeat_rule: str = None,
 ):
-    # TODO: future implementation — validation and module-specific event mapping
+    _ = priority, repeat_rule
     if module not in CALENDAR_SOURCE_MODULES and module != "calendar":
-        return None
-
+        module = "calendar"
     if not start_datetime:
         start_datetime = "1970-01-01 00:00:00"
-
-    event_id = create_calendar_event(
-        responsible_user=user_id,
+    return create_event(
+        creator_id=user_id,
         title=title,
+        start_time=start_datetime,
         description=description,
-        start_datetime=start_datetime,
-        end_datetime=end_datetime,
         module=module,
-        priority=priority,
-        reminder_minutes=reminder_minutes,
-        repeat_rule=repeat_rule,
+        owner_id=user_id,
+        end_time=end_datetime,
+        remind_before=reminder_minutes or 0,
+        status="ACTIVE",
     )
-
-    log_audit(
-        user_id,
-        "register_event",
-        "calendar",
-        f"{module}|{title}|{start_datetime}",
-    )
-    if event_id:
-        from services.workflow_triggers import WorkflowTriggers
-        WorkflowTriggers.on_calendar_event_created(
-            user_id, event_id, title, module=module,
-        )
-    return event_id
 
 
 def create_calendar_event(
@@ -1531,46 +1992,22 @@ def create_calendar_event(
     repeat_rule: str = None,
     status: str = "active",
 ) -> int:
-    # TODO: future implementation — datetime validation and conflict checks
-    cursor.execute(
-        """
-        INSERT INTO calendar_events (
-            title, description, start_datetime, end_datetime,
-            module, responsible_user, priority, reminder_minutes,
-            repeat_rule, status
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """,
-        (
-            title.strip(),
-            description.strip() if description else None,
-            start_datetime,
-            end_datetime,
-            module,
-            responsible_user,
-            priority,
-            reminder_minutes,
-            repeat_rule,
-            status,
-        ),
+    _ = priority, repeat_rule
+    return create_event(
+        creator_id=responsible_user,
+        title=title,
+        start_time=start_datetime,
+        description=description,
+        module=module,
+        owner_id=responsible_user,
+        end_time=end_datetime,
+        remind_before=reminder_minutes or 0,
+        status=_normalize_calendar_status(status),
     )
-    conn.commit()
-    return cursor.lastrowid
 
 
 def get_calendar_event(event_id: int, user_id: int):
-    # TODO: future implementation — shared events and role-based visibility
-    cursor.execute(
-        """
-        SELECT id, title, description, start_datetime, end_datetime,
-               module, responsible_user, priority, reminder_minutes,
-               repeat_rule, status, created_at, updated_at
-        FROM calendar_events
-        WHERE id = ? AND responsible_user = ?
-        """,
-        (event_id, user_id),
-    )
-    return cursor.fetchone()
+    return get_event(event_id, user_id)
 
 
 def get_calendar_events(
@@ -1579,69 +2016,31 @@ def get_calendar_events(
     status: str = None,
     limit: int = 20,
 ):
-    # TODO: future implementation — date range filters (today, week, reminders)
-    query = """
-        SELECT id, title, description, start_datetime, end_datetime,
-               module, responsible_user, priority, reminder_minutes,
-               repeat_rule, status, created_at, updated_at
-        FROM calendar_events
-        WHERE responsible_user = ?
-    """
-    params = [user_id]
-
+    events = get_events_by_user(user_id, scope="my", status=status, limit=limit)
     if module:
-        query += " AND module = ?"
-        params.append(module)
-
-    if status:
-        query += " AND status = ?"
-        params.append(status)
-
-    query += " ORDER BY start_datetime ASC LIMIT ?"
-    params.append(limit)
-
-    cursor.execute(query, params)
-    return cursor.fetchall()
+        module = _normalize_calendar_module(module)
+        events = [e for e in events if e[3] == module]
+    return events
 
 
 def update_calendar_event(event_id: int, user_id: int, **fields) -> bool:
-    # TODO: future implementation — partial update validation
-    allowed = {
-        "title", "description", "start_datetime", "end_datetime",
-        "module", "priority", "reminder_minutes", "repeat_rule", "status",
+    mapped = {}
+    key_map = {
+        "start_datetime": "start_time",
+        "end_datetime": "end_time",
+        "reminder_minutes": "remind_before",
     }
-    updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
-    if not updates:
-        return False
-
-    set_clause = ", ".join(f"{key} = ?" for key in updates)
-    values = list(updates.values()) + [event_id, user_id]
-
-    cursor.execute(
-        f"""
-        UPDATE calendar_events
-        SET {set_clause}, updated_at = CURRENT_TIMESTAMP
-        WHERE id = ? AND responsible_user = ?
-        """,
-        values,
-    )
-    conn.commit()
-    return cursor.rowcount > 0
+    for key, value in fields.items():
+        mapped[key_map.get(key, key)] = value
+    return update_event(event_id, user_id, **mapped)
 
 
 def delete_calendar_event(event_id: int, user_id: int) -> bool:
-    # TODO: future implementation — soft delete and audit trail
-    cursor.execute(
-        "DELETE FROM calendar_events WHERE id = ? AND responsible_user = ?",
-        (event_id, user_id),
-    )
-    conn.commit()
-    return cursor.rowcount > 0
+    return delete_event(event_id, user_id)
 
 
 def complete_calendar_event(event_id: int, user_id: int) -> bool:
-    # TODO: future implementation — completion workflow and notifications
-    return update_calendar_event(event_id, user_id, status="done")
+    return update_event(event_id, user_id, status="DONE")
 
 
 def reschedule_calendar_event(
@@ -1650,38 +2049,23 @@ def reschedule_calendar_event(
     start_datetime: str,
     end_datetime: str = None,
 ) -> bool:
-    # TODO: future implementation — reschedule notifications and conflict checks
-    return update_calendar_event(
-        event_id,
-        user_id,
-        start_datetime=start_datetime,
-        end_datetime=end_datetime,
+    return update_event(
+        event_id, user_id,
+        start_time=start_datetime,
+        end_time=end_datetime,
     )
 
 
-def format_calendar_events_text(user_id: int, module: str = None, limit: int = 10) -> str:
-    # TODO: future implementation — rich formatting and timezone support
-    events = get_calendar_events(user_id, module=module, limit=limit)
-    if not events:
-        return "Событий пока нет."
-
-    lines = ["📅 События:\n"]
-    for event in events:
-        event_id = event[0]
-        title = event[1]
-        description = event[2]
-        start_dt = event[3]
-        end_dt = event[4]
-        mod = event[5]
-        status = event[10]
-        lines.append(
-            f"#{event_id} · {title}\n"
-            f"   🕒 {start_dt} — {end_dt or '—'}\n"
-            f"   📦 {mod or '—'} · {status}"
-        )
-        if description:
-            lines.append(f"   📝 {description}")
-    return "\n".join(lines)
+MODULE_AI_AGENTS = {
+    "crypto_otc": None,
+    "agro_trading": None,
+    "law": None,
+    "drone": None,
+    "cafe_beauty": None,
+    "users": None,
+    "reports": None,
+    "calendar": None,
+}
 
 
 def check_module_access(telegram_id: int, module: str) -> bool:

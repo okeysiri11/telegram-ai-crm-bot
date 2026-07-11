@@ -13,6 +13,7 @@ from services.permissions import PermissionService
 from services.statuses import normalize_status
 from services.agro_deal_lifecycle import AgroDealLifecycle
 from services.tasks import TaskService
+from services.calendar_service import CalendarService
 from database import (
     get_user_profile,
     save_profile_fields,
@@ -72,6 +73,19 @@ from database import (
     complete_calendar_event,
     reschedule_calendar_event,
     format_calendar_events_text,
+    format_event_card,
+    parse_event_create_text,
+    create_event,
+    get_event,
+    get_events_by_user,
+    get_today_events,
+    get_week_events,
+    get_month_events,
+    get_reminder_events,
+    update_event,
+    delete_event,
+    CALENDAR_STATUSES,
+    CALENDAR_MODULES,
     REPORT_TYPES,
     REPORT_BUTTON_TO_TYPE,
     build_report_filters,
@@ -188,6 +202,8 @@ from keyboards import (
     reports_module_actions_inline,
     calendar_module_menu,
     calendar_event_actions_inline,
+    calendar_events_list_inline,
+    calendar_event_delete_confirm_inline,
     module_inline_actions,
     ai_assistant_menu,
     ai_settings_menu,
@@ -249,6 +265,7 @@ waiting_buy_request = {}
 ai_assistant_active = {}
 active_ai_project = {}
 task_flow = {}
+calendar_flow = {}
 ai_settings_flow = {}
 active_module = {}
 active_agro_sub = {}
@@ -407,22 +424,24 @@ WORKFLOW_STUB_MESSAGES = {
 }
 
 CALENDAR_MENU_BUTTONS = {
-    "📅 Мои события",
-    "➕ Новое событие",
+    "📅 Сегодня",
+    "📆 Неделя",
+    "🗓 Месяц",
+    "➕ Создать событие",
     "🔔 Напоминания",
-    "📆 Сегодня",
-    "📈 Неделя",
-    "📂 Все события",
+    "📋 Мои события",
+    "👥 Все события",
     "⬅ Назад",
 }
 
 CALENDAR_STUB_MESSAGES = {
-    "📅 Мои события": "Ваши события",
-    "➕ Новое событие": "Создание события",
+    "📅 Сегодня": "События на сегодня",
+    "📆 Неделя": "События на неделю",
+    "🗓 Месяц": "События на месяц",
+    "➕ Создать событие": "Создание события",
     "🔔 Напоминания": "Напоминания",
-    "📆 Сегодня": "События на сегодня",
-    "📈 Неделя": "События на неделю",
-    "📂 Все события": "Все события системы",
+    "📋 Мои события": "Мои события",
+    "👥 Все события": "Все события",
 }
 
 USERS_MENU_BUTTONS = {
@@ -1567,7 +1586,6 @@ async def workflow_screen(message: Message):
 
 @router.message(F.text == "📅 Календарь")
 async def open_calendar_module(message: Message):
-    # TODO: future implementation — calendar dashboard and widgets
     if active_module.get(message.from_user.id) == "agro":
         user_id = message.from_user.id
         await message.answer(
@@ -1583,77 +1601,200 @@ async def open_calendar_module(message: Message):
 
     _clear_ai_state(message.from_user.id)
     active_module[message.from_user.id] = "calendar"
+    calendar_flow.pop(message.from_user.id, None)
     log_audit(message.from_user.id, "open", "calendar")
 
-    sources = ", ".join(CALENDAR_SOURCE_MODULES)
+    modules = ", ".join(CALENDAR_MODULES.values())
     await message.answer(
         f"📅 Календарь\n\n"
         f"Центральный модуль системы.\n"
-        f"Источники событий: {sources}\n\n"
-        "Раздел находится в разработке.",
+        f"Модули: {modules}\n"
+        f"Статусы: {', '.join(CALENDAR_STATUSES)}\n\n"
+        "Интеграция: задачи, hub-модули, уведомления.",
         reply_markup=calendar_module_menu(),
     )
+
+
+async def _show_calendar_list(message: Message, title: str, user_id: int, audit_key: str, events):
+    text = format_calendar_events_text(user_id, events=events)
     await message.answer(
-        "Дополнительно:",
-        reply_markup=module_inline_actions("calendar"),
+        f"{title}\n\n{text}",
+        reply_markup=calendar_events_list_inline(events) if events else calendar_module_menu(),
     )
+    log_audit(user_id, "calendar_list", "calendar", audit_key)
 
 
-@router.message(F.text.in_(CALENDAR_MENU_BUTTONS))
+@router.message(
+    lambda m: (
+        m.text in CALENDAR_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "calendar"
+    )
+)
 async def calendar_screen(message: Message):
     screen = message.text
     user_id = message.from_user.id
-    active_module[user_id] = "calendar"
 
     if screen == "⬅ Назад":
         active_module.pop(user_id, None)
+        calendar_flow.pop(user_id, None)
         await message.answer("Главное меню", reply_markup=owner_main_menu())
         return
 
     title = CALENDAR_STUB_MESSAGES.get(screen, screen)
+    scope = "all" if PermissionService.is_crm_operator(user_id) else "my"
 
-    if screen == "📅 Мои события":
-        text = format_calendar_events_text(user_id)
-        await message.answer(
-            f"{title}\n\n{text}\n\n"
-            f"Источники: {', '.join(CALENDAR_SOURCE_MODULES)}",
-            reply_markup=calendar_module_menu(),
-        )
-        log_audit(user_id, "open_stub", "calendar", screen)
+    if screen == "📅 Сегодня":
+        events = CalendarService.get_today_events(user_id, scope=scope)
+        await _show_calendar_list(message, title, user_id, "today", events)
         return
 
-    if screen == "📂 Все события":
-        # TODO: future implementation — all events across modules and users
-        text = format_calendar_events_text(user_id, limit=20)
-        await message.answer(
-            f"{title}\n\n{text}\n\nРаздел находится в разработке.",
-            reply_markup=calendar_module_menu(),
-        )
-        log_audit(user_id, "open_stub", "calendar", screen)
+    if screen == "📆 Неделя":
+        events = CalendarService.get_week_events(user_id, scope=scope)
+        await _show_calendar_list(message, title, user_id, "week", events)
         return
 
-    if screen == "➕ Новое событие":
-        # TODO: future implementation — interactive event creation wizard
+    if screen == "🗓 Месяц":
+        events = CalendarService.get_month_events(user_id, scope=scope)
+        await _show_calendar_list(message, title, user_id, "month", events)
+        return
+
+    if screen == "📋 Мои события":
+        events = CalendarService.get_events_by_user(user_id, scope="my", limit=20)
+        await _show_calendar_list(message, title, user_id, "my", events)
+        return
+
+    if screen == "👥 Все события":
+        events = CalendarService.get_events_by_user(user_id, scope=scope, limit=30)
+        await _show_calendar_list(message, title, user_id, "all", events)
+        return
+
+    if screen == "🔔 Напоминания":
+        events = CalendarService.get_reminder_events(user_id, limit=20)
+        await _show_calendar_list(message, title, user_id, "reminders", events)
+        return
+
+    if screen == "➕ Создать событие":
+        calendar_flow[user_id] = {"step": "create"}
         await message.answer(
             f"{title}\n\n"
-            "Создание, редактирование, удаление, завершение и перенос событий "
-            "будут доступны в следующих версиях.\n\n"
-            "Раздел находится в разработке.",
+            "Отправьте событие в формате:\n"
+            "Создать событие:\n"
+            "Название: ...\n"
+            "Описание: ...\n"
+            "Модуль: AGRO | CRYPTO | DRONE | CAFE | LEGAL | AI | SYSTEM\n"
+            "Тип: meeting | task | deadline\n"
+            "Начало: 2026-07-15 18:00\n"
+            "Конец: 2026-07-15 19:00\n"
+            "Напомнить: 30",
             reply_markup=calendar_module_menu(),
         )
-        await message.answer(
-            "Действия с событиями (заглушка):",
-            reply_markup=calendar_event_actions_inline(0),
-        )
-        log_audit(user_id, "open_stub", "calendar", screen)
+        log_audit(user_id, "calendar_create_prompt", "calendar", "create")
         return
 
-    # TODO: future implementation — today, week, reminders filters
     await message.answer(
         f"{title}\n\nРаздел находится в разработке.",
         reply_markup=calendar_module_menu(),
     )
-    log_audit(user_id, "open_stub", "calendar", screen)
+
+
+@router.message(
+    lambda m: (
+        calendar_flow.get(m.from_user.id)
+        and active_module.get(m.from_user.id) == "calendar"
+        and m.text not in CALENDAR_MENU_BUTTONS
+    )
+)
+async def calendar_flow_message(message: Message):
+    user_id = message.from_user.id
+    flow = calendar_flow.get(user_id, {})
+    step = flow.get("step")
+    text = message.text.strip()
+
+    if step == "create":
+        parsed = parse_event_create_text(f"Создать событие:\n{text}") or parse_event_create_text(text)
+        if not parsed or not parsed.get("title") or not parsed.get("start_time"):
+            if text and "\n" not in text and (not parsed or not parsed.get("title")):
+                calendar_flow[user_id] = {"step": "create_time", "draft": {"title": text, "description": "", "module": "system", "event_type": "general"}}
+                await message.answer("Укажите время начала (2026-07-15 18:00):")
+                return
+            if parsed and parsed.get("title") and not parsed.get("start_time"):
+                calendar_flow[user_id] = {"step": "create_time", "draft": parsed}
+                await message.answer("Укажите время начала (2026-07-15 18:00):")
+                return
+            await message.answer("Укажите название и время начала.", reply_markup=calendar_module_menu())
+            return
+        event_id = CalendarService.create_event(
+            creator_id=user_id,
+            title=parsed["title"],
+            start_time=parsed["start_time"],
+            description=parsed.get("description", ""),
+            module=parsed.get("module", "system"),
+            event_type=parsed.get("event_type", "general"),
+            end_time=parsed.get("end_time"),
+            remind_before=parsed.get("remind_before", 0),
+        )
+        calendar_flow.pop(user_id, None)
+        event = get_event(event_id, user_id)
+        await message.answer(
+            f"✅ Событие #{event_id} создано.\n\n{format_event_card(event)}",
+            reply_markup=calendar_event_actions_inline(event_id),
+        )
+        return
+
+    if step == "create_time":
+        draft = flow.get("draft", {})
+        draft["start_time"] = text
+        event_id = CalendarService.create_event(
+            creator_id=user_id,
+            title=draft["title"],
+            start_time=draft["start_time"],
+            description=draft.get("description", ""),
+            module=draft.get("module", "system"),
+            event_type=draft.get("event_type", "general"),
+        )
+        calendar_flow.pop(user_id, None)
+        event = get_event(event_id, user_id)
+        await message.answer(
+            f"✅ Событие #{event_id} создано.\n\n{format_event_card(event)}",
+            reply_markup=calendar_event_actions_inline(event_id),
+        )
+        return
+
+    event_id = flow.get("event_id")
+    if not event_id:
+        calendar_flow.pop(user_id, None)
+        return
+
+    if step == "reschedule":
+        if CalendarService.update_event(event_id, user_id, start_time=text):
+            event = get_event(event_id, user_id)
+            await message.answer(
+                f"📅 Событие #{event_id} перенесено.\n\n{format_event_card(event)}",
+                reply_markup=calendar_event_actions_inline(event_id),
+            )
+        else:
+            await message.answer("Не удалось перенести событие.")
+        calendar_flow.pop(user_id, None)
+        return
+
+    if step == "edit":
+        parsed = parse_event_create_text(f"Создать событие:\n{text}")
+        fields = {}
+        if parsed:
+            for key in ("title", "description", "module", "start_time", "end_time"):
+                if parsed.get(key):
+                    fields[key] = parsed[key]
+        if not fields:
+            fields["title"] = text
+        if CalendarService.update_event(event_id, user_id, **fields):
+            event = get_event(event_id, user_id)
+            await message.answer(
+                f"✏ Событие #{event_id} обновлено.\n\n{format_event_card(event)}",
+                reply_markup=calendar_event_actions_inline(event_id),
+            )
+        else:
+            await message.answer("Не удалось изменить событие.")
+        calendar_flow.pop(user_id, None)
 
 
 @router.message(F.text.in_(MODULE_STUB_BUTTONS))
@@ -2356,67 +2497,122 @@ async def calendar_module_callback(callback: CallbackQuery):
     await _module_callback_answer(callback, "calendar", action)
 
 
-@router.callback_query(F.data == "cal:event:create")
-async def calendar_event_create_callback(callback: CallbackQuery):
-    # TODO: future implementation — event creation flow
+@router.callback_query(F.data.startswith("cal:open:"))
+async def calendar_open_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    event_id = int(callback.data.split(":")[-1])
+    event = get_event(event_id, user_id)
+    if not event:
+        await callback.answer("Событие не найдено", show_alert=True)
+        return
     await callback.answer()
     await callback.message.answer(
-        "➕ Создание события\n\nРаздел находится в разработке.",
-        reply_markup=calendar_module_menu(),
+        format_event_card(event),
+        reply_markup=calendar_event_actions_inline(event_id),
     )
-    log_audit(callback.from_user.id, "calendar_stub", "calendar", "create")
 
 
-@router.callback_query(F.data.startswith("cal:event:edit:"))
-async def calendar_event_edit_callback(callback: CallbackQuery):
-    # TODO: future implementation — event edit flow
-    event_id = callback.data.split(":")[-1]
+@router.callback_query(F.data.startswith("cal:active:"))
+async def calendar_active_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    event_id = int(callback.data.split(":")[-1])
+    if CalendarService.update_event(event_id, user_id, status="ACTIVE"):
+        event = get_event(event_id, user_id)
+        await callback.answer("Активно")
+        await callback.message.answer(format_event_card(event), reply_markup=calendar_event_actions_inline(event_id))
+    else:
+        await callback.answer("Нет доступа", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("cal:complete:"))
+async def calendar_complete_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    event_id = int(callback.data.split(":")[-1])
+    if CalendarService.update_event(event_id, user_id, status="DONE"):
+        event = get_event(event_id, user_id)
+        await callback.answer("Завершено")
+        await callback.message.answer(format_event_card(event), reply_markup=calendar_event_actions_inline(event_id))
+    else:
+        await callback.answer("Нет доступа", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("cal:cancel:"))
+async def calendar_cancel_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    event_id = int(callback.data.split(":")[-1])
+    if CalendarService.update_event(event_id, user_id, status="CANCELLED"):
+        event = get_event(event_id, user_id)
+        await callback.answer("Отменено")
+        await callback.message.answer(format_event_card(event), reply_markup=calendar_event_actions_inline(event_id))
+    else:
+        await callback.answer("Нет доступа", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("cal:edit:"))
+async def calendar_edit_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    event_id = int(callback.data.split(":")[-1])
+    if not get_event(event_id, user_id):
+        await callback.answer("Событие не найдено", show_alert=True)
+        return
+    calendar_flow[user_id] = {"step": "edit", "event_id": event_id}
+    active_module[user_id] = "calendar"
     await callback.answer()
     await callback.message.answer(
-        f"✏️ Редактирование события #{event_id}\n\n"
-        "Раздел находится в разработке.",
+        f"✏ Изменение события #{event_id}\n\n"
+        "Отправьте новые данные (Название, Описание, Модуль, Начало...).",
         reply_markup=calendar_module_menu(),
     )
-    log_audit(callback.from_user.id, "calendar_stub", "calendar", f"edit:{event_id}")
 
 
-@router.callback_query(F.data.startswith("cal:event:delete:"))
-async def calendar_event_delete_callback(callback: CallbackQuery):
-    # TODO: future implementation — event delete confirmation
-    event_id = callback.data.split(":")[-1]
+@router.callback_query(F.data.regexp(r"^cal:reschedule:\d+$"))
+async def calendar_reschedule_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    event_id = int(callback.data.split(":")[-1])
+    if not get_event(event_id, user_id):
+        await callback.answer("Событие не найдено", show_alert=True)
+        return
+    calendar_flow[user_id] = {"step": "reschedule", "event_id": event_id}
+    active_module[user_id] = "calendar"
     await callback.answer()
     await callback.message.answer(
-        f"🗑 Удаление события #{event_id}\n\n"
-        "Раздел находится в разработке.",
+        f"📅 Новое время для события #{event_id}\n\nФормат: 2026-07-15 18:00",
         reply_markup=calendar_module_menu(),
     )
-    log_audit(callback.from_user.id, "calendar_stub", "calendar", f"delete:{event_id}")
 
 
-@router.callback_query(F.data.startswith("cal:event:complete:"))
-async def calendar_event_complete_callback(callback: CallbackQuery):
-    # TODO: future implementation — event completion workflow
-    event_id = callback.data.split(":")[-1]
+@router.callback_query(F.data.regexp(r"^cal:delete:\d+$"))
+async def calendar_delete_prompt_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    event_id = int(callback.data.split(":")[-1])
+    event = get_event(event_id, user_id)
+    if not event:
+        await callback.answer("Событие не найдено", show_alert=True)
+        return
     await callback.answer()
     await callback.message.answer(
-        f"✅ Завершение события #{event_id}\n\n"
-        "Раздел находится в разработке.",
-        reply_markup=calendar_module_menu(),
+        f"Удалить событие «{event[1]}» (#{event_id})?",
+        reply_markup=calendar_event_delete_confirm_inline(event_id),
     )
-    log_audit(callback.from_user.id, "calendar_stub", "calendar", f"complete:{event_id}")
 
 
-@router.callback_query(F.data.startswith("cal:event:reschedule:"))
-async def calendar_event_reschedule_callback(callback: CallbackQuery):
-    # TODO: future implementation — event reschedule flow
-    event_id = callback.data.split(":")[-1]
+@router.callback_query(F.data.startswith("cal:del:yes:"))
+async def calendar_delete_confirm_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    event_id = int(callback.data.split(":")[-1])
+    if CalendarService.delete_event(event_id, user_id):
+        await callback.answer("Удалено")
+        await callback.message.answer(
+            f"🗑 Событие #{event_id} удалено.",
+            reply_markup=calendar_module_menu(),
+        )
+    else:
+        await callback.answer("Нет доступа", show_alert=True)
+
+
+@router.callback_query(F.data.startswith("cal:noop:"))
+async def calendar_noop_callback(callback: CallbackQuery):
     await callback.answer()
-    await callback.message.answer(
-        f"📅 Перенос события #{event_id}\n\n"
-        "Раздел находится в разработке.",
-        reply_markup=calendar_module_menu(),
-    )
-    log_audit(callback.from_user.id, "calendar_stub", "calendar", f"reschedule:{event_id}")
 
 
 # ==========================================================

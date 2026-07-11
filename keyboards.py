@@ -938,20 +938,22 @@ def reports_module_actions_inline(report_type: str = "summary") -> InlineKeyboar
 
 
 def calendar_module_menu():
-    # TODO: future implementation — central calendar hub for all modules
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="📅 Мои события"),
-                KeyboardButton(text="➕ Новое событие")
+                KeyboardButton(text="📅 Сегодня"),
+                KeyboardButton(text="📆 Неделя"),
+            ],
+            [
+                KeyboardButton(text="🗓 Месяц"),
+                KeyboardButton(text="➕ Создать событие"),
             ],
             [
                 KeyboardButton(text="🔔 Напоминания"),
-                KeyboardButton(text="📆 Сегодня")
+                KeyboardButton(text="📋 Мои события"),
             ],
             [
-                KeyboardButton(text="📈 Неделя"),
-                KeyboardButton(text="📂 Все события")
+                KeyboardButton(text="👥 Все события"),
             ],
             [
                 KeyboardButton(text="⬅ Назад")
@@ -962,28 +964,53 @@ def calendar_module_menu():
     return keyboard
 
 
+def calendar_events_list_inline(events) -> InlineKeyboardMarkup:
+    rows = []
+    for event in events[:15]:
+        eid, title = event[0], event[1]
+        short = title if len(title) <= 32 else title[:29] + "..."
+        rows.append([
+            InlineKeyboardButton(
+                text=f"#{eid} {short}",
+                callback_data=f"cal:open:{eid}",
+            ),
+        ])
+    return InlineKeyboardMarkup(inline_keyboard=rows or [[
+        InlineKeyboardButton(text="—", callback_data="cal:noop:0"),
+    ]])
+
+
 def calendar_event_actions_inline(event_id: int) -> InlineKeyboardMarkup:
-    # TODO: future implementation — dynamic event action menu
+    eid = event_id
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="▶ Активировать", callback_data=f"cal:active:{eid}"),
+                InlineKeyboardButton(text="✅ Завершить", callback_data=f"cal:complete:{eid}"),
+            ],
+            [
+                InlineKeyboardButton(text="✏ Изменить", callback_data=f"cal:edit:{eid}"),
+                InlineKeyboardButton(text="📅 Перенести", callback_data=f"cal:reschedule:{eid}"),
+            ],
+            [
+                InlineKeyboardButton(text="❌ Отменить", callback_data=f"cal:cancel:{eid}"),
+                InlineKeyboardButton(text="🗑 Удалить", callback_data=f"cal:delete:{eid}"),
+            ],
+        ]
+    )
+
+
+def calendar_event_delete_confirm_inline(event_id: int) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="✏️ Редактировать",
-                    callback_data=f"cal:event:edit:{event_id}"
+                    text="✅ Да, удалить",
+                    callback_data=f"cal:del:yes:{event_id}",
                 ),
                 InlineKeyboardButton(
-                    text="🗑 Удалить",
-                    callback_data=f"cal:event:delete:{event_id}"
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="✅ Завершить",
-                    callback_data=f"cal:event:complete:{event_id}"
-                ),
-                InlineKeyboardButton(
-                    text="📅 Перенести",
-                    callback_data=f"cal:event:reschedule:{event_id}"
+                    text="❌ Отмена",
+                    callback_data=f"cal:open:{event_id}",
                 ),
             ],
         ]
