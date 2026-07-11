@@ -101,6 +101,27 @@ from database import (
     format_file_search_text,
     format_file_tags_text,
     get_files_for_report,
+    AGRO_COUNTERPARTY_TYPES,
+    AGRO_CONTRACT_TYPES,
+    AGRO_CONTRACT_STATUSES,
+    AGRO_DELIVERY_STATUSES,
+    AGRO_DOCUMENT_TYPES,
+    AGRO_CALENDAR_EVENT_TYPES,
+    AGRO_CRM_SECTIONS,
+    AGRO_COUNTERPARTY_BUTTON_TO_TYPE,
+    AGRO_AI_CONTEXT_AREAS,
+    can_access_agro_section,
+    format_agro_counterparties_text,
+    format_agro_contracts_text,
+    format_agro_logistics_text,
+    format_agro_documents_text,
+    format_agro_finance_text,
+    format_agro_calendar_text,
+    format_agro_reports_text,
+    format_agro_section_stub,
+    format_agro_ai_assistant_stub,
+    format_agro_ai_context_stub,
+    get_agro_ai_context,
     SEARCH_DOMAINS,
     SEARCH_SCOPES,
     global_search,
@@ -137,6 +158,8 @@ from keyboards import (
     tasks_module_actions_inline,
     files_module_menu,
     files_module_actions_inline,
+    agro_counterparties_menu,
+    agro_module_actions_inline,
     search_module_menu,
     search_module_actions_inline,
 )
@@ -176,6 +199,7 @@ waiting_buy_request = {}
 ai_assistant_active = {}
 ai_settings_flow = {}
 active_module = {}
+active_agro_sub = {}
 
 MODULE_MENUS = {
     "law": law_module_menu,
@@ -459,6 +483,18 @@ AGRO_PRODUCTS = [
     "🌱 Рапс"
 ]
 
+AGRO_CRM_BUTTONS = {
+    "👥 Контрагенты",
+    "📑 Контракты",
+    "🚢 Логистика",
+    "📄 Документы",
+    "💵 Финансы",
+    "📊 Отчеты Agro",
+    "🤖 AI Agro",
+}
+
+AGRO_COUNTERPARTY_BUTTONS = set(AGRO_COUNTERPARTY_BUTTON_TO_TYPE.keys())
+
 @router.message(CommandStart())
 async def cmd_start(message: Message) -> None:
 
@@ -480,6 +516,8 @@ async def open_crypto_otc(message: Message):
 
 @router.message(F.text == "🌾 Agro Trading")
 async def open_agro(message: Message):
+    active_module[message.from_user.id] = "agro"
+    active_agro_sub.pop(message.from_user.id, None)
     await message.answer(
         "Раздел Agro Trading",
         reply_markup=agro_menu()
@@ -537,6 +575,115 @@ async def buy_product(message: Message):
     )
 
     waiting_buy_request[user_id] = True
+
+
+# ==========================================================
+# AGRO TRADING CRM (extension — stubs)
+# ==========================================================
+
+@router.message(
+    lambda m: (
+        m.text in AGRO_COUNTERPARTY_BUTTONS
+        and active_module.get(m.from_user.id) == "agro"
+        and active_agro_sub.get(m.from_user.id) == "counterparties"
+    )
+)
+async def agro_counterparty_type_screen(message: Message):
+    # TODO: future implementation — counterparty CRUD UI
+    user_id = message.from_user.id
+    cp_type = AGRO_COUNTERPARTY_BUTTON_TO_TYPE[message.text]
+    type_label = AGRO_COUNTERPARTY_TYPES.get(cp_type, cp_type)
+    text = format_agro_counterparties_text(user_id, counterparty_type=cp_type)
+    await message.answer(
+        f"{type_label}\n\n{text}",
+        reply_markup=agro_counterparties_menu(),
+    )
+    await message.answer(
+        "Действия:",
+        reply_markup=agro_module_actions_inline("counterparties"),
+    )
+    log_audit(user_id, "open_stub", "agro_trading", f"counterparty:{cp_type}")
+
+
+@router.message(
+    lambda m: (
+        m.text in AGRO_CRM_BUTTONS
+        and active_module.get(m.from_user.id) == "agro"
+    )
+)
+async def agro_crm_screen(message: Message):
+    # TODO: future implementation — agro CRM section screens
+    screen = message.text
+    user_id = message.from_user.id
+
+    if screen == "👥 Контрагенты":
+        active_agro_sub[user_id] = "counterparties"
+        types = ", ".join(AGRO_COUNTERPARTY_TYPES.values())
+        await message.answer(
+            f"👥 Контрагенты\n\n"
+            f"Типы: {types}\n\n"
+            "Выберите категорию контрагентов.",
+            reply_markup=agro_counterparties_menu(),
+        )
+        await message.answer(
+            "Действия:",
+            reply_markup=agro_module_actions_inline("counterparties"),
+        )
+        log_audit(user_id, "open_stub", "agro_trading", "counterparties")
+        return
+
+    section_map = {
+        "📑 Контракты": ("contracts", format_agro_contracts_text),
+        "🚢 Логистика": ("logistics", format_agro_logistics_text),
+        "📄 Документы": ("documents", format_agro_documents_text),
+        "💵 Финансы": ("finance", format_agro_finance_text),
+        "📊 Отчеты Agro": ("reports", format_agro_reports_text),
+    }
+
+    if screen in section_map:
+        section_key, formatter = section_map[screen]
+        if not can_access_agro_section(user_id, section_key):
+            await message.answer(
+                f"{screen}\n\nНет доступа к разделу.",
+                reply_markup=agro_menu(),
+            )
+            return
+        active_agro_sub.pop(user_id, None)
+        await message.answer(formatter(user_id), reply_markup=agro_menu())
+        await message.answer(
+            "Действия:",
+            reply_markup=agro_module_actions_inline(section_key),
+        )
+        log_audit(user_id, "open_stub", "agro_trading", section_key)
+        return
+
+    if screen == "🤖 AI Agro":
+        active_agro_sub.pop(user_id, None)
+        await message.answer(
+            format_agro_ai_assistant_stub(user_id),
+            reply_markup=agro_menu(),
+        )
+        await message.answer(
+            "Контекст AI Agro:",
+            reply_markup=agro_module_actions_inline("ai_assistant"),
+        )
+        log_audit(user_id, "open_stub", "agro_trading", "ai_assistant")
+        return
+
+
+@router.message(
+    lambda m: (
+        m.text == "⬅️ Назад"
+        and active_module.get(m.from_user.id) == "agro"
+        and active_agro_sub.get(m.from_user.id)
+    )
+)
+async def agro_sub_back(message: Message):
+    active_agro_sub.pop(message.from_user.id, None)
+    await message.answer(
+        "Agro Trading",
+        reply_markup=agro_menu(),
+    )
 
 
 # ==========================================================
@@ -1162,6 +1309,19 @@ async def search_screen(message: Message):
 @router.message(F.text == "📅 Календарь")
 async def open_calendar_module(message: Message):
     # TODO: future implementation — calendar dashboard and widgets
+    if active_module.get(message.from_user.id) == "agro":
+        user_id = message.from_user.id
+        await message.answer(
+            format_agro_calendar_text(user_id),
+            reply_markup=agro_menu(),
+        )
+        await message.answer(
+            "Действия:",
+            reply_markup=agro_module_actions_inline("calendar"),
+        )
+        log_audit(user_id, "open_stub", "agro_trading", "calendar")
+        return
+
     _clear_ai_state(message.from_user.id)
     active_module[message.from_user.id] = "calendar"
     log_audit(message.from_user.id, "open", "calendar")
@@ -1579,6 +1739,84 @@ async def files_attach_callback(callback: CallbackQuery):
     log_audit(callback.from_user.id, "files_stub", "files", f"attach:{file_id}")
 
 
+@router.callback_query(F.data.startswith("agr:create:"))
+async def agro_create_callback(callback: CallbackQuery):
+    # TODO: future implementation — create agro CRM entity
+    section = callback.data.split(":", 2)[2]
+    await callback.answer()
+    await callback.message.answer(
+        f"➕ Создать · {section}\n\n"
+        "Создание записей находится в разработке.",
+        reply_markup=agro_menu(),
+    )
+    log_audit(callback.from_user.id, "agro_stub", "agro_trading", f"create:{section}")
+
+
+@router.callback_query(F.data.startswith("agr:search:"))
+async def agro_search_callback(callback: CallbackQuery):
+    # TODO: future implementation — search within agro section
+    section = callback.data.split(":", 2)[2]
+    await callback.answer()
+    await callback.message.answer(
+        f"🔍 Поиск · {section}\n\n"
+        "Поиск в разделе находится в разработке.",
+        reply_markup=agro_menu(),
+    )
+    log_audit(callback.from_user.id, "agro_stub", "agro_trading", f"search:{section}")
+
+
+@router.callback_query(F.data.startswith("agr:by_request:"))
+async def agro_by_request_callback(callback: CallbackQuery):
+    # TODO: future implementation — filter by CRM request number
+    section = callback.data.split(":", 2)[2]
+    await callback.answer()
+    await callback.message.answer(
+        f"📋 По заявке · {section}\n\n"
+        "Привязка к заявкам CRM находится в разработке.",
+        reply_markup=agro_menu(),
+    )
+    log_audit(callback.from_user.id, "agro_stub", "agro_trading", f"by_request:{section}")
+
+
+@router.callback_query(F.data.startswith("agr:report:"))
+async def agro_report_callback(callback: CallbackQuery):
+    # TODO: future implementation — section report export
+    section = callback.data.split(":", 2)[2]
+    user_id = callback.from_user.id
+    await callback.answer()
+    if section == "reports":
+        text = format_agro_reports_text(user_id)
+    else:
+        text = f"📊 Отчет · {section}\n\nРаздел находится в разработке."
+    await callback.message.answer(text, reply_markup=agro_menu())
+    log_audit(user_id, "agro_stub", "agro_trading", f"report:{section}")
+
+
+@router.callback_query(F.data == "agr:ai:open")
+async def agro_ai_open_callback(callback: CallbackQuery):
+    # TODO: future implementation — open AI Agro Assistant chat
+    user_id = callback.from_user.id
+    await callback.answer()
+    await callback.message.answer(
+        format_agro_ai_assistant_stub(user_id),
+        reply_markup=agro_menu(),
+    )
+    log_audit(user_id, "agro_stub", "agro_trading", "ai_open")
+
+
+@router.callback_query(F.data.startswith("agr:ai:context:"))
+async def agro_ai_context_callback(callback: CallbackQuery):
+    # TODO: future implementation — preview AI Agro context area
+    area = callback.data.split(":", 3)[3]
+    user_id = callback.from_user.id
+    await callback.answer()
+    await callback.message.answer(
+        format_agro_ai_context_stub(area, user_id),
+        reply_markup=agro_menu(),
+    )
+    log_audit(user_id, "agro_stub", "agro_trading", f"ai_context:{area}")
+
+
 @router.callback_query(F.data.startswith("srch:run:"))
 async def search_run_callback(callback: CallbackQuery):
     # TODO: future implementation — execute search query
@@ -1894,6 +2132,7 @@ async def ai_chat_message(message: Message):
 @router.message(F.text == "⬅️ Назад")
 async def back_to_main(message: Message):
     _clear_ai_state(message.from_user.id)
+    active_agro_sub.pop(message.from_user.id, None)
     active_module.pop(message.from_user.id, None)
     await message.answer(
         "Главное меню",

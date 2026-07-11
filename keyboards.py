@@ -386,6 +386,17 @@ def agro_menu():
                 KeyboardButton(text="📦 Склады")
             ],
             [
+                KeyboardButton(text="👥 Контрагенты"),
+                KeyboardButton(text="📄 Документы")
+            ],
+            [
+                KeyboardButton(text="💵 Финансы"),
+                KeyboardButton(text="📊 Отчеты Agro")
+            ],
+            [
+                KeyboardButton(text="🤖 AI Agro")
+            ],
+            [
                 KeyboardButton(text="⬅️ Назад")
             ]
         ],
@@ -393,6 +404,58 @@ def agro_menu():
     )
 
     return keyboard
+
+
+def agro_counterparties_menu():
+    # TODO: future implementation — counterparty management
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="👤 Поставщики"),
+                KeyboardButton(text="🛒 Покупатели")
+            ],
+            [
+                KeyboardButton(text="🚛 Перевозчики"),
+                KeyboardButton(text="🤝 Брокеры")
+            ],
+            [
+                KeyboardButton(text="📦 Экспедиторы")
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def agro_module_actions_inline(section_key: str = "overview") -> InlineKeyboardMarkup:
+    # TODO: future implementation — agro CRM quick actions
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="➕ Создать",
+                    callback_data=f"agr:create:{section_key}"
+                ),
+                InlineKeyboardButton(
+                    text="🔍 Поиск",
+                    callback_data=f"agr:search:{section_key}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📋 По заявке",
+                    callback_data=f"agr:by_request:{section_key}"
+                ),
+                InlineKeyboardButton(
+                    text="📊 Отчет",
+                    callback_data=f"agr:report:{section_key}"
+                ),
+            ],
+        ]
+    )
 
 def agro_products_menu():
     keyboard = ReplyKeyboardMarkup(

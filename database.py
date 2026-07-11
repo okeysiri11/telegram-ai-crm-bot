@@ -201,6 +201,76 @@ CREATE TABLE IF NOT EXISTS files (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS agro_counterparties (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    counterparty_type TEXT NOT NULL,
+    country TEXT,
+    contact_info TEXT,
+    notes TEXT,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS agro_contracts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    contract_number TEXT NOT NULL,
+    contract_type TEXT NOT NULL,
+    execution_status TEXT DEFAULT 'DRAFT',
+    request_number INTEGER,
+    counterparty_id INTEGER,
+    notes TEXT,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS agro_logistics (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    request_number INTEGER,
+    transport TEXT,
+    route TEXT,
+    loading_date TEXT,
+    eta TEXT,
+    delivery_status TEXT DEFAULT 'PLANNED',
+    notes TEXT,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS agro_documents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    request_number INTEGER,
+    doc_type TEXT NOT NULL,
+    title TEXT NOT NULL,
+    file_id INTEGER,
+    notes TEXT,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS agro_finance (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    request_number INTEGER,
+    deal_amount REAL,
+    currency TEXT DEFAULT 'USD',
+    paid_amount REAL DEFAULT 0,
+    debt_amount REAL DEFAULT 0,
+    payment_schedule TEXT,
+    notes TEXT,
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
 conn.commit()
 
 ROLE_NAMES = (
@@ -1586,6 +1656,636 @@ def format_drone_ai_context_stub(area: str, user_id: int) -> str:
     return (
         f"🤖 AI контекст: {area}\n\n"
         f"Записей: {len(items)}.\n\n"
+        "Раздел находится в разработке."
+    )
+
+
+# ==========================================================
+# AGRO TRADING CRM (extension)
+# ==========================================================
+
+AGRO_COUNTERPARTY_TYPES = {
+    "supplier": "Поставщик",
+    "buyer": "Покупатель",
+    "carrier": "Перевозчик",
+    "broker": "Брокер",
+    "forwarder": "Экспедитор",
+}
+
+AGRO_CONTRACT_TYPES = ("FOB", "CIF", "EXW", "FCA")
+
+AGRO_CONTRACT_STATUSES = (
+    "DRAFT", "SIGNED", "IN_PROGRESS", "FULFILLED", "CANCELLED",
+)
+
+AGRO_DELIVERY_STATUSES = (
+    "PLANNED", "LOADING", "IN_TRANSIT", "ARRIVED", "DELIVERED", "DELAYED",
+)
+
+AGRO_DOCUMENT_TYPES = {
+    "invoice": "Инвойс",
+    "contract": "Контракт",
+    "certificate": "Сертификат",
+    "bill_of_lading": "Коносамент",
+    "customs": "Таможенный документ",
+}
+
+AGRO_CALENDAR_EVENT_TYPES = {
+    "loading": "Погрузка",
+    "payment": "Оплата",
+    "contract_signing": "Подписание контракта",
+    "cargo_arrival": "Прибытие груза",
+}
+
+AGRO_CRM_SECTIONS = {
+    "counterparties": "👥 Контрагенты",
+    "contracts": "📑 Контракты",
+    "logistics": "🚢 Логистика",
+    "documents": "📄 Документы",
+    "finance": "💵 Финансы",
+    "calendar": "📅 Календарь",
+    "reports": "📊 Отчеты Agro",
+    "ai_assistant": "🤖 AI Agro",
+}
+
+AGRO_COUNTERPARTY_BUTTON_TO_TYPE = {
+    "👤 Поставщики": "supplier",
+    "🛒 Покупатели": "buyer",
+    "🚛 Перевозчики": "carrier",
+    "🤝 Брокеры": "broker",
+    "📦 Экспедиторы": "forwarder",
+}
+
+AGRO_AI_CONTEXT_AREAS = (
+    "requests",
+    "counterparties",
+    "contracts",
+    "logistics",
+    "documents",
+    "finance",
+)
+
+
+def can_access_agro_section(user_id: int, section_key: str) -> bool:
+    # TODO: future implementation — section-level permissions for Agro CRM
+    _ = user_id
+    return section_key in AGRO_CRM_SECTIONS
+
+
+def create_agro_counterparty(
+    created_by: int,
+    name: str,
+    counterparty_type: str,
+    country: str = None,
+    contact_info: str = None,
+    notes: str = None,
+) -> int:
+    # TODO: future implementation — validation and duplicate checks
+    if counterparty_type not in AGRO_COUNTERPARTY_TYPES:
+        counterparty_type = "supplier"
+    cursor.execute(
+        """
+        INSERT INTO agro_counterparties (
+            name, counterparty_type, country, contact_info, notes, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (name.strip(), counterparty_type, country, contact_info, notes, created_by),
+    )
+    conn.commit()
+    cp_id = cursor.lastrowid
+    register_module_notification(
+        created_by,
+        "agro_trading",
+        title=f"Контрагент #{cp_id} создан",
+        message=name,
+        priority="INFO",
+    )
+    return cp_id
+
+
+def get_agro_counterparties(
+    user_id: int,
+    counterparty_type: str = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — team-wide counterparty registry
+    query = """
+        SELECT id, name, counterparty_type, country, contact_info, notes, created_at
+        FROM agro_counterparties
+        WHERE created_by = ?
+    """
+    params = [user_id]
+    if counterparty_type:
+        query += " AND counterparty_type = ?"
+        params.append(counterparty_type)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def format_agro_counterparties_text(
+    user_id: int,
+    counterparty_type: str = None,
+    limit: int = 10,
+) -> str:
+    # TODO: future implementation — rich counterparty cards
+    rows = get_agro_counterparties(user_id, counterparty_type, limit)
+    type_label = AGRO_COUNTERPARTY_TYPES.get(counterparty_type, "Все")
+    if not rows:
+        return f"👥 Контрагенты ({type_label}): записей нет."
+    lines = [f"👥 Контрагенты ({type_label}):\n"]
+    for row in rows:
+        cid, name, ctype, country, contact, notes, created_at = row
+        label = AGRO_COUNTERPARTY_TYPES.get(ctype, ctype)
+        lines.append(
+            f"#{cid} · {name} · {label}\n"
+            f"   🌍 {country or '—'} · 📞 {contact or '—'}\n"
+            f"   🕒 {created_at}"
+        )
+        if notes:
+            lines.append(f"   📝 {notes}")
+    return "\n".join(lines)
+
+
+def create_agro_contract(
+    created_by: int,
+    contract_number: str,
+    contract_type: str,
+    request_number: int = None,
+    counterparty_id: int = None,
+    execution_status: str = "DRAFT",
+    notes: str = None,
+) -> int:
+    # TODO: future implementation — contract workflow and signing
+    if contract_type not in AGRO_CONTRACT_TYPES:
+        contract_type = "FOB"
+    if execution_status not in AGRO_CONTRACT_STATUSES:
+        execution_status = "DRAFT"
+    cursor.execute(
+        """
+        INSERT INTO agro_contracts (
+            contract_number, contract_type, execution_status,
+            request_number, counterparty_id, notes, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            contract_number.strip(),
+            contract_type,
+            execution_status,
+            request_number,
+            counterparty_id,
+            notes,
+            created_by,
+        ),
+    )
+    conn.commit()
+    contract_id = cursor.lastrowid
+    _integrate_agro_contract_created(contract_id, created_by, contract_number, request_number)
+    return contract_id
+
+
+def _integrate_agro_contract_created(
+    contract_id: int,
+    user_id: int,
+    contract_number: str,
+    request_number: int = None,
+):
+    # TODO: future implementation — calendar signing event and file attachment
+    register_module_notification(
+        user_id,
+        "agro_trading",
+        title=f"Контракт #{contract_id}",
+        message=contract_number,
+        priority="INFO",
+    )
+    register_agro_calendar_event(
+        user_id,
+        "contract_signing",
+        title=f"Подписание: {contract_number}",
+        description=f"agro_contract:{contract_id}|request:{request_number or '—'}",
+    )
+
+
+def get_agro_contracts(
+    user_id: int,
+    request_number: int = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — filters by status and type
+    query = """
+        SELECT id, contract_number, contract_type, execution_status,
+               request_number, counterparty_id, notes, created_at
+        FROM agro_contracts
+        WHERE created_by = ?
+    """
+    params = [user_id]
+    if request_number is not None:
+        query += " AND request_number = ?"
+        params.append(request_number)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def format_agro_contracts_text(user_id: int, request_number: int = None) -> str:
+    # TODO: future implementation — contract detail view
+    rows = get_agro_contracts(user_id, request_number=request_number)
+    if not rows:
+        return "📑 Контракты: записей нет."
+    lines = ["📑 Контракты:\n"]
+    for row in rows:
+        cid, number, ctype, status, req_num, cp_id, notes, created_at = row
+        lines.append(
+            f"#{cid} · {number} · {ctype} · {status}\n"
+            f"   📋 заявка #{req_num or '—'} · 👥 контрагент #{cp_id or '—'}\n"
+            f"   🕒 {created_at}"
+        )
+        if notes:
+            lines.append(f"   📝 {notes}")
+    return "\n".join(lines)
+
+
+def create_agro_logistics(
+    created_by: int,
+    request_number: int = None,
+    transport: str = None,
+    route: str = None,
+    loading_date: str = None,
+    eta: str = None,
+    delivery_status: str = "PLANNED",
+    notes: str = None,
+) -> int:
+    # TODO: future implementation — route tracking and carrier assignment
+    if delivery_status not in AGRO_DELIVERY_STATUSES:
+        delivery_status = "PLANNED"
+    cursor.execute(
+        """
+        INSERT INTO agro_logistics (
+            request_number, transport, route, loading_date, eta,
+            delivery_status, notes, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            request_number, transport, route, loading_date, eta,
+            delivery_status, notes, created_by,
+        ),
+    )
+    conn.commit()
+    log_id = cursor.lastrowid
+    _integrate_agro_logistics_created(log_id, created_by, request_number, loading_date, eta)
+    return log_id
+
+
+def _integrate_agro_logistics_created(
+    log_id: int,
+    user_id: int,
+    request_number: int = None,
+    loading_date: str = None,
+    eta: str = None,
+):
+    # TODO: future implementation — calendar loading/arrival events
+    if loading_date:
+        register_agro_calendar_event(
+            user_id,
+            "loading",
+            title=f"Погрузка · заявка #{request_number or '—'}",
+            start_datetime=loading_date,
+            description=f"agro_logistics:{log_id}",
+        )
+    if eta:
+        register_agro_calendar_event(
+            user_id,
+            "cargo_arrival",
+            title=f"ETA · заявка #{request_number or '—'}",
+            start_datetime=eta,
+            description=f"agro_logistics:{log_id}",
+        )
+
+
+def get_agro_logistics(
+    user_id: int,
+    request_number: int = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — delivery status filters
+    query = """
+        SELECT id, request_number, transport, route, loading_date, eta,
+               delivery_status, notes, created_at
+        FROM agro_logistics
+        WHERE created_by = ?
+    """
+    params = [user_id]
+    if request_number is not None:
+        query += " AND request_number = ?"
+        params.append(request_number)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def format_agro_logistics_text(user_id: int, request_number: int = None) -> str:
+    # TODO: future implementation — logistics timeline view
+    rows = get_agro_logistics(user_id, request_number=request_number)
+    if not rows:
+        return "🚢 Логистика: записей нет."
+    lines = ["🚢 Логистика:\n"]
+    for row in rows:
+        lid, req_num, transport, route, loading, eta, status, notes, created_at = row
+        lines.append(
+            f"#{lid} · заявка #{req_num or '—'} · {status}\n"
+            f"   🚛 {transport or '—'} · 🗺 {route or '—'}\n"
+            f"   📅 погрузка {loading or '—'} · ETA {eta or '—'}\n"
+            f"   🕒 {created_at}"
+        )
+        if notes:
+            lines.append(f"   📝 {notes}")
+    return "\n".join(lines)
+
+
+def create_agro_document(
+    created_by: int,
+    doc_type: str,
+    title: str,
+    request_number: int = None,
+    file_id: int = None,
+    notes: str = None,
+) -> int:
+    # TODO: future implementation — link to central files storage
+    if doc_type not in AGRO_DOCUMENT_TYPES:
+        doc_type = "invoice"
+    cursor.execute(
+        """
+        INSERT INTO agro_documents (
+            request_number, doc_type, title, file_id, notes, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (request_number, doc_type, title.strip(), file_id, notes, created_by),
+    )
+    conn.commit()
+    doc_id = cursor.lastrowid
+    if file_id:
+        register_module_notification(
+            created_by,
+            "agro_trading",
+            title=f"Документ #{doc_id} привязан",
+            message=title,
+            priority="INFO",
+        )
+    return doc_id
+
+
+def get_agro_documents(
+    user_id: int,
+    request_number: int = None,
+    doc_type: str = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — document versioning
+    query = """
+        SELECT id, request_number, doc_type, title, file_id, notes, created_at
+        FROM agro_documents
+        WHERE created_by = ?
+    """
+    params = [user_id]
+    if request_number is not None:
+        query += " AND request_number = ?"
+        params.append(request_number)
+    if doc_type:
+        query += " AND doc_type = ?"
+        params.append(doc_type)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def format_agro_documents_text(user_id: int, request_number: int = None) -> str:
+    # TODO: future implementation — document list with file links
+    rows = get_agro_documents(user_id, request_number=request_number)
+    if not rows:
+        return "📄 Документы: записей нет."
+    lines = ["📄 Документы:\n"]
+    doc_labels = ", ".join(AGRO_DOCUMENT_TYPES.values())
+    lines.append(f"Типы: {doc_labels}\n")
+    for row in rows:
+        did, req_num, dtype, title, file_id, notes, created_at = row
+        dtype_label = AGRO_DOCUMENT_TYPES.get(dtype, dtype)
+        lines.append(
+            f"#{did} · {title} · {dtype_label}\n"
+            f"   📋 заявка #{req_num or '—'} · 📁 file #{file_id or '—'}\n"
+            f"   🕒 {created_at}"
+        )
+        if notes:
+            lines.append(f"   📝 {notes}")
+    return "\n".join(lines)
+
+
+def create_agro_finance(
+    created_by: int,
+    request_number: int = None,
+    deal_amount: float = None,
+    currency: str = "USD",
+    paid_amount: float = 0,
+    debt_amount: float = None,
+    payment_schedule: str = None,
+    notes: str = None,
+) -> int:
+    # TODO: future implementation — auto debt calculation and payment tracking
+    if debt_amount is None and deal_amount is not None:
+        debt_amount = max(deal_amount - (paid_amount or 0), 0)
+    cursor.execute(
+        """
+        INSERT INTO agro_finance (
+            request_number, deal_amount, currency, paid_amount,
+            debt_amount, payment_schedule, notes, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            request_number, deal_amount, currency, paid_amount,
+            debt_amount, payment_schedule, notes, created_by,
+        ),
+    )
+    conn.commit()
+    fin_id = cursor.lastrowid
+    _integrate_agro_finance_created(fin_id, created_by, request_number, deal_amount, currency)
+    return fin_id
+
+
+def _integrate_agro_finance_created(
+    fin_id: int,
+    user_id: int,
+    request_number: int = None,
+    deal_amount: float = None,
+    currency: str = "USD",
+):
+    # TODO: future implementation — payment calendar events from schedule
+    register_module_notification(
+        user_id,
+        "agro_trading",
+        title=f"Финансы · заявка #{request_number or '—'}",
+        message=f"{deal_amount or 0} {currency}",
+        priority="INFO",
+    )
+
+
+def get_agro_finance(
+    user_id: int,
+    request_number: int = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — aggregate debt reports
+    query = """
+        SELECT id, request_number, deal_amount, currency, paid_amount,
+               debt_amount, payment_schedule, notes, created_at
+        FROM agro_finance
+        WHERE created_by = ?
+    """
+    params = [user_id]
+    if request_number is not None:
+        query += " AND request_number = ?"
+        params.append(request_number)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def format_agro_finance_text(user_id: int, request_number: int = None) -> str:
+    # TODO: future implementation — payment schedule UI
+    rows = get_agro_finance(user_id, request_number=request_number)
+    if not rows:
+        return "💵 Финансы: записей нет."
+    lines = ["💵 Финансы:\n"]
+    for row in rows:
+        fid, req_num, amount, currency, paid, debt, schedule, notes, created_at = row
+        lines.append(
+            f"#{fid} · заявка #{req_num or '—'}\n"
+            f"   💰 {amount or 0} {currency} · оплачено {paid or 0}\n"
+            f"   📉 задолженность {debt or 0}\n"
+            f"   📅 график: {schedule or '—'}\n"
+            f"   🕒 {created_at}"
+        )
+        if notes:
+            lines.append(f"   📝 {notes}")
+    return "\n".join(lines)
+
+
+def register_agro_calendar_event(
+    user_id: int,
+    event_type: str,
+    title: str,
+    start_datetime: str = None,
+    description: str = "",
+):
+    # TODO: future implementation — dedicated agro calendar sync rules
+    type_label = AGRO_CALENDAR_EVENT_TYPES.get(event_type, event_type)
+    full_title = f"[Agro] {type_label}: {title}"
+    return register_calendar_event(
+        user_id,
+        "agro_trading",
+        title=full_title,
+        start_datetime=start_datetime,
+        description=description or f"agro_event:{event_type}",
+    )
+
+
+def format_agro_calendar_text(user_id: int) -> str:
+    # TODO: future implementation — agro-specific calendar filters
+    events = get_calendar_events(user_id, module="agro_trading", limit=10)
+    types = ", ".join(AGRO_CALENDAR_EVENT_TYPES.values())
+    if not events:
+        return (
+            f"📅 Agro календарь\n\n"
+            f"Типы событий: {types}\n\n"
+            "Событий нет."
+        )
+    text = format_calendar_events_text(user_id, module="agro_trading", limit=10)
+    return f"📅 Agro календарь\n\nТипы: {types}\n\n{text}"
+
+
+def get_agro_report_summary(user_id: int) -> dict:
+    # TODO: future implementation — real analytics from CRM data
+    finance_rows = get_agro_finance(user_id, limit=100)
+    contracts = get_agro_contracts(user_id, limit=100)
+    total_deals = len(contracts)
+    total_volume = sum(r[2] or 0 for r in finance_rows)
+    total_paid = sum(r[4] or 0 for r in finance_rows)
+    total_debt = sum(r[5] or 0 for r in finance_rows)
+    total_profit = total_paid - total_debt if finance_rows else 0
+    return {
+        "deals_count": total_deals,
+        "volume": total_volume,
+        "profit": total_profit,
+        "debt": total_debt,
+    }
+
+
+def format_agro_reports_text(user_id: int) -> str:
+    # TODO: future implementation — export via reports module
+    summary = get_agro_report_summary(user_id)
+    return (
+        "📊 Отчеты Agro Trading\n\n"
+        f"Сделок: {summary['deals_count']}\n"
+        f"Объемы: {summary['volume']}\n"
+        f"Прибыль: {summary['profit']}\n"
+        f"Задолженности: {summary['debt']}\n\n"
+        "Детальная аналитика находится в разработке."
+    )
+
+
+def get_agro_ai_context(user_id: int) -> dict:
+    # TODO: future implementation — aggregate context for AI Agro Assistant
+    return {
+        "user_id": user_id,
+        "requests": [],
+        "counterparties": get_agro_counterparties(user_id, limit=5),
+        "contracts": get_agro_contracts(user_id, limit=5),
+        "logistics": get_agro_logistics(user_id, limit=5),
+        "documents": get_agro_documents(user_id, limit=5),
+        "finance": get_agro_finance(user_id, limit=5),
+    }
+
+
+def format_agro_section_stub(section_key: str, user_id: int) -> str:
+    # TODO: future implementation — load real section data from DB
+    title = AGRO_CRM_SECTIONS.get(section_key, section_key)
+    return (
+        f"{title}\n\n"
+        f"Модуль Agro Trading CRM.\n"
+        f"Пользователь: {user_id}\n\n"
+        "Раздел находится в разработке."
+    )
+
+
+def format_agro_ai_assistant_stub(user_id: int) -> str:
+    # TODO: future implementation — connect dedicated AI Agro agent
+    context = get_agro_ai_context(user_id)
+    areas = ", ".join(AGRO_AI_CONTEXT_AREAS)
+    loaded = sum(1 for area in AGRO_AI_CONTEXT_AREAS if context.get(area))
+    return (
+        "🤖 AI Agro Assistant\n\n"
+        f"Будущий доступ к: {areas}.\n"
+        f"Загружено контекстных блоков: {loaded}/{len(AGRO_AI_CONTEXT_AREAS)}.\n\n"
+        "AI Agro Assistant находится в разработке."
+    )
+
+
+def format_agro_ai_context_stub(area: str, user_id: int) -> str:
+    # TODO: future implementation — preview AI context for specific area
+    context = get_agro_ai_context(user_id)
+    items = context.get(area, [])
+    count = len(items) if isinstance(items, list) else 0
+    return (
+        f"🤖 AI Agro контекст: {area}\n\n"
+        f"Записей: {count}.\n\n"
         "Раздел находится в разработке."
     )
 
