@@ -153,20 +153,77 @@ conn.commit()
 
 ROLE_NAMES = (
     "OWNER",
-    "MANAGER",
+    "ADMIN",
+    "OTC_MANAGER",
+    "AGRO_MANAGER",
     "LAWYER",
-    "DRONE_ENGINEER",
+    "ENGINEER",
     "BEAUTY_MANAGER",
+    "VIEWER",
+    # legacy roles (CRM compatibility)
+    "MANAGER",
+    "DRONE_ENGINEER",
     "CLIENT",
 )
 
 ROLE_DESCRIPTIONS = {
     "OWNER": "Владелец системы",
-    "MANAGER": "Менеджер CRM",
+    "ADMIN": "Администратор",
+    "OTC_MANAGER": "Менеджер Crypto OTC",
+    "AGRO_MANAGER": "Менеджер Agro Trading",
     "LAWYER": "Юрист",
-    "DRONE_ENGINEER": "Инженер дронов",
+    "ENGINEER": "Инженер Drone Engineering",
     "BEAUTY_MANAGER": "Менеджер Cafe & Beauty",
+    "VIEWER": "Наблюдатель (только просмотр)",
+    "MANAGER": "Менеджер CRM",
+    "DRONE_ENGINEER": "Инженер дронов",
     "CLIENT": "Клиент",
+}
+
+SYSTEM_PERMISSIONS = (
+    "crypto_access",
+    "agro_access",
+    "legal_access",
+    "drone_access",
+    "beauty_access",
+    "calendar_access",
+    "reports_access",
+    "ai_access",
+    "users_access",
+)
+
+MODULE_PERMISSIONS = {
+    "crypto_otc": "crypto_access",
+    "agro_trading": "agro_access",
+    "law": "legal_access",
+    "drone": "drone_access",
+    "cafe_beauty": "beauty_access",
+    "calendar": "calendar_access",
+    "reports": "reports_access",
+    "ai_assistant": "ai_access",
+    "users": "users_access",
+}
+
+_ALL = set(SYSTEM_PERMISSIONS)
+
+ROLE_PERMISSIONS = {
+    "OWNER": _ALL,
+    "ADMIN": _ALL,
+    "OTC_MANAGER": {
+        "crypto_access", "calendar_access", "reports_access", "ai_access",
+    },
+    "AGRO_MANAGER": {
+        "agro_access", "calendar_access", "reports_access", "ai_access",
+    },
+    "LAWYER": {"legal_access", "calendar_access", "ai_access"},
+    "ENGINEER": {"drone_access", "calendar_access", "ai_access"},
+    "BEAUTY_MANAGER": {"beauty_access", "calendar_access", "ai_access"},
+    "VIEWER": {"calendar_access", "reports_access", "ai_access"},
+    "MANAGER": {
+        "crypto_access", "agro_access", "calendar_access", "reports_access", "ai_access",
+    },
+    "DRONE_ENGINEER": {"drone_access", "calendar_access", "ai_access"},
+    "CLIENT": {"calendar_access", "ai_access"},
 }
 
 
@@ -206,6 +263,7 @@ def ensure_user(telegram_id: int, full_name: str = "", username: str = ""):
 
 
 def get_user_roles(telegram_id: int) -> list[str]:
+    # TODO: future implementation — cache roles per session
     cursor.execute(
         """
         SELECT r.role_name
@@ -223,10 +281,11 @@ def get_primary_role(telegram_id: int) -> str:
     roles = get_user_roles(telegram_id)
     if roles:
         return roles[0]
-    return "CLIENT"
+    return "VIEWER"
 
 
-def assign_role(telegram_id: int, role_name: str, assigned_by: int = None):
+def assign_role(telegram_id: int, role_name: str, assigned_by: int = None) -> bool:
+    # TODO: future implementation — Telegram UI for role assignment
     cursor.execute(
         "SELECT id FROM roles WHERE role_name = ?",
         (role_name,),
@@ -244,7 +303,48 @@ def assign_role(telegram_id: int, role_name: str, assigned_by: int = None):
         (telegram_id, role_row[0], assigned_by),
     )
     conn.commit()
-    return True
+    return cursor.rowcount > 0
+
+
+def revoke_role(telegram_id: int, role_name: str) -> bool:
+    # TODO: future implementation — Telegram UI for role revocation
+    cursor.execute(
+        "SELECT id FROM roles WHERE role_name = ?",
+        (role_name,),
+    )
+    role_row = cursor.fetchone()
+    if not role_row:
+        return False
+
+    cursor.execute(
+        "DELETE FROM user_roles WHERE user_id = ? AND role_id = ?",
+        (telegram_id, role_row[0]),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def has_permission(telegram_id: int, permission: str) -> bool:
+    # TODO: future implementation — per-user permission overrides from DB
+    if permission not in SYSTEM_PERMISSIONS:
+        return False
+
+    roles = get_user_roles(telegram_id)
+    if not roles:
+        return False
+
+    for role in roles:
+        if permission in ROLE_PERMISSIONS.get(role, set()):
+            return True
+    return False
+
+
+def has_module_access(telegram_id: int, module: str) -> bool:
+    # TODO: future implementation — combine module status and user activity
+    permission = MODULE_PERMISSIONS.get(module)
+    if not permission:
+        return False
+    return has_permission(telegram_id, permission)
 
 
 def log_audit(user_id: int, action: str, module: str, details: str = ""):
@@ -1089,9 +1189,87 @@ def format_calendar_events_text(user_id: int, module: str = None, limit: int = 1
 
 
 def check_module_access(telegram_id: int, module: str) -> bool:
-    # TODO: future implementation — role-based access control
-    _ = get_user_roles(telegram_id)
-    return module in SYSTEM_MODULES
+    # TODO: future implementation — deprecated alias, use has_module_access
+    return has_module_access(telegram_id, module)
+
+
+def list_users(limit: int = 50):
+    # TODO: future implementation — pagination, search, filters
+    cursor.execute(
+        """
+        SELECT telegram_id, username, full_name, is_active, created_at
+        FROM users
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (limit,),
+    )
+    return cursor.fetchall()
+
+
+def format_users_list_text(limit: int = 20) -> str:
+    # TODO: future implementation — rich user cards with roles
+    rows = list_users(limit)
+    if not rows:
+        return "Пользователи не найдены."
+
+    lines = ["📋 Список пользователей:\n"]
+    for telegram_id, username, full_name, is_active, created_at in rows:
+        roles = get_user_roles(telegram_id)
+        roles_text = ", ".join(roles) if roles else "без ролей"
+        status = "активен" if is_active else "неактивен"
+        lines.append(
+            f"• {full_name or '—'} (@{username or '—'})\n"
+            f"  ID: {telegram_id} · {status}\n"
+            f"  🛡 {roles_text}\n"
+            f"  🕒 {created_at}"
+        )
+    return "\n\n".join(lines)
+
+
+def format_roles_catalog_text() -> str:
+    # TODO: future implementation — role editor with permissions preview
+    lines = ["🛡 Роли системы:\n"]
+    for role_name in ROLE_NAMES:
+        desc = ROLE_DESCRIPTIONS.get(role_name, "")
+        perms = ROLE_PERMISSIONS.get(role_name, set())
+        perm_list = ", ".join(sorted(perms)) if perms else "—"
+        lines.append(f"• {role_name}\n  {desc}\n  🔐 {perm_list}")
+    return "\n\n".join(lines)
+
+
+def format_permissions_text(telegram_id: int) -> str:
+    # TODO: future implementation — per-user permission matrix
+    roles = get_user_roles(telegram_id)
+    granted = set()
+    for role in roles:
+        granted.update(ROLE_PERMISSIONS.get(role, set()))
+
+    lines = [
+        "🔐 Права доступа:\n",
+        f"Ваши роли: {', '.join(roles) if roles else 'не назначены'}\n",
+        "Модули:",
+    ]
+    for module, permission in MODULE_PERMISSIONS.items():
+        allowed = permission in granted
+        icon = "✅" if allowed else "❌"
+        lines.append(f"{icon} {SYSTEM_MODULES.get(module, module)} ({permission})")
+    return "\n".join(lines)
+
+
+def format_audit_log_text(limit: int = 10) -> str:
+    # TODO: future implementation — filters by module, user, date
+    rows = get_user_audit_log(limit=limit)
+    if not rows:
+        return "📝 Журнал действий пуст."
+
+    lines = ["📝 Журнал действий:\n"]
+    for user_id, action, module, details, created_at in rows:
+        lines.append(
+            f"• [{created_at}] user {user_id}\n"
+            f"  {module} / {action} — {details or '—'}"
+        )
+    return "\n".join(lines)
 
 
 def get_user_audit_log(user_id: int = None, limit: int = 20):

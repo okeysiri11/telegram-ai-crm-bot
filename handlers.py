@@ -23,6 +23,8 @@ from database import (
     ensure_user,
     get_user_roles,
     assign_role,
+    has_permission,
+    has_module_access,
     log_audit,
     get_ai_settings,
     save_ai_settings,
@@ -39,10 +41,14 @@ from database import (
     SYSTEM_MODULES,
     CALENDAR_SOURCE_MODULES,
     register_calendar_event,
-    check_module_access,
     get_user_audit_log,
     get_user_activity_summary,
     get_module_ai_agent,
+    format_users_list_text,
+    format_roles_catalog_text,
+    format_permissions_text,
+    format_audit_log_text,
+    SYSTEM_PERMISSIONS,
     create_calendar_event,
     get_calendar_event,
     get_calendar_events,
@@ -64,6 +70,7 @@ from keyboards import (
     drone_module_menu,
     cafe_beauty_module_menu,
     users_module_menu,
+    users_module_actions_inline,
     reports_module_menu,
     calendar_module_menu,
     calendar_event_actions_inline,
@@ -135,12 +142,6 @@ MODULE_STUB_BUTTONS = {
     "☕ Cafe",
     "💄 Beauty",
     "📦 Склад",
-    # Пользователи
-    "👤 Список пользователей",
-    "🎭 Роли",
-    "🔐 Права доступа",
-    "📋 Аудит действий",
-    "📈 Активность пользователей",
     # Отчеты
     "📊 Сводный отчет",
     "💰 Отчет Crypto OTC",
@@ -167,6 +168,25 @@ CALENDAR_STUB_MESSAGES = {
     "📆 Сегодня": "События на сегодня",
     "📈 Неделя": "События на неделю",
     "📂 Все события": "Все события системы",
+}
+
+USERS_MENU_BUTTONS = {
+    "📋 Список пользователей",
+    "➕ Добавить пользователя",
+    "🛡 Роли",
+    "🔐 Права доступа",
+    "📊 Активность",
+    "📝 Журнал действий",
+    "⬅ Назад",
+}
+
+USERS_STUB_MESSAGES = {
+    "📋 Список пользователей": "Список пользователей",
+    "➕ Добавить пользователя": "Добавление пользователя",
+    "🛡 Роли": "Управление ролями",
+    "🔐 Права доступа": "Права доступа",
+    "📊 Активность": "Активность пользователей",
+    "📝 Журнал действий": "Журнал действий",
 }
 
 
@@ -381,9 +401,104 @@ async def open_cafe_beauty_module(message: Message):
 
 @router.message(F.text == "👥 Пользователи")
 async def open_users_module(message: Message):
-    # TODO: future implementation — central users & access management
+    # TODO: future implementation — users dashboard and access overview
     _init_ai_user(message)
-    await _open_module(message, "users", "Пользователи")
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "users"
+    log_audit(message.from_user.id, "open", "users")
+
+    if not has_permission(message.from_user.id, "users_access"):
+        await message.answer(
+            "👥 Пользователи\n\n"
+            "У вас нет доступа к модулю управления пользователями.\n"
+            "Раздел находится в разработке.",
+            reply_markup=owner_main_menu(),
+        )
+        return
+
+    perms = ", ".join(SYSTEM_PERMISSIONS)
+    await message.answer(
+        f"👥 Пользователи\n\n"
+        f"Центральный модуль управления доступом.\n"
+        f"Права системы: {perms}\n\n"
+        "Раздел находится в разработке.",
+        reply_markup=users_module_menu(),
+    )
+    await message.answer(
+        "Дополнительно:",
+        reply_markup=users_module_actions_inline(),
+    )
+
+
+@router.message(F.text.in_(USERS_MENU_BUTTONS))
+async def users_screen(message: Message):
+    screen = message.text
+    user_id = message.from_user.id
+    active_module[user_id] = "users"
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    if not has_permission(user_id, "users_access"):
+        await message.answer(
+            "Нет доступа к модулю «Пользователи».",
+            reply_markup=owner_main_menu(),
+        )
+        return
+
+    title = USERS_STUB_MESSAGES.get(screen, screen)
+
+    if screen == "📋 Список пользователей":
+        await message.answer(
+            f"{title}\n\n{format_users_list_text()}",
+            reply_markup=users_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "users", screen)
+        return
+
+    if screen == "🛡 Роли":
+        await message.answer(
+            f"{title}\n\n{format_roles_catalog_text()}\n\n"
+            "Изменение ролей через Telegram пока недоступно.",
+            reply_markup=users_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "users", screen)
+        return
+
+    if screen == "🔐 Права доступа":
+        await message.answer(
+            format_permissions_text(user_id),
+            reply_markup=users_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "users", screen)
+        return
+
+    if screen == "📊 Активность":
+        await message.answer(
+            f"{title}\n\n{get_user_activity_summary(user_id)}",
+            reply_markup=users_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "users", screen)
+        return
+
+    if screen == "📝 Журнал действий":
+        await message.answer(
+            f"{title}\n\n{format_audit_log_text()}",
+            reply_markup=users_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "users", screen)
+        return
+
+    # TODO: future implementation — add user wizard
+    await message.answer(
+        f"{title}\n\n"
+        "Добавление пользователей через Telegram пока недоступно.\n"
+        "Раздел находится в разработке.",
+        reply_markup=users_module_menu(),
+    )
+    log_audit(user_id, "open_stub", "users", screen)
 
 
 @router.message(F.text == "📊 Отчеты")
@@ -475,31 +590,6 @@ async def module_stub_screen(message: Message):
     screen = message.text
     module_key = active_module.get(message.from_user.id, "unknown")
 
-    if screen == "📋 Аудит действий":
-        rows = get_user_audit_log(message.from_user.id, limit=5)
-        if rows:
-            lines = ["📋 Последние действия:\n"]
-            for row in rows:
-                lines.append(f"• [{row[4]}] {row[2]} / {row[1]}")
-            await message.answer("\n".join(lines))
-        else:
-            await message.answer("📋 Аудит действий\n\nЗаписей пока нет.")
-        return
-
-    if screen == "📈 Активность пользователей":
-        await message.answer(get_user_activity_summary(message.from_user.id))
-        return
-
-    if screen in {"🎭 Роли", "🔐 Права доступа", "👤 Список пользователей"}:
-        # TODO: future implementation — users access management
-        allowed = check_module_access(message.from_user.id, module_key)
-        await message.answer(
-            f"{screen}\n\nЦентральный модуль пользователей.\n"
-            f"Доступ: {'разрешён' if allowed else 'ограничен'}\n"
-            "Раздел находится в разработке."
-        )
-        return
-
     log_audit(message.from_user.id, "open_stub", module_key, screen)
     await message.answer(
         f"{screen}\n\nРаздел находится в разработке.",
@@ -529,6 +619,53 @@ async def cafe_beauty_module_callback(callback: CallbackQuery):
 async def users_module_callback(callback: CallbackQuery):
     action = callback.data.split(":", 2)[2]
     await _module_callback_answer(callback, "users", action)
+
+
+@router.callback_query(F.data == "usr:user:add")
+async def users_add_callback(callback: CallbackQuery):
+    # TODO: future implementation — add user via Telegram
+    await callback.answer()
+    await callback.message.answer(
+        "➕ Добавить пользователя\n\n"
+        "Изменение пользователей через Telegram пока недоступно.\n"
+        "Раздел находится в разработке.",
+        reply_markup=users_module_menu(),
+    )
+    log_audit(callback.from_user.id, "users_stub", "users", "add")
+
+
+@router.callback_query(F.data == "usr:roles:view")
+async def users_roles_callback(callback: CallbackQuery):
+    # TODO: future implementation — assign_role / revoke_role via Telegram
+    await callback.answer()
+    await callback.message.answer(
+        f"🛡 Роли\n\n{format_roles_catalog_text()}\n\n"
+        "Назначение и отзыв ролей через Telegram пока недоступны.",
+        reply_markup=users_module_menu(),
+    )
+    log_audit(callback.from_user.id, "users_stub", "users", "roles")
+
+
+@router.callback_query(F.data == "usr:permissions:view")
+async def users_permissions_callback(callback: CallbackQuery):
+    # TODO: future implementation — edit permission matrix
+    await callback.answer()
+    await callback.message.answer(
+        format_permissions_text(callback.from_user.id),
+        reply_markup=users_module_menu(),
+    )
+    log_audit(callback.from_user.id, "users_stub", "users", "permissions")
+
+
+@router.callback_query(F.data == "usr:audit:view")
+async def users_audit_callback(callback: CallbackQuery):
+    # TODO: future implementation — audit log filters
+    await callback.answer()
+    await callback.message.answer(
+        f"📝 Журнал действий\n\n{format_audit_log_text()}",
+        reply_markup=users_module_menu(),
+    )
+    log_audit(callback.from_user.id, "users_stub", "users", "audit")
 
 
 @router.callback_query(F.data.startswith("mod:reports:"))
@@ -771,6 +908,7 @@ async def ai_back_to_main(message: Message):
         and m.text not in AI_MENU_BUTTONS
         and m.text not in MODULE_STUB_BUTTONS
         and m.text not in CALENDAR_MENU_BUTTONS
+        and m.text not in USERS_MENU_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )

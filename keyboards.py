@@ -350,26 +350,56 @@ def cafe_beauty_module_menu():
 
 
 def users_module_menu():
+    # TODO: future implementation — central users & access management hub
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="👤 Список пользователей"),
-                KeyboardButton(text="🎭 Роли")
+                KeyboardButton(text="📋 Список пользователей"),
+                KeyboardButton(text="➕ Добавить пользователя")
             ],
             [
-                KeyboardButton(text="🔐 Права доступа"),
-                KeyboardButton(text="📋 Аудит действий")
+                KeyboardButton(text="🛡 Роли"),
+                KeyboardButton(text="🔐 Права доступа")
             ],
             [
-                KeyboardButton(text="📈 Активность пользователей")
+                KeyboardButton(text="📊 Активность"),
+                KeyboardButton(text="📝 Журнал действий")
             ],
             [
-                KeyboardButton(text="⬅️ Назад")
+                KeyboardButton(text="⬅ Назад")
             ]
         ],
         resize_keyboard=True
     )
     return keyboard
+
+
+def users_module_actions_inline() -> InlineKeyboardMarkup:
+    # TODO: future implementation — inline user management actions
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="➕ Добавить",
+                    callback_data="usr:user:add"
+                ),
+                InlineKeyboardButton(
+                    text="🛡 Роли",
+                    callback_data="usr:roles:view"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔐 Права",
+                    callback_data="usr:permissions:view"
+                ),
+                InlineKeyboardButton(
+                    text="📝 Журнал",
+                    callback_data="usr:audit:view"
+                ),
+            ],
+        ]
+    )
 
 
 def reports_module_menu():
