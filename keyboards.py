@@ -1053,3 +1053,61 @@ def ai_context_depth_menu():
         resize_keyboard=True
     )
     return keyboard
+
+
+def ai_projects_list_inline(projects, active_project_id: int = None) -> InlineKeyboardMarkup:
+    rows = []
+    for project_id, title, *_rest in projects:
+        short_title = title if len(title) <= 28 else title[:25] + "..."
+        active = " 🔵" if active_project_id == project_id else ""
+        rows.append([
+            InlineKeyboardButton(
+                text=f"📂 {short_title}{active}",
+                callback_data=f"ai:proj:open:{project_id}",
+            ),
+        ])
+        rows.append([
+            InlineKeyboardButton(
+                text="▶️ Активировать",
+                callback_data=f"ai:proj:active:{project_id}",
+            ),
+            InlineKeyboardButton(
+                text="🗑 Удалить",
+                callback_data=f"ai:proj:del:{project_id}",
+            ),
+        ])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def ai_project_detail_inline(project_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="▶️ Активировать",
+                    callback_data=f"ai:proj:active:{project_id}",
+                ),
+                InlineKeyboardButton(
+                    text="🗑 Удалить",
+                    callback_data=f"ai:proj:del:{project_id}",
+                ),
+            ],
+        ]
+    )
+
+
+def ai_project_delete_confirm_inline(project_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Да, удалить",
+                    callback_data=f"ai:proj:del:yes:{project_id}",
+                ),
+                InlineKeyboardButton(
+                    text="❌ Отмена",
+                    callback_data=f"ai:proj:open:{project_id}",
+                ),
+            ],
+        ]
+    )

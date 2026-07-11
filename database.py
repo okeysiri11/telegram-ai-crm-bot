@@ -117,8 +117,20 @@ CREATE TABLE IF NOT EXISTS ai_projects (
     user_id INTEGER NOT NULL,
     title TEXT NOT NULL,
     description TEXT,
+    category TEXT DEFAULT 'general',
     status TEXT DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS ai_project_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_id INTEGER NOT NULL,
+    role TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (project_id) REFERENCES ai_projects(id) ON DELETE CASCADE
 )
 """)
 
@@ -366,6 +378,26 @@ def _migrate_schema():
             report_file_id INTEGER,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             closed_at TIMESTAMP
+        )
+        """
+    )
+    conn.commit()
+
+    if not _column_exists("ai_projects", "category"):
+        cursor.execute(
+            "ALTER TABLE ai_projects ADD COLUMN category TEXT DEFAULT 'general'"
+        )
+        conn.commit()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ai_project_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            project_id INTEGER NOT NULL,
+            role TEXT NOT NULL,
+            message TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (project_id) REFERENCES ai_projects(id) ON DELETE CASCADE
         )
         """
     )
@@ -1024,41 +1056,227 @@ def format_profile_text(user_id: int) -> str:
     return "👤 Ваш профиль:\n\n" + "\n".join(lines)
 
 
-def create_ai_project(user_id: int, title: str, description: str = "") -> int:
+def create_ai_project(
+    user_id: int,
+    title: str,
+    description: str = "",
+    category: str = "general",
+) -> int:
+    category = (category or "general").strip().lower()[:64]
     cursor.execute(
         """
-        INSERT INTO ai_projects (user_id, title, description)
-        VALUES (?, ?, ?)
+        INSERT INTO ai_projects (user_id, title, description, category)
+        VALUES (?, ?, ?, ?)
         """,
-        (user_id, title.strip(), description.strip()),
+        (user_id, title.strip(), description.strip(), category),
     )
     conn.commit()
     return cursor.lastrowid
 
 
-def get_ai_projects(user_id: int):
-    cursor.execute(
-        """
-        SELECT id, title, description, status, created_at
-        FROM ai_projects
-        WHERE user_id = ?
-        ORDER BY id DESC
-        """,
-        (user_id,),
-    )
+def get_ai_projects(user_id: int, include_deleted: bool = False):
+    if include_deleted:
+        cursor.execute(
+            """
+            SELECT id, title, description, category, status, created_at, user_id
+            FROM ai_projects
+            WHERE user_id = ?
+            ORDER BY id DESC
+            """,
+            (user_id,),
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT id, title, description, category, status, created_at, user_id
+            FROM ai_projects
+            WHERE user_id = ? AND status != 'deleted'
+            ORDER BY id DESC
+            """,
+            (user_id,),
+        )
     return cursor.fetchall()
 
 
 def get_ai_project(user_id: int, project_id: int):
     cursor.execute(
         """
-        SELECT id, title, description, status, created_at
+        SELECT id, title, description, category, status, created_at, user_id
         FROM ai_projects
-        WHERE user_id = ? AND id = ?
+        WHERE user_id = ? AND id = ? AND status != 'deleted'
         """,
         (user_id, project_id),
     )
     return cursor.fetchone()
+
+
+def delete_ai_project(user_id: int, project_id: int) -> bool:
+    project = get_ai_project(user_id, project_id)
+    if not project:
+        return False
+    cursor.execute(
+        "DELETE FROM ai_project_messages WHERE project_id = ?",
+        (project_id,),
+    )
+    cursor.execute(
+        "DELETE FROM ai_projects WHERE id = ? AND user_id = ?",
+        (project_id, user_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def add_ai_project_message(project_id: int, role: str, message: str) -> int:
+    cursor.execute(
+        """
+        INSERT INTO ai_project_messages (project_id, role, message)
+        VALUES (?, ?, ?)
+        """,
+        (project_id, role, message),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_ai_project_messages(project_id: int, limit: int = 50) -> list[dict]:
+    cursor.execute(
+        """
+        SELECT role, message, created_at
+        FROM ai_project_messages
+        WHERE project_id = ?
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (project_id, limit),
+    )
+    rows = cursor.fetchall()
+    rows.reverse()
+    return [
+        {"role": role, "message": message, "created_at": created_at}
+        for role, message, created_at in rows
+    ]
+
+
+def get_ai_project_history_for_llm(project_id: int, limit: int = 20) -> list[dict]:
+    messages = get_ai_project_messages(project_id, limit)
+    return [{"role": item["role"], "content": item["message"]} for item in messages]
+
+
+AI_PROJECT_CATEGORIES = {
+    "general": "Общее",
+    "business": "Бизнес",
+    "health": "Здоровье / БАД",
+    "tech": "Технологии",
+    "construction": "Строительство",
+    "crypto": "Криптовалюта",
+    "legal": "Юриспруденция",
+    "agro": "Agro",
+}
+
+
+def _extract_labeled_field(text: str, labels: tuple[str, ...]) -> str:
+    import re
+    for label in labels:
+        pattern = rf"(?mi){re.escape(label)}\s*[:：]\s*(.+?)(?:\n|$)"
+        match = re.search(pattern, text)
+        if match:
+            return match.group(1).strip()
+    return ""
+
+
+def parse_project_create_text(text: str) -> dict | None:
+    import re
+    lower = text.lower().strip()
+    create_keywords = (
+        "создай проект",
+        "создать проект",
+        "новый проект",
+        "create project",
+    )
+    if not any(keyword in lower for keyword in create_keywords):
+        return None
+
+    title = _extract_labeled_field(text, ("название", "title", "name"))
+    description = _extract_labeled_field(text, ("описание", "description"))
+    category_raw = _extract_labeled_field(text, ("категория", "category"))
+    category = category_raw.strip().lower() if category_raw else "general"
+
+    if not title:
+        inline = re.sub(
+            r"(?i)(создай проект|создать проект|новый проект|create project)\s*[:：]?\s*",
+            "",
+            text.strip(),
+        )
+        if inline and "\n" not in inline:
+            title = inline.strip()
+
+    if not title:
+        return {"title": "", "description": description, "category": category}
+
+    return {
+        "title": title,
+        "description": description,
+        "category": category,
+    }
+
+
+def format_ai_project_context(project_row) -> str:
+    if not project_row:
+        return ""
+    project_id, title, description, category, status, created_at, owner_id = project_row
+    category_label = AI_PROJECT_CATEGORIES.get(category, category)
+    return (
+        f"\n\nАктивный проект #{project_id}: «{title}»\n"
+        f"Категория: {category_label}\n"
+        f"Описание: {description or '—'}\n"
+        f"Статус: {status}\n"
+        f"Создан: {created_at}\n"
+        f"Владелец ID: {owner_id}\n"
+        "Все сообщения пользователя в этом диалоге относятся к этому проекту."
+    )
+
+
+def format_ai_project_detail(user_id: int, project_id: int) -> str:
+    project = get_ai_project(user_id, project_id)
+    if not project:
+        return "Проект не найден."
+    pid, title, description, category, status, created_at, owner_id = project
+    category_label = AI_PROJECT_CATEGORIES.get(category, category)
+    msg_count = len(get_ai_project_messages(project_id, limit=1000))
+    return (
+        f"📁 Проект #{pid}\n\n"
+        f"📌 Название: {title}\n"
+        f"📝 Описание: {description or '—'}\n"
+        f"🏷 Категория: {category_label}\n"
+        f"📊 Статус: {status}\n"
+        f"👤 Владелец ID: {owner_id}\n"
+        f"🕒 Создан: {created_at}\n"
+        f"💬 Сообщений: {msg_count}"
+    )
+
+
+def format_projects_text(user_id: int, active_project_id: int = None) -> str:
+    projects = get_ai_projects(user_id)
+    if not projects:
+        return (
+            "У вас пока нет проектов.\n\n"
+            "Создайте проект сообщением, например:\n"
+            "Создай проект:\n"
+            "Название: Производство БАД\n"
+            "Описание: Запуск капсульного производства"
+        )
+
+    lines = ["📁 Ваши проекты:\n"]
+    for project_id, title, description, category, status, created_at, owner_id in projects:
+        category_label = AI_PROJECT_CATEGORIES.get(category, category)
+        active_mark = " 🔵 активный" if active_project_id == project_id else ""
+        lines.append(
+            f"#{project_id} · {title}{active_mark}\n"
+            f"   🏷 {category_label} · {status}\n"
+            f"   {description or '—'}\n"
+            f"   👤 владелец: {owner_id} · 🕒 {created_at}"
+        )
+    return "\n\n".join(lines)
 
 
 def create_ai_task(
@@ -1117,21 +1335,6 @@ def update_ai_task_status(user_id: int, task_id: int, status: str) -> bool:
     )
     conn.commit()
     return cursor.rowcount > 0
-
-
-def format_projects_text(user_id: int) -> str:
-    projects = get_ai_projects(user_id)
-    if not projects:
-        return "У вас пока нет проектов."
-
-    lines = ["📁 Ваши проекты:\n"]
-    for project_id, title, description, status, created_at in projects:
-        lines.append(
-            f"#{project_id} · {title} ({status})\n"
-            f"   {description or '—'}\n"
-            f"   🕒 {created_at}"
-        )
-    return "\n\n".join(lines)
 
 
 def format_tasks_text(user_id: int, project_id: int = None) -> str:

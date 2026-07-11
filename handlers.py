@@ -39,6 +39,16 @@ from database import (
     format_profile_text,
     format_memory_text,
     format_projects_text,
+    format_ai_project_detail,
+    format_ai_project_context,
+    create_ai_project,
+    get_ai_projects,
+    get_ai_project,
+    delete_ai_project,
+    add_ai_project_message,
+    get_ai_project_history_for_llm,
+    parse_project_create_text,
+    AI_PROJECT_CATEGORIES,
     format_tasks_text,
     format_ai_settings_text,
     TONE_LABELS,
@@ -169,6 +179,9 @@ from keyboards import (
     ai_settings_menu,
     ai_tone_menu,
     ai_context_depth_menu,
+    ai_projects_list_inline,
+    ai_project_delete_confirm_inline,
+    ai_project_detail_inline,
     notifications_module_menu,
     notifications_module_actions_inline,
     tasks_module_menu,
@@ -217,6 +230,7 @@ waiting_buy_request = {}
 
 # Состояния раздела AI Assistant
 ai_assistant_active = {}
+active_ai_project = {}
 ai_settings_flow = {}
 active_module = {}
 active_agro_sub = {}
@@ -416,6 +430,7 @@ USERS_STUB_MESSAGES = {
 def _clear_ai_state(user_id: int):
     ai_settings_flow.pop(user_id, None)
     ai_assistant_active.pop(user_id, None)
+    active_ai_project.pop(user_id, None)
 
 
 async def _open_module(message: Message, module_key: str, title: str):
@@ -2229,7 +2244,78 @@ async def show_ai_memory(message: Message):
 @router.message(F.text == "📁 Мои проекты")
 async def show_ai_projects(message: Message):
     _init_ai_user(message)
-    await message.answer(format_projects_text(message.from_user.id))
+    user_id = message.from_user.id
+    active_id = active_ai_project.get(user_id)
+    projects = get_ai_projects(user_id)
+    text = format_projects_text(user_id, active_project_id=active_id)
+    markup = ai_projects_list_inline(projects, active_id) if projects else None
+    await message.answer(text, reply_markup=markup)
+
+
+@router.callback_query(F.data.startswith("ai:proj:open:"))
+async def ai_project_open_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    project_id = int(callback.data.split(":")[-1])
+    text = format_ai_project_detail(user_id, project_id)
+    await callback.answer()
+    await callback.message.answer(
+        text,
+        reply_markup=ai_project_detail_inline(project_id),
+    )
+
+
+@router.callback_query(F.data.startswith("ai:proj:active:"))
+async def ai_project_activate_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    project_id = int(callback.data.split(":")[-1])
+    project = get_ai_project(user_id, project_id)
+    if not project:
+        await callback.answer("Проект не найден", show_alert=True)
+        return
+    active_ai_project[user_id] = project_id
+    ai_assistant_active[user_id] = True
+    await callback.answer("Проект активирован")
+    await callback.message.answer(
+        f"🔵 Активный проект: «{project[1]}» (#{project_id})\n\n"
+        "Все ваши сообщения будут сохраняться в этом проекте.",
+        reply_markup=ai_assistant_menu(),
+    )
+    log_audit(user_id, "ai_project_activate", "ai_assistant", str(project_id))
+
+
+@router.callback_query(F.data.startswith("ai:proj:del:yes:"))
+async def ai_project_delete_confirm_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    project_id = int(callback.data.split(":")[-1])
+    project = get_ai_project(user_id, project_id)
+    if not project:
+        await callback.answer("Проект не найден", show_alert=True)
+        return
+    delete_ai_project(user_id, project_id)
+    if active_ai_project.get(user_id) == project_id:
+        active_ai_project.pop(user_id, None)
+    await callback.answer("Проект удалён")
+    await callback.message.answer(
+        f"🗑 Проект «{project[1]}» (#{project_id}) удалён.",
+        reply_markup=ai_assistant_menu(),
+    )
+    log_audit(user_id, "ai_project_delete", "ai_assistant", str(project_id))
+
+
+@router.callback_query(F.data.regexp(r"^ai:proj:del:\d+$"))
+async def ai_project_delete_prompt_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    project_id = int(callback.data.split(":")[-1])
+    project = get_ai_project(user_id, project_id)
+    if not project:
+        await callback.answer("Проект не найден", show_alert=True)
+        return
+    await callback.answer()
+    await callback.message.answer(
+        f"Удалить проект «{project[1]}» (#{project_id})?\n"
+        "Все сообщения проекта будут удалены безвозвратно.",
+        reply_markup=ai_project_delete_confirm_inline(project_id),
+    )
 
 
 @router.message(F.text == "✅ Мои задачи")
@@ -2367,6 +2453,43 @@ async def ai_chat_message(message: Message):
     user_id = message.from_user.id
     _init_ai_user(message)
 
+    parsed_project = parse_project_create_text(message.text)
+    if parsed_project is not None:
+        if not parsed_project.get("title"):
+            await message.answer(
+                "Укажите название проекта, например:\n"
+                "Создай проект:\n"
+                "Название: Производство БАД\n"
+                "Описание: Запуск капсульного производства\n"
+                "Категория: health"
+            )
+            return
+
+        project_id = create_ai_project(
+            user_id,
+            parsed_project["title"],
+            parsed_project.get("description", ""),
+            category=parsed_project.get("category", "general"),
+        )
+        active_ai_project[user_id] = project_id
+        category_label = AI_PROJECT_CATEGORIES.get(
+            parsed_project.get("category", "general"),
+            parsed_project.get("category", "general"),
+        )
+        reply = (
+            f"✅ Проект «{parsed_project['title']}» создан (#{project_id}).\n"
+            f"🏷 Категория: {category_label}\n"
+            f"👤 Владелец: {user_id}\n\n"
+            "Проект активирован — все ваши сообщения будут сохраняться в нём."
+        )
+        add_ai_project_message(project_id, "user", message.text)
+        add_ai_project_message(project_id, "assistant", reply)
+        add_dialog_message(user_id, "user", message.text)
+        add_dialog_message(user_id, "assistant", reply)
+        await message.answer(reply)
+        log_audit(user_id, "ai_project_create", "ai_assistant", str(project_id))
+        return
+
     profile = get_user_profile(user_id)
     extracted = await extract_memory_from_message(message.text, profile)
     if extracted:
@@ -2374,10 +2497,25 @@ async def ai_chat_message(message: Message):
 
     settings = get_ai_settings(user_id)
     memory_context = format_memory_context(user_id)
-    history = get_dialog_history_for_llm(user_id, settings["context_depth"])
+    project_id = active_ai_project.get(user_id)
+    project_row = None
+    if project_id:
+        project_row = get_ai_project(user_id, project_id)
+        if not project_row:
+            active_ai_project.pop(user_id, None)
+            project_id = None
+        else:
+            memory_context += format_ai_project_context(project_row)
+
+    if project_id:
+        history = get_ai_project_history_for_llm(project_id, settings["context_depth"])
+    else:
+        history = get_dialog_history_for_llm(user_id, settings["context_depth"])
 
     history.append({"role": "user", "content": message.text})
     add_dialog_message(user_id, "user", message.text)
+    if project_id:
+        add_ai_project_message(project_id, "user", message.text)
 
     answer = await ask_openrouter(
         history,
@@ -2386,7 +2524,12 @@ async def ai_chat_message(message: Message):
     )
 
     add_dialog_message(user_id, "assistant", answer)
-    await message.answer(answer)
+    if project_id:
+        add_ai_project_message(project_id, "assistant", answer)
+    if project_id and project_row:
+        await message.answer(f"📁 «{project_row[1]}»\n\n{answer}")
+    else:
+        await message.answer(answer)
     log_audit(user_id, "chat", "ai_assistant")
 
 
