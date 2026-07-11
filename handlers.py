@@ -57,6 +57,13 @@ from database import (
     complete_calendar_event,
     reschedule_calendar_event,
     format_calendar_events_text,
+    REPORT_TYPES,
+    REPORT_BUTTON_TO_TYPE,
+    build_report_filters,
+    format_report_stub_text,
+    export_report_excel,
+    export_report_pdf,
+    can_access_report,
 )
 from keyboards import (
     owner_main_menu,
@@ -72,6 +79,7 @@ from keyboards import (
     users_module_menu,
     users_module_actions_inline,
     reports_module_menu,
+    reports_module_actions_inline,
     calendar_module_menu,
     calendar_event_actions_inline,
     module_inline_actions,
@@ -142,13 +150,20 @@ MODULE_STUB_BUTTONS = {
     "☕ Cafe",
     "💄 Beauty",
     "📦 Склад",
-    # Отчеты
-    "📊 Сводный отчет",
-    "💰 Отчет Crypto OTC",
-    "🌾 Отчет Agro Trading",
-    "⚖ Отчет Юриспруденция",
-    "🚁 Отчет Drone Engineering",
-    "☕ Отчет Cafe & Beauty",
+}
+
+REPORTS_MENU_BUTTONS = {
+    "💰 Финансы",
+    "📈 Прибыль",
+    "👥 Пользователи",
+    "📅 Календарь",
+    "🌾 Agro Trading",
+    "💵 Crypto OTC",
+    "🚁 Drone Engineering",
+    "⚖️ Юриспруденция",
+    "☕ Cafe & Beauty",
+    "🤖 AI аналитика",
+    "⬅ Назад",
 }
 
 CALENDAR_MENU_BUTTONS = {
@@ -503,8 +518,75 @@ async def users_screen(message: Message):
 
 @router.message(F.text == "📊 Отчеты")
 async def open_reports_module(message: Message):
-    # TODO: future implementation — reports aggregation
-    await _open_module(message, "reports", "Отчеты")
+    # TODO: future implementation — reports dashboard and KPI widgets
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "reports"
+    log_audit(message.from_user.id, "open", "reports")
+
+    if not has_permission(message.from_user.id, "reports_access"):
+        await message.answer(
+            "📊 Отчеты\n\n"
+            "У вас нет доступа к модулю отчетов.\n"
+            "Раздел находится в разработке.",
+            reply_markup=owner_main_menu(),
+        )
+        return
+
+    types_list = ", ".join(REPORT_TYPES.values())
+    await message.answer(
+        f"📊 Отчеты\n\n"
+        f"Центральный модуль отчетности.\n"
+        f"Доступные отчеты: {types_list}\n\n"
+        "Раздел находится в разработке.",
+        reply_markup=reports_module_menu(),
+    )
+    await message.answer(
+        "Дополнительно:",
+        reply_markup=reports_module_actions_inline("summary"),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in REPORTS_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "reports"
+    )
+)
+async def reports_screen(message: Message):
+    screen = message.text
+    user_id = message.from_user.id
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    if not has_permission(user_id, "reports_access"):
+        await message.answer(
+            "Нет доступа к модулю «Отчеты».",
+            reply_markup=owner_main_menu(),
+        )
+        return
+
+    report_type = REPORT_BUTTON_TO_TYPE.get(screen, "summary")
+
+    if not can_access_report(user_id, report_type):
+        await message.answer(
+            f"{screen}\n\nНет доступа к этому отчету.",
+            reply_markup=reports_module_menu(),
+        )
+        return
+
+    filters = build_report_filters()
+    await message.answer(
+        format_report_stub_text(report_type, user_id, filters),
+        reply_markup=reports_module_menu(),
+    )
+    await message.answer(
+        "Действия с отчетом:",
+        reply_markup=reports_module_actions_inline(report_type),
+    )
+    log_audit(user_id, "open_stub", "reports", report_type)
 
 
 @router.message(F.text == "📅 Календарь")
@@ -672,6 +754,80 @@ async def users_audit_callback(callback: CallbackQuery):
 async def reports_module_callback(callback: CallbackQuery):
     action = callback.data.split(":", 2)[2]
     await _module_callback_answer(callback, "reports", action)
+
+
+@router.callback_query(F.data.startswith("rpt:filter:date:"))
+async def reports_filter_date_callback(callback: CallbackQuery):
+    # TODO: future implementation — date range picker
+    report_type = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"📅 Фильтр по датам\n\n"
+        f"Отчет: {REPORT_TYPES.get(report_type, report_type)}\n\n"
+        "Выбор периода находится в разработке.",
+        reply_markup=reports_module_menu(),
+    )
+    log_audit(callback.from_user.id, "reports_stub", "reports", f"filter_date:{report_type}")
+
+
+@router.callback_query(F.data.startswith("rpt:filter:user:"))
+async def reports_filter_user_callback(callback: CallbackQuery):
+    # TODO: future implementation — user filter selector
+    report_type = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"👤 Фильтр по пользователю\n\n"
+        f"Отчет: {REPORT_TYPES.get(report_type, report_type)}\n\n"
+        "Фильтрация по пользователям находится в разработке.",
+        reply_markup=reports_module_menu(),
+    )
+    log_audit(callback.from_user.id, "reports_stub", "reports", f"filter_user:{report_type}")
+
+
+@router.callback_query(F.data.startswith("rpt:filter:department:"))
+async def reports_filter_department_callback(callback: CallbackQuery):
+    # TODO: future implementation — department filter selector
+    report_type = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"🏢 Фильтр по отделу\n\n"
+        f"Отчет: {REPORT_TYPES.get(report_type, report_type)}\n\n"
+        "Фильтрация по отделам находится в разработке.",
+        reply_markup=reports_module_menu(),
+    )
+    log_audit(callback.from_user.id, "reports_stub", "reports", f"filter_department:{report_type}")
+
+
+@router.callback_query(F.data.startswith("rpt:export:excel:"))
+async def reports_export_excel_callback(callback: CallbackQuery):
+    # TODO: future implementation — send Excel file to user
+    report_type = callback.data.split(":")[-1]
+    user_id = callback.from_user.id
+    await callback.answer()
+    path = export_report_excel(report_type, user_id, build_report_filters())
+    await callback.message.answer(
+        f"📊 Экспорт Excel\n\n"
+        f"Отчет: {REPORT_TYPES.get(report_type, report_type)}\n\n"
+        f"{'Файл: ' + path if path else 'Экспорт в Excel находится в разработке.'}",
+        reply_markup=reports_module_menu(),
+    )
+    log_audit(user_id, "reports_stub", "reports", f"export_excel:{report_type}")
+
+
+@router.callback_query(F.data.startswith("rpt:export:pdf:"))
+async def reports_export_pdf_callback(callback: CallbackQuery):
+    # TODO: future implementation — send PDF file to user
+    report_type = callback.data.split(":")[-1]
+    user_id = callback.from_user.id
+    await callback.answer()
+    path = export_report_pdf(report_type, user_id, build_report_filters())
+    await callback.message.answer(
+        f"📄 Экспорт PDF\n\n"
+        f"Отчет: {REPORT_TYPES.get(report_type, report_type)}\n\n"
+        f"{'Файл: ' + path if path else 'Экспорт в PDF находится в разработке.'}",
+        reply_markup=reports_module_menu(),
+    )
+    log_audit(user_id, "reports_stub", "reports", f"export_pdf:{report_type}")
 
 
 @router.callback_query(F.data.startswith("mod:calendar:"))
@@ -909,6 +1065,7 @@ async def ai_back_to_main(message: Message):
         and m.text not in MODULE_STUB_BUTTONS
         and m.text not in CALENDAR_MENU_BUTTONS
         and m.text not in USERS_MENU_BUTTONS
+        and m.text not in REPORTS_MENU_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )

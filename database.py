@@ -1313,3 +1313,136 @@ def get_user_activity_summary(user_id: int, limit: int = 10) -> str:
 def get_module_ai_agent(module: str):
     # TODO: future implementation — return configured AI agent for module
     return MODULE_AI_AGENTS.get(module)
+
+
+# ==========================================================
+# REPORTS (central hub)
+# ==========================================================
+
+REPORT_TYPES = {
+    "finance": "💰 Финансы",
+    "profit": "📈 Прибыль",
+    "users": "👥 Пользователи",
+    "calendar": "📅 Календарь",
+    "agro_trading": "🌾 Agro Trading",
+    "crypto_otc": "💵 Crypto OTC",
+    "drone": "🚁 Drone Engineering",
+    "law": "⚖️ Юриспруденция",
+    "cafe_beauty": "☕ Cafe & Beauty",
+    "ai_analytics": "🤖 AI аналитика",
+}
+
+REPORT_BUTTON_TO_TYPE = {label: key for key, label in REPORT_TYPES.items()}
+
+REPORT_DEPARTMENTS = {
+    "finance": "Финансы",
+    "agro_trading": "Agro Trading",
+    "crypto_otc": "Crypto OTC",
+    "drone": "Drone Engineering",
+    "law": "Юриспруденция",
+    "cafe_beauty": "Cafe & Beauty",
+    "users": "Пользователи",
+    "calendar": "Календарь",
+    "ai_assistant": "AI помощник",
+}
+
+
+def build_report_filters(
+    date_from: str = None,
+    date_to: str = None,
+    user_id: int = None,
+    department: str = None,
+) -> dict:
+    # TODO: future implementation — validate and normalize filter values
+    return {
+        "date_from": date_from,
+        "date_to": date_to,
+        "user_id": user_id,
+        "department": department,
+    }
+
+
+def get_report_data(
+    report_type: str,
+    requested_by: int,
+    filters: dict = None,
+):
+    # TODO: future implementation — aggregate data from modules and CRM
+    _ = requested_by
+    _ = filters or {}
+    if report_type not in REPORT_TYPES:
+        return None
+    return {
+        "type": report_type,
+        "title": REPORT_TYPES[report_type],
+        "rows": [],
+        "filters": filters or {},
+    }
+
+
+def format_report_stub_text(
+    report_type: str,
+    user_id: int,
+    filters: dict = None,
+) -> str:
+    # TODO: future implementation — render real report tables and charts
+    title = REPORT_TYPES.get(report_type, report_type)
+    filters = filters or {}
+    filter_lines = []
+    if filters.get("date_from") or filters.get("date_to"):
+        filter_lines.append(
+            f"📅 Период: {filters.get('date_from') or '—'} — {filters.get('date_to') or '—'}"
+        )
+    if filters.get("user_id"):
+        filter_lines.append(f"👤 Пользователь: {filters['user_id']}")
+    if filters.get("department"):
+        dept = REPORT_DEPARTMENTS.get(filters["department"], filters["department"])
+        filter_lines.append(f"🏢 Отдел: {dept}")
+
+    filters_text = "\n".join(filter_lines) if filter_lines else "Фильтры не заданы."
+    return (
+        f"{title}\n\n"
+        f"{filters_text}\n\n"
+        "Отчёт находится в разработке.\n"
+        "Доступны будущие фильтры и экспорт в Excel / PDF."
+    )
+
+
+def export_report_excel(
+    report_type: str,
+    user_id: int,
+    filters: dict = None,
+) -> str:
+    # TODO: future implementation — generate .xlsx file and return path
+    _ = get_report_data(report_type, user_id, filters)
+    return ""
+
+
+def export_report_pdf(
+    report_type: str,
+    user_id: int,
+    filters: dict = None,
+) -> str:
+    # TODO: future implementation — generate .pdf file and return path
+    _ = get_report_data(report_type, user_id, filters)
+    return ""
+
+
+def can_access_report(user_id: int, report_type: str) -> bool:
+    # TODO: future implementation — fine-grained report permissions
+    module_map = {
+        "crypto_otc": "crypto_otc",
+        "agro_trading": "agro_trading",
+        "law": "law",
+        "drone": "drone",
+        "cafe_beauty": "cafe_beauty",
+        "calendar": "calendar",
+        "users": "users",
+        "ai_analytics": "ai_assistant",
+    }
+    if report_type in {"finance", "profit"}:
+        return has_permission(user_id, "reports_access")
+    module = module_map.get(report_type)
+    if module:
+        return has_module_access(user_id, module) or has_permission(user_id, "reports_access")
+    return has_permission(user_id, "reports_access")

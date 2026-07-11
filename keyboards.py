@@ -403,27 +403,70 @@ def users_module_actions_inline() -> InlineKeyboardMarkup:
 
 
 def reports_module_menu():
+    # TODO: future implementation — central reports hub for all modules
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="📊 Сводный отчет"),
-                KeyboardButton(text="💰 Отчет Crypto OTC")
+                KeyboardButton(text="💰 Финансы"),
+                KeyboardButton(text="📈 Прибыль")
             ],
             [
-                KeyboardButton(text="🌾 Отчет Agro Trading"),
-                KeyboardButton(text="⚖ Отчет Юриспруденция")
+                KeyboardButton(text="👥 Пользователи"),
+                KeyboardButton(text="📅 Календарь")
             ],
             [
-                KeyboardButton(text="🚁 Отчет Drone Engineering"),
-                KeyboardButton(text="☕ Отчет Cafe & Beauty")
+                KeyboardButton(text="🌾 Agro Trading"),
+                KeyboardButton(text="💵 Crypto OTC")
             ],
             [
-                KeyboardButton(text="⬅️ Назад")
+                KeyboardButton(text="🚁 Drone Engineering"),
+                KeyboardButton(text="⚖️ Юриспруденция")
+            ],
+            [
+                KeyboardButton(text="☕ Cafe & Beauty"),
+                KeyboardButton(text="🤖 AI аналитика")
+            ],
+            [
+                KeyboardButton(text="⬅ Назад")
             ]
         ],
         resize_keyboard=True
     )
     return keyboard
+
+
+def reports_module_actions_inline(report_type: str = "summary") -> InlineKeyboardMarkup:
+    # TODO: future implementation — dynamic report actions
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📅 Фильтр: даты",
+                    callback_data=f"rpt:filter:date:{report_type}"
+                ),
+                InlineKeyboardButton(
+                    text="👤 Фильтр: пользователь",
+                    callback_data=f"rpt:filter:user:{report_type}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏢 Фильтр: отдел",
+                    callback_data=f"rpt:filter:department:{report_type}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📊 Excel",
+                    callback_data=f"rpt:export:excel:{report_type}"
+                ),
+                InlineKeyboardButton(
+                    text="📄 PDF",
+                    callback_data=f"rpt:export:pdf:{report_type}"
+                ),
+            ],
+        ]
+    )
 
 
 def calendar_module_menu():
