@@ -17,7 +17,6 @@ from database import (
     get_requests_by_manager,
     get_all_active_requests,
     ensure_user,
-    get_primary_role,
     get_user_roles,
     assign_role,
     log_audit,
@@ -93,14 +92,14 @@ CONTEXT_DEPTH_BY_LABEL = {
 }
 
 AI_MENU_BUTTONS = {
-    "🤖 AI Assistant",
-    "👤 Мой профиль",
-    "🧠 Моя память",
+    "🤖 AI помощник",
     "📁 Мои проекты",
     "✅ Мои задачи",
     "💬 История диалогов",
+    "⚙ Настройки AI",
     "⚙️ Настройки AI",
-    "⬅️ К AI Assistant",
+    "◀ Назад",
+    "⬅️ К AI помощнику",
     "⬅️ К настройкам AI",
     "🎭 Тон общения",
     "🌐 Язык ответов",
@@ -218,26 +217,23 @@ async def buy_product(message: Message):
 # AI ASSISTANT
 # ==========================================================
 
-@router.message(F.text == "🤖 AI Assistant")
+@router.message(F.text == "🤖 AI помощник")
 async def open_ai_assistant(message: Message):
     _init_ai_user(message)
     ai_settings_flow.pop(message.from_user.id, None)
 
-    role = get_primary_role(message.from_user.id)
     await message.answer(
-        f"🤖 AI Assistant\n\n"
-        f"Ваша роль: {role}\n"
-        f"Доступны только ваши данные.",
+        "Раздел AI помощника",
         reply_markup=ai_assistant_menu(),
     )
     log_audit(message.from_user.id, "open", "ai_assistant")
 
 
-@router.message(F.text == "⬅️ К AI Assistant")
+@router.message(F.text == "⬅️ К AI помощнику")
 async def back_to_ai_assistant(message: Message):
     ai_settings_flow.pop(message.from_user.id, None)
     await message.answer(
-        "AI Assistant",
+        "Раздел AI помощника",
         reply_markup=ai_assistant_menu(),
     )
 
@@ -275,7 +271,7 @@ async def show_ai_history(message: Message):
     await message.answer(text)
 
 
-@router.message(F.text == "⚙️ Настройки AI")
+@router.message((F.text == "⚙ Настройки AI") | (F.text == "⚙️ Настройки AI"))
 async def open_ai_settings(message: Message):
     _init_ai_user(message)
     await message.answer(
@@ -361,6 +357,15 @@ async def save_ai_language(message: Message):
     await message.answer(
         f"Язык ответов: {language}",
         reply_markup=ai_settings_menu(),
+    )
+
+
+@router.message(F.text == "◀ Назад")
+async def ai_back_to_main(message: Message):
+    ai_settings_flow.pop(message.from_user.id, None)
+    await message.answer(
+        "Главное меню",
+        reply_markup=owner_main_menu()
     )
 
 

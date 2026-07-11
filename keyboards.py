@@ -26,7 +26,7 @@ def owner_main_menu():
                 KeyboardButton(text="📊 Отчеты")
             ],
             [
-                KeyboardButton(text="🤖 AI Assistant")
+                KeyboardButton(text="🤖 AI помощник")
             ],
             [
                 KeyboardButton(text="⚙ Администрирование")
@@ -282,10 +282,6 @@ def ai_assistant_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="👤 Мой профиль"),
-                KeyboardButton(text="🧠 Моя память")
-            ],
-            [
                 KeyboardButton(text="📁 Мои проекты"),
                 KeyboardButton(text="✅ Мои задачи")
             ],
@@ -293,10 +289,10 @@ def ai_assistant_menu():
                 KeyboardButton(text="💬 История диалогов")
             ],
             [
-                KeyboardButton(text="⚙️ Настройки AI")
+                KeyboardButton(text="⚙ Настройки AI")
             ],
             [
-                KeyboardButton(text="⬅️ Назад")
+                KeyboardButton(text="◀ Назад")
             ]
         ],
         resize_keyboard=True
@@ -316,7 +312,7 @@ def ai_settings_menu():
                 KeyboardButton(text="🗑 Очистить историю")
             ],
             [
-                KeyboardButton(text="⬅️ К AI Assistant")
+                KeyboardButton(text="⬅️ К AI помощнику")
             ]
         ],
         resize_keyboard=True
