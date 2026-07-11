@@ -2403,6 +2403,7 @@ async def back_to_main(message: Message):
 @router.message(F.text)
 async def handle_text(message: Message) -> None:
     user_id = message.from_user.id
+    requests = []
 
     text_lower = message.text.lower()
 
@@ -2477,7 +2478,6 @@ async def handle_text(message: Message) -> None:
         return
 
     if message.from_user.id == MANAGER_ID:
-        ...
 
         if message.text.lower() == "crm":
             await message.answer(
@@ -2487,7 +2487,6 @@ async def handle_text(message: Message) -> None:
             return
 
         if "активные" in message.text.lower():
-
             requests = get_all_active_requests()
 
             if not requests:
@@ -2509,84 +2508,87 @@ async def handle_text(message: Message) -> None:
 
             await message.answer(text)
             return
-            if "заверш" in message.text.lower():
-                requests = get_requests_by_status("DONE")
 
-                if not requests:
-                    await message.answer("Завершенных заявок нет.")
-                    return
+        if "заверш" in message.text.lower():
+            requests = get_requests_by_status("DONE")
 
-                text = "✅ Завершенные заявки\n\n"
-
-                for req in requests:
-                    text += (
-                        f"#{req[0]} | "
-                        f"{req[3]} | "
-                        f"{req[2]} | "
-                        f"{req[1]}\n"
-                    )
-
-                await message.answer(text)
+            if not requests:
+                await message.answer("Завершенных заявок нет.")
                 return
-            if message.text.lower() in ["новые заявки", "новые"]:
-                requests = get_requests_by_status("NEW")
+
+            text = "✅ Завершенные заявки\n\n"
+
+            for req in requests:
+                text += (
+                    f"#{req[0]} | "
+                    f"{req[3]} | "
+                    f"{req[2]} | "
+                    f"{req[1]}\n"
+                )
+
+            await message.answer(text)
+            return
+
+        if message.text.lower() in ["новые заявки", "новые"]:
+            requests = get_requests_by_status("NEW")
 
             if not requests:
                 await message.answer("Новых заявок нет.")
                 return
 
-        text = "🆕 Новые заявки\n\n"
+            text = "🆕 Новые заявки\n\n"
 
-        for req in requests:
-            text += (
-                f"#{req[0]} | "
-                f"{req[3]} | "
-                f"{req[2]} | "
-                f"{req[1]}\n"
-            )
+            for req in requests:
+                text += (
+                    f"#{req[0]} | "
+                    f"{req[3]} | "
+                    f"{req[2]} | "
+                    f"{req[1]}\n"
+                )
 
-        await message.answer(text)
-        return
+            await message.answer(text)
+            return
 
         if message.text.lower() in ["завершенные заявки", "завершенные"]:
             requests = get_requests_by_status("DONE")
 
-        if not requests:
-            await message.answer("Завершенных заявок нет.")
+            if not requests:
+                await message.answer("Завершенных заявок нет.")
+                return
+
+            text = "✅ Завершенные заявки\n\n"
+
+            for req in requests:
+                text += (
+                    f"#{req[0]} | "
+                    f"{req[3]} | "
+                    f"{req[2]} | "
+                    f"{req[1]}\n"
+                )
+
+            await message.answer(text)
             return
-
-        text = "✅ Завершенные заявки\n\n"
-
-        for req in requests:
-            text += (
-                f"#{req[0]} | "
-                f"{req[3]} | "
-                f"{req[2]} | "
-                f"{req[1]}\n"
-            )
-
-        await message.answer(text)
-        return
 
         if message.text.lower() in ["отмененные заявки", "отмененные"]:
             requests = get_requests_by_status("CANCELED")
 
-        if not requests:
-            await message.answer("Отмененных заявок нет.")
+            if not requests:
+                await message.answer("Отмененных заявок нет.")
+                return
+
+            text = "❌ Отмененные заявки\n\n"
+
+            for req in requests:
+                text += (
+                    f"#{req[0]} | "
+                    f"{req[3]} | "
+                    f"{req[2]} | "
+                    f"{req[1]}\n"
+                )
+
+            await message.answer(text)
             return
 
-        text = "❌ Отмененные заявки\n\n"
-
-        for req in requests:
-            text += (
-                f"#{req[0]} | "
-                f"{req[3]} | "
-                f"{req[2]} | "
-                f"{req[1]}\n"
-            )
-
-        await message.answer(text)
-        return
     # обработка заявки на покупку
     if waiting_buy_request.get(user_id):
         product = buy_requests[user_id]["product"]
