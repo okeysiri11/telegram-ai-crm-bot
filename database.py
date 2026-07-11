@@ -830,3 +830,115 @@ def format_ai_settings_text(user_id: int) -> str:
         f"• Язык: {settings['language']}\n"
         f"• Глубина контекста: {settings['context_depth']} сообщений"
     )
+
+
+# ==========================================================
+# SYSTEM MODULES (infrastructure)
+# ==========================================================
+
+SYSTEM_MODULES = {
+    "crypto_otc": "Crypto OTC",
+    "agro_trading": "Agro Trading",
+    "law": "Юриспруденция",
+    "drone": "Drone Engineering",
+    "cafe_beauty": "Cafe & Beauty",
+    "users": "Пользователи",
+    "reports": "Отчеты",
+    "calendar": "Календарь",
+    "ai_assistant": "AI помощник",
+}
+
+# Modules that will register events in the central calendar
+CALENDAR_SOURCE_MODULES = (
+    "crypto_otc",
+    "agro_trading",
+    "law",
+    "drone",
+    "cafe_beauty",
+)
+
+# TODO: future implementation — module-specific AI agents
+MODULE_AI_AGENTS = {
+    "crypto_otc": None,
+    "agro_trading": None,
+    "law": None,
+    "drone": None,
+    "cafe_beauty": None,
+    "users": None,
+    "reports": None,
+    "calendar": None,
+}
+
+
+def register_calendar_event(
+    user_id: int,
+    module: str,
+    title: str,
+    event_at: str = None,
+    details: str = "",
+):
+    # TODO: future implementation — persist event in calendar_events table
+    if module not in CALENDAR_SOURCE_MODULES:
+        return None
+
+    log_audit(
+        user_id,
+        "register_event",
+        "calendar",
+        f"{module}|{title}|{event_at or ''}|{details}",
+    )
+    return None
+
+
+def get_calendar_events(user_id: int, module: str = None, limit: int = 20):
+    # TODO: future implementation — fetch unified calendar events
+    return []
+
+
+def check_module_access(telegram_id: int, module: str) -> bool:
+    # TODO: future implementation — role-based access control
+    _ = get_user_roles(telegram_id)
+    return module in SYSTEM_MODULES
+
+
+def get_user_audit_log(user_id: int = None, limit: int = 20):
+    # TODO: future implementation — extended audit filters and pagination
+    if user_id is not None:
+        cursor.execute(
+            """
+            SELECT user_id, action, module, details, created_at
+            FROM audit_log
+            WHERE user_id = ?
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (user_id, limit),
+        )
+    else:
+        cursor.execute(
+            """
+            SELECT user_id, action, module, details, created_at
+            FROM audit_log
+            ORDER BY id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+    return cursor.fetchall()
+
+
+def get_user_activity_summary(user_id: int, limit: int = 10) -> str:
+    # TODO: future implementation — activity dashboard for users module
+    rows = get_user_audit_log(user_id, limit)
+    if not rows:
+        return "Активность пользователя не зафиксирована."
+
+    lines = [f"📈 Активность пользователя {user_id}:\n"]
+    for row in rows:
+        lines.append(f"• [{row[4]}] {row[2]} / {row[1]} — {row[3] or '—'}")
+    return "\n".join(lines)
+
+
+def get_module_ai_agent(module: str):
+    # TODO: future implementation — return configured AI agent for module
+    return MODULE_AI_AGENTS.get(module)

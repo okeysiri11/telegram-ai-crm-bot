@@ -275,7 +275,173 @@ def crm_menu():
         resize_keyboard=True
     )
 
-    return keyboard                       
+    return keyboard
+
+
+# ==========================================================
+# MODULE MENUS (infrastructure stubs)
+# ==========================================================
+
+def law_module_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📂 Дела"),
+                KeyboardButton(text="📑 Документы")
+            ],
+            [
+                KeyboardButton(text="📚 Законодательство"),
+                KeyboardButton(text="⚖ Судебная практика")
+            ],
+            [
+                KeyboardButton(text="📅 Календарь")
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def drone_module_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📋 Проекты"),
+                KeyboardButton(text="📐 CAD / SolidWorks")
+            ],
+            [
+                KeyboardButton(text="🔌 Электроника"),
+                KeyboardButton(text="⚙ ArduPilot")
+            ],
+            [
+                KeyboardButton(text="🎮 Betaflight"),
+                KeyboardButton(text="📅 Календарь")
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def cafe_beauty_module_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="☕ Cafe"),
+                KeyboardButton(text="💄 Beauty")
+            ],
+            [
+                KeyboardButton(text="📦 Склад"),
+                KeyboardButton(text="📅 Календарь")
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def users_module_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="👤 Список пользователей"),
+                KeyboardButton(text="🎭 Роли")
+            ],
+            [
+                KeyboardButton(text="🔐 Права доступа"),
+                KeyboardButton(text="📋 Аудит действий")
+            ],
+            [
+                KeyboardButton(text="📈 Активность пользователей")
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def reports_module_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📊 Сводный отчет"),
+                KeyboardButton(text="💰 Отчет Crypto OTC")
+            ],
+            [
+                KeyboardButton(text="🌾 Отчет Agro Trading"),
+                KeyboardButton(text="⚖ Отчет Юриспруденция")
+            ],
+            [
+                KeyboardButton(text="🚁 Отчет Drone Engineering"),
+                KeyboardButton(text="☕ Отчет Cafe & Beauty")
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def calendar_module_menu():
+    # TODO: future implementation — central calendar hub for all modules
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📅 Все события"),
+                KeyboardButton(text="🔔 Предстоящие")
+            ],
+            [
+                KeyboardButton(text="🔗 Crypto OTC"),
+                KeyboardButton(text="🔗 Agro Trading")
+            ],
+            [
+                KeyboardButton(text="🔗 Юриспруденция"),
+                KeyboardButton(text="🔗 Drone Engineering")
+            ],
+            [
+                KeyboardButton(text="🔗 Cafe & Beauty")
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def module_inline_actions(module_key: str) -> InlineKeyboardMarkup:
+    # TODO: future implementation — connect module-specific AI agent
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🤖 AI агент",
+                    callback_data=f"mod:{module_key}:ai"
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text="◀ К разделу",
+                    callback_data=f"mod:{module_key}:back"
+                )
+            ]
+        ]
+    )
 
 
 def ai_assistant_menu():

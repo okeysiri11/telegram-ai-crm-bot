@@ -36,6 +36,13 @@ from database import (
     format_tasks_text,
     format_ai_settings_text,
     TONE_LABELS,
+    SYSTEM_MODULES,
+    CALENDAR_SOURCE_MODULES,
+    register_calendar_event,
+    check_module_access,
+    get_user_audit_log,
+    get_user_activity_summary,
+    get_module_ai_agent,
 )
 from keyboards import (
     owner_main_menu,
@@ -45,6 +52,13 @@ from keyboards import (
     product_actions_menu,
     manager_request_menu,
     crm_menu,
+    law_module_menu,
+    drone_module_menu,
+    cafe_beauty_module_menu,
+    users_module_menu,
+    reports_module_menu,
+    calendar_module_menu,
+    module_inline_actions,
     ai_assistant_menu,
     ai_settings_menu,
     ai_tone_menu,
@@ -85,6 +99,109 @@ waiting_buy_request = {}
 # Состояния раздела AI Assistant
 ai_assistant_active = {}
 ai_settings_flow = {}
+active_module = {}
+
+MODULE_MENUS = {
+    "law": law_module_menu,
+    "drone": drone_module_menu,
+    "cafe_beauty": cafe_beauty_module_menu,
+    "users": users_module_menu,
+    "reports": reports_module_menu,
+    "calendar": calendar_module_menu,
+}
+
+MODULE_STUB_BUTTONS = {
+    # Юриспруденция
+    "📂 Дела",
+    "📑 Документы",
+    "📚 Законодательство",
+    "⚖ Судебная практика",
+    # Drone Engineering
+    "📋 Проекты",
+    "📐 CAD / SolidWorks",
+    "🔌 Электроника",
+    "⚙ ArduPilot",
+    "🎮 Betaflight",
+    # Cafe & Beauty
+    "☕ Cafe",
+    "💄 Beauty",
+    "📦 Склад",
+    # Пользователи
+    "👤 Список пользователей",
+    "🎭 Роли",
+    "🔐 Права доступа",
+    "📋 Аудит действий",
+    "📈 Активность пользователей",
+    # Отчеты
+    "📊 Сводный отчет",
+    "💰 Отчет Crypto OTC",
+    "🌾 Отчет Agro Trading",
+    "⚖ Отчет Юриспруденция",
+    "🚁 Отчет Drone Engineering",
+    "☕ Отчет Cafe & Beauty",
+    # Календарь (центральный модуль)
+    "📅 Все события",
+    "🔔 Предстоящие",
+    "🔗 Crypto OTC",
+    "🔗 Agro Trading",
+    "🔗 Юриспруденция",
+    "🔗 Drone Engineering",
+    "🔗 Cafe & Beauty",
+}
+
+
+def _clear_ai_state(user_id: int):
+    ai_settings_flow.pop(user_id, None)
+    ai_assistant_active.pop(user_id, None)
+
+
+async def _open_module(message: Message, module_key: str, title: str):
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = module_key
+    log_audit(message.from_user.id, "open", module_key)
+
+    menu = MODULE_MENUS[module_key]()
+    await message.answer(
+        f"Раздел {title}\n\nРаздел находится в разработке.",
+        reply_markup=menu,
+    )
+    # TODO: future implementation — module dashboard widgets
+    await message.answer(
+        f"Модуль: {SYSTEM_MODULES.get(module_key, title)}",
+        reply_markup=module_inline_actions(module_key),
+    )
+
+
+async def _module_callback_answer(callback: CallbackQuery, module_key: str, action: str):
+    user_id = callback.from_user.id
+
+    if action == "ai":
+        agent = get_module_ai_agent(module_key)
+        # TODO: future implementation — launch dedicated module AI agent
+        text = (
+            f"🤖 AI агент модуля «{SYSTEM_MODULES.get(module_key, module_key)}»\n\n"
+            "Раздел находится в разработке."
+        )
+        if agent:
+            text += f"\n\nАгент: {agent}"
+        await callback.message.answer(text)
+        log_audit(user_id, "open_ai_agent", module_key)
+    elif action == "back":
+        menu_fn = MODULE_MENUS.get(module_key)
+        if menu_fn:
+            await callback.message.answer(
+                f"Раздел {SYSTEM_MODULES.get(module_key, module_key)}",
+                reply_markup=menu_fn(),
+            )
+        log_audit(user_id, "callback_back", module_key)
+    else:
+        # TODO: future implementation — handle module-specific inline actions
+        await callback.message.answer(
+            f"Действие «{action}» модуля «{SYSTEM_MODULES.get(module_key, module_key)}» "
+            "находится в разработке."
+        )
+
+    await callback.answer()
 
 TONE_BY_LABEL = {
     "Нейтральный": "neutral",
@@ -218,6 +335,150 @@ async def buy_product(message: Message):
     )
 
     waiting_buy_request[user_id] = True
+
+
+# ==========================================================
+# SYSTEM MODULES (infrastructure stubs)
+# ==========================================================
+
+@router.message(F.text == "⚖ Юриспруденция")
+async def open_law_module(message: Message):
+    # TODO: future implementation — law module business logic
+    await _open_module(message, "law", "Юриспруденция")
+
+
+@router.message(F.text == "🚁 Drone Engineering")
+async def open_drone_module(message: Message):
+    # TODO: future implementation — drone module business logic
+    await _open_module(message, "drone", "Drone Engineering")
+
+
+@router.message(F.text == "☕ Cafe & Beauty")
+async def open_cafe_beauty_module(message: Message):
+    # TODO: future implementation — cafe & beauty module business logic
+    await _open_module(message, "cafe_beauty", "Cafe & Beauty")
+
+
+@router.message(F.text == "👥 Пользователи")
+async def open_users_module(message: Message):
+    # TODO: future implementation — central users & access management
+    _init_ai_user(message)
+    await _open_module(message, "users", "Пользователи")
+
+
+@router.message(F.text == "📊 Отчеты")
+async def open_reports_module(message: Message):
+    # TODO: future implementation — reports aggregation
+    await _open_module(message, "reports", "Отчеты")
+
+
+@router.message(F.text == "📅 Календарь")
+async def open_calendar_module(message: Message):
+    # TODO: future implementation — central calendar hub
+    await _open_module(message, "calendar", "Календарь")
+
+
+@router.message(F.text.in_(MODULE_STUB_BUTTONS))
+async def module_stub_screen(message: Message):
+    screen = message.text
+    module_key = active_module.get(message.from_user.id, "unknown")
+
+    if screen == "📋 Аудит действий":
+        rows = get_user_audit_log(message.from_user.id, limit=5)
+        if rows:
+            lines = ["📋 Последние действия:\n"]
+            for row in rows:
+                lines.append(f"• [{row[4]}] {row[2]} / {row[1]}")
+            await message.answer("\n".join(lines))
+        else:
+            await message.answer("📋 Аудит действий\n\nЗаписей пока нет.")
+        return
+
+    if screen == "📈 Активность пользователей":
+        await message.answer(get_user_activity_summary(message.from_user.id))
+        return
+
+    if screen in {"📅 Все события", "🔔 Предстоящие"}:
+        # TODO: future implementation — unified calendar views
+        await message.answer(
+            f"{screen}\n\nЕдиный календарь находится в разработке.\n"
+            f"Источники событий: {', '.join(CALENDAR_SOURCE_MODULES)}"
+        )
+        return
+
+    if screen.startswith("🔗 "):
+        source_label = screen.replace("🔗 ", "")
+        source_map = {
+            "Crypto OTC": "crypto_otc",
+            "Agro Trading": "agro_trading",
+            "Юриспруденция": "law",
+            "Drone Engineering": "drone",
+            "Cafe & Beauty": "cafe_beauty",
+        }
+        module = source_map.get(source_label, source_label)
+        register_calendar_event(
+            message.from_user.id,
+            module,
+            title="stub_event",
+            details="calendar_link_opened",
+        )
+        await message.answer(
+            f"{screen}\n\nСобытия модуля будут отображаться в едином календаре.\n"
+            "Раздел находится в разработке."
+        )
+        return
+
+    if screen in {"🎭 Роли", "🔐 Права доступа", "👤 Список пользователей"}:
+        # TODO: future implementation — users access management
+        allowed = check_module_access(message.from_user.id, module_key)
+        await message.answer(
+            f"{screen}\n\nЦентральный модуль пользователей.\n"
+            f"Доступ: {'разрешён' if allowed else 'ограничен'}\n"
+            "Раздел находится в разработке."
+        )
+        return
+
+    log_audit(message.from_user.id, "open_stub", module_key, screen)
+    await message.answer(
+        f"{screen}\n\nРаздел находится в разработке.",
+        reply_markup=MODULE_MENUS.get(module_key, owner_main_menu)(),
+    )
+
+
+@router.callback_query(F.data.startswith("mod:law:"))
+async def law_module_callback(callback: CallbackQuery):
+    action = callback.data.split(":", 2)[2]
+    await _module_callback_answer(callback, "law", action)
+
+
+@router.callback_query(F.data.startswith("mod:drone:"))
+async def drone_module_callback(callback: CallbackQuery):
+    action = callback.data.split(":", 2)[2]
+    await _module_callback_answer(callback, "drone", action)
+
+
+@router.callback_query(F.data.startswith("mod:cafe_beauty:"))
+async def cafe_beauty_module_callback(callback: CallbackQuery):
+    action = callback.data.split(":", 2)[2]
+    await _module_callback_answer(callback, "cafe_beauty", action)
+
+
+@router.callback_query(F.data.startswith("mod:users:"))
+async def users_module_callback(callback: CallbackQuery):
+    action = callback.data.split(":", 2)[2]
+    await _module_callback_answer(callback, "users", action)
+
+
+@router.callback_query(F.data.startswith("mod:reports:"))
+async def reports_module_callback(callback: CallbackQuery):
+    action = callback.data.split(":", 2)[2]
+    await _module_callback_answer(callback, "reports", action)
+
+
+@router.callback_query(F.data.startswith("mod:calendar:"))
+async def calendar_module_callback(callback: CallbackQuery):
+    action = callback.data.split(":", 2)[2]
+    await _module_callback_answer(callback, "calendar", action)
 
 
 # ==========================================================
@@ -371,8 +632,8 @@ async def save_ai_language(message: Message):
 
 @router.message(F.text == "◀ Назад")
 async def ai_back_to_main(message: Message):
-    ai_settings_flow.pop(message.from_user.id, None)
-    ai_assistant_active.pop(message.from_user.id, None)
+    _clear_ai_state(message.from_user.id)
+    active_module.pop(message.from_user.id, None)
     await message.answer(
         "Главное меню",
         reply_markup=owner_main_menu()
@@ -383,6 +644,7 @@ async def ai_back_to_main(message: Message):
     lambda m: (
         ai_assistant_active.get(m.from_user.id)
         and m.text not in AI_MENU_BUTTONS
+        and m.text not in MODULE_STUB_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )
@@ -415,8 +677,8 @@ async def ai_chat_message(message: Message):
 
 @router.message(F.text == "⬅️ Назад")
 async def back_to_main(message: Message):
-    ai_settings_flow.pop(message.from_user.id, None)
-    ai_assistant_active.pop(message.from_user.id, None)
+    _clear_ai_state(message.from_user.id)
+    active_module.pop(message.from_user.id, None)
     await message.answer(
         "Главное меню",
         reply_markup=owner_main_menu()
