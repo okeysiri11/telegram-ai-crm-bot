@@ -8,6 +8,9 @@ from aiogram.types import (
 )
 from openrouter import ask_openrouter, extract_memory_from_message
 from config import OWNER_ID, MANAGER_ID, MANAGERS
+from services.request_auth import RequestAuthService
+from services.permissions import PermissionService
+from services.statuses import normalize_status
 from database import (
     get_user_profile,
     save_profile_fields,
@@ -2316,44 +2319,36 @@ async def handle_text(message: Message) -> None:
 
     if text_lower.startswith("в работу "):
         number = int(text_lower.replace("в работу ", ""))
-
-        update_request_status(
-            number,
-            "IN_PROGRESS",
-            message.from_user.id
-        )
-
-        await message.answer(
-            f"✅ Заявка #{number} взята в работу"
-        )
+        request = get_request_by_number(number)
+        if not RequestAuthService.can_take_request(user_id, request):
+            await message.answer(RequestAuthService.deny_message("take"))
+            return
+        if request and request[7]:
+            await message.answer("Заявка уже закреплена за менеджером.")
+            return
+        assign_manager(number, user_id)
+        update_request_status(number, "IN_PROGRESS", user_id)
+        await message.answer(f"✅ Заявка #{number} взята в работу")
         return
 
     if text_lower.startswith("завершить "):
         number = int(text_lower.replace("завершить ", ""))
-
-        update_request_status(
-            number,
-            "DONE",
-            message.from_user.id
-        )
-
-        await message.answer(
-            f"✅ Заявка #{number} завершена"
-        )
+        request = get_request_by_number(number)
+        if not RequestAuthService.can_update_status(user_id, request):
+            await message.answer(RequestAuthService.deny_message("update"))
+            return
+        update_request_status(number, "DONE", user_id)
+        await message.answer(f"✅ Заявка #{number} завершена")
         return
 
     if text_lower.startswith("отменить "):
         number = int(text_lower.replace("отменить ", ""))
-
-        update_request_status(
-            number,
-            "CANCELLED",
-            message.from_user.id
-        )
-
-        await message.answer(
-            f"❌ Заявка #{number} отменена"
-        )
+        request = get_request_by_number(number)
+        if not RequestAuthService.can_cancel_request(user_id, request):
+            await message.answer(RequestAuthService.deny_message("cancel"))
+            return
+        update_request_status(number, "CANCELLED", user_id)
+        await message.answer(f"❌ Заявка #{number} отменена")
         return
 
     print(f"Получено сообщение: [{message.text}]")
@@ -2367,13 +2362,17 @@ async def handle_text(message: Message) -> None:
             await message.answer("Заявка не найдена.")
             return
 
+        if not RequestAuthService.can_view_request(user_id, request):
+            await message.answer(RequestAuthService.deny_message("view"))
+            return
+
         text = (
             f"📋 Заявка #{request[1]}\n\n"
             f"👤 Клиент: {request[3]}\n"
             f"🆔 ID клиента: {request[2]}\n"
             f"📦 Товар: {request[4]}\n\n"
             f"📝 Текст заявки:\n{request[5]}\n\n"
-            f"📊 Статус: {request[6]}\n"
+            f"📊 Статус: {normalize_status(request[6])}\n"
             f"👨‍💼 Менеджер ID: {request[7]}\n"
             f"🕒 Создана: {request[8]}"
         )
@@ -2639,8 +2638,14 @@ async def cancel_request(message: Message):
 async def work_request(callback: CallbackQuery):
 
     request_number = int(callback.data.split("_")[1])
-
     request = get_request_by_number(request_number)
+
+    if not RequestAuthService.can_take_request(callback.from_user.id, request):
+        await callback.answer(
+            RequestAuthService.deny_message("take"),
+            show_alert=True,
+        )
+        return
 
     if request[7]:
         await callback.answer(
@@ -2651,7 +2656,7 @@ async def work_request(callback: CallbackQuery):
 
     assign_manager(request_number, callback.from_user.id)
 
-    update_request_status(request_number, "IN_PROGRESS")
+    update_request_status(request_number, "IN_PROGRESS", callback.from_user.id)
 
     client_id = get_request_client(request_number)
 
@@ -2675,8 +2680,16 @@ async def work_request(callback: CallbackQuery):
 async def done_request(callback: CallbackQuery):
 
     request_number = int(callback.data.split("_")[1])
+    request = get_request_by_number(request_number)
 
-    update_request_status(request_number, "DONE")
+    if not RequestAuthService.can_update_status(callback.from_user.id, request):
+        await callback.answer(
+            RequestAuthService.deny_message("update"),
+            show_alert=True,
+        )
+        return
+
+    update_request_status(request_number, "DONE", callback.from_user.id)
 
     client_id = get_request_client(request_number)
 
@@ -2700,8 +2713,16 @@ async def done_request(callback: CallbackQuery):
 async def cancel_request(callback: CallbackQuery):
 
     request_number = int(callback.data.split("_")[1])
+    request = get_request_by_number(request_number)
 
-    update_request_status(request_number, "CANCELED")
+    if not RequestAuthService.can_cancel_request(callback.from_user.id, request):
+        await callback.answer(
+            RequestAuthService.deny_message("cancel"),
+            show_alert=True,
+        )
+        return
+
+    update_request_status(request_number, "CANCELLED", callback.from_user.id)
 
     client_id = get_request_client(request_number)
 

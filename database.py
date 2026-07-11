@@ -22,9 +22,12 @@ CREATE TABLE IF NOT EXISTS user_memory (
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS users (
-    telegram_id INTEGER PRIMARY KEY,
-    name TEXT,
-    role TEXT
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    telegram_id INTEGER UNIQUE,
+    username TEXT,
+    full_name TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 """)
 
@@ -298,6 +301,34 @@ CREATE TABLE IF NOT EXISTS workflow_templates (
 
 conn.commit()
 
+
+def _column_exists(table: str, column: str) -> bool:
+    cursor.execute(f"PRAGMA table_info({table})")
+    return column in {row[1] for row in cursor.fetchall()}
+
+
+def _migrate_schema():
+    if not _column_exists("system_tasks", "task_source"):
+        cursor.execute(
+            "ALTER TABLE system_tasks ADD COLUMN task_source TEXT DEFAULT 'SYSTEM'"
+        )
+        conn.commit()
+
+    legacy_map = {
+        "COMPLETED": "DONE",
+        "CANCELED": "CANCELLED",
+        "CANCEL": "CANCELLED",
+    }
+    for old, new in legacy_map.items():
+        cursor.execute(
+            "UPDATE requests SET status = ? WHERE status = ?",
+            (new, old),
+        )
+    conn.commit()
+
+
+_migrate_schema()
+
 ROLE_NAMES = (
     "OWNER",
     "ADMIN",
@@ -472,26 +503,13 @@ def revoke_role(telegram_id: int, role_name: str) -> bool:
 
 
 def has_permission(telegram_id: int, permission: str) -> bool:
-    # TODO: future implementation — per-user permission overrides from DB
-    if permission not in SYSTEM_PERMISSIONS:
-        return False
-
-    roles = get_user_roles(telegram_id)
-    if not roles:
-        return False
-
-    for role in roles:
-        if permission in ROLE_PERMISSIONS.get(role, set()):
-            return True
-    return False
+    from services.permissions import PermissionService
+    return PermissionService.has_permission(telegram_id, permission)
 
 
 def has_module_access(telegram_id: int, module: str) -> bool:
-    # TODO: future implementation — combine module status and user activity
-    permission = MODULE_PERMISSIONS.get(module)
-    if not permission:
-        return False
-    return has_permission(telegram_id, permission)
+    from services.permissions import PermissionService
+    return PermissionService.can_access_module(telegram_id, module)
 
 
 def log_audit(user_id: int, action: str, module: str, details: str = ""):
@@ -607,6 +625,9 @@ def create_request(
     request_text: str,
     manager_id: int
 ):
+    from services.statuses import normalize_status
+    from services.workflow_triggers import WorkflowTriggers
+
     cursor.execute(
         """
         INSERT INTO requests (
@@ -628,7 +649,7 @@ def create_request(
             client_name,
             product,
             request_text,
-            "NEW",
+            normalize_status("NEW"),
             manager_id
         )
     )
@@ -641,8 +662,15 @@ def create_request(
     )
 
     row = cursor.fetchone()
+    request_number = row[0]
 
-    return row[0]
+    WorkflowTriggers.on_request_created(
+        client_id,
+        request_number,
+        module="agro_trading",
+        product=product,
+    )
+    return request_number
 
 
 def update_request_status(
@@ -650,14 +678,17 @@ def update_request_status(
     status: str,
     manager_id: int = None
 ):
-    conn = sqlite3.connect("memory.db")
-    cursor = conn.cursor()
+    from services.statuses import normalize_status
+    from services.workflow_triggers import WorkflowTriggers
+
+    status = normalize_status(status)
+    old_status = get_request_status(request_number)
 
     cursor.execute(
         """
         UPDATE requests
         SET status = ?,
-            manager_id = ?
+            manager_id = COALESCE(?, manager_id)
         WHERE request_number = ?
         """,
         (
@@ -668,7 +699,17 @@ def update_request_status(
     )
 
     conn.commit()
-    conn.close()
+
+    if old_status and old_status != status:
+        req = get_request_by_number(request_number)
+        actor = manager_id or (req[2] if req else 0)
+        WorkflowTriggers.on_request_status_changed(
+            actor,
+            request_number,
+            old_status,
+            status,
+            module="agro_trading",
+        )
 def get_request_status(
     request_number: int
 ):
@@ -686,7 +727,8 @@ def get_request_status(
     row = cursor.fetchone()
 
     if row:
-        return row[0]
+        from services.statuses import normalize_status
+        return normalize_status(row[0])
 
     return None
 
@@ -712,6 +754,8 @@ def get_request_client(
 
     return None
 def get_requests_by_status(status):
+    from services.statuses import normalize_status
+    status = normalize_status(status)
     cursor.execute(
         """
         SELECT request_number,
@@ -760,40 +804,22 @@ def get_request(
     )
 
     return cursor.fetchone()
-def get_request_by_number(request_number: int):
+
+
+def get_request_by_number(number):
     cursor.execute(
         """
-        SELECT client_id
-        FROM requests
-        WHERE request_number=?
-        """,
-        (request_number,)
-    )
-
-    row = cursor.fetchone()
-
-    if row:
-        return row[0]
-
-    return None
-def get_request_by_number(number):
-    conn = sqlite3.connect("memory.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
         SELECT *
         FROM requests
         WHERE request_number = ?
-    """, (number,))
+        """,
+        (number,),
+    )
+    return cursor.fetchone()
 
-    request = cursor.fetchone()
 
-    conn.close()
-
-    return request 
 def assign_manager(request_number, manager_id):
-    conn = sqlite3.connect("memory.db")
-    cursor = conn.cursor()
+    from services.workflow_triggers import WorkflowTriggers
 
     cursor.execute(
         """
@@ -801,27 +827,27 @@ def assign_manager(request_number, manager_id):
         SET manager_id = ?
         WHERE request_number = ?
         """,
-        (manager_id, request_number)
+        (manager_id, request_number),
     )
 
     conn.commit()
-    conn.close()
+    WorkflowTriggers.on_manager_assigned(
+        manager_id,
+        request_number,
+        manager_id,
+        module="agro_trading",
+    )
 def get_requests_by_manager(manager_id):
-    conn = sqlite3.connect("memory.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT *
         FROM requests
         WHERE manager_id = ?
         ORDER BY id DESC
-    """, (manager_id,))
-
-    requests = cursor.fetchall()
-
-    conn.close()
-
-    return requests
+        """,
+        (manager_id,),
+    )
+    return cursor.fetchall()
 
 
 # ==========================================================
@@ -1169,6 +1195,11 @@ def register_calendar_event(
         "calendar",
         f"{module}|{title}|{start_datetime}",
     )
+    if event_id:
+        from services.workflow_triggers import WorkflowTriggers
+        WorkflowTriggers.on_calendar_event_created(
+            user_id, event_id, title, module=module,
+        )
     return event_id
 
 
@@ -2565,7 +2596,7 @@ TASK_MODULES = {
     "ai_assistant": "AI Assistant",
 }
 
-TASK_STATUSES = ("NEW", "IN_PROGRESS", "BLOCKED", "DONE", "CANCELLED")
+TASK_STATUSES = ("NEW", "IN_PROGRESS", "BLOCKED", "DONE", "CANCELLED", "ARCHIVED")
 
 TASK_PRIORITIES = ("LOW", "NORMAL", "HIGH", "CRITICAL")
 
@@ -2582,6 +2613,7 @@ TASK_STATUS_ICONS = {
     "BLOCKED": "🚫",
     "DONE": "✅",
     "CANCELLED": "❌",
+    "ARCHIVED": "🗄",
 }
 
 
@@ -2593,20 +2625,25 @@ def create_system_task(
     priority: str = "NORMAL",
     assigned_user_id: int = None,
     due_date: str = None,
+    task_source: str = "SYSTEM",
 ) -> int:
     # TODO: future implementation — validation and module-specific rules
+    from services.statuses import normalize_status
+
     if module not in TASK_MODULES:
         module = "ai_assistant"
     if priority not in TASK_PRIORITIES:
         priority = "NORMAL"
+    if task_source not in ("HUMAN", "AI", "SYSTEM", "WORKFLOW"):
+        task_source = "SYSTEM"
 
     cursor.execute(
         """
         INSERT INTO system_tasks (
             title, description, creator_id, assigned_user_id,
-            module, priority, status, due_date
+            module, priority, status, due_date, task_source
         )
-        VALUES (?, ?, ?, ?, ?, ?, 'NEW', ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             title.strip(),
@@ -2615,7 +2652,9 @@ def create_system_task(
             assigned_user_id,
             module,
             priority,
+            normalize_status("NEW"),
             due_date,
+            task_source,
         ),
     )
     conn.commit()
@@ -2694,11 +2733,15 @@ def get_system_tasks(
     module: str = None,
     overdue_only: bool = False,
     limit: int = 20,
+    task_source: str = None,
 ):
     # TODO: future implementation — advanced filters and sorting
+    from services.statuses import normalize_status
+
     query = """
         SELECT id, title, description, creator_id, assigned_user_id,
-               module, priority, status, due_date, created_at, completed_at
+               module, priority, status, due_date, created_at, completed_at,
+               task_source
         FROM system_tasks
         WHERE 1=1
     """
@@ -2719,14 +2762,17 @@ def get_system_tasks(
 
     if status:
         query += " AND status = ?"
-        params.append(status)
+        params.append(normalize_status(status))
     if module:
         query += " AND module = ?"
         params.append(module)
+    if task_source:
+        query += " AND task_source = ?"
+        params.append(task_source)
     if overdue_only:
         query += (
             " AND due_date IS NOT NULL AND due_date < datetime('now')"
-            " AND status NOT IN ('DONE', 'CANCELLED')"
+            " AND status NOT IN ('DONE', 'CANCELLED', 'ARCHIVED')"
         )
 
     query += " ORDER BY id DESC LIMIT ?"
@@ -2764,6 +2810,8 @@ def update_system_task_status(
     status: str,
 ) -> bool:
     # TODO: future implementation — status workflow validation
+    from services.statuses import normalize_status
+    status = normalize_status(status)
     if status not in TASK_STATUSES:
         return False
 
@@ -2836,13 +2884,14 @@ def format_system_tasks_text(
 
     lines = ["✅ Задачи:\n"]
     for row in rows:
-        tid, title, description, creator_id, assigned_id, module, priority, nstatus, due_date, created_at, _completed = row
+        tid, title, description, creator_id, assigned_id, module, priority, nstatus, due_date, created_at, _completed = row[:11]
+        task_source = row[11] if len(row) > 11 else "SYSTEM"
         p_icon = TASK_PRIORITY_ICONS.get(priority, "➖")
         s_icon = TASK_STATUS_ICONS.get(nstatus, "🆕")
         mod_label = TASK_MODULES.get(module, module)
         lines.append(
             f"{s_icon} #{tid} · {title}\n"
-            f"   {p_icon} {priority} · {mod_label} · {nstatus}\n"
+            f"   {p_icon} {priority} · {mod_label} · {nstatus} · {task_source}\n"
             f"   👤 creator {creator_id} → assignee {assigned_id or '—'}\n"
             f"   📅 {due_date or '—'} · 🕒 {created_at}"
         )
