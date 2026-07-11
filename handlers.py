@@ -6,12 +6,8 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton
 )
-from openrouter import ask_openrouter, extract_memory_from_message
 from config import OWNER_ID, MANAGER_ID, MANAGERS
 from database import (
-    get_user_profile,
-    save_profile_fields,
-    format_memory_context,
     create_request,
     update_request_status,
     assign_manager,
@@ -27,14 +23,11 @@ from database import (
     log_audit,
     get_ai_settings,
     save_ai_settings,
-    add_dialog_message,
-    get_dialog_history_for_llm,
     clear_dialog_history,
     format_dialog_history_text,
     format_profile_text,
-    create_ai_project,
+    format_memory_text,
     format_projects_text,
-    create_ai_task,
     format_tasks_text,
     format_ai_settings_text,
     TONE_LABELS,
@@ -48,8 +41,6 @@ from keyboards import (
     manager_request_menu,
     crm_menu,
     ai_assistant_menu,
-    ai_projects_menu,
-    ai_tasks_menu,
     ai_settings_menu,
     ai_tone_menu,
     ai_context_depth_menu,
@@ -86,10 +77,7 @@ selected_product = {}
 buy_requests = {}
 waiting_buy_request = {}
 
-# Состояния раздела AI помощник
-ai_chat_mode = {}
-ai_waiting_project = {}
-ai_waiting_task = {}
+# Состояния раздела AI Assistant
 ai_settings_flow = {}
 
 TONE_BY_LABEL = {
@@ -105,18 +93,14 @@ CONTEXT_DEPTH_BY_LABEL = {
 }
 
 AI_MENU_BUTTONS = {
-    "🤖 AI помощник",
-    "💬 Чат с AI",
+    "🤖 AI Assistant",
     "👤 Мой профиль",
-    "📜 История диалогов",
-    "📁 Проекты",
-    "✅ Задачи",
+    "🧠 Моя память",
+    "📁 Мои проекты",
+    "✅ Мои задачи",
+    "💬 История диалогов",
     "⚙️ Настройки AI",
-    "➕ Новый проект",
-    "📋 Список проектов",
-    "➕ Новая задача",
-    "📋 Список задач",
-    "⬅️ К AI помощнику",
+    "⬅️ К AI Assistant",
     "⬅️ К настройкам AI",
     "🎭 Тон общения",
     "🌐 Язык ответов",
@@ -231,20 +215,17 @@ async def buy_product(message: Message):
 
 
 # ==========================================================
-# AI ПОМОЩНИК
+# AI ASSISTANT
 # ==========================================================
 
-@router.message(F.text == "🤖 AI помощник")
+@router.message(F.text == "🤖 AI Assistant")
 async def open_ai_assistant(message: Message):
     _init_ai_user(message)
-    ai_chat_mode.pop(message.from_user.id, None)
-    ai_waiting_project.pop(message.from_user.id, None)
-    ai_waiting_task.pop(message.from_user.id, None)
     ai_settings_flow.pop(message.from_user.id, None)
 
     role = get_primary_role(message.from_user.id)
     await message.answer(
-        f"🤖 AI помощник\n\n"
+        f"🤖 AI Assistant\n\n"
         f"Ваша роль: {role}\n"
         f"Доступны только ваши данные.",
         reply_markup=ai_assistant_menu(),
@@ -252,27 +233,11 @@ async def open_ai_assistant(message: Message):
     log_audit(message.from_user.id, "open", "ai_assistant")
 
 
-@router.message(F.text == "⬅️ К AI помощнику")
+@router.message(F.text == "⬅️ К AI Assistant")
 async def back_to_ai_assistant(message: Message):
-    ai_chat_mode.pop(message.from_user.id, None)
-    ai_waiting_project.pop(message.from_user.id, None)
-    ai_waiting_task.pop(message.from_user.id, None)
     ai_settings_flow.pop(message.from_user.id, None)
     await message.answer(
-        "AI помощник",
-        reply_markup=ai_assistant_menu(),
-    )
-
-
-@router.message(F.text == "💬 Чат с AI")
-async def start_ai_chat(message: Message):
-    _init_ai_user(message)
-    ai_chat_mode[message.from_user.id] = True
-    ai_waiting_project.pop(message.from_user.id, None)
-    ai_waiting_task.pop(message.from_user.id, None)
-    await message.answer(
-        "Режим чата включён. Пишите сообщение — AI ответит с учётом вашего профиля.\n\n"
-        "Для выхода нажмите «⬅️ К AI помощнику».",
+        "AI Assistant",
         reply_markup=ai_assistant_menu(),
     )
 
@@ -280,73 +245,39 @@ async def start_ai_chat(message: Message):
 @router.message(F.text == "👤 Мой профиль")
 async def show_ai_profile(message: Message):
     _init_ai_user(message)
-    ai_chat_mode.pop(message.from_user.id, None)
     await message.answer(format_profile_text(message.from_user.id))
 
 
-@router.message(F.text == "📜 История диалогов")
+@router.message(F.text == "🧠 Моя память")
+async def show_ai_memory(message: Message):
+    _init_ai_user(message)
+    await message.answer(format_memory_text(message.from_user.id))
+
+
+@router.message(F.text == "📁 Мои проекты")
+async def show_ai_projects(message: Message):
+    _init_ai_user(message)
+    await message.answer(format_projects_text(message.from_user.id))
+
+
+@router.message(F.text == "✅ Мои задачи")
+async def show_ai_tasks(message: Message):
+    _init_ai_user(message)
+    await message.answer(format_tasks_text(message.from_user.id))
+
+
+@router.message(F.text == "💬 История диалогов")
 async def show_ai_history(message: Message):
     _init_ai_user(message)
-    ai_chat_mode.pop(message.from_user.id, None)
     text = format_dialog_history_text(message.from_user.id, limit=10)
     if len(text) > 4000:
         text = text[:4000] + "\n\n… (показаны последние сообщения)"
     await message.answer(text)
 
 
-@router.message(F.text == "📁 Проекты")
-async def open_ai_projects(message: Message):
-    _init_ai_user(message)
-    ai_chat_mode.pop(message.from_user.id, None)
-    await message.answer(
-        "Управление проектами",
-        reply_markup=ai_projects_menu(),
-    )
-
-
-@router.message(F.text == "✅ Задачи")
-async def open_ai_tasks(message: Message):
-    _init_ai_user(message)
-    ai_chat_mode.pop(message.from_user.id, None)
-    await message.answer(
-        "Управление задачами",
-        reply_markup=ai_tasks_menu(),
-    )
-
-
-@router.message(F.text == "📋 Список проектов")
-async def list_ai_projects(message: Message):
-    await message.answer(format_projects_text(message.from_user.id))
-
-
-@router.message(F.text == "➕ Новый проект")
-async def new_ai_project(message: Message):
-    ai_waiting_project[message.from_user.id] = True
-    await message.answer(
-        "Отправьте название проекта одним сообщением.\n"
-        "Можно добавить описание через строку «Описание: ...»."
-    )
-
-
-@router.message(F.text == "📋 Список задач")
-async def list_ai_tasks(message: Message):
-    await message.answer(format_tasks_text(message.from_user.id))
-
-
-@router.message(F.text == "➕ Новая задача")
-async def new_ai_task(message: Message):
-    ai_waiting_task[message.from_user.id] = True
-    await message.answer(
-        "Отправьте задачу одним сообщением.\n"
-        "Чтобы привязать к проекту, добавьте в начале «#ID ».\n"
-        "Пример: #3 Подготовить смету"
-    )
-
-
 @router.message(F.text == "⚙️ Настройки AI")
 async def open_ai_settings(message: Message):
     _init_ai_user(message)
-    ai_chat_mode.pop(message.from_user.id, None)
     await message.answer(
         format_ai_settings_text(message.from_user.id),
         reply_markup=ai_settings_menu(),
@@ -418,62 +349,6 @@ async def ai_clear_history(message: Message):
     )
 
 
-@router.message(lambda m: ai_waiting_project.get(m.from_user.id) and m.text not in AI_MENU_BUTTONS)
-async def save_ai_project(message: Message):
-    user_id = message.from_user.id
-    text = message.text.strip()
-    description = ""
-
-    if "\n" in text:
-        title, rest = text.split("\n", 1)
-        if rest.lower().startswith("описание:"):
-            description = rest.split(":", 1)[1].strip()
-        else:
-            description = rest.strip()
-    else:
-        title = text
-
-    project_id = create_ai_project(user_id, title, description)
-    ai_waiting_project.pop(user_id, None)
-    log_audit(user_id, "create_project", "ai_assistant", f"#{project_id} {title}")
-    await message.answer(
-        f"Проект #{project_id} «{title}» создан.",
-        reply_markup=ai_projects_menu(),
-    )
-
-
-@router.message(lambda m: ai_waiting_task.get(m.from_user.id) and m.text not in AI_MENU_BUTTONS)
-async def save_ai_task(message: Message):
-    user_id = message.from_user.id
-    text = message.text.strip()
-    project_id = None
-    title = text
-
-    if text.startswith("#"):
-        parts = text.split(" ", 1)
-        try:
-            project_id = int(parts[0][1:])
-            title = parts[1] if len(parts) > 1 else ""
-        except ValueError:
-            project_id = None
-
-    if not title:
-        await message.answer("Укажите текст задачи.")
-        return
-
-    task_id = create_ai_task(user_id, title, project_id)
-    if task_id == 0:
-        await message.answer("Проект не найден. Задача не создана.")
-        return
-
-    ai_waiting_task.pop(user_id, None)
-    log_audit(user_id, "create_task", "ai_assistant", f"#{task_id} {title}")
-    await message.answer(
-        f"Задача #{task_id} «{title}» создана.",
-        reply_markup=ai_tasks_menu(),
-    )
-
-
 @router.message(lambda m: ai_settings_flow.get(m.from_user.id) == "language" and m.text not in AI_MENU_BUTTONS)
 async def save_ai_language(message: Message):
     language = message.text.strip().lower()
@@ -489,42 +364,8 @@ async def save_ai_language(message: Message):
     )
 
 
-@router.message(lambda m: ai_chat_mode.get(m.from_user.id) and m.text not in AI_MENU_BUTTONS)
-async def ai_chat_message(message: Message):
-    user_id = message.from_user.id
-    _init_ai_user(message)
-
-    profile = get_user_profile(user_id)
-    extracted = await extract_memory_from_message(message.text, profile)
-    if extracted:
-        save_profile_fields(user_id, extracted)
-
-    memory_context = format_memory_context(user_id)
-    settings = get_ai_settings(user_id)
-    history = get_dialog_history_for_llm(user_id, settings["context_depth"])
-
-    history.append({"role": "user", "content": message.text})
-    add_dialog_message(user_id, "user", message.text)
-
-    answer = await ask_openrouter(
-        history,
-        user_memory=memory_context,
-        ai_settings=settings,
-    )
-
-    history.append({"role": "assistant", "content": answer})
-    add_dialog_message(user_id, "assistant", answer)
-    dialog_history[user_id] = history[-settings["context_depth"]:]
-
-    await message.answer(answer)
-    log_audit(user_id, "chat", "ai_assistant")
-
-
 @router.message(F.text == "⬅️ Назад")
 async def back_to_main(message: Message):
-    ai_chat_mode.pop(message.from_user.id, None)
-    ai_waiting_project.pop(message.from_user.id, None)
-    ai_waiting_task.pop(message.from_user.id, None)
     ai_settings_flow.pop(message.from_user.id, None)
     await message.answer(
         "Главное меню",

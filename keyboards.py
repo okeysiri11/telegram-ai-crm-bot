@@ -26,7 +26,7 @@ def owner_main_menu():
                 KeyboardButton(text="📊 Отчеты")
             ],
             [
-                KeyboardButton(text="🤖 AI помощник")
+                KeyboardButton(text="🤖 AI Assistant")
             ],
             [
                 KeyboardButton(text="⚙ Администрирование")
@@ -282,51 +282,21 @@ def ai_assistant_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="💬 Чат с AI"),
-                KeyboardButton(text="👤 Мой профиль")
+                KeyboardButton(text="👤 Мой профиль"),
+                KeyboardButton(text="🧠 Моя память")
             ],
             [
-                KeyboardButton(text="📜 История диалогов"),
-                KeyboardButton(text="📁 Проекты")
+                KeyboardButton(text="📁 Мои проекты"),
+                KeyboardButton(text="✅ Мои задачи")
             ],
             [
-                KeyboardButton(text="✅ Задачи"),
+                KeyboardButton(text="💬 История диалогов")
+            ],
+            [
                 KeyboardButton(text="⚙️ Настройки AI")
             ],
             [
                 KeyboardButton(text="⬅️ Назад")
-            ]
-        ],
-        resize_keyboard=True
-    )
-    return keyboard
-
-
-def ai_projects_menu():
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text="➕ Новый проект"),
-                KeyboardButton(text="📋 Список проектов")
-            ],
-            [
-                KeyboardButton(text="⬅️ К AI помощнику")
-            ]
-        ],
-        resize_keyboard=True
-    )
-    return keyboard
-
-
-def ai_tasks_menu():
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text="➕ Новая задача"),
-                KeyboardButton(text="📋 Список задач")
-            ],
-            [
-                KeyboardButton(text="⬅️ К AI помощнику")
             ]
         ],
         resize_keyboard=True
@@ -346,7 +316,7 @@ def ai_settings_menu():
                 KeyboardButton(text="🗑 Очистить историю")
             ],
             [
-                KeyboardButton(text="⬅️ К AI помощнику")
+                KeyboardButton(text="⬅️ К AI Assistant")
             ]
         ],
         resize_keyboard=True

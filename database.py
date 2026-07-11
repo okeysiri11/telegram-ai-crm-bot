@@ -311,6 +311,18 @@ def save_profile_fields(user_id: int, fields: dict):
             save_memory(user_id, key, str(value).strip())
 
 
+def format_memory_text(user_id: int) -> str:
+    memory = load_memory(user_id)
+    if not memory:
+        return "🧠 Память пуста. AI запомнит данные из будущих диалогов."
+
+    lines = ["🧠 Моя память:\n"]
+    for key, value in memory.items():
+        label = MEMORY_FIELDS.get(key, key)
+        lines.append(f"• {label}: {value}")
+    return "\n".join(lines)
+
+
 def format_memory_context(user_id: int) -> str:
     profile = get_user_profile(user_id)
     if not profile:
