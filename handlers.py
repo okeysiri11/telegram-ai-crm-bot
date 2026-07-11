@@ -64,6 +64,14 @@ from database import (
     export_report_excel,
     export_report_pdf,
     can_access_report,
+    DRONE_SECTIONS,
+    DRONE_BUTTON_TO_SECTION,
+    DRONE_AI_CONTEXT_AREAS,
+    can_access_drone_section,
+    format_drone_section_stub,
+    format_drone_ai_engineer_stub,
+    format_drone_ai_context_stub,
+    get_drone_ai_context,
 )
 from keyboards import (
     owner_main_menu,
@@ -75,6 +83,7 @@ from keyboards import (
     crm_menu,
     law_module_menu,
     drone_module_menu,
+    drone_module_actions_inline,
     cafe_beauty_module_menu,
     users_module_menu,
     users_module_actions_inline,
@@ -140,16 +149,25 @@ MODULE_STUB_BUTTONS = {
     "📑 Документы",
     "📚 Законодательство",
     "⚖ Судебная практика",
-    # Drone Engineering
-    "📋 Проекты",
-    "📐 CAD / SolidWorks",
-    "🔌 Электроника",
-    "⚙ ArduPilot",
-    "🎮 Betaflight",
     # Cafe & Beauty
     "☕ Cafe",
     "💄 Beauty",
     "📦 Склад",
+}
+
+DRONE_MENU_BUTTONS = {
+    "📁 Проекты",
+    "📋 Спецификации BOM",
+    "🔋 Аккумуляторы",
+    "⚡ Электроника",
+    "📡 Связь и VTX",
+    "🛰 Навигация и GPS",
+    "🧠 Автопилоты",
+    "📐 CAD и чертежи",
+    "💰 Себестоимость",
+    "📦 Закупки",
+    "🤖 AI инженер",
+    "⬅ Назад",
 }
 
 REPORTS_MENU_BUTTONS = {
@@ -404,8 +422,86 @@ async def open_law_module(message: Message):
 
 @router.message(F.text == "🚁 Drone Engineering")
 async def open_drone_module(message: Message):
-    # TODO: future implementation — drone module business logic
-    await _open_module(message, "drone", "Drone Engineering")
+    # TODO: future implementation — drone engineering dashboard
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "drone"
+    log_audit(message.from_user.id, "open", "drone")
+
+    if not has_module_access(message.from_user.id, "drone"):
+        await message.answer(
+            "🚁 Drone Engineering\n\n"
+            "У вас нет доступа к модулю.\n"
+            "Раздел находится в разработке.",
+            reply_markup=owner_main_menu(),
+        )
+        return
+
+    sections = ", ".join(DRONE_SECTIONS.values())
+    await message.answer(
+        f"🚁 Drone Engineering\n\n"
+        f"Инженерный модуль системы.\n"
+        f"Разделы: {sections}\n\n"
+        "Раздел находится в разработке.",
+        reply_markup=drone_module_menu(),
+    )
+    await message.answer(
+        "Дополнительно:",
+        reply_markup=drone_module_actions_inline("overview"),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in DRONE_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "drone"
+    )
+)
+async def drone_screen(message: Message):
+    screen = message.text
+    user_id = message.from_user.id
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    if not has_module_access(user_id, "drone"):
+        await message.answer(
+            "Нет доступа к модулю «Drone Engineering».",
+            reply_markup=owner_main_menu(),
+        )
+        return
+
+    section_key = DRONE_BUTTON_TO_SECTION.get(screen, "overview")
+
+    if not can_access_drone_section(user_id, section_key):
+        await message.answer(
+            f"{screen}\n\nНет доступа к этому разделу.",
+            reply_markup=drone_module_menu(),
+        )
+        return
+
+    if section_key == "ai_engineer":
+        await message.answer(
+            format_drone_ai_engineer_stub(user_id),
+            reply_markup=drone_module_menu(),
+        )
+        await message.answer(
+            "Контекст AI инженера:",
+            reply_markup=drone_module_actions_inline(section_key),
+        )
+        log_audit(user_id, "open_stub", "drone", section_key)
+        return
+
+    await message.answer(
+        format_drone_section_stub(section_key, user_id),
+        reply_markup=drone_module_menu(),
+    )
+    await message.answer(
+        "Действия раздела:",
+        reply_markup=drone_module_actions_inline(section_key),
+    )
+    log_audit(user_id, "open_stub", "drone", section_key)
 
 
 @router.message(F.text == "☕ Cafe & Beauty")
@@ -689,6 +785,42 @@ async def law_module_callback(callback: CallbackQuery):
 async def drone_module_callback(callback: CallbackQuery):
     action = callback.data.split(":", 2)[2]
     await _module_callback_answer(callback, "drone", action)
+
+
+@router.callback_query(F.data == "drn:ai:open")
+async def drone_ai_engineer_callback(callback: CallbackQuery):
+    # TODO: future implementation — launch drone AI engineer chat
+    user_id = callback.from_user.id
+    await callback.answer()
+    await callback.message.answer(
+        format_drone_ai_engineer_stub(user_id),
+        reply_markup=drone_module_menu(),
+    )
+    log_audit(user_id, "drone_stub", "drone", "ai_engineer")
+
+
+@router.callback_query(F.data.startswith("drn:ai:context:"))
+async def drone_ai_context_callback(callback: CallbackQuery):
+    # TODO: future implementation — load AI context for projects, BOM, etc.
+    area = callback.data.split(":")[-1]
+    user_id = callback.from_user.id
+    await callback.answer()
+    await callback.message.answer(
+        format_drone_ai_context_stub(area, user_id),
+        reply_markup=drone_module_menu(),
+    )
+    log_audit(user_id, "drone_stub", "drone", f"ai_context:{area}")
+
+
+@router.callback_query(F.data.startswith("drn:section:back:"))
+async def drone_section_back_callback(callback: CallbackQuery):
+    # TODO: future implementation — restore section state
+    await callback.answer()
+    await callback.message.answer(
+        "🚁 Drone Engineering",
+        reply_markup=drone_module_menu(),
+    )
+    log_audit(callback.from_user.id, "drone_stub", "drone", "section_back")
 
 
 @router.callback_query(F.data.startswith("mod:cafe_beauty:"))
@@ -1066,6 +1198,7 @@ async def ai_back_to_main(message: Message):
         and m.text not in CALENDAR_MENU_BUTTONS
         and m.text not in USERS_MENU_BUTTONS
         and m.text not in REPORTS_MENU_BUTTONS
+        and m.text not in DRONE_MENU_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )

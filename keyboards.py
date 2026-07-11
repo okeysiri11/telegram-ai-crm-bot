@@ -306,27 +306,79 @@ def law_module_menu():
 
 
 def drone_module_menu():
+    # TODO: future implementation — full drone engineering hub
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="📋 Проекты"),
-                KeyboardButton(text="📐 CAD / SolidWorks")
+                KeyboardButton(text="📁 Проекты"),
+                KeyboardButton(text="📋 Спецификации BOM")
             ],
             [
-                KeyboardButton(text="🔌 Электроника"),
-                KeyboardButton(text="⚙ ArduPilot")
+                KeyboardButton(text="🔋 Аккумуляторы"),
+                KeyboardButton(text="⚡ Электроника")
             ],
             [
-                KeyboardButton(text="🎮 Betaflight"),
-                KeyboardButton(text="📅 Календарь")
+                KeyboardButton(text="📡 Связь и VTX"),
+                KeyboardButton(text="🛰 Навигация и GPS")
             ],
             [
-                KeyboardButton(text="⬅️ Назад")
+                KeyboardButton(text="🧠 Автопилоты"),
+                KeyboardButton(text="📐 CAD и чертежи")
+            ],
+            [
+                KeyboardButton(text="💰 Себестоимость"),
+                KeyboardButton(text="📦 Закупки")
+            ],
+            [
+                KeyboardButton(text="🤖 AI инженер")
+            ],
+            [
+                KeyboardButton(text="⬅ Назад")
             ]
         ],
         resize_keyboard=True
     )
     return keyboard
+
+
+def drone_module_actions_inline(section_key: str = "overview") -> InlineKeyboardMarkup:
+    # TODO: future implementation — section-specific quick actions
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🤖 AI инженер",
+                    callback_data="drn:ai:open"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📁 Проекты",
+                    callback_data="drn:ai:context:projects"
+                ),
+                InlineKeyboardButton(
+                    text="📋 BOM",
+                    callback_data="drn:ai:context:bom"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔋 Аккумуляторы",
+                    callback_data="drn:ai:context:batteries"
+                ),
+                InlineKeyboardButton(
+                    text="📐 Чертежи",
+                    callback_data="drn:ai:context:drawings"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="◀ К разделу",
+                    callback_data=f"drn:section:back:{section_key}"
+                ),
+            ],
+        ]
+    )
 
 
 def cafe_beauty_module_menu():

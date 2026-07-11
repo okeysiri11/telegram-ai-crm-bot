@@ -1446,3 +1446,91 @@ def can_access_report(user_id: int, report_type: str) -> bool:
     if module:
         return has_module_access(user_id, module) or has_permission(user_id, "reports_access")
     return has_permission(user_id, "reports_access")
+
+
+# ==========================================================
+# DRONE ENGINEERING
+# ==========================================================
+
+DRONE_SECTIONS = {
+    "projects": "📁 Проекты",
+    "bom": "📋 Спецификации BOM",
+    "batteries": "🔋 Аккумуляторы",
+    "electronics": "⚡ Электроника",
+    "vtx": "📡 Связь и VTX",
+    "gps": "🛰 Навигация и GPS",
+    "autopilot": "🧠 Автопилоты",
+    "cad": "📐 CAD и чертежи",
+    "cost": "💰 Себестоимость",
+    "procurement": "📦 Закупки",
+    "ai_engineer": "🤖 AI инженер",
+}
+
+DRONE_BUTTON_TO_SECTION = {label: key for key, label in DRONE_SECTIONS.items()}
+
+# Areas the drone AI engineer will access in future implementation
+DRONE_AI_CONTEXT_AREAS = (
+    "projects",
+    "bom",
+    "batteries",
+    "specifications",
+    "drawings",
+    "procurement",
+    "project_history",
+)
+
+
+def can_access_drone_section(user_id: int, section_key: str) -> bool:
+    # TODO: future implementation — section-level permissions
+    if not has_module_access(user_id, "drone"):
+        return False
+    return section_key in DRONE_SECTIONS
+
+
+def format_drone_section_stub(section_key: str, user_id: int) -> str:
+    # TODO: future implementation — load real section data from DB
+    title = DRONE_SECTIONS.get(section_key, section_key)
+    return (
+        f"{title}\n\n"
+        f"Раздел Drone Engineering.\n"
+        f"Пользователь: {user_id}\n\n"
+        "Раздел находится в разработке."
+    )
+
+
+def get_drone_ai_context(user_id: int) -> dict:
+    # TODO: future implementation — aggregate context for drone AI engineer
+    return {
+        "user_id": user_id,
+        "projects": [],
+        "bom": [],
+        "batteries": [],
+        "specifications": [],
+        "drawings": [],
+        "procurement": [],
+        "project_history": [],
+    }
+
+
+def format_drone_ai_engineer_stub(user_id: int) -> str:
+    # TODO: future implementation — connect dedicated drone AI agent
+    context = get_drone_ai_context(user_id)
+    areas = ", ".join(DRONE_AI_CONTEXT_AREAS)
+    loaded = sum(1 for k in DRONE_AI_CONTEXT_AREAS if context.get(k))
+    return (
+        "🤖 AI инженер\n\n"
+        f"Будущий доступ к: {areas}.\n"
+        f"Загружено контекстных блоков: {loaded}/{len(DRONE_AI_CONTEXT_AREAS)}.\n\n"
+        "AI инженер находится в разработке."
+    )
+
+
+def format_drone_ai_context_stub(area: str, user_id: int) -> str:
+    # TODO: future implementation — preview AI context for specific area
+    context = get_drone_ai_context(user_id)
+    items = context.get(area, [])
+    return (
+        f"🤖 AI контекст: {area}\n\n"
+        f"Записей: {len(items)}.\n\n"
+        "Раздел находится в разработке."
+    )
