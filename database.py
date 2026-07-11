@@ -131,11 +131,25 @@ CREATE TABLE IF NOT EXISTS ai_tasks (
 )
 """)
 
-conn.commit()
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS calendar_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    start_datetime TEXT NOT NULL,
+    end_datetime TEXT,
+    module TEXT,
+    responsible_user INTEGER NOT NULL,
+    priority TEXT DEFAULT 'normal',
+    reminder_minutes INTEGER DEFAULT 0,
+    repeat_rule TEXT,
+    status TEXT DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+""")
 
-# ==========================================================
-# ROLES (подготовка к разделению доступа)
-# ==========================================================
+conn.commit()
 
 ROLE_NAMES = (
     "OWNER",
@@ -874,25 +888,204 @@ def register_calendar_event(
     user_id: int,
     module: str,
     title: str,
-    event_at: str = None,
-    details: str = "",
+    start_datetime: str = None,
+    end_datetime: str = None,
+    description: str = "",
+    priority: str = "normal",
+    reminder_minutes: int = 0,
+    repeat_rule: str = None,
 ):
-    # TODO: future implementation — persist event in calendar_events table
-    if module not in CALENDAR_SOURCE_MODULES:
+    # TODO: future implementation — validation and module-specific event mapping
+    if module not in CALENDAR_SOURCE_MODULES and module != "calendar":
         return None
+
+    if not start_datetime:
+        start_datetime = "1970-01-01 00:00:00"
+
+    event_id = create_calendar_event(
+        responsible_user=user_id,
+        title=title,
+        description=description,
+        start_datetime=start_datetime,
+        end_datetime=end_datetime,
+        module=module,
+        priority=priority,
+        reminder_minutes=reminder_minutes,
+        repeat_rule=repeat_rule,
+    )
 
     log_audit(
         user_id,
         "register_event",
         "calendar",
-        f"{module}|{title}|{event_at or ''}|{details}",
+        f"{module}|{title}|{start_datetime}",
     )
-    return None
+    return event_id
 
 
-def get_calendar_events(user_id: int, module: str = None, limit: int = 20):
-    # TODO: future implementation — fetch unified calendar events
-    return []
+def create_calendar_event(
+    responsible_user: int,
+    title: str,
+    start_datetime: str,
+    description: str = "",
+    end_datetime: str = None,
+    module: str = "calendar",
+    priority: str = "normal",
+    reminder_minutes: int = 0,
+    repeat_rule: str = None,
+    status: str = "active",
+) -> int:
+    # TODO: future implementation — datetime validation and conflict checks
+    cursor.execute(
+        """
+        INSERT INTO calendar_events (
+            title, description, start_datetime, end_datetime,
+            module, responsible_user, priority, reminder_minutes,
+            repeat_rule, status
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            title.strip(),
+            description.strip() if description else None,
+            start_datetime,
+            end_datetime,
+            module,
+            responsible_user,
+            priority,
+            reminder_minutes,
+            repeat_rule,
+            status,
+        ),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_calendar_event(event_id: int, user_id: int):
+    # TODO: future implementation — shared events and role-based visibility
+    cursor.execute(
+        """
+        SELECT id, title, description, start_datetime, end_datetime,
+               module, responsible_user, priority, reminder_minutes,
+               repeat_rule, status, created_at, updated_at
+        FROM calendar_events
+        WHERE id = ? AND responsible_user = ?
+        """,
+        (event_id, user_id),
+    )
+    return cursor.fetchone()
+
+
+def get_calendar_events(
+    user_id: int,
+    module: str = None,
+    status: str = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — date range filters (today, week, reminders)
+    query = """
+        SELECT id, title, description, start_datetime, end_datetime,
+               module, responsible_user, priority, reminder_minutes,
+               repeat_rule, status, created_at, updated_at
+        FROM calendar_events
+        WHERE responsible_user = ?
+    """
+    params = [user_id]
+
+    if module:
+        query += " AND module = ?"
+        params.append(module)
+
+    if status:
+        query += " AND status = ?"
+        params.append(status)
+
+    query += " ORDER BY start_datetime ASC LIMIT ?"
+    params.append(limit)
+
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def update_calendar_event(event_id: int, user_id: int, **fields) -> bool:
+    # TODO: future implementation — partial update validation
+    allowed = {
+        "title", "description", "start_datetime", "end_datetime",
+        "module", "priority", "reminder_minutes", "repeat_rule", "status",
+    }
+    updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
+    if not updates:
+        return False
+
+    set_clause = ", ".join(f"{key} = ?" for key in updates)
+    values = list(updates.values()) + [event_id, user_id]
+
+    cursor.execute(
+        f"""
+        UPDATE calendar_events
+        SET {set_clause}, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND responsible_user = ?
+        """,
+        values,
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def delete_calendar_event(event_id: int, user_id: int) -> bool:
+    # TODO: future implementation — soft delete and audit trail
+    cursor.execute(
+        "DELETE FROM calendar_events WHERE id = ? AND responsible_user = ?",
+        (event_id, user_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def complete_calendar_event(event_id: int, user_id: int) -> bool:
+    # TODO: future implementation — completion workflow and notifications
+    return update_calendar_event(event_id, user_id, status="done")
+
+
+def reschedule_calendar_event(
+    event_id: int,
+    user_id: int,
+    start_datetime: str,
+    end_datetime: str = None,
+) -> bool:
+    # TODO: future implementation — reschedule notifications and conflict checks
+    return update_calendar_event(
+        event_id,
+        user_id,
+        start_datetime=start_datetime,
+        end_datetime=end_datetime,
+    )
+
+
+def format_calendar_events_text(user_id: int, module: str = None, limit: int = 10) -> str:
+    # TODO: future implementation — rich formatting and timezone support
+    events = get_calendar_events(user_id, module=module, limit=limit)
+    if not events:
+        return "Событий пока нет."
+
+    lines = ["📅 События:\n"]
+    for event in events:
+        event_id = event[0]
+        title = event[1]
+        description = event[2]
+        start_dt = event[3]
+        end_dt = event[4]
+        mod = event[5]
+        status = event[10]
+        lines.append(
+            f"#{event_id} · {title}\n"
+            f"   🕒 {start_dt} — {end_dt or '—'}\n"
+            f"   📦 {mod or '—'} · {status}"
+        )
+        if description:
+            lines.append(f"   📝 {description}")
+    return "\n".join(lines)
 
 
 def check_module_access(telegram_id: int, module: str) -> bool:

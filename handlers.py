@@ -43,6 +43,14 @@ from database import (
     get_user_audit_log,
     get_user_activity_summary,
     get_module_ai_agent,
+    create_calendar_event,
+    get_calendar_event,
+    get_calendar_events,
+    update_calendar_event,
+    delete_calendar_event,
+    complete_calendar_event,
+    reschedule_calendar_event,
+    format_calendar_events_text,
 )
 from keyboards import (
     owner_main_menu,
@@ -58,6 +66,7 @@ from keyboards import (
     users_module_menu,
     reports_module_menu,
     calendar_module_menu,
+    calendar_event_actions_inline,
     module_inline_actions,
     ai_assistant_menu,
     ai_settings_menu,
@@ -139,14 +148,25 @@ MODULE_STUB_BUTTONS = {
     "⚖ Отчет Юриспруденция",
     "🚁 Отчет Drone Engineering",
     "☕ Отчет Cafe & Beauty",
-    # Календарь (центральный модуль)
-    "📅 Все события",
-    "🔔 Предстоящие",
-    "🔗 Crypto OTC",
-    "🔗 Agro Trading",
-    "🔗 Юриспруденция",
-    "🔗 Drone Engineering",
-    "🔗 Cafe & Beauty",
+}
+
+CALENDAR_MENU_BUTTONS = {
+    "📅 Мои события",
+    "➕ Новое событие",
+    "🔔 Напоминания",
+    "📆 Сегодня",
+    "📈 Неделя",
+    "📂 Все события",
+    "⬅ Назад",
+}
+
+CALENDAR_STUB_MESSAGES = {
+    "📅 Мои события": "Ваши события",
+    "➕ Новое событие": "Создание события",
+    "🔔 Напоминания": "Напоминания",
+    "📆 Сегодня": "События на сегодня",
+    "📈 Неделя": "События на неделю",
+    "📂 Все события": "Все события системы",
 }
 
 
@@ -374,8 +394,80 @@ async def open_reports_module(message: Message):
 
 @router.message(F.text == "📅 Календарь")
 async def open_calendar_module(message: Message):
-    # TODO: future implementation — central calendar hub
-    await _open_module(message, "calendar", "Календарь")
+    # TODO: future implementation — calendar dashboard and widgets
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "calendar"
+    log_audit(message.from_user.id, "open", "calendar")
+
+    sources = ", ".join(CALENDAR_SOURCE_MODULES)
+    await message.answer(
+        f"📅 Календарь\n\n"
+        f"Центральный модуль системы.\n"
+        f"Источники событий: {sources}\n\n"
+        "Раздел находится в разработке.",
+        reply_markup=calendar_module_menu(),
+    )
+    await message.answer(
+        "Дополнительно:",
+        reply_markup=module_inline_actions("calendar"),
+    )
+
+
+@router.message(F.text.in_(CALENDAR_MENU_BUTTONS))
+async def calendar_screen(message: Message):
+    screen = message.text
+    user_id = message.from_user.id
+    active_module[user_id] = "calendar"
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    title = CALENDAR_STUB_MESSAGES.get(screen, screen)
+
+    if screen == "📅 Мои события":
+        text = format_calendar_events_text(user_id)
+        await message.answer(
+            f"{title}\n\n{text}\n\n"
+            f"Источники: {', '.join(CALENDAR_SOURCE_MODULES)}",
+            reply_markup=calendar_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "calendar", screen)
+        return
+
+    if screen == "📂 Все события":
+        # TODO: future implementation — all events across modules and users
+        text = format_calendar_events_text(user_id, limit=20)
+        await message.answer(
+            f"{title}\n\n{text}\n\nРаздел находится в разработке.",
+            reply_markup=calendar_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "calendar", screen)
+        return
+
+    if screen == "➕ Новое событие":
+        # TODO: future implementation — interactive event creation wizard
+        await message.answer(
+            f"{title}\n\n"
+            "Создание, редактирование, удаление, завершение и перенос событий "
+            "будут доступны в следующих версиях.\n\n"
+            "Раздел находится в разработке.",
+            reply_markup=calendar_module_menu(),
+        )
+        await message.answer(
+            "Действия с событиями (заглушка):",
+            reply_markup=calendar_event_actions_inline(0),
+        )
+        log_audit(user_id, "open_stub", "calendar", screen)
+        return
+
+    # TODO: future implementation — today, week, reminders filters
+    await message.answer(
+        f"{title}\n\nРаздел находится в разработке.",
+        reply_markup=calendar_module_menu(),
+    )
+    log_audit(user_id, "open_stub", "calendar", screen)
 
 
 @router.message(F.text.in_(MODULE_STUB_BUTTONS))
@@ -396,36 +488,6 @@ async def module_stub_screen(message: Message):
 
     if screen == "📈 Активность пользователей":
         await message.answer(get_user_activity_summary(message.from_user.id))
-        return
-
-    if screen in {"📅 Все события", "🔔 Предстоящие"}:
-        # TODO: future implementation — unified calendar views
-        await message.answer(
-            f"{screen}\n\nЕдиный календарь находится в разработке.\n"
-            f"Источники событий: {', '.join(CALENDAR_SOURCE_MODULES)}"
-        )
-        return
-
-    if screen.startswith("🔗 "):
-        source_label = screen.replace("🔗 ", "")
-        source_map = {
-            "Crypto OTC": "crypto_otc",
-            "Agro Trading": "agro_trading",
-            "Юриспруденция": "law",
-            "Drone Engineering": "drone",
-            "Cafe & Beauty": "cafe_beauty",
-        }
-        module = source_map.get(source_label, source_label)
-        register_calendar_event(
-            message.from_user.id,
-            module,
-            title="stub_event",
-            details="calendar_link_opened",
-        )
-        await message.answer(
-            f"{screen}\n\nСобытия модуля будут отображаться в едином календаре.\n"
-            "Раздел находится в разработке."
-        )
         return
 
     if screen in {"🎭 Роли", "🔐 Права доступа", "👤 Список пользователей"}:
@@ -479,6 +541,69 @@ async def reports_module_callback(callback: CallbackQuery):
 async def calendar_module_callback(callback: CallbackQuery):
     action = callback.data.split(":", 2)[2]
     await _module_callback_answer(callback, "calendar", action)
+
+
+@router.callback_query(F.data == "cal:event:create")
+async def calendar_event_create_callback(callback: CallbackQuery):
+    # TODO: future implementation — event creation flow
+    await callback.answer()
+    await callback.message.answer(
+        "➕ Создание события\n\nРаздел находится в разработке.",
+        reply_markup=calendar_module_menu(),
+    )
+    log_audit(callback.from_user.id, "calendar_stub", "calendar", "create")
+
+
+@router.callback_query(F.data.startswith("cal:event:edit:"))
+async def calendar_event_edit_callback(callback: CallbackQuery):
+    # TODO: future implementation — event edit flow
+    event_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"✏️ Редактирование события #{event_id}\n\n"
+        "Раздел находится в разработке.",
+        reply_markup=calendar_module_menu(),
+    )
+    log_audit(callback.from_user.id, "calendar_stub", "calendar", f"edit:{event_id}")
+
+
+@router.callback_query(F.data.startswith("cal:event:delete:"))
+async def calendar_event_delete_callback(callback: CallbackQuery):
+    # TODO: future implementation — event delete confirmation
+    event_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"🗑 Удаление события #{event_id}\n\n"
+        "Раздел находится в разработке.",
+        reply_markup=calendar_module_menu(),
+    )
+    log_audit(callback.from_user.id, "calendar_stub", "calendar", f"delete:{event_id}")
+
+
+@router.callback_query(F.data.startswith("cal:event:complete:"))
+async def calendar_event_complete_callback(callback: CallbackQuery):
+    # TODO: future implementation — event completion workflow
+    event_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"✅ Завершение события #{event_id}\n\n"
+        "Раздел находится в разработке.",
+        reply_markup=calendar_module_menu(),
+    )
+    log_audit(callback.from_user.id, "calendar_stub", "calendar", f"complete:{event_id}")
+
+
+@router.callback_query(F.data.startswith("cal:event:reschedule:"))
+async def calendar_event_reschedule_callback(callback: CallbackQuery):
+    # TODO: future implementation — event reschedule flow
+    event_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"📅 Перенос события #{event_id}\n\n"
+        "Раздел находится в разработке.",
+        reply_markup=calendar_module_menu(),
+    )
+    log_audit(callback.from_user.id, "calendar_stub", "calendar", f"reschedule:{event_id}")
 
 
 # ==========================================================
@@ -645,6 +770,7 @@ async def ai_back_to_main(message: Message):
         ai_assistant_active.get(m.from_user.id)
         and m.text not in AI_MENU_BUTTONS
         and m.text not in MODULE_STUB_BUTTONS
+        and m.text not in CALENDAR_MENU_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )

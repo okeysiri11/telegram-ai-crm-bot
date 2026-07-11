@@ -401,27 +401,52 @@ def calendar_module_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="📅 Все события"),
-                KeyboardButton(text="🔔 Предстоящие")
+                KeyboardButton(text="📅 Мои события"),
+                KeyboardButton(text="➕ Новое событие")
             ],
             [
-                KeyboardButton(text="🔗 Crypto OTC"),
-                KeyboardButton(text="🔗 Agro Trading")
+                KeyboardButton(text="🔔 Напоминания"),
+                KeyboardButton(text="📆 Сегодня")
             ],
             [
-                KeyboardButton(text="🔗 Юриспруденция"),
-                KeyboardButton(text="🔗 Drone Engineering")
+                KeyboardButton(text="📈 Неделя"),
+                KeyboardButton(text="📂 Все события")
             ],
             [
-                KeyboardButton(text="🔗 Cafe & Beauty")
-            ],
-            [
-                KeyboardButton(text="⬅️ Назад")
+                KeyboardButton(text="⬅ Назад")
             ]
         ],
         resize_keyboard=True
     )
     return keyboard
+
+
+def calendar_event_actions_inline(event_id: int) -> InlineKeyboardMarkup:
+    # TODO: future implementation — dynamic event action menu
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✏️ Редактировать",
+                    callback_data=f"cal:event:edit:{event_id}"
+                ),
+                InlineKeyboardButton(
+                    text="🗑 Удалить",
+                    callback_data=f"cal:event:delete:{event_id}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="✅ Завершить",
+                    callback_data=f"cal:event:complete:{event_id}"
+                ),
+                InlineKeyboardButton(
+                    text="📅 Перенести",
+                    callback_data=f"cal:event:reschedule:{event_id}"
+                ),
+            ],
+        ]
+    )
 
 
 def module_inline_actions(module_key: str) -> InlineKeyboardMarkup:
