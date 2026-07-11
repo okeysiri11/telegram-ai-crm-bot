@@ -93,6 +93,16 @@ conn.commit()
 # USER MEMORY
 # ==========================================================
 
+MEMORY_FIELDS = {
+    "name": "Имя",
+    "company": "Компания",
+    "city": "Город",
+    "country": "Страна",
+    "activity": "Сфера деятельности",
+    "interests": "Интересы",
+}
+
+
 def save_memory(user_id: int, key: str, value: str):
     cursor.execute(
         "REPLACE INTO user_memory (user_id, key, value) VALUES (?, ?, ?)",
@@ -127,6 +137,35 @@ def get_memory(user_id: int, key: str):
         return row[0]
 
     return None
+
+
+def get_user_profile(user_id: int) -> dict:
+    profile = load_memory(user_id)
+    return {
+        key: profile[key]
+        for key in MEMORY_FIELDS
+        if key in profile and profile[key]
+    }
+
+
+def save_profile_fields(user_id: int, fields: dict):
+    for key, value in fields.items():
+        if key not in MEMORY_FIELDS:
+            continue
+        if value and str(value).strip():
+            save_memory(user_id, key, str(value).strip())
+
+
+def format_memory_context(user_id: int) -> str:
+    profile = get_user_profile(user_id)
+    if not profile:
+        return ""
+
+    lines = [
+        f"- {MEMORY_FIELDS[key]}: {value}"
+        for key, value in profile.items()
+    ]
+    return "Известная информация о пользователе:\n" + "\n".join(lines)
 
 
 # ==========================================================

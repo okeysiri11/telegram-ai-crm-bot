@@ -6,12 +6,13 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton
 )
-from openrouter import ask_openrouter
+from openrouter import ask_openrouter, extract_memory_from_message
 from config import OWNER_ID, MANAGER_ID, MANAGERS
 from database import (
-    save_memory,
-    load_memory,
     get_memory,
+    get_user_profile,
+    save_profile_fields,
+    format_memory_context,
     create_request,
     update_request_status,
     assign_manager,
@@ -391,9 +392,6 @@ Telegram ID: {user_id}
         waiting_buy_request.pop(user_id, None)
         return
 
-    # память пользователя
-    memory = load_memory(user_id)
-
     if "как меня зовут" in message.text.lower():
         name = get_memory(user_id, "name")
 
@@ -404,28 +402,29 @@ Telegram ID: {user_id}
 
         return
 
-    # диалог с AI
+    profile = get_user_profile(user_id)
+    extracted = await extract_memory_from_message(message.text, profile)
+    if extracted:
+        save_profile_fields(user_id, extracted)
+
+    memory_context = format_memory_context(user_id)
+
     history = dialog_history.get(user_id, [])
+    history.append({
+        "role": "user",
+        "content": message.text
+    })
 
-    answer = await ask_openrouter(message.text)
+    answer = await ask_openrouter(history, user_memory=memory_context)
 
-    history.append(
-        {
-            "role": "user",
-            "content": message.text
-        }
-    )
+    history.append({
+        "role": "assistant",
+        "content": answer
+    })
 
-    history.append(
-        {
-            "role": "assistant",
-            "content": answer
-        }
-    )
-
-    dialog_history[user_id] = history[-10:]
-
+    dialog_history[user_id] = history[-20:]
     await message.answer(answer)
+
 @router.message(F.text.startswith("/work "))
 async def take_request(message: Message):
 
