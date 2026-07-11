@@ -1,6 +1,6 @@
 .env
 memory.db
 venv/
-pycache/
+__pycache__/
 *.pyc
 .DS_Store
