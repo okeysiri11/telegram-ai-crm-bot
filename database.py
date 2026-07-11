@@ -183,6 +183,24 @@ CREATE TABLE IF NOT EXISTS system_tasks (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    filename TEXT NOT NULL,
+    original_filename TEXT NOT NULL,
+    uploaded_by INTEGER NOT NULL,
+    module TEXT,
+    project_id INTEGER,
+    task_id INTEGER,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    file_size INTEGER,
+    mime_type TEXT,
+    tags TEXT,
+    description TEXT,
+    version INTEGER DEFAULT 1
+)
+""")
+
 conn.commit()
 
 ROLE_NAMES = (
@@ -2122,3 +2140,282 @@ def format_task_filters_text(user_id: int) -> str:
 def get_tasks_for_report(user_id: int, module: str = None, limit: int = 50):
     # TODO: future implementation — reports module integration
     return get_system_tasks(user_id, scope="all", module=module, limit=limit)
+
+
+# ==========================================================
+# SYSTEM FILES (central hub)
+# ==========================================================
+
+FILE_MODULES = {
+    "crypto_otc": "Crypto OTC",
+    "agro_trading": "Agro Trading",
+    "law": "Юриспруденция",
+    "drone": "Drone Engineering",
+    "cafe_beauty": "Cafe & Beauty",
+    "calendar": "Календарь",
+    "tasks": "Задачи",
+}
+
+
+def create_system_file(
+    uploaded_by: int,
+    filename: str,
+    original_filename: str,
+    module: str = "tasks",
+    project_id: int = None,
+    task_id: int = None,
+    file_size: int = None,
+    mime_type: str = None,
+    tags: str = None,
+    description: str = None,
+    version: int = 1,
+) -> int:
+    # TODO: future implementation — file storage on disk and validation
+    if module not in FILE_MODULES:
+        module = "tasks"
+
+    cursor.execute(
+        """
+        INSERT INTO files (
+            filename, original_filename, uploaded_by, module,
+            project_id, task_id, file_size, mime_type, tags,
+            description, version
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            filename.strip(),
+            original_filename.strip(),
+            uploaded_by,
+            module,
+            project_id,
+            task_id,
+            file_size,
+            mime_type,
+            tags,
+            description,
+            version,
+        ),
+    )
+    conn.commit()
+    file_id = cursor.lastrowid
+    _integrate_file_created(file_id, uploaded_by, original_filename, module, task_id)
+    return file_id
+
+
+def register_module_file(
+    uploaded_by: int,
+    module: str,
+    filename: str,
+    original_filename: str,
+    project_id: int = None,
+    task_id: int = None,
+    file_size: int = None,
+    mime_type: str = None,
+    tags: str = None,
+    description: str = None,
+    version: int = 1,
+) -> int:
+    # TODO: future implementation — unified entry point for all system modules
+    file_id = create_system_file(
+        uploaded_by=uploaded_by,
+        filename=filename,
+        original_filename=original_filename,
+        module=module,
+        project_id=project_id,
+        task_id=task_id,
+        file_size=file_size,
+        mime_type=mime_type,
+        tags=tags,
+        description=description,
+        version=version,
+    )
+    if file_id:
+        log_audit(uploaded_by, "create_file", "files", f"{module}|{original_filename}")
+    return file_id
+
+
+def _integrate_file_created(
+    file_id: int,
+    user_id: int,
+    original_filename: str,
+    module: str,
+    task_id: int = None,
+):
+    # TODO: future implementation — deep calendar/tasks/notifications integration
+    register_module_notification(
+        user_id,
+        module,
+        title=f"Загружен файл #{file_id}",
+        message=original_filename,
+        priority="INFO",
+    )
+    if task_id:
+        register_module_notification(
+            user_id,
+            "tasks",
+            title=f"Вложение к задаче #{task_id}",
+            message=original_filename,
+            priority="INFO",
+        )
+
+
+def get_system_file(file_id: int, user_id: int):
+    # TODO: future implementation — team visibility and role-based access
+    cursor.execute(
+        """
+        SELECT id, filename, original_filename, uploaded_by, module,
+               project_id, task_id, created_at, file_size, mime_type,
+               tags, description, version
+        FROM files
+        WHERE id = ? AND uploaded_by = ?
+        """,
+        (file_id, user_id),
+    )
+    return cursor.fetchone()
+
+
+def get_system_files(
+    user_id: int,
+    scope: str = "recent",
+    module: str = None,
+    task_id: int = None,
+    search_query: str = None,
+    tag: str = None,
+    limit: int = 20,
+):
+    # TODO: future implementation — advanced filters, sharing and favorites
+    query = """
+        SELECT id, filename, original_filename, uploaded_by, module,
+               project_id, task_id, created_at, file_size, mime_type,
+               tags, description, version
+        FROM files
+        WHERE 1=1
+    """
+    params = []
+
+    if scope == "incoming":
+        query += " AND uploaded_by != ?"
+        params.append(user_id)
+    elif scope == "outgoing":
+        query += " AND uploaded_by = ?"
+        params.append(user_id)
+    elif scope == "favorite":
+        query += " AND (tags LIKE '%favorite%' OR tags LIKE '%⭐%')"
+    elif scope == "task":
+        query += " AND task_id IS NOT NULL"
+    elif scope == "recent":
+        query += " AND uploaded_by = ?"
+        params.append(user_id)
+    else:
+        query += " AND uploaded_by = ?"
+        params.append(user_id)
+
+    if module:
+        query += " AND module = ?"
+        params.append(module)
+    if task_id is not None:
+        query += " AND task_id = ?"
+        params.append(task_id)
+    if search_query:
+        query += (
+            " AND (original_filename LIKE ? OR description LIKE ? OR tags LIKE ?)"
+        )
+        pattern = f"%{search_query}%"
+        params.extend([pattern, pattern, pattern])
+    if tag:
+        query += " AND tags LIKE ?"
+        params.append(f"%{tag}%")
+
+    query += " ORDER BY created_at DESC LIMIT ?"
+    params.append(limit)
+
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def format_system_files_text(
+    user_id: int,
+    scope: str = "recent",
+    module: str = None,
+    task_id: int = None,
+    search_query: str = None,
+    tag: str = None,
+    limit: int = 10,
+) -> str:
+    # TODO: future implementation — rich file cards and preview
+    rows = get_system_files(
+        user_id,
+        scope=scope,
+        module=module,
+        task_id=task_id,
+        search_query=search_query,
+        tag=tag,
+        limit=limit,
+    )
+    if not rows:
+        return "Файлов нет."
+
+    lines = ["📁 Файлы:\n"]
+    for row in rows:
+        (
+            fid, filename, original_filename, uploaded_by, mod,
+            project_id, tid, created_at, file_size, mime_type,
+            tags, description, version,
+        ) = row
+        mod_label = FILE_MODULES.get(mod, mod or "—")
+        size_label = f"{file_size} B" if file_size else "—"
+        lines.append(
+            f"📄 #{fid} · {original_filename}\n"
+            f"   🗂 {mod_label} · v{version} · {mime_type or '—'}\n"
+            f"   👤 {uploaded_by} · 📦 {size_label}\n"
+            f"   🏷 {tags or '—'} · 🕒 {created_at}"
+        )
+        if tid:
+            lines.append(f"   📎 задача #{tid} · проект #{project_id or '—'}")
+        if description:
+            lines.append(f"   📝 {description}")
+    return "\n".join(lines)
+
+
+def format_file_modules_text(user_id: int) -> str:
+    # TODO: future implementation — interactive module browser
+    lines = ["🗂 Файлы по модулям:\n"]
+    for key, label in FILE_MODULES.items():
+        count = len(get_system_files(user_id, scope="all", module=key, limit=100))
+        lines.append(f"• {label} ({key}): {count} файл(ов)")
+    lines.append("\nПросмотр по модулю находится в разработке.")
+    return "\n".join(lines)
+
+
+def format_file_search_text(user_id: int, query: str = None) -> str:
+    # TODO: future implementation — full-text search UI
+    if not query:
+        return (
+            "🔍 Поиск файлов\n\n"
+            "Поиск по имени, описанию и тегам.\n"
+            "Интерактивный поиск находится в разработке."
+        )
+    return format_system_files_text(user_id, scope="all", search_query=query)
+
+
+def format_file_tags_text(user_id: int) -> str:
+    # TODO: future implementation — tag management UI
+    rows = get_system_files(user_id, scope="all", limit=100)
+    tags_set = set()
+    for row in rows:
+        tags = row[10]
+        if tags:
+            for t in tags.split(","):
+                t = t.strip()
+                if t:
+                    tags_set.add(t)
+    if not tags_set:
+        return "🏷 Теги\n\nТегов пока нет."
+    tag_list = ", ".join(sorted(tags_set))
+    return f"🏷 Теги\n\n{tag_list}\n\nФильтрация по тегам находится в разработке."
+
+
+def get_files_for_report(user_id: int, module: str = None, limit: int = 50):
+    # TODO: future implementation — reports module integration
+    return get_system_files(user_id, scope="all", module=module, limit=limit)

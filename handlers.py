@@ -92,6 +92,15 @@ from database import (
     format_system_tasks_text,
     format_task_filters_text,
     get_tasks_for_report,
+    FILE_MODULES,
+    create_system_file,
+    register_module_file,
+    get_system_files,
+    format_system_files_text,
+    format_file_modules_text,
+    format_file_search_text,
+    format_file_tags_text,
+    get_files_for_report,
 )
 from keyboards import (
     owner_main_menu,
@@ -120,6 +129,8 @@ from keyboards import (
     notifications_module_actions_inline,
     tasks_module_menu,
     tasks_module_actions_inline,
+    files_module_menu,
+    files_module_actions_inline,
 )
 router = Router()
 
@@ -242,6 +253,29 @@ TASKS_STUB_MESSAGES = {
     "📅 Просроченные": "Просроченные задачи",
     "🏁 Завершенные": "Завершенные задачи",
     "⚙ Фильтры": "Фильтры задач",
+}
+
+FILES_MENU_BUTTONS = {
+    "📥 Входящие",
+    "📤 Исходящие",
+    "⭐ Избранное",
+    "🗂 По модулям",
+    "📎 Вложения к задачам",
+    "🔍 Поиск",
+    "🏷 Теги",
+    "🕒 Последние файлы",
+    "⬅ Назад",
+}
+
+FILES_STUB_MESSAGES = {
+    "📥 Входящие": "Входящие файлы",
+    "📤 Исходящие": "Исходящие файлы",
+    "⭐ Избранное": "Избранные файлы",
+    "🗂 По модулям": "Файлы по модулям",
+    "📎 Вложения к задачам": "Вложения к задачам",
+    "🔍 Поиск": "Поиск файлов",
+    "🏷 Теги": "Теги файлов",
+    "🕒 Последние файлы": "Последние файлы",
 }
 
 CALENDAR_MENU_BUTTONS = {
@@ -933,6 +967,112 @@ async def tasks_screen(message: Message):
     log_audit(user_id, "open_stub", "tasks", screen)
 
 
+@router.message(F.text == "📁 Файлы и документы")
+async def open_files_module(message: Message):
+    # TODO: future implementation — files dashboard and storage stats
+    _init_ai_user(message)
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "files"
+    log_audit(message.from_user.id, "open", "files")
+
+    modules = ", ".join(FILE_MODULES.values())
+    await message.answer(
+        f"📁 Файлы и документы\n\n"
+        f"Центральное файловое хранилище системы.\n"
+        f"Модули: {modules}\n\n"
+        "Интеграция: Crypto OTC, Agro Trading, Юриспруденция, "
+        "Drone Engineering, Cafe & Beauty, Календарь, Задачи.\n"
+        "Раздел находится в разработке.",
+        reply_markup=files_module_menu(),
+    )
+    await message.answer(
+        "Дополнительно:",
+        reply_markup=files_module_actions_inline(),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in FILES_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "files"
+    )
+)
+async def files_screen(message: Message):
+    screen = message.text
+    user_id = message.from_user.id
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    title = FILES_STUB_MESSAGES.get(screen, screen)
+
+    if screen == "📥 Входящие":
+        text = format_system_files_text(user_id, scope="incoming")
+        await message.answer(f"{title}\n\n{text}", reply_markup=files_module_menu())
+        log_audit(user_id, "open_stub", "files", "incoming")
+        return
+
+    if screen == "📤 Исходящие":
+        text = format_system_files_text(user_id, scope="outgoing")
+        await message.answer(f"{title}\n\n{text}", reply_markup=files_module_menu())
+        log_audit(user_id, "open_stub", "files", "outgoing")
+        return
+
+    if screen == "⭐ Избранное":
+        text = format_system_files_text(user_id, scope="favorite")
+        await message.answer(f"{title}\n\n{text}", reply_markup=files_module_menu())
+        log_audit(user_id, "open_stub", "files", "favorite")
+        return
+
+    if screen == "🗂 По модулям":
+        await message.answer(
+            format_file_modules_text(user_id),
+            reply_markup=files_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "files", "modules")
+        return
+
+    if screen == "📎 Вложения к задачам":
+        text = format_system_files_text(user_id, scope="task")
+        await message.answer(f"{title}\n\n{text}", reply_markup=files_module_menu())
+        log_audit(user_id, "open_stub", "files", "task_attachments")
+        return
+
+    if screen == "🔍 Поиск":
+        await message.answer(
+            format_file_search_text(user_id),
+            reply_markup=files_module_menu(),
+        )
+        await message.answer(
+            "Действия с файлом:",
+            reply_markup=files_module_actions_inline(),
+        )
+        log_audit(user_id, "open_stub", "files", "search")
+        return
+
+    if screen == "🏷 Теги":
+        await message.answer(
+            format_file_tags_text(user_id),
+            reply_markup=files_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "files", "tags")
+        return
+
+    if screen == "🕒 Последние файлы":
+        text = format_system_files_text(user_id, scope="recent")
+        await message.answer(f"{title}\n\n{text}", reply_markup=files_module_menu())
+        log_audit(user_id, "open_stub", "files", "recent")
+        return
+
+    await message.answer(
+        f"{title}\n\nРаздел находится в разработке.",
+        reply_markup=files_module_menu(),
+    )
+    log_audit(user_id, "open_stub", "files", screen)
+
+
 @router.message(F.text == "📅 Календарь")
 async def open_calendar_module(message: Message):
     # TODO: future implementation — calendar dashboard and widgets
@@ -1301,6 +1441,58 @@ async def tasks_status_callback(callback: CallbackQuery):
     log_audit(callback.from_user.id, "tasks_stub", "tasks", f"status:{task_id}")
 
 
+@router.callback_query(F.data.startswith("fil:open:"))
+async def files_open_callback(callback: CallbackQuery):
+    # TODO: future implementation — open file preview
+    file_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"📂 Открыть файл #{file_id}\n\n"
+        "Просмотр файлов находится в разработке.",
+        reply_markup=files_module_menu(),
+    )
+    log_audit(callback.from_user.id, "files_stub", "files", f"open:{file_id}")
+
+
+@router.callback_query(F.data.startswith("fil:download:"))
+async def files_download_callback(callback: CallbackQuery):
+    # TODO: future implementation — download file from storage
+    file_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"⬇ Скачать файл #{file_id}\n\n"
+        "Скачивание файлов находится в разработке.",
+        reply_markup=files_module_menu(),
+    )
+    log_audit(callback.from_user.id, "files_stub", "files", f"download:{file_id}")
+
+
+@router.callback_query(F.data.startswith("fil:tag:"))
+async def files_tag_callback(callback: CallbackQuery):
+    # TODO: future implementation — add or edit file tags
+    file_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"🏷 Теги файла #{file_id}\n\n"
+        "Управление тегами находится в разработке.",
+        reply_markup=files_module_menu(),
+    )
+    log_audit(callback.from_user.id, "files_stub", "files", f"tag:{file_id}")
+
+
+@router.callback_query(F.data.startswith("fil:attach:"))
+async def files_attach_callback(callback: CallbackQuery):
+    # TODO: future implementation — attach file to task
+    file_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"📎 Прикрепить файл #{file_id} к задаче\n\n"
+        "Привязка к задачам находится в разработке.",
+        reply_markup=files_module_menu(),
+    )
+    log_audit(callback.from_user.id, "files_stub", "files", f"attach:{file_id}")
+
+
 @router.callback_query(F.data.startswith("mod:calendar:"))
 async def calendar_module_callback(callback: CallbackQuery):
     action = callback.data.split(":", 2)[2]
@@ -1540,6 +1732,7 @@ async def ai_back_to_main(message: Message):
         and m.text not in DRONE_MENU_BUTTONS
         and m.text not in NOTIFICATIONS_MENU_BUTTONS
         and m.text not in TASKS_MENU_BUTTONS
+        and m.text not in FILES_MENU_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )

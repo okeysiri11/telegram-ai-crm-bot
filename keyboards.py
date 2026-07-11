@@ -30,7 +30,8 @@ def owner_main_menu():
                 KeyboardButton(text="🔔 Уведомления")
             ],
             [
-                KeyboardButton(text="✅ Задачи")
+                KeyboardButton(text="✅ Задачи"),
+                KeyboardButton(text="📁 Файлы и документы")
             ],
             [
                 KeyboardButton(text="⚙ Администрирование")
@@ -138,6 +139,64 @@ def tasks_module_actions_inline(task_id: int = 0) -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     text="⚙ Статус",
                     callback_data=f"tsk:status:{tid}"
+                ),
+            ],
+        ]
+    )
+
+
+def files_module_menu():
+    # TODO: future implementation — central files hub
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📥 Входящие"),
+                KeyboardButton(text="📤 Исходящие")
+            ],
+            [
+                KeyboardButton(text="⭐ Избранное"),
+                KeyboardButton(text="🗂 По модулям")
+            ],
+            [
+                KeyboardButton(text="📎 Вложения к задачам"),
+                KeyboardButton(text="🔍 Поиск")
+            ],
+            [
+                KeyboardButton(text="🏷 Теги"),
+                KeyboardButton(text="🕒 Последние файлы")
+            ],
+            [
+                KeyboardButton(text="⬅ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def files_module_actions_inline(file_id: int = 0) -> InlineKeyboardMarkup:
+    # TODO: future implementation — file quick actions
+    fid = file_id or 0
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="📂 Открыть",
+                    callback_data=f"fil:open:{fid}"
+                ),
+                InlineKeyboardButton(
+                    text="⬇ Скачать",
+                    callback_data=f"fil:download:{fid}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🏷 Тег",
+                    callback_data=f"fil:tag:{fid}"
+                ),
+                InlineKeyboardButton(
+                    text="📎 К задаче",
+                    callback_data=f"fil:attach:{fid}"
                 ),
             ],
         ]
