@@ -83,6 +83,15 @@ from database import (
     format_notifications_text,
     get_notification_settings,
     format_notification_settings_text,
+    TASK_MODULES,
+    TASK_STATUSES,
+    TASK_PRIORITIES,
+    create_system_task,
+    register_module_task,
+    get_system_tasks,
+    format_system_tasks_text,
+    format_task_filters_text,
+    get_tasks_for_report,
 )
 from keyboards import (
     owner_main_menu,
@@ -109,6 +118,8 @@ from keyboards import (
     ai_context_depth_menu,
     notifications_module_menu,
     notifications_module_actions_inline,
+    tasks_module_menu,
+    tasks_module_actions_inline,
 )
 router = Router()
 
@@ -212,6 +223,25 @@ NOTIFICATIONS_STUB_MESSAGES = {
     "📅 Напоминания": "Напоминания",
     "⚙ Настройки уведомлений": "Настройки уведомлений",
     "🗑 Архив": "Архив уведомлений",
+}
+
+TASKS_MENU_BUTTONS = {
+    "📥 Мои задачи",
+    "🆕 Новая задача",
+    "👥 Назначенные",
+    "📅 Просроченные",
+    "🏁 Завершенные",
+    "⚙ Фильтры",
+    "⬅ Назад",
+}
+
+TASKS_STUB_MESSAGES = {
+    "📥 Мои задачи": "Мои задачи",
+    "🆕 Новая задача": "Новая задача",
+    "👥 Назначенные": "Назначенные задачи",
+    "📅 Просроченные": "Просроченные задачи",
+    "🏁 Завершенные": "Завершенные задачи",
+    "⚙ Фильтры": "Фильтры задач",
 }
 
 CALENDAR_MENU_BUTTONS = {
@@ -807,6 +837,102 @@ async def notifications_screen(message: Message):
     log_audit(user_id, "open_stub", "notifications", screen)
 
 
+@router.message(F.text == "✅ Задачи")
+async def open_tasks_module(message: Message):
+    # TODO: future implementation — tasks dashboard and counters
+    _init_ai_user(message)
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "tasks"
+    log_audit(message.from_user.id, "open", "tasks")
+
+    modules = ", ".join(TASK_MODULES.values())
+    await message.answer(
+        f"✅ Задачи\n\n"
+        f"Центральный модуль задач системы.\n"
+        f"Модули: {modules}\n"
+        f"Статусы: {', '.join(TASK_STATUSES)}\n"
+        f"Приоритеты: {', '.join(TASK_PRIORITIES)}\n\n"
+        "Интеграция: календарь, уведомления, отчеты.\n"
+        "Раздел находится в разработке.",
+        reply_markup=tasks_module_menu(),
+    )
+    await message.answer(
+        "Дополнительно:",
+        reply_markup=tasks_module_actions_inline(),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in TASKS_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "tasks"
+    )
+)
+async def tasks_screen(message: Message):
+    screen = message.text
+    user_id = message.from_user.id
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    title = TASKS_STUB_MESSAGES.get(screen, screen)
+
+    if screen == "📥 Мои задачи":
+        text = format_system_tasks_text(user_id, scope="my")
+        await message.answer(f"{title}\n\n{text}", reply_markup=tasks_module_menu())
+        log_audit(user_id, "open_stub", "tasks", "my")
+        return
+
+    if screen == "👥 Назначенные":
+        text = format_system_tasks_text(user_id, scope="assigned")
+        await message.answer(f"{title}\n\n{text}", reply_markup=tasks_module_menu())
+        log_audit(user_id, "open_stub", "tasks", "assigned")
+        return
+
+    if screen == "📅 Просроченные":
+        text = format_system_tasks_text(user_id, scope="all", overdue_only=True)
+        await message.answer(f"{title}\n\n{text}", reply_markup=tasks_module_menu())
+        log_audit(user_id, "open_stub", "tasks", "overdue")
+        return
+
+    if screen == "🏁 Завершенные":
+        text = format_system_tasks_text(user_id, scope="all", status="DONE")
+        await message.answer(f"{title}\n\n{text}", reply_markup=tasks_module_menu())
+        log_audit(user_id, "open_stub", "tasks", "done")
+        return
+
+    if screen == "⚙ Фильтры":
+        await message.answer(
+            format_task_filters_text(user_id),
+            reply_markup=tasks_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "tasks", "filters")
+        return
+
+    if screen == "🆕 Новая задача":
+        await message.answer(
+            f"{title}\n\n"
+            "Создание задач через Telegram находится в разработке.\n"
+            "Будут доступны: создание, назначение, смена статуса, "
+            "завершение и перенос срока.",
+            reply_markup=tasks_module_menu(),
+        )
+        await message.answer(
+            "Действия с задачей:",
+            reply_markup=tasks_module_actions_inline(),
+        )
+        log_audit(user_id, "open_stub", "tasks", "new")
+        return
+
+    await message.answer(
+        f"{title}\n\nРаздел находится в разработке.",
+        reply_markup=tasks_module_menu(),
+    )
+    log_audit(user_id, "open_stub", "tasks", screen)
+
+
 @router.message(F.text == "📅 Календарь")
 async def open_calendar_module(message: Message):
     # TODO: future implementation — calendar dashboard and widgets
@@ -1122,6 +1248,59 @@ async def notifications_settings_callback(callback: CallbackQuery):
     log_audit(user_id, "notifications_stub", "notifications", "settings")
 
 
+@router.callback_query(F.data.startswith("tsk:assign:"))
+async def tasks_assign_callback(callback: CallbackQuery):
+    # TODO: future implementation — assign task to user
+    task_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"👤 Назначить задачу #{task_id}\n\n"
+        "Назначение задач находится в разработке.",
+        reply_markup=tasks_module_menu(),
+    )
+    log_audit(callback.from_user.id, "tasks_stub", "tasks", f"assign:{task_id}")
+
+
+@router.callback_query(F.data.startswith("tsk:complete:"))
+async def tasks_complete_callback(callback: CallbackQuery):
+    # TODO: future implementation — complete task workflow
+    task_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"🏁 Завершить задачу #{task_id}\n\n"
+        "Завершение задач находится в разработке.",
+        reply_markup=tasks_module_menu(),
+    )
+    log_audit(callback.from_user.id, "tasks_stub", "tasks", f"complete:{task_id}")
+
+
+@router.callback_query(F.data.startswith("tsk:reschedule:"))
+async def tasks_reschedule_callback(callback: CallbackQuery):
+    # TODO: future implementation — reschedule task due date
+    task_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"📅 Перенести срок задачи #{task_id}\n\n"
+        "Перенос срока находится в разработке.",
+        reply_markup=tasks_module_menu(),
+    )
+    log_audit(callback.from_user.id, "tasks_stub", "tasks", f"reschedule:{task_id}")
+
+
+@router.callback_query(F.data.startswith("tsk:status:"))
+async def tasks_status_callback(callback: CallbackQuery):
+    # TODO: future implementation — change task status
+    task_id = callback.data.split(":")[-1]
+    await callback.answer()
+    await callback.message.answer(
+        f"⚙ Статус задачи #{task_id}\n\n"
+        f"Доступные статусы: {', '.join(TASK_STATUSES)}\n\n"
+        "Изменение статуса находится в разработке.",
+        reply_markup=tasks_module_menu(),
+    )
+    log_audit(callback.from_user.id, "tasks_stub", "tasks", f"status:{task_id}")
+
+
 @router.callback_query(F.data.startswith("mod:calendar:"))
 async def calendar_module_callback(callback: CallbackQuery):
     action = callback.data.split(":", 2)[2]
@@ -1360,6 +1539,7 @@ async def ai_back_to_main(message: Message):
         and m.text not in REPORTS_MENU_BUTTONS
         and m.text not in DRONE_MENU_BUTTONS
         and m.text not in NOTIFICATIONS_MENU_BUTTONS
+        and m.text not in TASKS_MENU_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )

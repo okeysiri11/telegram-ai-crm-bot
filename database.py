@@ -167,6 +167,22 @@ CREATE TABLE IF NOT EXISTS notifications (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS system_tasks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    description TEXT,
+    creator_id INTEGER NOT NULL,
+    assigned_user_id INTEGER,
+    module TEXT,
+    priority TEXT DEFAULT 'NORMAL',
+    status TEXT DEFAULT 'NEW',
+    due_date TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP
+)
+""")
+
 conn.commit()
 
 ROLE_NAMES = (
@@ -979,6 +995,7 @@ SYSTEM_MODULES = {
     "calendar": "Календарь",
     "ai_assistant": "AI помощник",
     "notifications": "Уведомления",
+    "tasks": "Задачи",
 }
 
 # Modules that will register events in the central calendar
@@ -1790,3 +1807,318 @@ def format_notification_settings_text(user_id: int) -> str:
         f"Статусы: {', '.join(NOTIFICATION_STATUSES)}"
     )
     return "\n".join(lines)
+
+
+# ==========================================================
+# SYSTEM TASKS (central hub)
+# ==========================================================
+
+TASK_MODULES = {
+    "crypto_otc": "Crypto OTC",
+    "agro_trading": "Agro Trading",
+    "law": "Юриспруденция",
+    "drone": "Drone Engineering",
+    "cafe_beauty": "Cafe & Beauty",
+    "ai_assistant": "AI Assistant",
+}
+
+TASK_STATUSES = ("NEW", "IN_PROGRESS", "BLOCKED", "DONE", "CANCELLED")
+
+TASK_PRIORITIES = ("LOW", "NORMAL", "HIGH", "CRITICAL")
+
+TASK_PRIORITY_ICONS = {
+    "LOW": "🔽",
+    "NORMAL": "➖",
+    "HIGH": "🔼",
+    "CRITICAL": "🚨",
+}
+
+TASK_STATUS_ICONS = {
+    "NEW": "🆕",
+    "IN_PROGRESS": "⚙️",
+    "BLOCKED": "🚫",
+    "DONE": "✅",
+    "CANCELLED": "❌",
+}
+
+
+def create_system_task(
+    creator_id: int,
+    title: str,
+    description: str = "",
+    module: str = "ai_assistant",
+    priority: str = "NORMAL",
+    assigned_user_id: int = None,
+    due_date: str = None,
+) -> int:
+    # TODO: future implementation — validation and module-specific rules
+    if module not in TASK_MODULES:
+        module = "ai_assistant"
+    if priority not in TASK_PRIORITIES:
+        priority = "NORMAL"
+
+    cursor.execute(
+        """
+        INSERT INTO system_tasks (
+            title, description, creator_id, assigned_user_id,
+            module, priority, status, due_date
+        )
+        VALUES (?, ?, ?, ?, ?, ?, 'NEW', ?)
+        """,
+        (
+            title.strip(),
+            description.strip() if description else None,
+            creator_id,
+            assigned_user_id,
+            module,
+            priority,
+            due_date,
+        ),
+    )
+    conn.commit()
+    task_id = cursor.lastrowid
+    _integrate_task_created(task_id, creator_id, title, module, due_date)
+    return task_id
+
+
+def register_module_task(
+    creator_id: int,
+    module: str,
+    title: str,
+    description: str = "",
+    priority: str = "NORMAL",
+    assigned_user_id: int = None,
+    due_date: str = None,
+) -> int:
+    # TODO: future implementation — unified entry point for all system modules
+    task_id = create_system_task(
+        creator_id=creator_id,
+        title=title,
+        description=description,
+        module=module,
+        priority=priority,
+        assigned_user_id=assigned_user_id,
+        due_date=due_date,
+    )
+    if task_id:
+        log_audit(creator_id, "create_task", "tasks", f"{module}|{title}")
+    return task_id
+
+
+def _integrate_task_created(
+    task_id: int,
+    user_id: int,
+    title: str,
+    module: str,
+    due_date: str = None,
+):
+    # TODO: future implementation — deep calendar/notifications integration
+    if due_date:
+        register_calendar_event(
+            user_id,
+            module if module in CALENDAR_SOURCE_MODULES else "calendar",
+            title=f"Задача #{task_id}: {title}",
+            start_datetime=due_date,
+            description=f"system_task:{task_id}",
+        )
+    register_module_notification(
+        user_id,
+        module,
+        title=f"Создана задача #{task_id}",
+        message=title,
+        priority="INFO",
+    )
+
+
+def get_system_task(task_id: int, user_id: int):
+    # TODO: future implementation — team visibility and role-based access
+    cursor.execute(
+        """
+        SELECT id, title, description, creator_id, assigned_user_id,
+               module, priority, status, due_date, created_at, completed_at
+        FROM system_tasks
+        WHERE id = ? AND (creator_id = ? OR assigned_user_id = ?)
+        """,
+        (task_id, user_id, user_id),
+    )
+    return cursor.fetchone()
+
+
+def get_system_tasks(
+    user_id: int,
+    scope: str = "my",
+    status: str = None,
+    module: str = None,
+    overdue_only: bool = False,
+    limit: int = 20,
+):
+    # TODO: future implementation — advanced filters and sorting
+    query = """
+        SELECT id, title, description, creator_id, assigned_user_id,
+               module, priority, status, due_date, created_at, completed_at
+        FROM system_tasks
+        WHERE 1=1
+    """
+    params = []
+
+    if scope == "my":
+        query += " AND creator_id = ?"
+        params.append(user_id)
+    elif scope == "assigned":
+        query += " AND assigned_user_id = ?"
+        params.append(user_id)
+    elif scope == "all":
+        query += " AND (creator_id = ? OR assigned_user_id = ?)"
+        params.extend([user_id, user_id])
+    else:
+        query += " AND (creator_id = ? OR assigned_user_id = ?)"
+        params.extend([user_id, user_id])
+
+    if status:
+        query += " AND status = ?"
+        params.append(status)
+    if module:
+        query += " AND module = ?"
+        params.append(module)
+    if overdue_only:
+        query += (
+            " AND due_date IS NOT NULL AND due_date < datetime('now')"
+            " AND status NOT IN ('DONE', 'CANCELLED')"
+        )
+
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def assign_system_task(task_id: int, user_id: int, assigned_user_id: int) -> bool:
+    # TODO: future implementation — assignment notifications and permissions
+    cursor.execute(
+        """
+        UPDATE system_tasks
+        SET assigned_user_id = ?
+        WHERE id = ? AND creator_id = ?
+        """,
+        (assigned_user_id, task_id, user_id),
+    )
+    conn.commit()
+    if cursor.rowcount > 0:
+        register_module_notification(
+            assigned_user_id,
+            "ai_assistant",
+            title=f"Вам назначена задача #{task_id}",
+            priority="INFO",
+        )
+        return True
+    return False
+
+
+def update_system_task_status(
+    task_id: int,
+    user_id: int,
+    status: str,
+) -> bool:
+    # TODO: future implementation — status workflow validation
+    if status not in TASK_STATUSES:
+        return False
+
+    if status == "DONE":
+        cursor.execute(
+            """
+            UPDATE system_tasks
+            SET status = ?, completed_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND (creator_id = ? OR assigned_user_id = ?)
+            """,
+            (status, task_id, user_id, user_id),
+        )
+    else:
+        cursor.execute(
+            """
+            UPDATE system_tasks
+            SET status = ?, completed_at = NULL
+            WHERE id = ? AND (creator_id = ? OR assigned_user_id = ?)
+            """,
+            (status, task_id, user_id, user_id),
+        )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def complete_system_task(task_id: int, user_id: int) -> bool:
+    # TODO: future implementation — completion hooks for reports
+    ok = update_system_task_status(task_id, user_id, "DONE")
+    if ok:
+        register_module_notification(
+            user_id,
+            "ai_assistant",
+            title=f"Задача #{task_id} завершена",
+            priority="INFO",
+        )
+    return ok
+
+
+def reschedule_system_task(task_id: int, user_id: int, due_date: str) -> bool:
+    # TODO: future implementation — calendar sync on reschedule
+    cursor.execute(
+        """
+        UPDATE system_tasks
+        SET due_date = ?
+        WHERE id = ? AND (creator_id = ? OR assigned_user_id = ?)
+        """,
+        (due_date, task_id, user_id, user_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def format_system_tasks_text(
+    user_id: int,
+    scope: str = "my",
+    status: str = None,
+    overdue_only: bool = False,
+    limit: int = 10,
+) -> str:
+    # TODO: future implementation — rich task cards
+    rows = get_system_tasks(
+        user_id,
+        scope=scope,
+        status=status,
+        overdue_only=overdue_only,
+        limit=limit,
+    )
+    if not rows:
+        return "Задач нет."
+
+    lines = ["✅ Задачи:\n"]
+    for row in rows:
+        tid, title, description, creator_id, assigned_id, module, priority, nstatus, due_date, created_at, _completed = row
+        p_icon = TASK_PRIORITY_ICONS.get(priority, "➖")
+        s_icon = TASK_STATUS_ICONS.get(nstatus, "🆕")
+        mod_label = TASK_MODULES.get(module, module)
+        lines.append(
+            f"{s_icon} #{tid} · {title}\n"
+            f"   {p_icon} {priority} · {mod_label} · {nstatus}\n"
+            f"   👤 creator {creator_id} → assignee {assigned_id or '—'}\n"
+            f"   📅 {due_date or '—'} · 🕒 {created_at}"
+        )
+        if description:
+            lines.append(f"   📝 {description}")
+    return "\n".join(lines)
+
+
+def format_task_filters_text(user_id: int) -> str:
+    # TODO: future implementation — interactive filter UI
+    return (
+        "⚙ Фильтры задач\n\n"
+        f"Модули: {', '.join(TASK_MODULES.values())}\n"
+        f"Статусы: {', '.join(TASK_STATUSES)}\n"
+        f"Приоритеты: {', '.join(TASK_PRIORITIES)}\n\n"
+        "Фильтрация находится в разработке."
+    )
+
+
+def get_tasks_for_report(user_id: int, module: str = None, limit: int = 50):
+    # TODO: future implementation — reports module integration
+    return get_system_tasks(user_id, scope="all", module=module, limit=limit)

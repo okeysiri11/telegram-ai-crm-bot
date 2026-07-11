@@ -30,6 +30,9 @@ def owner_main_menu():
                 KeyboardButton(text="🔔 Уведомления")
             ],
             [
+                KeyboardButton(text="✅ Задачи")
+            ],
+            [
                 KeyboardButton(text="⚙ Администрирование")
             ]
         ],
@@ -81,6 +84,60 @@ def notifications_module_actions_inline() -> InlineKeyboardMarkup:
                 InlineKeyboardButton(
                     text="⚙ Настройки",
                     callback_data="ntf:settings:open"
+                ),
+            ],
+        ]
+    )
+
+
+def tasks_module_menu():
+    # TODO: future implementation — central tasks hub
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📥 Мои задачи"),
+                KeyboardButton(text="🆕 Новая задача")
+            ],
+            [
+                KeyboardButton(text="👥 Назначенные"),
+                KeyboardButton(text="📅 Просроченные")
+            ],
+            [
+                KeyboardButton(text="🏁 Завершенные"),
+                KeyboardButton(text="⚙ Фильтры")
+            ],
+            [
+                KeyboardButton(text="⬅ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def tasks_module_actions_inline(task_id: int = 0) -> InlineKeyboardMarkup:
+    # TODO: future implementation — task quick actions
+    tid = task_id or 0
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="👤 Назначить",
+                    callback_data=f"tsk:assign:{tid}"
+                ),
+                InlineKeyboardButton(
+                    text="🏁 Завершить",
+                    callback_data=f"tsk:complete:{tid}"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="📅 Перенести срок",
+                    callback_data=f"tsk:reschedule:{tid}"
+                ),
+                InlineKeyboardButton(
+                    text="⚙ Статус",
+                    callback_data=f"tsk:status:{tid}"
                 ),
             ],
         ]
