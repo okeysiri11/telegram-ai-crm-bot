@@ -26,6 +26,9 @@ def owner_main_menu():
                 KeyboardButton(text="📊 Отчеты")
             ],
             [
+                KeyboardButton(text="🤖 AI помощник")
+            ],
+            [
                 KeyboardButton(text="⚙ Администрирование")
             ]
         ],
@@ -273,3 +276,117 @@ def crm_menu():
     )
 
     return keyboard                       
+
+
+def ai_assistant_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="💬 Чат с AI"),
+                KeyboardButton(text="👤 Мой профиль")
+            ],
+            [
+                KeyboardButton(text="📜 История диалогов"),
+                KeyboardButton(text="📁 Проекты")
+            ],
+            [
+                KeyboardButton(text="✅ Задачи"),
+                KeyboardButton(text="⚙️ Настройки AI")
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def ai_projects_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="➕ Новый проект"),
+                KeyboardButton(text="📋 Список проектов")
+            ],
+            [
+                KeyboardButton(text="⬅️ К AI помощнику")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def ai_tasks_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="➕ Новая задача"),
+                KeyboardButton(text="📋 Список задач")
+            ],
+            [
+                KeyboardButton(text="⬅️ К AI помощнику")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def ai_settings_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="🎭 Тон общения"),
+                KeyboardButton(text="🌐 Язык ответов")
+            ],
+            [
+                KeyboardButton(text="📏 Глубина контекста"),
+                KeyboardButton(text="🗑 Очистить историю")
+            ],
+            [
+                KeyboardButton(text="⬅️ К AI помощнику")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def ai_tone_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="Нейтральный"),
+                KeyboardButton(text="Формальный")
+            ],
+            [
+                KeyboardButton(text="Дружелюбный")
+            ],
+            [
+                KeyboardButton(text="⬅️ К настройкам AI")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def ai_context_depth_menu():
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="10 сообщений"),
+                KeyboardButton(text="20 сообщений")
+            ],
+            [
+                KeyboardButton(text="40 сообщений")
+            ],
+            [
+                KeyboardButton(text="⬅️ К настройкам AI")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard

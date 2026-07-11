@@ -46,8 +46,29 @@ async def _call_openrouter(messages: list) -> str:
             return data["choices"][0]["message"]["content"]
 
 
-def _build_system_prompt(user_memory: str = "") -> str:
+TONE_PROMPTS = {
+    "neutral": "Отвечай нейтрально и по делу.",
+    "formal": "Отвечай формально и профессионально.",
+    "friendly": "Отвечай дружелюбно и поддерживающе.",
+}
+
+
+def _build_system_prompt(user_memory: str = "", ai_settings: dict = None) -> str:
     prompt = BASE_SYSTEM_PROMPT.strip()
+    settings = ai_settings or {}
+
+    tone = settings.get("tone", "neutral")
+    if tone in TONE_PROMPTS:
+        prompt += f"\n\n{TONE_PROMPTS[tone]}"
+
+    language = settings.get("language", "ru")
+    if language == "uk":
+        prompt += "\n\nОтвечай на украинском языке."
+    elif language == "en":
+        prompt += "\n\nAnswer in English."
+    else:
+        prompt += "\n\nОтвечай на русском языке."
+
     if user_memory:
         prompt += f"\n\n{user_memory.strip()}"
     return prompt
@@ -116,7 +137,30 @@ async def extract_memory_from_message(
     return _parse_memory_json(raw)
 
 
-async def ask_openrouter(messages: list, user_memory: str = "") -> str:
-    system_prompt = _build_system_prompt(user_memory)
+async def ask_openrouter(
+    messages: list,
+    user_memory: str = "",
+    ai_settings: dict = None,
+) -> str:
+    settings = dict(ai_settings or {})
+    model = settings.pop("model", MODEL)
+    system_prompt = _build_system_prompt(user_memory, settings)
     full_messages = [{"role": "system", "content": system_prompt}] + messages
-    return await _call_openrouter(full_messages)
+
+    headers = {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": model,
+        "messages": full_messages,
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(OPENROUTER_URL, headers=headers, json=payload) as response:
+            data = await response.json()
+
+            if "choices" not in data:
+                raise Exception(f"Ошибка OpenRouter: {data}")
+
+            return data["choices"][0]["message"]["content"]
