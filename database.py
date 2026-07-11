@@ -149,6 +149,24 @@ CREATE TABLE IF NOT EXISTS calendar_events (
 )
 """)
 
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    category TEXT NOT NULL,
+    title TEXT NOT NULL,
+    message TEXT,
+    priority TEXT DEFAULT 'INFO',
+    status TEXT DEFAULT 'NEW',
+    is_important INTEGER DEFAULT 0,
+    is_reminder INTEGER DEFAULT 0,
+    source_module TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    read_at TIMESTAMP,
+    archived_at TIMESTAMP
+)
+""")
+
 conn.commit()
 
 ROLE_NAMES = (
@@ -960,6 +978,7 @@ SYSTEM_MODULES = {
     "reports": "Отчеты",
     "calendar": "Календарь",
     "ai_assistant": "AI помощник",
+    "notifications": "Уведомления",
 }
 
 # Modules that will register events in the central calendar
@@ -1534,3 +1553,240 @@ def format_drone_ai_context_stub(area: str, user_id: int) -> str:
         f"Записей: {len(items)}.\n\n"
         "Раздел находится в разработке."
     )
+
+
+# ==========================================================
+# NOTIFICATIONS (central hub)
+# ==========================================================
+
+NOTIFICATION_CATEGORIES = {
+    "crypto_otc": "Crypto OTC",
+    "agro_trading": "Agro Trading",
+    "law": "Юриспруденция",
+    "drone": "Drone Engineering",
+    "cafe_beauty": "Cafe & Beauty",
+    "calendar": "Календарь",
+    "ai_assistant": "AI Assistant",
+}
+
+NOTIFICATION_PRIORITIES = ("INFO", "WARNING", "CRITICAL")
+
+NOTIFICATION_STATUSES = ("NEW", "READ", "ARCHIVED")
+
+PRIORITY_ICONS = {
+    "INFO": "ℹ️",
+    "WARNING": "⚠️",
+    "CRITICAL": "🚨",
+}
+
+
+def create_notification(
+    user_id: int,
+    category: str,
+    title: str,
+    message: str = "",
+    priority: str = "INFO",
+    is_important: bool = False,
+    is_reminder: bool = False,
+    source_module: str = None,
+) -> int:
+    # TODO: future implementation — trigger push/Telegram delivery from modules
+    if category not in NOTIFICATION_CATEGORIES:
+        return 0
+    if priority not in NOTIFICATION_PRIORITIES:
+        priority = "INFO"
+
+    cursor.execute(
+        """
+        INSERT INTO notifications (
+            user_id, category, title, message, priority,
+            status, is_important, is_reminder, source_module
+        )
+        VALUES (?, ?, ?, ?, ?, 'NEW', ?, ?, ?)
+        """,
+        (
+            user_id,
+            category,
+            title.strip(),
+            message.strip() if message else None,
+            priority,
+            int(is_important),
+            int(is_reminder),
+            source_module or category,
+        ),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def register_module_notification(
+    user_id: int,
+    module: str,
+    title: str,
+    message: str = "",
+    priority: str = "INFO",
+    is_important: bool = False,
+    is_reminder: bool = False,
+) -> int:
+    # TODO: future implementation — unified entry point for all system modules
+    category = module if module in NOTIFICATION_CATEGORIES else "ai_assistant"
+    notification_id = create_notification(
+        user_id=user_id,
+        category=category,
+        title=title,
+        message=message,
+        priority=priority,
+        is_important=is_important,
+        is_reminder=is_reminder,
+        source_module=module,
+    )
+    if notification_id:
+        log_audit(user_id, "create_notification", "notifications", f"{module}|{title}")
+    return notification_id
+
+
+def get_notifications(
+    user_id: int,
+    status: str = None,
+    category: str = None,
+    important_only: bool = False,
+    reminders_only: bool = False,
+    limit: int = 20,
+):
+    # TODO: future implementation — pagination and full-text search
+    query = """
+        SELECT id, category, title, message, priority, status,
+               is_important, is_reminder, source_module, created_at
+        FROM notifications
+        WHERE user_id = ?
+    """
+    params = [user_id]
+
+    if status:
+        query += " AND status = ?"
+        params.append(status)
+    if category:
+        query += " AND category = ?"
+        params.append(category)
+    if important_only:
+        query += " AND is_important = 1"
+    if reminders_only:
+        query += " AND is_reminder = 1"
+
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def get_notification(notification_id: int, user_id: int):
+    # TODO: future implementation — shared/system notifications
+    cursor.execute(
+        """
+        SELECT id, category, title, message, priority, status,
+               is_important, is_reminder, source_module, created_at
+        FROM notifications
+        WHERE id = ? AND user_id = ?
+        """,
+        (notification_id, user_id),
+    )
+    return cursor.fetchone()
+
+
+def mark_notification_read(notification_id: int, user_id: int) -> bool:
+    # TODO: future implementation — batch read and read receipts
+    cursor.execute(
+        """
+        UPDATE notifications
+        SET status = 'READ', read_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND user_id = ? AND status = 'NEW'
+        """,
+        (notification_id, user_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def archive_notification(notification_id: int, user_id: int) -> bool:
+    # TODO: future implementation — soft archive with restore
+    cursor.execute(
+        """
+        UPDATE notifications
+        SET status = 'ARCHIVED', archived_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND user_id = ? AND status != 'ARCHIVED'
+        """,
+        (notification_id, user_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def format_notifications_text(
+    user_id: int,
+    status: str = None,
+    important_only: bool = False,
+    reminders_only: bool = False,
+    limit: int = 10,
+) -> str:
+    # TODO: future implementation — rich cards and grouping by category
+    rows = get_notifications(
+        user_id,
+        status=status,
+        important_only=important_only,
+        reminders_only=reminders_only,
+        limit=limit,
+    )
+    if not rows:
+        return "Уведомлений нет."
+
+    lines = ["🔔 Уведомления:\n"]
+    for row in rows:
+        nid = row[0]
+        category = row[1]
+        title = row[2]
+        message = row[3]
+        priority = row[4]
+        nstatus = row[5]
+        created_at = row[9]
+        icon = PRIORITY_ICONS.get(priority, "ℹ️")
+        cat_label = NOTIFICATION_CATEGORIES.get(category, category)
+        lines.append(
+            f"{icon} #{nid} · {title}\n"
+            f"   📦 {cat_label} · {nstatus} · {priority}\n"
+            f"   🕒 {created_at}"
+        )
+        if message:
+            lines.append(f"   📝 {message}")
+    return "\n".join(lines)
+
+
+def get_notification_settings(user_id: int) -> dict:
+    # TODO: future implementation — dedicated notification_settings table
+    memory = load_memory(user_id)
+    return {
+        cat: memory.get(f"notify_{cat}", "1") == "1"
+        for cat in NOTIFICATION_CATEGORIES
+    }
+
+
+def save_notification_settings(user_id: int, **settings) -> None:
+    # TODO: future implementation — per-category and per-priority rules
+    for key, enabled in settings.items():
+        if key.startswith("notify_"):
+            save_memory(user_id, key, "1" if enabled else "0")
+
+
+def format_notification_settings_text(user_id: int) -> str:
+    # TODO: future implementation — interactive settings UI
+    settings = get_notification_settings(user_id)
+    lines = ["⚙ Настройки уведомлений:\n"]
+    for cat, label in NOTIFICATION_CATEGORIES.items():
+        enabled = settings.get(cat, True)
+        icon = "✅" if enabled else "❌"
+        lines.append(f"{icon} {label}")
+    lines.append(
+        f"\nПриоритеты: {', '.join(NOTIFICATION_PRIORITIES)}\n"
+        f"Статусы: {', '.join(NOTIFICATION_STATUSES)}"
+    )
+    return "\n".join(lines)

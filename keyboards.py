@@ -26,7 +26,8 @@ def owner_main_menu():
                 KeyboardButton(text="📊 Отчеты")
             ],
             [
-                KeyboardButton(text="🤖 AI помощник")
+                KeyboardButton(text="🤖 AI помощник"),
+                KeyboardButton(text="🔔 Уведомления")
             ],
             [
                 KeyboardButton(text="⚙ Администрирование")
@@ -36,6 +37,55 @@ def owner_main_menu():
     )
 
     return keyboard
+
+
+def notifications_module_menu():
+    # TODO: future implementation — central notifications hub
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📥 Новые"),
+                KeyboardButton(text="📌 Важные")
+            ],
+            [
+                KeyboardButton(text="📅 Напоминания"),
+                KeyboardButton(text="⚙ Настройки уведомлений")
+            ],
+            [
+                KeyboardButton(text="🗑 Архив")
+            ],
+            [
+                KeyboardButton(text="⬅ Назад")
+            ]
+        ],
+        resize_keyboard=True
+    )
+    return keyboard
+
+
+def notifications_module_actions_inline() -> InlineKeyboardMarkup:
+    # TODO: future implementation — notification quick actions
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Прочитать все",
+                    callback_data="ntf:action:read_all"
+                ),
+                InlineKeyboardButton(
+                    text="🗑 В архив",
+                    callback_data="ntf:action:archive_all"
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⚙ Настройки",
+                    callback_data="ntf:settings:open"
+                ),
+            ],
+        ]
+    )
+
 
 def wife_menu():
     keyboard = ReplyKeyboardMarkup(

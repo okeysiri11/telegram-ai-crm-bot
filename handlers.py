@@ -72,6 +72,17 @@ from database import (
     format_drone_ai_engineer_stub,
     format_drone_ai_context_stub,
     get_drone_ai_context,
+    NOTIFICATION_CATEGORIES,
+    NOTIFICATION_PRIORITIES,
+    NOTIFICATION_STATUSES,
+    create_notification,
+    register_module_notification,
+    get_notifications,
+    mark_notification_read,
+    archive_notification,
+    format_notifications_text,
+    get_notification_settings,
+    format_notification_settings_text,
 )
 from keyboards import (
     owner_main_menu,
@@ -96,6 +107,8 @@ from keyboards import (
     ai_settings_menu,
     ai_tone_menu,
     ai_context_depth_menu,
+    notifications_module_menu,
+    notifications_module_actions_inline,
 )
 router = Router()
 
@@ -182,6 +195,23 @@ REPORTS_MENU_BUTTONS = {
     "☕ Cafe & Beauty",
     "🤖 AI аналитика",
     "⬅ Назад",
+}
+
+NOTIFICATIONS_MENU_BUTTONS = {
+    "📥 Новые",
+    "📌 Важные",
+    "📅 Напоминания",
+    "⚙ Настройки уведомлений",
+    "🗑 Архив",
+    "⬅ Назад",
+}
+
+NOTIFICATIONS_STUB_MESSAGES = {
+    "📥 Новые": "Новые уведомления",
+    "📌 Важные": "Важные уведомления",
+    "📅 Напоминания": "Напоминания",
+    "⚙ Настройки уведомлений": "Настройки уведомлений",
+    "🗑 Архив": "Архив уведомлений",
 }
 
 CALENDAR_MENU_BUTTONS = {
@@ -685,6 +715,98 @@ async def reports_screen(message: Message):
     log_audit(user_id, "open_stub", "reports", report_type)
 
 
+@router.message(F.text == "🔔 Уведомления")
+async def open_notifications_module(message: Message):
+    # TODO: future implementation — notifications dashboard and unread badge
+    _init_ai_user(message)
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "notifications"
+    log_audit(message.from_user.id, "open", "notifications")
+
+    categories = ", ".join(NOTIFICATION_CATEGORIES.values())
+    await message.answer(
+        f"🔔 Уведомления\n\n"
+        f"Центральный модуль уведомлений.\n"
+        f"Категории: {categories}\n"
+        f"Приоритеты: {', '.join(NOTIFICATION_PRIORITIES)}\n"
+        f"Статусы: {', '.join(NOTIFICATION_STATUSES)}\n\n"
+        "Раздел находится в разработке.",
+        reply_markup=notifications_module_menu(),
+    )
+    await message.answer(
+        "Дополнительно:",
+        reply_markup=notifications_module_actions_inline(),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in NOTIFICATIONS_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "notifications"
+    )
+)
+async def notifications_screen(message: Message):
+    screen = message.text
+    user_id = message.from_user.id
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    title = NOTIFICATIONS_STUB_MESSAGES.get(screen, screen)
+
+    if screen == "📥 Новые":
+        text = format_notifications_text(user_id, status="NEW")
+        await message.answer(
+            f"{title}\n\n{text}",
+            reply_markup=notifications_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "notifications", "new")
+        return
+
+    if screen == "📌 Важные":
+        text = format_notifications_text(user_id, important_only=True)
+        await message.answer(
+            f"{title}\n\n{text}",
+            reply_markup=notifications_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "notifications", "important")
+        return
+
+    if screen == "📅 Напоминания":
+        text = format_notifications_text(user_id, reminders_only=True)
+        await message.answer(
+            f"{title}\n\n{text}",
+            reply_markup=notifications_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "notifications", "reminders")
+        return
+
+    if screen == "⚙ Настройки уведомлений":
+        await message.answer(
+            format_notification_settings_text(user_id),
+            reply_markup=notifications_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "notifications", "settings")
+        return
+
+    if screen == "🗑 Архив":
+        text = format_notifications_text(user_id, status="ARCHIVED")
+        await message.answer(
+            f"{title}\n\n{text}",
+            reply_markup=notifications_module_menu(),
+        )
+        log_audit(user_id, "open_stub", "notifications", "archive")
+        return
+
+    await message.answer(
+        f"{title}\n\nРаздел находится в разработке.",
+        reply_markup=notifications_module_menu(),
+    )
+    log_audit(user_id, "open_stub", "notifications", screen)
+
+
 @router.message(F.text == "📅 Календарь")
 async def open_calendar_module(message: Message):
     # TODO: future implementation — calendar dashboard and widgets
@@ -962,6 +1084,44 @@ async def reports_export_pdf_callback(callback: CallbackQuery):
     log_audit(user_id, "reports_stub", "reports", f"export_pdf:{report_type}")
 
 
+@router.callback_query(F.data == "ntf:action:read_all")
+async def notifications_read_all_callback(callback: CallbackQuery):
+    # TODO: future implementation — mark all notifications as READ
+    user_id = callback.from_user.id
+    await callback.answer()
+    await callback.message.answer(
+        "✅ Прочитать все\n\n"
+        "Массовая отметка прочитанными находится в разработке.",
+        reply_markup=notifications_module_menu(),
+    )
+    log_audit(user_id, "notifications_stub", "notifications", "read_all")
+
+
+@router.callback_query(F.data == "ntf:action:archive_all")
+async def notifications_archive_all_callback(callback: CallbackQuery):
+    # TODO: future implementation — archive all read notifications
+    user_id = callback.from_user.id
+    await callback.answer()
+    await callback.message.answer(
+        "🗑 В архив\n\n"
+        "Массовая архивация находится в разработке.",
+        reply_markup=notifications_module_menu(),
+    )
+    log_audit(user_id, "notifications_stub", "notifications", "archive_all")
+
+
+@router.callback_query(F.data == "ntf:settings:open")
+async def notifications_settings_callback(callback: CallbackQuery):
+    # TODO: future implementation — interactive notification settings
+    user_id = callback.from_user.id
+    await callback.answer()
+    await callback.message.answer(
+        format_notification_settings_text(user_id),
+        reply_markup=notifications_module_menu(),
+    )
+    log_audit(user_id, "notifications_stub", "notifications", "settings")
+
+
 @router.callback_query(F.data.startswith("mod:calendar:"))
 async def calendar_module_callback(callback: CallbackQuery):
     action = callback.data.split(":", 2)[2]
@@ -1199,6 +1359,7 @@ async def ai_back_to_main(message: Message):
         and m.text not in USERS_MENU_BUTTONS
         and m.text not in REPORTS_MENU_BUTTONS
         and m.text not in DRONE_MENU_BUTTONS
+        and m.text not in NOTIFICATIONS_MENU_BUTTONS
         and not ai_settings_flow.get(m.from_user.id)
     )
 )
