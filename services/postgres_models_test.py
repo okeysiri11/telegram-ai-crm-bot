@@ -8,8 +8,10 @@ class PostgresModelsTest:
     def run_integration_test() -> dict:
         steps = {}
         try:
-            import database.models
             from database.base import Base
+            from database.migration_models import load_all_models
+
+            load_all_models()
 
             tables = sorted(Base.metadata.tables.keys())
             steps["table_count"] = len(tables)

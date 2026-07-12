@@ -14,8 +14,10 @@ if str(ROOT) not in sys.path:
 
 
 def validate_metadata() -> dict:
-    import database.models
     from database.base import Base
+    from database.migration_models import load_all_models
+
+    load_all_models()
 
     tables = Base.metadata.sorted_tables
     fk_count = sum(len(t.foreign_keys) for t in tables)

@@ -1,25 +1,42 @@
 # Alembic environment — async PostgreSQL migrations (SQLAlchemy 2 + asyncpg).
+# Imports ONLY PostgreSQL ORM metadata; never legacy SQLite runtime code.
 
 from __future__ import annotations
 
 import asyncio
+import importlib
+import os
 from logging.config import fileConfig
 
 from alembic import context
+from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from database.base import Base
-import database.models  # noqa: F401 — register all ORM models with metadata
-from database.engine import DATABASE_URL
+
+load_dotenv()
+
+DEFAULT_DATABASE_URL = (
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem"
+)
+DATABASE_URL: str = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+
+
+def _load_migration_models() -> None:
+    """Register ORM tables via database/models/* only (no legacy imports)."""
+    importlib.import_module("database.migration_models").load_all_models()
+
+
+_load_migration_models()
+
+target_metadata = Base.metadata
 
 config = context.config
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
-
-target_metadata = Base.metadata
 
 
 def get_url() -> str:
