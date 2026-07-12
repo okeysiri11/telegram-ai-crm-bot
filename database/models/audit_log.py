@@ -36,6 +36,8 @@ class AuditAction(str, enum.Enum):
     RISK_CHECK = "RISK_CHECK"
     RISK_OVERRIDE = "RISK_OVERRIDE"
     RISK_REJECTION = "RISK_REJECTION"
+    QUOTE_UPDATED = "QUOTE_UPDATED"
+    SOURCE_FAILED = "SOURCE_FAILED"
 
 
 class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):

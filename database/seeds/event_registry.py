@@ -143,6 +143,18 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "risk",
         "description": "Risk decision manually overridden",
     },
+    "market.quote.updated": {
+        "aggregate_type": "market",
+        "description": "Market quote updated",
+    },
+    "market.spread.changed": {
+        "aggregate_type": "market",
+        "description": "Market spread changed",
+    },
+    "market.source.failed": {
+        "aggregate_type": "market",
+        "description": "Market data source fetch failed",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
