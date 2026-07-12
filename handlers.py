@@ -14,6 +14,10 @@ from services.statuses import normalize_status
 from services.agro_deal_lifecycle import AgroDealLifecycle
 from services.tasks import TaskService
 from services.calendar_service import CalendarService
+from services.ai_agents import AIAgentService
+from services.notifications import NotificationService
+from services.dashboard import DashboardService
+from services.search_service import SearchService
 from database import (
     get_user_profile,
     save_profile_fields,
@@ -183,6 +187,11 @@ from database import (
     format_workflow_stats_text,
     pause_workflow_process,
     complete_workflow_process,
+    format_ai_agents_text,
+    get_ai_agent,
+    get_ai_dialog_history,
+    format_dashboard_text,
+    format_dashboard_section,
 )
 from keyboards import (
     owner_main_menu,
@@ -212,6 +221,9 @@ from keyboards import (
     ai_projects_list_inline,
     ai_project_delete_confirm_inline,
     ai_project_detail_inline,
+    ai_agents_menu,
+    ai_agents_list_inline,
+    dashboard_module_menu,
     notifications_module_menu,
     notifications_module_actions_inline,
     tasks_module_menu,
@@ -264,6 +276,8 @@ waiting_buy_request = {}
 # Состояния раздела AI Assistant
 ai_assistant_active = {}
 active_ai_project = {}
+active_ai_agent = {}
+search_flow = {}
 task_flow = {}
 calendar_flow = {}
 ai_settings_flow = {}
@@ -406,6 +420,39 @@ SEARCH_STUB_MESSAGES = {
     "☕ Cafe & Beauty": "Поиск в Cafe & Beauty",
 }
 
+AI_AGENT_BUTTONS = {
+    "🧠 Общий AI": "AI_GENERAL",
+    "🚁 Drone AI": "AI_DRONE",
+    "⚖ Legal AI": "AI_LEGAL",
+    "🌾 Agro AI": "AI_AGRO",
+    "💰 Crypto AI": "AI_CRYPTO",
+    "💄 Beauty AI": "AI_BEAUTY",
+}
+
+AI_AGENTS_MENU_BUTTONS = set(AI_AGENT_BUTTONS.keys()) | {
+    "📜 История агента",
+    "⬅ Назад",
+}
+
+DASHBOARD_MENU_BUTTONS = {
+    "📊 KPI",
+    "📈 Продажи",
+    "📅 Загрузка",
+    "📦 Проекты",
+    "🔔 Уведомления KPI",
+    "📋 Задачи KPI",
+    "⬅ Назад",
+}
+
+DASHBOARD_SECTION_MAP = {
+    "📊 KPI": "kpi",
+    "📈 Продажи": "sales",
+    "📅 Загрузка": "workload",
+    "📦 Проекты": "projects",
+    "🔔 Уведомления KPI": "notifications",
+    "📋 Задачи KPI": "tasks",
+}
+
 WORKFLOW_MENU_BUTTONS = {
     "📋 Шаблоны процессов",
     "▶️ Активные процессы",
@@ -468,6 +515,7 @@ def _clear_ai_state(user_id: int):
     ai_settings_flow.pop(user_id, None)
     ai_assistant_active.pop(user_id, None)
     active_ai_project.pop(user_id, None)
+    active_ai_agent.pop(user_id, None)
 
 
 async def _open_module(message: Message, module_key: str, title: str):
@@ -1452,18 +1500,20 @@ async def files_screen(message: Message):
 
 
 @router.message(F.text == "🔎 Глобальный поиск")
+@router.message(F.text == "🔎 Поиск")
 async def open_search_module(message: Message):
-    # TODO: future implementation — search dashboard and recent queries
     _init_ai_user(message)
     _clear_ai_state(message.from_user.id)
     active_module[message.from_user.id] = "search"
+    search_flow[message.from_user.id] = {"awaiting": True, "scope": "all"}
     log_audit(message.from_user.id, "open", "search")
 
     domains = ", ".join(SEARCH_DOMAINS.values())
     await message.answer(
         f"{format_search_hub_text(message.from_user.id)}\n\n"
         f"Модули: {', '.join(SEARCH_SCOPES.values())}\n"
-        f"Области: {domains}",
+        f"Области: {domains}\n\n"
+        "Введите текст для поиска или выберите область:",
         reply_markup=search_module_menu(),
     )
     await message.answer(
@@ -1488,6 +1538,7 @@ async def search_screen(message: Message):
         return
 
     scope = get_search_scope_for_button(screen)
+    search_flow[user_id] = {"awaiting": True, "scope": scope}
     title = SEARCH_STUB_MESSAGES.get(screen, screen)
     text = format_global_search_text(user_id, scope=scope)
 
@@ -1500,6 +1551,147 @@ async def search_screen(message: Message):
         reply_markup=search_module_actions_inline(scope),
     )
     log_audit(user_id, "open_stub", "search", scope)
+
+
+@router.message(
+    lambda m: (
+        active_module.get(m.from_user.id) == "search"
+        and search_flow.get(m.from_user.id, {}).get("awaiting")
+        and m.text not in SEARCH_MENU_BUTTONS
+        and not m.text.startswith("/")
+    )
+)
+async def search_query_message(message: Message):
+    user_id = message.from_user.id
+    query = message.text.strip()
+    if len(query) < 2:
+        await message.answer("Введите минимум 2 символа для поиска.")
+        return
+    text = SearchService.search_and_format(user_id, query)
+    await message.answer(text, reply_markup=search_module_menu())
+    log_audit(user_id, "search", "search", query[:80])
+
+
+@router.message(F.text == "📂 Файлы")
+async def open_files_alias(message: Message):
+    await open_files_module(message)
+
+
+@router.message(F.text == "📊 Аналитика")
+async def open_dashboard_module(message: Message):
+    _init_ai_user(message)
+    _clear_ai_state(message.from_user.id)
+    active_module[message.from_user.id] = "dashboard"
+    log_audit(message.from_user.id, "open", "dashboard")
+    await message.answer(
+        DashboardService.format_overview(message.from_user.id),
+        reply_markup=dashboard_module_menu(),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in DASHBOARD_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "dashboard"
+    )
+)
+async def dashboard_screen(message: Message):
+    user_id = message.from_user.id
+    screen = message.text
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+    section = DASHBOARD_SECTION_MAP.get(screen, "kpi")
+    text = DashboardService.format_section(user_id, section)
+    await message.answer(text, reply_markup=dashboard_module_menu())
+    log_audit(user_id, "open", "dashboard", section)
+
+
+@router.message(F.text == "🤖 AI Агенты")
+async def open_ai_agents_module(message: Message):
+    _init_ai_user(message)
+    ai_assistant_active.pop(message.from_user.id, None)
+    active_ai_agent.pop(message.from_user.id, None)
+    active_module[message.from_user.id] = "ai_agents"
+    log_audit(message.from_user.id, "open", "ai_agents")
+    agents = AIAgentService.list_agents_for_user(message.from_user.id)
+    await message.answer(
+        format_ai_agents_text(message.from_user.id),
+        reply_markup=ai_agents_menu(),
+    )
+    if agents:
+        await message.answer(
+            "Выберите агента:",
+            reply_markup=ai_agents_list_inline(agents),
+        )
+
+
+@router.message(
+    lambda m: (
+        m.text in AI_AGENTS_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "ai_agents"
+    )
+)
+async def ai_agents_screen(message: Message):
+    user_id = message.from_user.id
+    screen = message.text
+
+    if screen == "⬅ Назад":
+        active_ai_agent.pop(user_id, None)
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    if screen == "📜 История агента":
+        code = active_ai_agent.get(user_id)
+        if not code:
+            await message.answer("Сначала выберите агента.", reply_markup=ai_agents_menu())
+            return
+        history = get_ai_dialog_history(user_id, code, limit=10)
+        if not history:
+            await message.answer("История пуста.", reply_markup=ai_agents_menu())
+            return
+        lines = [f"📜 История {code}:\n"]
+        for item in history:
+            role = "👤" if item["role"] == "user" else "🤖"
+            lines.append(f"{role} {item['content'][:200]}")
+        await message.answer("\n\n".join(lines), reply_markup=ai_agents_menu())
+        return
+
+    agent_code = AI_AGENT_BUTTONS.get(screen)
+    if not agent_code:
+        return
+    if not AIAgentService.can_access_agent(user_id, agent_code):
+        await message.answer("Нет доступа к этому агенту.", reply_markup=ai_agents_menu())
+        return
+    active_ai_agent[user_id] = agent_code
+    agent = get_ai_agent(agent_code)
+    name = agent[2] if agent else agent_code
+    await message.answer(
+        f"🔵 Активен агент: {name} ({agent_code})\n\nНапишите сообщение.",
+        reply_markup=ai_agents_menu(),
+    )
+    log_audit(user_id, "ai_agent_select", "ai_agents", agent_code)
+
+
+@router.callback_query(F.data.startswith("agent:select:"))
+async def ai_agent_select_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    agent_code = callback.data.split(":")[-1]
+    if not AIAgentService.can_access_agent(user_id, agent_code):
+        await callback.answer("Нет доступа", show_alert=True)
+        return
+    active_ai_agent[user_id] = agent_code
+    active_module[user_id] = "ai_agents"
+    agent = get_ai_agent(agent_code)
+    name = agent[2] if agent else agent_code
+    await callback.answer(f"Агент: {name}")
+    await callback.message.answer(
+        f"🔵 Активен агент: {name}\n\nНапишите сообщение.",
+        reply_markup=ai_agents_menu(),
+    )
+    log_audit(user_id, "ai_agent_select", "ai_agents", agent_code)
 
 
 @router.message(F.text == "⚙️ Бизнес-процессы")
@@ -1998,28 +2190,26 @@ async def reports_export_pdf_callback(callback: CallbackQuery):
 
 @router.callback_query(F.data == "ntf:action:read_all")
 async def notifications_read_all_callback(callback: CallbackQuery):
-    # TODO: future implementation — mark all notifications as READ
     user_id = callback.from_user.id
+    count = NotificationService.mark_all_read(user_id)
     await callback.answer()
     await callback.message.answer(
-        "✅ Прочитать все\n\n"
-        "Массовая отметка прочитанными находится в разработке.",
+        f"✅ Отмечено прочитанными: {count}",
         reply_markup=notifications_module_menu(),
     )
-    log_audit(user_id, "notifications_stub", "notifications", "read_all")
+    log_audit(user_id, "notifications", "notifications", f"read_all:{count}")
 
 
 @router.callback_query(F.data == "ntf:action:archive_all")
 async def notifications_archive_all_callback(callback: CallbackQuery):
-    # TODO: future implementation — archive all read notifications
     user_id = callback.from_user.id
+    count = NotificationService.archive_all_read(user_id)
     await callback.answer()
     await callback.message.answer(
-        "🗑 В архив\n\n"
-        "Массовая архивация находится в разработке.",
+        f"🗑 В архив: {count}",
         reply_markup=notifications_module_menu(),
     )
-    log_audit(user_id, "notifications_stub", "notifications", "archive_all")
+    log_audit(user_id, "notifications", "notifications", f"archive_all:{count}")
 
 
 @router.callback_query(F.data == "ntf:settings:open")
@@ -2396,15 +2586,16 @@ async def agro_deal_report_callback(callback: CallbackQuery):
 
 @router.callback_query(F.data.startswith("srch:run:"))
 async def search_run_callback(callback: CallbackQuery):
-    # TODO: future implementation — execute search query
     scope = callback.data.split(":", 2)[2]
     user_id = callback.from_user.id
+    search_flow[user_id] = {"awaiting": True, "scope": scope}
     await callback.answer()
     await callback.message.answer(
-        format_global_search_text(user_id, scope=scope),
+        f"{format_global_search_text(user_id, scope=scope)}\n\n"
+        "Введите поисковый запрос:",
         reply_markup=search_module_menu(),
     )
-    log_audit(user_id, "search_stub", "search", f"run:{scope}")
+    log_audit(user_id, "search", "search", f"run:{scope}")
 
 
 @router.callback_query(F.data == "srch:filter:open")
@@ -2616,6 +2807,33 @@ async def calendar_noop_callback(callback: CallbackQuery):
 
 
 # ==========================================================
+# AI AGENTS (multi-agent layer — separate from AI Assistant)
+# ==========================================================
+
+@router.message(
+    lambda m: (
+        active_ai_agent.get(m.from_user.id)
+        and active_module.get(m.from_user.id) == "ai_agents"
+        and m.text not in AI_AGENTS_MENU_BUTTONS
+        and m.text not in MODULE_STUB_BUTTONS
+        and not m.text.startswith("/")
+    )
+)
+async def ai_agent_chat_message(message: Message):
+    user_id = message.from_user.id
+    agent_code = active_ai_agent[user_id]
+    _init_ai_user(message)
+    try:
+        answer = await AIAgentService.chat(user_id, agent_code, message.text)
+    except Exception as exc:
+        answer = f"Ошибка AI-агента: {exc}"
+    agent = get_ai_agent(agent_code)
+    name = agent[2] if agent else agent_code
+    await message.answer(f"🤖 {name}\n\n{answer}", reply_markup=ai_agents_menu())
+    log_audit(user_id, "ai_agent_chat", "ai_agents", agent_code)
+
+
+# ==========================================================
 # AI ASSISTANT
 # ==========================================================
 
@@ -2623,6 +2841,8 @@ async def calendar_noop_callback(callback: CallbackQuery):
 async def open_ai_assistant(message: Message):
     _init_ai_user(message)
     ai_settings_flow.pop(message.from_user.id, None)
+    active_ai_agent.pop(message.from_user.id, None)
+    active_module.pop(message.from_user.id, None)
     ai_assistant_active[message.from_user.id] = True
 
     await message.answer(
@@ -2848,7 +3068,9 @@ async def ai_back_to_main(message: Message):
 @router.message(
     lambda m: (
         ai_assistant_active.get(m.from_user.id)
+        and not active_ai_agent.get(m.from_user.id)
         and m.text not in AI_MENU_BUTTONS
+        and m.text not in AI_AGENTS_MENU_BUTTONS
         and m.text not in MODULE_STUB_BUTTONS
         and m.text not in CALENDAR_MENU_BUTTONS
         and m.text not in USERS_MENU_BUTTONS

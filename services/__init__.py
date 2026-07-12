@@ -10,6 +10,11 @@ from services.request_auth import RequestAuthService
 from services.workflow_triggers import WorkflowTriggers
 from services.agro_deal_lifecycle import AgroDealLifecycle
 from services.calendar_service import CalendarService
+from services.ai_agents import AIAgentService
+from services.notifications import NotificationService
+from services.workflow_engine import WorkflowEngine
+from services.dashboard import DashboardService
+from services.search_service import SearchService
 
 __all__ = [
     "UNIFIED_STATUSES",
@@ -23,4 +28,9 @@ __all__ = [
     "WorkflowTriggers",
     "AgroDealLifecycle",
     "CalendarService",
+    "AIAgentService",
+    "NotificationService",
+    "WorkflowEngine",
+    "DashboardService",
+    "SearchService",
 ]

@@ -23,14 +23,22 @@ def owner_main_menu():
             ],
             [
                 KeyboardButton(text="📅 Календарь"),
-                KeyboardButton(text="📊 Отчеты")
+                KeyboardButton(text="📊 Аналитика")
             ],
             [
-                KeyboardButton(text="🤖 AI помощник"),
-                KeyboardButton(text="🔔 Уведомления")
+                KeyboardButton(text="🤖 AI Агенты"),
+                KeyboardButton(text="🤖 AI помощник")
             ],
             [
-                KeyboardButton(text="✅ Задачи"),
+                KeyboardButton(text="🔔 Уведомления"),
+                KeyboardButton(text="✅ Задачи")
+            ],
+            [
+                KeyboardButton(text="📂 Файлы"),
+                KeyboardButton(text="🔎 Поиск")
+            ],
+            [
+                KeyboardButton(text="📊 Отчеты"),
                 KeyboardButton(text="📁 Файлы и документы")
             ],
             [
@@ -1172,4 +1180,69 @@ def ai_project_delete_confirm_inline(project_id: int) -> InlineKeyboardMarkup:
                 ),
             ],
         ]
+    )
+
+
+def ai_agents_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="🧠 Общий AI"),
+                KeyboardButton(text="🚁 Drone AI"),
+            ],
+            [
+                KeyboardButton(text="⚖ Legal AI"),
+                KeyboardButton(text="🌾 Agro AI"),
+            ],
+            [
+                KeyboardButton(text="💰 Crypto AI"),
+                KeyboardButton(text="💄 Beauty AI"),
+            ],
+            [
+                KeyboardButton(text="📜 История агента"),
+                KeyboardButton(text="⬅ Назад"),
+            ],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def ai_agents_list_inline(agents: list) -> InlineKeyboardMarkup:
+    code_map = {
+        "AI_GENERAL": "agent:select:AI_GENERAL",
+        "AI_DRONE": "agent:select:AI_DRONE",
+        "AI_LEGAL": "agent:select:AI_LEGAL",
+        "AI_AGRO": "agent:select:AI_AGRO",
+        "AI_CRYPTO": "agent:select:AI_CRYPTO",
+        "AI_BEAUTY": "agent:select:AI_BEAUTY",
+    }
+    rows = []
+    for row in agents:
+        code, name = row[1], row[2]
+        cb = code_map.get(code)
+        if cb:
+            rows.append([InlineKeyboardButton(text=name, callback_data=cb)])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def dashboard_module_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📊 KPI"),
+                KeyboardButton(text="📈 Продажи"),
+            ],
+            [
+                KeyboardButton(text="📅 Загрузка"),
+                KeyboardButton(text="📦 Проекты"),
+            ],
+            [
+                KeyboardButton(text="🔔 Уведомления KPI"),
+                KeyboardButton(text="📋 Задачи KPI"),
+            ],
+            [
+                KeyboardButton(text="⬅ Назад"),
+            ],
+        ],
+        resize_keyboard=True,
     )

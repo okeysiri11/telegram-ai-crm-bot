@@ -451,6 +451,7 @@ def _migrate_schema():
     conn.commit()
     _migrate_legacy_tasks()
     _migrate_calendar_schema()
+    _migrate_multi_agent_platform()
 
 
 def _migrate_calendar_schema():
@@ -558,6 +559,161 @@ def _migrate_legacy_tasks():
             """
         )
         conn.commit()
+
+
+def _migrate_multi_agent_platform():
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ai_agents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            model TEXT DEFAULT 'openai/gpt-5-mini',
+            prompt TEXT,
+            active INTEGER DEFAULT 1
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ai_dialogs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            agent_code TEXT NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS workflow_rules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trigger_code TEXT NOT NULL,
+            module TEXT,
+            action_type TEXT NOT NULL,
+            action_payload TEXT,
+            active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS workflow_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trigger_code TEXT NOT NULL,
+            module TEXT,
+            user_id INTEGER,
+            entity_type TEXT,
+            entity_id INTEGER,
+            action_type TEXT,
+            status TEXT DEFAULT 'OK',
+            details TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    conn.commit()
+
+    notif_cols = {
+        "module": "TEXT",
+        "event_type": "TEXT DEFAULT 'general'",
+        "is_read": "INTEGER DEFAULT 0",
+        "sent_at": "TEXT",
+        "channel": "TEXT DEFAULT 'SYSTEM'",
+    }
+    for col, defn in notif_cols.items():
+        if not _column_exists("notifications", col):
+            cursor.execute(f"ALTER TABLE notifications ADD COLUMN {col} {defn}")
+    conn.commit()
+    cursor.execute(
+        """
+        UPDATE notifications SET
+            module = COALESCE(module, source_module, category),
+            is_read = CASE WHEN status IN ('READ', 'ARCHIVED') THEN 1 ELSE 0 END,
+            channel = COALESCE(channel, 'SYSTEM')
+        WHERE module IS NULL OR is_read IS NULL
+        """
+    )
+    conn.commit()
+
+    file_cols = {
+        "calendar_event_id": "INTEGER",
+        "request_number": "INTEGER",
+    }
+    for col, defn in file_cols.items():
+        if not _column_exists("files", col):
+            cursor.execute(f"ALTER TABLE files ADD COLUMN {col} {defn}")
+    conn.commit()
+
+    _seed_ai_agents()
+    _seed_workflow_rules()
+
+
+def _seed_ai_agents():
+    agents = [
+        ("AI_GENERAL", "Общий AI", "Универсальный помощник платформы", None,
+         "Ты AI_GENERAL — универсальный ассистент ERP/CRM платформы Фомы."),
+        ("AI_DRONE", "Drone AI", "Инженерия и проекты дронов", "drone",
+         "Ты AI_DRONE — инженерный ассистент по дронам, BOM, проектам и производству."),
+        ("AI_LEGAL", "Legal AI", "Юриспруденция и документы", "law",
+         "Ты AI_LEGAL — юридический ассистент. Законодательство Украины, договоры, compliance."),
+        ("AI_AGRO", "Agro AI", "Agro Trading и сделки", "agro_trading",
+         "Ты AI_AGRO — ассистент Agro Trading: зерно, контракты, логистика, финансы."),
+        ("AI_CRYPTO", "Crypto AI", "Crypto OTC операции", "crypto_otc",
+         "Ты AI_CRYPTO — ассистент Crypto OTC: USDT, платежи, compliance."),
+        ("AI_BEAUTY", "Beauty AI", "Cafe & Beauty", "cafe_beauty",
+         "Ты AI_BEAUTY — ассистент Cafe & Beauty: операции, маркeting, клиенты."),
+    ]
+    for code, name, desc, module, prompt in agents:
+        cursor.execute("SELECT id FROM ai_agents WHERE code = ?", (code,))
+        if cursor.fetchone():
+            continue
+        cursor.execute(
+            """
+            INSERT INTO ai_agents (code, name, description, prompt, active)
+            VALUES (?, ?, ?, ?, 1)
+            """,
+            (code, name, desc, prompt),
+        )
+    conn.commit()
+
+
+def _seed_workflow_rules():
+    rules = [
+        ("AGRO_REQUEST_CREATED", "agro_trading", "send_notification",
+         '{"title":"Новая Agro заявка","priority":"HIGH"}'),
+        ("TASK_CREATED", "system", "send_notification",
+         '{"title":"Создана задача","priority":"NORMAL"}'),
+        ("TASK_COMPLETED", "system", "send_notification",
+         '{"title":"Задача завершена","priority":"INFO"}'),
+        ("EVENT_CREATED", "calendar", "send_notification",
+         '{"title":"Создано событие","priority":"INFO"}'),
+        ("PROJECT_CREATED", "ai_assistant", "send_notification",
+         '{"title":"Создан AI проект","priority":"INFO"}'),
+        ("FILE_UPLOADED", "system", "send_notification",
+         '{"title":"Загружен файл","priority":"INFO"}'),
+        ("USER_CREATED", "users", "send_notification",
+         '{"title":"Новый пользователь","priority":"INFO"}'),
+    ]
+    for trigger, module, action, payload in rules:
+        cursor.execute(
+            "SELECT id FROM workflow_rules WHERE trigger_code = ? AND action_type = ?",
+            (trigger, action),
+        )
+        if cursor.fetchone():
+            continue
+        cursor.execute(
+            """
+            INSERT INTO workflow_rules (trigger_code, module, action_type, action_payload, active)
+            VALUES (?, ?, ?, ?, 1)
+            """,
+            (trigger, module, action, payload),
+        )
+    conn.commit()
 
 
 _migrate_schema()
@@ -670,6 +826,15 @@ def ensure_user(telegram_id: int, full_name: str = "", username: str = ""):
         (telegram_id, username or None, full_name or None),
     )
     conn.commit()
+    from services.workflow_engine import WorkflowEngine
+    WorkflowEngine.execute_workflow(
+        "USER_CREATED",
+        telegram_id,
+        "users",
+        entity_type="user",
+        entity_id=telegram_id,
+        payload={"full_name": full_name},
+    )
     return cursor.lastrowid
 
 
@@ -902,6 +1067,15 @@ def create_request(
         request_number,
         module="agro_trading",
         product=product,
+    )
+    from services.workflow_engine import WorkflowEngine
+    WorkflowEngine.execute_workflow(
+        "AGRO_REQUEST_CREATED",
+        client_id,
+        "agro_trading",
+        entity_type="request",
+        entity_id=request_number,
+        payload={"title": f"Новая заявка #{request_number}", "product": product},
     )
     return request_number
 
@@ -1227,7 +1401,17 @@ def create_ai_project(
         (user_id, title.strip(), description.strip(), category),
     )
     conn.commit()
-    return cursor.lastrowid
+    project_id = cursor.lastrowid
+    from services.workflow_engine import WorkflowEngine
+    WorkflowEngine.execute_workflow(
+        "PROJECT_CREATED",
+        user_id,
+        "ai_assistant",
+        entity_type="project",
+        entity_id=project_id,
+        payload={"title": title},
+    )
+    return project_id
 
 
 def get_ai_projects(user_id: int, include_deleted: bool = False):
@@ -1637,6 +1821,15 @@ def create_event(
     from services.workflow_triggers import WorkflowTriggers
     WorkflowTriggers.on_calendar_event_created(
         creator_id, event_id, title, module=module,
+    )
+    from services.workflow_engine import WorkflowEngine
+    WorkflowEngine.execute_workflow(
+        "EVENT_CREATED",
+        creator_id,
+        module,
+        entity_type="event",
+        entity_id=event_id,
+        payload={"title": title},
     )
     return event_id
 
@@ -2057,14 +2250,15 @@ def reschedule_calendar_event(
 
 
 MODULE_AI_AGENTS = {
-    "crypto_otc": None,
-    "agro_trading": None,
-    "law": None,
-    "drone": None,
-    "cafe_beauty": None,
-    "users": None,
-    "reports": None,
-    "calendar": None,
+    "crypto_otc": "AI_CRYPTO",
+    "agro_trading": "AI_AGRO",
+    "law": "AI_LEGAL",
+    "drone": "AI_DRONE",
+    "cafe_beauty": "AI_BEAUTY",
+    "users": "AI_GENERAL",
+    "reports": "AI_GENERAL",
+    "calendar": "AI_GENERAL",
+    "ai_assistant": "AI_GENERAL",
 }
 
 
@@ -2191,8 +2385,10 @@ def get_user_activity_summary(user_id: int, limit: int = 10) -> str:
 
 
 def get_module_ai_agent(module: str):
-    # TODO: future implementation — return configured AI agent for module
-    return MODULE_AI_AGENTS.get(module)
+    code = MODULE_AI_AGENTS.get(module)
+    if not code:
+        return None
+    return get_ai_agent(code)
 
 
 # ==========================================================
@@ -3263,9 +3459,10 @@ def create_notification(
         """
         INSERT INTO notifications (
             user_id, category, title, message, priority,
-            status, is_important, is_reminder, source_module
+            status, is_important, is_reminder, source_module,
+            module, event_type, channel, is_read
         )
-        VALUES (?, ?, ?, ?, ?, 'NEW', ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, 'NEW', ?, ?, ?, ?, ?, ?, 0)
         """,
         (
             user_id,
@@ -3276,6 +3473,9 @@ def create_notification(
             int(is_important),
             int(is_reminder),
             source_module or category,
+            source_module or category,
+            "general",
+            "SYSTEM",
         ),
     )
     conn.commit()
@@ -3596,6 +3796,16 @@ def create_task(
         priority="INFO",
     )
     log_audit(creator_id, "create_task", "tasks", f"{module}|{title}")
+
+    from services.workflow_engine import WorkflowEngine
+    WorkflowEngine.execute_workflow(
+        "TASK_CREATED",
+        creator_id,
+        module if module in TASK_MODULES else "system",
+        entity_type="task",
+        entity_id=task_id,
+        payload={"title": title},
+    )
     return task_id
 
 
@@ -3699,6 +3909,15 @@ def update_task_status(task_id: int, user_id: int, status: str) -> bool:
             title=f"Задача #{task_id}: {status}",
             priority="INFO",
         )
+        if status == "DONE":
+            from services.workflow_engine import WorkflowEngine
+            WorkflowEngine.execute_workflow(
+                "TASK_COMPLETED",
+                user_id,
+                "system",
+                entity_type="task",
+                entity_id=task_id,
+            )
         return True
     return False
 
@@ -4030,6 +4249,8 @@ def create_system_file(
     module: str = "tasks",
     project_id: int = None,
     task_id: int = None,
+    calendar_event_id: int = None,
+    request_number: int = None,
     file_size: int = None,
     mime_type: str = None,
     tags: str = None,
@@ -4044,10 +4265,10 @@ def create_system_file(
         """
         INSERT INTO files (
             filename, original_filename, uploaded_by, module,
-            project_id, task_id, file_size, mime_type, tags,
-            description, version
+            project_id, task_id, calendar_event_id, request_number,
+            file_size, mime_type, tags, description, version
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             filename.strip(),
@@ -4056,6 +4277,8 @@ def create_system_file(
             module,
             project_id,
             task_id,
+            calendar_event_id,
+            request_number,
             file_size,
             mime_type,
             tags,
@@ -4124,6 +4347,15 @@ def _integrate_file_created(
             message=original_filename,
             priority="INFO",
         )
+    from services.workflow_engine import WorkflowEngine
+    WorkflowEngine.execute_workflow(
+        "FILE_UPLOADED",
+        user_id,
+        module,
+        entity_type="file",
+        entity_id=file_id,
+        payload={"filename": original_filename},
+    )
 
 
 def get_system_file(file_id: int, user_id: int):
@@ -4345,33 +4577,54 @@ def global_search(
 
 
 def search_users(user_id: int, query: str = None, limit: int = 20):
-    # TODO: future implementation — search users by name, role, permissions
     if not query:
         return []
     cursor.execute(
         """
-        SELECT telegram_id, name, role
-        FROM users
-        WHERE name LIKE ? OR role LIKE ?
+        SELECT u.telegram_id, u.full_name, u.username,
+               GROUP_CONCAT(r.role_name, ', ')
+        FROM users u
+        LEFT JOIN user_roles ur ON ur.user_id = u.telegram_id
+        LEFT JOIN roles r ON r.id = ur.role_id
+        WHERE u.full_name LIKE ? OR u.username LIKE ?
+           OR CAST(u.telegram_id AS TEXT) LIKE ?
+        GROUP BY u.telegram_id
+        ORDER BY u.id DESC
         LIMIT ?
         """,
-        (f"%{query}%", f"%{query}%", limit),
+        (f"%{query}%", f"%{query}%", f"%{query}%", limit),
     )
     return cursor.fetchall()
 
 
 def search_calendar_events(user_id: int, query: str = None, limit: int = 20):
-    # TODO: future implementation — full calendar search integration
     if not query:
         return []
-    return get_calendar_events(user_id, limit=limit)
+    cursor.execute(
+        """
+        SELECT id, title, start_time, module, status
+        FROM calendar_events
+        WHERE (creator_id = ? OR owner_id = ? OR responsible_user = ?)
+          AND (title LIKE ? OR description LIKE ? OR module LIKE ?)
+        ORDER BY id DESC LIMIT ?
+        """,
+        (user_id, user_id, user_id, f"%{query}%", f"%{query}%", f"%{query}%", limit),
+    )
+    return cursor.fetchall()
 
 
 def search_tasks(user_id: int, query: str = None, limit: int = 20):
-    # TODO: future implementation — full tasks search integration
     if not query:
         return []
-    return get_system_tasks(user_id, scope="all", limit=limit)
+    cursor.execute(
+        f"""
+        {_TASK_SELECT}
+        WHERE (title LIKE ? OR description LIKE ? OR CAST(id AS TEXT) LIKE ?)
+        ORDER BY id DESC LIMIT ?
+        """,
+        (f"%{query}%", f"%{query}%", f"%{query}%", limit),
+    )
+    return cursor.fetchall()
 
 
 def search_files(user_id: int, query: str = None, limit: int = 20):
@@ -4397,8 +4650,19 @@ def search_projects(
     module: str = None,
     limit: int = 20,
 ):
-    # TODO: future implementation — projects search across modules
-    return []
+    if not query:
+        return []
+    cursor.execute(
+        """
+        SELECT id, title, category, status, created_at
+        FROM ai_projects
+        WHERE user_id = ? AND status != 'deleted'
+          AND (title LIKE ? OR description LIKE ? OR category LIKE ?)
+        ORDER BY id DESC LIMIT ?
+        """,
+        (user_id, f"%{query}%", f"%{query}%", f"%{query}%", limit),
+    )
+    return cursor.fetchall()
 
 
 def search_contracts(
@@ -4840,3 +5104,338 @@ def format_workflow_stats_text(user_id: int) -> str:
         f"Действия: {', '.join(WORKFLOW_ACTION_TYPES.values())}\n\n"
         "Детальная аналитика находится в разработке."
     )
+
+
+# ==========================================================
+# AI AGENTS (multi-agent layer)
+# ==========================================================
+
+AGENT_MODULE_ACCESS = {
+    "AI_GENERAL": None,
+    "AI_DRONE": "drone",
+    "AI_LEGAL": "law",
+    "AI_AGRO": "agro_trading",
+    "AI_CRYPTO": "crypto_otc",
+    "AI_BEAUTY": "cafe_beauty",
+}
+
+
+def get_ai_agent(code: str):
+    cursor.execute(
+        "SELECT id, code, name, description, model, prompt, active FROM ai_agents WHERE code = ?",
+        (code,),
+    )
+    return cursor.fetchone()
+
+
+def get_ai_agents(active_only: bool = True):
+    if active_only:
+        cursor.execute(
+            "SELECT id, code, name, description, model, prompt, active FROM ai_agents WHERE active = 1 ORDER BY id"
+        )
+    else:
+        cursor.execute(
+            "SELECT id, code, name, description, model, prompt, active FROM ai_agents ORDER BY id"
+        )
+    return cursor.fetchall()
+
+
+def add_ai_dialog_message(user_id: int, agent_code: str, role: str, content: str) -> int:
+    cursor.execute(
+        """
+        INSERT INTO ai_dialogs (user_id, agent_code, role, content)
+        VALUES (?, ?, ?, ?)
+        """,
+        (user_id, agent_code, role, content),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_ai_dialog_history(user_id: int, agent_code: str, limit: int = 20) -> list[dict]:
+    cursor.execute(
+        """
+        SELECT role, content, created_at FROM ai_dialogs
+        WHERE user_id = ? AND agent_code = ?
+        ORDER BY id DESC LIMIT ?
+        """,
+        (user_id, agent_code, limit),
+    )
+    rows = cursor.fetchall()
+    rows.reverse()
+    return [{"role": r, "content": c, "created_at": t} for r, c, t in rows]
+
+
+def get_ai_dialog_history_for_llm(user_id: int, agent_code: str, limit: int = 20) -> list[dict]:
+    history = get_ai_dialog_history(user_id, agent_code, limit)
+    return [{"role": item["role"], "content": item["content"]} for item in history]
+
+
+def format_ai_agents_text(user_id: int) -> str:
+    from services.permissions import PermissionService
+    agents = get_ai_agents()
+    lines = ["🤖 AI Агенты:\n"]
+    visible = 0
+    for _id, code, name, desc, model, _prompt, active in agents:
+        module = AGENT_MODULE_ACCESS.get(code)
+        if module and not PermissionService.can_access_module(user_id, module):
+            continue
+        if code == "AI_GENERAL" and not PermissionService.has_permission(user_id, "ai_access"):
+            from config import OWNER_ID, MANAGER_ID
+            if user_id not in (OWNER_ID, MANAGER_ID):
+                continue
+        visible += 1
+        lines.append(f"• {name} ({code})\n  {desc or '—'}\n  model: {model or 'default'}")
+    if visible == 0:
+        lines.append("Нет доступных агентов для вашей роли.")
+    return "\n\n".join(lines)
+
+
+def mark_all_notifications_read(user_id: int) -> int:
+    cursor.execute(
+        """
+        UPDATE notifications
+        SET status = 'READ', is_read = 1, read_at = CURRENT_TIMESTAMP
+        WHERE user_id = ? AND status = 'NEW'
+        """,
+        (user_id,),
+    )
+    conn.commit()
+    return cursor.rowcount
+
+
+def archive_read_notifications(user_id: int) -> int:
+    cursor.execute(
+        """
+        UPDATE notifications
+        SET status = 'ARCHIVED', is_read = 1, archived_at = CURRENT_TIMESTAMP
+        WHERE user_id = ? AND status = 'READ'
+        """,
+        (user_id,),
+    )
+    conn.commit()
+    return cursor.rowcount
+
+
+# ==========================================================
+# WORKFLOW RULES ENGINE (DB)
+# ==========================================================
+
+WORKFLOW_TRIGGER_CODES = (
+    "AGRO_REQUEST_CREATED",
+    "TASK_CREATED",
+    "TASK_COMPLETED",
+    "EVENT_CREATED",
+    "USER_CREATED",
+    "FILE_UPLOADED",
+    "PROJECT_CREATED",
+)
+
+
+def register_workflow_rule(
+    trigger_code: str,
+    action_type: str,
+    module: str = "system",
+    action_payload: str = None,
+) -> int:
+    cursor.execute(
+        """
+        INSERT INTO workflow_rules (trigger_code, module, action_type, action_payload, active)
+        VALUES (?, ?, ?, ?, 1)
+        """,
+        (trigger_code, module, action_type, action_payload),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_workflow_rules(trigger_code: str = None, active_only: bool = True):
+    query = "SELECT id, trigger_code, module, action_type, action_payload, active FROM workflow_rules WHERE 1=1"
+    params = []
+    if trigger_code:
+        query += " AND trigger_code = ?"
+        params.append(trigger_code)
+    if active_only:
+        query += " AND active = 1"
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def log_workflow_execution(
+    trigger_code: str,
+    user_id: int,
+    module: str,
+    action_type: str,
+    entity_type: str = None,
+    entity_id: int = None,
+    status: str = "OK",
+    details: str = None,
+) -> int:
+    cursor.execute(
+        """
+        INSERT INTO workflow_logs (
+            trigger_code, module, user_id, entity_type, entity_id,
+            action_type, status, details
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (trigger_code, module, user_id, entity_type, entity_id, action_type, status, details),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+# ==========================================================
+# DASHBOARD / ANALYTICS
+# ==========================================================
+
+def get_dashboard_kpi(user_id: int) -> dict:
+    cursor.execute("SELECT COUNT(*) FROM requests WHERE status NOT IN ('DONE', 'CANCELLED')")
+    active_requests = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT COUNT(*) FROM tasks WHERE status NOT IN ('DONE', 'CANCELLED') AND (creator_id = ? OR assignee_id = ?)",
+        (user_id, user_id),
+    )
+    active_tasks = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT COUNT(*) FROM notifications WHERE user_id = ? AND (is_read = 0 OR status = 'NEW')",
+        (user_id,),
+    )
+    unread_notifications = cursor.fetchone()[0]
+    cursor.execute(
+        "SELECT COUNT(*) FROM ai_projects WHERE user_id = ? AND status != 'deleted'",
+        (user_id,),
+    )
+    active_projects = cursor.fetchone()[0]
+    return {
+        "active_requests": active_requests,
+        "active_tasks": active_tasks,
+        "unread_notifications": unread_notifications,
+        "active_projects": active_projects,
+    }
+
+
+def format_dashboard_text(user_id: int) -> str:
+    kpi = get_dashboard_kpi(user_id)
+    return (
+        "📊 Аналитика / KPI\n\n"
+        f"📋 Активные заявки CRM: {kpi['active_requests']}\n"
+        f"✅ Активные задачи: {kpi['active_tasks']}\n"
+        f"📦 AI проекты: {kpi['active_projects']}\n"
+        f"🔔 Непрочитанные уведомления: {kpi['unread_notifications']}\n\n"
+        "Разделы: KPI · Продажи · Загрузка · Проекты · Уведомления · Задачи"
+    )
+
+
+def format_dashboard_section(user_id: int, section: str) -> str:
+    if section == "kpi":
+        return format_dashboard_text(user_id)
+    if section == "sales":
+        cursor.execute("SELECT COUNT(*) FROM requests WHERE status = 'DONE'")
+        done = cursor.fetchone()[0]
+        return f"📈 Продажи / заявки\n\n✅ Завершено заявок: {done}"
+    if section == "workload":
+        rows = get_tasks_by_user(user_id, scope="my", active_only=True, limit=10)
+        lines = [f"📅 Загрузка сотрудника ({user_id})\n"]
+        for r in rows:
+            lines.append(f"  #{r[0]} {r[1]} · {r[8]}")
+        return "\n".join(lines) if len(lines) > 1 else lines[0] + "\nЗадач нет."
+    if section == "projects":
+        return format_projects_text(user_id)
+    if section == "notifications":
+        return format_notifications_text(user_id, status="NEW", limit=10)
+    if section == "tasks":
+        return format_tasks_list_text(user_id, scope="my", active_only=True, limit=10)
+    return format_dashboard_text(user_id)
+
+
+# ==========================================================
+# ENHANCED GLOBAL SEARCH
+# ==========================================================
+
+def search_requests(user_id: int, query: str, limit: int = 10):
+    cursor.execute(
+        """
+        SELECT request_number, client_name, product, status, created_at
+        FROM requests
+        WHERE CAST(request_number AS TEXT) LIKE ?
+           OR client_name LIKE ? OR product LIKE ? OR request_text LIKE ?
+        ORDER BY id DESC LIMIT ?
+        """,
+        (f"%{query}%", f"%{query}%", f"%{query}%", f"%{query}%", limit),
+    )
+    return cursor.fetchall()
+
+
+def search_notifications(user_id: int, query: str, limit: int = 10):
+    cursor.execute(
+        """
+        SELECT id, title, message, COALESCE(module, category), priority, created_at
+        FROM notifications
+        WHERE user_id = ? AND (title LIKE ? OR message LIKE ?)
+        ORDER BY id DESC LIMIT ?
+        """,
+        (user_id, f"%{query}%", f"%{query}%", limit),
+    )
+    return cursor.fetchall()
+
+
+def search_ai_dialogs(user_id: int, query: str, limit: int = 10):
+    cursor.execute(
+        """
+        SELECT agent_code, role, substr(content, 1, 80), created_at
+        FROM ai_dialogs
+        WHERE user_id = ? AND content LIKE ?
+        ORDER BY id DESC LIMIT ?
+        """,
+        (user_id, f"%{query}%", limit),
+    )
+    return cursor.fetchall()
+
+
+def enhanced_global_search(user_id: int, query: str, limit: int = 10) -> dict:
+    if not query:
+        return {}
+    return {
+        "requests": search_requests(user_id, query, limit),
+        "tasks": search_tasks(user_id, query, limit),
+        "files": search_files(user_id, query, limit),
+        "calendar": search_calendar_events(user_id, query, limit),
+        "projects": search_projects(user_id, query, limit=limit),
+        "users": search_users(user_id, query, limit),
+        "notifications": search_notifications(user_id, query, limit),
+        "ai_dialogs": search_ai_dialogs(user_id, query, limit),
+        "deals": search_deals(user_id, query, limit=limit),
+    }
+
+
+def format_enhanced_search_results(results: dict, query: str) -> str:
+    lines = [f"🔎 Результаты: «{query}»\n"]
+    formatters = {
+        "requests": ("📋 Заявки", lambda i: f"#{i[0]} {i[1]} · {i[2]}"),
+        "tasks": ("✅ Задачи", lambda i: f"#{i[0]} {i[1]}"),
+        "files": ("📁 Файлы", lambda i: f"#{i[0]} {i[2] or i[1]}"),
+        "calendar": ("📅 Календарь", lambda i: f"#{i[0]} {i[1]} · {i[2]}"),
+        "projects": ("📦 Проекты", lambda i: f"#{i[0]} {i[1]}"),
+        "users": ("👥 Пользователи", lambda i: f"{i[1] or i[2]} (ID {i[0]})"),
+        "notifications": ("🔔 Уведомления", lambda i: f"#{i[0]} {i[1]}"),
+        "ai_dialogs": ("🤖 AI диалоги", lambda i: f"{i[0]} · {i[2]}"),
+        "deals": ("🤝 Сделки", lambda i: str(i[0]) if i else "—"),
+    }
+    total = 0
+    for key, (label, fmt) in formatters.items():
+        items = results.get(key) or []
+        if not items:
+            continue
+        total += len(items)
+        lines.append(f"\n{label} ({len(items)}):")
+        for item in items[:5]:
+            try:
+                lines.append(f"  · {fmt(item)}")
+            except (IndexError, TypeError):
+                lines.append(f"  · {item}")
+    if total == 0:
+        lines.append("\nНичего не найдено.")
+    else:
+        lines.append(f"\nВсего: {total}")
+    return "\n".join(lines)
