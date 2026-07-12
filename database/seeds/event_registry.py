@@ -79,6 +79,18 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "aml",
         "description": "AML manual review required",
     },
+    "price.updated": {
+        "aggregate_type": "price",
+        "description": "Market price updated",
+    },
+    "spread.changed": {
+        "aggregate_type": "price",
+        "description": "Spread rule changed",
+    },
+    "partner.price.updated": {
+        "aggregate_type": "partner",
+        "description": "Partner pricing updated",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
