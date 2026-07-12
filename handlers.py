@@ -294,6 +294,10 @@ from keyboards import (
 )
 router = Router()
 
+from deal_workflow_handlers import deal_workflow_router
+
+router.include_router(deal_workflow_router)
+
 STATUS_NAMES = {
     "NEW": "🆕 Новая",
     "IN_PROGRESS": "⚙️ В работе",

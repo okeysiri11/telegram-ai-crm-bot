@@ -95,3 +95,12 @@ class DealRepository:
         stmt = stmt.order_by(Deal.created_at.desc()).limit(limit)
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
+
+    async def assign_manager(self, deal_id: uuid.UUID, manager_id: int) -> Deal | None:
+        deal = await self.get_by_id(deal_id)
+        if deal is None:
+            return None
+        deal.manager_id = manager_id
+        deal.status = DealStatus.ASSIGNED.value
+        await self._session.flush()
+        return deal
