@@ -60,17 +60,11 @@ class TaskService:
             assignee_id=assigned_user_id,
             priority=priority,
             deadline=due_date,
+            task_type=task_type,
         )
 
         if task_id:
-            from services.workflow_triggers import WorkflowTriggers
-            WorkflowTriggers.on_task_created(
-                creator_id,
-                task_id,
-                task_type=task_type,
-                title=title,
-                module=module,
-            )
+            pass  # TASK_CREATED event published by create_task via EventBus
         return task_id
 
     @staticmethod

@@ -460,6 +460,7 @@ def _migrate_schema():
     _migrate_company_core_phase1()
     _migrate_platform_hardening()
     _migrate_bidex_financial_core_phase1()
+    _migrate_event_bus()
 
 
 def _migrate_company_core_phase1():
@@ -755,6 +756,31 @@ def _migrate_bidex_financial_core_phase1():
             """,
             (name, acc_type, currency),
         )
+    conn.commit()
+
+
+    conn.commit()
+
+
+def _migrate_event_bus():
+    """Unified Event Bus — platform_events log with replay support."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS platform_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_type TEXT NOT NULL,
+            module TEXT NOT NULL,
+            entity_type TEXT NOT NULL,
+            entity_id TEXT,
+            user_id INTEGER NOT NULL,
+            payload TEXT,
+            status TEXT NOT NULL DEFAULT 'PUBLISHED',
+            delivery_errors TEXT,
+            replay_of INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
     conn.commit()
 
 
@@ -1791,14 +1817,12 @@ def ensure_user(telegram_id: int, full_name: str = "", username: str = ""):
         (telegram_id, username or None, full_name or None),
     )
     conn.commit()
-    from services.workflow_engine import WorkflowEngine
-    WorkflowEngine.execute_workflow(
+    from events import EventBus
+    EventBus.publish(
         "USER_CREATED",
-        telegram_id,
-        "users",
-        entity_type="user",
+        user_id=telegram_id,
         entity_id=telegram_id,
-        payload={"full_name": full_name},
+        payload={"full_name": full_name, "username": username},
     )
     return cursor.lastrowid
 
@@ -1989,7 +2013,6 @@ def create_request(
     manager_id: int
 ):
     from services.statuses import normalize_status
-    from services.workflow_triggers import WorkflowTriggers
 
     cursor.execute(
         """
@@ -2030,39 +2053,20 @@ def create_request(
     row = cursor.fetchone()
     request_number = row[0]
 
-    WorkflowTriggers.on_request_created(
-        client_id,
-        request_number,
-        module="agro_trading",
-        product=product,
-    )
-    from services.workflow_engine import WorkflowEngine
-    WorkflowEngine.execute_workflow(
+    from events import EventBus
+    EventBus.publish(
         "AGRO_REQUEST_CREATED",
-        client_id,
-        "agro_trading",
-        entity_type="request",
-        entity_id=request_number,
-        payload={"title": f"Новая заявка #{request_number}", "product": product},
-    )
-    notify_agro_managers_new_request(
-        request_number,
-        product=product,
-        client_name=client_name,
-    )
-    log_audit(client_id, "create_request", "agro_trading", f"#{request_number}|{product}")
-    from services.agro_erp_workflow import AgroErpWorkflow
-    AgroErpWorkflow.emit(
-        "REQUEST_CREATED",
-        client_id,
-        entity_type="request",
+        user_id=client_id,
         entity_id=request_number,
         payload={
-            "title": f"Заявка #{request_number} создана",
+            "product": product,
+            "client_name": client_name,
+            "title": f"Новая заявка #{request_number}",
             "message": f"{client_name} · {product}".strip(" ·"),
             "priority": "HIGH",
         },
     )
+    log_audit(client_id, "create_request", "agro_trading", f"#{request_number}|{product}")
     return request_number
 
 
@@ -2107,9 +2111,6 @@ def update_request_status(
     status: str,
     manager_id: int = None
 ):
-    from services.statuses import normalize_status
-    from services.workflow_triggers import WorkflowTriggers
-
     status = normalize_status(status)
     old_status = get_request_status(request_number)
 
@@ -2132,12 +2133,12 @@ def update_request_status(
     if old_status and old_status != status:
         req = get_request_by_number(request_number)
         actor = manager_id or (req[2] if req else 0)
-        WorkflowTriggers.on_request_status_changed(
-            actor,
-            request_number,
-            old_status,
-            status,
-            module="agro_trading",
+        from events import EventBus
+        EventBus.publish(
+            "AGRO_REQUEST_STATUS_CHANGED",
+            user_id=actor,
+            entity_id=request_number,
+            payload={"old_status": old_status, "new_status": status},
         )
         log_audit(
             actor,
@@ -2145,13 +2146,6 @@ def update_request_status(
             "agro_trading",
             f"#{request_number}:{old_status}->{status}",
         )
-        from services.agro_request_workflow import AgroRequestWorkflow
-        if status == "DONE":
-            AgroRequestWorkflow.on_request_done(actor, request_number)
-        elif status == "CANCELLED":
-            AgroRequestWorkflow.on_request_cancelled(actor, request_number)
-        from services.agro_erp import AgroErpService
-        AgroErpService.on_request_status_changed(actor, request_number, status)
 
 
 def get_request_status(
@@ -2263,8 +2257,6 @@ def get_request_by_number(number):
 
 
 def assign_manager(request_number, manager_id):
-    from services.workflow_triggers import WorkflowTriggers
-
     cursor.execute(
         """
         UPDATE requests
@@ -2275,11 +2267,12 @@ def assign_manager(request_number, manager_id):
     )
 
     conn.commit()
-    WorkflowTriggers.on_manager_assigned(
-        manager_id,
-        request_number,
-        manager_id,
-        module="agro_trading",
+    from events import EventBus
+    EventBus.publish(
+        "AGRO_REQUEST_ASSIGNED",
+        user_id=manager_id,
+        entity_id=request_number,
+        payload={"manager_id": manager_id},
     )
     log_audit(
         manager_id,
@@ -2287,12 +2280,8 @@ def assign_manager(request_number, manager_id):
         "agro_trading",
         f"#{request_number}:manager={manager_id}",
     )
-    from services.agro_request_workflow import AgroRequestWorkflow
-    AgroRequestWorkflow.on_request_assigned(
-        manager_id, request_number, manager_id,
-    )
-    from services.agro_erp import AgroErpService
-    AgroErpService.on_request_taken(manager_id, request_number, manager_id)
+
+
 def get_requests_by_manager(manager_id):
     cursor.execute(
         """
@@ -2888,17 +2877,12 @@ def create_event(
     event_id = cursor.lastrowid
     assign_public_id("calendar_events", event_id)
     log_audit(creator_id, "create_event", "calendar", f"{module}|{title}|{start_time}")
-    from services.workflow_triggers import WorkflowTriggers
-    WorkflowTriggers.on_calendar_event_created(
-        creator_id, event_id, title, module=module,
-    )
-    from services.workflow_engine import WorkflowEngine
-    WorkflowEngine.execute_workflow(
-        "EVENT_CREATED",
-        creator_id,
-        module,
-        entity_type="event",
+    from events import EventBus
+    EventBus.publish(
+        "CALENDAR_EVENT_CREATED",
+        user_id=creator_id,
         entity_id=event_id,
+        module=module,
         payload={"title": title},
     )
     return event_id
@@ -5399,6 +5383,7 @@ def create_task(
     priority: str = "NORMAL",
     deadline: str = None,
     status: str = "NEW",
+    task_type: str = "SYSTEM",
 ) -> int:
     module = _normalize_task_module(module)
     priority = _normalize_task_priority(priority)
@@ -5455,14 +5440,13 @@ def create_task(
     )
     log_audit(creator_id, "create_task", "tasks", f"{module}|{title}")
 
-    from services.workflow_engine import WorkflowEngine
-    WorkflowEngine.execute_workflow(
+    from events import EventBus
+    EventBus.publish(
         "TASK_CREATED",
-        creator_id,
-        module if module in TASK_MODULES else "system",
-        entity_type="task",
+        user_id=creator_id,
         entity_id=task_id,
-        payload={"title": title},
+        module=module if module in TASK_MODULES else "system",
+        payload={"title": title, "task_type": task_type},
     )
     return task_id
 
@@ -8432,7 +8416,32 @@ def update_finance_transaction_status(
                 f"id={transaction_id}|balance_update_failed",
             )
             return False
+        _publish_finance_event(updated, user_id)
     return True
+
+
+def _publish_finance_event(tx_row: tuple, user_id: int) -> None:
+    if not tx_row:
+        return
+    (
+        tid, ttype, _debit, _credit, amount, currency, _status,
+        ref_type, ref_id, _created_by, _created_at, notes,
+    ) = tx_row
+    from events import EventBus
+    event_type = "FINANCE_COMMISSION_PAID" if ttype == "COMMISSION" else "FINANCE_PAYMENT_CONFIRMED"
+    EventBus.publish(
+        event_type,
+        user_id=user_id,
+        entity_id=tid,
+        payload={
+            "transaction_type": ttype,
+            "amount": amount,
+            "currency": currency,
+            "reference_type": ref_type,
+            "reference_id": ref_id,
+            "notes": notes,
+        },
+    )
 
 
 def format_finance_account_card(row: tuple) -> str:
@@ -8468,3 +8477,88 @@ def format_finance_transaction_card(row: tuple) -> str:
         f"📝 {notes or '—'}\n"
         f"🕒 {created_at}"
     )
+
+
+# ==========================================================
+# EVENT BUS — platform_events persistence & replay
+# ==========================================================
+
+def insert_platform_event(event, replay_of: int = None) -> int:
+    import json
+    entity_id = str(event.entity_id) if event.entity_id is not None else None
+    replay_of = replay_of or event.payload.get("_replay_of")
+    cursor.execute(
+        """
+        INSERT INTO platform_events (
+            event_type, module, entity_type, entity_id,
+            user_id, payload, status, replay_of
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            event.event_type,
+            event.module,
+            event.entity_type,
+            entity_id,
+            event.user_id,
+            json.dumps(event.payload, ensure_ascii=False),
+            event.status,
+            replay_of,
+        ),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def update_platform_event_status(
+    event_id: int,
+    status: str,
+    delivery_errors: str = None,
+) -> bool:
+    cursor.execute(
+        """
+        UPDATE platform_events
+        SET status = ?, delivery_errors = ?
+        WHERE id = ?
+        """,
+        (status, delivery_errors, event_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def get_platform_event(event_id: int):
+    cursor.execute(
+        """
+        SELECT id, event_type, module, entity_type, entity_id,
+               user_id, payload, created_at, status
+        FROM platform_events
+        WHERE id = ?
+        """,
+        (event_id,),
+    )
+    return cursor.fetchone()
+
+
+def list_platform_events(
+    event_type: str = None,
+    module: str = None,
+    limit: int = 50,
+) -> list:
+    query = """
+        SELECT id, event_type, module, entity_type, entity_id,
+               user_id, payload, created_at, status
+        FROM platform_events
+        WHERE 1=1
+    """
+    params: list = []
+    if event_type:
+        query += " AND event_type = ?"
+        params.append(event_type.strip().upper())
+    if module:
+        query += " AND module = ?"
+        params.append(module)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()

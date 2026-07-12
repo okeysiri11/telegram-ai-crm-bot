@@ -19,6 +19,7 @@ from services.backup import BackupService
 from services.platform_hardening_test import PlatformHardeningTest
 from services.finance_core import FinanceCoreService
 from services.finance_auth import FinanceAuthService
+from services.event_bus_test import EventBusTestService
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
@@ -1218,6 +1219,32 @@ async def finance_core_integration_test(message: Message):
         lines.append(f"Error: {result['error']}")
     await message.answer("\n".join(lines))
     log_audit(user_id, "finance_integration_test", "finance", result.get("status"))
+
+
+@router.message(Command("event_bus_test"))
+async def event_bus_integration_test(message: Message):
+    user_id = message.from_user.id
+    from database import get_user_roles
+    roles = set(get_user_roles(user_id))
+    if user_id not in (OWNER_ID, MANAGER_ID) and "SUPER_MANAGER" not in roles:
+        await message.answer("Нет доступа к /event_bus_test.")
+        return
+    result = EventBusTestService.run_integration_test(user_id)
+    steps = result.get("steps", {})
+    lines = [
+        "EVENT BUS INTEGRATION TEST",
+        f"STATUS: {result.get('status', 'ERROR')}",
+        f"Published event: {steps.get('publish', '—')}",
+        f"Delivery status: {steps.get('logged_status', '—')}",
+        f"Replay event: {steps.get('replay', '—')}",
+        f"Audit entries: {steps.get('audit_entries', '—')}",
+        f"New platform_events: {steps.get('events_created', '—')}",
+        f"Subscribers (AUTO_LEAD): {steps.get('subscribers', '—')}",
+    ]
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "event_bus_test", "event_bus", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")
