@@ -1,10 +1,9 @@
-# Future REST/GraphQL API layer.
-# Telegram handlers and Web UI will consume services via repositories.
+# REST/GraphQL API layer + system HTTP endpoints.
 #
-# Planned structure:
-#   api/routes/tasks.py
-#   api/routes/calendar.py
-#   api/routes/deals.py
-#   api/middleware/auth.py
+# Routes:
+#   GET /system/db-health  — PostgreSQL async health check
+#
+# Run via bot.py (alongside Telegram polling) or standalone:
+#   python -c "import asyncio; from api.server import start_api_server; asyncio.run(start_api_server())"
 
 API_VERSION = "v1"

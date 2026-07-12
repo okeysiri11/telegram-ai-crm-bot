@@ -31,7 +31,13 @@ class SystemHealthService:
             snapshot[label] = SystemHealthService.check_component(key)
         from database import get_last_platform_health
         snapshot["last_test"] = get_last_platform_health()
+        snapshot["PostgreSQL"] = SystemHealthService._postgres_status()
         return snapshot
+
+    @staticmethod
+    def _postgres_status() -> str:
+        from database.connection import is_postgres_configured
+        return "ONLINE" if is_postgres_configured() else "OFFLINE"
 
     @staticmethod
     def format_health_dashboard() -> str:
@@ -39,7 +45,7 @@ class SystemHealthService:
         icons = {"ONLINE": "🟢", "DEGRADED": "🟡", "OFFLINE": "🔴"}
         lines = ["❤️ System Health\n"]
         for label in (
-            "Database", "Telegram", "AI Router", "Workflow",
+            "Database", "PostgreSQL", "Telegram", "AI Router", "Workflow",
             "Calendar", "Notifications", "Search", "Files", "Audit",
         ):
             status = snap.get(label, "OFFLINE")
