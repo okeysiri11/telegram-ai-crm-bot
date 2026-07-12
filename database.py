@@ -461,6 +461,7 @@ def _migrate_schema():
     _migrate_platform_hardening()
     _migrate_bidex_financial_core_phase1()
     _migrate_event_bus()
+    _migrate_deal_engine_phase1()
 
 
 def _migrate_company_core_phase1():
@@ -781,6 +782,86 @@ def _migrate_event_bus():
         )
         """
     )
+    conn.commit()
+
+
+def _migrate_deal_engine_phase1():
+    """Universal Deal Engine — generic deals + per-module extension tables."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS deals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            module TEXT NOT NULL,
+            deal_type TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'NEW',
+            owner_id INTEGER NOT NULL,
+            manager_id INTEGER,
+            customer_id INTEGER,
+            partner_id INTEGER,
+            amount REAL,
+            currency TEXT DEFAULT 'USD',
+            profit REAL,
+            commission REAL,
+            public_id TEXT,
+            legacy_ref_type TEXT,
+            legacy_ref_id INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    extension_tables = {
+        "deal_agro_ext": """
+            deal_id INTEGER PRIMARY KEY,
+            request_number INTEGER,
+            product TEXT,
+            erp_status TEXT,
+            legacy_agro_deal_id INTEGER,
+            FOREIGN KEY (deal_id) REFERENCES deals(id)
+        """,
+        "deal_auto_ext": """
+            deal_id INTEGER PRIMARY KEY,
+            vehicle_model TEXT,
+            vin TEXT,
+            tradein_flag INTEGER DEFAULT 0,
+            FOREIGN KEY (deal_id) REFERENCES deals(id)
+        """,
+        "deal_legal_ext": """
+            deal_id INTEGER PRIMARY KEY,
+            case_number TEXT,
+            court_name TEXT,
+            case_type TEXT,
+            FOREIGN KEY (deal_id) REFERENCES deals(id)
+        """,
+        "deal_drone_ext": """
+            deal_id INTEGER PRIMARY KEY,
+            project_name TEXT,
+            drone_model TEXT,
+            delivery_date TEXT,
+            FOREIGN KEY (deal_id) REFERENCES deals(id)
+        """,
+        "deal_finance_ext": """
+            deal_id INTEGER PRIMARY KEY,
+            finance_transaction_id INTEGER,
+            finance_account_id INTEGER,
+            payment_terms TEXT,
+            FOREIGN KEY (deal_id) REFERENCES deals(id)
+        """,
+        "deal_logistics_ext": """
+            deal_id INTEGER PRIMARY KEY,
+            route TEXT,
+            shipment_id TEXT,
+            origin TEXT,
+            destination TEXT,
+            FOREIGN KEY (deal_id) REFERENCES deals(id)
+        """,
+    }
+    for table, columns in extension_tables.items():
+        cursor.execute(f"CREATE TABLE IF NOT EXISTS {table} ({columns})")
+    conn.commit()
+
+    if not _column_exists("deals", "public_id"):
+        cursor.execute("ALTER TABLE deals ADD COLUMN public_id TEXT")
     conn.commit()
 
 
@@ -1781,6 +1862,72 @@ FINANCE_ROLE_ACTIONS = {
     "OTC_MANAGER": {"FINANCE_VIEW", "FINANCE_CREATE"},
     "MANAGER": {"FINANCE_VIEW", "FINANCE_CREATE"},
     "VIEWER": {"FINANCE_VIEW"},
+    "CLIENT": set(),
+}
+
+DEAL_MODULES = (
+    "AGRO", "AUTO", "LEGAL", "DRONE", "FINANCE", "LOGISTICS",
+)
+
+DEAL_STATUSES = (
+    "NEW", "ACTIVE", "NEGOTIATION", "IN_PROGRESS", "ON_HOLD",
+    "COMPLETED", "CANCELLED",
+)
+
+DEAL_STATUS_TRANSITIONS = {
+    "NEW": {"ACTIVE", "NEGOTIATION", "CANCELLED"},
+    "ACTIVE": {"IN_PROGRESS", "NEGOTIATION", "ON_HOLD", "CANCELLED"},
+    "NEGOTIATION": {"IN_PROGRESS", "ON_HOLD", "CANCELLED"},
+    "IN_PROGRESS": {"COMPLETED", "ON_HOLD", "CANCELLED"},
+    "ON_HOLD": {"IN_PROGRESS", "NEGOTIATION", "CANCELLED"},
+    "COMPLETED": set(),
+    "CANCELLED": set(),
+}
+
+DEAL_TYPES_BY_MODULE = {
+    "AGRO": ("EXPORT", "IMPORT", "DOMESTIC"),
+    "AUTO": ("SALE", "TRADEIN", "LEASING"),
+    "LEGAL": ("CASE", "CONSULTATION", "CONTRACT"),
+    "DRONE": ("PROJECT", "SERVICE", "RENTAL"),
+    "FINANCE": ("LOAN", "FACTORING", "SETTLEMENT"),
+    "LOGISTICS": ("SHIPMENT", "WAREHOUSE", "CUSTOMS"),
+}
+
+DEAL_MODULE_TO_HUB = {
+    "AGRO": "agro_trading",
+    "AUTO": "automotive",
+    "LEGAL": "law",
+    "DRONE": "drone",
+    "FINANCE": "finance",
+    "LOGISTICS": "logistics",
+}
+
+DEAL_EXT_TABLES = {
+    "AGRO": "deal_agro_ext",
+    "AUTO": "deal_auto_ext",
+    "LEGAL": "deal_legal_ext",
+    "DRONE": "deal_drone_ext",
+    "FINANCE": "deal_finance_ext",
+    "LOGISTICS": "deal_logistics_ext",
+}
+
+DEAL_ACTION_PERMISSIONS = (
+    "DEAL_VIEW",
+    "DEAL_CREATE",
+    "DEAL_EDIT",
+    "DEAL_APPROVE",
+)
+
+DEAL_ROLE_ACTIONS = {
+    "OWNER": set(DEAL_ACTION_PERMISSIONS),
+    "ADMIN": set(DEAL_ACTION_PERMISSIONS),
+    "SUPER_MANAGER": set(DEAL_ACTION_PERMISSIONS),
+    "AGRO_MANAGER": {"DEAL_VIEW", "DEAL_CREATE", "DEAL_EDIT"},
+    "CRYPTO_MANAGER": {"DEAL_VIEW", "DEAL_CREATE"},
+    "MANAGER": {"DEAL_VIEW", "DEAL_CREATE", "DEAL_EDIT"},
+    "LAWYER": {"DEAL_VIEW", "DEAL_CREATE", "DEAL_EDIT"},
+    "ENGINEER": {"DEAL_VIEW", "DEAL_CREATE"},
+    "VIEWER": {"DEAL_VIEW"},
     "CLIENT": set(),
 }
 
@@ -7874,6 +8021,7 @@ PUBLIC_ID_PREFIX_MAP = {
     "tasks": "TK",
     "calendar_events": "EV",
     "agro_documents": "DC",
+    "deals": "DL",
 }
 
 ATTACHMENT_ENTITY_TYPES = (
@@ -8562,3 +8710,336 @@ def list_platform_events(
     params.append(limit)
     cursor.execute(query, params)
     return cursor.fetchall()
+
+
+# ==========================================================
+# UNIVERSAL DEAL ENGINE
+# ==========================================================
+
+_DEAL_SELECT = """
+    SELECT id, module, deal_type, status, owner_id, manager_id,
+           customer_id, partner_id, amount, currency, profit, commission,
+           public_id, legacy_ref_type, legacy_ref_id, created_at, updated_at
+    FROM deals
+"""
+
+
+def _normalize_deal_module(module: str) -> str:
+    key = (module or "AGRO").strip().upper()
+    return key if key in DEAL_MODULES else "AGRO"
+
+
+def _normalize_deal_type(module: str, deal_type: str) -> str:
+    module = _normalize_deal_module(module)
+    key = (deal_type or "EXPORT").strip().upper()
+    allowed = DEAL_TYPES_BY_MODULE.get(module, ())
+    return key if key in allowed else (allowed[0] if allowed else "GENERAL")
+
+
+def has_deal_action(user_id: int, action: str) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+    if action not in DEAL_ACTION_PERMISSIONS:
+        return False
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return True
+    for role in get_user_roles(user_id):
+        if action in DEAL_ROLE_ACTIONS.get(role, set()):
+            return True
+    return False
+
+
+def create_deal(
+    user_id: int,
+    module: str,
+    deal_type: str,
+    owner_id: int = None,
+    manager_id: int = None,
+    customer_id: int = None,
+    partner_id: int = None,
+    amount: float = None,
+    currency: str = "USD",
+    profit: float = None,
+    commission: float = None,
+    status: str = "NEW",
+    legacy_ref_type: str = None,
+    legacy_ref_id: int = None,
+    extension: dict = None,
+) -> int:
+    module = _normalize_deal_module(module)
+    deal_type = _normalize_deal_type(module, deal_type)
+    status = status.strip().upper() if status else "NEW"
+    if status not in DEAL_STATUSES:
+        status = "NEW"
+    owner_id = owner_id or user_id
+
+    cursor.execute(
+        """
+        INSERT INTO deals (
+            module, deal_type, status, owner_id, manager_id,
+            customer_id, partner_id, amount, currency, profit, commission,
+            legacy_ref_type, legacy_ref_id
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            module, deal_type, status, owner_id, manager_id,
+            customer_id, partner_id, amount, currency, profit, commission,
+            legacy_ref_type, legacy_ref_id,
+        ),
+    )
+    conn.commit()
+    deal_id = cursor.lastrowid
+    assign_public_id("deals", deal_id)
+
+    if extension:
+        upsert_deal_extension(deal_id, module, extension)
+
+    log_audit(
+        user_id, "deal_create", "deals",
+        f"id={deal_id}|module={module}|type={deal_type}",
+    )
+    from events import EventBus
+    EventBus.publish(
+        "DEAL_CREATED",
+        user_id=user_id,
+        module=DEAL_MODULE_TO_HUB.get(module, module.lower()),
+        entity_type="deal",
+        entity_id=deal_id,
+        payload={
+            "module": module,
+            "deal_type": deal_type,
+            "amount": amount,
+            "currency": currency,
+        },
+    )
+    return deal_id
+
+
+def get_deal(deal_id: int):
+    cursor.execute(f"{_DEAL_SELECT} WHERE id = ?", (deal_id,))
+    return cursor.fetchone()
+
+
+def list_deals(
+    module: str = None,
+    status: str = None,
+    manager_id: int = None,
+    limit: int = 50,
+) -> list:
+    query = f"{_DEAL_SELECT} WHERE 1=1"
+    params: list = []
+    if module:
+        query += " AND module = ?"
+        params.append(_normalize_deal_module(module))
+    if status:
+        query += " AND status = ?"
+        params.append(status.upper())
+    if manager_id is not None:
+        query += " AND (manager_id = ? OR owner_id = ?)"
+        params.extend([manager_id, manager_id])
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def update_deal_fields(deal_id: int, user_id: int, **fields) -> bool:
+    allowed = {
+        "deal_type", "manager_id", "customer_id", "partner_id",
+        "amount", "currency", "profit", "commission",
+    }
+    parts, params = [], []
+    for key, value in fields.items():
+        if key not in allowed or value is None:
+            continue
+        parts.append(f"{key} = ?")
+        params.append(value)
+    if not parts:
+        return False
+    parts.append("updated_at = CURRENT_TIMESTAMP")
+    params.append(deal_id)
+    cursor.execute(
+        f"UPDATE deals SET {', '.join(parts)} WHERE id = ?",
+        params,
+    )
+    conn.commit()
+    if cursor.rowcount:
+        log_audit(user_id, "deal_update", "deals", f"id={deal_id}")
+    return cursor.rowcount > 0
+
+
+def update_deal_status(deal_id: int, user_id: int, new_status: str) -> bool:
+    new_status = new_status.strip().upper()
+    deal = get_deal(deal_id)
+    if not deal or new_status not in DEAL_STATUSES:
+        return False
+    current = deal[3]
+    allowed = DEAL_STATUS_TRANSITIONS.get(current, set())
+    if new_status != current and new_status not in allowed:
+        return False
+
+    cursor.execute(
+        """
+        UPDATE deals SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (new_status, deal_id),
+    )
+    conn.commit()
+    if not cursor.rowcount:
+        return False
+
+    log_audit(
+        user_id, "deal_status", "deals",
+        f"id={deal_id}|{current}->{new_status}",
+    )
+    from events import EventBus
+    EventBus.publish(
+        "DEAL_STATUS_CHANGED",
+        user_id=user_id,
+        module=DEAL_MODULE_TO_HUB.get(deal[1], deal[1].lower()),
+        entity_type="deal",
+        entity_id=deal_id,
+        payload={"old_status": current, "new_status": new_status, "module": deal[1]},
+    )
+    if new_status == "COMPLETED":
+        EventBus.publish(
+            "DEAL_COMPLETED",
+            user_id=user_id,
+            module=DEAL_MODULE_TO_HUB.get(deal[1], deal[1].lower()),
+            entity_type="deal",
+            entity_id=deal_id,
+            payload={"module": deal[1], "amount": deal[8], "currency": deal[9]},
+        )
+    return True
+
+
+def upsert_deal_extension(deal_id: int, module: str, data: dict) -> bool:
+    module = _normalize_deal_module(module)
+    table = DEAL_EXT_TABLES.get(module)
+    if not table or not data:
+        return False
+
+    columns_map = {
+        "AGRO": ("request_number", "product", "erp_status", "legacy_agro_deal_id"),
+        "AUTO": ("vehicle_model", "vin", "tradein_flag"),
+        "LEGAL": ("case_number", "court_name", "case_type"),
+        "DRONE": ("project_name", "drone_model", "delivery_date"),
+        "FINANCE": ("finance_transaction_id", "finance_account_id", "payment_terms"),
+        "LOGISTICS": ("route", "shipment_id", "origin", "destination"),
+    }
+    allowed = columns_map.get(module, ())
+    filtered = {k: data[k] for k in allowed if k in data}
+    if not filtered:
+        return False
+
+    cursor.execute(f"SELECT deal_id FROM {table} WHERE deal_id = ?", (deal_id,))
+    exists = cursor.fetchone()
+    if exists:
+        parts = [f"{k} = ?" for k in filtered]
+        params = list(filtered.values()) + [deal_id]
+        cursor.execute(
+            f"UPDATE {table} SET {', '.join(parts)} WHERE deal_id = ?",
+            params,
+        )
+    else:
+        cols = ["deal_id"] + list(filtered.keys())
+        placeholders = ",".join("?" * len(cols))
+        cursor.execute(
+            f"INSERT INTO {table} ({', '.join(cols)}) VALUES ({placeholders})",
+            [deal_id] + list(filtered.values()),
+        )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def get_deal_extension(deal_id: int, module: str) -> dict | None:
+    module = _normalize_deal_module(module)
+    table = DEAL_EXT_TABLES.get(module)
+    if not table:
+        return None
+    cursor.execute(f"SELECT * FROM {table} WHERE deal_id = ?", (deal_id,))
+    row = cursor.fetchone()
+    if not row:
+        return None
+    columns_map = {
+        "AGRO": ("deal_id", "request_number", "product", "erp_status", "legacy_agro_deal_id"),
+        "AUTO": ("deal_id", "vehicle_model", "vin", "tradein_flag"),
+        "LEGAL": ("deal_id", "case_number", "court_name", "case_type"),
+        "DRONE": ("deal_id", "project_name", "drone_model", "delivery_date"),
+        "FINANCE": ("deal_id", "finance_transaction_id", "finance_account_id", "payment_terms"),
+        "LOGISTICS": ("deal_id", "route", "shipment_id", "origin", "destination"),
+    }
+    keys = columns_map.get(module, ())
+    return dict(zip(keys, row))
+
+
+def sync_universal_deal_from_agro(agro_deal_id: int, user_id: int) -> int:
+    """Link or create universal deal row from legacy agro_deals (non-breaking)."""
+    cursor.execute(
+        """
+        SELECT id, request_number, client_id, product, manager_id, status,
+               erp_status, price, currency
+        FROM agro_deals WHERE id = ?
+        """,
+        (agro_deal_id,),
+    )
+    row = cursor.fetchone()
+    if not row:
+        return 0
+
+    cursor.execute(
+        """
+        SELECT id FROM deals
+        WHERE legacy_ref_type = 'agro_deals' AND legacy_ref_id = ?
+        """,
+        (agro_deal_id,),
+    )
+    existing = cursor.fetchone()
+    if existing:
+        return existing[0]
+
+    _aid, req_num, client_id, product, manager_id, status, erp_status, price, currency = row
+    erp_map = {"NEGOTIATION": "NEGOTIATION", "NEW": "NEW", "DONE": "COMPLETED"}
+    uni_status = erp_map.get(erp_status or status, "ACTIVE")
+
+    return create_deal(
+        user_id=user_id,
+        module="AGRO",
+        deal_type="EXPORT",
+        owner_id=client_id,
+        manager_id=manager_id,
+        customer_id=client_id,
+        amount=price,
+        currency=currency or "USD",
+        status=uni_status if uni_status in DEAL_STATUSES else "NEGOTIATION",
+        legacy_ref_type="agro_deals",
+        legacy_ref_id=agro_deal_id,
+        extension={
+            "request_number": req_num,
+            "product": product,
+            "erp_status": erp_status,
+            "legacy_agro_deal_id": agro_deal_id,
+        },
+    )
+
+
+def format_deal_card(deal_row: tuple) -> str:
+    if not deal_row:
+        return "Сделка не найдена."
+    (
+        did, module, deal_type, status, owner_id, manager_id,
+        customer_id, partner_id, amount, currency, profit, commission,
+        public_id, legacy_ref_type, legacy_ref_id, created_at, updated_at,
+    ) = deal_row
+    return (
+        f"🤝 Сделка #{did} ({public_id or '—'})\n\n"
+        f"🏷 {module} · {deal_type}\n"
+        f"📊 Статус: {status}\n"
+        f"💵 {amount or 0:,.2f} {currency or 'USD'}\n"
+        f"📈 Profit: {profit or 0} · Commission: {commission or 0}\n"
+        f"👤 Owner: {owner_id} · Manager: {manager_id or '—'}\n"
+        f"👥 Customer: {customer_id or '—'} · Partner: {partner_id or '—'}\n"
+        f"🔗 Legacy: {legacy_ref_type or '—'} #{legacy_ref_id or '—'}\n"
+        f"🕒 {created_at} → {updated_at}"
+    )

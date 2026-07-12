@@ -20,6 +20,7 @@ from services.platform_hardening_test import PlatformHardeningTest
 from services.finance_core import FinanceCoreService
 from services.finance_auth import FinanceAuthService
 from services.event_bus_test import EventBusTestService
+from services.deal_engine import DealEngine
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
@@ -1245,6 +1246,32 @@ async def event_bus_integration_test(message: Message):
         lines.append(f"Error: {result['error']}")
     await message.answer("\n".join(lines))
     log_audit(user_id, "event_bus_test", "event_bus", result.get("status"))
+
+
+@router.message(Command("deal_test"))
+async def deal_engine_integration_test(message: Message):
+    user_id = message.from_user.id
+    if not DealEngine.can_view(user_id):
+        await message.answer("Нет доступа к /deal_test.")
+        return
+    result = DealEngine.run_integration_test(user_id)
+    steps = result.get("steps", {})
+    lines = [
+        "UNIVERSAL DEAL ENGINE — INTEGRATION TEST",
+        f"STATUS: {result.get('status', 'ERROR')}",
+        f"AUTO deal: {steps.get('create_auto', '—')}",
+        f"LEGAL deal: {steps.get('create_legal', '—')}",
+        f"Transitions: {steps.get('transitions', '—')}",
+        f"Final status: {steps.get('final_status', '—')}",
+        f"Public ID: {steps.get('public_id', '—')}",
+        f"Extension: {steps.get('extension', '—')}",
+        f"Audit (deals): {steps.get('audit_count', '—')}",
+        f"Total deals: {steps.get('total_deals', '—')}",
+    ]
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "deal_integration_test", "deals", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")

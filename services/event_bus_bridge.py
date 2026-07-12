@@ -24,6 +24,9 @@ def register_default_subscribers() -> None:
         ("AUTO_TRADEIN_STARTED", _on_auto_tradein_started, "auto_tradein_stub"),
         ("LEGAL_CASE_CREATED", _on_legal_case_created, "legal_stub"),
         ("DRONE_PROJECT_CREATED", _on_drone_project_created, "drone_stub"),
+        ("DEAL_CREATED", _on_deal_created, "deal_workflow"),
+        ("DEAL_STATUS_CHANGED", _on_deal_status_changed, "deal_workflow"),
+        ("DEAL_COMPLETED", _on_deal_completed, "deal_workflow"),
     ]
     for event_type, handler, sid in handlers:
         EventBus.subscribe(event_type, handler, subscriber_id=sid)
@@ -96,9 +99,12 @@ def _on_agro_request_assigned(event: PlatformEvent) -> None:
 
 def _on_agro_erp_taken(event: PlatformEvent) -> None:
     from services.agro_erp import AgroErpService
+    from database import sync_universal_deal_from_agro
     rn = event.entity_id
     manager_id = event.payload.get("manager_id", event.user_id)
-    AgroErpService.on_request_taken(manager_id, rn, manager_id)
+    deal_id = AgroErpService.on_request_taken(manager_id, rn, manager_id)
+    if deal_id:
+        sync_universal_deal_from_agro(deal_id, manager_id)
 
 
 def _on_agro_status_changed(event: PlatformEvent) -> None:
@@ -240,4 +246,32 @@ def _on_drone_project_created(event: PlatformEvent) -> None:
     log_audit(
         event.user_id, "drone_project_created", "drone",
         f"project={event.entity_id}",
+    )
+
+
+def _on_deal_created(event: PlatformEvent) -> None:
+    from services.deal_workflow import DealWorkflowEngine
+    module = event.payload.get("module", "AGRO")
+    DealWorkflowEngine.on_created(
+        event.entity_id, event.user_id, module, event.payload,
+    )
+
+
+def _on_deal_status_changed(event: PlatformEvent) -> None:
+    from services.deal_workflow import DealWorkflowEngine
+    module = event.payload.get("module", "AGRO")
+    DealWorkflowEngine.on_status_changed(
+        event.entity_id,
+        event.user_id,
+        module,
+        event.payload.get("old_status", ""),
+        event.payload.get("new_status", ""),
+    )
+
+
+def _on_deal_completed(event: PlatformEvent) -> None:
+    from services.deal_workflow import DealWorkflowEngine
+    module = event.payload.get("module", "AGRO")
+    DealWorkflowEngine.on_completed(
+        event.entity_id, event.user_id, module, event.payload,
     )
