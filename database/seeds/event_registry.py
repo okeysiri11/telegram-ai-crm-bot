@@ -155,6 +155,26 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "market",
         "description": "Market data source fetch failed",
     },
+    "otc.order.created": {
+        "aggregate_type": "otc",
+        "description": "OTC order created",
+    },
+    "otc.quote.received": {
+        "aggregate_type": "otc",
+        "description": "OTC counterparty quote received",
+    },
+    "otc.match.created": {
+        "aggregate_type": "otc",
+        "description": "OTC match created",
+    },
+    "otc.order.filled": {
+        "aggregate_type": "otc",
+        "description": "OTC order fully filled",
+    },
+    "otc.execution.failed": {
+        "aggregate_type": "otc",
+        "description": "OTC execution leg failed",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
