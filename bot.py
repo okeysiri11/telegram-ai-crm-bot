@@ -17,14 +17,18 @@ dp.include_router(router)
 async def main() -> None:
     from api.server import start_api_server
     from database.session import shutdown_db
+    from services.pg_scheduler_engine import get_default_worker
     from services.pg_webhook_engine import WebhookEngineV1
 
     WebhookEngineV1.register_event_handlers()
+    scheduler = get_default_worker()
+    await scheduler.start()
     runner = await start_api_server(host=API_HOST, port=API_PORT)
     logger.info("API server listening on http://%s:%s/system/db-health", API_HOST, API_PORT)
     try:
         await dp.start_polling(bot)
     finally:
+        await scheduler.shutdown()
         await runner.cleanup()
         await shutdown_db()
 
