@@ -1,35 +1,109 @@
-# Commission repository — commission access layer.
+# Commission Engine repository — PostgreSQL async data access.
+
+from __future__ import annotations
+
+import uuid
+from datetime import datetime, timezone
+from decimal import Decimal
+from typing import Any
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from database.models.commission import (
+    Commission,
+    CommissionStatus,
+    CommissionType,
+)
 
 
 class CommissionRepository:
-    @staticmethod
-    def create(user_id: int, recipient_id: int, recipient_role: str, commission_type: str, amount: float, **kwargs) -> int:
-        from services.commission_engine import CommissionEngine
-        return CommissionEngine.create(
-            user_id, recipient_id, recipient_role, commission_type, amount, **kwargs,
+    def __init__(self, session: AsyncSession) -> None:
+        self._session = session
+
+    async def create(
+        self,
+        *,
+        deal_id: uuid.UUID,
+        commission_type: str,
+        asset: str,
+        amount: Decimal,
+        manager_id: int | None = None,
+        partner_id: int | None = None,
+        percentage: Decimal | None = None,
+        status: str = CommissionStatus.PENDING.value,
+        **extra: Any,
+    ) -> Commission:
+        if extra:
+            raise TypeError(f"Unsupported fields: {', '.join(sorted(extra))}")
+
+        if commission_type not in {t.value for t in CommissionType}:
+            raise ValueError(f"Invalid commission_type: {commission_type}")
+        if status not in {s.value for s in CommissionStatus}:
+            raise ValueError(f"Invalid status: {status}")
+        if amount < 0:
+            raise ValueError("amount must be non-negative")
+
+        commission = Commission(
+            deal_id=deal_id,
+            manager_id=manager_id,
+            partner_id=partner_id,
+            commission_type=commission_type,
+            asset=asset,
+            percentage=percentage,
+            amount=amount,
+            status=status,
         )
+        self._session.add(commission)
+        await self._session.flush()
+        return commission
 
-    @staticmethod
-    def get(commission_id: int, user_id: int = None):
-        from services.commission_engine import CommissionEngine
-        return CommissionEngine.get(commission_id, user_id)
+    async def get_by_deal(self, deal_id: uuid.UUID) -> list[Commission]:
+        result = await self._session.execute(
+            select(Commission)
+            .where(Commission.deal_id == deal_id)
+            .order_by(Commission.created_at.asc())
+        )
+        return list(result.scalars().all())
 
-    @staticmethod
-    def list(user_id: int, **kwargs) -> list:
-        from services.commission_engine import CommissionEngine
-        return CommissionEngine.list(user_id, **kwargs)
+    async def list_pending(self, *, limit: int = 100) -> list[Commission]:
+        result = await self._session.execute(
+            select(Commission)
+            .where(Commission.status == CommissionStatus.PENDING.value)
+            .order_by(Commission.created_at.asc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
 
-    @staticmethod
-    def approve(commission_id: int, user_id: int) -> bool:
-        from services.commission_engine import CommissionEngine
-        return CommissionEngine.approve(commission_id, user_id)
+    async def mark_paid(self, commission_id: uuid.UUID) -> Commission | None:
+        result = await self._session.execute(
+            select(Commission).where(Commission.id == commission_id)
+        )
+        commission = result.scalar_one_or_none()
+        if commission is None:
+            return None
 
-    @staticmethod
-    def pay(commission_id: int, user_id: int, **kwargs) -> int | None:
-        from services.commission_engine import CommissionEngine
-        return CommissionEngine.pay(commission_id, user_id, **kwargs)
+        commission.status = CommissionStatus.PAID.value
+        commission.paid_at = datetime.now(timezone.utc)
+        await self._session.flush()
+        return commission
 
-    @staticmethod
-    def accrue_for_deal(deal_id: int, user_id: int, recipients: dict = None) -> list[int]:
-        from services.commission_engine import CommissionEngine
-        return CommissionEngine.accrue_for_deal(deal_id, user_id, recipients=recipients)
+    async def calculate_company_profit(self, deal_id: uuid.UUID) -> Decimal:
+        result = await self._session.execute(
+            select(Commission.commission_type, func.sum(Commission.amount))
+            .where(
+                Commission.deal_id == deal_id,
+                Commission.status != CommissionStatus.CANCELLED.value,
+            )
+            .group_by(Commission.commission_type)
+        )
+        totals = {row[0]: Decimal(row[1] or 0) for row in result.all()}
+
+        client_fee = totals.get(CommissionType.CLIENT_FEE.value, Decimal(0))
+        manager_reward = totals.get(CommissionType.MANAGER_REWARD.value, Decimal(0))
+        partner_reward = totals.get(CommissionType.PARTNER_REWARD.value, Decimal(0))
+        recorded_profit = totals.get(CommissionType.COMPANY_PROFIT.value, Decimal(0))
+
+        if recorded_profit > 0:
+            return recorded_profit
+        return client_fee - manager_reward - partner_reward
