@@ -39,6 +39,30 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "partner",
         "description": "Partner unassigned",
     },
+    "partner.created": {
+        "aggregate_type": "partner",
+        "description": "Partner created",
+    },
+    "partner.updated": {
+        "aggregate_type": "partner",
+        "description": "Partner updated",
+    },
+    "partner.blocked": {
+        "aggregate_type": "partner",
+        "description": "Partner blocked",
+    },
+    "partner.limit_exceeded": {
+        "aggregate_type": "partner",
+        "description": "Partner limit exceeded",
+    },
+    "partner.kyc_approved": {
+        "aggregate_type": "partner",
+        "description": "Partner KYC approved",
+    },
+    "partner.kyc_rejected": {
+        "aggregate_type": "partner",
+        "description": "Partner KYC rejected",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",

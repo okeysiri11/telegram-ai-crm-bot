@@ -21,6 +21,11 @@ class AuditAction(str, enum.Enum):
     LOGIN = "LOGIN"
     LOGOUT = "LOGOUT"
     EXPORT = "EXPORT"
+    CREATE_PARTNER = "CREATE_PARTNER"
+    UPDATE_PARTNER = "UPDATE_PARTNER"
+    BLOCK_PARTNER = "BLOCK_PARTNER"
+    CHANGE_LIMIT = "CHANGE_LIMIT"
+    CHANGE_COMMISSION = "CHANGE_COMMISSION"
 
 
 class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
