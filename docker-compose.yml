@@ -1,18 +1,18 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: bidex-postgres
+    container_name: ai-ecosystem-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: bidex
-      POSTGRES_USER: bidex
-      POSTGRES_PASSWORD: bidex
+      POSTGRES_DB: ai_ecosystem
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bidex -d bidex"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ai_ecosystem"]
       interval: 5s
       timeout: 5s
       retries: 5

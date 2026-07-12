@@ -7,12 +7,11 @@ load_dotenv()
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# PostgreSQL (SQLAlchemy async + asyncpg)
-POSTGRES_HOST = os.getenv("POSTGRES_HOST", "localhost")
-POSTGRES_PORT = int(os.getenv("POSTGRES_PORT", "5432"))
-POSTGRES_DB = os.getenv("POSTGRES_DB", "bidex")
-POSTGRES_USER = os.getenv("POSTGRES_USER", "bidex")
-POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD", "")
+# PostgreSQL (SQLAlchemy 2 async + asyncpg)
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem",
+)
 
 # HTTP API (health checks)
 API_HOST = os.getenv("API_HOST", "0.0.0.0")

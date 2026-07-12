@@ -8,8 +8,8 @@ from contextlib import asynccontextmanager
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-from database.connection import dispose_engine, get_engine, is_postgres_configured
 from database.base import Base
+from database.engine import dispose_engine, get_engine, is_postgres_configured
 
 _session_factory: async_sessionmaker[AsyncSession] | None = None
 
@@ -53,7 +53,7 @@ async def check_db_health() -> dict:
             "ok": False,
             "status": "unconfigured",
             "driver": "asyncpg",
-            "error": "POSTGRES_* environment variables are incomplete",
+            "error": "DATABASE_URL is not configured",
         }
 
     try:
