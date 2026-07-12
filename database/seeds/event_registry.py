@@ -63,6 +63,22 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "partner",
         "description": "Partner KYC rejected",
     },
+    "kyc.started": {
+        "aggregate_type": "kyc",
+        "description": "KYC process started",
+    },
+    "kyc.approved": {
+        "aggregate_type": "kyc",
+        "description": "KYC approved",
+    },
+    "kyc.rejected": {
+        "aggregate_type": "kyc",
+        "description": "KYC rejected",
+    },
+    "aml.review_required": {
+        "aggregate_type": "aml",
+        "description": "AML manual review required",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
