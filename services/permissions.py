@@ -35,6 +35,9 @@ class PermissionService:
 
     @staticmethod
     def can_access_module(user_id: int, module: str) -> bool:
+        from services.hierarchical_rbac import HierarchicalRBAC
+        if HierarchicalRBAC.can_module(user_id, module):
+            return True
         from database import MODULE_PERMISSIONS
         if user_id in (OWNER_ID, MANAGER_ID):
             return True
@@ -144,3 +147,23 @@ class PermissionService:
     def has_ledger_action(user_id: int, action: str) -> bool:
         from database import has_ledger_action
         return has_ledger_action(user_id, action)
+
+    @staticmethod
+    def has_rbac(user_id: int, permission_code: str) -> bool:
+        from services.hierarchical_rbac import HierarchicalRBAC
+        return HierarchicalRBAC.check(user_id, permission_code)
+
+    @staticmethod
+    def can_module(user_id: int, module: str) -> bool:
+        from services.hierarchical_rbac import HierarchicalRBAC
+        return HierarchicalRBAC.can_module(user_id, module)
+
+    @staticmethod
+    def can_entity(user_id: int, entity_code: str) -> bool:
+        from services.hierarchical_rbac import HierarchicalRBAC
+        return HierarchicalRBAC.can_entity(user_id, entity_code)
+
+    @staticmethod
+    def can_action(user_id: int, action_code: str) -> bool:
+        from services.hierarchical_rbac import HierarchicalRBAC
+        return HierarchicalRBAC.can_action(user_id, action_code)

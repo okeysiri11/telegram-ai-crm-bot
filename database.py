@@ -465,6 +465,70 @@ def _migrate_schema():
     _migrate_commission_engine_phase1()
     _migrate_partner_hub_phase1()
     _migrate_internal_ledger_phase1()
+    _migrate_hierarchical_rbac_phase1()
+
+
+def _migrate_hierarchical_rbac_phase1():
+    """Hierarchical RBAC — MODULE / ENTITY / ACTION permission levels."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS rbac_permissions (
+            code TEXT PRIMARY KEY,
+            level TEXT NOT NULL,
+            module TEXT,
+            entity TEXT,
+            parent_code TEXT,
+            description TEXT
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS rbac_role_grants (
+            role_name TEXT NOT NULL,
+            permission_code TEXT NOT NULL,
+            PRIMARY KEY (role_name, permission_code),
+            FOREIGN KEY (permission_code) REFERENCES rbac_permissions(code)
+        )
+        """
+    )
+    conn.commit()
+
+
+def _seed_hierarchical_rbac():
+    for code, meta in RBAC_PERMISSION_REGISTRY.items():
+        cursor.execute(
+            "SELECT code FROM rbac_permissions WHERE code = ?",
+            (code,),
+        )
+        if cursor.fetchone():
+            continue
+        cursor.execute(
+            """
+            INSERT INTO rbac_permissions (code, level, module, entity, parent_code, description)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                code,
+                meta["level"],
+                meta.get("module"),
+                meta.get("entity"),
+                meta.get("parent"),
+                meta.get("description", ""),
+            ),
+        )
+    conn.commit()
+
+    for role_name, perms in RBAC_RESOLVED_ROLE_GRANTS.items():
+        for perm in perms:
+            cursor.execute(
+                """
+                INSERT OR IGNORE INTO rbac_role_grants (role_name, permission_code)
+                VALUES (?, ?)
+                """,
+                (role_name, perm),
+            )
+    conn.commit()
 
 
 def _migrate_internal_ledger_phase1():
@@ -1810,6 +1874,9 @@ def format_user_permissions_inspector(telegram_id: int) -> str:
         allowed = PermissionService.has_owner_only_action(telegram_id, action)
         owner_ops.append(f"{'✅' if allowed else '❌'} {action}")
 
+    from database import format_hierarchical_rbac_text
+    rbac_block = format_hierarchical_rbac_text(telegram_id)
+
     return (
         f"🔐 Права пользователя\n\n"
         f"Пользователь: {user[2] or '—'}\n"
@@ -1818,7 +1885,8 @@ def format_user_permissions_inspector(telegram_id: int) -> str:
         f"Роль: {', '.join(roles) if roles else '—'}\n\n"
         f"Права:\n{', '.join(sorted(granted)) if granted else '—'}\n\n"
         f"Доступные модули:\n" + "\n".join(operations) + "\n\n"
-        f"Системные операции:\n" + "\n".join(owner_ops)
+        f"Системные операции:\n" + "\n".join(owner_ops) + "\n\n"
+        f"{rbac_block}"
     )
 
 
@@ -1893,15 +1961,16 @@ ROLE_NAMES = (
     "OWNER",
     "ADMIN",
     "SUPER_MANAGER",
+    "MANAGER",
+    "OPERATOR",
+    "VIEWER",
     "CRYPTO_MANAGER",
     "OTC_MANAGER",
     "AGRO_MANAGER",
     "LAWYER",
     "ENGINEER",
     "BEAUTY_MANAGER",
-    "VIEWER",
     # legacy roles (CRM compatibility)
-    "MANAGER",
     "DRONE_ENGINEER",
     "CLIENT",
 )
@@ -1918,14 +1987,15 @@ ROLE_DESCRIPTIONS = {
     "OWNER": "Владелец системы",
     "ADMIN": "Администратор",
     "SUPER_MANAGER": "Супер-менеджер — все бизнес-модули",
+    "MANAGER": "Менеджер — назначения и закрытие сделок",
+    "OPERATOR": "Оператор — создание и редактирование",
+    "VIEWER": "Наблюдатель (только просмотр)",
     "CRYPTO_MANAGER": "Менеджер Crypto OTC ERP",
     "OTC_MANAGER": "Менеджер Crypto OTC",
     "AGRO_MANAGER": "Менеджер Agro Trading",
     "LAWYER": "Юрист",
     "ENGINEER": "Инженер Drone Engineering",
     "BEAUTY_MANAGER": "Менеджер Cafe & Beauty",
-    "VIEWER": "Наблюдатель (только просмотр)",
-    "MANAGER": "Менеджер CRM",
     "DRONE_ENGINEER": "Инженер дронов",
     "CLIENT": "Клиент",
 }
@@ -2204,6 +2274,277 @@ LEDGER_ROLE_ACTIONS = {
     "VIEWER": {"LEDGER_VIEW"},
     "CLIENT": set(),
 }
+
+# ---------------------------------------------------------------------------
+# Hierarchical RBAC — MODULE_ACCESS → ENTITY_ACCESS → ACTION_ACCESS
+# ---------------------------------------------------------------------------
+
+RBAC_LEVELS = ("MODULE_ACCESS", "ENTITY_ACCESS", "ACTION_ACCESS")
+
+RBAC_CORE_ROLES = (
+    "VIEWER", "OPERATOR", "MANAGER", "SUPER_MANAGER", "ADMIN", "OWNER",
+)
+
+RBAC_ROLE_INHERITANCE = {
+    "VIEWER": frozenset(),
+    "OPERATOR": frozenset({"VIEWER"}),
+    "MANAGER": frozenset({"OPERATOR", "VIEWER"}),
+    "SUPER_MANAGER": frozenset({"MANAGER", "OPERATOR", "VIEWER"}),
+    "ADMIN": frozenset({"SUPER_MANAGER", "MANAGER", "OPERATOR", "VIEWER"}),
+    "OWNER": frozenset({"ADMIN", "SUPER_MANAGER", "MANAGER", "OPERATOR", "VIEWER"}),
+}
+
+RBAC_LEGACY_ROLE_TIER = {
+    "AGRO_MANAGER": "OPERATOR",
+    "CRYPTO_MANAGER": "OPERATOR",
+    "OTC_MANAGER": "OPERATOR",
+    "LAWYER": "OPERATOR",
+    "ENGINEER": "OPERATOR",
+    "BEAUTY_MANAGER": "OPERATOR",
+    "DRONE_ENGINEER": "OPERATOR",
+    "CLIENT": "VIEWER",
+}
+
+LEGACY_MODULE_TO_RBAC = {
+    "agro_trading": "AGRO_MODULE_ACCESS",
+    "crypto_otc": "CRYPTO_MODULE_ACCESS",
+    "law": "LEGAL_MODULE_ACCESS",
+    "drone": "DRONE_MODULE_ACCESS",
+    "cafe_beauty": "BEAUTY_MODULE_ACCESS",
+    "calendar": "CALENDAR_MODULE_ACCESS",
+    "reports": "REPORTS_MODULE_ACCESS",
+    "ai_assistant": "AI_MODULE_ACCESS",
+    "users": "USERS_MODULE_ACCESS",
+    "finance": "FINANCE_MODULE_ACCESS",
+    "automotive": "AUTO_MODULE_ACCESS",
+    "deals": "DEAL_MODULE_ACCESS",
+    "partners": "PARTNER_MODULE_ACCESS",
+    "ledger": "LEDGER_MODULE_ACCESS",
+    "commissions": "COMMISSION_MODULE_ACCESS",
+}
+
+
+def _rbac_perm(level, module=None, entity=None, parent=None, description=""):
+    return {
+        "level": level, "module": module, "entity": entity,
+        "parent": parent, "description": description,
+    }
+
+
+RBAC_PERMISSION_REGISTRY = {
+    # MODULE_ACCESS
+    "AUTO_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "AUTO", description="Automotive module"),
+    "AGRO_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "AGRO", description="Agro Trading module"),
+    "FINANCE_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "FINANCE", description="Finance module"),
+    "LEGAL_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "LEGAL", description="Legal module"),
+    "CRYPTO_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "CRYPTO", description="Crypto OTC module"),
+    "DRONE_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "DRONE", description="Drone module"),
+    "BEAUTY_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "BEAUTY", description="Beauty module"),
+    "DEAL_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "DEAL", description="Universal deals"),
+    "PARTNER_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "PARTNER", description="Partner Hub"),
+    "COMMISSION_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "COMMISSION", description="Commissions"),
+    "LEDGER_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "LEDGER", description="Internal ledger"),
+    "CALENDAR_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "CALENDAR", description="Calendar"),
+    "REPORTS_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "REPORTS", description="Reports"),
+    "AI_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "AI", description="AI assistant"),
+    "USERS_MODULE_ACCESS": _rbac_perm("MODULE_ACCESS", "USERS", description="User admin"),
+    # ENTITY_ACCESS
+    "AUTO_DEAL_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "AUTO", "DEAL", "AUTO_MODULE_ACCESS", "Auto deals",
+    ),
+    "AGRO_REQUEST_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "AGRO", "REQUEST", "AGRO_MODULE_ACCESS", "Agro requests",
+    ),
+    "AGRO_DEAL_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "AGRO", "DEAL", "AGRO_MODULE_ACCESS", "Agro deals",
+    ),
+    "FINANCE_ACCOUNT_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "FINANCE", "ACCOUNT", "FINANCE_MODULE_ACCESS",
+    ),
+    "FINANCE_TX_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "FINANCE", "TRANSACTION", "FINANCE_MODULE_ACCESS",
+    ),
+    "LEGAL_CASE_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "LEGAL", "CASE", "LEGAL_MODULE_ACCESS",
+    ),
+    "LEGAL_DOCUMENT_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "LEGAL", "DOCUMENT", "LEGAL_MODULE_ACCESS",
+    ),
+    "DEAL_ENTITY_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "DEAL", "DEAL", "DEAL_MODULE_ACCESS",
+    ),
+    "PARTNER_ENTITY_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "PARTNER", "PARTNER", "PARTNER_MODULE_ACCESS",
+    ),
+    "COMMISSION_ENTITY_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "COMMISSION", "COMMISSION", "COMMISSION_MODULE_ACCESS",
+    ),
+    "LEDGER_ENTITY_ACCESS": _rbac_perm(
+        "ENTITY_ACCESS", "LEDGER", "ENTRY", "LEDGER_MODULE_ACCESS",
+    ),
+    # ACTION_ACCESS — Auto
+    "AUTO_VIEW_DEAL": _rbac_perm(
+        "ACTION_ACCESS", "AUTO", "DEAL", "AUTO_DEAL_ACCESS",
+    ),
+    "AUTO_CREATE_DEAL": _rbac_perm(
+        "ACTION_ACCESS", "AUTO", "DEAL", "AUTO_DEAL_ACCESS",
+    ),
+    "AUTO_CLOSE_DEAL": _rbac_perm(
+        "ACTION_ACCESS", "AUTO", "DEAL", "AUTO_DEAL_ACCESS",
+    ),
+    # ACTION_ACCESS — Agro
+    "AGRO_VIEW": _rbac_perm("ACTION_ACCESS", "AGRO", "REQUEST", "AGRO_REQUEST_ACCESS"),
+    "AGRO_ASSIGN": _rbac_perm("ACTION_ACCESS", "AGRO", "REQUEST", "AGRO_REQUEST_ACCESS"),
+    "AGRO_CREATE_REQUEST": _rbac_perm(
+        "ACTION_ACCESS", "AGRO", "REQUEST", "AGRO_REQUEST_ACCESS",
+    ),
+    # ACTION_ACCESS — Finance (align with FINANCE_ACTION_PERMISSIONS)
+    "FINANCE_VIEW": _rbac_perm("ACTION_ACCESS", "FINANCE", "TRANSACTION", "FINANCE_TX_ACCESS"),
+    "FINANCE_CREATE": _rbac_perm("ACTION_ACCESS", "FINANCE", "TRANSACTION", "FINANCE_TX_ACCESS"),
+    "FINANCE_APPROVE": _rbac_perm("ACTION_ACCESS", "FINANCE", "TRANSACTION", "FINANCE_TX_ACCESS"),
+    "FINANCE_EXECUTE": _rbac_perm("ACTION_ACCESS", "FINANCE", "TRANSACTION", "FINANCE_TX_ACCESS"),
+    # ACTION_ACCESS — Legal
+    "LEGAL_VIEW": _rbac_perm("ACTION_ACCESS", "LEGAL", "CASE", "LEGAL_CASE_ACCESS"),
+    "LEGAL_EDIT": _rbac_perm("ACTION_ACCESS", "LEGAL", "CASE", "LEGAL_CASE_ACCESS"),
+    # ACTION_ACCESS — Universal deals
+    "DEAL_VIEW": _rbac_perm("ACTION_ACCESS", "DEAL", "DEAL", "DEAL_ENTITY_ACCESS"),
+    "DEAL_CREATE": _rbac_perm("ACTION_ACCESS", "DEAL", "DEAL", "DEAL_ENTITY_ACCESS"),
+    "DEAL_EDIT": _rbac_perm("ACTION_ACCESS", "DEAL", "DEAL", "DEAL_ENTITY_ACCESS"),
+    "DEAL_APPROVE": _rbac_perm("ACTION_ACCESS", "DEAL", "DEAL", "DEAL_ENTITY_ACCESS"),
+    # ACTION_ACCESS — Commission / Partner / Ledger
+    "COMMISSION_VIEW": _rbac_perm(
+        "ACTION_ACCESS", "COMMISSION", "COMMISSION", "COMMISSION_ENTITY_ACCESS",
+    ),
+    "COMMISSION_CREATE": _rbac_perm(
+        "ACTION_ACCESS", "COMMISSION", "COMMISSION", "COMMISSION_ENTITY_ACCESS",
+    ),
+    "COMMISSION_APPROVE": _rbac_perm(
+        "ACTION_ACCESS", "COMMISSION", "COMMISSION", "COMMISSION_ENTITY_ACCESS",
+    ),
+    "COMMISSION_PAY": _rbac_perm(
+        "ACTION_ACCESS", "COMMISSION", "COMMISSION", "COMMISSION_ENTITY_ACCESS",
+    ),
+    "PARTNER_VIEW": _rbac_perm(
+        "ACTION_ACCESS", "PARTNER", "PARTNER", "PARTNER_ENTITY_ACCESS",
+    ),
+    "PARTNER_CREATE": _rbac_perm(
+        "ACTION_ACCESS", "PARTNER", "PARTNER", "PARTNER_ENTITY_ACCESS",
+    ),
+    "PARTNER_EDIT": _rbac_perm(
+        "ACTION_ACCESS", "PARTNER", "PARTNER", "PARTNER_ENTITY_ACCESS",
+    ),
+    "PARTNER_ASSIGN": _rbac_perm(
+        "ACTION_ACCESS", "PARTNER", "PARTNER", "PARTNER_ENTITY_ACCESS",
+    ),
+    "PARTNER_ANALYTICS": _rbac_perm(
+        "ACTION_ACCESS", "PARTNER", "PARTNER", "PARTNER_ENTITY_ACCESS",
+    ),
+    "LEDGER_VIEW": _rbac_perm(
+        "ACTION_ACCESS", "LEDGER", "ENTRY", "LEDGER_ENTITY_ACCESS",
+    ),
+    "LEDGER_CREATE": _rbac_perm(
+        "ACTION_ACCESS", "LEDGER", "ENTRY", "LEDGER_ENTITY_ACCESS",
+    ),
+    "LEDGER_REVERSE": _rbac_perm(
+        "ACTION_ACCESS", "LEDGER", "ENTRY", "LEDGER_ENTITY_ACCESS",
+    ),
+    # Crypto actions (legacy alignment)
+    "CRYPTO_VIEW_DEALS": _rbac_perm("ACTION_ACCESS", "CRYPTO", "DEAL", "CRYPTO_MODULE_ACCESS"),
+    "CRYPTO_EDIT_DEALS": _rbac_perm("ACTION_ACCESS", "CRYPTO", "DEAL", "CRYPTO_MODULE_ACCESS"),
+    "CRYPTO_VIEW_FINANCE": _rbac_perm("ACTION_ACCESS", "CRYPTO", "FINANCE", "CRYPTO_MODULE_ACCESS"),
+}
+
+RBAC_TIER_GRANTS = {
+    "VIEWER": {
+        "AUTO_MODULE_ACCESS", "AGRO_MODULE_ACCESS", "FINANCE_MODULE_ACCESS",
+        "LEGAL_MODULE_ACCESS", "DEAL_MODULE_ACCESS", "CALENDAR_MODULE_ACCESS",
+        "REPORTS_MODULE_ACCESS", "AI_MODULE_ACCESS",
+        "AUTO_DEAL_ACCESS", "AGRO_REQUEST_ACCESS", "AGRO_DEAL_ACCESS",
+        "FINANCE_TX_ACCESS", "LEGAL_CASE_ACCESS", "DEAL_ENTITY_ACCESS",
+        "AUTO_VIEW_DEAL", "AGRO_VIEW", "FINANCE_VIEW", "LEGAL_VIEW",
+        "DEAL_VIEW", "COMMISSION_VIEW", "PARTNER_VIEW", "LEDGER_VIEW",
+        "CRYPTO_VIEW_DEALS", "CRYPTO_VIEW_FINANCE",
+    },
+    "OPERATOR": {
+        "AUTO_CREATE_DEAL", "AGRO_CREATE_REQUEST", "FINANCE_CREATE",
+        "LEGAL_EDIT", "DEAL_CREATE", "DEAL_EDIT",
+        "COMMISSION_CREATE", "PARTNER_CREATE", "PARTNER_EDIT", "LEDGER_CREATE",
+        "CRYPTO_EDIT_DEALS",
+        "COMMISSION_MODULE_ACCESS", "PARTNER_MODULE_ACCESS", "LEDGER_MODULE_ACCESS",
+        "COMMISSION_ENTITY_ACCESS", "PARTNER_ENTITY_ACCESS", "LEDGER_ENTITY_ACCESS",
+    },
+    "MANAGER": {
+        "AUTO_CLOSE_DEAL", "AGRO_ASSIGN", "FINANCE_APPROVE",
+        "DEAL_APPROVE", "COMMISSION_APPROVE", "PARTNER_ASSIGN",
+    },
+    "SUPER_MANAGER": {
+        "FINANCE_EXECUTE", "COMMISSION_PAY", "LEDGER_REVERSE",
+        "PARTNER_ANALYTICS",
+        "CRYPTO_MODULE_ACCESS", "DRONE_MODULE_ACCESS", "BEAUTY_MODULE_ACCESS",
+        "USERS_MODULE_ACCESS", "COMMISSION_MODULE_ACCESS",
+    },
+}
+
+RBAC_LEGACY_ROLE_GRANTS = {
+    "AGRO_MANAGER": {
+        "AGRO_MODULE_ACCESS", "AGRO_REQUEST_ACCESS", "AGRO_DEAL_ACCESS",
+        "AGRO_VIEW", "AGRO_ASSIGN", "AGRO_CREATE_REQUEST",
+        "DEAL_MODULE_ACCESS", "DEAL_ENTITY_ACCESS", "DEAL_VIEW", "DEAL_CREATE", "DEAL_EDIT",
+        "COMMISSION_VIEW", "COMMISSION_CREATE", "PARTNER_VIEW", "PARTNER_ASSIGN",
+    },
+    "CRYPTO_MANAGER": {
+        "CRYPTO_MODULE_ACCESS", "CRYPTO_VIEW_DEALS", "CRYPTO_EDIT_DEALS",
+        "CRYPTO_VIEW_FINANCE", "FINANCE_MODULE_ACCESS", "FINANCE_VIEW", "FINANCE_CREATE",
+    },
+    "OTC_MANAGER": {
+        "CRYPTO_MODULE_ACCESS", "CRYPTO_VIEW_DEALS", "CRYPTO_EDIT_DEALS",
+        "CRYPTO_VIEW_FINANCE",
+    },
+    "LAWYER": {
+        "LEGAL_MODULE_ACCESS", "LEGAL_CASE_ACCESS", "LEGAL_DOCUMENT_ACCESS",
+        "LEGAL_VIEW", "LEGAL_EDIT", "DEAL_VIEW", "DEAL_EDIT",
+    },
+    "ENGINEER": {"DRONE_MODULE_ACCESS", "DEAL_VIEW", "DEAL_CREATE"},
+    "BEAUTY_MANAGER": {"BEAUTY_MODULE_ACCESS", "DEAL_VIEW"},
+    "DRONE_ENGINEER": {"DRONE_MODULE_ACCESS", "DEAL_VIEW"},
+    "CLIENT": {"AI_MODULE_ACCESS", "CALENDAR_MODULE_ACCESS"},
+}
+
+
+def _rbac_resolve_chain(role: str) -> list[str]:
+    if role not in RBAC_ROLE_INHERITANCE:
+        return [role]
+    chain = [role]
+    queue = list(RBAC_ROLE_INHERITANCE.get(role, ()))
+    seen = {role}
+    while queue:
+        parent = queue.pop(0)
+        if parent in seen:
+            continue
+        seen.add(parent)
+        chain.append(parent)
+        queue.extend(RBAC_ROLE_INHERITANCE.get(parent, ()))
+    return chain
+
+
+def _rbac_build_resolved_grants() -> dict[str, set[str]]:
+    resolved = {}
+    for tier in RBAC_CORE_ROLES:
+        grants = set()
+        for role in _rbac_resolve_chain(tier):
+            grants.update(RBAC_TIER_GRANTS.get(role, set()))
+        resolved[tier] = grants
+    for role, extra in RBAC_LEGACY_ROLE_GRANTS.items():
+        tier = RBAC_LEGACY_ROLE_TIER.get(role)
+        grants = set(extra)
+        if tier:
+            grants.update(resolved.get(tier, set()))
+        resolved[role] = grants
+    return resolved
+
+
+RBAC_RESOLVED_ROLE_GRANTS = _rbac_build_resolved_grants()
+_seed_hierarchical_rbac()
 
 
 def _seed_roles():
@@ -7202,6 +7543,8 @@ CRYPTO_CALENDAR_EVENT_TYPES = {
 
 
 def has_crypto_action(user_id: int, action: str) -> bool:
+    if action in RBAC_PERMISSION_REGISTRY:
+        return has_rbac_permission(user_id, action)
     from config import OWNER_ID, MANAGER_ID
     if action not in CRYPTO_ACTION_PERMISSIONS:
         return False
@@ -8603,6 +8946,8 @@ def _normalize_finance_tx_status(value: str) -> str:
 
 
 def has_finance_action(user_id: int, action: str) -> bool:
+    if action in RBAC_PERMISSION_REGISTRY:
+        return has_rbac_permission(user_id, action)
     from config import OWNER_ID, MANAGER_ID
     if action not in FINANCE_ACTION_PERMISSIONS:
         return False
@@ -9013,6 +9358,8 @@ def _normalize_deal_type(module: str, deal_type: str) -> str:
 
 
 def has_deal_action(user_id: int, action: str) -> bool:
+    if action in RBAC_PERMISSION_REGISTRY:
+        return has_rbac_permission(user_id, action)
     from config import OWNER_ID, MANAGER_ID
     if action not in DEAL_ACTION_PERMISSIONS:
         return False
@@ -9343,6 +9690,8 @@ def _normalize_commission_type(value: str) -> str:
 
 
 def has_commission_action(user_id: int, action: str) -> bool:
+    if action in RBAC_PERMISSION_REGISTRY:
+        return has_rbac_permission(user_id, action)
     from config import OWNER_ID, MANAGER_ID
     if action not in COMMISSION_ACTION_PERMISSIONS:
         return False
@@ -9781,6 +10130,8 @@ def _partner_parse_json_list(value: str | None) -> list:
 
 
 def has_partner_action(user_id: int, action: str) -> bool:
+    if action in RBAC_PERMISSION_REGISTRY:
+        return has_rbac_permission(user_id, action)
     from config import OWNER_ID, MANAGER_ID
     if action not in PARTNER_ACTION_PERMISSIONS:
         return False
@@ -10224,6 +10575,126 @@ def format_partner_analytics(partner_id: int, period: str = None) -> str:
 
 
 # ==========================================================
+# HIERARCHICAL RBAC RUNTIME
+# ==========================================================
+
+def get_user_effective_rbac_roles(user_id: int) -> set[str]:
+    from config import OWNER_ID, MANAGER_ID
+    roles = set(get_user_roles(user_id))
+    if user_id in (OWNER_ID, MANAGER_ID):
+        roles.add("OWNER")
+    effective = set(roles)
+    for role in list(roles):
+        tier = RBAC_LEGACY_ROLE_TIER.get(role, role if role in RBAC_CORE_ROLES else None)
+        if tier and tier in RBAC_ROLE_INHERITANCE:
+            for inherited in _rbac_resolve_chain(tier):
+                effective.add(inherited)
+        elif role in RBAC_ROLE_INHERITANCE:
+            effective.update(_rbac_resolve_chain(role))
+    return effective
+
+
+def get_user_rbac_grants(user_id: int) -> set[str]:
+    from config import OWNER_ID, MANAGER_ID
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return set(RBAC_PERMISSION_REGISTRY.keys())
+
+    grants = set()
+    for role in get_user_roles(user_id):
+        tier = RBAC_LEGACY_ROLE_TIER.get(role)
+        if tier and tier in RBAC_RESOLVED_ROLE_GRANTS:
+            grants.update(RBAC_RESOLVED_ROLE_GRANTS[tier])
+        if role in RBAC_RESOLVED_ROLE_GRANTS:
+            grants.update(RBAC_RESOLVED_ROLE_GRANTS[role])
+
+    cursor.execute(
+        """
+        SELECT rg.permission_code
+        FROM rbac_role_grants rg
+        JOIN roles r ON r.role_name = rg.role_name
+        JOIN user_roles ur ON ur.role_id = r.id
+        WHERE ur.user_id = ?
+        """,
+        (user_id,),
+    )
+    for row in cursor.fetchall():
+        grants.add(row[0])
+
+    return grants
+
+
+def _rbac_parent_chain(permission_code: str) -> list[str]:
+    chain = []
+    current = permission_code
+    seen = set()
+    while current and current not in seen:
+        seen.add(current)
+        meta = RBAC_PERMISSION_REGISTRY.get(current)
+        if not meta:
+            break
+        parent = meta.get("parent")
+        if parent:
+            chain.append(parent)
+            current = parent
+        else:
+            break
+    return chain
+
+
+def has_rbac_permission(user_id: int, permission_code: str) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+    if permission_code not in RBAC_PERMISSION_REGISTRY:
+        return False
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return True
+
+    effective_roles = get_user_effective_rbac_roles(user_id)
+    if "OWNER" in effective_roles or "ADMIN" in effective_roles:
+        return True
+
+    grants = get_user_rbac_grants(user_id)
+    if permission_code not in grants:
+        return False
+
+    meta = RBAC_PERMISSION_REGISTRY[permission_code]
+    if meta["level"] == "MODULE_ACCESS":
+        return True
+
+    for parent in _rbac_parent_chain(permission_code):
+        if parent not in grants:
+            return False
+    return True
+
+
+def format_hierarchical_rbac_text(user_id: int) -> str:
+    grants = get_user_rbac_grants(user_id)
+    roles = get_user_effective_rbac_roles(user_id)
+    by_level = {level: [] for level in RBAC_LEVELS}
+    for code in sorted(grants):
+        meta = RBAC_PERMISSION_REGISTRY.get(code)
+        if meta:
+            by_level[meta["level"]].append(code)
+
+    lines = [
+        "🔐 Hierarchical RBAC",
+        f"Effective roles: {', '.join(sorted(roles)) or '—'}",
+        "",
+    ]
+    for level in RBAC_LEVELS:
+        items = by_level.get(level, [])
+        lines.append(f"{level} ({len(items)}):")
+        if items:
+            for code in items[:12]:
+                lines.append(f"  • {code}")
+            if len(items) > 12:
+                lines.append(f"  … +{len(items) - 12} more")
+        else:
+            lines.append("  —")
+        lines.append("")
+    return "\n".join(lines).strip()
+
+
+# ==========================================================
 # INTERNAL LEDGER
 # ==========================================================
 
@@ -10261,6 +10732,8 @@ def _assign_ledger_entry_id(row_id: int) -> str | None:
 
 
 def has_ledger_action(user_id: int, action: str) -> bool:
+    if action in RBAC_PERMISSION_REGISTRY:
+        return has_rbac_permission(user_id, action)
     from config import OWNER_ID, MANAGER_ID
     if action not in LEDGER_ACTION_PERMISSIONS:
         return False
@@ -10531,3 +11004,123 @@ def format_ledger_entry_card(row: tuple) -> str:
         f"👤 Created by: {created_by}\n"
         f"🕒 {created_at}"
     )
+
+
+# ==========================================================
+# HIERARCHICAL RBAC RUNTIME
+# ==========================================================
+
+def get_user_effective_rbac_roles(user_id: int) -> set[str]:
+    from config import OWNER_ID, MANAGER_ID
+    roles = set(get_user_roles(user_id))
+    if user_id in (OWNER_ID, MANAGER_ID):
+        roles.add("OWNER")
+    effective = set(roles)
+    for role in list(roles):
+        tier = RBAC_LEGACY_ROLE_TIER.get(role, role if role in RBAC_CORE_ROLES else None)
+        if tier and tier in RBAC_ROLE_INHERITANCE:
+            for inherited in _rbac_resolve_chain(tier):
+                effective.add(inherited)
+        elif role in RBAC_ROLE_INHERITANCE:
+            effective.update(_rbac_resolve_chain(role))
+    return effective
+
+
+def get_user_rbac_grants(user_id: int) -> set[str]:
+    from config import OWNER_ID, MANAGER_ID
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return set(RBAC_PERMISSION_REGISTRY.keys())
+
+    grants = set()
+    for role in get_user_roles(user_id):
+        tier = RBAC_LEGACY_ROLE_TIER.get(role)
+        if tier and tier in RBAC_RESOLVED_ROLE_GRANTS:
+            grants.update(RBAC_RESOLVED_ROLE_GRANTS[tier])
+        if role in RBAC_RESOLVED_ROLE_GRANTS:
+            grants.update(RBAC_RESOLVED_ROLE_GRANTS[role])
+
+    cursor.execute(
+        """
+        SELECT rg.permission_code
+        FROM rbac_role_grants rg
+        JOIN roles r ON r.role_name = rg.role_name
+        JOIN user_roles ur ON ur.role_id = r.id
+        WHERE ur.user_id = ?
+        """,
+        (user_id,),
+    )
+    for row in cursor.fetchall():
+        grants.add(row[0])
+
+    return grants
+
+
+def _rbac_parent_chain(permission_code: str) -> list[str]:
+    chain = []
+    current = permission_code
+    seen = set()
+    while current and current not in seen:
+        seen.add(current)
+        meta = RBAC_PERMISSION_REGISTRY.get(current)
+        if not meta:
+            break
+        parent = meta.get("parent")
+        if parent:
+            chain.append(parent)
+            current = parent
+        else:
+            break
+    return chain
+
+
+def has_rbac_permission(user_id: int, permission_code: str) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+    if permission_code not in RBAC_PERMISSION_REGISTRY:
+        return False
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return True
+
+    effective_roles = get_user_effective_rbac_roles(user_id)
+    if "OWNER" in effective_roles or "ADMIN" in effective_roles:
+        return True
+
+    grants = get_user_rbac_grants(user_id)
+    if permission_code not in grants:
+        return False
+
+    meta = RBAC_PERMISSION_REGISTRY[permission_code]
+    if meta["level"] == "MODULE_ACCESS":
+        return True
+
+    for parent in _rbac_parent_chain(permission_code):
+        if parent not in grants:
+            return False
+    return True
+
+
+def format_hierarchical_rbac_text(user_id: int) -> str:
+    grants = get_user_rbac_grants(user_id)
+    roles = get_user_effective_rbac_roles(user_id)
+    by_level = {level: [] for level in RBAC_LEVELS}
+    for code in sorted(grants):
+        meta = RBAC_PERMISSION_REGISTRY.get(code)
+        if meta:
+            by_level[meta["level"]].append(code)
+
+    lines = [
+        "🔐 Hierarchical RBAC",
+        f"Effective roles: {', '.join(sorted(roles)) or '—'}",
+        "",
+    ]
+    for level in RBAC_LEVELS:
+        items = by_level.get(level, [])
+        lines.append(f"{level} ({len(items)}):")
+        if items:
+            for code in items[:12]:
+                lines.append(f"  • {code}")
+            if len(items) > 12:
+                lines.append(f"  … +{len(items) - 12} more")
+        else:
+            lines.append("  —")
+        lines.append("")
+    return "\n".join(lines).strip()

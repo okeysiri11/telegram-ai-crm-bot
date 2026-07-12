@@ -24,6 +24,7 @@ from services.deal_engine import DealEngine
 from services.commission_engine import CommissionEngine
 from services.partner_engine import PartnerEngine
 from services.ledger_engine import LedgerEngine
+from services.hierarchical_rbac import HierarchicalRBAC
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
@@ -1368,6 +1369,44 @@ async def internal_ledger_integration_test(message: Message):
         lines.append(f"Error: {result['error']}")
     await message.answer("\n".join(lines))
     log_audit(user_id, "ledger_integration_test", "ledger", result.get("status"))
+
+
+@router.message(Command("rbac_test"))
+async def hierarchical_rbac_integration_test(message: Message):
+    user_id = message.from_user.id
+    from database import get_user_roles
+    roles = set(get_user_roles(user_id))
+    if user_id not in (OWNER_ID, MANAGER_ID) and not roles & {"ADMIN", "SUPER_MANAGER", "OWNER"}:
+        await message.answer("Нет доступа к /rbac_test.")
+        return
+    result = HierarchicalRBAC.run_integration_test(user_id)
+    steps = result.get("steps", {})
+    checks = steps.get("checks", {})
+    by_level = steps.get("by_level", {})
+    lines = [
+        "HIERARCHICAL RBAC — INTEGRATION TEST",
+        f"STATUS: {result.get('status', 'ERROR')}",
+        f"Effective roles: {', '.join(steps.get('effective_roles', [])) or '—'}",
+        f"Grants: {steps.get('grant_count', '—')}",
+        f"Registry: {steps.get('registry_size', '—')} · DB grants: {steps.get('role_grants', '—')}",
+        "",
+        "Levels:",
+        f"  MODULE_ACCESS: {by_level.get('MODULE_ACCESS', 0)}",
+        f"  ENTITY_ACCESS: {by_level.get('ENTITY_ACCESS', 0)}",
+        f"  ACTION_ACCESS: {by_level.get('ACTION_ACCESS', 0)}",
+        "",
+        "Example checks:",
+        f"  AUTO_CREATE_DEAL: {checks.get('AUTO_CREATE_DEAL', '—')}",
+        f"  AUTO_CLOSE_DEAL: {checks.get('AUTO_CLOSE_DEAL', '—')}",
+        f"  FINANCE_VIEW: {checks.get('FINANCE_VIEW', '—')}",
+        f"  FINANCE_APPROVE: {checks.get('FINANCE_APPROVE', '—')}",
+        f"  LEGAL_EDIT: {checks.get('LEGAL_EDIT', '—')}",
+        f"  AGRO_ASSIGN: {checks.get('AGRO_ASSIGN', '—')}",
+    ]
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "rbac_integration_test", "rbac", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")
