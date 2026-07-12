@@ -103,3 +103,106 @@ def _default_send_notification(
 
 
 WorkflowEngine.register_action("send_notification", _default_send_notification)
+
+
+def _action_create_task(
+    user_id: int,
+    module: str,
+    trigger_code: str,
+    entity_type: str = None,
+    entity_id: int = None,
+    payload: dict = None,
+) -> int:
+    from services.tasks import TaskService
+    payload = payload or {}
+    title = payload.get("title") or f"Workflow task: {trigger_code}"
+    return TaskService.create(
+        task_type=TaskService.WORKFLOW,
+        creator_id=user_id,
+        title=title,
+        description=payload.get("message", ""),
+        module=module,
+        priority=payload.get("priority", "NORMAL"),
+        assigned_user_id=payload.get("manager_id"),
+    )
+
+
+def _action_create_calendar_event(
+    user_id: int,
+    module: str,
+    trigger_code: str,
+    entity_type: str = None,
+    entity_id: int = None,
+    payload: dict = None,
+) -> int:
+    from services.calendar_service import CalendarService
+    from datetime import datetime
+    payload = payload or {}
+    title = payload.get("title") or f"Event: {trigger_code}"
+    owner = payload.get("manager_id") or user_id
+    return CalendarService.create_event(
+        creator_id=user_id,
+        title=title,
+        start_time=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+        module=module,
+        event_type=payload.get("event_type", "agro_task"),
+        owner_id=owner,
+        description=payload.get("message", ""),
+    )
+
+
+def _action_notify_client(
+    user_id: int,
+    module: str,
+    trigger_code: str,
+    entity_type: str = None,
+    entity_id: int = None,
+    payload: dict = None,
+) -> int:
+    from services.notifications import NotificationService
+    payload = payload or {}
+    client_id = payload.get("client_id")
+    if not client_id:
+        return 0
+    return NotificationService.create_notification(
+        user_id=client_id,
+        module=module,
+        title=payload.get("title", "Обновление заявки"),
+        message=payload.get("message", ""),
+        priority=payload.get("priority", "NORMAL"),
+        event_type=trigger_code,
+    )
+
+
+def _action_notify_participants(
+    user_id: int,
+    module: str,
+    trigger_code: str,
+    entity_type: str = None,
+    entity_id: int = None,
+    payload: dict = None,
+) -> int:
+    from services.notifications import NotificationService
+    payload = payload or {}
+    ids = {user_id}
+    if payload.get("client_id"):
+        ids.add(payload["client_id"])
+    if payload.get("manager_id"):
+        ids.add(payload["manager_id"])
+    last_id = 0
+    for uid in ids:
+        last_id = NotificationService.create_notification(
+            user_id=uid,
+            module=module,
+            title=payload.get("title", "Обновление заявки"),
+            message=payload.get("message", ""),
+            priority=payload.get("priority", "NORMAL"),
+            event_type=trigger_code,
+        )
+    return last_id
+
+
+WorkflowEngine.register_action("create_task", _action_create_task)
+WorkflowEngine.register_action("create_calendar_event", _action_create_calendar_event)
+WorkflowEngine.register_action("notify_client", _action_notify_client)
+WorkflowEngine.register_action("notify_participants", _action_notify_participants)

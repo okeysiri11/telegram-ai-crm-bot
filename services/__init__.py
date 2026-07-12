@@ -16,6 +16,9 @@ from services.notifications import NotificationService
 from services.workflow_engine import WorkflowEngine
 from services.dashboard import DashboardService
 from services.search_service import SearchService
+from services.platform_test import PlatformTestService
+from services.system_health import SystemHealthService
+from services.agro_request_workflow import AgroRequestWorkflow
 
 __all__ = [
     "UNIFIED_STATUSES",
@@ -35,4 +38,7 @@ __all__ = [
     "WorkflowEngine",
     "DashboardService",
     "SearchService",
+    "PlatformTestService",
+    "SystemHealthService",
+    "AgroRequestWorkflow",
 ]

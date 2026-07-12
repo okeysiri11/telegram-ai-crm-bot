@@ -1,5 +1,5 @@
 from aiogram import F, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import CommandStart, Command
 from aiogram.types import (
     Message,
     CallbackQuery,
@@ -16,6 +16,8 @@ from services.tasks import TaskService
 from services.calendar_service import CalendarService
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
+from services.platform_test import PlatformTestService
+from services.system_health import SystemHealthService
 from services.notifications import NotificationService
 from services.dashboard import DashboardService
 from services.search_service import SearchService
@@ -69,6 +71,8 @@ from database import (
     get_module_ai_agent,
     format_users_list_text,
     format_roles_catalog_text,
+    format_user_permissions_inspector,
+    find_user_by_name,
     format_permissions_text,
     format_audit_log_text,
     SYSTEM_PERMISSIONS,
@@ -230,6 +234,8 @@ from keyboards import (
     ai_agents_menu,
     ai_agents_list_inline,
     dashboard_module_menu,
+    admin_module_menu,
+    test_center_menu,
     notifications_module_menu,
     notifications_module_actions_inline,
     tasks_module_menu,
@@ -291,6 +297,7 @@ ai_settings_flow = {}
 active_module = {}
 active_agro_sub = {}
 agro_nav_state = {}
+admin_permissions_flow = {}
 
 MODULE_MENUS = {
     "law": law_module_menu,
@@ -460,6 +467,16 @@ DASHBOARD_SECTION_MAP = {
     "🔔 Уведомления KPI": "notifications",
     "📋 Задачи KPI": "tasks",
 }
+
+ADMIN_MENU_BUTTONS = {
+    "🔐 Права пользователя",
+    "🛡 Роли системы",
+    "📋 Список пользователей",
+    "📝 Журнал действий",
+    "⬅ Назад",
+}
+
+TEST_CENTER_BUTTONS = set(PlatformTestService.TEST_MODULES.keys()) | {"⬅ Назад"}
 
 WORKFLOW_MENU_BUTTONS = {
     "📋 Шаблоны процессов",
@@ -1760,6 +1777,194 @@ async def dashboard_screen(message: Message):
     text = DashboardService.format_section(user_id, section)
     await message.answer(text, reply_markup=dashboard_module_menu())
     log_audit(user_id, "open", "dashboard", section)
+
+
+def _can_access_admin(user_id: int) -> bool:
+    return has_permission(user_id, "users_access") or user_id == OWNER_ID
+
+
+@router.message(F.text == "⚙ Администрирование")
+async def open_admin_module(message: Message):
+    _init_ai_user(message)
+    _clear_ai_state(message.from_user.id)
+    user_id = message.from_user.id
+    if not _can_access_admin(user_id):
+        await message.answer(
+            "⚙ Администрирование\n\nНет доступа к модулю администрирования.",
+            reply_markup=owner_main_menu(),
+        )
+        return
+    active_module[user_id] = "admin"
+    admin_permissions_flow.pop(user_id, None)
+    log_audit(user_id, "open", "admin")
+    await message.answer(
+        "⚙ Администрирование\n\nУправление ролями, пользователями и правами.",
+        reply_markup=admin_module_menu(),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in ADMIN_MENU_BUTTONS
+        and active_module.get(m.from_user.id) == "admin"
+    )
+)
+async def admin_screen(message: Message):
+    user_id = message.from_user.id
+    screen = message.text
+
+    if screen == "⬅ Назад":
+        admin_permissions_flow.pop(user_id, None)
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    if not _can_access_admin(user_id):
+        await message.answer("Нет доступа.", reply_markup=owner_main_menu())
+        return
+
+    if screen == "🔐 Права пользователя":
+        admin_permissions_flow[user_id] = True
+        await message.answer(
+            "🔐 Права пользователя\n\n"
+            "Введите Telegram ID или часть имени пользователя.\n"
+            "Или отправьте «я» для просмотра своих прав.",
+            reply_markup=admin_module_menu(),
+        )
+        log_audit(user_id, "open", "admin", "permissions_inspector")
+        return
+
+    if screen == "🛡 Роли системы":
+        await message.answer(
+            f"🛡 Роли системы\n\n{format_roles_catalog_text()}",
+            reply_markup=admin_module_menu(),
+        )
+        log_audit(user_id, "open", "admin", "roles")
+        return
+
+    if screen == "📋 Список пользователей":
+        await message.answer(
+            f"📋 Список пользователей\n\n{format_users_list_text()}",
+            reply_markup=admin_module_menu(),
+        )
+        log_audit(user_id, "open", "admin", "users")
+        return
+
+    if screen == "📝 Журнал действий":
+        await message.answer(
+            f"📝 Журнал действий\n\n{format_audit_log_text()}",
+            reply_markup=admin_module_menu(),
+        )
+        log_audit(user_id, "open", "admin", "audit")
+        return
+
+
+@router.message(lambda m: admin_permissions_flow.get(m.from_user.id))
+async def admin_permissions_lookup(message: Message):
+    user_id = message.from_user.id
+    if message.text in ADMIN_MENU_BUTTONS or message.text == "⬅ Назад":
+        admin_permissions_flow.pop(user_id, None)
+        return
+
+    query = (message.text or "").strip()
+    target_id = user_id
+    if query.lower() not in ("я", "me", "self"):
+        if query.isdigit():
+            target_id = int(query)
+        else:
+            row = find_user_by_name(query)
+            if not row:
+                await message.answer(
+                    "Пользователь не найден. Попробуйте другой ID или имя.",
+                    reply_markup=admin_module_menu(),
+                )
+                return
+            target_id = row[0]
+
+    admin_permissions_flow.pop(user_id, None)
+    await message.answer(
+        format_user_permissions_inspector(target_id),
+        reply_markup=admin_module_menu(),
+    )
+    log_audit(user_id, "inspect_permissions", "admin", str(target_id))
+
+
+@router.message(F.text == "🧪 Тестовый центр")
+async def open_test_center(message: Message):
+    _init_ai_user(message)
+    _clear_ai_state(message.from_user.id)
+    user_id = message.from_user.id
+    if not _can_access_admin(user_id):
+        await message.answer(
+            "🧪 Тестовый центр\n\nНет доступа.",
+            reply_markup=owner_main_menu(),
+        )
+        return
+    active_module[user_id] = "test_center"
+    log_audit(user_id, "open", "test_center")
+    await message.answer(
+        "🧪 Тестовый центр\n\nВыберите модуль для проверки.",
+        reply_markup=test_center_menu(),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in TEST_CENTER_BUTTONS
+        and active_module.get(m.from_user.id) == "test_center"
+    )
+)
+async def test_center_screen(message: Message):
+    user_id = message.from_user.id
+    screen = message.text
+
+    if screen == "⬅ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    module_key = PlatformTestService.TEST_MODULES.get(screen)
+    if not module_key:
+        await message.answer("Неизвестный тест.", reply_markup=test_center_menu())
+        return
+
+    result = PlatformTestService.run_module_test(module_key, user_id)
+    await message.answer(
+        f"{screen}\n\n{result}",
+        reply_markup=test_center_menu(),
+    )
+    log_audit(user_id, "module_test", "test_center", module_key)
+
+
+@router.message(F.text == "❤️ System Health")
+async def open_system_health(message: Message):
+    _init_ai_user(message)
+    _clear_ai_state(message.from_user.id)
+    user_id = message.from_user.id
+    if not _can_access_admin(user_id):
+        await message.answer(
+            "❤️ System Health\n\nНет доступа.",
+            reply_markup=owner_main_menu(),
+        )
+        return
+    log_audit(user_id, "open", "system_health")
+    await message.answer(
+        SystemHealthService.format_health_dashboard(),
+        reply_markup=owner_main_menu(),
+    )
+
+
+@router.message(Command("platform_test"))
+async def platform_test_command(message: Message):
+    user_id = message.from_user.id
+    if not _can_access_admin(user_id):
+        await message.answer("Нет доступа к /platform_test.")
+        return
+    payload = PlatformTestService.run_platform_test()
+    report = PlatformTestService.format_platform_test_report(payload)
+    validation = PlatformTestService.format_platform_validation(payload)
+    await message.answer(f"{report}\n\n{validation}")
+    log_audit(user_id, "platform_test", "system", payload.get("status"))
 
 
 @router.message(F.text == "🤖 AI Агенты")
@@ -3262,6 +3467,9 @@ async def ai_back_to_main(message: Message):
         and m.text not in FILES_MENU_BUTTONS
         and m.text not in SEARCH_MENU_BUTTONS
         and m.text not in WORKFLOW_MENU_BUTTONS
+        and m.text not in ADMIN_MENU_BUTTONS
+        and m.text not in TEST_CENTER_BUTTONS
+        and not admin_permissions_flow.get(m.from_user.id)
         and not ai_settings_flow.get(m.from_user.id)
     )
 )

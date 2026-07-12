@@ -452,6 +452,7 @@ def _migrate_schema():
     _migrate_legacy_tasks()
     _migrate_calendar_schema()
     _migrate_multi_agent_platform()
+    _migrate_phase4b()
 
 
 def _migrate_calendar_schema():
@@ -681,6 +682,176 @@ def _migrate_multi_agent_platform():
     _seed_workflow_rules()
 
 
+def _migrate_phase4b():
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS platform_health_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            status TEXT NOT NULL,
+            results_json TEXT,
+            tested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    conn.commit()
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO roles (role_name, description)
+        VALUES (?, ?)
+        """,
+        ("SUPER_MANAGER", "Супер-менеджер — полный доступ к бизнес-модулям"),
+    )
+    conn.commit()
+    _seed_request_workflow_rules()
+    _assign_super_manager_user()
+
+
+def _assign_super_manager_user():
+    from config import OWNER_ID
+    cursor.execute(
+        """
+        SELECT telegram_id FROM users
+        WHERE full_name LIKE ? OR full_name LIKE ?
+        ORDER BY id DESC LIMIT 1
+        """,
+        ("%Молтисанти%", "%Moltisanti%"),
+    )
+    row = cursor.fetchone()
+    if not row:
+        return
+    telegram_id = row[0]
+    cursor.execute("SELECT id FROM roles WHERE role_name = 'SUPER_MANAGER'")
+    role_row = cursor.fetchone()
+    if not role_row:
+        return
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO user_roles (user_id, role_id, assigned_by)
+        VALUES (?, ?, ?)
+        """,
+        (telegram_id, role_row[0], OWNER_ID),
+    )
+    conn.commit()
+
+
+def _seed_request_workflow_rules():
+    rules = [
+        ("REQUEST_ASSIGNED", "agro_trading", "send_notification",
+         '{"title":"Заявка назначена","priority":"HIGH"}'),
+        ("REQUEST_DONE", "agro_trading", "notify_client",
+         '{"title":"Заявка завершена","priority":"NORMAL"}'),
+        ("REQUEST_DONE", "agro_trading", "send_notification",
+         '{"title":"Заявка закрыта","priority":"INFO"}'),
+        ("REQUEST_CANCELLED", "agro_trading", "notify_participants",
+         '{"title":"Заявка отменена","priority":"WARNING"}'),
+    ]
+    for trigger, module, action, payload in rules:
+        cursor.execute(
+            "SELECT id FROM workflow_rules WHERE trigger_code = ? AND action_type = ?",
+            (trigger, action),
+        )
+        if cursor.fetchone():
+            continue
+        cursor.execute(
+            """
+            INSERT INTO workflow_rules (trigger_code, module, action_type, action_payload, active)
+            VALUES (?, ?, ?, ?, 1)
+            """,
+            (trigger, module, action, payload),
+        )
+    conn.commit()
+
+
+def save_platform_health_run(payload: dict) -> int:
+    import json
+    cursor.execute(
+        """
+        INSERT INTO platform_health_log (status, results_json, tested_at)
+        VALUES (?, ?, ?)
+        """,
+        (
+            payload.get("status", "UNKNOWN"),
+            json.dumps(payload.get("results", {}), ensure_ascii=False),
+            payload.get("tested_at"),
+        ),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_last_platform_health() -> dict:
+    import json
+    cursor.execute(
+        """
+        SELECT status, results_json, tested_at
+        FROM platform_health_log
+        ORDER BY id DESC LIMIT 1
+        """
+    )
+    row = cursor.fetchone()
+    if not row:
+        return {}
+    results = {}
+    try:
+        results = json.loads(row[1]) if row[1] else {}
+    except json.JSONDecodeError:
+        results = {}
+    return {"status": row[0], "results": results, "tested_at": row[2]}
+
+
+def find_user_by_name(name_part: str):
+    cursor.execute(
+        """
+        SELECT telegram_id, username, full_name, is_active, created_at
+        FROM users
+        WHERE full_name LIKE ? OR username LIKE ?
+        ORDER BY id DESC LIMIT 1
+        """,
+        (f"%{name_part}%", f"%{name_part}%"),
+    )
+    return cursor.fetchone()
+
+
+def format_user_permissions_inspector(telegram_id: int) -> str:
+    from services.permissions import PermissionService
+
+    cursor.execute(
+        "SELECT telegram_id, username, full_name FROM users WHERE telegram_id = ?",
+        (telegram_id,),
+    )
+    user = cursor.fetchone()
+    if not user:
+        return "Пользователь не найден."
+
+    roles = get_user_roles(telegram_id)
+    granted = set()
+    for role in roles:
+        granted.update(ROLE_PERMISSIONS.get(role, set()))
+
+    operations = []
+    for module in MODULE_PERMISSIONS:
+        if PermissionService.can_access_module(telegram_id, module):
+            operations.append(f"✅ {SYSTEM_MODULES.get(module, module)}")
+        else:
+            operations.append(f"❌ {SYSTEM_MODULES.get(module, module)}")
+
+    owner_ops = []
+    for action in OWNER_ONLY_ACTIONS:
+        allowed = PermissionService.has_owner_only_action(telegram_id, action)
+        owner_ops.append(f"{'✅' if allowed else '❌'} {action}")
+
+    return (
+        f"🔐 Права пользователя\n\n"
+        f"Пользователь: {user[2] or '—'}\n"
+        f"Telegram ID: {user[0]}\n"
+        f"Username: @{user[1] or '—'}\n\n"
+        f"Роль: {', '.join(roles) if roles else '—'}\n\n"
+        f"Права:\n{', '.join(sorted(granted)) if granted else '—'}\n\n"
+        f"Доступные модули:\n" + "\n".join(operations) + "\n\n"
+        f"Системные операции:\n" + "\n".join(owner_ops)
+    )
+
+
 def _seed_ai_agents():
     agents = [
         ("AI_GENERAL", "Общий AI", "Универсальный помощник платформы", None,
@@ -751,6 +922,7 @@ _migrate_schema()
 ROLE_NAMES = (
     "OWNER",
     "ADMIN",
+    "SUPER_MANAGER",
     "OTC_MANAGER",
     "AGRO_MANAGER",
     "LAWYER",
@@ -763,9 +935,18 @@ ROLE_NAMES = (
     "CLIENT",
 )
 
+OWNER_ONLY_ACTIONS = frozenset({
+    "USER_DELETE",
+    "ROLE_DELETE",
+    "SYSTEM_RESET",
+    "DATABASE_DROP",
+    "OWNER_ONLY",
+})
+
 ROLE_DESCRIPTIONS = {
     "OWNER": "Владелец системы",
     "ADMIN": "Администратор",
+    "SUPER_MANAGER": "Супер-менеджер — все бизнес-модули",
     "OTC_MANAGER": "Менеджер Crypto OTC",
     "AGRO_MANAGER": "Менеджер Agro Trading",
     "LAWYER": "Юрист",
@@ -806,6 +987,7 @@ _ALL = set(SYSTEM_PERMISSIONS)
 ROLE_PERMISSIONS = {
     "OWNER": _ALL,
     "ADMIN": _ALL,
+    "SUPER_MANAGER": _ALL,
     "OTC_MANAGER": {
         "crypto_access", "calendar_access", "reports_access", "ai_access",
     },
@@ -1130,7 +1312,7 @@ def notify_agro_managers_new_request(
         SELECT DISTINCT ur.user_id
         FROM user_roles ur
         JOIN roles r ON r.id = ur.role_id
-        WHERE r.role_name IN ('AGRO_MANAGER', 'MANAGER', 'ADMIN', 'OWNER')
+        WHERE r.role_name IN ('AGRO_MANAGER', 'MANAGER', 'ADMIN', 'OWNER', 'SUPER_MANAGER')
         """
     )
     for row in cursor.fetchall():
@@ -1195,6 +1377,11 @@ def update_request_status(
             "agro_trading",
             f"#{request_number}:{old_status}->{status}",
         )
+        from services.agro_request_workflow import AgroRequestWorkflow
+        if status == "DONE":
+            AgroRequestWorkflow.on_request_done(actor, request_number)
+        elif status == "CANCELLED":
+            AgroRequestWorkflow.on_request_cancelled(actor, request_number)
 def get_request_status(
     request_number: int
 ):
@@ -1327,6 +1514,10 @@ def assign_manager(request_number, manager_id):
         "assign_manager",
         "agro_trading",
         f"#{request_number}:manager={manager_id}",
+    )
+    from services.agro_request_workflow import AgroRequestWorkflow
+    AgroRequestWorkflow.on_request_assigned(
+        manager_id, request_number, manager_id,
     )
 def get_requests_by_manager(manager_id):
     cursor.execute(
@@ -5398,6 +5589,9 @@ def archive_read_notifications(user_id: int) -> int:
 
 WORKFLOW_TRIGGER_CODES = (
     "AGRO_REQUEST_CREATED",
+    "REQUEST_ASSIGNED",
+    "REQUEST_DONE",
+    "REQUEST_CANCELLED",
     "TASK_CREATED",
     "TASK_COMPLETED",
     "EVENT_CREATED",

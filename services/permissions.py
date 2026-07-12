@@ -6,10 +6,13 @@ from config import MANAGER_ID, OWNER_ID
 class PermissionService:
     CRM_PERMISSIONS = frozenset({"agro_access", "crypto_access"})
     CRM_ROLES = frozenset({
-        "OWNER", "ADMIN", "MANAGER", "AGRO_MANAGER", "OTC_MANAGER",
+        "OWNER", "ADMIN", "MANAGER", "AGRO_MANAGER", "OTC_MANAGER", "SUPER_MANAGER",
     })
-    EDIT_ROLES = frozenset({"OWNER", "ADMIN", "MANAGER", "AGRO_MANAGER", "OTC_MANAGER"})
+    EDIT_ROLES = frozenset({
+        "OWNER", "ADMIN", "MANAGER", "AGRO_MANAGER", "OTC_MANAGER", "SUPER_MANAGER",
+    })
     DELETE_ROLES = frozenset({"OWNER", "ADMIN"})
+    BUSINESS_FULL_ACCESS_ROLES = frozenset({"OWNER", "ADMIN", "SUPER_MANAGER"})
 
     @staticmethod
     def has_permission(user_id: int, permission: str) -> bool:
@@ -33,10 +36,25 @@ class PermissionService:
         from database import MODULE_PERMISSIONS
         if user_id in (OWNER_ID, MANAGER_ID):
             return True
+        roles = PermissionService._user_roles(user_id)
+        if roles & PermissionService.BUSINESS_FULL_ACCESS_ROLES:
+            return True
         permission = MODULE_PERMISSIONS.get(module)
         if not permission:
             return False
         return PermissionService.has_permission(user_id, permission)
+
+    @staticmethod
+    def has_owner_only_action(user_id: int, action: str) -> bool:
+        from database import OWNER_ONLY_ACTIONS
+        if action not in OWNER_ONLY_ACTIONS:
+            return True
+        if user_id == OWNER_ID:
+            return True
+        roles = PermissionService._user_roles(user_id)
+        if "ADMIN" in roles and action != "OWNER_ONLY":
+            return action not in {"SYSTEM_RESET", "DATABASE_DROP"}
+        return False
 
     @staticmethod
     def can_edit_entity(
@@ -45,7 +63,6 @@ class PermissionService:
         entity_id: int = None,
         owner_id: int = None,
     ) -> bool:
-        # TODO: future implementation — entity-level ACL from DB
         if user_id in (OWNER_ID, MANAGER_ID):
             return True
         roles = PermissionService._user_roles(user_id)
@@ -64,13 +81,16 @@ class PermissionService:
         entity_id: int = None,
         owner_id: int = None,
     ) -> bool:
-        # TODO: future implementation — soft-delete policy per entity type
         if user_id == OWNER_ID:
             return True
         roles = PermissionService._user_roles(user_id)
+        if "SUPER_MANAGER" in roles:
+            return entity_type in {"task", "file", "workflow", "notification"}
         if roles & PermissionService.DELETE_ROLES:
             if entity_type == "request":
                 return "ADMIN" in roles or "OWNER" in roles
+            if entity_type in {"user", "role"}:
+                return False
             return True
         if owner_id is not None and user_id == owner_id:
             return entity_type in {"task", "file", "workflow", "notification"}

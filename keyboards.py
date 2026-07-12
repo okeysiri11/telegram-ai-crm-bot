@@ -49,6 +49,10 @@ def owner_main_menu():
             ],
             [
                 KeyboardButton(text="⚙ Администрирование")
+            ],
+            [
+                KeyboardButton(text="🧪 Тестовый центр"),
+                KeyboardButton(text="❤️ System Health"),
             ]
         ],
         resize_keyboard=True
@@ -1311,6 +1315,63 @@ def dashboard_module_menu() -> ReplyKeyboardMarkup:
             [
                 KeyboardButton(text="🔔 Уведомления KPI"),
                 KeyboardButton(text="📋 Задачи KPI"),
+            ],
+            [
+                KeyboardButton(text="⬅ Назад"),
+            ],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def admin_module_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="🔐 Права пользователя"),
+                KeyboardButton(text="🛡 Роли системы"),
+            ],
+            [
+                KeyboardButton(text="📋 Список пользователей"),
+                KeyboardButton(text="📝 Журнал действий"),
+            ],
+            [
+                KeyboardButton(text="⬅ Назад"),
+            ],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def test_center_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="🌾 Agro Test"),
+                KeyboardButton(text="💰 Crypto Test"),
+            ],
+            [
+                KeyboardButton(text="🚁 Drone Test"),
+                KeyboardButton(text="☕ Cafe Test"),
+            ],
+            [
+                KeyboardButton(text="💄 Beauty Test"),
+                KeyboardButton(text="⚖ Legal Test"),
+            ],
+            [
+                KeyboardButton(text="📅 Calendar Test"),
+                KeyboardButton(text="📁 Files Test"),
+            ],
+            [
+                KeyboardButton(text="🔎 Search Test"),
+                KeyboardButton(text="📊 Reports Test"),
+            ],
+            [
+                KeyboardButton(text="🤖 AI Test"),
+                KeyboardButton(text="⚙ Workflow Test"),
+            ],
+            [
+                KeyboardButton(text="🔔 Notification Test"),
             ],
             [
                 KeyboardButton(text="⬅ Назад"),
