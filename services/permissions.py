@@ -119,3 +119,8 @@ class PermissionService:
     def has_crypto_action(user_id: int, action: str) -> bool:
         from database import has_crypto_action
         return has_crypto_action(user_id, action)
+
+    @staticmethod
+    def has_finance_action(user_id: int, action: str) -> bool:
+        from database import has_finance_action
+        return has_finance_action(user_id, action)

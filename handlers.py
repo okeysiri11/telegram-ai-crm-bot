@@ -17,6 +17,8 @@ from services.calendar_service import CalendarService
 from services.calendar_access import CalendarAccessService
 from services.backup import BackupService
 from services.platform_hardening_test import PlatformHardeningTest
+from services.finance_core import FinanceCoreService
+from services.finance_auth import FinanceAuthService
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
@@ -1189,6 +1191,33 @@ async def hardening_test_command(message: Message):
         lines.append(f"\nError: {result['error']}")
     await message.answer("\n".join(lines))
     log_audit(user_id, "hardening_test", "system", result.get("status"))
+
+
+@router.message(Command("finance_test"))
+async def finance_core_integration_test(message: Message):
+    user_id = message.from_user.id
+    if not FinanceAuthService.can_view(user_id):
+        await message.answer("Нет доступа к /finance_test.")
+        return
+    result = FinanceCoreService.run_integration_test(user_id)
+    steps = result.get("steps", {})
+    lines = [
+        "BIDEX FINANCIAL CORE — INTEGRATION TEST",
+        f"STATUS: {result.get('status', 'ERROR')}",
+        f"Account: {steps.get('create_account', '—')}",
+        f"Transaction: {steps.get('create_transaction', '—')}",
+        f"Final status: {steps.get('final_status', '—')}",
+        f"Audit entries (finance): {steps.get('audit_log_entries', '—')}",
+        f"Debit balance: {steps.get('debit_balance', '—')}",
+        f"Credit balance: {steps.get('credit_balance', '—')}",
+    ]
+    for key in ("status_pending", "status_approved", "status_executing", "status_completed"):
+        if key in steps:
+            lines.append(f"{key}: {steps[key]}")
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "finance_integration_test", "finance", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")

@@ -459,6 +459,7 @@ def _migrate_schema():
     _migrate_crypto_erp_phase1()
     _migrate_company_core_phase1()
     _migrate_platform_hardening()
+    _migrate_bidex_financial_core_phase1()
 
 
 def _migrate_company_core_phase1():
@@ -692,6 +693,68 @@ def _migrate_platform_hardening():
                 f"UPDATE {table} SET public_id = ? WHERE id = ?",
                 (pid, row_id),
             )
+    conn.commit()
+
+
+def _migrate_bidex_financial_core_phase1():
+    """BIDEX Financial Core Phase 1 — accounts and transactions engine."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS finance_accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            account_name TEXT NOT NULL,
+            account_type TEXT NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'USD',
+            balance REAL NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'ACTIVE',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS finance_transactions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            transaction_type TEXT NOT NULL,
+            debit_account_id INTEGER,
+            credit_account_id INTEGER,
+            amount REAL NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'USD',
+            status TEXT NOT NULL DEFAULT 'CREATED',
+            reference_type TEXT,
+            reference_id INTEGER,
+            created_by INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT,
+            FOREIGN KEY (debit_account_id) REFERENCES finance_accounts(id),
+            FOREIGN KEY (credit_account_id) REFERENCES finance_accounts(id)
+        )
+        """
+    )
+    conn.commit()
+
+    seed_accounts = [
+        ("Main Cash USD", "CASH", "USD"),
+        ("Main Bank USD", "BANK", "USD"),
+        ("Crypto Wallet USDT", "CRYPTO_WALLET", "USDT"),
+        ("Commission Pool", "COMMISSION", "USD"),
+        ("Platform Reserve", "RESERVE", "USD"),
+    ]
+    for name, acc_type, currency in seed_accounts:
+        cursor.execute(
+            "SELECT id FROM finance_accounts WHERE account_name = ?",
+            (name,),
+        )
+        if cursor.fetchone():
+            continue
+        cursor.execute(
+            """
+            INSERT INTO finance_accounts (account_name, account_type, currency, balance, status)
+            VALUES (?, ?, ?, 0, 'ACTIVE')
+            """,
+            (name, acc_type, currency),
+        )
     conn.commit()
 
 
@@ -1647,6 +1710,51 @@ CRYPTO_ROLE_ACTIONS = {
     "OTC_MANAGER": set(CRYPTO_ACTION_PERMISSIONS),
     "MANAGER": {"CRYPTO_VIEW_DEALS", "CRYPTO_EDIT_DEALS", "CRYPTO_VIEW_FINANCE"},
     "VIEWER": {"CRYPTO_VIEW_DEALS"},
+    "CLIENT": set(),
+}
+
+FINANCE_ACTION_PERMISSIONS = (
+    "FINANCE_VIEW",
+    "FINANCE_CREATE",
+    "FINANCE_APPROVE",
+    "FINANCE_EXECUTE",
+)
+
+FINANCE_ACCOUNT_TYPES = (
+    "CASH", "BANK", "CRYPTO_WALLET", "PARTNER", "COMMISSION", "RESERVE",
+)
+
+FINANCE_TRANSACTION_TYPES = (
+    "INCOME", "EXPENSE", "TRANSFER", "COMMISSION", "SALARY",
+    "PARTNER_PAYOUT", "REFUND", "CRYPTO_SWAP", "OTC_SETTLEMENT",
+    "INTERNAL_TRANSFER",
+)
+
+FINANCE_TRANSACTION_STATUSES = (
+    "CREATED", "PENDING", "APPROVED", "EXECUTING",
+    "COMPLETED", "FAILED", "CANCELLED", "DISPUTED",
+)
+
+FINANCE_STATUS_TRANSITIONS = {
+    "CREATED": {"PENDING", "CANCELLED"},
+    "PENDING": {"APPROVED", "CANCELLED", "DISPUTED"},
+    "APPROVED": {"EXECUTING", "CANCELLED"},
+    "EXECUTING": {"COMPLETED", "FAILED"},
+    "DISPUTED": {"PENDING", "CANCELLED"},
+    "COMPLETED": set(),
+    "FAILED": set(),
+    "CANCELLED": set(),
+}
+
+FINANCE_ROLE_ACTIONS = {
+    "OWNER": set(FINANCE_ACTION_PERMISSIONS),
+    "ADMIN": set(FINANCE_ACTION_PERMISSIONS),
+    "SUPER_MANAGER": set(FINANCE_ACTION_PERMISSIONS),
+    "AGRO_MANAGER": {"FINANCE_VIEW", "FINANCE_CREATE"},
+    "CRYPTO_MANAGER": {"FINANCE_VIEW", "FINANCE_CREATE"},
+    "OTC_MANAGER": {"FINANCE_VIEW", "FINANCE_CREATE"},
+    "MANAGER": {"FINANCE_VIEW", "FINANCE_CREATE"},
+    "VIEWER": {"FINANCE_VIEW"},
     "CLIENT": set(),
 }
 
@@ -8051,3 +8159,312 @@ def get_public_id(table: str, row_id: int) -> str | None:
     cursor.execute(f"SELECT public_id FROM {table} WHERE id = ?", (row_id,))
     row = cursor.fetchone()
     return row[0] if row else None
+
+
+# ==========================================================
+# BIDEX FINANCIAL CORE — accounts & transactions
+# ==========================================================
+
+_FINANCE_ACCOUNT_SELECT = """
+    SELECT id, account_name, account_type, currency, balance, status,
+           created_at, updated_at
+    FROM finance_accounts
+"""
+
+_FINANCE_TX_SELECT = """
+    SELECT id, transaction_type, debit_account_id, credit_account_id,
+           amount, currency, status, reference_type, reference_id,
+           created_by, created_at, notes
+    FROM finance_transactions
+"""
+
+
+def _normalize_finance_account_type(value: str) -> str:
+    key = (value or "CASH").strip().upper()
+    return key if key in FINANCE_ACCOUNT_TYPES else "CASH"
+
+
+def _normalize_finance_transaction_type(value: str) -> str:
+    key = (value or "TRANSFER").strip().upper()
+    return key if key in FINANCE_TRANSACTION_TYPES else "TRANSFER"
+
+
+def _normalize_finance_tx_status(value: str) -> str:
+    key = (value or "CREATED").strip().upper()
+    return key if key in FINANCE_TRANSACTION_STATUSES else "CREATED"
+
+
+def has_finance_action(user_id: int, action: str) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+    if action not in FINANCE_ACTION_PERMISSIONS:
+        return False
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return True
+    for role in get_user_roles(user_id):
+        if action in FINANCE_ROLE_ACTIONS.get(role, set()):
+            return True
+    return False
+
+
+def create_finance_account(
+    user_id: int,
+    account_name: str,
+    account_type: str = "CASH",
+    currency: str = "USD",
+    balance: float = 0,
+) -> int:
+    account_type = _normalize_finance_account_type(account_type)
+    cursor.execute(
+        """
+        INSERT INTO finance_accounts (
+            account_name, account_type, currency, balance, status
+        )
+        VALUES (?, ?, ?, ?, 'ACTIVE')
+        """,
+        (account_name.strip(), account_type, currency.upper(), float(balance or 0)),
+    )
+    conn.commit()
+    account_id = cursor.lastrowid
+    log_audit(
+        user_id, "finance_account_create", "finance",
+        f"id={account_id}|{account_name}|{account_type}|{currency}",
+    )
+    return account_id
+
+
+def get_finance_account(account_id: int):
+    cursor.execute(f"{_FINANCE_ACCOUNT_SELECT} WHERE id = ?", (account_id,))
+    return cursor.fetchone()
+
+
+def list_finance_accounts(status: str = None, limit: int = 50) -> list:
+    query = f"{_FINANCE_ACCOUNT_SELECT} WHERE 1=1"
+    params: list = []
+    if status:
+        query += " AND status = ?"
+        params.append(status.upper())
+    query += " ORDER BY id ASC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def update_finance_account_status(account_id: int, user_id: int, status: str) -> bool:
+    status = status.strip().upper()
+    if status not in ("ACTIVE", "FROZEN", "CLOSED"):
+        return False
+    cursor.execute(
+        """
+        UPDATE finance_accounts
+        SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (status, account_id),
+    )
+    conn.commit()
+    if cursor.rowcount:
+        log_audit(
+            user_id, "finance_account_status", "finance",
+            f"id={account_id}|status={status}",
+        )
+    return cursor.rowcount > 0
+
+
+def create_finance_transaction(
+    user_id: int,
+    transaction_type: str,
+    amount: float,
+    currency: str = "USD",
+    debit_account_id: int = None,
+    credit_account_id: int = None,
+    reference_type: str = None,
+    reference_id: int = None,
+    notes: str = None,
+    status: str = "CREATED",
+) -> int:
+    transaction_type = _normalize_finance_transaction_type(transaction_type)
+    status = _normalize_finance_tx_status(status)
+    amount = float(amount)
+    if amount <= 0:
+        return 0
+
+    if debit_account_id:
+        debit = get_finance_account(debit_account_id)
+        if not debit or debit[5] != "ACTIVE":
+            return 0
+    if credit_account_id:
+        credit = get_finance_account(credit_account_id)
+        if not credit or credit[5] != "ACTIVE":
+            return 0
+
+    cursor.execute(
+        """
+        INSERT INTO finance_transactions (
+            transaction_type, debit_account_id, credit_account_id,
+            amount, currency, status, reference_type, reference_id,
+            created_by, notes
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            transaction_type,
+            debit_account_id,
+            credit_account_id,
+            amount,
+            currency.upper(),
+            status,
+            reference_type,
+            reference_id,
+            user_id,
+            notes,
+        ),
+    )
+    conn.commit()
+    tx_id = cursor.lastrowid
+    log_audit(
+        user_id, "finance_transaction_create", "finance",
+        f"id={tx_id}|type={transaction_type}|amount={amount}|{currency}|status={status}",
+    )
+    return tx_id
+
+
+def get_finance_transaction(transaction_id: int):
+    cursor.execute(f"{_FINANCE_TX_SELECT} WHERE id = ?", (transaction_id,))
+    return cursor.fetchone()
+
+
+def list_finance_transactions(
+    status: str = None,
+    reference_type: str = None,
+    reference_id: int = None,
+    limit: int = 50,
+) -> list:
+    query = f"{_FINANCE_TX_SELECT} WHERE 1=1"
+    params: list = []
+    if status:
+        query += " AND status = ?"
+        params.append(_normalize_finance_tx_status(status))
+    if reference_type:
+        query += " AND reference_type = ?"
+        params.append(reference_type.upper())
+    if reference_id is not None:
+        query += " AND reference_id = ?"
+        params.append(reference_id)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def _apply_finance_transaction_balances(tx_row: tuple) -> bool:
+    """Apply double-entry balance update when transaction completes."""
+    (
+        _tid, _ttype, debit_id, credit_id, amount, currency, status,
+        _ref_type, _ref_id, _created_by, _created_at, _notes,
+    ) = tx_row
+    if debit_id:
+        cursor.execute(
+            """
+            UPDATE finance_accounts
+            SET balance = balance - ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND currency = ?
+            """,
+            (amount, debit_id, currency),
+        )
+        if cursor.rowcount == 0:
+            return False
+    if credit_id:
+        cursor.execute(
+            """
+            UPDATE finance_accounts
+            SET balance = balance + ?, updated_at = CURRENT_TIMESTAMP
+            WHERE id = ? AND currency = ?
+            """,
+            (amount, credit_id, currency),
+        )
+        if cursor.rowcount == 0:
+            return False
+    conn.commit()
+    return True
+
+
+def update_finance_transaction_status(
+    transaction_id: int,
+    user_id: int,
+    new_status: str,
+) -> bool:
+    new_status = _normalize_finance_tx_status(new_status)
+    tx = get_finance_transaction(transaction_id)
+    if not tx:
+        return False
+    current = tx[6]
+    allowed = FINANCE_STATUS_TRANSITIONS.get(current, set())
+    if new_status == current:
+        return True
+    if new_status not in allowed:
+        return False
+
+    cursor.execute(
+        """
+        UPDATE finance_transactions SET status = ? WHERE id = ?
+        """,
+        (new_status, transaction_id),
+    )
+    conn.commit()
+    if cursor.rowcount == 0:
+        return False
+
+    log_audit(
+        user_id, "finance_transaction_status", "finance",
+        f"id={transaction_id}|{current}->{new_status}",
+    )
+
+    if new_status == "COMPLETED":
+        updated = get_finance_transaction(transaction_id)
+        if updated and not _apply_finance_transaction_balances(updated):
+            cursor.execute(
+                "UPDATE finance_transactions SET status = ? WHERE id = ?",
+                ("FAILED", transaction_id),
+            )
+            conn.commit()
+            log_audit(
+                user_id, "finance_transaction_failed", "finance",
+                f"id={transaction_id}|balance_update_failed",
+            )
+            return False
+    return True
+
+
+def format_finance_account_card(row: tuple) -> str:
+    if not row:
+        return "Счёт не найден."
+    aid, name, acc_type, currency, balance, status, created, updated = row
+    return (
+        f"💰 Счёт #{aid}\n\n"
+        f"📌 {name}\n"
+        f"🏷 Тип: {acc_type}\n"
+        f"💵 {balance:,.2f} {currency}\n"
+        f"📊 Статус: {status}\n"
+        f"🕒 Создан: {created}\n"
+        f"🔄 Обновлён: {updated}"
+    )
+
+
+def format_finance_transaction_card(row: tuple) -> str:
+    if not row:
+        return "Транзакция не найдена."
+    (
+        tid, ttype, debit_id, credit_id, amount, currency, status,
+        ref_type, ref_id, created_by, created_at, notes,
+    ) = row
+    return (
+        f"💸 Транзакция #{tid}\n\n"
+        f"🏷 Тип: {ttype}\n"
+        f"📤 Debit: #{debit_id or '—'} → 📥 Credit: #{credit_id or '—'}\n"
+        f"💵 {amount:,.2f} {currency}\n"
+        f"📊 Статус: {status}\n"
+        f"🔗 Ref: {ref_type or '—'} #{ref_id or '—'}\n"
+        f"👤 Создал: {created_by}\n"
+        f"📝 {notes or '—'}\n"
+        f"🕒 {created_at}"
+    )
