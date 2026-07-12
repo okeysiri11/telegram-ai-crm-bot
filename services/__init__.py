@@ -22,6 +22,11 @@ from services.agro_request_workflow import AgroRequestWorkflow
 from services.agro_erp import AgroErpService
 from services.agro_erp_calendar import AgroErpCalendar
 from services.agro_erp_workflow import AgroErpWorkflow
+from services.crypto_erp import CryptoErpService
+from services.crypto_erp_calendar import CryptoErpCalendar
+from services.crypto_erp_workflow import CryptoErpWorkflow
+from services.crypto_otc_agent import CryptoOTCAgent
+from services.crypto_auth import CryptoAuthService
 
 __all__ = [
     "UNIFIED_STATUSES",
@@ -47,4 +52,9 @@ __all__ = [
     "AgroErpService",
     "AgroErpCalendar",
     "AgroErpWorkflow",
+    "CryptoErpService",
+    "CryptoErpCalendar",
+    "CryptoErpWorkflow",
+    "CryptoOTCAgent",
+    "CryptoAuthService",
 ]

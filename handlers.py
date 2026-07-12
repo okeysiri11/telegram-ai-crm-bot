@@ -21,6 +21,8 @@ from services.system_health import SystemHealthService
 from services.notifications import NotificationService
 from services.dashboard import DashboardService
 from services.search_service import SearchService
+from services.crypto_auth import CryptoAuthService
+from services.crypto_otc_agent import CryptoOTCAgent
 from database import (
     get_user_profile,
     save_profile_fields,
@@ -180,6 +182,15 @@ from database import (
     format_agro_deal_hub_section,
     get_agro_deal_by_request,
     get_agro_documents_by_deal,
+    create_crypto_otc_request,
+    create_crypto_deal_from_request,
+    format_crypto_deals_list,
+    format_crypto_deal_text,
+    get_crypto_deal,
+    get_crypto_deal_calendar_links,
+    update_crypto_payment_status,
+    run_crypto_erp_cycle_test,
+    CRYPTO_OTC_DIRECTIONS,
     SEARCH_DOMAINS,
     SEARCH_SCOPES,
     global_search,
@@ -302,6 +313,22 @@ active_module = {}
 active_agro_sub = {}
 agro_nav_state = {}
 admin_permissions_flow = {}
+crypto_otc_flow = {}
+
+CRYPTO_DIRECTION_BUTTONS = {
+    "🟢 Buy USDT": "BUY_USDT",
+    "🔴 Sell USDT": "SELL_USDT",
+    "💵 Buy Cash": "BUY_CASH",
+    "💴 Sell Cash": "SELL_CASH",
+}
+
+CRYPTO_OTC_MENU_BUTTONS = set(CRYPTO_DIRECTION_BUTTONS.keys()) | {
+    "📑 Сделки OTC",
+    "🤖 Crypto Agent",
+    "💵 Курсы",
+    "📊 PnL",
+    "⬅️ Назад",
+}
 
 MODULE_MENUS = {
     "law": law_module_menu,
@@ -769,10 +796,167 @@ async def cmd_start(message: Message) -> None:
 
 @router.message(F.text == "💰 Crypto OTC")
 async def open_crypto_otc(message: Message):
+    user_id = message.from_user.id
+    _init_ai_user(message)
+    if not CryptoAuthService.can_access_crypto(user_id):
+        await message.answer(
+            "💰 Crypto OTC\n\nНет доступа к модулю.",
+            reply_markup=owner_main_menu(),
+        )
+        return
+    active_module[user_id] = "crypto"
+    crypto_otc_flow.pop(user_id, None)
     await message.answer(
-        "Раздел Crypto OTC",
-        reply_markup=crypto_otc_menu()
+        "💰 Crypto OTC ERP\n\n"
+        f"Направления: {', '.join(CRYPTO_OTC_DIRECTIONS.values())}",
+        reply_markup=crypto_otc_menu(),
     )
+    log_audit(user_id, "open", "crypto_otc")
+
+
+@router.message(
+    lambda m: (
+        m.text in CRYPTO_DIRECTION_BUTTONS
+        and active_module.get(m.from_user.id) == "crypto"
+    )
+)
+async def crypto_otc_start_request(message: Message):
+    user_id = message.from_user.id
+    direction = CRYPTO_DIRECTION_BUTTONS[message.text]
+    crypto_otc_flow[user_id] = {"direction": direction, "step": "amount"}
+    await message.answer(
+        f"{message.text}\n\nВведите сумму (число):",
+        reply_markup=crypto_otc_menu(),
+    )
+
+
+@router.message(
+    lambda m: (
+        active_module.get(m.from_user.id) == "crypto"
+        and crypto_otc_flow.get(m.from_user.id, {}).get("step") == "amount"
+        and m.text
+        and m.text.replace(".", "", 1).isdigit()
+    )
+)
+async def crypto_otc_submit_amount(message: Message):
+    user_id = message.from_user.id
+    flow = crypto_otc_flow.pop(user_id, {})
+    direction = flow.get("direction", "BUY_USDT")
+    amount = float(message.text)
+    req_num = create_crypto_otc_request(
+        client_id=user_id,
+        direction=direction,
+        amount=amount,
+    )
+    fee = CryptoOTCAgent.calculate_fee(amount, direction)
+    routes = ", ".join(CryptoOTCAgent.recommend_routes(direction, amount))
+    await message.answer(
+        f"✅ Запрос #{req_num} создан\n\n"
+        f"Направление: {CRYPTO_OTC_DIRECTIONS.get(direction, direction)}\n"
+        f"Сумма: {amount}\n"
+        f"Комиссия: {fee}\n"
+        f"Маршруты: {routes}\n\n"
+        "Менеджер обработает запрос.",
+        reply_markup=crypto_otc_menu(),
+    )
+    log_audit(user_id, "crypto_otc_request", "crypto_otc", str(req_num))
+
+
+@router.message(
+    lambda m: (
+        m.text == "📑 Сделки OTC"
+        and active_module.get(m.from_user.id) == "crypto"
+    )
+)
+async def crypto_otc_deals_list(message: Message):
+    user_id = message.from_user.id
+    if not CryptoAuthService.can_view_deals(user_id):
+        await message.answer(CryptoAuthService.deny_message("CRYPTO_VIEW_DEALS", user_id))
+        return
+    await message.answer(format_crypto_deals_list(user_id), reply_markup=crypto_otc_menu())
+
+
+@router.message(
+    lambda m: (
+        m.text == "🤖 Crypto Agent"
+        and active_module.get(m.from_user.id) == "crypto"
+    )
+)
+async def crypto_otc_agent_screen(message: Message):
+    user_id = message.from_user.id
+    if not CryptoAuthService.can_view_finance(user_id):
+        await message.answer(CryptoAuthService.deny_message("CRYPTO_VIEW_FINANCE", user_id))
+        return
+    liq = CryptoOTCAgent.check_liquidity("USDT")
+    report = CryptoOTCAgent.format_agent_report(user_id)
+    await message.answer(
+        f"{report}\n\n💧 USDT liquidity: {liq['status']}",
+        reply_markup=crypto_otc_menu(),
+    )
+
+
+@router.message(Command("crypto_test"))
+async def crypto_erp_cycle_test(message: Message):
+    user_id = message.from_user.id
+    if not CryptoAuthService.can_edit_deals(user_id):
+        await message.answer("Нет доступа к /crypto_test.")
+        return
+    result = run_crypto_erp_cycle_test(user_id)
+    status = result.get("status", "ERROR")
+    steps = result.get("steps", {})
+    lines = [
+        "CRYPTO ERP CYCLE TEST",
+        f"STATUS: {status}",
+        f"Request: {steps.get('request', '—')}",
+        f"Deal: {steps.get('deal', '—')}",
+        f"Payment: {steps.get('payment', '—')}",
+        f"Closed: {steps.get('closed', False)}",
+    ]
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "crypto_cycle_test", "crypto_otc", status)
+
+
+@router.message(
+    lambda m: (
+        active_module.get(m.from_user.id) == "crypto"
+        and m.text
+        and m.text.isdigit()
+        and not crypto_otc_flow.get(m.from_user.id)
+    )
+)
+async def crypto_otc_deal_or_request(message: Message):
+    user_id = message.from_user.id
+    num = int(message.text)
+    deal = get_crypto_deal(num)
+    if deal:
+        if not CryptoAuthService.can_view_deals(user_id):
+            await message.answer(CryptoAuthService.deny_message("CRYPTO_VIEW_DEALS", user_id))
+            return
+        text = format_crypto_deal_text(num)
+        if CryptoAuthService.can_view_finance(user_id):
+            profit = CryptoOTCAgent.analyze_profit(num)
+            text += f"\n\n📊 Прибыль: {profit.get('profit', '—')} ({profit.get('margin_pct', 0)}%)"
+        cal = get_crypto_deal_calendar_links(num)
+        if cal:
+            text += "\n\n📅 События:"
+            for link in cal:
+                text += f"\n  · {link[3]} → event #{link[2]}"
+        await message.answer(text, reply_markup=crypto_otc_menu())
+        return
+
+    if CryptoAuthService.can_edit_deals(user_id):
+        deal_id = create_crypto_deal_from_request(num, user_id, user_id)
+        if deal_id:
+            await message.answer(
+                f"✅ Сделка #{deal_id} создана из запроса #{num}\n\n"
+                f"{format_crypto_deal_text(deal_id)}",
+                reply_markup=crypto_otc_menu(),
+            )
+            return
+    await message.answer("Сделка или запрос не найдены.", reply_markup=crypto_otc_menu())
+
 
 @router.message(F.text == "🌾 Agro Trading")
 async def open_agro(message: Message):
@@ -3575,6 +3759,8 @@ async def ai_back_to_main(message: Message):
         and m.text not in WORKFLOW_MENU_BUTTONS
         and m.text not in ADMIN_MENU_BUTTONS
         and m.text not in TEST_CENTER_BUTTONS
+        and m.text not in CRYPTO_OTC_MENU_BUTTONS
+        and not crypto_otc_flow.get(m.from_user.id)
         and not admin_permissions_flow.get(m.from_user.id)
         and not ai_settings_flow.get(m.from_user.id)
     )

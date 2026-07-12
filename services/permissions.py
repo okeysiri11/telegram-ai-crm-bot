@@ -6,10 +6,12 @@ from config import MANAGER_ID, OWNER_ID
 class PermissionService:
     CRM_PERMISSIONS = frozenset({"agro_access", "crypto_access"})
     CRM_ROLES = frozenset({
-        "OWNER", "ADMIN", "MANAGER", "AGRO_MANAGER", "OTC_MANAGER", "SUPER_MANAGER",
+        "OWNER", "ADMIN", "MANAGER", "AGRO_MANAGER", "OTC_MANAGER",
+        "CRYPTO_MANAGER", "SUPER_MANAGER",
     })
     EDIT_ROLES = frozenset({
-        "OWNER", "ADMIN", "MANAGER", "AGRO_MANAGER", "OTC_MANAGER", "SUPER_MANAGER",
+        "OWNER", "ADMIN", "MANAGER", "AGRO_MANAGER", "OTC_MANAGER",
+        "CRYPTO_MANAGER", "SUPER_MANAGER",
     })
     DELETE_ROLES = frozenset({"OWNER", "ADMIN"})
     BUSINESS_FULL_ACCESS_ROLES = frozenset({"OWNER", "ADMIN", "SUPER_MANAGER"})
@@ -112,3 +114,8 @@ class PermissionService:
     def _user_roles(user_id: int) -> set:
         from database import get_user_roles
         return set(get_user_roles(user_id))
+
+    @staticmethod
+    def has_crypto_action(user_id: int, action: str) -> bool:
+        from database import has_crypto_action
+        return has_crypto_action(user_id, action)

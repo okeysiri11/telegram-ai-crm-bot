@@ -438,29 +438,29 @@ def crypto_otc_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
+                KeyboardButton(text="🟢 Buy USDT"),
+                KeyboardButton(text="🔴 Sell USDT"),
+            ],
+            [
+                KeyboardButton(text="💵 Buy Cash"),
+                KeyboardButton(text="💴 Sell Cash"),
+            ],
+            [
+                KeyboardButton(text="📑 Сделки OTC"),
+                KeyboardButton(text="🤖 Crypto Agent"),
+            ],
+            [
                 KeyboardButton(text="💵 Курсы"),
-                KeyboardButton(text="🏦 Банки")
-            ],
-            [
-                KeyboardButton(text="💳 Платежи"),
-                KeyboardButton(text="👤 Клиенты")
-            ],
-            [
-                KeyboardButton(text="📈 Арбитраж"),
-                KeyboardButton(text="📑 Договоры")
-            ],
-            [
                 KeyboardButton(text="📊 PnL"),
-                KeyboardButton(text="📅 Сделки")
             ],
             [
-                KeyboardButton(text="⬅️ Назад")
-            ]
+                KeyboardButton(text="⬅️ Назад"),
+            ],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
 
-    return keyboard 
+    return keyboard
 def agro_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[

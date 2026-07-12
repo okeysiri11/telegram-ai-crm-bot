@@ -455,6 +455,126 @@ def _migrate_schema():
     _migrate_phase4b()
     _migrate_agro_erp_phase1()
     _migrate_agro_erp_phase2()
+    _migrate_crypto_erp_phase1()
+
+
+def _migrate_crypto_erp_phase1():
+    """Crypto OTC ERP Phase 1 — deals, requests, payments, calendar links."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS crypto_otc_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            request_number INTEGER UNIQUE NOT NULL,
+            client_id INTEGER NOT NULL,
+            direction TEXT NOT NULL,
+            asset TEXT DEFAULT 'USDT',
+            amount REAL,
+            currency TEXT DEFAULT 'USD',
+            rate REAL,
+            fee REAL DEFAULT 0,
+            manager_id INTEGER,
+            status TEXT DEFAULT 'NEW',
+            deal_id INTEGER,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS crypto_deals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            client_id INTEGER NOT NULL,
+            request_id INTEGER,
+            direction TEXT NOT NULL,
+            asset TEXT DEFAULT 'USDT',
+            amount REAL,
+            currency TEXT DEFAULT 'USD',
+            rate REAL,
+            fee REAL DEFAULT 0,
+            manager_id INTEGER,
+            status TEXT DEFAULT 'NEW',
+            payment_status TEXT DEFAULT 'WAITING_PAYMENT',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            closed_at TIMESTAMP,
+            notes TEXT
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS crypto_payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            deal_id INTEGER NOT NULL,
+            amount REAL,
+            currency TEXT DEFAULT 'USD',
+            payment_status TEXT DEFAULT 'WAITING_PAYMENT',
+            confirmed_at TIMESTAMP,
+            delivered_at TIMESTAMP,
+            created_by INTEGER NOT NULL,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS crypto_deal_calendar_links (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            deal_id INTEGER NOT NULL,
+            calendar_event_id INTEGER NOT NULL,
+            event_type TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(deal_id, event_type)
+        )
+        """
+    )
+    conn.commit()
+
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO roles (role_name, description)
+        VALUES (?, ?)
+        """,
+        ("CRYPTO_MANAGER", "Менеджер Crypto OTC ERP"),
+    )
+    conn.commit()
+    _seed_crypto_erp_workflow_rules()
+
+
+def _seed_crypto_erp_workflow_rules():
+    rules = [
+        ("REQUEST_CREATED", "crypto_otc", "send_notification",
+         '{"title":"Crypto OTC запрос","priority":"HIGH"}'),
+        ("DEAL_CREATED", "crypto_otc", "send_notification",
+         '{"title":"Crypto OTC сделка создана","priority":"HIGH"}'),
+        ("PAYMENT_RECEIVED", "crypto_otc", "send_notification",
+         '{"title":"Crypto оплата получена","priority":"NORMAL"}'),
+        ("DELIVERY_COMPLETED", "crypto_otc", "send_notification",
+         '{"title":"Crypto выдача завершена","priority":"NORMAL"}'),
+        ("DEAL_CLOSED", "crypto_otc", "send_notification",
+         '{"title":"Crypto сделка закрыта","priority":"INFO"}'),
+    ]
+    for trigger, module, action, payload in rules:
+        cursor.execute(
+            """
+            SELECT id FROM workflow_rules
+            WHERE trigger_code = ? AND module = ? AND action_type = ?
+            """,
+            (trigger, module, action),
+        )
+        if cursor.fetchone():
+            continue
+        cursor.execute(
+            """
+            INSERT INTO workflow_rules (trigger_code, module, action_type, action_payload, active)
+            VALUES (?, ?, ?, ?, 1)
+            """,
+            (trigger, module, action, payload),
+        )
+    conn.commit()
 
 
 def _migrate_agro_erp_phase2():
@@ -1142,6 +1262,7 @@ ROLE_NAMES = (
     "OWNER",
     "ADMIN",
     "SUPER_MANAGER",
+    "CRYPTO_MANAGER",
     "OTC_MANAGER",
     "AGRO_MANAGER",
     "LAWYER",
@@ -1166,6 +1287,7 @@ ROLE_DESCRIPTIONS = {
     "OWNER": "Владелец системы",
     "ADMIN": "Администратор",
     "SUPER_MANAGER": "Супер-менеджер — все бизнес-модули",
+    "CRYPTO_MANAGER": "Менеджер Crypto OTC ERP",
     "OTC_MANAGER": "Менеджер Crypto OTC",
     "AGRO_MANAGER": "Менеджер Agro Trading",
     "LAWYER": "Юрист",
@@ -1210,6 +1332,9 @@ ROLE_PERMISSIONS = {
     "OTC_MANAGER": {
         "crypto_access", "calendar_access", "reports_access", "ai_access",
     },
+    "CRYPTO_MANAGER": {
+        "crypto_access", "calendar_access", "reports_access", "ai_access",
+    },
     "AGRO_MANAGER": {
         "agro_access", "calendar_access", "reports_access", "ai_access",
     },
@@ -1222,6 +1347,27 @@ ROLE_PERMISSIONS = {
     },
     "DRONE_ENGINEER": {"drone_access", "calendar_access", "ai_access"},
     "CLIENT": {"calendar_access", "ai_access"},
+}
+
+CRYPTO_ACTION_PERMISSIONS = (
+    "CRYPTO_VIEW_DEALS",
+    "CRYPTO_EDIT_DEALS",
+    "CRYPTO_VIEW_FINANCE",
+)
+
+CRYPTO_MANAGER_ROLES = frozenset({
+    "OWNER", "ADMIN", "SUPER_MANAGER", "CRYPTO_MANAGER", "OTC_MANAGER", "MANAGER",
+})
+
+CRYPTO_ROLE_ACTIONS = {
+    "OWNER": set(CRYPTO_ACTION_PERMISSIONS),
+    "ADMIN": set(CRYPTO_ACTION_PERMISSIONS),
+    "SUPER_MANAGER": set(CRYPTO_ACTION_PERMISSIONS),
+    "CRYPTO_MANAGER": set(CRYPTO_ACTION_PERMISSIONS),
+    "OTC_MANAGER": set(CRYPTO_ACTION_PERMISSIONS),
+    "MANAGER": {"CRYPTO_VIEW_DEALS", "CRYPTO_EDIT_DEALS", "CRYPTO_VIEW_FINANCE"},
+    "VIEWER": {"CRYPTO_VIEW_DEALS"},
+    "CLIENT": set(),
 }
 
 
@@ -6203,6 +6349,350 @@ def format_workflow_stats_text(user_id: int) -> str:
 
 
 # ==========================================================
+# CRYPTO OTC ERP (Phase 1)
+# ==========================================================
+
+CRYPTO_DEAL_STATUSES = (
+    "NEW", "PAYMENT_PENDING", "PROCESSING", "COMPLETED", "CANCELLED",
+)
+
+CRYPTO_OTC_DIRECTIONS = {
+    "BUY_USDT": "Buy USDT",
+    "SELL_USDT": "Sell USDT",
+    "BUY_CASH": "Buy Cash",
+    "SELL_CASH": "Sell Cash",
+}
+
+CRYPTO_PAYMENT_STATUSES = (
+    "WAITING_PAYMENT",
+    "PAYMENT_RECEIVED",
+    "PAYMENT_CONFIRMED",
+    "DELIVERED",
+)
+
+CRYPTO_CALENDAR_EVENT_TYPES = {
+    "client_meeting": "Встреча с клиентом",
+    "cash_delivery": "Выдача наличных",
+    "usdt_receipt": "Получение USDT",
+    "large_deal": "Крупная сделка",
+}
+
+
+def has_crypto_action(user_id: int, action: str) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+    if action not in CRYPTO_ACTION_PERMISSIONS:
+        return False
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return True
+    roles = get_user_roles(user_id)
+    for role in roles:
+        if action in CRYPTO_ROLE_ACTIONS.get(role, set()):
+            return True
+    return False
+
+
+def create_crypto_otc_request(
+    client_id: int,
+    direction: str,
+    amount: float = None,
+    asset: str = "USDT",
+    currency: str = "USD",
+    rate: float = None,
+    notes: str = None,
+) -> int:
+    from datetime import datetime
+    from services.crypto_erp_workflow import CryptoErpWorkflow
+
+    if direction not in CRYPTO_OTC_DIRECTIONS:
+        direction = "BUY_USDT"
+    from services.crypto_otc_agent import CryptoOTCAgent
+    fee = CryptoOTCAgent.calculate_fee(amount, direction, rate)
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        """
+        INSERT INTO crypto_otc_requests (
+            request_number, client_id, direction, asset, amount, currency,
+            rate, fee, status, notes, created_at, updated_at
+        )
+        VALUES (
+            (SELECT COALESCE(MAX(request_number), 2000) + 1 FROM crypto_otc_requests),
+            ?, ?, ?, ?, ?, ?, ?, 'NEW', ?, ?, ?
+        )
+        """,
+        (client_id, direction, asset, amount, currency, rate, fee, notes, now, now),
+    )
+    conn.commit()
+    request_number = cursor.execute(
+        "SELECT request_number FROM crypto_otc_requests WHERE id = ?",
+        (cursor.lastrowid,),
+    ).fetchone()[0]
+    CryptoErpWorkflow.emit(
+        "REQUEST_CREATED",
+        client_id,
+        entity_type="crypto_request",
+        entity_id=request_number,
+        payload={
+            "title": f"Crypto запрос #{request_number}",
+            "message": f"{CRYPTO_OTC_DIRECTIONS.get(direction, direction)} {amount or ''} {asset}",
+            "priority": "HIGH",
+        },
+    )
+    log_audit(client_id, "crypto_request_created", "crypto_otc", f"#{request_number}:{direction}")
+    return request_number
+
+
+def create_crypto_deal_from_request(
+    request_number: int,
+    manager_id: int,
+    actor_id: int = None,
+) -> int:
+    from datetime import datetime
+    from services.crypto_erp import CryptoErpService
+
+    cursor.execute(
+        "SELECT * FROM crypto_otc_requests WHERE request_number = ?",
+        (request_number,),
+    )
+    req = cursor.fetchone()
+    if not req:
+        return 0
+    (
+        _rid, req_num, client_id, direction, asset, amount, currency,
+        rate, fee, req_mgr, status, deal_id, notes, created_at, updated_at,
+    ) = req
+    if deal_id:
+        return deal_id
+
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        """
+        INSERT INTO crypto_deals (
+            client_id, request_id, direction, asset, amount, currency,
+            rate, fee, manager_id, status, payment_status, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'PAYMENT_PENDING', 'WAITING_PAYMENT', ?, ?)
+        """,
+        (
+            client_id, request_number, direction, asset, amount, currency,
+            rate, fee, manager_id, now, now,
+        ),
+    )
+    conn.commit()
+    new_deal_id = cursor.lastrowid
+    cursor.execute(
+        """
+        UPDATE crypto_otc_requests
+        SET deal_id = ?, manager_id = ?, status = 'PROCESSING', updated_at = ?
+        WHERE request_number = ?
+        """,
+        (new_deal_id, manager_id, now, request_number),
+    )
+    conn.commit()
+    create_crypto_payment(new_deal_id, manager_id or actor_id or client_id, amount, currency)
+    CryptoErpService.on_deal_created(actor_id or manager_id, new_deal_id, request_number)
+    return new_deal_id
+
+
+def get_crypto_deal(deal_id: int):
+    cursor.execute("SELECT * FROM crypto_deals WHERE id = ?", (deal_id,))
+    return cursor.fetchone()
+
+
+def get_crypto_deals(user_id: int, status: str = None, limit: int = 20):
+    query = """
+        SELECT id, client_id, direction, asset, amount, currency, rate, fee,
+               manager_id, status, payment_status, created_at, updated_at, closed_at
+        FROM crypto_deals
+        WHERE client_id = ? OR manager_id = ?
+    """
+    params = [user_id, user_id]
+    if status:
+        query += " AND status = ?"
+        params.append(status)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def update_crypto_deal_status(deal_id: int, status: str, actor_id: int) -> bool:
+    if status not in CRYPTO_DEAL_STATUSES:
+        return False
+    from datetime import datetime
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    closed = now if status in ("COMPLETED", "CANCELLED") else None
+    cursor.execute(
+        """
+        UPDATE crypto_deals
+        SET status = ?, updated_at = ?, closed_at = COALESCE(?, closed_at)
+        WHERE id = ?
+        """,
+        (status, now, closed, deal_id),
+    )
+    conn.commit()
+    if cursor.rowcount and status == "COMPLETED":
+        from services.crypto_erp import CryptoErpService
+        CryptoErpService.on_deal_closed(actor_id, deal_id)
+    return cursor.rowcount > 0
+
+
+def create_crypto_payment(
+    deal_id: int,
+    created_by: int,
+    amount: float = None,
+    currency: str = "USD",
+) -> int:
+    cursor.execute(
+        """
+        INSERT INTO crypto_payments (deal_id, amount, currency, payment_status, created_by)
+        VALUES (?, ?, ?, 'WAITING_PAYMENT', ?)
+        """,
+        (deal_id, amount, currency, created_by),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def update_crypto_payment_status(
+    payment_id: int,
+    payment_status: str,
+    actor_id: int,
+) -> bool:
+    if payment_status not in CRYPTO_PAYMENT_STATUSES:
+        return False
+    from datetime import datetime
+    from services.crypto_erp import CryptoErpService
+
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute("SELECT deal_id FROM crypto_payments WHERE id = ?", (payment_id,))
+    row = cursor.fetchone()
+    if not row:
+        return False
+    deal_id = row[0]
+    confirmed = now if payment_status in ("PAYMENT_RECEIVED", "PAYMENT_CONFIRMED", "DELIVERED") else None
+    delivered = now if payment_status == "DELIVERED" else None
+    cursor.execute(
+        """
+        UPDATE crypto_payments
+        SET payment_status = ?, confirmed_at = COALESCE(?, confirmed_at),
+            delivered_at = COALESCE(?, delivered_at)
+        WHERE id = ?
+        """,
+        (payment_status, confirmed, delivered, payment_id),
+    )
+    cursor.execute(
+        "UPDATE crypto_deals SET payment_status = ?, updated_at = ? WHERE id = ?",
+        (payment_status, now, deal_id),
+    )
+    conn.commit()
+    if payment_status == "PAYMENT_RECEIVED":
+        CryptoErpService.on_payment_received(actor_id, deal_id, payment_id)
+        cursor.execute(
+            "UPDATE crypto_deals SET status = 'PROCESSING' WHERE id = ?",
+            (deal_id,),
+        )
+        conn.commit()
+    elif payment_status == "DELIVERED":
+        CryptoErpService.on_delivery_completed(actor_id, deal_id)
+    return cursor.rowcount > 0
+
+
+def link_crypto_deal_calendar(deal_id: int, calendar_event_id: int, event_type: str) -> int:
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO crypto_deal_calendar_links (deal_id, calendar_event_id, event_type)
+        VALUES (?, ?, ?)
+        """,
+        (deal_id, calendar_event_id, event_type),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_crypto_deal_calendar_links(deal_id: int):
+    cursor.execute(
+        """
+        SELECT id, deal_id, calendar_event_id, event_type, created_at
+        FROM crypto_deal_calendar_links WHERE deal_id = ? ORDER BY id
+        """,
+        (deal_id,),
+    )
+    return cursor.fetchall()
+
+
+def format_crypto_deal_text(deal_id: int) -> str:
+    deal = get_crypto_deal(deal_id)
+    if not deal:
+        return f"Сделка #{deal_id} не найдена."
+    (
+        did, client_id, request_id, direction, asset, amount, currency,
+        rate, fee, manager_id, status, payment_status, created_at, updated_at, closed_at, notes,
+    ) = deal
+    dir_label = CRYPTO_OTC_DIRECTIONS.get(direction, direction)
+    return (
+        f"💰 Crypto OTC сделка #{did}\n\n"
+        f"📋 Запрос: #{request_id or '—'}\n"
+        f"🔄 {dir_label} · {asset}\n"
+        f"💵 {amount or '—'} {currency} · курс {rate or '—'}\n"
+        f"💳 Комиссия: {fee or 0}\n"
+        f"📊 Статус: {status} · оплата: {payment_status}\n"
+        f"👤 Клиент: {client_id} · 👨‍💼 Менеджер: {manager_id or '—'}\n"
+        f"🕒 {created_at} → {updated_at}\n"
+        f"🏁 {closed_at or '—'}\n"
+        f"📝 {notes or '—'}"
+    )
+
+
+def format_crypto_deals_list(user_id: int, limit: int = 15) -> str:
+    rows = get_crypto_deals(user_id, limit=limit)
+    if not rows:
+        return "📑 Crypto OTC сделки: записей нет."
+    lines = ["📑 Crypto OTC сделки:\n"]
+    for row in rows:
+        did, client_id, direction, asset, amount, currency, rate, fee, mgr, status, pay_st, created, updated, closed = row
+        lines.append(
+            f"#{did} · {CRYPTO_OTC_DIRECTIONS.get(direction, direction)} · {status}\n"
+            f"   💵 {amount or '—'} {asset} · 💳 {pay_st}\n"
+            f"   🕒 {updated or created}"
+        )
+    lines.append("\nОтправьте ID сделки для деталей.")
+    return "\n".join(lines)
+
+
+def run_crypto_erp_cycle_test(user_id: int) -> dict:
+    """Full cycle: client → request → deal → payment → delivery → close."""
+    steps = {}
+    try:
+        req_num = create_crypto_otc_request(
+            client_id=user_id,
+            direction="BUY_USDT",
+            amount=10000,
+            rate=1.0,
+            notes="cycle_test",
+        )
+        steps["request"] = req_num
+        deal_id = create_crypto_deal_from_request(req_num, user_id, user_id)
+        steps["deal"] = deal_id
+        cursor.execute(
+            "SELECT id FROM crypto_payments WHERE deal_id = ? ORDER BY id DESC LIMIT 1",
+            (deal_id,),
+        )
+        pay_row = cursor.fetchone()
+        pay_id = pay_row[0] if pay_row else 0
+        update_crypto_payment_status(pay_id, "PAYMENT_RECEIVED", user_id)
+        update_crypto_payment_status(pay_id, "PAYMENT_CONFIRMED", user_id)
+        update_crypto_payment_status(pay_id, "DELIVERED", user_id)
+        steps["payment"] = pay_id
+        update_crypto_deal_status(deal_id, "COMPLETED", user_id)
+        steps["closed"] = True
+        deal = get_crypto_deal(deal_id)
+        ok = deal and deal[10] == "COMPLETED" and deal[11] == "DELIVERED"
+        return {"ok": ok, "steps": steps, "status": "OK" if ok else "ERROR"}
+    except Exception as exc:
+        return {"ok": False, "steps": steps, "status": "ERROR", "error": str(exc)}
+
+
+# ==========================================================
 # AI AGENTS (multi-agent layer)
 # ==========================================================
 
@@ -6416,6 +6906,8 @@ WORKFLOW_TRIGGER_CODES = (
     "CONTRACT_SIGNED",
     "SHIPMENT_STARTED",
     "PAYMENT_RECEIVED",
+    "DELIVERY_COMPLETED",
+    "DEAL_CLOSED",
     "DEAL_COMPLETED",
     "TASK_CREATED",
     "TASK_COMPLETED",

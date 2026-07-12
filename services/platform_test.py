@@ -128,8 +128,13 @@ class PlatformTestService:
                 rows = get_requests_by_status("NEW")
                 _ = get_agro_deal_by_request(rows[0][0]) if rows else None
             elif module_key == "crypto":
-                from services.permissions import PermissionService
-                PermissionService.can_access_module(user_id, "crypto_otc")
+                from services.crypto_auth import CryptoAuthService
+                from database import run_crypto_erp_cycle_test
+                if not CryptoAuthService.can_access_crypto(user_id):
+                    raise RuntimeError("no crypto access")
+                result = run_crypto_erp_cycle_test(user_id)
+                if not result.get("ok"):
+                    raise RuntimeError(result.get("error", "cycle failed"))
             elif module_key == "drone":
                 from database import get_drone_ai_context
                 get_drone_ai_context(user_id)
