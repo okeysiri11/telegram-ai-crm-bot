@@ -26,11 +26,12 @@ import database.models.automotive_inventory  # noqa: F401
 
 
 class SalesPipelineStage(str, enum.Enum):
-    NEW = "NEW"
+    NEW_LEAD = "NEW_LEAD"
     CONTACTED = "CONTACTED"
+    TEST_DRIVE = "TEST_DRIVE"
     NEGOTIATION = "NEGOTIATION"
     RESERVED = "RESERVED"
-    CONTRACT = "CONTRACT"
+    CONTRACT_SIGNED = "CONTRACT_SIGNED"
     PAID = "PAID"
     DELIVERED = "DELIVERED"
 
@@ -81,7 +82,7 @@ class Lead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     pipeline_stage: Mapped[str] = mapped_column(
         String(30),
-        default=SalesPipelineStage.NEW.value,
+        default=SalesPipelineStage.NEW_LEAD.value,
         nullable=False,
     )
     assigned_to: Mapped[int | None] = mapped_column(BigInteger, nullable=True)

@@ -250,6 +250,21 @@ class AutomotiveSalesEngineV1:
                 scheduled_at=scheduled_at,
                 notes=notes,
             )
+
+            if lead.pipeline_stage != SalesPipelineStage.TEST_DRIVE.value:
+                old_stage = lead.pipeline_stage
+                await LeadRepository(session).update_stage(
+                    lead_id,
+                    SalesPipelineStage.TEST_DRIVE.value,
+                )
+                await SalesPipelineRepository(session).record(
+                    lead_id=lead_id,
+                    from_stage=old_stage,
+                    to_stage=SalesPipelineStage.TEST_DRIVE.value,
+                    changed_by=actor_id,
+                    notes="Test drive scheduled",
+                )
+
             return AutomotiveSalesEngineV1._test_drive_snapshot(test_drive)
 
     @staticmethod

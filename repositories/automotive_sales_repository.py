@@ -34,7 +34,7 @@ class LeadRepository:
         customer_phone: str | None = None,
         customer_email: str | None = None,
         source: str = LeadSource.OTHER.value,
-        pipeline_stage: str = SalesPipelineStage.NEW.value,
+        pipeline_stage: str = SalesPipelineStage.NEW_LEAD.value,
         assigned_to: int | None = None,
         budget: Decimal | None = None,
         currency: str = "USD",
