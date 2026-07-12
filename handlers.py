@@ -15,6 +15,8 @@ from services.agro_deal_lifecycle import AgroDealLifecycle
 from services.tasks import TaskService
 from services.calendar_service import CalendarService
 from services.calendar_access import CalendarAccessService
+from services.backup import BackupService
+from services.platform_hardening_test import PlatformHardeningTest
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
@@ -1119,6 +1121,74 @@ async def calendar_isolation_test(message: Message):
         lines.append(f"Error: {result['error']}")
     await message.answer("\n".join(lines))
     log_audit(user_id, "calendar_isolation_test", "calendar", result.get("status"))
+
+
+def _can_run_platform_admin(user_id: int) -> bool:
+    from database import get_user_roles
+    roles = set(get_user_roles(user_id))
+    return user_id in (OWNER_ID, MANAGER_ID) or bool(roles & {"OWNER", "SUPER_MANAGER"})
+
+
+@router.message(Command("backup"))
+async def backup_command(message: Message):
+    user_id = message.from_user.id
+    if not _can_run_platform_admin(user_id):
+        await message.answer("Нет доступа к /backup.")
+        return
+    path = BackupService.create_backup()
+    backups = BackupService.list_backups()
+    await message.answer(
+        f"✅ Backup создан:\n{path}\n\n"
+        f"Всего бэкапов: {len(backups)}\n"
+        f"Последние: {', '.join(backups[:5]) or '—'}"
+    )
+    log_audit(user_id, "backup", "system", path)
+
+
+@router.message(Command("restore"))
+async def restore_command(message: Message):
+    user_id = message.from_user.id
+    if not _can_run_platform_admin(user_id):
+        await message.answer("Нет доступа к /restore.")
+        return
+    parts = (message.text or "").split(maxsplit=1)
+    if len(parts) < 2:
+        backups = BackupService.list_backups()
+        await message.answer(
+            "Использование: /restore backup_YYYY_MM_DD_HH_MM.db\n\n"
+            f"Доступные бэкапы:\n" + "\n".join(f"· {b}" for b in backups[:10]) or "—"
+        )
+        return
+    filename = parts[1].strip()
+    if BackupService.restore_backup(filename):
+        await message.answer(f"✅ База восстановлена из {filename}")
+        log_audit(user_id, "restore", "system", filename)
+    else:
+        await message.answer(f"❌ Не удалось восстановить из {filename}")
+
+
+@router.message(Command("hardening_test"))
+async def hardening_test_command(message: Message):
+    user_id = message.from_user.id
+    if not _can_run_platform_admin(user_id):
+        await message.answer("Нет доступа к /hardening_test.")
+        return
+    result = PlatformHardeningTest.run_validation()
+    steps = result.get("steps", {})
+    lines = [
+        "PLATFORM HARDENING VALIDATION",
+        f"Platform Hardening Status: {result.get('status', 'ERROR')}",
+        f"Migration Readiness: {result.get('migration_readiness_pct', 0)}%",
+        "",
+    ]
+    for name, info in steps.items():
+        mark = "✅" if info.get("ok") else "❌"
+        detail = info.get("detail", "")
+        lines.append(f"{mark} {name}: {detail}")
+    if result.get("error"):
+        lines.append(f"\nError: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "hardening_test", "system", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")

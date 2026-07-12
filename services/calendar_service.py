@@ -128,10 +128,9 @@ class CalendarService:
     def remove_task_event(event_id: int) -> bool:
         if not event_id:
             return False
-        from database import cursor, conn
-        cursor.execute("DELETE FROM calendar_events WHERE id = ?", (event_id,))
-        conn.commit()
-        return cursor.rowcount > 0
+        from services.soft_delete import SoftDeleteService
+        from config import OWNER_ID
+        return SoftDeleteService.soft_delete("calendar_event", event_id, OWNER_ID)
 
     # --- NotificationService API (future) ---
 

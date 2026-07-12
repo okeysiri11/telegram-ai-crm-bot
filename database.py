@@ -458,6 +458,7 @@ def _migrate_schema():
     _migrate_agro_erp_phase2()
     _migrate_crypto_erp_phase1()
     _migrate_company_core_phase1()
+    _migrate_platform_hardening()
 
 
 def _migrate_company_core_phase1():
@@ -545,6 +546,156 @@ def _seed_company_departments():
             (code, name, desc),
         )
     conn.commit()
+
+
+def _generate_public_id(prefix: str) -> str:
+    from datetime import datetime
+    year = datetime.utcnow().year
+    cursor.execute(
+        """
+        INSERT INTO public_id_sequences (prefix, year, last_value)
+        VALUES (?, ?, 1)
+        ON CONFLICT(prefix, year) DO UPDATE SET last_value = last_value + 1
+        """,
+        (prefix, year),
+    )
+    cursor.execute(
+        "SELECT last_value FROM public_id_sequences WHERE prefix = ? AND year = ?",
+        (prefix, year),
+    )
+    seq = cursor.fetchone()[0]
+    conn.commit()
+    return f"{prefix}-{year}-{seq:06d}"
+
+
+def _migrate_platform_hardening():
+    """Pre-migration hardening — soft delete, attachments, comments, timeline, flags, public_id."""
+    soft_delete_tables = (
+        "users", "tasks", "calendar_events", "files", "requests",
+        "agro_deals", "crypto_deals", "agro_documents", "notifications",
+    )
+    for table in soft_delete_tables:
+        for column, definition in (
+            ("is_deleted", "INTEGER DEFAULT 0"),
+            ("deleted_at", "TIMESTAMP"),
+            ("deleted_by", "INTEGER"),
+        ):
+            if not _column_exists(table, column):
+                cursor.execute(
+                    f"ALTER TABLE {table} ADD COLUMN {column} {definition}"
+                )
+    conn.commit()
+
+    public_id_tables = {
+        "requests": "AG",
+        "agro_deals": "AG",
+        "crypto_deals": "CR",
+        "tasks": "TK",
+        "calendar_events": "EV",
+        "agro_documents": "DC",
+    }
+    for table in public_id_tables:
+        if not _column_exists(table, "public_id"):
+            cursor.execute(f"ALTER TABLE {table} ADD COLUMN public_id TEXT")
+    conn.commit()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS public_id_sequences (
+            prefix TEXT NOT NULL,
+            year INTEGER NOT NULL,
+            last_value INTEGER DEFAULT 0,
+            PRIMARY KEY (prefix, year)
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS attachments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entity_type TEXT NOT NULL,
+            entity_id INTEGER NOT NULL,
+            file_id INTEGER NOT NULL,
+            uploaded_by INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_deleted INTEGER DEFAULT 0,
+            deleted_at TIMESTAMP,
+            deleted_by INTEGER
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS comments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entity_type TEXT NOT NULL,
+            entity_id INTEGER NOT NULL,
+            author_id INTEGER NOT NULL,
+            comment_text TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_deleted INTEGER DEFAULT 0,
+            deleted_at TIMESTAMP,
+            deleted_by INTEGER
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS timeline_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entity_type TEXT NOT NULL,
+            entity_id INTEGER NOT NULL,
+            event_type TEXT NOT NULL,
+            user_id INTEGER,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS feature_flags (
+            feature_name TEXT PRIMARY KEY,
+            enabled INTEGER DEFAULT 0,
+            description TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    conn.commit()
+
+    flags = [
+        ("ENABLE_AI_AGENTS", 1, "AI agents module"),
+        ("ENABLE_WEB_PANEL", 0, "Future Web UI panel"),
+        ("ENABLE_DRONE_MODULE", 1, "Drone Engineering module"),
+        ("ENABLE_CAFE_MODULE", 1, "Cafe module"),
+        ("ENABLE_LEGAL_MODULE", 1, "Legal module"),
+    ]
+    for name, enabled, desc in flags:
+        cursor.execute(
+            """
+            INSERT OR IGNORE INTO feature_flags (feature_name, enabled, description)
+            VALUES (?, ?, ?)
+            """,
+            (name, enabled, desc),
+        )
+    conn.commit()
+
+    for table, prefix in public_id_tables.items():
+        cursor.execute(
+            f"SELECT id FROM {table} WHERE public_id IS NULL OR public_id = ''"
+        )
+        for (row_id,) in cursor.fetchall():
+            pid = _generate_public_id(prefix)
+            cursor.execute(
+                f"UPDATE {table} SET public_id = ? WHERE id = ?",
+                (pid, row_id),
+            )
+    conn.commit()
+
+
+_NOT_DELETED_SQL = "COALESCE(is_deleted, 0) = 0"
 
 
 def _migrate_crypto_erp_phase1():
@@ -1760,9 +1911,12 @@ def create_request(
 
     conn.commit()
 
+    request_id = cursor.lastrowid
+    assign_public_id("requests", request_id)
+
     cursor.execute(
         "SELECT request_number FROM requests WHERE id=?",
-        (cursor.lastrowid,)
+        (request_id,)
     )
 
     row = cursor.fetchone()
@@ -2624,6 +2778,7 @@ def create_event(
     )
     conn.commit()
     event_id = cursor.lastrowid
+    assign_public_id("calendar_events", event_id)
     log_audit(creator_id, "create_event", "calendar", f"{module}|{title}|{start_time}")
     from services.workflow_triggers import WorkflowTriggers
     WorkflowTriggers.on_calendar_event_created(
@@ -2642,7 +2797,10 @@ def create_event(
 
 
 def get_event(event_id: int, user_id: int = None):
-    cursor.execute(f"{_EVENT_SELECT} WHERE id = ?", (event_id,))
+    cursor.execute(
+        f"{_EVENT_SELECT} WHERE id = ? AND {_NOT_DELETED_SQL}",
+        (event_id,),
+    )
     row = cursor.fetchone()
     if not row or user_id is None:
         return row
@@ -2658,7 +2816,7 @@ def get_events_by_user(
     status: str = None,
     limit: int = 20,
 ):
-    query = f"{_EVENT_SELECT} WHERE 1=1"
+    query = f"{_EVENT_SELECT} WHERE {_NOT_DELETED_SQL}"
     params: list = []
 
     if scope == "owned":
@@ -2698,6 +2856,7 @@ def get_today_events(user_id: int, scope: str = "my", limit: int = 20):
     query = f"""
         {_EVENT_SELECT}
         WHERE date(COALESCE(start_time, start_datetime)) = date('now')
+          AND {_NOT_DELETED_SQL}
     """
     params: list = []
     query, params = _apply_calendar_access(query, params, user_id, scope)
@@ -2712,6 +2871,7 @@ def get_week_events(user_id: int, scope: str = "my", limit: int = 50):
         {_EVENT_SELECT}
         WHERE datetime(COALESCE(start_time, start_datetime)) >= datetime('now', 'start of day')
           AND datetime(COALESCE(start_time, start_datetime)) < datetime('now', '+7 days', 'start of day')
+          AND {_NOT_DELETED_SQL}
     """
     params: list = []
     query, params = _apply_calendar_access(query, params, user_id, scope)
@@ -2725,6 +2885,7 @@ def get_month_events(user_id: int, scope: str = "my", limit: int = 100):
     query = f"""
         {_EVENT_SELECT}
         WHERE strftime('%Y-%m', COALESCE(start_time, start_datetime)) = strftime('%Y-%m', 'now')
+          AND {_NOT_DELETED_SQL}
     """
     params: list = []
     query, params = _apply_calendar_access(query, params, user_id, scope)
@@ -2741,6 +2902,7 @@ def get_reminder_events(user_id: int, scope: str = "department", limit: int = 20
           AND status IN ('PLANNED', 'ACTIVE')
           AND datetime(COALESCE(start_time, start_datetime), '-' || remind_before || ' minutes')
               <= datetime('now', '+1 day')
+          AND {_NOT_DELETED_SQL}
     """
     params: list = []
     query, params = _apply_calendar_access(query, params, user_id, scope)
@@ -2853,10 +3015,10 @@ def delete_event(event_id: int, user_id: int) -> bool:
         user_id, "calendar_event", event_id, owner_id=event[6],
     ):
         return False
-    cursor.execute("DELETE FROM calendar_events WHERE id = ?", (event_id,))
-    conn.commit()
-    log_audit(user_id, "delete_event", "calendar", str(event_id))
-    return cursor.rowcount > 0
+    ok = soft_delete("calendar_event", event_id, user_id)
+    if ok:
+        log_audit(user_id, "delete_event", "calendar", str(event_id))
+    return ok
 
 
 def format_event_card(event_row) -> str:
@@ -5156,6 +5318,7 @@ def create_task(
     )
     conn.commit()
     task_id = cursor.lastrowid
+    assign_public_id("tasks", task_id)
 
     calendar_event_id = None
     if deadline:
@@ -5197,7 +5360,10 @@ def create_task(
 
 
 def get_task(task_id: int, user_id: int = None):
-    cursor.execute(f"{_TASK_SELECT} WHERE id = ?", (task_id,))
+    cursor.execute(
+        f"{_TASK_SELECT} WHERE id = ? AND {_NOT_DELETED_SQL}",
+        (task_id,),
+    )
     row = cursor.fetchone()
     if not row or user_id is None:
         return row
@@ -5221,7 +5387,7 @@ def get_tasks_by_user(
     overdue_only: bool = False,
     limit: int = 20,
 ):
-    query = f"{_TASK_SELECT} WHERE 1=1"
+    query = f"{_TASK_SELECT} WHERE {_NOT_DELETED_SQL}"
     params = []
 
     if scope == "my":
@@ -5395,12 +5561,11 @@ def delete_task(task_id: int, user_id: int) -> bool:
     ):
         return False
     if task[13]:
-        from services.calendar_service import CalendarService
-        CalendarService.remove_task_event(task[13])
-    cursor.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
-    conn.commit()
-    log_audit(user_id, "delete_task", "tasks", str(task_id))
-    return cursor.rowcount > 0
+        soft_delete("calendar_event", task[13], user_id)
+    ok = soft_delete("task", task_id, user_id)
+    if ok:
+        log_audit(user_id, "delete_task", "tasks", str(task_id))
+    return ok
 
 
 def format_task_card(task_row) -> str:
@@ -7577,3 +7742,312 @@ def format_enhanced_search_results(results: dict, query: str) -> str:
     else:
         lines.append(f"\nВсего: {total}")
     return "\n".join(lines)
+
+
+# ==========================================================
+# PLATFORM HARDENING — soft delete, attachments, comments,
+# timeline, feature flags, public IDs
+# ==========================================================
+
+SOFT_DELETE_ENTITY_MAP = {
+    "user": "users",
+    "users": "users",
+    "task": "tasks",
+    "tasks": "tasks",
+    "calendar_event": "calendar_events",
+    "calendar_events": "calendar_events",
+    "file": "files",
+    "files": "files",
+    "agro_request": "requests",
+    "agro_requests": "requests",
+    "request": "requests",
+    "requests": "requests",
+    "agro_deal": "agro_deals",
+    "agro_deals": "agro_deals",
+    "crypto_deal": "crypto_deals",
+    "crypto_deals": "crypto_deals",
+    "document": "agro_documents",
+    "documents": "agro_documents",
+    "agro_documents": "agro_documents",
+    "notification": "notifications",
+    "notifications": "notifications",
+    "comment": "comments",
+    "comments": "comments",
+}
+
+PUBLIC_ID_PREFIX_MAP = {
+    "requests": "AG",
+    "agro_deals": "AG",
+    "crypto_deals": "CR",
+    "tasks": "TK",
+    "calendar_events": "EV",
+    "agro_documents": "DC",
+}
+
+ATTACHMENT_ENTITY_TYPES = (
+    "AGRO_REQUEST", "AGRO_DEAL", "CRYPTO_DEAL", "TASK",
+    "CALENDAR_EVENT", "LEGAL_CASE", "PROJECT", "COMMENT",
+)
+
+
+def _resolve_soft_delete_table(entity_type: str) -> str | None:
+    return SOFT_DELETE_ENTITY_MAP.get((entity_type or "").strip().lower())
+
+
+def assign_public_id(table: str, row_id: int) -> str | None:
+    prefix = PUBLIC_ID_PREFIX_MAP.get(table)
+    if not prefix or not row_id:
+        return None
+    if not _column_exists(table, "public_id"):
+        return None
+    cursor.execute(f"SELECT public_id FROM {table} WHERE id = ?", (row_id,))
+    row = cursor.fetchone()
+    if row and row[0]:
+        return row[0]
+    public_id = _generate_public_id(prefix)
+    cursor.execute(
+        f"UPDATE {table} SET public_id = ? WHERE id = ?",
+        (public_id, row_id),
+    )
+    conn.commit()
+    return public_id
+
+
+def soft_delete(entity_type: str, entity_id: int, user_id: int) -> bool:
+    table = _resolve_soft_delete_table(entity_type)
+    if not table:
+        return False
+    cursor.execute(
+        f"""
+        UPDATE {table}
+        SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, deleted_by = ?
+        WHERE id = ? AND {_NOT_DELETED_SQL}
+        """,
+        (user_id, entity_id),
+    )
+    conn.commit()
+    if cursor.rowcount:
+        log_audit(user_id, "soft_delete", entity_type, str(entity_id))
+        record_timeline_event(
+            entity_type, entity_id, "SOFT_DELETED", user_id,
+            description=f"Запись #{entity_id} помечена удалённой",
+        )
+    return cursor.rowcount > 0
+
+
+def restore(entity_type: str, entity_id: int, user_id: int) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+
+    roles = set(get_user_roles(user_id))
+    can_restore = (
+        user_id in (OWNER_ID, MANAGER_ID)
+        or roles & {"OWNER", "SUPER_MANAGER"}
+    )
+    if not can_restore:
+        return False
+
+    table = _resolve_soft_delete_table(entity_type)
+    if not table:
+        return False
+    cursor.execute(
+        f"""
+        UPDATE {table}
+        SET is_deleted = 0, deleted_at = NULL, deleted_by = NULL
+        WHERE id = ? AND COALESCE(is_deleted, 0) = 1
+        """,
+        (entity_id,),
+    )
+    conn.commit()
+    if cursor.rowcount:
+        log_audit(user_id, "restore", entity_type, str(entity_id))
+        record_timeline_event(
+            entity_type, entity_id, "RESTORED", user_id,
+            description=f"Запись #{entity_id} восстановлена",
+        )
+    return cursor.rowcount > 0
+
+
+def purge_deleted(entity_type: str = None, older_than_days: int = 90) -> int:
+    from config import OWNER_ID
+    tables = (
+        [SOFT_DELETE_ENTITY_MAP[entity_type.lower()]]
+        if entity_type and _resolve_soft_delete_table(entity_type)
+        else sorted(set(SOFT_DELETE_ENTITY_MAP.values()))
+    )
+    total = 0
+    for table in tables:
+        if table == "comments":
+            cond = f"COALESCE(is_deleted, 0) = 1 AND deleted_at < datetime('now', '-{older_than_days} days')"
+        else:
+            cond = (
+                f"COALESCE(is_deleted, 0) = 1"
+                f" AND deleted_at < datetime('now', '-{older_than_days} days')"
+            )
+        cursor.execute(f"DELETE FROM {table} WHERE {cond}")
+        total += cursor.rowcount
+    conn.commit()
+    log_audit(OWNER_ID, "purge_deleted", "system", f"count={total}")
+    return total
+
+
+def attach_file(
+    entity_type: str,
+    entity_id: int,
+    file_id: int,
+    uploaded_by: int,
+) -> int:
+    entity_type = entity_type.strip().upper()
+    cursor.execute(
+        """
+        INSERT INTO attachments (entity_type, entity_id, file_id, uploaded_by)
+        VALUES (?, ?, ?, ?)
+        """,
+        (entity_type, entity_id, file_id, uploaded_by),
+    )
+    conn.commit()
+    attach_id = cursor.lastrowid
+    record_timeline_event(
+        entity_type, entity_id, "FILE_ATTACHED", uploaded_by,
+        description=f"Файл #{file_id} прикреплён",
+    )
+    log_audit(uploaded_by, "attach_file", entity_type.lower(), str(attach_id))
+    return attach_id
+
+
+def get_attachments(entity_type: str, entity_id: int, limit: int = 50) -> list:
+    cursor.execute(
+        """
+        SELECT id, entity_type, entity_id, file_id, uploaded_by, created_at
+        FROM attachments
+        WHERE entity_type = ? AND entity_id = ? AND COALESCE(is_deleted, 0) = 0
+        ORDER BY id DESC LIMIT ?
+        """,
+        (entity_type.strip().upper(), entity_id, limit),
+    )
+    return cursor.fetchall()
+
+
+def remove_attachment(attachment_id: int, user_id: int) -> bool:
+    cursor.execute(
+        """
+        UPDATE attachments
+        SET is_deleted = 1, deleted_at = CURRENT_TIMESTAMP, deleted_by = ?
+        WHERE id = ? AND COALESCE(is_deleted, 0) = 0
+        """,
+        (user_id, attachment_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def add_comment(
+    entity_type: str,
+    entity_id: int,
+    author_id: int,
+    comment_text: str,
+) -> int:
+    entity_type = entity_type.strip().upper()
+    text = comment_text.strip()
+    if not text:
+        return 0
+    cursor.execute(
+        """
+        INSERT INTO comments (entity_type, entity_id, author_id, comment_text)
+        VALUES (?, ?, ?, ?)
+        """,
+        (entity_type, entity_id, author_id, text),
+    )
+    conn.commit()
+    comment_id = cursor.lastrowid
+    record_timeline_event(
+        entity_type, entity_id, "COMMENT_ADDED", author_id,
+        description=text[:200],
+    )
+    log_audit(author_id, "add_comment", entity_type.lower(), str(comment_id))
+    return comment_id
+
+
+def get_comments(entity_type: str, entity_id: int, limit: int = 50) -> list:
+    cursor.execute(
+        """
+        SELECT id, entity_type, entity_id, author_id, comment_text,
+               created_at, updated_at
+        FROM comments
+        WHERE entity_type = ? AND entity_id = ? AND COALESCE(is_deleted, 0) = 0
+        ORDER BY id ASC LIMIT ?
+        """,
+        (entity_type.strip().upper(), entity_id, limit),
+    )
+    return cursor.fetchall()
+
+
+def record_timeline_event(
+    entity_type: str,
+    entity_id: int,
+    event_type: str,
+    user_id: int = None,
+    description: str = None,
+) -> int:
+    cursor.execute(
+        """
+        INSERT INTO timeline_events (entity_type, entity_id, event_type, user_id, description)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (
+            entity_type.strip().upper(),
+            entity_id,
+            event_type.strip().upper(),
+            user_id,
+            description,
+        ),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_timeline(entity_type: str, entity_id: int, limit: int = 50) -> list:
+    cursor.execute(
+        """
+        SELECT id, entity_type, entity_id, event_type, user_id, description, created_at
+        FROM timeline_events
+        WHERE entity_type = ? AND entity_id = ?
+        ORDER BY id DESC LIMIT ?
+        """,
+        (entity_type.strip().upper(), entity_id, limit),
+    )
+    return cursor.fetchall()
+
+
+def is_feature_enabled(feature_name: str) -> bool:
+    cursor.execute(
+        "SELECT enabled FROM feature_flags WHERE feature_name = ?",
+        (feature_name.strip().upper(),),
+    )
+    row = cursor.fetchone()
+    if not row:
+        return False
+    return bool(row[0])
+
+
+def set_feature_flag(feature_name: str, enabled: bool, description: str = None) -> bool:
+    cursor.execute(
+        """
+        INSERT INTO feature_flags (feature_name, enabled, description, updated_at)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(feature_name) DO UPDATE SET
+            enabled = excluded.enabled,
+            description = COALESCE(excluded.description, feature_flags.description),
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        (feature_name.strip().upper(), 1 if enabled else 0, description),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def get_public_id(table: str, row_id: int) -> str | None:
+    if not _column_exists(table, "public_id"):
+        return None
+    cursor.execute(f"SELECT public_id FROM {table} WHERE id = ?", (row_id,))
+    row = cursor.fetchone()
+    return row[0] if row else None
