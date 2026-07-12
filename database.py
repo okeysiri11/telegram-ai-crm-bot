@@ -453,6 +453,122 @@ def _migrate_schema():
     _migrate_calendar_schema()
     _migrate_multi_agent_platform()
     _migrate_phase4b()
+    _migrate_agro_erp_phase1()
+
+
+def _migrate_agro_erp_phase1():
+    """Agro ERP Phase 1 — additive columns on existing agro_* tables."""
+    deal_columns = {
+        "request_id": "INTEGER",
+        "buyer_id": "INTEGER",
+        "seller_id": "INTEGER",
+        "quantity": "REAL",
+        "unit": "TEXT",
+        "price": "REAL",
+        "currency": "TEXT DEFAULT 'USD'",
+        "incoterms": "TEXT",
+        "loading_port": "TEXT",
+        "destination_port": "TEXT",
+        "payment_method": "TEXT",
+        "erp_status": "TEXT",
+        "notes": "TEXT",
+        "updated_at": "TIMESTAMP",
+    }
+    for column, definition in deal_columns.items():
+        if not _column_exists("agro_deals", column):
+            cursor.execute(
+                f"ALTER TABLE agro_deals ADD COLUMN {column} {definition}"
+            )
+    conn.commit()
+
+    cursor.execute(
+        """
+        UPDATE agro_deals
+        SET request_id = request_number,
+            buyer_id = COALESCE(buyer_id, client_id),
+            updated_at = COALESCE(updated_at, created_at)
+        WHERE request_id IS NULL OR buyer_id IS NULL
+        """
+    )
+    conn.commit()
+
+    cp_columns = {
+        "city": "TEXT",
+        "contacts": "TEXT",
+        "email": "TEXT",
+        "telegram": "TEXT",
+        "rating": "REAL",
+    }
+    for column, definition in cp_columns.items():
+        if not _column_exists("agro_counterparties", column):
+            cursor.execute(
+                f"ALTER TABLE agro_counterparties ADD COLUMN {column} {definition}"
+            )
+    conn.commit()
+
+    if _column_exists("agro_counterparties", "contact_info"):
+        cursor.execute(
+            """
+            UPDATE agro_counterparties
+            SET contacts = contact_info
+            WHERE contacts IS NULL AND contact_info IS NOT NULL
+            """
+        )
+        conn.commit()
+
+    doc_columns = {
+        "deal_id": "INTEGER",
+        "document_type": "TEXT",
+        "uploaded_by": "INTEGER",
+        "uploaded_at": "TIMESTAMP",
+        "comment": "TEXT",
+    }
+    for column, definition in doc_columns.items():
+        if not _column_exists("agro_documents", column):
+            cursor.execute(
+                f"ALTER TABLE agro_documents ADD COLUMN {column} {definition}"
+            )
+    conn.commit()
+
+    cursor.execute(
+        """
+        UPDATE agro_documents
+        SET document_type = doc_type,
+            uploaded_by = created_by,
+            uploaded_at = created_at,
+            comment = notes
+        WHERE document_type IS NULL
+        """
+    )
+    conn.commit()
+
+    cursor.execute(
+        """
+        UPDATE agro_documents
+        SET deal_id = (
+            SELECT id FROM agro_deals
+            WHERE agro_deals.request_number = agro_documents.request_number
+        )
+        WHERE deal_id IS NULL AND request_number IS NOT NULL
+        """
+    )
+    conn.commit()
+
+    if not _column_exists("requests", "deal_id"):
+        cursor.execute("ALTER TABLE requests ADD COLUMN deal_id INTEGER")
+        conn.commit()
+
+    cursor.execute(
+        """
+        UPDATE requests
+        SET deal_id = (
+            SELECT id FROM agro_deals
+            WHERE agro_deals.request_number = requests.request_number
+        )
+        WHERE deal_id IS NULL
+        """
+    )
+    conn.commit()
 
 
 def _migrate_calendar_schema():
@@ -1382,6 +1498,10 @@ def update_request_status(
             AgroRequestWorkflow.on_request_done(actor, request_number)
         elif status == "CANCELLED":
             AgroRequestWorkflow.on_request_cancelled(actor, request_number)
+        from services.agro_erp import AgroErpService
+        AgroErpService.on_request_status_changed(actor, request_number, status)
+
+
 def get_request_status(
     request_number: int
 ):
@@ -1519,6 +1639,8 @@ def assign_manager(request_number, manager_id):
     AgroRequestWorkflow.on_request_assigned(
         manager_id, request_number, manager_id,
     )
+    from services.agro_erp import AgroErpService
+    AgroErpService.on_request_taken(manager_id, request_number, manager_id)
 def get_requests_by_manager(manager_id):
     cursor.execute(
         """
@@ -2893,12 +3015,38 @@ def format_drone_ai_context_stub(area: str, user_id: int) -> str:
 # ==========================================================
 
 AGRO_COUNTERPARTY_TYPES = {
+    "BUYER": "Покупатель",
+    "SELLER": "Продавец",
+    "BROKER": "Брокер",
+    "SHIPPER": "Перевозчик",
+    "PORT": "Порт",
+    "WAREHOUSE": "Склад",
+    "BANK": "Банк",
+    # legacy keys (backward compatible)
     "supplier": "Поставщик",
     "buyer": "Покупатель",
     "carrier": "Перевозчик",
     "broker": "Брокер",
     "forwarder": "Экспедитор",
 }
+
+AGRO_COUNTERPARTY_LEGACY_MAP = {
+    "supplier": "SELLER",
+    "buyer": "BUYER",
+    "carrier": "SHIPPER",
+    "broker": "BROKER",
+    "forwarder": "BROKER",
+}
+
+AGRO_ERP_DEAL_STATUSES = (
+    "NEW",
+    "NEGOTIATION",
+    "CONTRACT",
+    "LOGISTICS",
+    "PAYMENT",
+    "COMPLETED",
+    "CANCELLED",
+)
 
 AGRO_CONTRACT_TYPES = ("FOB", "CIF", "EXW", "FCA")
 
@@ -2911,11 +3059,28 @@ AGRO_DELIVERY_STATUSES = (
 )
 
 AGRO_DOCUMENT_TYPES = {
+    "CONTRACT": "Контракт",
+    "INVOICE": "Инвойс",
+    "BL": "Коносамент",
+    "COA": "Сертификат качества",
+    "SPECIFICATION": "Спецификация",
+    "LC": "Аккредитив",
+    "SWIFT": "SWIFT",
+    "OTHER": "Прочее",
+    # legacy keys
     "invoice": "Инвойс",
     "contract": "Контракт",
     "certificate": "Сертификат",
     "bill_of_lading": "Коносамент",
     "customs": "Таможенный документ",
+}
+
+AGRO_DOCUMENT_LEGACY_MAP = {
+    "invoice": "INVOICE",
+    "contract": "CONTRACT",
+    "certificate": "COA",
+    "bill_of_lading": "BL",
+    "customs": "OTHER",
 }
 
 AGRO_CALENDAR_EVENT_TYPES = {
@@ -2969,18 +3134,29 @@ def create_agro_counterparty(
     country: str = None,
     contact_info: str = None,
     notes: str = None,
+    city: str = None,
+    contacts: str = None,
+    email: str = None,
+    telegram: str = None,
+    rating: float = None,
 ) -> int:
-    # TODO: future implementation — validation and duplicate checks
+    if counterparty_type in AGRO_COUNTERPARTY_LEGACY_MAP:
+        counterparty_type = AGRO_COUNTERPARTY_LEGACY_MAP[counterparty_type]
     if counterparty_type not in AGRO_COUNTERPARTY_TYPES:
-        counterparty_type = "supplier"
+        counterparty_type = "BUYER"
+    contacts = contacts or contact_info
     cursor.execute(
         """
         INSERT INTO agro_counterparties (
-            name, counterparty_type, country, contact_info, notes, created_by
+            name, counterparty_type, country, contact_info, notes, created_by,
+            city, contacts, email, telegram, rating
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (name.strip(), counterparty_type, country, contact_info, notes, created_by),
+        (
+            name.strip(), counterparty_type, country, contacts, notes, created_by,
+            city, contacts, email, telegram, rating,
+        ),
     )
     conn.commit()
     cp_id = cursor.lastrowid
@@ -3001,7 +3177,9 @@ def get_agro_counterparties(
 ):
     # TODO: future implementation — team-wide counterparty registry
     query = """
-        SELECT id, name, counterparty_type, country, contact_info, notes, created_at
+        SELECT id, name, counterparty_type, country,
+               COALESCE(contacts, contact_info), notes, created_at,
+               city, email, telegram, rating
         FROM agro_counterparties
         WHERE created_by = ?
     """
@@ -3027,12 +3205,13 @@ def format_agro_counterparties_text(
         return f"👥 Контрагенты ({type_label}): записей нет."
     lines = [f"👥 Контрагенты ({type_label}):\n"]
     for row in rows:
-        cid, name, ctype, country, contact, notes, created_at = row
+        cid, name, ctype, country, contact, notes, created_at, city, email, telegram, rating = row
         label = AGRO_COUNTERPARTY_TYPES.get(ctype, ctype)
         lines.append(
             f"#{cid} · {name} · {label}\n"
-            f"   🌍 {country or '—'} · 📞 {contact or '—'}\n"
-            f"   🕒 {created_at}"
+            f"   🌍 {country or '—'} · 🏙 {city or '—'}\n"
+            f"   📞 {contact or '—'} · ✉ {email or '—'} · TG {telegram or '—'}\n"
+            f"   ⭐ {rating if rating is not None else '—'} · 🕒 {created_at}"
         )
         if notes:
             lines.append(f"   📝 {notes}")
@@ -3245,18 +3424,31 @@ def create_agro_document(
     request_number: int = None,
     file_id: int = None,
     notes: str = None,
+    deal_id: int = None,
+    comment: str = None,
 ) -> int:
-    # TODO: future implementation — link to central files storage
+    if doc_type in AGRO_DOCUMENT_LEGACY_MAP:
+        doc_type = AGRO_DOCUMENT_LEGACY_MAP[doc_type]
     if doc_type not in AGRO_DOCUMENT_TYPES:
-        doc_type = "invoice"
+        doc_type = "OTHER"
+    if deal_id is None and request_number is not None:
+        deal = get_agro_deal_by_request(request_number)
+        if deal:
+            deal_id = deal[0]
+    comment = comment or notes
     cursor.execute(
         """
         INSERT INTO agro_documents (
-            request_number, doc_type, title, file_id, notes, created_by
+            request_number, deal_id, doc_type, document_type, title,
+            file_id, notes, comment, created_by, uploaded_by,
+            created_at, uploaded_at
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         """,
-        (request_number, doc_type, title.strip(), file_id, notes, created_by),
+        (
+            request_number, deal_id, doc_type, doc_type, title.strip(),
+            file_id, comment, comment, created_by, created_by,
+        ),
     )
     conn.commit()
     doc_id = cursor.lastrowid
@@ -3271,15 +3463,56 @@ def create_agro_document(
     return doc_id
 
 
+def attach_agro_document_to_deal(
+    deal_id: int,
+    document_type: str,
+    uploaded_by: int,
+    file_id: int = None,
+    title: str = None,
+    comment: str = None,
+) -> int:
+    """Deal → Document → File Storage integration."""
+    if document_type in AGRO_DOCUMENT_LEGACY_MAP:
+        document_type = AGRO_DOCUMENT_LEGACY_MAP[document_type]
+    if document_type not in AGRO_DOCUMENT_TYPES:
+        document_type = "OTHER"
+
+    deal = get_agro_deal_by_id(deal_id)
+    if not deal:
+        return 0
+
+    request_number = deal[1]
+    title = title or f"{AGRO_DOCUMENT_TYPES.get(document_type, document_type)} · сделка #{deal_id}"
+
+    doc_id = create_agro_document(
+        created_by=uploaded_by,
+        doc_type=document_type,
+        title=title,
+        request_number=request_number,
+        file_id=file_id,
+        notes=comment,
+        deal_id=deal_id,
+        comment=comment,
+    )
+    log_audit(
+        uploaded_by,
+        "agro_document_attach",
+        "agro_trading",
+        f"deal:{deal_id}:doc:{doc_id}:file:{file_id}",
+    )
+    return doc_id
+
+
 def get_agro_documents(
     user_id: int,
     request_number: int = None,
     doc_type: str = None,
+    deal_id: int = None,
     limit: int = 20,
 ):
-    # TODO: future implementation — document versioning
     query = """
-        SELECT id, request_number, doc_type, title, file_id, notes, created_at
+        SELECT id, request_number, doc_type, title, file_id, notes, created_at,
+               deal_id, document_type, comment, uploaded_by, uploaded_at
         FROM agro_documents
         WHERE created_by = ?
     """
@@ -3287,33 +3520,55 @@ def get_agro_documents(
     if request_number is not None:
         query += " AND request_number = ?"
         params.append(request_number)
+    if deal_id is not None:
+        query += " AND deal_id = ?"
+        params.append(deal_id)
     if doc_type:
-        query += " AND doc_type = ?"
-        params.append(doc_type)
+        query += " AND (doc_type = ? OR document_type = ?)"
+        params.extend([doc_type, doc_type])
     query += " ORDER BY id DESC LIMIT ?"
     params.append(limit)
     cursor.execute(query, params)
     return cursor.fetchall()
 
 
+def get_agro_documents_by_deal(deal_id: int, limit: int = 20):
+    cursor.execute(
+        """
+        SELECT id, document_type, title, file_id, uploaded_by, uploaded_at, comment
+        FROM agro_documents
+        WHERE deal_id = ?
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (deal_id, limit),
+    )
+    return cursor.fetchall()
+
+
 def format_agro_documents_text(user_id: int, request_number: int = None) -> str:
-    # TODO: future implementation — document list with file links
     rows = get_agro_documents(user_id, request_number=request_number)
     if not rows:
         return "📄 Документы: записей нет."
     lines = ["📄 Документы:\n"]
-    doc_labels = ", ".join(AGRO_DOCUMENT_TYPES.values())
+    doc_labels = ", ".join(
+        v for k, v in AGRO_DOCUMENT_TYPES.items() if k.isupper()
+    )
     lines.append(f"Типы: {doc_labels}\n")
     for row in rows:
-        did, req_num, dtype, title, file_id, notes, created_at = row
-        dtype_label = AGRO_DOCUMENT_TYPES.get(dtype, dtype)
+        (
+            did, req_num, dtype, title, file_id, notes, created_at,
+            deal_id, document_type, comment, uploaded_by, uploaded_at,
+        ) = row
+        dtype_label = AGRO_DOCUMENT_TYPES.get(document_type or dtype, document_type or dtype)
         lines.append(
             f"#{did} · {title} · {dtype_label}\n"
-            f"   📋 заявка #{req_num or '—'} · 📁 file #{file_id or '—'}\n"
-            f"   🕒 {created_at}"
+            f"   📋 заявка #{req_num or '—'} · 🤝 сделка #{deal_id or '—'}\n"
+            f"   📁 file #{file_id or '—'} · 👤 {uploaded_by or '—'}\n"
+            f"   🕒 {uploaded_at or created_at}"
         )
-        if notes:
-            lines.append(f"   📝 {notes}")
+        if comment or notes:
+            lines.append(f"   💬 {comment or notes}")
     return "\n".join(lines)
 
 
@@ -3532,20 +3787,107 @@ def create_agro_deal(
     status: str = "NEW",
 ) -> int:
     from services.statuses import normalize_status
+    from datetime import datetime
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
     cursor.execute(
         """
         INSERT OR IGNORE INTO agro_deals (
-            request_number, client_id, product, manager_id, status
+            request_number, request_id, client_id, buyer_id, product,
+            manager_id, status, erp_status, created_at, updated_at
         )
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (request_number, client_id, product, manager_id, normalize_status(status)),
+        (
+            request_number, request_number, client_id, client_id, product,
+            manager_id, normalize_status(status), "NEW", now, now,
+        ),
     )
     conn.commit()
     if cursor.rowcount == 0:
         deal = get_agro_deal_by_request(request_number)
         return deal[0] if deal else 0
-    return cursor.lastrowid
+    deal_id = cursor.lastrowid
+    link_request_to_deal(request_number, deal_id)
+    return deal_id
+
+
+def link_request_to_deal(request_number: int, deal_id: int) -> bool:
+    cursor.execute(
+        "UPDATE requests SET deal_id = ? WHERE request_number = ?",
+        (deal_id, request_number),
+    )
+    cursor.execute(
+        """
+        UPDATE agro_deals
+        SET request_id = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (request_number, deal_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def activate_agro_erp_deal(
+    request_number: int,
+    buyer_id: int,
+    manager_id: int,
+    product: str = None,
+    erp_status: str = "NEGOTIATION",
+) -> int:
+    from datetime import datetime
+
+    deal = get_agro_deal_by_request(request_number)
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    if deal:
+        deal_id = deal[0]
+        update_agro_deal_erp(
+            request_number,
+            buyer_id=buyer_id,
+            manager_id=manager_id,
+            product=product,
+            erp_status=erp_status,
+            request_id=request_number,
+            updated_at=now,
+        )
+        link_request_to_deal(request_number, deal_id)
+        return deal_id
+
+    cursor.execute(
+        """
+        INSERT INTO agro_deals (
+            request_number, request_id, client_id, buyer_id, product,
+            manager_id, status, erp_status, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            request_number, request_number, buyer_id, buyer_id, product,
+            manager_id, "NEW", erp_status, now, now,
+        ),
+    )
+    conn.commit()
+    deal_id = cursor.lastrowid
+    link_request_to_deal(request_number, deal_id)
+    return deal_id
+
+
+def get_agro_deal_by_id(deal_id: int):
+    cursor.execute(
+        """
+        SELECT id, request_number, client_id, product, status, manager_id,
+               workflow_process_id, manager_task_id, document_folder_id,
+               calendar_event_id, contract_id, logistics_id, finance_id,
+               report_file_id, created_at, closed_at,
+               request_id, buyer_id, seller_id, quantity, unit, price, currency,
+               incoterms, loading_port, destination_port, payment_method,
+               erp_status, notes, updated_at
+        FROM agro_deals
+        WHERE id = ?
+        """,
+        (deal_id,),
+    )
+    return cursor.fetchone()
 
 
 def get_agro_deal_by_request(request_number: int):
@@ -3554,13 +3896,62 @@ def get_agro_deal_by_request(request_number: int):
         SELECT id, request_number, client_id, product, status, manager_id,
                workflow_process_id, manager_task_id, document_folder_id,
                calendar_event_id, contract_id, logistics_id, finance_id,
-               report_file_id, created_at, closed_at
+               report_file_id, created_at, closed_at,
+               request_id, buyer_id, seller_id, quantity, unit, price, currency,
+               incoterms, loading_port, destination_port, payment_method,
+               erp_status, notes, updated_at
         FROM agro_deals
         WHERE request_number = ?
         """,
         (request_number,),
     )
     return cursor.fetchone()
+
+
+def get_agro_erp_deals(user_id: int, limit: int = 20):
+    cursor.execute(
+        """
+        SELECT id, request_number, product, erp_status, manager_id, buyer_id,
+               quantity, unit, price, currency, created_at, updated_at
+        FROM agro_deals
+        WHERE manager_id = ? OR buyer_id = ? OR client_id = ?
+        ORDER BY id DESC
+        LIMIT ?
+        """,
+        (user_id, user_id, user_id, limit),
+    )
+    return cursor.fetchall()
+
+
+def update_agro_deal_erp(request_number: int, **fields) -> bool:
+    if not fields:
+        return False
+    allowed = {
+        "request_id", "buyer_id", "seller_id", "product", "quantity", "unit",
+        "price", "currency", "incoterms", "loading_port", "destination_port",
+        "payment_method", "manager_id", "erp_status", "notes", "updated_at",
+        "closed_at", "status",
+    }
+    parts = []
+    params = []
+    for key, value in fields.items():
+        if key not in allowed or value is None:
+            continue
+        parts.append(f"{key} = ?")
+        params.append(value)
+    if not parts:
+        return False
+    if "updated_at" not in fields:
+        from datetime import datetime
+        parts.append("updated_at = ?")
+        params.append(datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+    params.append(request_number)
+    cursor.execute(
+        f"UPDATE agro_deals SET {', '.join(parts)} WHERE request_number = ?",
+        params,
+    )
+    conn.commit()
+    return cursor.rowcount > 0
 
 
 def update_agro_deal(request_number: int, **fields) -> bool:
@@ -3571,6 +3962,9 @@ def update_agro_deal(request_number: int, **fields) -> bool:
         "product", "status", "manager_id", "workflow_process_id",
         "manager_task_id", "document_folder_id", "calendar_event_id",
         "contract_id", "logistics_id", "finance_id", "report_file_id", "closed_at",
+        "request_id", "buyer_id", "seller_id", "quantity", "unit", "price",
+        "currency", "incoterms", "loading_port", "destination_port",
+        "payment_method", "erp_status", "notes", "updated_at",
     }
     parts = []
     params = []
@@ -3611,8 +4005,25 @@ def close_agro_deal(request_number: int, user_id: int) -> bool:
     return update_agro_deal(
         request_number,
         status=normalize_status("DONE"),
+        erp_status="COMPLETED",
         closed_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
     )
+
+
+def format_agro_erp_deals_text(user_id: int, limit: int = 15) -> str:
+    rows = get_agro_erp_deals(user_id, limit=limit)
+    if not rows:
+        return "📋 Agro ERP сделки: записей нет."
+    lines = ["📋 Agro ERP сделки:\n"]
+    for row in rows:
+        did, req_num, product, erp_status, mgr, buyer, qty, unit, price, currency, created, updated = row
+        lines.append(
+            f"#{did} · заявка #{req_num} · {erp_status or '—'}\n"
+            f"   📦 {product or '—'} · 👤 buyer {buyer or '—'} · 👨‍💼 mgr {mgr or '—'}\n"
+            f"   📊 {qty or '—'} {unit or ''} · 💰 {price or '—'} {currency or ''}\n"
+            f"   🕒 {updated or created}"
+        )
+    return "\n".join(lines)
 
 
 def format_agro_deal_text(request_number: int) -> str:
@@ -3623,14 +4034,24 @@ def format_agro_deal_text(request_number: int) -> str:
         did, req_num, client_id, product, status, manager_id,
         workflow_id, task_id, folder_id, cal_id, contract_id,
         logistics_id, finance_id, report_id, created_at, closed_at,
+        request_id, buyer_id, seller_id, quantity, unit, price, currency,
+        incoterms, loading_port, destination_port, payment_method,
+        erp_status, notes, updated_at,
     ) = deal
     return (
         f"🌾 Agro-сделка #{did}\n\n"
-        f"📋 Заявка: #{req_num}\n"
+        f"📋 Заявка: #{req_num} (request_id: {request_id or req_num})\n"
         f"📦 Товар: {product or '—'}\n"
-        f"📊 Статус: {status}\n"
-        f"👤 Клиент ID: {client_id}\n"
-        f"👨‍💼 Менеджер ID: {manager_id or '—'}\n\n"
+        f"📊 CRM статус: {status}\n"
+        f"📊 ERP статус: {erp_status or '—'}\n"
+        f"👤 Покупатель ID: {buyer_id or client_id}\n"
+        f"🏭 Продавец ID: {seller_id or '—'}\n"
+        f"👨‍💼 Менеджер ID: {manager_id or '—'}\n"
+        f"📊 Объём: {quantity or '—'} {unit or ''}\n"
+        f"💰 Цена: {price or '—'} {currency or 'USD'}\n"
+        f"🌐 Incoterms: {incoterms or '—'}\n"
+        f"⚓ {loading_port or '—'} → {destination_port or '—'}\n"
+        f"💳 Оплата: {payment_method or '—'}\n\n"
         f"⚙ Workflow: #{workflow_id or '—'}\n"
         f"✅ Задача: #{task_id or '—'}\n"
         f"📅 Календарь: #{cal_id or '—'}\n"
@@ -3639,7 +4060,9 @@ def format_agro_deal_text(request_number: int) -> str:
         f"🚢 Логистика: #{logistics_id or '—'}\n"
         f"💵 Финансы: #{finance_id or '—'}\n"
         f"📊 Отчёт: #{report_id or '—'}\n\n"
+        f"📝 {notes or '—'}\n\n"
         f"🕒 Создана: {created_at}\n"
+        f"🔄 Обновлена: {updated_at or '—'}\n"
         f"🏁 Закрыта: {closed_at or '—'}"
     )
 
@@ -3679,13 +4102,13 @@ def generate_agro_deal_report(request_number: int, user_id: int) -> int:
         description=content[:500],
         tags=f"report,deal,{request_number}",
     )
-    create_agro_document(
-        created_by=user_id,
-        doc_type="contract",
-        title=f"Отчёт сделки #{request_number}",
-        request_number=request_number,
+    attach_agro_document_to_deal(
+        deal_id=deal[0],
+        document_type="OTHER",
+        uploaded_by=user_id,
         file_id=file_id,
-        notes=f"generated_at:{datetime.utcnow().isoformat()}",
+        title=f"Отчёт сделки #{request_number}",
+        comment=f"generated_at:{datetime.utcnow().isoformat()}",
     )
     update_agro_deal(request_number, report_file_id=file_id)
     log_audit(user_id, "agro_deal_report", "agro_trading", f"deal:{request_number}")

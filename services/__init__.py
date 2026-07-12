@@ -19,6 +19,7 @@ from services.search_service import SearchService
 from services.platform_test import PlatformTestService
 from services.system_health import SystemHealthService
 from services.agro_request_workflow import AgroRequestWorkflow
+from services.agro_erp import AgroErpService
 
 __all__ = [
     "UNIFIED_STATUSES",
@@ -41,4 +42,5 @@ __all__ = [
     "PlatformTestService",
     "SystemHealthService",
     "AgroRequestWorkflow",
+    "AgroErpService",
 ]

@@ -176,7 +176,10 @@ from database import (
     format_agro_ai_context_stub,
     get_agro_ai_context,
     format_agro_deal_text,
+    format_agro_erp_deals_text,
     get_agro_deal_by_request,
+    get_agro_documents_by_deal,
+    AGRO_ERP_DEAL_STATUSES,
     SEARCH_DOMAINS,
     SEARCH_SCOPES,
     global_search,
@@ -718,6 +721,7 @@ AGRO_CATALOG_TEXT = "Выберите товарную группу:"
 
 AGRO_CRM_BUTTONS = {
     "👥 Контрагенты",
+    "📋 Сделки",
     "📑 Контракты",
     "🚢 Логистика",
     "📄 Документы",
@@ -940,6 +944,23 @@ async def agro_crm_screen(message: Message):
         log_audit(user_id, "open_stub", "agro_trading", "counterparties")
         return
 
+    if screen == "📋 Сделки":
+        active_agro_sub[user_id] = "deals"
+        statuses = ", ".join(AGRO_ERP_DEAL_STATUSES)
+        await message.answer(
+            f"📋 Agro ERP Сделки\n\n"
+            f"ERP-статусы: {statuses}\n\n"
+            f"{format_agro_erp_deals_text(user_id)}\n\n"
+            "Отправьте номер заявки для деталей сделки.",
+            reply_markup=agro_menu(),
+        )
+        await message.answer(
+            "Действия:",
+            reply_markup=agro_module_actions_inline("deals"),
+        )
+        log_audit(user_id, "open", "agro_trading", "erp_deals")
+        return
+
     section_map = {
         "📑 Контракты": ("contracts", format_agro_contracts_text),
         "🚢 Логистика": ("logistics", format_agro_logistics_text),
@@ -992,6 +1013,37 @@ async def agro_sub_back(message: Message):
         "Agro Trading",
         reply_markup=agro_menu(),
     )
+
+
+@router.message(
+    lambda m: (
+        active_module.get(m.from_user.id) == "agro"
+        and active_agro_sub.get(m.from_user.id) == "deals"
+        and m.text
+        and m.text.isdigit()
+    )
+)
+async def agro_erp_deal_detail(message: Message):
+    user_id = message.from_user.id
+    request_number = int(message.text)
+    if not RequestAuthService.can_access_agro_requests(user_id):
+        await message.answer("Нет доступа к Agro ERP.", reply_markup=agro_menu())
+        return
+    deal_text = format_agro_deal_text(request_number)
+    deal = get_agro_deal_by_request(request_number)
+    docs_block = ""
+    if deal:
+        docs = get_agro_documents_by_deal(deal[0], limit=5)
+        if docs:
+            docs_block = "\n\n📄 Документы сделки:\n"
+            for doc in docs:
+                did, dtype, title, file_id, uploader, uploaded, comment = doc
+                docs_block += f"  #{did} {title} · {dtype} · file #{file_id or '—'}\n"
+    await message.answer(
+        deal_text + docs_block,
+        reply_markup=agro_deal_actions_inline(request_number),
+    )
+    log_audit(user_id, "agro_erp_deal_view", "agro_trading", str(request_number))
 
 
 # ==========================================================

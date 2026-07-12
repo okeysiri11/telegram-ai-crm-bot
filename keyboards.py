@@ -490,14 +490,15 @@ def agro_menu():
             ],
             [
                 KeyboardButton(text="👥 Контрагенты"),
-                KeyboardButton(text="📄 Документы")
+                KeyboardButton(text="📋 Сделки"),
             ],
             [
+                KeyboardButton(text="📄 Документы"),
                 KeyboardButton(text="💵 Финансы"),
-                KeyboardButton(text="📊 Отчеты Agro")
             ],
             [
-                KeyboardButton(text="🤖 AI Agro")
+                KeyboardButton(text="📊 Отчеты Agro"),
+                KeyboardButton(text="🤖 AI Agro"),
             ],
             [
                 KeyboardButton(text="⬅️ Назад")
