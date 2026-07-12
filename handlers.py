@@ -177,9 +177,9 @@ from database import (
     get_agro_ai_context,
     format_agro_deal_text,
     format_agro_erp_deals_text,
+    format_agro_deal_hub_section,
     get_agro_deal_by_request,
     get_agro_documents_by_deal,
-    AGRO_ERP_DEAL_STATUSES,
     SEARCH_DOMAINS,
     SEARCH_SCOPES,
     global_search,
@@ -251,6 +251,7 @@ from keyboards import (
     agro_counterparties_menu,
     agro_module_actions_inline,
     agro_deal_actions_inline,
+    agro_deal_hub_menu,
     search_module_menu,
     search_module_actions_inline,
     workflow_module_menu,
@@ -721,6 +722,7 @@ AGRO_CATALOG_TEXT = "Выберите товарную группу:"
 
 AGRO_CRM_BUTTONS = {
     "👥 Контрагенты",
+    "📑 Сделки",
     "📋 Сделки",
     "📑 Контракты",
     "🚢 Логистика",
@@ -728,6 +730,27 @@ AGRO_CRM_BUTTONS = {
     "💵 Финансы",
     "📊 Отчеты Agro",
     "🤖 AI Agro",
+}
+
+AGRO_DEAL_HUB_BUTTONS = {
+    "▶️ Активные сделки",
+    "🤝 Переговоры",
+    "📑 Контракты ERP",
+    "🚢 Логистика ERP",
+    "💳 Платежи",
+    "🏁 Закрытые сделки",
+    "📊 Аналитика сделок",
+    "⬅️ Назад в Agro",
+}
+
+AGRO_DEAL_HUB_BUTTON_TO_SECTION = {
+    "▶️ Активные сделки": "active",
+    "🤝 Переговоры": "negotiation",
+    "📑 Контракты ERP": "contracts",
+    "🚢 Логистика ERP": "logistics",
+    "💳 Платежи": "payments",
+    "🏁 Закрытые сделки": "closed",
+    "📊 Аналитика сделок": "analytics",
 }
 
 AGRO_COUNTERPARTY_BUTTONS = set(AGRO_COUNTERPARTY_BUTTON_TO_TYPE.keys())
@@ -944,21 +967,14 @@ async def agro_crm_screen(message: Message):
         log_audit(user_id, "open_stub", "agro_trading", "counterparties")
         return
 
-    if screen == "📋 Сделки":
-        active_agro_sub[user_id] = "deals"
-        statuses = ", ".join(AGRO_ERP_DEAL_STATUSES)
+    if screen in ("📑 Сделки", "📋 Сделки"):
+        active_agro_sub[user_id] = "deal_hub"
         await message.answer(
-            f"📋 Agro ERP Сделки\n\n"
-            f"ERP-статусы: {statuses}\n\n"
-            f"{format_agro_erp_deals_text(user_id)}\n\n"
-            "Отправьте номер заявки для деталей сделки.",
-            reply_markup=agro_menu(),
+            "📑 Сделки — Deal Hub\n\n"
+            "Центр управления ERP-сделками.",
+            reply_markup=agro_deal_hub_menu(),
         )
-        await message.answer(
-            "Действия:",
-            reply_markup=agro_module_actions_inline("deals"),
-        )
-        log_audit(user_id, "open", "agro_trading", "erp_deals")
+        log_audit(user_id, "open", "agro_trading", "deal_hub")
         return
 
     section_map = {
@@ -1017,8 +1033,34 @@ async def agro_sub_back(message: Message):
 
 @router.message(
     lambda m: (
+        m.text in AGRO_DEAL_HUB_BUTTONS
+        and active_module.get(m.from_user.id) == "agro"
+        and active_agro_sub.get(m.from_user.id) == "deal_hub"
+    )
+)
+async def agro_deal_hub_screen(message: Message):
+    user_id = message.from_user.id
+    screen = message.text
+
+    if screen == "⬅️ Назад в Agro":
+        active_agro_sub.pop(user_id, None)
+        await message.answer("Agro Trading", reply_markup=agro_menu())
+        return
+
+    if not RequestAuthService.can_access_agro_requests(user_id):
+        await message.answer("Нет доступа.", reply_markup=agro_menu())
+        return
+
+    section = AGRO_DEAL_HUB_BUTTON_TO_SECTION.get(screen, "active")
+    text = format_agro_deal_hub_section(user_id, section)
+    await message.answer(text, reply_markup=agro_deal_hub_menu())
+    log_audit(user_id, "deal_hub", "agro_trading", section)
+
+
+@router.message(
+    lambda m: (
         active_module.get(m.from_user.id) == "agro"
-        and active_agro_sub.get(m.from_user.id) == "deals"
+        and active_agro_sub.get(m.from_user.id) in ("deals", "deal_hub")
         and m.text
         and m.text.isdigit()
     )
@@ -1039,6 +1081,18 @@ async def agro_erp_deal_detail(message: Message):
             for doc in docs:
                 did, dtype, title, file_id, uploader, uploaded, comment = doc
                 docs_block += f"  #{did} {title} · {dtype} · file #{file_id or '—'}\n"
+        from database import get_agro_deal_calendar_links, get_agro_finance_by_deal
+        cal_links = get_agro_deal_calendar_links(deal[0])
+        if cal_links:
+            docs_block += "\n📅 Календарь сделки:\n"
+            for link in cal_links:
+                _, _, cal_id, ev_type, created = link
+                docs_block += f"  · {ev_type}: event #{cal_id}\n"
+        fin = get_agro_finance_by_deal(deal[0])
+        if fin:
+            docs_block += (
+                f"\n💳 Финансы: {fin[2]} {fin[3]} · {fin[7]} · прибыль {fin[6] or '—'}"
+            )
     await message.answer(
         deal_text + docs_block,
         reply_markup=agro_deal_actions_inline(request_number),

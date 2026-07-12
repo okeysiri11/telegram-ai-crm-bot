@@ -490,7 +490,7 @@ def agro_menu():
             ],
             [
                 KeyboardButton(text="👥 Контрагенты"),
-                KeyboardButton(text="📋 Сделки"),
+                KeyboardButton(text="📑 Сделки"),
             ],
             [
                 KeyboardButton(text="📄 Документы"),
@@ -508,6 +508,32 @@ def agro_menu():
     )
 
     return keyboard
+
+
+def agro_deal_hub_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="▶️ Активные сделки"),
+                KeyboardButton(text="🤝 Переговоры"),
+            ],
+            [
+                KeyboardButton(text="📑 Контракты ERP"),
+                KeyboardButton(text="🚢 Логистика ERP"),
+            ],
+            [
+                KeyboardButton(text="💳 Платежи"),
+                KeyboardButton(text="🏁 Закрытые сделки"),
+            ],
+            [
+                KeyboardButton(text="📊 Аналитика сделок"),
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад в Agro"),
+            ],
+        ],
+        resize_keyboard=True,
+    )
 
 
 def agro_deal_actions_inline(request_number: int) -> InlineKeyboardMarkup:

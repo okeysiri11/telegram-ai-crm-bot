@@ -454,6 +454,109 @@ def _migrate_schema():
     _migrate_multi_agent_platform()
     _migrate_phase4b()
     _migrate_agro_erp_phase1()
+    _migrate_agro_erp_phase2()
+
+
+def _migrate_agro_erp_phase2():
+    """Agro ERP Phase 2 — finance fields, deal-calendar links, workflow rules."""
+    finance_columns = {
+        "deal_id": "INTEGER",
+        "amount": "REAL",
+        "commission": "REAL DEFAULT 0",
+        "expenses": "REAL DEFAULT 0",
+        "profit": "REAL",
+        "payment_status": "TEXT DEFAULT 'UNPAID'",
+        "payment_date": "TEXT",
+    }
+    for column, definition in finance_columns.items():
+        if not _column_exists("agro_finance", column):
+            cursor.execute(
+                f"ALTER TABLE agro_finance ADD COLUMN {column} {definition}"
+            )
+    conn.commit()
+
+    cursor.execute(
+        """
+        UPDATE agro_finance
+        SET amount = COALESCE(amount, deal_amount),
+            deal_id = (
+                SELECT id FROM agro_deals
+                WHERE agro_deals.request_number = agro_finance.request_number
+            )
+        WHERE amount IS NULL OR deal_id IS NULL
+        """
+    )
+    conn.commit()
+
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS agro_deal_calendar_links (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            deal_id INTEGER NOT NULL,
+            calendar_event_id INTEGER NOT NULL,
+            event_type TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(deal_id, event_type)
+        )
+        """
+    )
+    conn.commit()
+
+    cursor.execute(
+        """
+        INSERT OR IGNORE INTO agro_deal_calendar_links (deal_id, calendar_event_id, event_type)
+        SELECT id, calendar_event_id, 'deal_created'
+        FROM agro_deals
+        WHERE calendar_event_id IS NOT NULL
+        """
+    )
+    conn.commit()
+
+    _seed_agro_erp_workflow_rules()
+
+
+def _seed_agro_erp_workflow_rules():
+    rules = [
+        ("REQUEST_CREATED", "agro_trading", "send_notification",
+         '{"title":"Agro заявка создана","priority":"HIGH"}'),
+        ("REQUEST_TAKEN", "agro_trading", "send_notification",
+         '{"title":"Заявка взята в работу","priority":"HIGH"}'),
+        ("DEAL_CREATED", "agro_trading", "send_notification",
+         '{"title":"ERP сделка создана","priority":"HIGH"}'),
+        ("DEAL_CREATED", "agro_trading", "create_calendar_event",
+         '{"event_type":"deal_created","title":"Создание сделки"}'),
+        ("CONTRACT_SIGNED", "agro_trading", "send_notification",
+         '{"title":"Контракт подписан","priority":"NORMAL"}'),
+        ("CONTRACT_SIGNED", "agro_trading", "create_calendar_event",
+         '{"event_type":"contract_signed","title":"Подписание контракта"}'),
+        ("SHIPMENT_STARTED", "agro_trading", "send_notification",
+         '{"title":"Отгрузка начата","priority":"NORMAL"}'),
+        ("SHIPMENT_STARTED", "agro_trading", "create_calendar_event",
+         '{"event_type":"loading","title":"Погрузка"}'),
+        ("PAYMENT_RECEIVED", "agro_trading", "send_notification",
+         '{"title":"Оплата получена","priority":"INFO"}'),
+        ("PAYMENT_RECEIVED", "agro_trading", "create_calendar_event",
+         '{"event_type":"payment","title":"Оплата"}'),
+        ("DEAL_COMPLETED", "agro_trading", "send_notification",
+         '{"title":"Сделка завершена","priority":"INFO"}'),
+        ("DEAL_COMPLETED", "agro_trading", "create_calendar_event",
+         '{"event_type":"deal_closed","title":"Закрытие сделки"}'),
+    ]
+    for trigger, module, action, payload in rules:
+        cursor.execute(
+            "SELECT id FROM workflow_rules WHERE trigger_code = ? AND action_type = ?",
+            (trigger, action),
+        )
+        if cursor.fetchone():
+            continue
+        cursor.execute(
+            """
+            INSERT INTO workflow_rules (trigger_code, module, action_type, action_payload, active)
+            VALUES (?, ?, ?, ?, 1)
+            """,
+            (trigger, module, action, payload),
+        )
+    conn.commit()
 
 
 def _migrate_agro_erp_phase1():
@@ -1411,6 +1514,18 @@ def create_request(
         client_name=client_name,
     )
     log_audit(client_id, "create_request", "agro_trading", f"#{request_number}|{product}")
+    from services.agro_erp_workflow import AgroErpWorkflow
+    AgroErpWorkflow.emit(
+        "REQUEST_CREATED",
+        client_id,
+        entity_type="request",
+        entity_id=request_number,
+        payload={
+            "title": f"Заявка #{request_number} создана",
+            "message": f"{client_name} · {product}".strip(" ·"),
+            "priority": "HIGH",
+        },
+    )
     return request_number
 
 
@@ -3048,6 +3163,23 @@ AGRO_ERP_DEAL_STATUSES = (
     "CANCELLED",
 )
 
+AGRO_PAYMENT_STATUSES = (
+    "UNPAID",
+    "PARTIAL",
+    "PAID",
+    "OVERDUE",
+)
+
+AGRO_DEAL_HUB_SECTIONS = {
+    "active": "Активные сделки",
+    "negotiation": "Переговоры",
+    "contracts": "Контракты",
+    "logistics": "Логистика",
+    "payments": "Платежи",
+    "closed": "Закрытые сделки",
+    "analytics": "Аналитика",
+}
+
 AGRO_CONTRACT_TYPES = ("FOB", "CIF", "EXW", "FCA")
 
 AGRO_CONTRACT_STATUSES = (
@@ -3581,26 +3713,45 @@ def create_agro_finance(
     debt_amount: float = None,
     payment_schedule: str = None,
     notes: str = None,
+    deal_id: int = None,
+    amount: float = None,
+    commission: float = 0,
+    expenses: float = 0,
+    payment_status: str = "UNPAID",
+    payment_date: str = None,
 ) -> int:
-    # TODO: future implementation — auto debt calculation and payment tracking
-    if debt_amount is None and deal_amount is not None:
-        debt_amount = max(deal_amount - (paid_amount or 0), 0)
+    amount = amount if amount is not None else deal_amount
+    if debt_amount is None and amount is not None:
+        debt_amount = max(amount - (paid_amount or 0), 0)
+    profit = None
+    if amount is not None:
+        profit = amount - (commission or 0) - (expenses or 0)
+    if deal_id is None and request_number is not None:
+        deal = get_agro_deal_by_request(request_number)
+        if deal:
+            deal_id = deal[0]
+    if payment_status not in AGRO_PAYMENT_STATUSES:
+        payment_status = "UNPAID"
     cursor.execute(
         """
         INSERT INTO agro_finance (
-            request_number, deal_amount, currency, paid_amount,
-            debt_amount, payment_schedule, notes, created_by
+            request_number, deal_id, deal_amount, amount, currency, paid_amount,
+            debt_amount, commission, expenses, profit, payment_status, payment_date,
+            payment_schedule, notes, created_by
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
-            request_number, deal_amount, currency, paid_amount,
-            debt_amount, payment_schedule, notes, created_by,
+            request_number, deal_id, amount, amount, currency, paid_amount,
+            debt_amount, commission, expenses, profit, payment_status, payment_date,
+            payment_schedule, notes, created_by,
         ),
     )
     conn.commit()
     fin_id = cursor.lastrowid
-    _integrate_agro_finance_created(fin_id, created_by, request_number, deal_amount, currency)
+    _integrate_agro_finance_created(fin_id, created_by, request_number, amount, currency)
+    if deal_id and payment_status == "PAID":
+        _agro_erp_post_payment_received(deal_id, created_by, fin_id)
     return fin_id
 
 
@@ -3624,12 +3775,13 @@ def _integrate_agro_finance_created(
 def get_agro_finance(
     user_id: int,
     request_number: int = None,
+    deal_id: int = None,
     limit: int = 20,
 ):
-    # TODO: future implementation — aggregate debt reports
     query = """
-        SELECT id, request_number, deal_amount, currency, paid_amount,
-               debt_amount, payment_schedule, notes, created_at
+        SELECT id, request_number, deal_id, deal_amount, amount, currency,
+               paid_amount, debt_amount, commission, expenses, profit,
+               payment_status, payment_date, payment_schedule, notes, created_at
         FROM agro_finance
         WHERE created_by = ?
     """
@@ -3637,25 +3789,82 @@ def get_agro_finance(
     if request_number is not None:
         query += " AND request_number = ?"
         params.append(request_number)
+    if deal_id is not None:
+        query += " AND deal_id = ?"
+        params.append(deal_id)
     query += " ORDER BY id DESC LIMIT ?"
     params.append(limit)
     cursor.execute(query, params)
     return cursor.fetchall()
 
 
+def get_agro_finance_by_deal(deal_id: int):
+    cursor.execute(
+        """
+        SELECT id, deal_id, amount, currency, commission, expenses, profit,
+               payment_status, payment_date, paid_amount, debt_amount, created_at
+        FROM agro_finance
+        WHERE deal_id = ?
+        ORDER BY id DESC LIMIT 1
+        """,
+        (deal_id,),
+    )
+    return cursor.fetchone()
+
+
+def update_agro_finance_payment(
+    finance_id: int,
+    user_id: int,
+    payment_status: str,
+    paid_amount: float = None,
+    payment_date: str = None,
+) -> bool:
+    if payment_status not in AGRO_PAYMENT_STATUSES:
+        return False
+    cursor.execute(
+        "SELECT deal_id, amount, commission, expenses, paid_amount FROM agro_finance WHERE id = ?",
+        (finance_id,),
+    )
+    row = cursor.fetchone()
+    if not row:
+        return False
+    deal_id, amount, commission, expenses, old_paid = row
+    paid = paid_amount if paid_amount is not None else old_paid
+    debt = max((amount or 0) - (paid or 0), 0)
+    profit = (amount or 0) - (commission or 0) - (expenses or 0)
+    cursor.execute(
+        """
+        UPDATE agro_finance
+        SET payment_status = ?, paid_amount = ?, debt_amount = ?,
+            profit = ?, payment_date = COALESCE(?, payment_date)
+        WHERE id = ?
+        """,
+        (payment_status, paid, debt, profit, payment_date, finance_id),
+    )
+    conn.commit()
+    if deal_id and payment_status in ("PAID", "PARTIAL"):
+        _agro_erp_post_payment_received(deal_id, user_id, finance_id)
+    return cursor.rowcount > 0
+
+
 def format_agro_finance_text(user_id: int, request_number: int = None) -> str:
-    # TODO: future implementation — payment schedule UI
     rows = get_agro_finance(user_id, request_number=request_number)
     if not rows:
         return "💵 Финансы: записей нет."
     lines = ["💵 Финансы:\n"]
     for row in rows:
-        fid, req_num, amount, currency, paid, debt, schedule, notes, created_at = row
+        (
+            fid, req_num, deal_id, deal_amount, amount, currency,
+            paid, debt, commission, expenses, profit,
+            pay_status, pay_date, schedule, notes, created_at,
+        ) = row
+        amt = amount or deal_amount or 0
         lines.append(
-            f"#{fid} · заявка #{req_num or '—'}\n"
-            f"   💰 {amount or 0} {currency} · оплачено {paid or 0}\n"
-            f"   📉 задолженность {debt or 0}\n"
-            f"   📅 график: {schedule or '—'}\n"
+            f"#{fid} · сделка #{deal_id or '—'} · заявка #{req_num or '—'}\n"
+            f"   💰 {amt} {currency} · {pay_status or 'UNPAID'}\n"
+            f"   📊 комиссия {commission or 0} · расходы {expenses or 0} · прибыль {profit or '—'}\n"
+            f"   ✅ оплачено {paid or 0} · 📉 долг {debt or 0}\n"
+            f"   📅 оплата: {pay_date or '—'} · график: {schedule or '—'}\n"
             f"   🕒 {created_at}"
         )
         if notes:
@@ -3701,10 +3910,10 @@ def get_agro_report_summary(user_id: int) -> dict:
     finance_rows = get_agro_finance(user_id, limit=100)
     contracts = get_agro_contracts(user_id, limit=100)
     total_deals = len(contracts)
-    total_volume = sum(r[2] or 0 for r in finance_rows)
-    total_paid = sum(r[4] or 0 for r in finance_rows)
-    total_debt = sum(r[5] or 0 for r in finance_rows)
-    total_profit = total_paid - total_debt if finance_rows else 0
+    total_volume = sum((r[4] or r[3] or 0) for r in finance_rows)
+    total_paid = sum(r[6] or 0 for r in finance_rows)
+    total_debt = sum(r[7] or 0 for r in finance_rows)
+    total_profit = sum(r[10] or 0 for r in finance_rows) if finance_rows else 0
     return {
         "deals_count": total_deals,
         "volume": total_volume,
@@ -3987,27 +4196,213 @@ def update_agro_deal(request_number: int, **fields) -> bool:
 
 
 def bind_agro_deal_contract(request_number: int, contract_id: int) -> bool:
-    return update_agro_deal(request_number, contract_id=contract_id)
+    ok = update_agro_deal(request_number, contract_id=contract_id, erp_status="CONTRACT")
+    if ok:
+        _agro_erp_post_contract_signed(request_number, contract_id)
+    return ok
 
 
 def bind_agro_deal_logistics(request_number: int, logistics_id: int) -> bool:
-    return update_agro_deal(request_number, logistics_id=logistics_id)
+    ok = update_agro_deal(request_number, logistics_id=logistics_id, erp_status="LOGISTICS")
+    if ok:
+        _agro_erp_post_shipment_started(request_number, logistics_id)
+    return ok
 
 
 def bind_agro_deal_finance(request_number: int, finance_id: int) -> bool:
-    return update_agro_deal(request_number, finance_id=finance_id)
+    ok = update_agro_deal(request_number, finance_id=finance_id, erp_status="PAYMENT")
+    return ok
+
+
+def _agro_erp_post_contract_signed(request_number: int, contract_id: int) -> None:
+    deal = get_agro_deal_by_request(request_number)
+    if not deal:
+        return
+    deal_id, manager_id = deal[0], deal[5] or deal[2]
+    from services.agro_erp_calendar import AgroErpCalendar
+    from services.agro_erp_workflow import AgroErpWorkflow
+    AgroErpCalendar.create_deal_event(deal_id, "contract_signed", manager_id)
+    AgroErpCalendar.create_deal_event(deal_id, "vessel_arrival", manager_id)
+    AgroErpWorkflow.emit(
+        "CONTRACT_SIGNED",
+        manager_id,
+        entity_type="contract",
+        entity_id=contract_id,
+        payload={"title": f"Контракт #{contract_id} подписан", "deal_id": deal_id},
+    )
+
+
+def _agro_erp_post_shipment_started(request_number: int, logistics_id: int) -> None:
+    deal = get_agro_deal_by_request(request_number)
+    if not deal:
+        return
+    deal_id, manager_id = deal[0], deal[5] or deal[2]
+    from services.agro_erp_calendar import AgroErpCalendar
+    from services.agro_erp_workflow import AgroErpWorkflow
+    AgroErpCalendar.create_deal_event(deal_id, "loading", manager_id)
+    AgroErpWorkflow.emit(
+        "SHIPMENT_STARTED",
+        manager_id,
+        entity_type="logistics",
+        entity_id=logistics_id,
+        payload={"title": f"Отгрузка #{logistics_id} начата", "deal_id": deal_id},
+    )
+
+
+def _agro_erp_post_payment_received(deal_id: int, user_id: int, finance_id: int) -> None:
+    from services.agro_erp_calendar import AgroErpCalendar
+    from services.agro_erp_workflow import AgroErpWorkflow
+    AgroErpCalendar.create_deal_event(deal_id, "payment", user_id)
+    AgroErpWorkflow.emit(
+        "PAYMENT_RECEIVED",
+        user_id,
+        entity_type="finance",
+        entity_id=finance_id,
+        payload={"title": f"Оплата по сделке #{deal_id}", "deal_id": deal_id},
+    )
+
+
+def _agro_erp_post_deal_completed(deal_id: int, user_id: int, request_number: int) -> None:
+    from services.agro_erp_calendar import AgroErpCalendar
+    from services.agro_erp_workflow import AgroErpWorkflow
+    AgroErpCalendar.create_deal_event(deal_id, "deal_closed", user_id)
+    AgroErpWorkflow.emit(
+        "DEAL_COMPLETED",
+        user_id,
+        entity_type="deal",
+        entity_id=deal_id,
+        payload={"title": f"Сделка #{deal_id} завершена", "request_number": request_number},
+    )
+
+
+def link_agro_deal_calendar(deal_id: int, calendar_event_id: int, event_type: str) -> int:
+    cursor.execute(
+        """
+        INSERT OR REPLACE INTO agro_deal_calendar_links (deal_id, calendar_event_id, event_type)
+        VALUES (?, ?, ?)
+        """,
+        (deal_id, calendar_event_id, event_type),
+    )
+    conn.commit()
+    if event_type == "deal_created":
+        cursor.execute(
+            "UPDATE agro_deals SET calendar_event_id = ? WHERE id = ?",
+            (calendar_event_id, deal_id),
+        )
+        conn.commit()
+    return cursor.lastrowid
+
+
+def get_agro_deal_calendar_links(deal_id: int):
+    cursor.execute(
+        """
+        SELECT id, deal_id, calendar_event_id, event_type, created_at
+        FROM agro_deal_calendar_links
+        WHERE deal_id = ?
+        ORDER BY id
+        """,
+        (deal_id,),
+    )
+    return cursor.fetchall()
+
+
+def get_agro_deals_by_hub_section(user_id: int, section: str, limit: int = 20):
+    base = """
+        SELECT id, request_number, product, erp_status, manager_id, buyer_id,
+               price, currency, created_at, updated_at
+        FROM agro_deals
+        WHERE (manager_id = ? OR buyer_id = ? OR client_id = ?)
+    """
+    params = [user_id, user_id, user_id]
+    if section == "active":
+        base += " AND erp_status NOT IN ('COMPLETED', 'CANCELLED')"
+    elif section == "negotiation":
+        base += " AND erp_status = 'NEGOTIATION'"
+    elif section == "contracts":
+        base += " AND erp_status = 'CONTRACT'"
+    elif section == "logistics":
+        base += " AND erp_status = 'LOGISTICS'"
+    elif section == "payments":
+        base += " AND erp_status = 'PAYMENT'"
+    elif section == "closed":
+        base += " AND erp_status IN ('COMPLETED', 'CANCELLED')"
+    elif section == "analytics":
+        base += " AND 1=1"
+    else:
+        base += " AND 1=1"
+    base += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(base, params)
+    return cursor.fetchall()
+
+
+def format_agro_deal_hub_section(user_id: int, section: str, limit: int = 15) -> str:
+    title = AGRO_DEAL_HUB_SECTIONS.get(section, section)
+    if section == "analytics":
+        return format_agro_deal_hub_analytics(user_id)
+    rows = get_agro_deals_by_hub_section(user_id, section, limit=limit)
+    if not rows:
+        return f"📑 {title}: записей нет."
+    lines = [f"📑 {title}:\n"]
+    for row in rows:
+        did, req, product, erp_st, mgr, buyer, price, cur, created, updated = row
+        lines.append(
+            f"#{did} · заявка #{req} · {erp_st or '—'}\n"
+            f"   📦 {product or '—'} · 💰 {price or '—'} {cur or ''}\n"
+            f"   🕒 {updated or created}"
+        )
+    lines.append("\nОтправьте номер заявки для деталей.")
+    return "\n".join(lines)
+
+
+def format_agro_deal_hub_analytics(user_id: int) -> str:
+    cursor.execute(
+        """
+        SELECT erp_status, COUNT(*), COALESCE(SUM(price), 0)
+        FROM agro_deals
+        WHERE manager_id = ? OR buyer_id = ? OR client_id = ?
+        GROUP BY erp_status
+        """,
+        (user_id, user_id, user_id),
+    )
+    status_rows = cursor.fetchall()
+    cursor.execute(
+        """
+        SELECT payment_status, COUNT(*), COALESCE(SUM(amount), 0)
+        FROM agro_finance
+        WHERE created_by = ?
+        GROUP BY payment_status
+        """,
+        (user_id,),
+    )
+    fin_rows = cursor.fetchall()
+    lines = ["📑 Аналитика сделок:\n", "По статусам ERP:"]
+    total_deals = 0
+    for st, cnt, vol in status_rows:
+        total_deals += cnt
+        lines.append(f"  · {st or '—'}: {cnt} · объём {vol}")
+    lines.append(f"\nВсего сделок: {total_deals}")
+    lines.append("\nФинансы:")
+    for ps, cnt, amt in fin_rows:
+        lines.append(f"  · {ps}: {cnt} · {amt}")
+    if not fin_rows:
+        lines.append("  · нет данных")
+    return "\n".join(lines)
 
 
 def close_agro_deal(request_number: int, user_id: int) -> bool:
     from datetime import datetime
     from services.statuses import normalize_status
-    _ = user_id
-    return update_agro_deal(
+    deal = get_agro_deal_by_request(request_number)
+    ok = update_agro_deal(
         request_number,
         status=normalize_status("DONE"),
         erp_status="COMPLETED",
         closed_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
     )
+    if ok and deal:
+        _agro_erp_post_deal_completed(deal[0], user_id, request_number)
+    return ok
 
 
 def format_agro_erp_deals_text(user_id: int, limit: int = 15) -> str:
@@ -6012,9 +6407,16 @@ def archive_read_notifications(user_id: int) -> int:
 
 WORKFLOW_TRIGGER_CODES = (
     "AGRO_REQUEST_CREATED",
+    "REQUEST_CREATED",
+    "REQUEST_TAKEN",
     "REQUEST_ASSIGNED",
     "REQUEST_DONE",
     "REQUEST_CANCELLED",
+    "DEAL_CREATED",
+    "CONTRACT_SIGNED",
+    "SHIPMENT_STARTED",
+    "PAYMENT_RECEIVED",
+    "DEAL_COMPLETED",
     "TASK_CREATED",
     "TASK_COMPLETED",
     "EVENT_CREATED",
