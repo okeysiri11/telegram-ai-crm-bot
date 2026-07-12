@@ -19,6 +19,10 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "payment",
         "description": "Payment received",
     },
+    "payment.completed": {
+        "aggregate_type": "payment",
+        "description": "Payment completed",
+    },
     "payment.sent": {
         "aggregate_type": "payment",
         "description": "Payment sent",
@@ -190,6 +194,10 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
     "vehicle.import.completed": {
         "aggregate_type": "vehicle",
         "description": "Vehicle marketplace import job completed",
+    },
+    "vehicle.imported": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle imported into inventory",
     },
     "vehicle.price.changed": {
         "aggregate_type": "vehicle",
