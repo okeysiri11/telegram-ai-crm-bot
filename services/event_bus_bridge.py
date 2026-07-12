@@ -31,6 +31,10 @@ def register_default_subscribers() -> None:
         ("DEAL_COMPLETED", _on_deal_completed_partner_kpi, "partner_kpi"),
         ("PARTNER_ASSIGNED", _on_partner_assigned, "partner_workflow"),
         ("PARTNER_CREATED", _on_partner_created, "partner_workflow"),
+        ("DEAL_COMPLETED", _on_deal_completed_ledger, "ledger_income"),
+        ("LEDGER_ENTRY_CREATED", _on_ledger_entry_created, "ledger_workflow"),
+        ("FINANCE_PAYMENT_CONFIRMED", _on_finance_payment_ledger_sync, "ledger_sync"),
+        ("FINANCE_COMMISSION_PAID", _on_finance_commission_ledger_sync, "ledger_sync"),
     ]
     for event_type, handler, sid in handlers:
         EventBus.subscribe(event_type, handler, subscriber_id=sid)
@@ -328,3 +332,50 @@ def _on_partner_created(event: PlatformEvent) -> None:
         event.user_id, "partner_created_event", "partners",
         f"id={event.entity_id}|type={event.payload.get('partner_type')}",
     )
+
+
+def _on_deal_completed_ledger(event: PlatformEvent) -> None:
+    from database import record_deal_ledger_income
+    deal_id = int(event.entity_id)
+    record_deal_ledger_income(deal_id, event.user_id)
+
+
+def _on_ledger_entry_created(event: PlatformEvent) -> None:
+    from database import log_audit
+    from services.timeline import TimelineService
+    TimelineService.record(
+        "LEDGER",
+        event.entity_id,
+        "LEDGER_ENTRY_CREATED",
+        event.user_id,
+        description=(
+            f"{event.payload.get('entry_type')} "
+            f"{event.payload.get('amount')} {event.payload.get('currency')}"
+        ),
+    )
+    log_audit(
+        event.user_id, "ledger_entry_event", "ledger",
+        f"id={event.entity_id}|type={event.payload.get('entry_type')}",
+    )
+
+
+def _sync_ledger_from_finance(event: PlatformEvent) -> None:
+    from database import (
+        get_finance_transaction,
+        get_ledger_entry,
+        mark_ledger_executed,
+    )
+    tx = get_finance_transaction(int(event.entity_id))
+    if not tx or tx[7] != "LEDGER" or not tx[8]:
+        return
+    entry = get_ledger_entry(int(tx[8]))
+    if entry and entry[8] == "PENDING_EXECUTION":
+        mark_ledger_executed(int(tx[8]), event.user_id, int(event.entity_id))
+
+
+def _on_finance_payment_ledger_sync(event: PlatformEvent) -> None:
+    _sync_ledger_from_finance(event)
+
+
+def _on_finance_commission_ledger_sync(event: PlatformEvent) -> None:
+    _sync_ledger_from_finance(event)

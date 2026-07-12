@@ -23,6 +23,7 @@ from services.event_bus_test import EventBusTestService
 from services.deal_engine import DealEngine
 from services.commission_engine import CommissionEngine
 from services.partner_engine import PartnerEngine
+from services.ledger_engine import LedgerEngine
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
@@ -1336,6 +1337,37 @@ async def partner_hub_integration_test(message: Message):
         lines.append(f"Error: {result['error']}")
     await message.answer("\n".join(lines))
     log_audit(user_id, "partner_integration_test", "partners", result.get("status"))
+
+
+@router.message(Command("ledger_test"))
+async def internal_ledger_integration_test(message: Message):
+    user_id = message.from_user.id
+    if not LedgerEngine.can_view(user_id):
+        await message.answer("Нет доступа к /ledger_test.")
+        return
+    result = LedgerEngine.run_integration_test(user_id)
+    steps = result.get("steps", {})
+    summary = steps.get("summary") or {}
+    lines = [
+        "INTERNAL LEDGER — INTEGRATION TEST",
+        f"STATUS: {result.get('status', 'ERROR')}",
+        f"Deal: {steps.get('create_deal', '—')}",
+        f"Posted types: {', '.join(steps.get('posted_types', [])) or '—'}",
+        f"Payment entry: {steps.get('payment_entry', '—')}",
+        f"Payment status: {steps.get('payment_status', '—')}",
+        f"BidEx Connector TX: {steps.get('connector_tx', '—')}",
+        f"Executed status: {steps.get('executed_status', '—')}",
+        f"Finance TX link: {steps.get('finance_tx_id', '—')}",
+        f"Deal income entries: {steps.get('deal_income_entries', '—')}",
+        f"Net balance: {steps.get('net_balance', '—')}",
+        f"Pending execution: {summary.get('pending_execution', '—')}",
+        f"Ledger events: {steps.get('ledger_events', '—')}",
+        f"Audit (ledger): {steps.get('audit_count', '—')}",
+    ]
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "ledger_integration_test", "ledger", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")

@@ -112,6 +112,16 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "entity_type": "deal",
         "description": "Партнёр назначен на сделку",
     },
+    "LEDGER_ENTRY_CREATED": {
+        "module": "ledger",
+        "entity_type": "ledger_entry",
+        "description": "Проводка добавлена в Ledger",
+    },
+    "LEDGER_ENTRY_EXECUTED": {
+        "module": "ledger",
+        "entity_type": "ledger_entry",
+        "description": "Проводка исполнена через BidEx Connector",
+    },
 }
 
 SubscriberHandler = Callable[["PlatformEvent"], None]

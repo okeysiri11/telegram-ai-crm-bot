@@ -139,3 +139,8 @@ class PermissionService:
     def has_partner_action(user_id: int, action: str) -> bool:
         from database import has_partner_action
         return has_partner_action(user_id, action)
+
+    @staticmethod
+    def has_ledger_action(user_id: int, action: str) -> bool:
+        from database import has_ledger_action
+        return has_ledger_action(user_id, action)

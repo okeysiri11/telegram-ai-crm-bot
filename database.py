@@ -464,6 +464,32 @@ def _migrate_schema():
     _migrate_deal_engine_phase1()
     _migrate_commission_engine_phase1()
     _migrate_partner_hub_phase1()
+    _migrate_internal_ledger_phase1()
+
+
+def _migrate_internal_ledger_phase1():
+    """Internal Ledger — accounting entries; payments via BidEx Connector only."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ledger_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            entry_id TEXT UNIQUE,
+            deal_id INTEGER,
+            module TEXT NOT NULL,
+            entry_type TEXT NOT NULL,
+            amount REAL NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'USD',
+            description TEXT,
+            status TEXT NOT NULL DEFAULT 'POSTED',
+            finance_transaction_id INTEGER,
+            created_by INTEGER NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (deal_id) REFERENCES deals(id),
+            FOREIGN KEY (finance_transaction_id) REFERENCES finance_transactions(id)
+        )
+        """
+    )
+    conn.commit()
 
 
 def _migrate_partner_hub_phase1():
@@ -2139,6 +2165,43 @@ PARTNER_ROLE_ACTIONS = {
     "MANAGER": {"PARTNER_VIEW", "PARTNER_CREATE", "PARTNER_EDIT", "PARTNER_ASSIGN"},
     "LAWYER": {"PARTNER_VIEW", "PARTNER_ASSIGN"},
     "VIEWER": {"PARTNER_VIEW"},
+    "CLIENT": set(),
+}
+
+LEDGER_ENTRY_TYPES = (
+    "INCOME", "EXPENSE", "COMMISSION", "RESERVE", "PAYMENT", "REFUND", "WITHDRAW",
+)
+
+LEDGER_STATUSES = ("POSTED", "PENDING_EXECUTION", "EXECUTED", "REVERSED")
+
+LEDGER_EXECUTION_ENTRY_TYPES = frozenset({
+    "PAYMENT", "WITHDRAW", "REFUND", "COMMISSION",
+})
+
+LEDGER_ENTRY_SIGNS = {
+    "INCOME": 1,
+    "EXPENSE": -1,
+    "COMMISSION": -1,
+    "RESERVE": -1,
+    "PAYMENT": -1,
+    "REFUND": 1,
+    "WITHDRAW": -1,
+}
+
+LEDGER_ACTION_PERMISSIONS = (
+    "LEDGER_VIEW",
+    "LEDGER_CREATE",
+    "LEDGER_REVERSE",
+)
+
+LEDGER_ROLE_ACTIONS = {
+    "OWNER": set(LEDGER_ACTION_PERMISSIONS),
+    "ADMIN": set(LEDGER_ACTION_PERMISSIONS),
+    "SUPER_MANAGER": set(LEDGER_ACTION_PERMISSIONS),
+    "AGRO_MANAGER": {"LEDGER_VIEW", "LEDGER_CREATE"},
+    "CRYPTO_MANAGER": {"LEDGER_VIEW", "LEDGER_CREATE"},
+    "MANAGER": {"LEDGER_VIEW", "LEDGER_CREATE", "LEDGER_REVERSE"},
+    "VIEWER": {"LEDGER_VIEW"},
     "CLIENT": set(),
 }
 
@@ -8234,6 +8297,7 @@ PUBLIC_ID_PREFIX_MAP = {
     "agro_documents": "DC",
     "deals": "DL",
     "partners": "PR",
+    "ledger_entries": "LE",
 }
 
 ATTACHMENT_ENTITY_TYPES = (
@@ -10157,3 +10221,313 @@ def format_partner_analytics(partner_id: int, period: str = None) -> str:
                 f"  • Объём: {kpi[5]:,.2f} · Комиссия: {kpi[6]:,.2f}",
             ])
     return "\n".join(lines)
+
+
+# ==========================================================
+# INTERNAL LEDGER
+# ==========================================================
+
+_LEDGER_SELECT = """
+    SELECT id, entry_id, deal_id, module, entry_type, amount, currency,
+           description, status, finance_transaction_id, created_by, created_at
+    FROM ledger_entries
+"""
+
+
+def _normalize_ledger_entry_type(value: str) -> str:
+    key = (value or "INCOME").strip().upper()
+    return key if key in LEDGER_ENTRY_TYPES else "INCOME"
+
+
+def _ledger_signed_amount(entry_type: str, amount: float) -> float:
+    sign = LEDGER_ENTRY_SIGNS.get(_normalize_ledger_entry_type(entry_type), 1)
+    return round(abs(float(amount)) * sign, 2)
+
+
+def _assign_ledger_entry_id(row_id: int) -> str | None:
+    if not row_id:
+        return None
+    cursor.execute("SELECT entry_id FROM ledger_entries WHERE id = ?", (row_id,))
+    row = cursor.fetchone()
+    if row and row[0]:
+        return row[0]
+    entry_id = _generate_public_id("LE")
+    cursor.execute(
+        "UPDATE ledger_entries SET entry_id = ? WHERE id = ?",
+        (entry_id, row_id),
+    )
+    conn.commit()
+    return entry_id
+
+
+def has_ledger_action(user_id: int, action: str) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+    if action not in LEDGER_ACTION_PERMISSIONS:
+        return False
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return True
+    for role in get_user_roles(user_id):
+        if action in LEDGER_ROLE_ACTIONS.get(role, set()):
+            return True
+    return False
+
+
+def create_ledger_entry(
+    user_id: int,
+    module: str,
+    entry_type: str,
+    amount: float,
+    currency: str = "USD",
+    deal_id: int = None,
+    description: str = None,
+    status: str = None,
+) -> int:
+    """Record accounting entry only — does NOT execute payments."""
+    entry_type = _normalize_ledger_entry_type(entry_type)
+    amount = abs(float(amount))
+    if amount <= 0:
+        return 0
+    module = (module or "FINANCE").strip().upper()
+    if status:
+        status = status.strip().upper()
+        if status not in LEDGER_STATUSES:
+            status = None
+    if not status:
+        status = (
+            "PENDING_EXECUTION"
+            if entry_type in LEDGER_EXECUTION_ENTRY_TYPES
+            else "POSTED"
+        )
+
+    cursor.execute(
+        """
+        INSERT INTO ledger_entries (
+            deal_id, module, entry_type, amount, currency,
+            description, status, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            deal_id, module, entry_type, amount, currency.upper(),
+            description, status, user_id,
+        ),
+    )
+    conn.commit()
+    row_id = cursor.lastrowid
+    entry_id = _assign_ledger_entry_id(row_id)
+    log_audit(
+        user_id, "ledger_entry_create", "ledger",
+        f"id={row_id}|entry={entry_id}|type={entry_type}|amount={amount}|status={status}",
+    )
+    from events import EventBus
+    EventBus.publish(
+        "LEDGER_ENTRY_CREATED",
+        user_id=user_id,
+        module=module.lower(),
+        entity_type="ledger_entry",
+        entity_id=row_id,
+        payload={
+            "entry_id": entry_id,
+            "entry_type": entry_type,
+            "amount": amount,
+            "currency": currency.upper(),
+            "deal_id": deal_id,
+            "status": status,
+        },
+    )
+    return row_id
+
+
+def get_ledger_entry(entry_row_id: int):
+    cursor.execute(f"{_LEDGER_SELECT} WHERE id = ?", (entry_row_id,))
+    return cursor.fetchone()
+
+
+def get_ledger_entry_by_code(entry_id: str):
+    cursor.execute(f"{_LEDGER_SELECT} WHERE entry_id = ?", (entry_id,))
+    return cursor.fetchone()
+
+
+def list_ledger_entries(
+    deal_id: int = None,
+    module: str = None,
+    entry_type: str = None,
+    status: str = None,
+    limit: int = 50,
+) -> list:
+    query = f"{_LEDGER_SELECT} WHERE 1=1"
+    params: list = []
+    if deal_id is not None:
+        query += " AND deal_id = ?"
+        params.append(deal_id)
+    if module:
+        query += " AND module = ?"
+        params.append(module.strip().upper())
+    if entry_type:
+        query += " AND entry_type = ?"
+        params.append(_normalize_ledger_entry_type(entry_type))
+    if status:
+        query += " AND status = ?"
+        params.append(status.strip().upper())
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def mark_ledger_executed(
+    entry_row_id: int,
+    user_id: int,
+    finance_transaction_id: int,
+) -> bool:
+    """Mark ledger entry executed after BidEx Connector completes payment."""
+    entry = get_ledger_entry(entry_row_id)
+    if not entry or entry[8] in ("EXECUTED", "REVERSED"):
+        return False
+    cursor.execute(
+        """
+        UPDATE ledger_entries
+        SET status = 'EXECUTED', finance_transaction_id = ?
+        WHERE id = ?
+        """,
+        (finance_transaction_id, entry_row_id),
+    )
+    conn.commit()
+    if cursor.rowcount:
+        log_audit(
+            user_id, "ledger_entry_executed", "ledger",
+            f"id={entry_row_id}|tx={finance_transaction_id}",
+        )
+        from events import EventBus
+        EventBus.publish(
+            "LEDGER_ENTRY_EXECUTED",
+            user_id=user_id,
+            module=entry[3].lower(),
+            entity_type="ledger_entry",
+            entity_id=entry_row_id,
+            payload={
+                "entry_id": entry[1],
+                "entry_type": entry[4],
+                "finance_transaction_id": finance_transaction_id,
+                "deal_id": entry[2],
+            },
+        )
+    return cursor.rowcount > 0
+
+
+def reverse_ledger_entry(entry_row_id: int, user_id: int) -> bool:
+    entry = get_ledger_entry(entry_row_id)
+    if not entry or entry[8] == "REVERSED":
+        return False
+    if entry[8] == "EXECUTED":
+        return False
+    cursor.execute(
+        "UPDATE ledger_entries SET status = 'REVERSED' WHERE id = ?",
+        (entry_row_id,),
+    )
+    conn.commit()
+    if cursor.rowcount:
+        log_audit(user_id, "ledger_entry_reverse", "ledger", f"id={entry_row_id}")
+    return cursor.rowcount > 0
+
+
+def get_ledger_balance(
+    deal_id: int = None,
+    module: str = None,
+    currency: str = "USD",
+) -> dict:
+    query = """
+        SELECT entry_type, SUM(amount)
+        FROM ledger_entries
+        WHERE status IN ('POSTED', 'EXECUTED', 'PENDING_EXECUTION')
+          AND currency = ?
+    """
+    params: list = [currency.upper()]
+    if deal_id is not None:
+        query += " AND deal_id = ?"
+        params.append(deal_id)
+    if module:
+        query += " AND module = ?"
+        params.append(module.strip().upper())
+    query += " GROUP BY entry_type"
+    cursor.execute(query, params)
+    by_type = {row[0]: float(row[1] or 0) for row in cursor.fetchall()}
+    net = sum(
+        _ledger_signed_amount(etype, amt) for etype, amt in by_type.items()
+    )
+    return {
+        "currency": currency.upper(),
+        "deal_id": deal_id,
+        "module": module,
+        "by_type": by_type,
+        "net_balance": round(net, 2),
+        "income": by_type.get("INCOME", 0),
+        "expenses": sum(
+            by_type.get(t, 0)
+            for t in ("EXPENSE", "COMMISSION", "PAYMENT", "WITHDRAW", "RESERVE")
+        ),
+    }
+
+
+def get_ledger_summary(module: str = None, currency: str = "USD") -> dict:
+    balance = get_ledger_balance(module=module, currency=currency)
+    cursor.execute(
+        """
+        SELECT COUNT(*),
+               SUM(CASE WHEN status = 'PENDING_EXECUTION' THEN 1 ELSE 0 END),
+               SUM(CASE WHEN status = 'EXECUTED' THEN 1 ELSE 0 END)
+        FROM ledger_entries
+        WHERE currency = ?
+        """ + (" AND module = ?" if module else ""),
+        ([currency.upper(), module.strip().upper()] if module else [currency.upper()]),
+    )
+    total, pending, executed = cursor.fetchone()
+    balance["total_entries"] = int(total or 0)
+    balance["pending_execution"] = int(pending or 0)
+    balance["executed"] = int(executed or 0)
+    return balance
+
+
+def record_deal_ledger_income(deal_id: int, user_id: int) -> int:
+    """Auto-post INCOME when deal completes."""
+    deal = get_deal(deal_id)
+    if not deal:
+        return 0
+    amount = float(deal[8] or 0)
+    if amount <= 0:
+        return 0
+    existing = list_ledger_entries(deal_id=deal_id, entry_type="INCOME", limit=1)
+    if existing:
+        return existing[0][0]
+    return create_ledger_entry(
+        user_id,
+        module=deal[1],
+        entry_type="INCOME",
+        amount=amount,
+        currency=deal[9] or "USD",
+        deal_id=deal_id,
+        description=f"Deal #{deal_id} completed income",
+        status="POSTED",
+    )
+
+
+def format_ledger_entry_card(row: tuple) -> str:
+    if not row:
+        return "Проводка не найдена."
+    (
+        rid, entry_id, deal_id, module, entry_type, amount, currency,
+        description, status, finance_tx_id, created_by, created_at,
+    ) = row
+    signed = _ledger_signed_amount(entry_type, amount)
+    sign_str = "+" if signed >= 0 else "−"
+    return (
+        f"📒 Ledger {entry_id or f'#{rid}'}\n\n"
+        f"🏷 {entry_type} · {module}\n"
+        f"🤝 Сделка: #{deal_id or '—'}\n"
+        f"💵 {sign_str}{abs(signed):,.2f} {currency}\n"
+        f"📊 Статус: {status}\n"
+        f"🔗 Finance TX: #{finance_tx_id or '—'} (via BidEx Connector)\n"
+        f"📝 {description or '—'}\n"
+        f"👤 Created by: {created_by}\n"
+        f"🕒 {created_at}"
+    )
