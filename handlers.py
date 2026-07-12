@@ -14,6 +14,7 @@ from services.statuses import normalize_status
 from services.agro_deal_lifecycle import AgroDealLifecycle
 from services.tasks import TaskService
 from services.calendar_service import CalendarService
+from services.calendar_access import CalendarAccessService
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
@@ -321,6 +322,7 @@ ai_router_agent = {}
 search_flow = {}
 task_flow = {}
 calendar_flow = {}
+active_calendar_scope = {}
 ai_settings_flow = {}
 active_module = {}
 active_agro_sub = {}
@@ -552,24 +554,26 @@ WORKFLOW_STUB_MESSAGES = {
 }
 
 CALENDAR_MENU_BUTTONS = {
+    "📅 Мой календарь",
+    "🏢 Календарь отдела",
+    "🌍 Все события компании",
     "📅 Сегодня",
     "📆 Неделя",
     "🗓 Месяц",
     "➕ Создать событие",
     "🔔 Напоминания",
-    "📋 Мои события",
-    "👥 Все события",
     "⬅ Назад",
 }
 
 CALENDAR_STUB_MESSAGES = {
+    "📅 Мой календарь": "Мой календарь",
+    "🏢 Календарь отдела": "Календарь отдела",
+    "🌍 Все события компании": "Все события компании",
     "📅 Сегодня": "События на сегодня",
     "📆 Неделя": "События на неделю",
     "🗓 Месяц": "События на месяц",
     "➕ Создать событие": "Создание события",
     "🔔 Напоминания": "Напоминания",
-    "📋 Мои события": "Мои события",
-    "👥 Все события": "Все события",
 }
 
 USERS_MENU_BUTTONS = {
@@ -1089,6 +1093,32 @@ async def company_core_integration_test(message: Message):
         lines.append(f"Error: {result['error']}")
     await message.answer("\n".join(lines))
     log_audit(user_id, "company_integration_test", "users", result.get("status"))
+
+
+@router.message(Command("calendar_test"))
+async def calendar_isolation_test(message: Message):
+    user_id = message.from_user.id
+    from database import get_user_roles
+    roles = set(get_user_roles(user_id))
+    if user_id not in (OWNER_ID, MANAGER_ID) and "SUPER_MANAGER" not in roles:
+        await message.answer("Нет доступа к /calendar_test.")
+        return
+    result = CalendarAccessService.run_isolation_test()
+    steps = result.get("steps", {})
+    lines = [
+        "CALENDAR ISOLATION TEST",
+        f"STATUS: {result.get('status', 'ERROR')}",
+        f"Beauty sees Agro: {steps.get('beauty_sees_agro')}",
+        f"Beauty sees Beauty: {steps.get('beauty_sees_beauty')}",
+        f"Agro sees Beauty: {steps.get('agro_sees_beauty')}",
+        f"Agro sees Agro: {steps.get('agro_sees_agro')}",
+        f"Owner sees all: {steps.get('owner_sees_all')}",
+        f"Super Manager sees all: {steps.get('super_sees_all')}",
+    ]
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "calendar_isolation_test", "calendar", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")
@@ -2576,6 +2606,7 @@ async def open_calendar_module(message: Message):
     _clear_ai_state(message.from_user.id)
     active_module[message.from_user.id] = "calendar"
     calendar_flow.pop(message.from_user.id, None)
+    active_calendar_scope[message.from_user.id] = "my"
     log_audit(message.from_user.id, "open", "calendar")
 
     modules = ", ".join(CALENDAR_MODULES.values())
@@ -2584,8 +2615,9 @@ async def open_calendar_module(message: Message):
         f"Центральный модуль системы.\n"
         f"Модули: {modules}\n"
         f"Статусы: {', '.join(CALENDAR_STATUSES)}\n\n"
-        "Интеграция: задачи, hub-модули, уведомления.",
-        reply_markup=calendar_module_menu(),
+        "Изоляция по отделам: PRIVATE · DEPARTMENT · MANAGEMENT · GLOBAL\n"
+        "Выберите область: мой / отдел / компания.",
+        reply_markup=calendar_module_menu(message.from_user.id),
     )
 
 
@@ -2593,9 +2625,13 @@ async def _show_calendar_list(message: Message, title: str, user_id: int, audit_
     text = format_calendar_events_text(user_id, events=events)
     await message.answer(
         f"{title}\n\n{text}",
-        reply_markup=calendar_events_list_inline(events) if events else calendar_module_menu(),
+        reply_markup=calendar_events_list_inline(events) if events else calendar_module_menu(user_id),
     )
     log_audit(user_id, "calendar_list", "calendar", audit_key)
+
+
+def _calendar_active_scope(user_id: int) -> str:
+    return active_calendar_scope.get(user_id, "my")
 
 
 @router.message(
@@ -2607,43 +2643,59 @@ async def _show_calendar_list(message: Message, title: str, user_id: int, audit_
 async def calendar_screen(message: Message):
     screen = message.text
     user_id = message.from_user.id
+    title = CALENDAR_STUB_MESSAGES.get(screen, screen)
 
     if screen == "⬅ Назад":
         active_module.pop(user_id, None)
         calendar_flow.pop(user_id, None)
+        active_calendar_scope.pop(user_id, None)
         await message.answer("Главное меню", reply_markup=owner_main_menu())
         return
 
-    title = CALENDAR_STUB_MESSAGES.get(screen, screen)
-    scope = "all" if PermissionService.is_crm_operator(user_id) else "my"
+    if screen == "📅 Мой календарь":
+        active_calendar_scope[user_id] = "my"
+        events = CalendarService.get_events_by_user(user_id, scope="my", limit=20)
+        await _show_calendar_list(message, title, user_id, "scope_my", events)
+        return
+
+    if screen == "🏢 Календарь отдела":
+        active_calendar_scope[user_id] = "department"
+        events = CalendarService.get_events_by_user(user_id, scope="department", limit=30)
+        await _show_calendar_list(message, title, user_id, "scope_department", events)
+        return
+
+    if screen == "🌍 Все события компании":
+        if not CalendarAccessService.can_see_all_company(user_id):
+            await message.answer(
+                "Доступ только для OWNER и SUPER_MANAGER.",
+                reply_markup=calendar_module_menu(user_id),
+            )
+            return
+        active_calendar_scope[user_id] = "company"
+        events = CalendarService.get_events_by_user(user_id, scope="company", limit=50)
+        await _show_calendar_list(message, title, user_id, "scope_company", events)
+        return
+
+    scope = _calendar_active_scope(user_id)
+    scope_hint = {"my": "личные", "department": "отдел", "company": "компания"}.get(scope, scope)
 
     if screen == "📅 Сегодня":
         events = CalendarService.get_today_events(user_id, scope=scope)
-        await _show_calendar_list(message, title, user_id, "today", events)
+        await _show_calendar_list(message, f"{title} ({scope_hint})", user_id, f"today:{scope}", events)
         return
 
     if screen == "📆 Неделя":
         events = CalendarService.get_week_events(user_id, scope=scope)
-        await _show_calendar_list(message, title, user_id, "week", events)
+        await _show_calendar_list(message, f"{title} ({scope_hint})", user_id, f"week:{scope}", events)
         return
 
     if screen == "🗓 Месяц":
         events = CalendarService.get_month_events(user_id, scope=scope)
-        await _show_calendar_list(message, title, user_id, "month", events)
-        return
-
-    if screen == "📋 Мои события":
-        events = CalendarService.get_events_by_user(user_id, scope="my", limit=20)
-        await _show_calendar_list(message, title, user_id, "my", events)
-        return
-
-    if screen == "👥 Все события":
-        events = CalendarService.get_events_by_user(user_id, scope=scope, limit=30)
-        await _show_calendar_list(message, title, user_id, "all", events)
+        await _show_calendar_list(message, f"{title} ({scope_hint})", user_id, f"month:{scope}", events)
         return
 
     if screen == "🔔 Напоминания":
-        events = CalendarService.get_reminder_events(user_id, limit=20)
+        events = CalendarService.get_reminder_events(user_id, scope=scope)
         await _show_calendar_list(message, title, user_id, "reminders", events)
         return
 
@@ -2660,14 +2712,14 @@ async def calendar_screen(message: Message):
             "Начало: 2026-07-15 18:00\n"
             "Конец: 2026-07-15 19:00\n"
             "Напомнить: 30",
-            reply_markup=calendar_module_menu(),
+            reply_markup=calendar_module_menu(user_id),
         )
         log_audit(user_id, "calendar_create_prompt", "calendar", "create")
         return
 
     await message.answer(
         f"{title}\n\nРаздел находится в разработке.",
-        reply_markup=calendar_module_menu(),
+        reply_markup=calendar_module_menu(user_id),
     )
 
 
@@ -2695,7 +2747,7 @@ async def calendar_flow_message(message: Message):
                 calendar_flow[user_id] = {"step": "create_time", "draft": parsed}
                 await message.answer("Укажите время начала (2026-07-15 18:00):")
                 return
-            await message.answer("Укажите название и время начала.", reply_markup=calendar_module_menu())
+            await message.answer("Укажите название и время начала.", reply_markup=calendar_module_menu(user_id))
             return
         event_id = CalendarService.create_event(
             creator_id=user_id,
@@ -3534,7 +3586,7 @@ async def calendar_edit_callback(callback: CallbackQuery):
     await callback.message.answer(
         f"✏ Изменение события #{event_id}\n\n"
         "Отправьте новые данные (Название, Описание, Модуль, Начало...).",
-        reply_markup=calendar_module_menu(),
+        reply_markup=calendar_module_menu(user_id),
     )
 
 
@@ -3550,7 +3602,7 @@ async def calendar_reschedule_callback(callback: CallbackQuery):
     await callback.answer()
     await callback.message.answer(
         f"📅 Новое время для события #{event_id}\n\nФормат: 2026-07-15 18:00",
-        reply_markup=calendar_module_menu(),
+        reply_markup=calendar_module_menu(user_id),
     )
 
 
@@ -3577,7 +3629,7 @@ async def calendar_delete_confirm_callback(callback: CallbackQuery):
         await callback.answer("Удалено")
         await callback.message.answer(
             f"🗑 Событие #{event_id} удалено.",
-            reply_markup=calendar_module_menu(),
+            reply_markup=calendar_module_menu(user_id),
         )
     else:
         await callback.answer("Нет доступа", show_alert=True)

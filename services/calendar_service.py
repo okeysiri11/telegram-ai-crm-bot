@@ -1,19 +1,11 @@
 # Unified CalendarService for hub modules, tasks and future notifications.
 
-from config import OWNER_ID, MANAGER_ID
-
 
 class CalendarService:
     @staticmethod
     def can_access(user_id: int, event_row) -> bool:
-        if not event_row:
-            return False
-        if user_id in (OWNER_ID, MANAGER_ID):
-            return True
-        if user_id in (event_row[5], event_row[6]):
-            return True
-        from services.permissions import PermissionService
-        return PermissionService.is_crm_operator(user_id)
+        from services.calendar_access import CalendarAccessService
+        return CalendarAccessService.can_view_event(user_id, event_row)
 
     @staticmethod
     def create_event(
@@ -27,6 +19,9 @@ class CalendarService:
         end_time: str = None,
         remind_before: int = 0,
         status: str = "PLANNED",
+        department: str = None,
+        visibility: str = "DEPARTMENT",
+        assigned_user_id: int = None,
     ) -> int:
         from database import create_event
         return create_event(
@@ -40,6 +35,9 @@ class CalendarService:
             end_time=end_time,
             remind_before=remind_before,
             status=status,
+            department=department,
+            visibility=visibility,
+            assigned_user_id=assigned_user_id,
         )
 
     @staticmethod
@@ -73,9 +71,9 @@ class CalendarService:
         return get_month_events(user_id, scope=scope, limit=limit)
 
     @staticmethod
-    def get_reminder_events(user_id: int, limit: int = 20):
+    def get_reminder_events(user_id: int, scope: str = "department", limit: int = 20):
         from database import get_reminder_events
-        return get_reminder_events(user_id, limit=limit)
+        return get_reminder_events(user_id, scope=scope, limit=limit)
 
     @staticmethod
     def update_event(event_id: int, user_id: int, **fields) -> bool:

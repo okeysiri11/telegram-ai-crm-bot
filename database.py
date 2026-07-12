@@ -451,6 +451,7 @@ def _migrate_schema():
     conn.commit()
     _migrate_legacy_tasks()
     _migrate_calendar_schema()
+    _migrate_calendar_isolation()
     _migrate_multi_agent_platform()
     _migrate_phase4b()
     _migrate_agro_erp_phase1()
@@ -935,6 +936,46 @@ def _migrate_calendar_schema():
             "UPDATE calendar_events SET status = ? WHERE lower(status) = ?",
             (new, old),
         )
+    conn.commit()
+
+
+def _migrate_calendar_isolation():
+    """Calendar department isolation — department, visibility, assigned_user_id."""
+    iso_columns = {
+        "department": "TEXT",
+        "visibility": "TEXT DEFAULT 'DEPARTMENT'",
+        "assigned_user_id": "INTEGER",
+    }
+    for column, definition in iso_columns.items():
+        if not _column_exists("calendar_events", column):
+            cursor.execute(
+                f"ALTER TABLE calendar_events ADD COLUMN {column} {definition}"
+            )
+    conn.commit()
+
+    dept_cases = " ".join(
+        f"WHEN '{mod}' THEN '{dept}'"
+        for mod, dept in {
+            "agro_trading": "AGRO",
+            "crypto_otc": "CRYPTO",
+            "drone": "DRONE",
+            "law": "LEGAL",
+            "cafe_beauty": "BEAUTY",
+            "users": "SYSTEM",
+            "calendar": "SYSTEM",
+            "ai_assistant": "SYSTEM",
+            "system": "SYSTEM",
+        }.items()
+    )
+    cursor.execute(
+        f"""
+        UPDATE calendar_events
+        SET department = CASE module {dept_cases} ELSE 'SYSTEM' END,
+            visibility = COALESCE(visibility, 'DEPARTMENT'),
+            assigned_user_id = COALESCE(assigned_user_id, owner_id, responsible_user, creator_id)
+        WHERE department IS NULL OR assigned_user_id IS NULL
+        """
+    )
     conn.commit()
 
 
@@ -2492,9 +2533,16 @@ _EVENT_SELECT = """
     SELECT id, title, description, module, event_type, creator_id, owner_id,
            start_time, end_time, remind_before, status, created_at,
            start_datetime, end_datetime, responsible_user, priority,
-           reminder_minutes, repeat_rule, updated_at
+           reminder_minutes, repeat_rule, updated_at,
+           department, visibility, assigned_user_id
     FROM calendar_events
 """
+
+
+def _apply_calendar_access(query: str, params: list, user_id: int, scope: str = "my") -> tuple[str, list]:
+    from services.calendar_access import CalendarAccessService
+    fragment, extra = CalendarAccessService.build_access_filter(user_id, scope)
+    return query + fragment, params + extra
 
 
 def _normalize_calendar_module(module: str) -> str:
@@ -2528,11 +2576,19 @@ def create_event(
     end_time: str = None,
     remind_before: int = 0,
     status: str = "PLANNED",
+    department: str = None,
+    visibility: str = "DEPARTMENT",
+    assigned_user_id: int = None,
 ) -> int:
+    from services.calendar_access import CalendarAccessService
+
     module = _normalize_calendar_module(module)
     owner_id = owner_id or creator_id
     status = _normalize_calendar_status(status)
     event_type = event_type if event_type in CALENDAR_EVENT_TYPES else "general"
+    department = department or CalendarAccessService.department_from_module(module)
+    visibility = visibility if visibility in ("PRIVATE", "DEPARTMENT", "MANAGEMENT", "GLOBAL") else "DEPARTMENT"
+    assigned_user_id = assigned_user_id or owner_id
 
     cursor.execute(
         """
@@ -2540,9 +2596,10 @@ def create_event(
             title, description, module, event_type, creator_id, owner_id,
             start_time, end_time, remind_before, status,
             start_datetime, end_datetime, responsible_user,
-            reminder_minutes, priority
+            reminder_minutes, priority,
+            department, visibility, assigned_user_id
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             title.strip(),
@@ -2560,6 +2617,9 @@ def create_event(
             owner_id,
             remind_before,
             "normal",
+            department,
+            visibility,
+            assigned_user_id,
         ),
     )
     conn.commit()
@@ -2586,13 +2646,8 @@ def get_event(event_id: int, user_id: int = None):
     row = cursor.fetchone()
     if not row or user_id is None:
         return row
-    from config import OWNER_ID, MANAGER_ID
-    if user_id in (OWNER_ID, MANAGER_ID):
-        return row
-    if user_id in (row[5], row[6]):
-        return row
-    from services.permissions import PermissionService
-    if PermissionService.is_crm_operator(user_id):
+    from services.calendar_access import CalendarAccessService
+    if CalendarAccessService.can_view_event(user_id, row):
         return row
     return None
 
@@ -2604,19 +2659,13 @@ def get_events_by_user(
     limit: int = 20,
 ):
     query = f"{_EVENT_SELECT} WHERE 1=1"
-    params = []
+    params: list = []
 
-    if scope == "my":
-        query += " AND (creator_id = ? OR owner_id = ?)"
-        params.extend([user_id, user_id])
-    elif scope == "owned":
+    if scope == "owned":
         query += " AND owner_id = ?"
         params.append(user_id)
-    elif scope == "all":
-        pass
     else:
-        query += " AND (creator_id = ? OR owner_id = ?)"
-        params.extend([user_id, user_id])
+        query, params = _apply_calendar_access(query, params, user_id, scope)
 
     if status:
         query += " AND status = ?"
@@ -2632,13 +2681,13 @@ def get_events_by_module(
     module: str,
     user_id: int = None,
     limit: int = 20,
+    scope: str = "department",
 ):
     module = _normalize_calendar_module(module)
     query = f"{_EVENT_SELECT} WHERE module = ?"
     params = [module]
     if user_id is not None:
-        query += " AND (creator_id = ? OR owner_id = ?)"
-        params.extend([user_id, user_id])
+        query, params = _apply_calendar_access(query, params, user_id, scope)
     query += " ORDER BY start_time ASC LIMIT ?"
     params.append(limit)
     cursor.execute(query, params)
@@ -2650,10 +2699,8 @@ def get_today_events(user_id: int, scope: str = "my", limit: int = 20):
         {_EVENT_SELECT}
         WHERE date(COALESCE(start_time, start_datetime)) = date('now')
     """
-    params = []
-    if scope != "all":
-        query += " AND (creator_id = ? OR owner_id = ?)"
-        params.extend([user_id, user_id])
+    params: list = []
+    query, params = _apply_calendar_access(query, params, user_id, scope)
     query += " ORDER BY start_time ASC LIMIT ?"
     params.append(limit)
     cursor.execute(query, params)
@@ -2666,10 +2713,8 @@ def get_week_events(user_id: int, scope: str = "my", limit: int = 50):
         WHERE datetime(COALESCE(start_time, start_datetime)) >= datetime('now', 'start of day')
           AND datetime(COALESCE(start_time, start_datetime)) < datetime('now', '+7 days', 'start of day')
     """
-    params = []
-    if scope != "all":
-        query += " AND (creator_id = ? OR owner_id = ?)"
-        params.extend([user_id, user_id])
+    params: list = []
+    query, params = _apply_calendar_access(query, params, user_id, scope)
     query += " ORDER BY start_time ASC LIMIT ?"
     params.append(limit)
     cursor.execute(query, params)
@@ -2681,27 +2726,27 @@ def get_month_events(user_id: int, scope: str = "my", limit: int = 100):
         {_EVENT_SELECT}
         WHERE strftime('%Y-%m', COALESCE(start_time, start_datetime)) = strftime('%Y-%m', 'now')
     """
-    params = []
-    if scope != "all":
-        query += " AND (creator_id = ? OR owner_id = ?)"
-        params.extend([user_id, user_id])
+    params: list = []
+    query, params = _apply_calendar_access(query, params, user_id, scope)
     query += " ORDER BY start_time ASC LIMIT ?"
     params.append(limit)
     cursor.execute(query, params)
     return cursor.fetchall()
 
 
-def get_reminder_events(user_id: int, limit: int = 20):
+def get_reminder_events(user_id: int, scope: str = "department", limit: int = 20):
     query = f"""
         {_EVENT_SELECT}
-        WHERE (creator_id = ? OR owner_id = ?)
-          AND remind_before > 0
+        WHERE remind_before > 0
           AND status IN ('PLANNED', 'ACTIVE')
           AND datetime(COALESCE(start_time, start_datetime), '-' || remind_before || ' minutes')
               <= datetime('now', '+1 day')
-        ORDER BY start_time ASC LIMIT ?
     """
-    cursor.execute(query, (user_id, user_id, limit))
+    params: list = []
+    query, params = _apply_calendar_access(query, params, user_id, scope)
+    query += " ORDER BY start_time ASC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
     return cursor.fetchall()
 
 
@@ -2756,6 +2801,7 @@ def update_event(event_id: int, user_id: int, **fields) -> bool:
     allowed = {
         "title", "description", "module", "event_type", "owner_id",
         "start_time", "end_time", "remind_before", "status",
+        "department", "visibility", "assigned_user_id",
     }
     parts = []
     params = []
@@ -2764,6 +2810,9 @@ def update_event(event_id: int, user_id: int, **fields) -> bool:
             continue
         if key == "module":
             value = _normalize_calendar_module(value)
+            from services.calendar_access import CalendarAccessService
+            parts.append("department = ?")
+            params.append(CalendarAccessService.department_from_module(value))
         if key == "status":
             value = _normalize_calendar_status(value)
         parts.append(f"{key} = ?")
@@ -2779,6 +2828,9 @@ def update_event(event_id: int, user_id: int, **fields) -> bool:
     if "owner_id" in fields:
         parts.append("responsible_user = ?")
         params.append(fields["owner_id"])
+        if "assigned_user_id" not in fields:
+            parts.append("assigned_user_id = ?")
+            params.append(fields["owner_id"])
     if "remind_before" in fields:
         parts.append("reminder_minutes = ?")
         params.append(fields["remind_before"])
@@ -2814,13 +2866,17 @@ def format_event_card(event_row) -> str:
         eid, title, description, module, event_type, creator_id, owner_id,
         start_time, end_time, remind_before, status, created_at, *_rest,
     ) = event_row
+    department = event_row[19] if len(event_row) > 19 else None
+    visibility = event_row[20] if len(event_row) > 20 else "DEPARTMENT"
     mod_label = CALENDAR_MODULES.get(module, module)
     icon = CALENDAR_STATUS_ICONS.get(status, "📋")
+    dept_line = f"🏢 Отдел: {department or '—'} · видимость: {visibility or 'DEPARTMENT'}\n"
     return (
         f"{icon} Событие #{eid}\n\n"
         f"📌 {title}\n"
         f"📝 {description or '—'}\n"
         f"🏷 Модуль: {mod_label} · тип: {event_type}\n"
+        f"{dept_line}"
         f"📊 Статус: {status}\n"
         f"👤 Создатель: {creator_id} · владелец: {owner_id}\n"
         f"🕒 Начало: {start_time}\n"
@@ -2955,8 +3011,9 @@ def get_calendar_events(
     module: str = None,
     status: str = None,
     limit: int = 20,
+    scope: str = "department",
 ):
-    events = get_events_by_user(user_id, scope="my", status=status, limit=limit)
+    events = get_events_by_user(user_id, scope=scope, status=status, limit=limit)
     if module:
         module = _normalize_calendar_module(module)
         events = [e for e in events if e[3] == module]
@@ -5927,19 +5984,19 @@ def search_users(user_id: int, query: str = None, limit: int = 20):
     return cursor.fetchall()
 
 
-def search_calendar_events(user_id: int, query: str = None, limit: int = 20):
+def search_calendar_events(user_id: int, query: str = None, limit: int = 20, scope: str = "department"):
     if not query:
         return []
-    cursor.execute(
-        """
+    base = """
         SELECT id, title, start_time, module, status
         FROM calendar_events
-        WHERE (creator_id = ? OR owner_id = ? OR responsible_user = ?)
-          AND (title LIKE ? OR description LIKE ? OR module LIKE ?)
-        ORDER BY id DESC LIMIT ?
-        """,
-        (user_id, user_id, user_id, f"%{query}%", f"%{query}%", f"%{query}%", limit),
-    )
+        WHERE (title LIKE ? OR description LIKE ? OR module LIKE ?)
+    """
+    params = [f"%{query}%", f"%{query}%", f"%{query}%"]
+    sql, params = _apply_calendar_access(base, params, user_id, scope)
+    sql += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(sql, params)
     return cursor.fetchall()
 
 

@@ -1034,9 +1034,20 @@ def reports_module_actions_inline(report_type: str = "summary") -> InlineKeyboar
     )
 
 
-def calendar_module_menu():
+def calendar_module_menu(user_id: int = None):
+    from services.calendar_access import CalendarAccessService
+
+    rows = [
+        [
+            KeyboardButton(text="📅 Мой календарь"),
+            KeyboardButton(text="🏢 Календарь отдела"),
+        ],
+    ]
+    if user_id is not None and CalendarAccessService.can_see_all_company(user_id):
+        rows.append([KeyboardButton(text="🌍 Все события компании")])
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
+            *rows,
             [
                 KeyboardButton(text="📅 Сегодня"),
                 KeyboardButton(text="📆 Неделя"),
@@ -1047,10 +1058,6 @@ def calendar_module_menu():
             ],
             [
                 KeyboardButton(text="🔔 Напоминания"),
-                KeyboardButton(text="📋 Мои события"),
-            ],
-            [
-                KeyboardButton(text="👥 Все события"),
             ],
             [
                 KeyboardButton(text="⬅ Назад")
