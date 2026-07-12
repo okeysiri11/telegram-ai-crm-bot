@@ -107,6 +107,22 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "liquidity",
         "description": "Liquidity reservation consumed",
     },
+    "settlement.created": {
+        "aggregate_type": "settlement",
+        "description": "Settlement created",
+    },
+    "settlement.started": {
+        "aggregate_type": "settlement",
+        "description": "Settlement started",
+    },
+    "settlement.completed": {
+        "aggregate_type": "settlement",
+        "description": "Settlement completed",
+    },
+    "settlement.failed": {
+        "aggregate_type": "settlement",
+        "description": "Settlement failed",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
