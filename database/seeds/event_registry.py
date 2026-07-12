@@ -91,6 +91,22 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "partner",
         "description": "Partner pricing updated",
     },
+    "liquidity.reserved": {
+        "aggregate_type": "liquidity",
+        "description": "Liquidity reserved for deal",
+    },
+    "liquidity.released": {
+        "aggregate_type": "liquidity",
+        "description": "Liquidity reservation released",
+    },
+    "liquidity.shortage": {
+        "aggregate_type": "liquidity",
+        "description": "Liquidity shortage detected",
+    },
+    "liquidity.consumed": {
+        "aggregate_type": "liquidity",
+        "description": "Liquidity reservation consumed",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
