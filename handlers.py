@@ -21,6 +21,7 @@ from services.finance_core import FinanceCoreService
 from services.finance_auth import FinanceAuthService
 from services.event_bus_test import EventBusTestService
 from services.deal_engine import DealEngine
+from services.commission_engine import CommissionEngine
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
@@ -1272,6 +1273,38 @@ async def deal_engine_integration_test(message: Message):
         lines.append(f"Error: {result['error']}")
     await message.answer("\n".join(lines))
     log_audit(user_id, "deal_integration_test", "deals", result.get("status"))
+
+
+@router.message(Command("commission_test"))
+async def commission_engine_integration_test(message: Message):
+    user_id = message.from_user.id
+    if not CommissionEngine.can_view(user_id):
+        await message.answer("Нет доступа к /commission_test.")
+        return
+    result = CommissionEngine.run_integration_test(user_id)
+    steps = result.get("steps", {})
+    lines = [
+        "COMMISSION ENGINE — INTEGRATION TEST",
+        f"STATUS: {result.get('status', 'ERROR')}",
+        f"Rules: {steps.get('rules_count', '—')} ({', '.join(steps.get('rule_types', []))})",
+        f"Deal: {steps.get('create_deal', '—')}",
+        f"Accrued (new): {steps.get('accrual_count', '—')}",
+        f"Total commissions: {steps.get('total_commissions', '—')}",
+        f"Types: {', '.join(steps.get('commission_types', [])) or '—'}",
+        f"Approved: {steps.get('approved_count', '—')}",
+        f"Pool funded TX: {steps.get('pool_funded', '—')}",
+        f"Pay TX: {steps.get('pay_tx', '—')}",
+        f"Paid status: {steps.get('paid_status', '—')}",
+        f"Payment ref: {steps.get('payment_reference', '—')}",
+        f"Payment rows: {steps.get('payment_rows', '—')}",
+        f"Finance TX: {steps.get('finance_commission_tx', '—')}",
+        f"FINANCE_COMMISSION_PAID events: {steps.get('commission_paid_events', '—')}",
+        f"Audit (commissions): {steps.get('audit_count', '—')}",
+    ]
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "commission_integration_test", "commissions", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")

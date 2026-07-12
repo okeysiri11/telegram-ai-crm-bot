@@ -462,6 +462,7 @@ def _migrate_schema():
     _migrate_bidex_financial_core_phase1()
     _migrate_event_bus()
     _migrate_deal_engine_phase1()
+    _migrate_commission_engine_phase1()
 
 
 def _migrate_company_core_phase1():
@@ -760,6 +761,92 @@ def _migrate_bidex_financial_core_phase1():
     conn.commit()
 
 
+def _migrate_commission_engine_phase1():
+    """Commission Engine — rules, accruals, payments; integrates with Finance Core."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS commission_rules (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            rule_name TEXT NOT NULL,
+            commission_type TEXT NOT NULL,
+            module TEXT,
+            rate_type TEXT NOT NULL DEFAULT 'PERCENT',
+            rate_value REAL NOT NULL,
+            currency TEXT DEFAULT 'USD',
+            min_amount REAL,
+            max_amount REAL,
+            active INTEGER DEFAULT 1,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS commissions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipient_id INTEGER NOT NULL,
+            recipient_role TEXT NOT NULL,
+            commission_type TEXT NOT NULL,
+            deal_id INTEGER,
+            amount REAL NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'USD',
+            status TEXT NOT NULL DEFAULT 'PENDING',
+            rule_id INTEGER,
+            payment_reference TEXT,
+            finance_transaction_id INTEGER,
+            module TEXT,
+            notes TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (deal_id) REFERENCES deals(id),
+            FOREIGN KEY (rule_id) REFERENCES commission_rules(id)
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS commission_payments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            commission_id INTEGER NOT NULL,
+            amount REAL NOT NULL,
+            currency TEXT NOT NULL DEFAULT 'USD',
+            status TEXT NOT NULL DEFAULT 'PENDING',
+            payment_reference TEXT,
+            finance_transaction_id INTEGER,
+            paid_by INTEGER,
+            paid_at TIMESTAMP,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (commission_id) REFERENCES commissions(id)
+        )
+        """
+    )
+    conn.commit()
+
+    default_rules = [
+        ("Manager Default 2%", "MANAGER", None, "PERCENT", 2.0, "USD"),
+        ("Agent Default 1.5%", "AGENT", None, "PERCENT", 1.5, "USD"),
+        ("Partner Default 3%", "PARTNER", None, "PERCENT", 3.0, "USD"),
+        ("Broker Default 1%", "BROKER", None, "PERCENT", 1.0, "USD"),
+        ("Insurance Default 0.5%", "INSURANCE", None, "PERCENT", 0.5, "USD"),
+        ("Referral Fixed 100", "REFERRAL", None, "FIXED", 100.0, "USD"),
+    ]
+    for name, ctype, module, rtype, rval, currency in default_rules:
+        cursor.execute(
+            "SELECT id FROM commission_rules WHERE rule_name = ?",
+            (name,),
+        )
+        if cursor.fetchone():
+            continue
+        cursor.execute(
+            """
+            INSERT INTO commission_rules (
+                rule_name, commission_type, module, rate_type, rate_value, currency
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (name, ctype, module, rtype, rval, currency),
+        )
     conn.commit()
 
 
@@ -1928,6 +2015,37 @@ DEAL_ROLE_ACTIONS = {
     "LAWYER": {"DEAL_VIEW", "DEAL_CREATE", "DEAL_EDIT"},
     "ENGINEER": {"DEAL_VIEW", "DEAL_CREATE"},
     "VIEWER": {"DEAL_VIEW"},
+    "CLIENT": set(),
+}
+
+COMMISSION_TYPES = (
+    "MANAGER", "AGENT", "PARTNER", "BROKER", "INSURANCE", "REFERRAL",
+)
+
+COMMISSION_STATUSES = ("PENDING", "APPROVED", "PAID", "CANCELLED")
+
+COMMISSION_STATUS_TRANSITIONS = {
+    "PENDING": {"APPROVED", "CANCELLED"},
+    "APPROVED": {"PAID", "CANCELLED"},
+    "PAID": set(),
+    "CANCELLED": set(),
+}
+
+COMMISSION_ACTION_PERMISSIONS = (
+    "COMMISSION_VIEW",
+    "COMMISSION_CREATE",
+    "COMMISSION_APPROVE",
+    "COMMISSION_PAY",
+)
+
+COMMISSION_ROLE_ACTIONS = {
+    "OWNER": set(COMMISSION_ACTION_PERMISSIONS),
+    "ADMIN": set(COMMISSION_ACTION_PERMISSIONS),
+    "SUPER_MANAGER": set(COMMISSION_ACTION_PERMISSIONS),
+    "AGRO_MANAGER": {"COMMISSION_VIEW", "COMMISSION_CREATE"},
+    "CRYPTO_MANAGER": {"COMMISSION_VIEW", "COMMISSION_CREATE"},
+    "MANAGER": {"COMMISSION_VIEW", "COMMISSION_CREATE", "COMMISSION_APPROVE"},
+    "VIEWER": {"COMMISSION_VIEW"},
     "CLIENT": set(),
 }
 
@@ -9042,4 +9160,420 @@ def format_deal_card(deal_row: tuple) -> str:
         f"👥 Customer: {customer_id or '—'} · Partner: {partner_id or '—'}\n"
         f"🔗 Legacy: {legacy_ref_type or '—'} #{legacy_ref_id or '—'}\n"
         f"🕒 {created_at} → {updated_at}"
+    )
+
+
+# ==========================================================
+# COMMISSION ENGINE
+# ==========================================================
+
+_COMMISSION_SELECT = """
+    SELECT id, recipient_id, recipient_role, commission_type, deal_id,
+           amount, currency, status, rule_id, payment_reference,
+           finance_transaction_id, module, notes, created_at, updated_at
+    FROM commissions
+"""
+
+
+def _normalize_commission_type(value: str) -> str:
+    key = (value or "MANAGER").strip().upper()
+    return key if key in COMMISSION_TYPES else "MANAGER"
+
+
+def has_commission_action(user_id: int, action: str) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+    if action not in COMMISSION_ACTION_PERMISSIONS:
+        return False
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return True
+    for role in get_user_roles(user_id):
+        if action in COMMISSION_ROLE_ACTIONS.get(role, set()):
+            return True
+    return False
+
+
+def _get_commission_pool_account_id(currency: str = "USD") -> int | None:
+    cursor.execute(
+        """
+        SELECT id FROM finance_accounts
+        WHERE account_type = 'COMMISSION' AND currency = ? AND status = 'ACTIVE'
+        LIMIT 1
+        """,
+        (currency.upper(),),
+    )
+    row = cursor.fetchone()
+    return row[0] if row else None
+
+
+def _get_commission_payout_account_id(currency: str = "USD") -> int | None:
+    """Default credit account for commission payouts (Main Cash)."""
+    cursor.execute(
+        """
+        SELECT id FROM finance_accounts
+        WHERE account_type = 'CASH' AND currency = ? AND status = 'ACTIVE'
+        ORDER BY id ASC
+        LIMIT 1
+        """,
+        (currency.upper(),),
+    )
+    row = cursor.fetchone()
+    return row[0] if row else None
+
+
+def create_commission_rule(
+    user_id: int,
+    rule_name: str,
+    commission_type: str,
+    rate_value: float,
+    rate_type: str = "PERCENT",
+    module: str = None,
+    currency: str = "USD",
+    min_amount: float = None,
+    max_amount: float = None,
+) -> int:
+    commission_type = _normalize_commission_type(commission_type)
+    rate_type = rate_type.upper() if rate_type else "PERCENT"
+    cursor.execute(
+        """
+        INSERT INTO commission_rules (
+            rule_name, commission_type, module, rate_type, rate_value,
+            currency, min_amount, max_amount
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            rule_name.strip(), commission_type, module, rate_type, float(rate_value),
+            currency.upper(), min_amount, max_amount,
+        ),
+    )
+    conn.commit()
+    rule_id = cursor.lastrowid
+    log_audit(user_id, "commission_rule_create", "commissions", f"id={rule_id}|{commission_type}")
+    return rule_id
+
+
+def get_commission_rule(rule_id: int):
+    cursor.execute(
+        """
+        SELECT id, rule_name, commission_type, module, rate_type, rate_value,
+               currency, min_amount, max_amount, active, created_at, updated_at
+        FROM commission_rules WHERE id = ?
+        """,
+        (rule_id,),
+    )
+    return cursor.fetchone()
+
+
+def list_commission_rules(commission_type: str = None, active_only: bool = True) -> list:
+    query = "SELECT * FROM commission_rules WHERE 1=1"
+    params: list = []
+    if commission_type:
+        query += " AND commission_type = ?"
+        params.append(_normalize_commission_type(commission_type))
+    if active_only:
+        query += " AND active = 1"
+    query += " ORDER BY id ASC"
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def calculate_commission_amount(
+    base_amount: float,
+    commission_type: str,
+    module: str = None,
+    currency: str = "USD",
+) -> tuple[float, int | None]:
+    """Return (amount, rule_id) using best matching active rule."""
+    commission_type = _normalize_commission_type(commission_type)
+    cursor.execute(
+        """
+        SELECT id, rate_type, rate_value, min_amount, max_amount
+        FROM commission_rules
+        WHERE commission_type = ? AND active = 1
+          AND (module IS NULL OR module = ?)
+          AND currency = ?
+        ORDER BY module DESC, id ASC
+        LIMIT 1
+        """,
+        (commission_type, module, currency.upper()),
+    )
+    row = cursor.fetchone()
+    if not row:
+        return 0.0, None
+    rule_id, rate_type, rate_value, min_amt, max_amt = row
+    if rate_type == "FIXED":
+        amount = float(rate_value)
+    else:
+        amount = float(base_amount or 0) * float(rate_value) / 100.0
+    if min_amt is not None:
+        amount = max(amount, float(min_amt))
+    if max_amt is not None:
+        amount = min(amount, float(max_amt))
+    return round(amount, 2), rule_id
+
+
+def create_commission(
+    user_id: int,
+    recipient_id: int,
+    recipient_role: str,
+    commission_type: str,
+    amount: float,
+    deal_id: int = None,
+    currency: str = "USD",
+    rule_id: int = None,
+    module: str = None,
+    notes: str = None,
+) -> int:
+    commission_type = _normalize_commission_type(commission_type)
+    cursor.execute(
+        """
+        INSERT INTO commissions (
+            recipient_id, recipient_role, commission_type, deal_id,
+            amount, currency, status, rule_id, module, notes
+        )
+        VALUES (?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)
+        """,
+        (
+            recipient_id, recipient_role, commission_type, deal_id,
+            float(amount), currency.upper(), rule_id, module, notes,
+        ),
+    )
+    conn.commit()
+    cid = cursor.lastrowid
+    log_audit(
+        user_id, "commission_create", "commissions",
+        f"id={cid}|type={commission_type}|amount={amount}|deal={deal_id}",
+    )
+    return cid
+
+
+def get_commission(commission_id: int):
+    cursor.execute(f"{_COMMISSION_SELECT} WHERE id = ?", (commission_id,))
+    return cursor.fetchone()
+
+
+def list_commissions(
+    recipient_id: int = None,
+    deal_id: int = None,
+    status: str = None,
+    commission_type: str = None,
+    limit: int = 50,
+) -> list:
+    query = f"{_COMMISSION_SELECT} WHERE 1=1"
+    params: list = []
+    if recipient_id is not None:
+        query += " AND recipient_id = ?"
+        params.append(recipient_id)
+    if deal_id is not None:
+        query += " AND deal_id = ?"
+        params.append(deal_id)
+    if status:
+        query += " AND status = ?"
+        params.append(status.upper())
+    if commission_type:
+        query += " AND commission_type = ?"
+        params.append(_normalize_commission_type(commission_type))
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def update_commission_status(
+    commission_id: int,
+    user_id: int,
+    new_status: str,
+) -> bool:
+    new_status = new_status.strip().upper()
+    if new_status not in COMMISSION_STATUSES:
+        return False
+    comm = get_commission(commission_id)
+    if not comm:
+        return False
+    current = comm[7]
+    allowed = COMMISSION_STATUS_TRANSITIONS.get(current, set())
+    if new_status != current and new_status not in allowed:
+        return False
+
+    cursor.execute(
+        """
+        UPDATE commissions SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (new_status, commission_id),
+    )
+    conn.commit()
+    if cursor.rowcount:
+        log_audit(
+            user_id, "commission_status", "commissions",
+            f"id={commission_id}|{current}->{new_status}",
+        )
+    return cursor.rowcount > 0
+
+
+def pay_commission(
+    commission_id: int,
+    user_id: int,
+    debit_account_id: int = None,
+    credit_account_id: int = None,
+) -> int | None:
+    """Mark commission PAID and create Finance Core COMMISSION transaction."""
+    comm = get_commission(commission_id)
+    if not comm:
+        return None
+
+    (
+        cid, recipient_id, recipient_role, commission_type, deal_id,
+        amount, currency, status, rule_id, payment_reference,
+        finance_tx_id, module, notes, created_at, updated_at,
+    ) = comm
+
+    if status == "PAID":
+        return finance_tx_id
+    if status == "CANCELLED":
+        return None
+    if status == "PENDING":
+        if not update_commission_status(commission_id, user_id, "APPROVED"):
+            return None
+        comm = get_commission(commission_id)
+        if not comm or comm[7] != "APPROVED":
+            return None
+    elif status != "APPROVED":
+        return None
+
+    pool_id = debit_account_id or _get_commission_pool_account_id(currency)
+    payout_id = credit_account_id or _get_commission_payout_account_id(currency)
+    if not pool_id or not payout_id or pool_id == payout_id:
+        return None
+
+    tx_id = create_finance_transaction(
+        user_id=user_id,
+        transaction_type="COMMISSION",
+        amount=amount,
+        currency=currency,
+        debit_account_id=pool_id,
+        credit_account_id=payout_id,
+        reference_type="COMMISSION",
+        reference_id=cid,
+        notes=f"Commission #{cid} {commission_type} deal={deal_id}",
+        status="CREATED",
+    )
+    if not tx_id:
+        return None
+
+    for step in ("PENDING", "APPROVED", "EXECUTING", "COMPLETED"):
+        if not update_finance_transaction_status(tx_id, user_id, step):
+            break
+
+    pay_ref = f"FIN-TX-{tx_id}"
+    cursor.execute(
+        """
+        INSERT INTO commission_payments (
+            commission_id, amount, currency, status,
+            payment_reference, finance_transaction_id, paid_by, paid_at
+        )
+        VALUES (?, ?, ?, 'PAID', ?, ?, ?, CURRENT_TIMESTAMP)
+        """,
+        (cid, amount, currency, pay_ref, tx_id, user_id),
+    )
+    cursor.execute(
+        """
+        UPDATE commissions
+        SET status = 'PAID', payment_reference = ?,
+            finance_transaction_id = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (pay_ref, tx_id, cid),
+    )
+    conn.commit()
+    log_audit(
+        user_id, "commission_paid", "commissions",
+        f"id={cid}|tx={tx_id}|ref={pay_ref}",
+    )
+    return tx_id
+
+
+def accrue_commissions_for_deal(
+    deal_id: int,
+    user_id: int,
+    recipients: dict = None,
+) -> list[int]:
+    """Auto-accrue commissions when a deal completes."""
+    deal = get_deal(deal_id)
+    if not deal:
+        return []
+    (
+        _did, module, _dtype, _status, _owner, manager_id,
+        _customer, partner_id, amount, currency, _profit, _commission,
+        *_rest,
+    ) = deal
+    base = float(amount or 0)
+    recipients = recipients or {}
+    created = []
+    seen: set[tuple] = set()
+
+    def _accrue(commission_type: str, recipient_id: int, recipient_role: str) -> None:
+        if not recipient_id:
+            return
+        key = (commission_type, recipient_id)
+        if key in seen:
+            return
+        seen.add(key)
+        cursor.execute(
+            """
+            SELECT id FROM commissions
+            WHERE deal_id = ? AND commission_type = ? AND recipient_id = ?
+              AND status != 'CANCELLED'
+            LIMIT 1
+            """,
+            (deal_id, commission_type, recipient_id),
+        )
+        if cursor.fetchone():
+            return
+        amt, rule_id = calculate_commission_amount(base, commission_type, module, currency)
+        if amt <= 0:
+            return
+        created.append(create_commission(
+            user_id, recipient_id, recipient_role, commission_type, amt,
+            deal_id=deal_id, currency=currency, rule_id=rule_id, module=module,
+            notes=f"Auto-accrual deal #{deal_id}",
+        ))
+
+    _accrue("MANAGER", manager_id, recipients.get("manager_role", "MANAGER"))
+    _accrue("PARTNER", partner_id, recipients.get("partner_role", "PARTNER"))
+    _accrue("AGENT", recipients.get("agent_id"), recipients.get("agent_role", "AGENT"))
+    _accrue("BROKER", recipients.get("broker_id"), recipients.get("broker_role", "BROKER"))
+    _accrue(
+        "INSURANCE",
+        recipients.get("insurance_id"),
+        recipients.get("insurance_role", "INSURANCE"),
+    )
+    _accrue(
+        "REFERRAL",
+        recipients.get("referral_id"),
+        recipients.get("referral_role", "REFERRAL"),
+    )
+
+    return created
+
+
+def format_commission_card(row: tuple) -> str:
+    if not row:
+        return "Комиссия не найдена."
+    (
+        cid, recipient_id, recipient_role, commission_type, deal_id,
+        amount, currency, status, rule_id, payment_reference,
+        finance_tx_id, module, notes, created_at, updated_at,
+    ) = row
+    return (
+        f"💰 Комиссия #{cid}\n\n"
+        f"👤 Получатель: {recipient_id} ({recipient_role})\n"
+        f"🏷 Тип: {commission_type} · модуль: {module or '—'}\n"
+        f"🤝 Сделка: #{deal_id or '—'}\n"
+        f"💵 {amount:,.2f} {currency}\n"
+        f"📊 Статус: {status}\n"
+        f"📋 Правило: #{rule_id or '—'}\n"
+        f"🔗 Оплата: {payment_reference or '—'} · TX #{finance_tx_id or '—'}\n"
+        f"📝 {notes or '—'}\n"
+        f"🕒 {created_at}"
     )

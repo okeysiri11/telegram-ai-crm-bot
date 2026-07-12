@@ -27,6 +27,7 @@ def register_default_subscribers() -> None:
         ("DEAL_CREATED", _on_deal_created, "deal_workflow"),
         ("DEAL_STATUS_CHANGED", _on_deal_status_changed, "deal_workflow"),
         ("DEAL_COMPLETED", _on_deal_completed, "deal_workflow"),
+        ("DEAL_COMPLETED", _on_deal_completed_commissions, "commission_accrual"),
     ]
     for event_type, handler, sid in handlers:
         EventBus.subscribe(event_type, handler, subscriber_id=sid)
@@ -275,3 +276,19 @@ def _on_deal_completed(event: PlatformEvent) -> None:
     DealWorkflowEngine.on_completed(
         event.entity_id, event.user_id, module, event.payload,
     )
+
+
+def _on_deal_completed_commissions(event: PlatformEvent) -> None:
+    from database import accrue_commissions_for_deal
+    deal_id = int(event.entity_id)
+    payload = event.payload or {}
+    recipients = {
+        key: payload[key]
+        for key in (
+            "agent_id", "broker_id", "insurance_id", "referral_id",
+            "agent_role", "broker_role", "insurance_role", "referral_role",
+            "manager_role", "partner_role",
+        )
+        if payload.get(key) is not None
+    }
+    accrue_commissions_for_deal(deal_id, event.user_id, recipients=recipients or None)

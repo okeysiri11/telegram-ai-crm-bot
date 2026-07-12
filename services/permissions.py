@@ -129,3 +129,8 @@ class PermissionService:
     def has_deal_action(user_id: int, action: str) -> bool:
         from database import has_deal_action
         return has_deal_action(user_id, action)
+
+    @staticmethod
+    def has_commission_action(user_id: int, action: str) -> bool:
+        from database import has_commission_action
+        return has_commission_action(user_id, action)
