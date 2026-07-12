@@ -195,6 +195,30 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "vehicle",
         "description": "Vehicle price changed during marketplace import",
     },
+    "vehicle.created": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle operation created",
+    },
+    "vehicle.arrived": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle arrived at warehouse",
+    },
+    "vehicle.listed": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle listed for sale",
+    },
+    "vehicle.reserved": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle reserved for sale",
+    },
+    "vehicle.sold": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle sold",
+    },
+    "vehicle.delivered": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle delivered to customer",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
