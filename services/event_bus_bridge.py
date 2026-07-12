@@ -28,6 +28,9 @@ def register_default_subscribers() -> None:
         ("DEAL_STATUS_CHANGED", _on_deal_status_changed, "deal_workflow"),
         ("DEAL_COMPLETED", _on_deal_completed, "deal_workflow"),
         ("DEAL_COMPLETED", _on_deal_completed_commissions, "commission_accrual"),
+        ("DEAL_COMPLETED", _on_deal_completed_partner_kpi, "partner_kpi"),
+        ("PARTNER_ASSIGNED", _on_partner_assigned, "partner_workflow"),
+        ("PARTNER_CREATED", _on_partner_created, "partner_workflow"),
     ]
     for event_type, handler, sid in handlers:
         EventBus.subscribe(event_type, handler, subscriber_id=sid)
@@ -292,3 +295,36 @@ def _on_deal_completed_commissions(event: PlatformEvent) -> None:
         if payload.get(key) is not None
     }
     accrue_commissions_for_deal(deal_id, event.user_id, recipients=recipients or None)
+
+
+def _on_deal_completed_partner_kpi(event: PlatformEvent) -> None:
+    from database import list_partner_assignments, refresh_partner_kpi
+    deal_id = int(event.entity_id)
+    for row in list_partner_assignments(deal_id=deal_id):
+        refresh_partner_kpi(row[1])
+
+
+def _on_partner_assigned(event: PlatformEvent) -> None:
+    from database import log_audit
+    from services.timeline import TimelineService
+    partner_id = event.payload.get("partner_id")
+    company = event.payload.get("company_name", "")
+    TimelineService.record(
+        "DEAL",
+        event.entity_id,
+        "PARTNER_ASSIGNED",
+        event.user_id,
+        description=f"Partner {company} (#{partner_id}) assigned",
+    )
+    log_audit(
+        event.user_id, "partner_assigned_event", "partners",
+        f"deal={event.entity_id}|partner={partner_id}",
+    )
+
+
+def _on_partner_created(event: PlatformEvent) -> None:
+    from database import log_audit
+    log_audit(
+        event.user_id, "partner_created_event", "partners",
+        f"id={event.entity_id}|type={event.payload.get('partner_type')}",
+    )

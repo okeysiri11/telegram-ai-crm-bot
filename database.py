@@ -463,6 +463,74 @@ def _migrate_schema():
     _migrate_event_bus()
     _migrate_deal_engine_phase1()
     _migrate_commission_engine_phase1()
+    _migrate_partner_hub_phase1()
+
+
+def _migrate_partner_hub_phase1():
+    """Partner Hub — registry, deal assignments, performance KPI."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS partners (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partner_type TEXT NOT NULL,
+            company_name TEXT NOT NULL,
+            contact_person TEXT,
+            telegram TEXT,
+            telegram_id INTEGER,
+            phone TEXT,
+            email TEXT,
+            rating REAL DEFAULT 0,
+            active INTEGER DEFAULT 1,
+            regions TEXT,
+            services TEXT,
+            public_id TEXT,
+            created_by INTEGER,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_deleted INTEGER DEFAULT 0,
+            deleted_at TIMESTAMP,
+            deleted_by INTEGER
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS partner_deal_assignments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partner_id INTEGER NOT NULL,
+            deal_id INTEGER NOT NULL,
+            assignment_role TEXT NOT NULL DEFAULT 'PARTNER',
+            status TEXT NOT NULL DEFAULT 'ACTIVE',
+            assigned_by INTEGER NOT NULL,
+            assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            notes TEXT,
+            FOREIGN KEY (partner_id) REFERENCES partners(id),
+            FOREIGN KEY (deal_id) REFERENCES deals(id),
+            UNIQUE(partner_id, deal_id)
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS partner_kpi (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            partner_id INTEGER NOT NULL,
+            period TEXT NOT NULL,
+            deals_count INTEGER DEFAULT 0,
+            deals_completed INTEGER DEFAULT 0,
+            total_volume REAL DEFAULT 0,
+            total_commission REAL DEFAULT 0,
+            avg_rating REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(partner_id, period),
+            FOREIGN KEY (partner_id) REFERENCES partners(id)
+        )
+        """
+    )
+    if not _column_exists("partners", "public_id"):
+        cursor.execute("ALTER TABLE partners ADD COLUMN public_id TEXT")
+    conn.commit()
 
 
 def _migrate_company_core_phase1():
@@ -2046,6 +2114,31 @@ COMMISSION_ROLE_ACTIONS = {
     "CRYPTO_MANAGER": {"COMMISSION_VIEW", "COMMISSION_CREATE"},
     "MANAGER": {"COMMISSION_VIEW", "COMMISSION_CREATE", "COMMISSION_APPROVE"},
     "VIEWER": {"COMMISSION_VIEW"},
+    "CLIENT": set(),
+}
+
+PARTNER_TYPES = (
+    "BROKER", "INSURANCE", "BANK", "LEASING", "LOGISTICS",
+    "SERVICE", "SUPPLIER", "LAWYER", "CUSTOMS",
+)
+
+PARTNER_ACTION_PERMISSIONS = (
+    "PARTNER_VIEW",
+    "PARTNER_CREATE",
+    "PARTNER_EDIT",
+    "PARTNER_ASSIGN",
+    "PARTNER_ANALYTICS",
+)
+
+PARTNER_ROLE_ACTIONS = {
+    "OWNER": set(PARTNER_ACTION_PERMISSIONS),
+    "ADMIN": set(PARTNER_ACTION_PERMISSIONS),
+    "SUPER_MANAGER": set(PARTNER_ACTION_PERMISSIONS),
+    "AGRO_MANAGER": {"PARTNER_VIEW", "PARTNER_CREATE", "PARTNER_ASSIGN"},
+    "CRYPTO_MANAGER": {"PARTNER_VIEW", "PARTNER_CREATE"},
+    "MANAGER": {"PARTNER_VIEW", "PARTNER_CREATE", "PARTNER_EDIT", "PARTNER_ASSIGN"},
+    "LAWYER": {"PARTNER_VIEW", "PARTNER_ASSIGN"},
+    "VIEWER": {"PARTNER_VIEW"},
     "CLIENT": set(),
 }
 
@@ -8140,6 +8233,7 @@ PUBLIC_ID_PREFIX_MAP = {
     "calendar_events": "EV",
     "agro_documents": "DC",
     "deals": "DL",
+    "partners": "PR",
 }
 
 ATTACHMENT_ENTITY_TYPES = (
@@ -8942,6 +9036,7 @@ def list_deals(
     module: str = None,
     status: str = None,
     manager_id: int = None,
+    partner_id: int = None,
     limit: int = 50,
 ) -> list:
     query = f"{_DEAL_SELECT} WHERE 1=1"
@@ -8955,6 +9050,9 @@ def list_deals(
     if manager_id is not None:
         query += " AND (manager_id = ? OR owner_id = ?)"
         params.extend([manager_id, manager_id])
+    if partner_id is not None:
+        query += " AND partner_id = ?"
+        params.append(partner_id)
     query += " ORDER BY id DESC LIMIT ?"
     params.append(limit)
     cursor.execute(query, params)
@@ -9577,3 +9675,485 @@ def format_commission_card(row: tuple) -> str:
         f"📝 {notes or '—'}\n"
         f"🕒 {created_at}"
     )
+
+
+# ==========================================================
+# PARTNER HUB
+# ==========================================================
+
+_PARTNER_SELECT = """
+    SELECT id, partner_type, company_name, contact_person, telegram, telegram_id,
+           phone, email, rating, active, regions, services, public_id,
+           created_by, created_at, updated_at
+    FROM partners
+"""
+
+
+def _normalize_partner_type(value: str) -> str:
+    key = (value or "BROKER").strip().upper()
+    return key if key in PARTNER_TYPES else "BROKER"
+
+
+def _partner_json_list(value) -> str | None:
+    import json
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    if isinstance(value, (list, tuple)):
+        return json.dumps(list(value), ensure_ascii=False)
+    return json.dumps([str(value)], ensure_ascii=False)
+
+
+def _partner_parse_json_list(value: str | None) -> list:
+    import json
+    if not value:
+        return []
+    try:
+        parsed = json.loads(value)
+        return parsed if isinstance(parsed, list) else [str(parsed)]
+    except (json.JSONDecodeError, TypeError):
+        return [part.strip() for part in str(value).split(",") if part.strip()]
+
+
+def has_partner_action(user_id: int, action: str) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+    if action not in PARTNER_ACTION_PERMISSIONS:
+        return False
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return True
+    for role in get_user_roles(user_id):
+        if action in PARTNER_ROLE_ACTIONS.get(role, set()):
+            return True
+    return False
+
+
+def create_partner(
+    user_id: int,
+    partner_type: str,
+    company_name: str,
+    contact_person: str = None,
+    telegram: str = None,
+    telegram_id: int = None,
+    phone: str = None,
+    email: str = None,
+    rating: float = 0,
+    active: bool = True,
+    regions=None,
+    services=None,
+) -> int:
+    partner_type = _normalize_partner_type(partner_type)
+    cursor.execute(
+        """
+        INSERT INTO partners (
+            partner_type, company_name, contact_person, telegram, telegram_id,
+            phone, email, rating, active, regions, services, created_by
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            partner_type,
+            company_name.strip(),
+            contact_person,
+            telegram,
+            telegram_id,
+            phone,
+            email,
+            float(rating or 0),
+            1 if active else 0,
+            _partner_json_list(regions),
+            _partner_json_list(services),
+            user_id,
+        ),
+    )
+    conn.commit()
+    partner_id = cursor.lastrowid
+    assign_public_id("partners", partner_id)
+    log_audit(
+        user_id, "partner_create", "partners",
+        f"id={partner_id}|type={partner_type}|{company_name}",
+    )
+    from events import EventBus
+    EventBus.publish(
+        "PARTNER_CREATED",
+        user_id=user_id,
+        module="partners",
+        entity_type="partner",
+        entity_id=partner_id,
+        payload={
+            "partner_type": partner_type,
+            "company_name": company_name,
+        },
+    )
+    return partner_id
+
+
+def get_partner(partner_id: int):
+    cursor.execute(
+        f"{_PARTNER_SELECT} WHERE id = ? AND is_deleted = 0",
+        (partner_id,),
+    )
+    return cursor.fetchone()
+
+
+def list_partners(
+    partner_type: str = None,
+    active_only: bool = True,
+    region: str = None,
+    limit: int = 50,
+) -> list:
+    query = f"{_PARTNER_SELECT} WHERE is_deleted = 0"
+    params: list = []
+    if partner_type:
+        query += " AND partner_type = ?"
+        params.append(_normalize_partner_type(partner_type))
+    if active_only:
+        query += " AND active = 1"
+    if region:
+        query += " AND (regions LIKE ? OR regions IS NULL)"
+        params.append(f"%{region.strip()}%")
+    query += " ORDER BY rating DESC, company_name ASC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def update_partner(partner_id: int, user_id: int, **fields) -> bool:
+    allowed = {
+        "partner_type", "company_name", "contact_person", "telegram", "telegram_id",
+        "phone", "email", "rating", "active", "regions", "services",
+    }
+    parts, params = [], []
+    for key, value in fields.items():
+        if key not in allowed or value is None:
+            continue
+        if key == "partner_type":
+            value = _normalize_partner_type(value)
+        elif key in ("regions", "services"):
+            value = _partner_json_list(value)
+        elif key == "active":
+            value = 1 if value else 0
+        elif key == "rating":
+            value = float(value)
+        parts.append(f"{key} = ?")
+        params.append(value)
+    if not parts:
+        return False
+    parts.append("updated_at = CURRENT_TIMESTAMP")
+    params.append(partner_id)
+    cursor.execute(
+        f"UPDATE partners SET {', '.join(parts)} WHERE id = ? AND is_deleted = 0",
+        params,
+    )
+    conn.commit()
+    if cursor.rowcount:
+        log_audit(user_id, "partner_update", "partners", f"id={partner_id}")
+    return cursor.rowcount > 0
+
+
+def assign_partner_to_deal(
+    partner_id: int,
+    deal_id: int,
+    user_id: int,
+    assignment_role: str = "PARTNER",
+    notes: str = None,
+) -> bool:
+    partner = get_partner(partner_id)
+    deal = get_deal(deal_id)
+    if not partner or not deal:
+        return False
+    if not partner[9]:
+        return False
+
+    cursor.execute(
+        """
+        INSERT INTO partner_deal_assignments (
+            partner_id, deal_id, assignment_role, assigned_by, notes
+        )
+        VALUES (?, ?, ?, ?, ?)
+        ON CONFLICT(partner_id, deal_id) DO UPDATE SET
+            assignment_role = excluded.assignment_role,
+            status = 'ACTIVE',
+            assigned_by = excluded.assigned_by,
+            assigned_at = CURRENT_TIMESTAMP,
+            notes = excluded.notes
+        """,
+        (
+            partner_id, deal_id,
+            assignment_role.strip().upper() or "PARTNER",
+            user_id, notes,
+        ),
+    )
+    recipient_id = partner[5] or partner_id
+    cursor.execute(
+        """
+        UPDATE deals SET partner_id = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+        """,
+        (recipient_id, deal_id),
+    )
+    conn.commit()
+    log_audit(
+        user_id, "partner_assign_deal", "partners",
+        f"partner={partner_id}|deal={deal_id}|role={assignment_role}",
+    )
+    from events import EventBus
+    EventBus.publish(
+        "PARTNER_ASSIGNED",
+        user_id=user_id,
+        module=DEAL_MODULE_TO_HUB.get(deal[1], deal[1].lower()),
+        entity_type="deal",
+        entity_id=deal_id,
+        payload={
+            "partner_id": partner_id,
+            "partner_type": partner[1],
+            "company_name": partner[2],
+            "assignment_role": assignment_role,
+            "deal_module": deal[1],
+        },
+    )
+    return True
+
+
+def list_partner_assignments(partner_id: int = None, deal_id: int = None, limit: int = 50) -> list:
+    query = """
+        SELECT a.id, a.partner_id, a.deal_id, a.assignment_role, a.status,
+               a.assigned_by, a.assigned_at, a.notes,
+               p.company_name, p.partner_type, d.module, d.status, d.amount, d.currency
+        FROM partner_deal_assignments a
+        JOIN partners p ON p.id = a.partner_id AND p.is_deleted = 0
+        JOIN deals d ON d.id = a.deal_id
+        WHERE a.status = 'ACTIVE'
+    """
+    params: list = []
+    if partner_id is not None:
+        query += " AND a.partner_id = ?"
+        params.append(partner_id)
+    if deal_id is not None:
+        query += " AND a.deal_id = ?"
+        params.append(deal_id)
+    query += " ORDER BY a.assigned_at DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def list_deals_for_partner(partner_id: int, limit: int = 50) -> list:
+    partner = get_partner(partner_id)
+    if not partner:
+        return []
+    cursor.execute(
+        """
+        SELECT d.id, d.module, d.deal_type, d.status, d.owner_id, d.manager_id,
+               d.customer_id, d.partner_id, d.amount, d.currency, d.profit, d.commission,
+               d.public_id, d.legacy_ref_type, d.legacy_ref_id, d.created_at, d.updated_at
+        FROM deals d
+        JOIN partner_deal_assignments a ON a.deal_id = d.id AND a.status = 'ACTIVE'
+        WHERE a.partner_id = ?
+        ORDER BY d.id DESC
+        LIMIT ?
+        """,
+        (partner_id, limit),
+    )
+    return cursor.fetchall()
+
+
+def refresh_partner_kpi(partner_id: int, period: str = None) -> int:
+    from datetime import datetime
+    period = period or datetime.utcnow().strftime("%Y-%m")
+    partner = get_partner(partner_id)
+    if not partner:
+        return 0
+
+    cursor.execute(
+        """
+        SELECT COUNT(*),
+               SUM(CASE WHEN d.status = 'COMPLETED' THEN 1 ELSE 0 END),
+               SUM(COALESCE(d.amount, 0)),
+               SUM(CASE WHEN d.status = 'COMPLETED' THEN COALESCE(d.amount, 0) ELSE 0 END)
+        FROM partner_deal_assignments a
+        JOIN deals d ON d.id = a.deal_id
+        WHERE a.partner_id = ? AND a.status = 'ACTIVE'
+          AND strftime('%Y-%m', a.assigned_at) = ?
+        """,
+        (partner_id, period),
+    )
+    deals_count, deals_completed, total_volume, _completed_volume = cursor.fetchone()
+
+    recipient_id = partner[5] or partner_id
+    cursor.execute(
+        """
+        SELECT SUM(amount) FROM commissions
+        WHERE recipient_id = ? AND commission_type = 'PARTNER'
+          AND status IN ('APPROVED', 'PAID')
+          AND strftime('%Y-%m', created_at) = ?
+        """,
+        (recipient_id, period),
+    )
+    commission_row = cursor.fetchone()
+    total_commission = float(commission_row[0] or 0) if commission_row else 0.0
+
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        """
+        INSERT INTO partner_kpi (
+            partner_id, period, deals_count, deals_completed,
+            total_volume, total_commission, avg_rating, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(partner_id, period) DO UPDATE SET
+            deals_count = excluded.deals_count,
+            deals_completed = excluded.deals_completed,
+            total_volume = excluded.total_volume,
+            total_commission = excluded.total_commission,
+            avg_rating = excluded.avg_rating,
+            updated_at = excluded.updated_at
+        """,
+        (
+            partner_id, period,
+            int(deals_count or 0),
+            int(deals_completed or 0),
+            float(total_volume or 0),
+            total_commission,
+            float(partner[8] or 0),
+            now, now,
+        ),
+    )
+    conn.commit()
+    cursor.execute(
+        "SELECT id FROM partner_kpi WHERE partner_id = ? AND period = ?",
+        (partner_id, period),
+    )
+    row = cursor.fetchone()
+    return row[0] if row else 0
+
+
+def get_partner_kpi(partner_id: int, period: str = None):
+    if period:
+        cursor.execute(
+            """
+            SELECT id, partner_id, period, deals_count, deals_completed,
+                   total_volume, total_commission, avg_rating, created_at
+            FROM partner_kpi WHERE partner_id = ? AND period = ?
+            """,
+            (partner_id, period),
+        )
+        return cursor.fetchone()
+    cursor.execute(
+        """
+        SELECT id, partner_id, period, deals_count, deals_completed,
+               total_volume, total_commission, avg_rating, created_at
+        FROM partner_kpi WHERE partner_id = ?
+        ORDER BY period DESC
+        LIMIT 12
+        """,
+        (partner_id,),
+    )
+    return cursor.fetchall()
+
+
+def get_partner_performance(partner_id: int) -> dict:
+    partner = get_partner(partner_id)
+    if not partner:
+        return {}
+    cursor.execute(
+        """
+        SELECT COUNT(*),
+               SUM(CASE WHEN d.status = 'COMPLETED' THEN 1 ELSE 0 END),
+               SUM(COALESCE(d.amount, 0)),
+               AVG(COALESCE(d.amount, 0))
+        FROM partner_deal_assignments a
+        JOIN deals d ON d.id = a.deal_id
+        WHERE a.partner_id = ? AND a.status = 'ACTIVE'
+        """,
+        (partner_id,),
+    )
+    total_deals, completed_deals, total_volume, avg_deal = cursor.fetchone()
+    recipient_id = partner[5] or partner_id
+    cursor.execute(
+        """
+        SELECT COUNT(*), SUM(amount)
+        FROM commissions
+        WHERE recipient_id = ? AND commission_type = 'PARTNER'
+          AND status IN ('APPROVED', 'PAID')
+        """,
+        (recipient_id,),
+    )
+    comm_count, comm_total = cursor.fetchone()
+    return {
+        "partner_id": partner_id,
+        "company_name": partner[2],
+        "partner_type": partner[1],
+        "rating": partner[8],
+        "total_deals": int(total_deals or 0),
+        "completed_deals": int(completed_deals or 0),
+        "total_volume": float(total_volume or 0),
+        "avg_deal_amount": round(float(avg_deal or 0), 2),
+        "commission_count": int(comm_count or 0),
+        "commission_total": float(comm_total or 0),
+        "completion_rate": round(
+            (completed_deals / total_deals * 100) if total_deals else 0, 1,
+        ),
+    }
+
+
+def format_partner_card(row: tuple) -> str:
+    if not row:
+        return "Партнёр не найден."
+    (
+        pid, partner_type, company_name, contact_person, telegram, telegram_id,
+        phone, email, rating, active, regions, services, public_id,
+        created_by, created_at, updated_at,
+    ) = row
+    region_list = ", ".join(_partner_parse_json_list(regions)) or "—"
+    service_list = ", ".join(_partner_parse_json_list(services)) or "—"
+    status = "✅ Активен" if active else "⏸ Неактивен"
+    return (
+        f"🤝 Партнёр #{pid} ({public_id or '—'})\n\n"
+        f"🏢 {company_name}\n"
+        f"🏷 Тип: {partner_type} · {status}\n"
+        f"👤 Контакт: {contact_person or '—'}\n"
+        f"📱 Telegram: {telegram or '—'} · ID: {telegram_id or '—'}\n"
+        f"📞 {phone or '—'} · ✉️ {email or '—'}\n"
+        f"⭐ Рейтинг: {rating or 0}\n"
+        f"🌍 Регионы: {region_list}\n"
+        f"🛠 Услуги: {service_list}\n"
+        f"🕒 {created_at}"
+    )
+
+
+def format_partner_analytics(partner_id: int, period: str = None) -> str:
+    partner = get_partner(partner_id)
+    if not partner:
+        return "Партнёр не найден."
+    perf = get_partner_performance(partner_id)
+    kpi = get_partner_kpi(partner_id, period)
+    lines = [
+        f"📊 Аналитика: {partner[2]}",
+        f"🏷 {partner[1]} · ⭐ {partner[8] or 0}",
+        "",
+        "📈 Общая эффективность:",
+        f"  • Сделок: {perf.get('total_deals', 0)} (завершено: {perf.get('completed_deals', 0)})",
+        f"  • Конверсия: {perf.get('completion_rate', 0)}%",
+        f"  • Объём: {perf.get('total_volume', 0):,.2f}",
+        f"  • Средняя сделка: {perf.get('avg_deal_amount', 0):,.2f}",
+        f"  • Комиссии: {perf.get('commission_total', 0):,.2f} ({perf.get('commission_count', 0)} шт.)",
+    ]
+    if kpi:
+        if isinstance(kpi, list):
+            lines.append("")
+            lines.append("📅 KPI по периодам:")
+            for row in kpi[:6]:
+                lines.append(
+                    f"  • {row[2]}: {row[3]} сделок, "
+                    f"завершено {row[4]}, объём {row[5]:,.0f}, "
+                    f"комиссия {row[6]:,.0f}"
+                )
+        else:
+            lines.extend([
+                "",
+                f"📅 Период {kpi[2]}:",
+                f"  • Сделок: {kpi[3]} · Завершено: {kpi[4]}",
+                f"  • Объём: {kpi[5]:,.2f} · Комиссия: {kpi[6]:,.2f}",
+            ])
+    return "\n".join(lines)

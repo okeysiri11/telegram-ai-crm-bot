@@ -57,6 +57,19 @@ class DealEngine:
         return update_deal_fields(deal_id, user_id, **fields)
 
     @staticmethod
+    def assign_partner(
+        deal_id: int,
+        partner_id: int,
+        user_id: int,
+        assignment_role: str = "PARTNER",
+        notes: str = None,
+    ) -> bool:
+        from services.partner_engine import PartnerEngine
+        return PartnerEngine.assign_to_deal(
+            partner_id, deal_id, user_id, assignment_role, notes,
+        )
+
+    @staticmethod
     def transition(deal_id: int, user_id: int, new_status: str) -> bool:
         from database import has_deal_action, update_deal_status
         if new_status == "COMPLETED" and not has_deal_action(user_id, "DEAL_APPROVE"):

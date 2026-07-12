@@ -22,6 +22,7 @@ from services.finance_auth import FinanceAuthService
 from services.event_bus_test import EventBusTestService
 from services.deal_engine import DealEngine
 from services.commission_engine import CommissionEngine
+from services.partner_engine import PartnerEngine
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
@@ -1305,6 +1306,36 @@ async def commission_engine_integration_test(message: Message):
         lines.append(f"Error: {result['error']}")
     await message.answer("\n".join(lines))
     log_audit(user_id, "commission_integration_test", "commissions", result.get("status"))
+
+
+@router.message(Command("partner_test"))
+async def partner_hub_integration_test(message: Message):
+    user_id = message.from_user.id
+    if not PartnerEngine.can_view(user_id):
+        await message.answer("Нет доступа к /partner_test.")
+        return
+    result = PartnerEngine.run_integration_test(user_id)
+    steps = result.get("steps", {})
+    lines = [
+        "PARTNER HUB — INTEGRATION TEST",
+        f"STATUS: {result.get('status', 'ERROR')}",
+        f"Partners created: {steps.get('partners_created', '—')}",
+        f"Types: {', '.join(steps.get('partner_types', [])) or '—'}",
+        f"Public ID: {steps.get('public_id', '—')}",
+        f"Deal: {steps.get('create_deal', '—')}",
+        f"Assigned: {steps.get('assign_deal', '—')}",
+        f"Assignments: {steps.get('assignment_count', '—')}",
+        f"KPI refreshed: {steps.get('kpi_refreshed', '—')}",
+        f"Deals: {steps.get('total_deals', '—')} (completed: {steps.get('completed_deals', '—')})",
+        f"Volume: {steps.get('total_volume', '—')}",
+        f"Completion rate: {steps.get('completion_rate', '—')}%",
+        f"Partner events: {steps.get('partner_events', '—')}",
+        f"Audit (partners): {steps.get('audit_count', '—')}",
+    ]
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "partner_integration_test", "partners", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")

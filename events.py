@@ -102,6 +102,16 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "entity_type": "deal",
         "description": "Сделка завершена",
     },
+    "PARTNER_CREATED": {
+        "module": "partners",
+        "entity_type": "partner",
+        "description": "Партнёр зарегистрирован",
+    },
+    "PARTNER_ASSIGNED": {
+        "module": "partners",
+        "entity_type": "deal",
+        "description": "Партнёр назначен на сделку",
+    },
 }
 
 SubscriberHandler = Callable[["PlatformEvent"], None]
