@@ -123,6 +123,26 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "settlement",
         "description": "Settlement failed",
     },
+    "risk.detected": {
+        "aggregate_type": "risk",
+        "description": "Risk condition detected",
+    },
+    "risk.review_required": {
+        "aggregate_type": "risk",
+        "description": "Risk review required",
+    },
+    "risk.approved": {
+        "aggregate_type": "risk",
+        "description": "Risk evaluation approved",
+    },
+    "risk.rejected": {
+        "aggregate_type": "risk",
+        "description": "Risk evaluation rejected",
+    },
+    "risk.override": {
+        "aggregate_type": "risk",
+        "description": "Risk decision manually overridden",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
