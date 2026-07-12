@@ -11,6 +11,7 @@ import aiohttp
 from config import OWNER_ID
 from database.models.audit_log import AuditAction
 from database.models.market_data import (
+    MARKET_PAIRS,
     SUPPORTED_ASSETS,
     MarketSourceCode,
     MarketSourceType,
@@ -50,6 +51,7 @@ WHITEBIT_SYMBOLS = {
 DEFAULT_FX_RATES: dict[str, dict[str, str]] = {
     "USD": {"bid": "1.0", "ask": "1.0", "last": "1.0", "volume_24h": "0"},
     "EUR": {"bid": "1.08", "ask": "1.09", "last": "1.085", "volume_24h": "0"},
+    "UAH": {"bid": "0.024", "ask": "0.0242", "last": "0.0241", "volume_24h": "0"},
     "AED": {"bid": "0.272", "ask": "0.273", "last": "0.2725", "volume_24h": "0"},
     "PLN": {"bid": "0.25", "ask": "0.251", "last": "0.2505", "volume_24h": "0"},
     "GEL": {"bid": "0.37", "ask": "0.371", "last": "0.3705", "volume_24h": "0"},
@@ -614,3 +616,62 @@ class MarketDataEngineV1:
             {"asset": asset, "source": MarketSourceCode.MANUAL.value},
         )
         return MarketDataEngineV1._quote_payload(quote)
+
+    @staticmethod
+    def list_market_pairs() -> list[dict[str, str]]:
+        return [{"base": base, "quote": quote} for base, quote in MARKET_PAIRS]
+
+    @staticmethod
+    async def get_pair_rate(
+        actor_id: int,
+        base: str,
+        quote: str,
+    ) -> dict[str, Any]:
+        if not await MarketDataEngineV1.user_can_access(actor_id):
+            raise MarketDataEngineError("Access denied")
+
+        pair = (base, quote)
+        if pair not in MARKET_PAIRS:
+            raise MarketDataEngineError(f"Unsupported pair: {base}/{quote}")
+
+        async with get_session() as session:
+            if pair == ("BTC", "USDT"):
+                quotes = await MarketQuoteRepository(session).list_by_asset("BTC")
+                if not quotes:
+                    raise MarketDataEngineError("No BTC quote available")
+                bid, ask, _ = MarketDataEngineV1._aggregate_bid_ask(quotes)
+                spread_abs, mid, spread_pct = MarketDataEngineV1._spread_values(bid, ask)
+                return {
+                    "base": base,
+                    "quote": quote,
+                    "bid": str(bid),
+                    "ask": str(ask),
+                    "mid": str(mid),
+                    "spread": str(spread_abs),
+                    "spread_pct": str(spread_pct),
+                    "method": "direct",
+                }
+
+            base_quotes = await MarketQuoteRepository(session).list_by_asset(base)
+            quote_quotes = await MarketQuoteRepository(session).list_by_asset(quote)
+            if not base_quotes or not quote_quotes:
+                raise MarketDataEngineError(f"Cannot resolve pair rate for {base}/{quote}")
+
+            b_bid, b_ask, _ = MarketDataEngineV1._aggregate_bid_ask(base_quotes)
+            q_bid, q_ask, _ = MarketDataEngineV1._aggregate_bid_ask(quote_quotes)
+            if q_ask <= 0 or q_bid <= 0:
+                raise MarketDataEngineError(f"Invalid quote leg for {base}/{quote}")
+
+            bid = b_bid / q_ask
+            ask = b_ask / q_bid
+            spread_abs, mid, spread_pct = MarketDataEngineV1._spread_values(bid, ask)
+            return {
+                "base": base,
+                "quote": quote,
+                "bid": str(bid),
+                "ask": str(ask),
+                "mid": str(mid),
+                "spread": str(spread_abs),
+                "spread_pct": str(spread_pct),
+                "method": "cross",
+            }

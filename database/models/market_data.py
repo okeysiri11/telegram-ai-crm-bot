@@ -26,7 +26,17 @@ from sqlalchemy.orm import Mapped, mapped_column
 from database.base import Base
 from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
 
-SUPPORTED_ASSETS = frozenset({"USD", "EUR", "USDT", "BTC", "ETH", "AED", "PLN", "GEL"})
+SUPPORTED_ASSETS = frozenset({
+    "USD", "EUR", "USDT", "BTC", "ETH", "AED", "PLN", "GEL", "UAH",
+})
+
+MARKET_PAIRS: tuple[tuple[str, str], ...] = (
+    ("USD", "UAH"),
+    ("USD", "EUR"),
+    ("EUR", "AED"),
+    ("USDT", "USD"),
+    ("BTC", "USDT"),
+)
 
 
 class MarketSourceCode(str, enum.Enum):
