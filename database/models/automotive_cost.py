@@ -33,13 +33,18 @@ class VehicleCostStatus(str, enum.Enum):
     LOCKED = "LOCKED"
 
 
-class CostItemType(str, enum.Enum):
+class CostType(str, enum.Enum):
     PURCHASE = "PURCHASE"
     AUCTION_FEE = "AUCTION_FEE"
-    LOGISTICS = "LOGISTICS"
+    TRANSPORT = "TRANSPORT"
+    PORT = "PORT"
     CUSTOMS = "CUSTOMS"
+    CERTIFICATION = "CERTIFICATION"
     REPAIR = "REPAIR"
-    MARGIN = "MARGIN"
+    DETAILING = "DETAILING"
+    ADVERTISING = "ADVERTISING"
+    COMMISSION = "COMMISSION"
+    INSURANCE = "INSURANCE"
     OTHER = "OTHER"
 
 
@@ -49,18 +54,11 @@ class MarginRuleType(str, enum.Enum):
     TIERED = "TIERED"
 
 
-class LogisticsRoute(str, enum.Enum):
-    USA_ODESSA = "USA_ODESSA"
-    USA_KYIV = "USA_KYIV"
-    EU_ODESSA = "EU_ODESSA"
-    LOCAL = "LOCAL"
-
-
 class VehicleCost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "automotive_cost_v1_vehicle_costs"
     __table_args__ = (
         UniqueConstraint("vehicle_id", name="uq_automotive_cost_v1_vehicle_costs_vehicle_id"),
-        CheckConstraint("total_amount >= 0", name="ck_automotive_cost_v1_vc_total"),
+        CheckConstraint("total_cost >= 0", name="ck_automotive_cost_v1_vc_total_cost"),
         Index("ix_automotive_cost_v1_vc_status", "status"),
     )
 
@@ -75,8 +73,7 @@ class VehicleCost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         default=VehicleCostStatus.DRAFT.value,
         nullable=False,
     )
-    purchase_amount: Mapped[Decimal] = mapped_column(Numeric(20, 2), nullable=False)
-    subtotal_amount: Mapped[Decimal] = mapped_column(
+    total_cost: Mapped[Decimal] = mapped_column(
         Numeric(20, 2),
         default=Decimal("0"),
         nullable=False,
@@ -86,51 +83,49 @@ class VehicleCost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         default=Decimal("0"),
         nullable=False,
     )
-    total_amount: Mapped[Decimal] = mapped_column(
+    target_price: Mapped[Decimal] = mapped_column(
         Numeric(20, 2),
         default=Decimal("0"),
         nullable=False,
     )
+    roi_percent: Mapped[Decimal | None] = mapped_column(Numeric(8, 4), nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     def __repr__(self) -> str:
         return (
             f"<VehicleCost id={self.id} vehicle={self.vehicle_id} "
-            f"total={self.total_amount}>"
+            f"target={self.target_price}>"
         )
 
 
-class CostItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    __tablename__ = "automotive_cost_v1_cost_items"
+class VehicleCostItem(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+    __tablename__ = "automotive_cost_v1_vehicle_cost_items"
     __table_args__ = (
-        Index("ix_automotive_cost_v1_ci_vehicle_cost_id", "vehicle_cost_id"),
-        Index("ix_automotive_cost_v1_ci_item_type", "item_type"),
+        Index("ix_automotive_cost_v1_vci_vehicle_id", "vehicle_id"),
+        Index("ix_automotive_cost_v1_vci_cost_type", "cost_type"),
     )
 
-    vehicle_cost_id: Mapped[uuid.UUID] = mapped_column(
+    vehicle_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("automotive_cost_v1_vehicle_costs.id", ondelete="CASCADE"),
+        ForeignKey("automotive_v1_vehicles.id", ondelete="CASCADE"),
         nullable=False,
     )
-    item_type: Mapped[str] = mapped_column(String(30), nullable=False)
-    label: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    cost_type: Mapped[str] = mapped_column(String(30), nullable=False)
     amount: Mapped[Decimal] = mapped_column(Numeric(20, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(10), default="USD", nullable=False)
-    is_calculated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    calculation_method: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     def __repr__(self) -> str:
         return (
-            f"<CostItem id={self.id} type={self.item_type} amount={self.amount}>"
+            f"<VehicleCostItem id={self.id} vehicle={self.vehicle_id} "
+            f"type={self.cost_type} amount={self.amount}>"
         )
 
 
-class MarginRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    __tablename__ = "automotive_cost_v1_margin_rules"
+class VehicleMarginRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "automotive_cost_v1_vehicle_margin_rules"
     __table_args__ = (
-        Index("ix_automotive_cost_v1_mr_is_active", "is_active"),
-        Index("ix_automotive_cost_v1_mr_priority", "priority"),
+        Index("ix_automotive_cost_v1_vmr_is_active", "is_active"),
+        Index("ix_automotive_cost_v1_vmr_priority", "priority"),
     )
 
     name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -145,4 +140,4 @@ class MarginRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     def __repr__(self) -> str:
-        return f"<MarginRule id={self.id} name={self.name} type={self.rule_type}>"
+        return f"<VehicleMarginRule id={self.id} name={self.name} type={self.rule_type}>"

@@ -11,12 +11,12 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.automotive_cost import (
-    CostItem,
-    CostItemType,
-    MarginRule,
+    CostType,
     MarginRuleType,
     VehicleCost,
+    VehicleCostItem,
     VehicleCostStatus,
+    VehicleMarginRule,
 )
 
 
@@ -24,32 +24,16 @@ class VehicleCostRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create(
+    async def get_or_create(
         self,
-        *,
         vehicle_id: uuid.UUID,
-        purchase_amount: Decimal,
+        *,
         currency: str = "USD",
-        status: str = VehicleCostStatus.DRAFT.value,
-        subtotal_amount: Decimal = Decimal("0"),
-        margin_amount: Decimal = Decimal("0"),
-        total_amount: Decimal = Decimal("0"),
-        notes: str | None = None,
-        **extra: Any,
     ) -> VehicleCost:
-        if extra:
-            raise TypeError(f"Unsupported fields: {', '.join(sorted(extra))}")
-
-        cost = VehicleCost(
-            vehicle_id=vehicle_id,
-            purchase_amount=purchase_amount,
-            currency=currency,
-            status=status,
-            subtotal_amount=subtotal_amount,
-            margin_amount=margin_amount,
-            total_amount=total_amount,
-            notes=notes,
-        )
+        cost = await self.get_by_vehicle(vehicle_id)
+        if cost is not None:
+            return cost
+        cost = VehicleCost(vehicle_id=vehicle_id, currency=currency)
         self._session.add(cost)
         await self._session.flush()
         return cost
@@ -66,21 +50,23 @@ class VehicleCostRepository:
         )
         return result.scalar_one_or_none()
 
-    async def update_totals(
+    async def update_summary(
         self,
         cost_id: uuid.UUID,
         *,
-        subtotal_amount: Decimal,
+        total_cost: Decimal,
         margin_amount: Decimal,
-        total_amount: Decimal,
+        target_price: Decimal,
+        roi_percent: Decimal | None,
         status: str = VehicleCostStatus.CALCULATED.value,
     ) -> VehicleCost | None:
         cost = await self.get_by_id(cost_id)
         if cost is None:
             return None
-        cost.subtotal_amount = subtotal_amount
+        cost.total_cost = total_cost
         cost.margin_amount = margin_amount
-        cost.total_amount = total_amount
+        cost.target_price = target_price
+        cost.roi_percent = roi_percent
         cost.status = status
         cost.updated_at = datetime.now(timezone.utc)
         await self._session.flush()
@@ -102,65 +88,88 @@ class VehicleCostRepository:
         return cost
 
 
-class CostItemRepository:
+class VehicleCostItemRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create(
+    async def add(
         self,
         *,
-        vehicle_cost_id: uuid.UUID,
-        item_type: str,
+        vehicle_id: uuid.UUID,
+        cost_type: str,
         amount: Decimal,
-        label: str | None = None,
         currency: str = "USD",
-        is_calculated: bool = False,
-        calculation_method: str | None = None,
-        notes: str | None = None,
         **extra: Any,
-    ) -> CostItem:
+    ) -> VehicleCostItem:
         if extra:
             raise TypeError(f"Unsupported fields: {', '.join(sorted(extra))}")
-        if item_type not in {t.value for t in CostItemType}:
-            raise ValueError(f"Invalid item_type: {item_type}")
+        if cost_type not in {t.value for t in CostType}:
+            raise ValueError(f"Invalid cost_type: {cost_type}")
 
-        item = CostItem(
-            vehicle_cost_id=vehicle_cost_id,
-            item_type=item_type,
+        item = VehicleCostItem(
+            vehicle_id=vehicle_id,
+            cost_type=cost_type,
             amount=amount,
-            label=label,
             currency=currency,
-            is_calculated=is_calculated,
-            calculation_method=calculation_method,
-            notes=notes,
         )
         self._session.add(item)
         await self._session.flush()
         return item
 
-    async def list_by_vehicle_cost(self, vehicle_cost_id: uuid.UUID) -> list[CostItem]:
+    async def upsert_by_type(
+        self,
+        *,
+        vehicle_id: uuid.UUID,
+        cost_type: str,
+        amount: Decimal,
+        currency: str = "USD",
+    ) -> VehicleCostItem:
         result = await self._session.execute(
-            select(CostItem)
-            .where(CostItem.vehicle_cost_id == vehicle_cost_id)
-            .order_by(CostItem.created_at.asc())
+            select(VehicleCostItem).where(
+                VehicleCostItem.vehicle_id == vehicle_id,
+                VehicleCostItem.cost_type == cost_type,
+            )
+        )
+        item = result.scalar_one_or_none()
+        if item is None:
+            return await self.add(
+                vehicle_id=vehicle_id,
+                cost_type=cost_type,
+                amount=amount,
+                currency=currency,
+            )
+        item.amount = amount
+        item.currency = currency
+        await self._session.flush()
+        return item
+
+    async def list_by_vehicle(self, vehicle_id: uuid.UUID) -> list[VehicleCostItem]:
+        result = await self._session.execute(
+            select(VehicleCostItem)
+            .where(VehicleCostItem.vehicle_id == vehicle_id)
+            .order_by(VehicleCostItem.created_at.asc())
         )
         return list(result.scalars().all())
 
+    async def sum_by_vehicle(self, vehicle_id: uuid.UUID) -> Decimal:
+        items = await self.list_by_vehicle(vehicle_id)
+        return sum((item.amount for item in items), Decimal("0"))
+
     async def replace_items(
         self,
-        vehicle_cost_id: uuid.UUID,
+        vehicle_id: uuid.UUID,
         items: list[dict[str, Any]],
-    ) -> list[CostItem]:
+    ) -> list[VehicleCostItem]:
         await self._session.execute(
-            delete(CostItem).where(CostItem.vehicle_cost_id == vehicle_cost_id)
+            delete(VehicleCostItem).where(VehicleCostItem.vehicle_id == vehicle_id)
         )
-        created: list[CostItem] = []
+        created: list[VehicleCostItem] = []
         for item_data in items:
-            created.append(await self.create(vehicle_cost_id=vehicle_cost_id, **item_data))
+            created.append(await self.add(vehicle_id=vehicle_id, **item_data))
         return created
 
 
-class MarginRuleRepository:
+class VehicleMarginRuleRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
@@ -178,13 +187,13 @@ class MarginRuleRepository:
         priority: int = 0,
         notes: str | None = None,
         **extra: Any,
-    ) -> MarginRule:
+    ) -> VehicleMarginRule:
         if extra:
             raise TypeError(f"Unsupported fields: {', '.join(sorted(extra))}")
         if rule_type not in {t.value for t in MarginRuleType}:
             raise ValueError(f"Invalid rule_type: {rule_type}")
 
-        rule = MarginRule(
+        rule = VehicleMarginRule(
             name=name,
             rule_type=rule_type,
             margin_percent=margin_percent,
@@ -200,20 +209,20 @@ class MarginRuleRepository:
         await self._session.flush()
         return rule
 
-    async def get_by_id(self, rule_id: uuid.UUID) -> MarginRule | None:
+    async def get_by_id(self, rule_id: uuid.UUID) -> VehicleMarginRule | None:
         result = await self._session.execute(
-            select(MarginRule).where(MarginRule.id == rule_id)
+            select(VehicleMarginRule).where(VehicleMarginRule.id == rule_id)
         )
         return result.scalar_one_or_none()
 
     async def find_applicable(
         self,
         base_amount: Decimal,
-    ) -> MarginRule | None:
+    ) -> VehicleMarginRule | None:
         result = await self._session.execute(
-            select(MarginRule)
-            .where(MarginRule.is_active.is_(True))
-            .order_by(MarginRule.priority.desc(), MarginRule.created_at.desc())
+            select(VehicleMarginRule)
+            .where(VehicleMarginRule.is_active.is_(True))
+            .order_by(VehicleMarginRule.priority.desc(), VehicleMarginRule.created_at.desc())
         )
         for rule in result.scalars().all():
             if rule.min_base_amount is not None and base_amount < rule.min_base_amount:
@@ -223,10 +232,10 @@ class MarginRuleRepository:
             return rule
         return None
 
-    async def list_active(self) -> list[MarginRule]:
+    async def list_active(self) -> list[VehicleMarginRule]:
         result = await self._session.execute(
-            select(MarginRule)
-            .where(MarginRule.is_active.is_(True))
-            .order_by(MarginRule.priority.desc())
+            select(VehicleMarginRule)
+            .where(VehicleMarginRule.is_active.is_(True))
+            .order_by(VehicleMarginRule.priority.desc())
         )
         return list(result.scalars().all())

@@ -175,6 +175,14 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "otc",
         "description": "OTC execution leg failed",
     },
+    "vehicle.cost.updated": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle total cost updated",
+    },
+    "vehicle.margin.updated": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle margin and target price updated",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
