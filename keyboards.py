@@ -1104,20 +1104,36 @@ def ai_assistant_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
+                KeyboardButton(text="🤖 Общий AI"),
+                KeyboardButton(text="🌾 Agro AI"),
+            ],
+            [
+                KeyboardButton(text="💵 Crypto AI"),
+                KeyboardButton(text="⚖ Legal AI"),
+            ],
+            [
+                KeyboardButton(text="🚁 Drone AI"),
+                KeyboardButton(text="💄 Beauty AI"),
+            ],
+            [
+                KeyboardButton(text="📊 Finance AI"),
+                KeyboardButton(text="🔄 Авто-роутинг"),
+            ],
+            [
                 KeyboardButton(text="📁 Мои проекты"),
-                KeyboardButton(text="✅ Мои задачи")
+                KeyboardButton(text="✅ Мои задачи"),
             ],
             [
-                KeyboardButton(text="💬 История диалогов")
+                KeyboardButton(text="💬 История диалогов"),
             ],
             [
-                KeyboardButton(text="⚙ Настройки AI")
+                KeyboardButton(text="⚙ Настройки AI"),
             ],
             [
-                KeyboardButton(text="◀ Назад")
-            ]
+                KeyboardButton(text="◀ Назад"),
+            ],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
     return keyboard
 
@@ -1270,6 +1286,7 @@ def ai_agents_list_inline(agents: list) -> InlineKeyboardMarkup:
         "AI_AGRO": "agent:select:AI_AGRO",
         "AI_CRYPTO": "agent:select:AI_CRYPTO",
         "AI_BEAUTY": "agent:select:AI_BEAUTY",
+        "AI_FINANCE": "agent:select:AI_FINANCE",
     }
     rows = []
     for row in agents:

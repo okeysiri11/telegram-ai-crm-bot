@@ -11,6 +11,7 @@ from services.workflow_triggers import WorkflowTriggers
 from services.agro_deal_lifecycle import AgroDealLifecycle
 from services.calendar_service import CalendarService
 from services.ai_agents import AIAgentService
+from services.ai_router import AIRouter
 from services.notifications import NotificationService
 from services.workflow_engine import WorkflowEngine
 from services.dashboard import DashboardService
@@ -29,6 +30,7 @@ __all__ = [
     "AgroDealLifecycle",
     "CalendarService",
     "AIAgentService",
+    "AIRouter",
     "NotificationService",
     "WorkflowEngine",
     "DashboardService",

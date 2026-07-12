@@ -1,7 +1,7 @@
-# Multi-agent AI layer — separate from global AI Assistant.
+# Multi-agent AI layer — per-agent memory, settings, tools, dialog history.
 
 from config import OWNER_ID, MANAGER_ID
-from openrouter import ask_openrouter, MODEL
+from openrouter import ask_openrouter, MODEL, MEMORY_KEYS
 
 
 class AIAgentService:
@@ -55,14 +55,20 @@ class AIAgentService:
         user_id: int,
         agent_code: str,
         message: str,
-        context_depth: int = 10,
+        context_depth: int = None,
+        project_id: int = None,
+        project_row=None,
+        tools_context: str = "",
     ) -> str:
         from database import (
             get_ai_agent,
             get_ai_dialog_history_for_llm,
             add_ai_dialog_message,
-            format_memory_context,
-            get_ai_settings,
+            get_ai_agent_settings,
+            format_ai_agent_memory_context,
+            format_ai_project_context,
+            get_ai_project_history_for_llm,
+            add_ai_project_message,
         )
 
         if not AIAgentService.can_access_agent(user_id, agent_code):
@@ -73,27 +79,38 @@ class AIAgentService:
             return "Агент не найден."
 
         _id, code, name, desc, model, prompt, active = agent
-        settings = get_ai_settings(user_id)
-        memory = format_memory_context(user_id)
+        settings = get_ai_agent_settings(user_id, agent_code)
+        depth = context_depth or settings["context_depth"]
+        memory = format_ai_agent_memory_context(user_id, agent_code)
         files_ctx = AIAgentService.get_shared_files_context(user_id)
 
         system_parts = [prompt or f"Ты {name}."]
+        if tools_context:
+            system_parts.append(tools_context)
         if files_ctx:
             system_parts.append(files_ctx)
         if memory:
             system_parts.append(memory)
 
-        history = get_ai_dialog_history_for_llm(user_id, agent_code, context_depth)
+        if project_id and project_row:
+            system_parts.append(format_ai_project_context(project_row))
+            history = get_ai_project_history_for_llm(project_id, depth)
+        else:
+            history = get_ai_dialog_history_for_llm(user_id, agent_code, depth)
+
         history.append({"role": "user", "content": message})
         add_ai_dialog_message(user_id, agent_code, "user", message)
+        if project_id:
+            add_ai_project_message(project_id, "user", message)
 
         ai_settings = dict(settings)
         ai_settings["model"] = model or MODEL
-        full_messages = history
         answer = await ask_openrouter(
-            full_messages,
+            history,
             user_memory="\n\n".join(system_parts),
             ai_settings=ai_settings,
         )
         add_ai_dialog_message(user_id, agent_code, "assistant", answer)
+        if project_id:
+            add_ai_project_message(project_id, "assistant", answer)
         return answer

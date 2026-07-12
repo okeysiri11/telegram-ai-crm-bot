@@ -649,6 +649,34 @@ def _migrate_multi_agent_platform():
             cursor.execute(f"ALTER TABLE files ADD COLUMN {col} {defn}")
     conn.commit()
 
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ai_agent_settings (
+            user_id INTEGER NOT NULL,
+            agent_code TEXT NOT NULL,
+            model TEXT DEFAULT 'openai/gpt-5-mini',
+            tone TEXT DEFAULT 'neutral',
+            language TEXT DEFAULT 'ru',
+            context_depth INTEGER DEFAULT 20,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, agent_code)
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS ai_agent_memory (
+            user_id INTEGER NOT NULL,
+            agent_code TEXT NOT NULL,
+            memory_key TEXT NOT NULL,
+            memory_value TEXT,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (user_id, agent_code, memory_key)
+        )
+        """
+    )
+    conn.commit()
+
     _seed_ai_agents()
     _seed_workflow_rules()
 
@@ -667,6 +695,8 @@ def _seed_ai_agents():
          "Ты AI_CRYPTO — ассистент Crypto OTC: USDT, платежи, compliance."),
         ("AI_BEAUTY", "Beauty AI", "Cafe & Beauty", "cafe_beauty",
          "Ты AI_BEAUTY — ассистент Cafe & Beauty: операции, маркeting, клиенты."),
+        ("AI_FINANCE", "Finance AI", "Финансы и аналитика", "reports",
+         "Ты AI_FINANCE — финансовый ассистент: PnL, бюджеты, отчёты, cashflow, KPI."),
     ]
     for code, name, desc, module, prompt in agents:
         cursor.execute("SELECT id FROM ai_agents WHERE code = ?", (code,))
@@ -5174,7 +5204,95 @@ AGENT_MODULE_ACCESS = {
     "AI_AGRO": "agro_trading",
     "AI_CRYPTO": "crypto_otc",
     "AI_BEAUTY": "cafe_beauty",
+    "AI_FINANCE": "reports",
 }
+
+
+def get_ai_agent_settings(user_id: int, agent_code: str) -> dict:
+    cursor.execute(
+        """
+        SELECT model, tone, language, context_depth
+        FROM ai_agent_settings
+        WHERE user_id = ? AND agent_code = ?
+        """,
+        (user_id, agent_code),
+    )
+    row = cursor.fetchone()
+    if row:
+        return {
+            "model": row[0],
+            "tone": row[1],
+            "language": row[2],
+            "context_depth": row[3],
+        }
+    return get_ai_settings(user_id)
+
+
+def save_ai_agent_settings(user_id: int, agent_code: str, **fields) -> None:
+    current = get_ai_agent_settings(user_id, agent_code)
+    current.update({k: v for k, v in fields.items() if v is not None})
+    cursor.execute(
+        """
+        INSERT INTO ai_agent_settings (user_id, agent_code, model, tone, language, context_depth)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ON CONFLICT(user_id, agent_code) DO UPDATE SET
+            model = excluded.model,
+            tone = excluded.tone,
+            language = excluded.language,
+            context_depth = excluded.context_depth,
+            updated_at = CURRENT_TIMESTAMP
+        """,
+        (
+            user_id,
+            agent_code,
+            current["model"],
+            current["tone"],
+            current["language"],
+            current["context_depth"],
+        ),
+    )
+    conn.commit()
+
+
+def get_ai_agent_memory(user_id: int, agent_code: str) -> dict:
+    cursor.execute(
+        """
+        SELECT memory_key, memory_value
+        FROM ai_agent_memory
+        WHERE user_id = ? AND agent_code = ?
+        """,
+        (user_id, agent_code),
+    )
+    return {row[0]: row[1] for row in cursor.fetchall() if row[1]}
+
+
+def save_ai_agent_memory_fields(user_id: int, agent_code: str, fields: dict) -> None:
+    from openrouter import MEMORY_KEYS
+    for key, value in fields.items():
+        if key not in MEMORY_KEYS or not value:
+            continue
+        cursor.execute(
+            """
+            INSERT INTO ai_agent_memory (user_id, agent_code, memory_key, memory_value)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(user_id, agent_code, memory_key) DO UPDATE SET
+                memory_value = excluded.memory_value,
+                updated_at = CURRENT_TIMESTAMP
+            """,
+            (user_id, agent_code, key, str(value).strip()),
+        )
+    conn.commit()
+
+
+def format_ai_agent_memory_context(user_id: int, agent_code: str) -> str:
+    profile = get_ai_agent_memory(user_id, agent_code)
+    if not profile:
+        return ""
+    lines = [f"Память агента {agent_code}:"]
+    for key, value in profile.items():
+        label = MEMORY_FIELDS.get(key, key)
+        lines.append(f"• {label}: {value}")
+    return "\n".join(lines)
 
 
 def get_ai_agent(code: str):

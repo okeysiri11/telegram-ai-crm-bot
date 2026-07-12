@@ -15,6 +15,7 @@ from services.agro_deal_lifecycle import AgroDealLifecycle
 from services.tasks import TaskService
 from services.calendar_service import CalendarService
 from services.ai_agents import AIAgentService
+from services.ai_router import AIRouter
 from services.notifications import NotificationService
 from services.dashboard import DashboardService
 from services.search_service import SearchService
@@ -38,6 +39,8 @@ from database import (
     log_audit,
     get_ai_settings,
     save_ai_settings,
+    save_ai_agent_memory_fields,
+    get_ai_agent,
     add_dialog_message,
     get_dialog_history_for_llm,
     clear_dialog_history,
@@ -280,6 +283,7 @@ waiting_buy_request = {}
 ai_assistant_active = {}
 active_ai_project = {}
 active_ai_agent = {}
+ai_router_agent = {}
 search_flow = {}
 task_flow = {}
 calendar_flow = {}
@@ -520,6 +524,7 @@ def _clear_ai_state(user_id: int):
     ai_assistant_active.pop(user_id, None)
     active_ai_project.pop(user_id, None)
     active_ai_agent.pop(user_id, None)
+    ai_router_agent.pop(user_id, None)
 
 
 async def _open_module(message: Message, module_key: str, title: str):
@@ -584,6 +589,14 @@ CONTEXT_DEPTH_BY_LABEL = {
 
 AI_MENU_BUTTONS = {
     "🤖 AI помощник",
+    "🤖 Общий AI",
+    "🌾 Agro AI",
+    "💵 Crypto AI",
+    "⚖ Legal AI",
+    "🚁 Drone AI",
+    "💄 Beauty AI",
+    "📊 Finance AI",
+    "🔄 Авто-роутинг",
     "📁 Мои проекты",
     "✅ Мои задачи",
     "💬 История диалогов",
@@ -602,6 +615,17 @@ AI_MENU_BUTTONS = {
     "10 сообщений",
     "20 сообщений",
     "40 сообщений",
+}
+
+AI_ROUTER_AGENT_BUTTONS = {
+    "🤖 Общий AI": "AI_GENERAL",
+    "🌾 Agro AI": "AI_AGRO",
+    "💵 Crypto AI": "AI_CRYPTO",
+    "⚖ Legal AI": "AI_LEGAL",
+    "🚁 Drone AI": "AI_DRONE",
+    "💄 Beauty AI": "AI_BEAUTY",
+    "📊 Finance AI": "AI_FINANCE",
+    "🔄 Авто-роутинг": AIRouter.AUTO,
 }
 
 
@@ -2973,10 +2997,14 @@ async def open_ai_assistant(message: Message):
     ai_settings_flow.pop(message.from_user.id, None)
     active_ai_agent.pop(message.from_user.id, None)
     active_module.pop(message.from_user.id, None)
+    ai_router_agent[message.from_user.id] = AIRouter.AUTO
     ai_assistant_active[message.from_user.id] = True
 
     await message.answer(
-        "Раздел AI помощника",
+        "Раздел AI помощника\n\n"
+        f"{AIRouter.format_routing_status(AIRouter.AUTO)}\n\n"
+        "Напишите сообщение — роутер выберет агента автоматически,\n"
+        "или выберите агента вручную на клавиатуре.",
         reply_markup=ai_assistant_menu(),
     )
     log_audit(message.from_user.id, "open", "ai_assistant")
@@ -2990,6 +3018,29 @@ async def back_to_ai_assistant(message: Message):
         "Раздел AI помощника",
         reply_markup=ai_assistant_menu(),
     )
+
+
+@router.message(
+    lambda m: (
+        m.text in AI_ROUTER_AGENT_BUTTONS
+        and ai_assistant_active.get(m.from_user.id)
+    )
+)
+async def ai_router_select_agent(message: Message):
+    user_id = message.from_user.id
+    choice = AI_ROUTER_AGENT_BUTTONS[message.text]
+    if choice != AIRouter.AUTO and not AIAgentService.can_access_agent(user_id, choice):
+        await message.answer(
+            "❌ Нет доступа к этому агенту.",
+            reply_markup=ai_assistant_menu(),
+        )
+        return
+    ai_router_agent[user_id] = choice
+    await message.answer(
+        AIRouter.format_routing_status(choice),
+        reply_markup=ai_assistant_menu(),
+    )
+    log_audit(user_id, "ai_router_select", "ai_assistant", choice)
 
 
 @router.message(F.text == "👤 Мой профиль")
@@ -3257,11 +3308,17 @@ async def ai_chat_message(message: Message):
 
     profile = get_user_profile(user_id)
     extracted = await extract_memory_from_message(message.text, profile)
+    manual = ai_router_agent.get(user_id, AIRouter.AUTO)
+    domain, agent_code = AIRouter.resolve_agent(
+        user_id,
+        message.text,
+        manual if manual != AIRouter.AUTO else None,
+    )
     if extracted:
         save_profile_fields(user_id, extracted)
+        save_ai_agent_memory_fields(user_id, agent_code, extracted)
 
     settings = get_ai_settings(user_id)
-    memory_context = format_memory_context(user_id)
     project_id = active_ai_project.get(user_id)
     project_row = None
     if project_id:
@@ -3269,33 +3326,35 @@ async def ai_chat_message(message: Message):
         if not project_row:
             active_ai_project.pop(user_id, None)
             project_id = None
-        else:
-            memory_context += format_ai_project_context(project_row)
 
-    if project_id:
-        history = get_ai_project_history_for_llm(project_id, settings["context_depth"])
-    else:
-        history = get_dialog_history_for_llm(user_id, settings["context_depth"])
-
-    history.append({"role": "user", "content": message.text})
-    add_dialog_message(user_id, "user", message.text)
-    if project_id:
-        add_ai_project_message(project_id, "user", message.text)
-
-    answer = await ask_openrouter(
-        history,
-        user_memory=memory_context,
-        ai_settings=settings,
+    result = await AIRouter.chat(
+        user_id,
+        message.text,
+        agent_code,
+        project_id=project_id,
+        project_row=project_row,
     )
+    answer = result["answer"]
 
+    add_dialog_message(user_id, "user", message.text)
     add_dialog_message(user_id, "assistant", answer)
-    if project_id:
-        add_ai_project_message(project_id, "assistant", answer)
+
     if project_id and project_row:
-        await message.answer(f"📁 «{project_row[1]}»\n\n{answer}")
+        await message.answer(
+            f"📁 «{project_row[1]}» · 🤖 {result['agent_name']}\n\n{answer}",
+        )
+    elif manual and manual != AIRouter.AUTO:
+        await message.answer(f"🤖 {result['agent_name']}\n\n{answer}")
     else:
-        await message.answer(answer)
-    log_audit(user_id, "chat", "ai_assistant")
+        await message.answer(
+            f"🤖 {result['agent_name']} · {result['domain']}\n\n{answer}",
+        )
+    log_audit(
+        user_id,
+        "chat",
+        "ai_assistant",
+        f"{result['agent_code']}:{result['domain']}",
+    )
 
 
 @router.message(F.text == "⬅️ Назад")
