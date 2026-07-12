@@ -18,7 +18,7 @@ class PostgresModelsTest:
             steps["tables"] = tables
 
             required = {
-                "users", "roles", "user_roles", "rbac_permissions", "rbac_role_grants",
+                "users", "roles", "user_roles", "permissions", "role_permissions",
                 "deals", "platform_events", "ledger_entries",
                 "commission_rules", "commissions", "commission_payments",
                 "partners", "partner_deal_assignments", "calendar_events",

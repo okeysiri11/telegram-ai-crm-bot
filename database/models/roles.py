@@ -1,4 +1,4 @@
-# Role models.
+# Role models — RBAC v2.
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -14,25 +14,26 @@ from database.base import Base
 from database.models.mixins import UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from database.models.permissions import RbacRoleGrant
+    from database.models.permissions import RolePermission
     from database.models.users import User
 
 
 class Role(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "roles"
     __table_args__ = (
-        UniqueConstraint("role_name", name="uq_roles_role_name"),
-        Index("ix_roles_role_name", "role_name"),
+        UniqueConstraint("code", name="uq_roles_code"),
+        Index("ix_roles_code", "code"),
     )
 
-    role_name: Mapped[str] = mapped_column(String(64), nullable=False)
-    description: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    code: Mapped[str] = mapped_column(String(64), nullable=False)
+    name: Mapped[str] = mapped_column(String(128), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     user_links: Mapped[list[UserRole]] = relationship(
         back_populates="role",
         cascade="all, delete-orphan",
     )
-    rbac_grants: Mapped[list[RbacRoleGrant]] = relationship(
+    permission_links: Mapped[list[RolePermission]] = relationship(
         back_populates="role",
         cascade="all, delete-orphan",
     )
@@ -55,15 +56,15 @@ class UserRole(Base):
         ForeignKey("roles.id", ondelete="CASCADE"),
         primary_key=True,
     )
-    assigned_by_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-    )
     assigned_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
+    )
+    assigned_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     user: Mapped[User] = relationship(
@@ -71,6 +72,6 @@ class UserRole(Base):
         foreign_keys=[user_id],
     )
     role: Mapped[Role] = relationship(back_populates="user_links")
-    assigned_by: Mapped[User | None] = relationship(
-        foreign_keys=[assigned_by_id],
+    assigner: Mapped[User | None] = relationship(
+        foreign_keys=[assigned_by],
     )
