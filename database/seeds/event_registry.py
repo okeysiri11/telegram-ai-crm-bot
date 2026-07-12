@@ -183,6 +183,18 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "vehicle",
         "description": "Vehicle margin and target price updated",
     },
+    "vehicle.import.started": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle marketplace import job started",
+    },
+    "vehicle.import.completed": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle marketplace import job completed",
+    },
+    "vehicle.price.changed": {
+        "aggregate_type": "vehicle",
+        "description": "Vehicle price changed during marketplace import",
+    },
     "user.created": {
         "aggregate_type": "user",
         "description": "User created",
