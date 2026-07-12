@@ -590,6 +590,61 @@ def agro_module_actions_inline(section_key: str = "overview") -> InlineKeyboardM
         ]
     )
 
+AGRO_PRODUCT_CATALOG = [
+    "🌾 Пшеница",
+    "🌽 Кукуруза",
+    "🌻 Подсолнечное масло",
+    "🫒 Оливковое масло",
+    "🍎 Яблоки",
+    "🧂 Сахар",
+    "🫘 Нут",
+    "🌱 Шрот",
+    "🌾 Ячмень",
+    "🌱 Рапс",
+]
+
+
+def agro_products_inline() -> InlineKeyboardMarkup:
+    rows = []
+    row = []
+    for idx, product in enumerate(AGRO_PRODUCT_CATALOG):
+        row.append(
+            InlineKeyboardButton(
+                text=product,
+                callback_data=f"agr:prod:{idx}",
+            )
+        )
+        if len(row) == 2:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def product_actions_inline(product_idx: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🟢 Купить",
+                    callback_data=f"agr:buy:{product_idx}",
+                ),
+                InlineKeyboardButton(
+                    text="🔴 Продать",
+                    callback_data=f"agr:sell:{product_idx}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="⬅ Назад к товарам",
+                    callback_data="agr:nav:products",
+                ),
+            ],
+        ]
+    )
+
+
 def agro_products_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[

@@ -180,6 +180,21 @@ class AgroDealLifecycle:
             priority="WARNING" if is_terminal_status(new_status) else "INFO",
         )
 
+        if new_status == "IN_PROGRESS":
+            from database import get_request_by_number, create_event
+            req = get_request_by_number(request_number)
+            assignee = (req[7] if req and req[7] else None) or actor_id
+            create_event(
+                creator_id=actor_id,
+                title=f"Обработка заявки #{request_number}",
+                start_time=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"),
+                module=MODULE,
+                event_type="agro_task",
+                owner_id=assignee,
+                description=f"agro_request_in_progress|request:{request_number}",
+                status="PLANNED",
+            )
+
         if new_status == "DONE":
             AgroDealLifecycle.close_deal(actor_id, request_number)
         log_audit(

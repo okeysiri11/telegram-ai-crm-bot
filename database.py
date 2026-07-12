@@ -1077,7 +1077,49 @@ def create_request(
         entity_id=request_number,
         payload={"title": f"Новая заявка #{request_number}", "product": product},
     )
+    notify_agro_managers_new_request(
+        request_number,
+        product=product,
+        client_name=client_name,
+    )
+    log_audit(client_id, "create_request", "agro_trading", f"#{request_number}|{product}")
     return request_number
+
+
+def notify_agro_managers_new_request(
+    request_number: int,
+    product: str = "",
+    client_name: str = "",
+    exclude_id: int = None,
+) -> list[int]:
+    from config import MANAGER_ID, OWNER_ID
+
+    manager_ids = {MANAGER_ID, OWNER_ID}
+    cursor.execute(
+        """
+        SELECT DISTINCT ur.user_id
+        FROM user_roles ur
+        JOIN roles r ON r.id = ur.role_id
+        WHERE r.role_name IN ('AGRO_MANAGER', 'MANAGER', 'ADMIN', 'OWNER')
+        """
+    )
+    for row in cursor.fetchall():
+        if row[0]:
+            manager_ids.add(row[0])
+
+    notified = []
+    for mid in manager_ids:
+        if not mid or mid == exclude_id:
+            continue
+        register_module_notification(
+            mid,
+            "agro_trading",
+            title=f"Новая Agro заявка #{request_number}",
+            message=f"{client_name} · {product}".strip(" ·"),
+            priority="HIGH",
+        )
+        notified.append(mid)
+    return notified
 
 
 def update_request_status(
@@ -1116,6 +1158,12 @@ def update_request_status(
             old_status,
             status,
             module="agro_trading",
+        )
+        log_audit(
+            actor,
+            "update_request_status",
+            "agro_trading",
+            f"#{request_number}:{old_status}->{status}",
         )
 def get_request_status(
     request_number: int
@@ -1243,6 +1291,12 @@ def assign_manager(request_number, manager_id):
         request_number,
         manager_id,
         module="agro_trading",
+    )
+    log_audit(
+        manager_id,
+        "assign_manager",
+        "agro_trading",
+        f"#{request_number}:manager={manager_id}",
     )
 def get_requests_by_manager(manager_id):
     cursor.execute(
@@ -1728,7 +1782,8 @@ CALENDAR_MODULE_ALIASES = {
 CALENDAR_STATUSES = ("PLANNED", "ACTIVE", "DONE", "CANCELLED", "MISSED")
 
 CALENDAR_EVENT_TYPES = (
-    "general", "task", "meeting", "deadline", "reminder", "agro", "payment", "delivery",
+    "general", "task", "meeting", "deadline", "reminder", "agro", "agro_task",
+    "payment", "delivery",
 )
 
 CALENDAR_STATUS_ICONS = {
@@ -2643,6 +2698,7 @@ AGRO_DOCUMENT_TYPES = {
 }
 
 AGRO_CALENDAR_EVENT_TYPES = {
+    "agro_task": "Agro Task",
     "loading": "Погрузка",
     "payment": "Оплата",
     "contract_signing": "Подписание контракта",
@@ -2679,9 +2735,10 @@ AGRO_AI_CONTEXT_AREAS = (
 
 
 def can_access_agro_section(user_id: int, section_key: str) -> bool:
-    # TODO: future implementation — section-level permissions for Agro CRM
-    _ = user_id
-    return section_key in AGRO_CRM_SECTIONS
+    if section_key not in AGRO_CRM_SECTIONS:
+        return False
+    from services.request_auth import RequestAuthService
+    return RequestAuthService.can_access_agro_requests(user_id)
 
 
 def create_agro_counterparty(

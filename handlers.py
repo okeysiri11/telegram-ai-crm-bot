@@ -198,6 +198,9 @@ from keyboards import (
     crypto_otc_menu,
     agro_menu,
     agro_products_menu,
+    agro_products_inline,
+    product_actions_inline,
+    AGRO_PRODUCT_CATALOG,
     product_actions_menu,
     manager_request_menu,
     crm_menu,
@@ -283,6 +286,7 @@ calendar_flow = {}
 ai_settings_flow = {}
 active_module = {}
 active_agro_sub = {}
+agro_nav_state = {}
 
 MODULE_MENUS = {
     "law": law_module_menu,
@@ -607,18 +611,69 @@ def _init_ai_user(message: Message):
     if not get_user_roles(user.id):
         assign_role(user.id, "CLIENT")
 
-AGRO_PRODUCTS = [
-    "🌾 Пшеница",
-    "🌽 Кукуруза",
-    "🌻 Подсолнечное масло",
-    "🫒 Оливковое масло",
-    "🍎 Яблоки",
-    "🧂 Сахар",
-    "🫘 Нут",
-    "🌱 Шрот",
-    "🌾 Ячмень",
-    "🌱 Рапс"
-]
+
+async def _show_agro_catalog(message: Message, *, edit_inline: bool = False) -> None:
+    user_id = message.from_user.id
+    waiting_buy_request.pop(user_id, None)
+    buy_requests.pop(user_id, None)
+    selected_product.pop(user_id, None)
+    active_module[user_id] = "agro"
+    active_agro_sub.pop(user_id, None)
+
+    nav = agro_nav_state.get(user_id)
+    inline_markup = agro_products_inline()
+    if nav and nav.get("message_id"):
+        try:
+            await message.bot.edit_message_text(
+                AGRO_CATALOG_TEXT,
+                chat_id=nav["chat_id"],
+                message_id=nav["message_id"],
+                reply_markup=inline_markup,
+            )
+            nav["level"] = "catalog"
+        except Exception:
+            pass
+
+    await message.answer(AGRO_CATALOG_TEXT, reply_markup=agro_products_menu())
+
+
+async def _show_agro_product_actions(
+    message: Message,
+    user_id: int,
+    product: str,
+    product_idx: int,
+) -> None:
+    selected_product[user_id] = product
+    nav = agro_nav_state.get(user_id)
+    text = f"Выбран товар: {product}\n\nВыберите действие:"
+    inline_markup = product_actions_inline(product_idx)
+
+    if nav and nav.get("message_id"):
+        try:
+            await message.bot.edit_message_text(
+                text,
+                chat_id=nav["chat_id"],
+                message_id=nav["message_id"],
+                reply_markup=inline_markup,
+            )
+            nav["level"] = "product"
+            nav["product_idx"] = product_idx
+        except Exception:
+            pass
+    else:
+        inline_msg = await message.answer(text, reply_markup=inline_markup)
+        agro_nav_state[user_id] = {
+            "chat_id": inline_msg.chat.id,
+            "message_id": inline_msg.message_id,
+            "level": "product",
+            "product_idx": product_idx,
+        }
+
+    await message.answer(text, reply_markup=product_actions_menu())
+
+AGRO_PRODUCTS = AGRO_PRODUCT_CATALOG
+
+AGRO_CATALOG_TEXT = "Выберите товарную группу:"
 
 AGRO_CRM_BUTTONS = {
     "👥 Контрагенты",
@@ -662,22 +717,20 @@ async def open_agro(message: Message):
 
 @router.message(F.text == "🌾 Товары")
 async def open_agro_products(message: Message):
-    await message.answer(
-        "Выберите товарную группу:",
-        reply_markup=agro_products_menu()
-    ) 
+    await _show_agro_catalog(message)
+
+
+@router.message(F.text == "⬅ Назад к товарам")
+async def agro_back_to_products(message: Message):
+    await _show_agro_catalog(message, edit_inline=True)
+
 
 @router.message(F.text.in_(AGRO_PRODUCTS))
 async def open_product(message: Message):
     user_id = message.from_user.id
-
-    selected_product[user_id] = message.text
-
-    await message.answer(
-        f"Выбран товар: {message.text}\n\n"
-        "Выберите действие:",
-        reply_markup=product_actions_menu()
-    )
+    product = message.text
+    product_idx = AGRO_PRODUCTS.index(product)
+    await _show_agro_product_actions(message, user_id, product, product_idx)
 @router.message(F.text == "🟢 Купить")
 async def buy_product(message: Message):
     user_id = message.from_user.id
@@ -712,6 +765,83 @@ async def buy_product(message: Message):
     )
 
     waiting_buy_request[user_id] = True
+
+
+@router.callback_query(F.data == "agr:nav:products")
+async def agro_nav_products_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    waiting_buy_request.pop(user_id, None)
+    buy_requests.pop(user_id, None)
+    selected_product.pop(user_id, None)
+    active_module[user_id] = "agro"
+
+    nav = agro_nav_state.get(user_id)
+    if nav and nav.get("message_id"):
+        try:
+            await callback.bot.edit_message_text(
+                AGRO_CATALOG_TEXT,
+                chat_id=nav["chat_id"],
+                message_id=nav["message_id"],
+                reply_markup=agro_products_inline(),
+            )
+            nav["level"] = "catalog"
+        except Exception:
+            pass
+
+    await callback.message.answer(
+        AGRO_CATALOG_TEXT,
+        reply_markup=agro_products_menu(),
+    )
+    await callback.answer()
+    log_audit(user_id, "agro_nav", "agro_trading", "back_to_products")
+
+
+@router.callback_query(F.data.startswith("agr:prod:"))
+async def agro_product_select_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    product_idx = int(callback.data.split(":")[-1])
+    if product_idx < 0 or product_idx >= len(AGRO_PRODUCTS):
+        await callback.answer("Товар не найден", show_alert=True)
+        return
+    product = AGRO_PRODUCTS[product_idx]
+    selected_product[user_id] = product
+    text = f"Выбран товар: {product}\n\nВыберите действие:"
+    inline_markup = product_actions_inline(product_idx)
+
+    try:
+        await callback.message.edit_text(text, reply_markup=inline_markup)
+        agro_nav_state[user_id] = {
+            "chat_id": callback.message.chat.id,
+            "message_id": callback.message.message_id,
+            "level": "product",
+            "product_idx": product_idx,
+        }
+    except Exception:
+        pass
+
+    await callback.message.answer(text, reply_markup=product_actions_menu())
+    await callback.answer()
+    log_audit(user_id, "agro_product_select", "agro_trading", product)
+
+
+@router.callback_query(F.data.startswith("agr:buy:"))
+async def agro_buy_inline_callback(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    product_idx = int(callback.data.split(":")[-1])
+    if product_idx < 0 or product_idx >= len(AGRO_PRODUCTS):
+        await callback.answer("Товар не найден", show_alert=True)
+        return
+    product = AGRO_PRODUCTS[product_idx]
+    selected_product[user_id] = product
+    buy_requests[user_id] = {"product": product}
+    waiting_buy_request[user_id] = True
+    await callback.answer()
+    await callback.message.answer(
+        f"🟢 Новая заявка на покупку\n\nТовар: {product}\n\n"
+        "Отправьте одним сообщением:\n\nСтрана:\nОбъем:\nКачество:\n"
+        "Условия поставки:\nСпособ оплаты:",
+        reply_markup=product_actions_menu(),
+    )
 
 
 # ==========================================================
@@ -2505,7 +2635,7 @@ async def agro_deal_bind_contract_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     request = get_request_by_number(request_number)
     if not RequestAuthService.can_update_status(user_id, request):
-        await callback.answer(RequestAuthService.deny_message("bind"), show_alert=True)
+        await callback.answer(RequestAuthService.deny_message("bind", user_id), show_alert=True)
         return
     contract_id = AgroDealLifecycle.bind_contract(user_id, request_number)
     await callback.answer()
@@ -2522,7 +2652,7 @@ async def agro_deal_bind_logistics_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     request = get_request_by_number(request_number)
     if not RequestAuthService.can_update_status(user_id, request):
-        await callback.answer(RequestAuthService.deny_message("bind"), show_alert=True)
+        await callback.answer(RequestAuthService.deny_message("bind", user_id), show_alert=True)
         return
     logistics_id = AgroDealLifecycle.bind_logistics(user_id, request_number)
     await callback.answer()
@@ -2539,7 +2669,7 @@ async def agro_deal_bind_finance_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     request = get_request_by_number(request_number)
     if not RequestAuthService.can_update_status(user_id, request):
-        await callback.answer(RequestAuthService.deny_message("bind"), show_alert=True)
+        await callback.answer(RequestAuthService.deny_message("bind", user_id), show_alert=True)
         return
     finance_id = AgroDealLifecycle.bind_finance(user_id, request_number)
     await callback.answer()
@@ -2556,7 +2686,7 @@ async def agro_deal_close_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     request = get_request_by_number(request_number)
     if not RequestAuthService.can_update_status(user_id, request):
-        await callback.answer(RequestAuthService.deny_message("close"), show_alert=True)
+        await callback.answer(RequestAuthService.deny_message("close", user_id), show_alert=True)
         return
     update_request_status(request_number, "DONE", user_id)
     await callback.answer("Сделка закрыта")
@@ -2573,7 +2703,7 @@ async def agro_deal_report_callback(callback: CallbackQuery):
     user_id = callback.from_user.id
     request = get_request_by_number(request_number)
     if not RequestAuthService.can_view_request(user_id, request):
-        await callback.answer(RequestAuthService.deny_message("report"), show_alert=True)
+        await callback.answer(RequestAuthService.deny_message("report", user_id), show_alert=True)
         return
     file_id = AgroDealLifecycle.generate_report(user_id, request_number)
     await callback.answer()
@@ -3189,7 +3319,7 @@ async def handle_text(message: Message) -> None:
         number = int(text_lower.replace("в работу ", ""))
         request = get_request_by_number(number)
         if not RequestAuthService.can_take_request(user_id, request):
-            await message.answer(RequestAuthService.deny_message("take"))
+            await message.answer(RequestAuthService.deny_message("take", user_id))
             return
         if request and request[7]:
             await message.answer("Заявка уже закреплена за менеджером.")
@@ -3203,7 +3333,7 @@ async def handle_text(message: Message) -> None:
         number = int(text_lower.replace("завершить ", ""))
         request = get_request_by_number(number)
         if not RequestAuthService.can_update_status(user_id, request):
-            await message.answer(RequestAuthService.deny_message("update"))
+            await message.answer(RequestAuthService.deny_message("update", user_id))
             return
         update_request_status(number, "DONE", user_id)
         await message.answer(f"✅ Заявка #{number} завершена")
@@ -3213,7 +3343,7 @@ async def handle_text(message: Message) -> None:
         number = int(text_lower.replace("отменить ", ""))
         request = get_request_by_number(number)
         if not RequestAuthService.can_cancel_request(user_id, request):
-            await message.answer(RequestAuthService.deny_message("cancel"))
+            await message.answer(RequestAuthService.deny_message("cancel", user_id))
             return
         update_request_status(number, "CANCELLED", user_id)
         await message.answer(f"❌ Заявка #{number} отменена")
@@ -3231,7 +3361,7 @@ async def handle_text(message: Message) -> None:
             return
 
         if not RequestAuthService.can_view_request(user_id, request):
-            await message.answer(RequestAuthService.deny_message("view"))
+            await message.answer(RequestAuthService.deny_message("view", user_id))
             return
 
         text = (
@@ -3248,7 +3378,7 @@ async def handle_text(message: Message) -> None:
         await message.answer(text)
         deal_text = format_agro_deal_text(int(message.text))
         await message.answer(deal_text)
-        if PermissionService.is_crm_operator(user_id):
+        if RequestAuthService.can_access_agro_requests(user_id):
             await message.answer(
                 "Действия со сделкой:",
                 reply_markup=agro_deal_actions_inline(int(message.text)),
@@ -3518,7 +3648,7 @@ async def work_request(callback: CallbackQuery):
 
     if not RequestAuthService.can_take_request(callback.from_user.id, request):
         await callback.answer(
-            RequestAuthService.deny_message("take"),
+            RequestAuthService.deny_message("take", callback.from_user.id),
             show_alert=True,
         )
         return
@@ -3560,7 +3690,7 @@ async def done_request(callback: CallbackQuery):
 
     if not RequestAuthService.can_update_status(callback.from_user.id, request):
         await callback.answer(
-            RequestAuthService.deny_message("update"),
+            RequestAuthService.deny_message("update", callback.from_user.id),
             show_alert=True,
         )
         return
@@ -3593,7 +3723,7 @@ async def cancel_request(callback: CallbackQuery):
 
     if not RequestAuthService.can_cancel_request(callback.from_user.id, request):
         await callback.answer(
-            RequestAuthService.deny_message("cancel"),
+            RequestAuthService.deny_message("cancel", callback.from_user.id),
             show_alert=True,
         )
         return
