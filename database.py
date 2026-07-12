@@ -456,6 +456,94 @@ def _migrate_schema():
     _migrate_agro_erp_phase1()
     _migrate_agro_erp_phase2()
     _migrate_crypto_erp_phase1()
+    _migrate_company_core_phase1()
+
+
+def _migrate_company_core_phase1():
+    """Company Core Phase 1 — employees, departments, KPI, time tracking."""
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS departments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS employees (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            full_name TEXT NOT NULL,
+            role TEXT,
+            department TEXT,
+            position TEXT,
+            phone TEXT,
+            email TEXT,
+            telegram_id INTEGER UNIQUE,
+            manager_id INTEGER,
+            hire_date TEXT,
+            salary REAL,
+            status TEXT DEFAULT 'ACTIVE',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS employee_kpi (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id INTEGER NOT NULL,
+            period TEXT NOT NULL,
+            deals_count INTEGER DEFAULT 0,
+            revenue REAL DEFAULT 0,
+            profit REAL DEFAULT 0,
+            tasks_completed INTEGER DEFAULT 0,
+            rating REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(employee_id, period)
+        )
+        """
+    )
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS employee_time_tracking (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id INTEGER NOT NULL,
+            check_in TIMESTAMP NOT NULL,
+            check_out TIMESTAMP,
+            hours_worked REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
+    )
+    conn.commit()
+    _seed_company_departments()
+
+
+def _seed_company_departments():
+    departments = [
+        ("AGRO", "Agro Trading", "Отдел Agro Trading"),
+        ("CRYPTO", "Crypto OTC", "Отдел Crypto OTC"),
+        ("DRONE", "Drone Engineering", "Отдел Drone Engineering"),
+        ("LEGAL", "Legal", "Юридический отдел"),
+        ("FINANCE", "Finance", "Финансовый отдел"),
+        ("BEAUTY", "Cafe & Beauty", "Отдел Cafe & Beauty"),
+        ("ADMINISTRATION", "Administration", "Администрация"),
+    ]
+    for code, name, desc in departments:
+        cursor.execute(
+            """
+            INSERT OR IGNORE INTO departments (code, name, description)
+            VALUES (?, ?, ?)
+            """,
+            (code, name, desc),
+        )
+    conn.commit()
 
 
 def _migrate_crypto_erp_phase1():
@@ -6690,6 +6778,313 @@ def run_crypto_erp_cycle_test(user_id: int) -> dict:
         return {"ok": ok, "steps": steps, "status": "OK" if ok else "ERROR"}
     except Exception as exc:
         return {"ok": False, "steps": steps, "status": "ERROR", "error": str(exc)}
+
+
+# ==========================================================
+# COMPANY CORE (Phase 1)
+# ==========================================================
+
+COMPANY_DEPARTMENT_CODES = (
+    "AGRO", "CRYPTO", "DRONE", "LEGAL", "FINANCE", "BEAUTY", "ADMINISTRATION",
+)
+
+EMPLOYEE_STATUSES = ("ACTIVE", "ON_LEAVE", "SICK", "TERMINATED")
+
+
+def can_access_company_core(user_id: int) -> bool:
+    from config import OWNER_ID, MANAGER_ID
+    if user_id in (OWNER_ID, MANAGER_ID):
+        return True
+    return has_permission(user_id, "users_access")
+
+
+def get_departments():
+    cursor.execute(
+        "SELECT id, code, name, description FROM departments ORDER BY code"
+    )
+    return cursor.fetchall()
+
+
+def format_departments_text() -> str:
+    rows = get_departments()
+    if not rows:
+        return "🏢 Отделы: не настроены."
+    lines = ["🏢 Отделы компании:\n"]
+    for _id, code, name, desc in rows:
+        lines.append(f"· {code} — {name}")
+        if desc:
+            lines.append(f"  {desc}")
+    return "\n".join(lines)
+
+
+def ensure_employee_for_user(
+    telegram_id: int,
+    full_name: str = None,
+    department: str = "ADMINISTRATION",
+    role: str = "VIEWER",
+) -> int:
+    from datetime import datetime
+    ensure_user(telegram_id, full_name=full_name or "")
+    cursor.execute("SELECT id FROM employees WHERE telegram_id = ?", (telegram_id,))
+    row = cursor.fetchone()
+    if row:
+        return row[0]
+    cursor.execute(
+        "SELECT full_name FROM users WHERE telegram_id = ?", (telegram_id,),
+    )
+    user_row = cursor.fetchone()
+    name = full_name or (user_row[0] if user_row else f"User {telegram_id}")
+    now = datetime.utcnow().strftime("%Y-%m-%d")
+    cursor.execute(
+        """
+        INSERT INTO employees (
+            full_name, role, department, position, telegram_id,
+            hire_date, status, created_at, updated_at
+        )
+        VALUES (?, ?, ?, 'Staff', ?, ?, 'ACTIVE', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        """,
+        (name, role, department, telegram_id, now),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def get_employee(employee_id: int = None, telegram_id: int = None):
+    if employee_id:
+        cursor.execute("SELECT * FROM employees WHERE id = ?", (employee_id,))
+    elif telegram_id:
+        cursor.execute("SELECT * FROM employees WHERE telegram_id = ?", (telegram_id,))
+    else:
+        return None
+    return cursor.fetchone()
+
+
+def get_employees(department: str = None, status: str = "ACTIVE", limit: int = 50):
+    query = "SELECT * FROM employees WHERE 1=1"
+    params = []
+    if department:
+        query += " AND department = ?"
+        params.append(department)
+    if status:
+        query += " AND status = ?"
+        params.append(status)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+    cursor.execute(query, params)
+    return cursor.fetchall()
+
+
+def format_employees_text(department: str = None, limit: int = 20) -> str:
+    rows = get_employees(department=department, limit=limit)
+    if not rows:
+        return "👥 Сотрудники: записей нет."
+    lines = ["👥 Сотрудники:\n"]
+    for row in rows:
+        (
+            eid, name, role, dept, position, phone, email, tg_id,
+            mgr_id, hire_date, salary, status, created, updated,
+        ) = row
+        lines.append(
+            f"#{eid} · {name} · {dept or '—'}\n"
+            f"   {position or '—'} · {role or '—'} · {status}\n"
+            f"   TG: {tg_id or '—'} · менеджер: {mgr_id or '—'}"
+        )
+    return "\n".join(lines)
+
+
+def upsert_employee_kpi(
+    employee_id: int,
+    period: str,
+    deals_count: int = 0,
+    revenue: float = 0,
+    profit: float = 0,
+    tasks_completed: int = 0,
+    rating: float = None,
+) -> int:
+    from datetime import datetime
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        """
+        INSERT INTO employee_kpi (
+            employee_id, period, deals_count, revenue, profit,
+            tasks_completed, rating, created_at, updated_at
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(employee_id, period) DO UPDATE SET
+            deals_count = excluded.deals_count,
+            revenue = excluded.revenue,
+            profit = excluded.profit,
+            tasks_completed = excluded.tasks_completed,
+            rating = excluded.rating,
+            updated_at = excluded.updated_at
+        """,
+        (
+            employee_id, period, deals_count, revenue, profit,
+            tasks_completed, rating, now, now,
+        ),
+    )
+    conn.commit()
+    cursor.execute(
+        "SELECT id FROM employee_kpi WHERE employee_id = ? AND period = ?",
+        (employee_id, period),
+    )
+    row = cursor.fetchone()
+    return row[0] if row else 0
+
+
+def get_employee_kpi(employee_id: int, period: str = None):
+    if period:
+        cursor.execute(
+            """
+            SELECT id, employee_id, period, deals_count, revenue, profit,
+                   tasks_completed, rating, created_at
+            FROM employee_kpi WHERE employee_id = ? AND period = ?
+            """,
+            (employee_id, period),
+        )
+        return cursor.fetchone()
+    cursor.execute(
+        """
+        SELECT id, employee_id, period, deals_count, revenue, profit,
+               tasks_completed, rating, created_at
+        FROM employee_kpi WHERE employee_id = ?
+        ORDER BY period DESC LIMIT 1
+        """,
+        (employee_id,),
+    )
+    return cursor.fetchone()
+
+
+def format_employee_kpi_text(employee_id: int, period: str = None) -> str:
+    kpi = get_employee_kpi(employee_id, period=period)
+    emp = get_employee(employee_id=employee_id)
+    if not kpi:
+        return f"📊 KPI сотрудника #{employee_id}: нет данных."
+    name = emp[1] if emp else f"#{employee_id}"
+    (
+        _kid, _eid, per, deals, rev, profit, tasks, rating, created,
+    ) = kpi
+    return (
+        f"📊 KPI · {name}\n\n"
+        f"Период: {per}\n"
+        f"Сделок: {deals} · задач: {tasks}\n"
+        f"Выручка: {rev} · прибыль: {profit}\n"
+        f"Рейтинг: {rating or '—'}\n"
+        f"🕒 {created}"
+    )
+
+
+def employee_clock_in(employee_id: int) -> int:
+    from datetime import datetime
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        """
+        SELECT id FROM employee_time_tracking
+        WHERE employee_id = ? AND check_out IS NULL
+        ORDER BY id DESC LIMIT 1
+        """,
+        (employee_id,),
+    )
+    if cursor.fetchone():
+        return 0
+    cursor.execute(
+        """
+        INSERT INTO employee_time_tracking (employee_id, check_in)
+        VALUES (?, ?)
+        """,
+        (employee_id, now),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def employee_clock_out(employee_id: int) -> bool:
+    from datetime import datetime
+    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        """
+        SELECT id, check_in FROM employee_time_tracking
+        WHERE employee_id = ? AND check_out IS NULL
+        ORDER BY id DESC LIMIT 1
+        """,
+        (employee_id,),
+    )
+    row = cursor.fetchone()
+    if not row:
+        return False
+    track_id, check_in = row
+    try:
+        fmt = "%Y-%m-%d %H:%M:%S"
+        t_in = datetime.strptime(check_in[:19], fmt)
+        t_out = datetime.strptime(now, fmt)
+        hours = round((t_out - t_in).total_seconds() / 3600, 2)
+    except Exception:
+        hours = 0
+    cursor.execute(
+        """
+        UPDATE employee_time_tracking
+        SET check_out = ?, hours_worked = ?
+        WHERE id = ?
+        """,
+        (now, hours, track_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def get_employee_time_tracking(employee_id: int, limit: int = 10):
+    cursor.execute(
+        """
+        SELECT id, check_in, check_out, hours_worked
+        FROM employee_time_tracking
+        WHERE employee_id = ?
+        ORDER BY id DESC LIMIT ?
+        """,
+        (employee_id, limit),
+    )
+    return cursor.fetchall()
+
+
+def format_time_tracking_text(employee_id: int) -> str:
+    rows = get_employee_time_tracking(employee_id)
+    emp = get_employee(employee_id=employee_id)
+    name = emp[1] if emp else f"#{employee_id}"
+    if not rows:
+        return f"⏱ Учёт времени · {name}: записей нет."
+    lines = [f"⏱ Учёт времени · {name}:\n"]
+    for tid, cin, cout, hours in rows:
+        lines.append(f"#{tid} · {cin} → {cout or '—'} · {hours or 0} ч")
+    return "\n".join(lines)
+
+
+def set_employee_status(employee_id: int, status: str) -> bool:
+    if status not in EMPLOYEE_STATUSES:
+        return False
+    cursor.execute(
+        "UPDATE employees SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
+        (status, employee_id),
+    )
+    conn.commit()
+    return cursor.rowcount > 0
+
+
+def format_company_hr_report(employee_id: int) -> str:
+    emp = get_employee(employee_id=employee_id)
+    kpi = get_employee_kpi(employee_id)
+    time_rows = get_employee_time_tracking(employee_id, limit=3)
+    if not emp:
+        return "Отчёт: сотрудник не найден."
+    total_hours = sum(r[3] or 0 for r in time_rows)
+    lines = [
+        f"📋 HR Report · {emp[1]}",
+        f"Отдел: {emp[3]} · статус: {emp[11]}",
+    ]
+    if kpi:
+        lines.append(
+            f"KPI {kpi[2]}: сделок {kpi[3]}, прибыль {kpi[5]}, задач {kpi[6]}"
+        )
+    lines.append(f"Последние смены: {len(time_rows)} · {total_hours} ч")
+    return "\n".join(lines)
 
 
 # ==========================================================

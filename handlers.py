@@ -23,6 +23,8 @@ from services.dashboard import DashboardService
 from services.search_service import SearchService
 from services.crypto_auth import CryptoAuthService
 from services.crypto_otc_agent import CryptoOTCAgent
+from services.hr_agent import HRAgent
+from services.company_core import CompanyCoreService
 from database import (
     get_user_profile,
     save_profile_fields,
@@ -191,6 +193,16 @@ from database import (
     update_crypto_payment_status,
     run_crypto_erp_cycle_test,
     CRYPTO_OTC_DIRECTIONS,
+    can_access_company_core,
+    ensure_employee_for_user,
+    get_employee,
+    format_departments_text,
+    format_employees_text,
+    format_employee_kpi_text,
+    format_time_tracking_text,
+    employee_clock_in,
+    employee_clock_out,
+    format_company_hr_report,
     SEARCH_DOMAINS,
     SEARCH_SCOPES,
     global_search,
@@ -263,6 +275,7 @@ from keyboards import (
     agro_module_actions_inline,
     agro_deal_actions_inline,
     agro_deal_hub_menu,
+    company_core_menu,
     search_module_menu,
     search_module_actions_inline,
     workflow_module_menu,
@@ -327,6 +340,18 @@ CRYPTO_OTC_MENU_BUTTONS = set(CRYPTO_DIRECTION_BUTTONS.keys()) | {
     "🤖 Crypto Agent",
     "💵 Курсы",
     "📊 PnL",
+    "⬅️ Назад",
+}
+
+COMPANY_CORE_BUTTONS = {
+    "👥 Сотрудники",
+    "🏢 Отделы",
+    "📊 KPI",
+    "⏱ Учёт времени",
+    "🟢 Check-in",
+    "🔴 Check-out",
+    "🤖 HR Agent",
+    "🔔 HR напоминания",
     "⬅️ Назад",
 }
 
@@ -956,6 +981,114 @@ async def crypto_otc_deal_or_request(message: Message):
             )
             return
     await message.answer("Сделка или запрос не найдены.", reply_markup=crypto_otc_menu())
+
+
+@router.message(F.text == "🏢 Company Core")
+async def open_company_core(message: Message):
+    user_id = message.from_user.id
+    _init_ai_user(message)
+    if not can_access_company_core(user_id):
+        await message.answer(
+            "🏢 Company Core\n\nНет доступа (требуется users_access).",
+            reply_markup=owner_main_menu(),
+        )
+        return
+    active_module[user_id] = "company"
+    ensure_employee_for_user(
+        user_id,
+        full_name=message.from_user.full_name,
+    )
+    await message.answer(
+        "🏢 Company Core\n\nHR, сотрудники, KPI и учёт времени.",
+        reply_markup=company_core_menu(),
+    )
+    log_audit(user_id, "open", "company_core")
+
+
+@router.message(
+    lambda m: (
+        m.text in COMPANY_CORE_BUTTONS
+        and active_module.get(m.from_user.id) == "company"
+    )
+)
+async def company_core_screen(message: Message):
+    user_id = message.from_user.id
+    screen = message.text
+
+    if screen == "⬅️ Назад":
+        active_module.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        return
+
+    if not can_access_company_core(user_id):
+        await message.answer("Нет доступа.", reply_markup=owner_main_menu())
+        return
+
+    emp_id = ensure_employee_for_user(user_id, full_name=message.from_user.full_name)
+
+    if screen == "👥 Сотрудники":
+        await message.answer(format_employees_text(), reply_markup=company_core_menu())
+    elif screen == "🏢 Отделы":
+        await message.answer(format_departments_text(), reply_markup=company_core_menu())
+    elif screen == "📊 KPI":
+        await message.answer(
+            format_employee_kpi_text(emp_id),
+            reply_markup=company_core_menu(),
+        )
+    elif screen == "⏱ Учёт времени":
+        await message.answer(
+            format_time_tracking_text(emp_id),
+            reply_markup=company_core_menu(),
+        )
+    elif screen == "🟢 Check-in":
+        tid = employee_clock_in(emp_id)
+        msg = f"✅ Check-in #{tid}" if tid else "Уже на смене или ошибка."
+        await message.answer(msg, reply_markup=company_core_menu())
+    elif screen == "🔴 Check-out":
+        ok = employee_clock_out(emp_id)
+        msg = "✅ Check-out завершён" if ok else "Нет открытой смены."
+        await message.answer(
+            f"{msg}\n\n{format_time_tracking_text(emp_id)}",
+            reply_markup=company_core_menu(),
+        )
+    elif screen == "🤖 HR Agent":
+        await message.answer(
+            HRAgent.format_report(emp_id),
+            reply_markup=company_core_menu(),
+        )
+    elif screen == "🔔 HR напоминания":
+        if not has_permission(user_id, "users_access"):
+            await message.answer("Нет прав для рассылки.", reply_markup=company_core_menu())
+            return
+        count = len(HRAgent.send_reminders(user_id))
+        await message.answer(
+            f"Отправлено напоминаний: {count}",
+            reply_markup=company_core_menu(),
+        )
+    log_audit(user_id, "company_core", "users", screen)
+
+
+@router.message(Command("company_test"))
+async def company_core_integration_test(message: Message):
+    user_id = message.from_user.id
+    if not can_access_company_core(user_id):
+        await message.answer("Нет доступа к /company_test.")
+        return
+    result = CompanyCoreService.run_integration_test(user_id)
+    steps = result.get("steps", {})
+    lines = [
+        "COMPANY CORE INTEGRATION TEST",
+        f"STATUS: {result.get('status', 'ERROR')}",
+        f"Employee: {steps.get('employee', '—')}",
+        f"Task: {steps.get('task', '—')}",
+        f"Calendar: {steps.get('calendar', '—')}",
+        f"KPI: {steps.get('kpi', '—')}",
+        f"Report: {steps.get('report', '—')[:80]}",
+    ]
+    if result.get("error"):
+        lines.append(f"Error: {result['error']}")
+    await message.answer("\n".join(lines))
+    log_audit(user_id, "company_integration_test", "users", result.get("status"))
 
 
 @router.message(F.text == "🌾 Agro Trading")
@@ -3760,6 +3893,7 @@ async def ai_back_to_main(message: Message):
         and m.text not in ADMIN_MENU_BUTTONS
         and m.text not in TEST_CENTER_BUTTONS
         and m.text not in CRYPTO_OTC_MENU_BUTTONS
+        and m.text not in COMPANY_CORE_BUTTONS
         and not crypto_otc_flow.get(m.from_user.id)
         and not admin_permissions_flow.get(m.from_user.id)
         and not ai_settings_flow.get(m.from_user.id)

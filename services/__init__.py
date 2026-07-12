@@ -27,6 +27,8 @@ from services.crypto_erp_calendar import CryptoErpCalendar
 from services.crypto_erp_workflow import CryptoErpWorkflow
 from services.crypto_otc_agent import CryptoOTCAgent
 from services.crypto_auth import CryptoAuthService
+from services.hr_agent import HRAgent
+from services.company_core import CompanyCoreService
 
 __all__ = [
     "UNIFIED_STATUSES",
@@ -57,4 +59,6 @@ __all__ = [
     "CryptoErpWorkflow",
     "CryptoOTCAgent",
     "CryptoAuthService",
+    "HRAgent",
+    "CompanyCoreService",
 ]

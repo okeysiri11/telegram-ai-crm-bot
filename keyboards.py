@@ -19,7 +19,10 @@ def owner_main_menu():
             ],
             [
                 KeyboardButton(text="🌾 Agro Trading"),
-                KeyboardButton(text="👥 Пользователи")
+                KeyboardButton(text="🏢 Company Core"),
+            ],
+            [
+                KeyboardButton(text="👥 Пользователи"),
             ],
             [
                 KeyboardButton(text="📅 Календарь"),
@@ -1345,6 +1348,33 @@ def dashboard_module_menu() -> ReplyKeyboardMarkup:
             ],
             [
                 KeyboardButton(text="⬅ Назад"),
+            ],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def company_core_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="👥 Сотрудники"),
+                KeyboardButton(text="🏢 Отделы"),
+            ],
+            [
+                KeyboardButton(text="📊 KPI"),
+                KeyboardButton(text="⏱ Учёт времени"),
+            ],
+            [
+                KeyboardButton(text="🟢 Check-in"),
+                KeyboardButton(text="🔴 Check-out"),
+            ],
+            [
+                KeyboardButton(text="🤖 HR Agent"),
+                KeyboardButton(text="🔔 HR напоминания"),
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад"),
             ],
         ],
         resize_keyboard=True,
