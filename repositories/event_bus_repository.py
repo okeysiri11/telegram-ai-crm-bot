@@ -4,21 +4,25 @@ from __future__ import annotations
 
 import logging
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any
 
-from sqlalchemy import select, update
+from sqlalchemy import cast, func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.types import Integer
 
 from database.models.crm_events import (
     EVENT_STATUS_COMPLETED,
+    EVENT_STATUS_DEAD_LETTER,
     EVENT_STATUS_FAILED,
     EVENT_STATUS_PENDING,
     EVENT_STATUS_PROCESSING,
     Event,
 )
+from database.models.event_dead_letter import EventDeadLetter
 from database.seeds.event_registry import validate_event_type
+from services.event_bus_config import MAX_RETRIES, compute_backoff_seconds
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +30,17 @@ logger = logging.getLogger(__name__)
 class EventBusRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    @staticmethod
+    def _attempts(state: dict[str, Any]) -> int:
+        return int(state.get("attempts", 0))
+
+    @staticmethod
+    def _next_retry_at(state: dict[str, Any]) -> datetime | None:
+        raw = state.get("next_retry_at")
+        if not raw:
+            return None
+        return datetime.fromisoformat(raw)
 
     async def find_duplicate(
         self,
@@ -137,49 +152,137 @@ class EventBusRepository:
                 return duplicate
             raise
 
-    async def claim_pending_events(self, *, limit: int = 50) -> list[Event]:
-        result = await self._session.execute(
-            select(Event)
+    async def count_pending_events(self) -> int:
+        result = await self._session.scalar(
+            select(func.count())
+            .select_from(Event)
             .where(Event.status == EVENT_STATUS_PENDING)
-            .order_by(Event.created_at.asc())
-            .limit(limit)
-            .with_for_update(skip_locked=True)
         )
-        events = list(result.scalars().all())
-        now = datetime.now(timezone.utc)
-        for event in events:
-            event.status = EVENT_STATUS_PROCESSING
-            state = dict(event.delivery_state or {})
-            state["attempts"] = int(state.get("attempts", 0)) + 1
-            event.delivery_state = state
-            event.processed_at = now
-        await self._session.flush()
-        return events
+        return int(result or 0)
+
+    async def count_queue_size(self) -> dict[str, int]:
+        pending = await self._session.scalar(
+            select(func.count())
+            .select_from(Event)
+            .where(Event.status == EVENT_STATUS_PENDING)
+        )
+        processing = await self._session.scalar(
+            select(func.count())
+            .select_from(Event)
+            .where(Event.status == EVENT_STATUS_PROCESSING)
+        )
+        failed = await self._session.scalar(
+            select(func.count())
+            .select_from(Event)
+            .where(Event.status == EVENT_STATUS_FAILED)
+        )
+        return {
+            "pending": int(pending or 0),
+            "processing": int(processing or 0),
+            "failed": int(failed or 0),
+            "total": int(pending or 0) + int(processing or 0) + int(failed or 0),
+        }
+
+    async def claim_pending_events(self, *, limit: int = 50) -> list[Event]:
+        return await self._claim_events(
+            statuses=(EVENT_STATUS_PENDING,),
+            limit=limit,
+            check_backoff=False,
+        )
 
     async def claim_failed_events(self, *, limit: int = 50) -> list[Event]:
+        return await self._claim_events(
+            statuses=(EVENT_STATUS_FAILED,),
+            limit=limit,
+            check_backoff=True,
+        )
+
+    async def claim_events_for_processing(
+        self,
+        *,
+        limit: int = 50,
+        max_retries: int = MAX_RETRIES,
+    ) -> list[Event]:
+        now = datetime.now(timezone.utc)
+        attempts_expr = cast(
+            func.coalesce(Event.delivery_state["attempts"].as_string(), "0"),
+            Integer,
+        )
         result = await self._session.execute(
             select(Event)
-            .where(Event.status == EVENT_STATUS_FAILED)
+            .where(
+                or_(
+                    Event.status == EVENT_STATUS_PENDING,
+                    (
+                        (Event.status == EVENT_STATUS_FAILED)
+                        & (attempts_expr < max_retries)
+                    ),
+                )
+            )
             .order_by(Event.created_at.asc())
             .limit(limit)
             .with_for_update(skip_locked=True)
         )
         events = list(result.scalars().all())
-        now = datetime.now(timezone.utc)
+        claimed: list[Event] = []
         for event in events:
-            event.status = EVENT_STATUS_PROCESSING
             state = dict(event.delivery_state or {})
-            state["attempts"] = int(state.get("attempts", 0)) + 1
+            if event.status == EVENT_STATUS_FAILED:
+                next_retry = self._next_retry_at(state)
+                if next_retry is not None and next_retry > now:
+                    continue
+                state["handlers_done"] = []
+            state["attempts"] = self._attempts(state) + 1
+            state["processing_started_at"] = now.isoformat()
             event.delivery_state = state
+            event.status = EVENT_STATUS_PROCESSING
             event.processed_at = now
+            claimed.append(event)
         await self._session.flush()
-        return events
+        return claimed
+
+    async def _claim_events(
+        self,
+        *,
+        statuses: tuple[str, ...],
+        limit: int,
+        check_backoff: bool,
+    ) -> list[Event]:
+        now = datetime.now(timezone.utc)
+        result = await self._session.execute(
+            select(Event)
+            .where(Event.status.in_(statuses))
+            .order_by(Event.created_at.asc())
+            .limit(limit)
+            .with_for_update(skip_locked=True)
+        )
+        events = list(result.scalars().all())
+        claimed: list[Event] = []
+        for event in events:
+            state = dict(event.delivery_state or {})
+            if check_backoff:
+                next_retry = self._next_retry_at(state)
+                if next_retry is not None and next_retry > now:
+                    continue
+                if self._attempts(state) >= MAX_RETRIES:
+                    continue
+                state["handlers_done"] = []
+            state["attempts"] = self._attempts(state) + 1
+            state["processing_started_at"] = now.isoformat()
+            event.delivery_state = state
+            event.status = EVENT_STATUS_PROCESSING
+            event.processed_at = now
+            claimed.append(event)
+        await self._session.flush()
+        return claimed
 
     async def mark_completed(self, event: Event, handler_names: list[str]) -> None:
         state = dict(event.delivery_state or {})
         done = set(state.get("handlers_done") or [])
         done.update(handler_names)
         state["handlers_done"] = sorted(done)
+        state.pop("last_error", None)
+        state.pop("next_retry_at", None)
         event.delivery_state = state
         event.status = EVENT_STATUS_COMPLETED
         event.processed_at = datetime.now(timezone.utc)
@@ -189,21 +292,84 @@ class EventBusRepository:
             extra={"event_id": str(event.id), "event_type": event.event_type},
         )
 
-    async def mark_failed(self, event: Event, error: str) -> None:
+    async def mark_failed(
+        self,
+        event: Event,
+        error: str,
+        *,
+        max_retries: int = MAX_RETRIES,
+    ) -> str:
         state = dict(event.delivery_state or {})
+        attempts = self._attempts(state)
         state["last_error"] = error
         event.delivery_state = state
-        event.status = EVENT_STATUS_FAILED
         event.processed_at = datetime.now(timezone.utc)
+
+        if attempts >= max_retries:
+            await self.move_to_dead_letter(event, error, retry_count=attempts)
+            return EVENT_STATUS_DEAD_LETTER
+
+        backoff = compute_backoff_seconds(attempts)
+        next_retry = datetime.now(timezone.utc) + timedelta(seconds=backoff)
+        state["next_retry_at"] = next_retry.isoformat()
+        event.delivery_state = state
+        event.status = EVENT_STATUS_FAILED
         await self._session.flush()
-        logger.error(
-            "event_failed",
+        logger.warning(
+            "event_failed_will_retry",
             extra={
                 "event_id": str(event.id),
                 "event_type": event.event_type,
                 "error": error,
+                "attempts": attempts,
+                "max_retries": max_retries,
+                "next_retry_at": state["next_retry_at"],
             },
         )
+        return EVENT_STATUS_FAILED
+
+    async def move_to_dead_letter(
+        self,
+        event: Event,
+        error_message: str,
+        *,
+        retry_count: int | None = None,
+    ) -> EventDeadLetter:
+        attempts = retry_count if retry_count is not None else self._attempts(
+            event.delivery_state or {}
+        )
+        dead_letter = EventDeadLetter(
+            event_name=event.event_type,
+            payload={
+                "event_id": str(event.id),
+                "aggregate_type": event.aggregate_type,
+                "aggregate_id": str(event.aggregate_id),
+                "correlation_id": str(event.correlation_id),
+                "causation_id": str(event.causation_id) if event.causation_id else None,
+                "original_payload": dict(event.payload),
+                "delivery_state": dict(event.delivery_state or {}),
+            },
+            error_message=error_message,
+            retry_count=attempts,
+        )
+        self._session.add(dead_letter)
+        event.status = EVENT_STATUS_DEAD_LETTER
+        state = dict(event.delivery_state or {})
+        state["last_error"] = error_message
+        state["dead_letter_id"] = str(dead_letter.id)
+        event.delivery_state = state
+        event.processed_at = datetime.now(timezone.utc)
+        await self._session.flush()
+        logger.error(
+            "event_moved_to_dead_letter",
+            extra={
+                "event_id": str(event.id),
+                "dead_letter_id": str(dead_letter.id),
+                "event_type": event.event_type,
+                "retry_count": attempts,
+            },
+        )
+        return dead_letter
 
     async def list_by_aggregate(self, aggregate_id: uuid.UUID) -> list[Event]:
         result = await self._session.execute(
@@ -240,6 +406,7 @@ class EventBusRepository:
         event.status = EVENT_STATUS_PENDING
         state = dict(event.delivery_state or {})
         state["handlers_done"] = []
+        state.pop("next_retry_at", None)
         event.delivery_state = state
         event.processed_at = None
         await self._session.flush()
