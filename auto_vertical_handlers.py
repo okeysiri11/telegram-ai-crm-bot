@@ -1,4 +1,4 @@
-# Auto Vertical Telegram UI v1 — Cars module handlers.
+# Auto Vertical Telegram UI v1 — Cars module handlers (Car Entity Engine).
 
 from __future__ import annotations
 
@@ -17,10 +17,7 @@ from keyboards import (
     auto_vertical_menu,
     owner_main_menu,
 )
-from services.pg_automotive_inventory_engine import (
-    AutomotiveInventoryEngineError,
-    AutomotiveInventoryEngineV1,
-)
+from services.pg_car_engine import CarEngineError, CarEngineV1
 
 auto_vertical_router = Router()
 
@@ -28,40 +25,38 @@ auto_vertical_active: dict[int, bool] = {}
 auto_vertical_flow: dict[int, dict] = {}
 
 
-def _format_vehicle_card(vehicle: dict) -> str:
+def _format_car_card(car: dict) -> str:
     lines = [
-        f"🚗 {vehicle.get('year', '—')} {vehicle.get('make', '')} {vehicle.get('model', '')}".strip(),
-        f"VIN: {vehicle.get('vin', '—')}",
-        f"Stock: {vehicle.get('stock_number', '—')}",
-        f"Status: {vehicle.get('status', '—')}",
+        f"🚗 {car.get('year', '—')} {car.get('make', '')} {car.get('model', '')}".strip(),
+        f"VIN: {car.get('vin', '—')}",
+        f"Status: {car.get('status', '—')}",
     ]
-    if vehicle.get("mileage") is not None:
-        lines.append(f"Mileage: {vehicle['mileage']}")
-    if vehicle.get("purchase_price"):
-        lines.append(f"Purchase: {vehicle['purchase_price']} {vehicle.get('currency', '')}".strip())
-    if vehicle.get("target_price"):
-        lines.append(f"Target: {vehicle['target_price']} {vehicle.get('currency', '')}".strip())
-    if vehicle.get("sale_price"):
-        lines.append(f"Sale: {vehicle['sale_price']} {vehicle.get('currency', '')}".strip())
+    if car.get("color"):
+        lines.append(f"Color: {car['color']}")
+    if car.get("mileage") is not None:
+        lines.append(f"Mileage: {car['mileage']}")
+    if car.get("purchase_price"):
+        lines.append(f"Purchase: {car['purchase_price']}")
+    if car.get("total_cost"):
+        lines.append(f"Total cost: {car['total_cost']}")
+    if car.get("sale_price"):
+        lines.append(f"Sale: {car['sale_price']}")
+    if car.get("expected_profit"):
+        lines.append(f"Expected profit: {car['expected_profit']}")
     return "\n".join(lines)
 
 
-def _format_profit_result(
-    *,
-    purchase: Decimal,
-    sale: Decimal,
-    currency: str = "USD",
-) -> str:
-    margin = sale - purchase
-    margin_pct = (margin / purchase * Decimal("100")) if purchase > 0 else Decimal("0")
-    roi_pct = margin_pct
+def _format_profit_breakdown(profit: dict) -> str:
     return (
         "🧮 Profit Calculator\n\n"
-        f"Purchase: {purchase} {currency}\n"
-        f"Sale: {sale} {currency}\n"
-        f"Margin: {margin} {currency}\n"
-        f"Margin %: {margin_pct.quantize(Decimal('0.01'))}%\n"
-        f"ROI %: {roi_pct.quantize(Decimal('0.01'))}%"
+        f"Purchase: {profit.get('purchase_price', '0')}\n"
+        f"Delivery: {profit.get('delivery_cost', '0')}\n"
+        f"Customs: {profit.get('customs_cost', '0')}\n"
+        f"Repair: {profit.get('repair_cost', '0')}\n"
+        f"Advertising: {profit.get('advertising_cost', '0')}\n"
+        f"Total cost: {profit.get('total_cost', '0')}\n"
+        f"Sale price: {profit.get('sale_price', '—')}\n"
+        f"Expected profit: {profit.get('expected_profit', '—')}"
     )
 
 
@@ -71,12 +66,12 @@ def _clear_flow(user_id: int) -> None:
 
 async def _show_car_list(message: Message, user_id: int) -> None:
     try:
-        vehicles = await AutomotiveInventoryEngineV1.list_vehicles(user_id, limit=50)
-    except AutomotiveInventoryEngineError as exc:
+        cars = await CarEngineV1.list_cars(user_id, limit=50)
+    except CarEngineError as exc:
         await message.answer(str(exc), reply_markup=auto_vertical_menu())
         return
 
-    if not vehicles:
+    if not cars:
         await message.answer(
             "📋 Car List\n\nИнвентарь пуст. Добавьте автомобиль через «➕ Add Car».",
             reply_markup=auto_vertical_menu(),
@@ -84,8 +79,8 @@ async def _show_car_list(message: Message, user_id: int) -> None:
         return
 
     await message.answer(
-        f"📋 Car List\n\nВсего: {len(vehicles)}",
-        reply_markup=auto_vertical_car_list_inline(vehicles),
+        f"📋 Car List\n\nВсего: {len(cars)}",
+        reply_markup=auto_vertical_car_list_inline(cars),
     )
     await message.answer("Выберите автомобиль:", reply_markup=auto_vertical_menu())
 
@@ -93,7 +88,7 @@ async def _show_car_list(message: Message, user_id: int) -> None:
 async def _start_add_car(message: Message, user_id: int) -> None:
     auto_vertical_flow[user_id] = {"step": "vin", "data": {}}
     await message.answer(
-        "➕ Add Car\n\nВведите VIN автомобиля:",
+        "➕ Add Car\n\nВведите VIN автомобиля (17 символов):",
         reply_markup=auto_vertical_menu(),
     )
 
@@ -102,15 +97,16 @@ async def _start_search(message: Message, user_id: int) -> None:
     auto_vertical_flow[user_id] = {"step": "search", "data": {}}
     await message.answer(
         "🔎 Search Car\n\n"
-        "Введите VIN, stock number, марку или модель:",
+        "Введите VIN, марку, модель, год или статус:",
         reply_markup=auto_vertical_menu(),
     )
 
 
 async def _start_profit_calculator(message: Message, user_id: int) -> None:
-    auto_vertical_flow[user_id] = {"step": "profit_purchase", "data": {}}
+    auto_vertical_flow[user_id] = {"step": "profit_vin", "data": {}}
     await message.answer(
-        "🧮 Profit Calculator\n\nВведите цену закупки (число):",
+        "🧮 Profit Calculator\n\n"
+        "Введите VIN существующего авто или «-» для ручного расчёта:",
         reply_markup=auto_vertical_menu(),
     )
 
@@ -162,7 +158,7 @@ async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: s
 @auto_vertical_router.message(F.text == AUTO_VERTICAL_MAIN_BUTTON)
 async def open_auto_vertical(message: Message) -> None:
     user_id = message.from_user.id
-    if not await AutomotiveInventoryEngineV1.user_can_access(user_id):
+    if not await CarEngineV1.user_can_access(user_id):
         await message.answer(
             "🚗 Cars\n\nНет доступа к модулю.",
             reply_markup=owner_main_menu(),
@@ -233,12 +229,6 @@ async def auto_vertical_flow_handler(message: Message) -> None:
         data["year"] = int(parts[-1])
         data["model"] = parts[-2]
         data["make"] = " ".join(parts[:-2])
-        flow["step"] = "stock_number"
-        await message.answer("Введите stock number (инвентарный номер):")
-        return
-
-    if step == "stock_number":
-        data["stock_number"] = text
         flow["step"] = "purchase_price"
         await message.answer(
             "Введите цену закупки (число) или «-» чтобы пропустить:"
@@ -253,23 +243,43 @@ async def auto_vertical_flow_handler(message: Message) -> None:
             except InvalidOperation:
                 await message.answer("Введите число или «-»:")
                 return
+        data["fields"] = fields
+        flow["step"] = "optional_costs"
+        await message.answer(
+            "Доп. расходы одной строкой через пробел "
+            "(delivery customs repair advertising) или «-»:\n"
+            "Пример: 800 1200 500 200"
+        )
+        return
+
+    if step == "optional_costs":
+        fields = data.get("fields", {})
+        if text != "-":
+            parts = text.split()
+            labels = ("delivery_cost", "customs_cost", "repair_cost", "advertising_cost")
+            try:
+                for idx, label in enumerate(labels):
+                    if idx < len(parts):
+                        fields[label] = Decimal(parts[idx].replace(",", "."))
+            except InvalidOperation:
+                await message.answer("Введите до 4 чисел или «-»:")
+                return
         _clear_flow(user_id)
         try:
-            vehicle = await AutomotiveInventoryEngineV1.create_vehicle(
+            car = await CarEngineV1.create_car(
                 user_id,
                 vin=data["vin"],
-                stock_number=data["stock_number"],
                 make=data["make"],
                 model=data["model"],
                 year=data["year"],
                 **fields,
             )
-        except AutomotiveInventoryEngineError as exc:
+        except CarEngineError as exc:
             await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
             return
 
         await message.answer(
-            "✅ Автомобиль добавлен\n\n" + _format_vehicle_card(vehicle),
+            "✅ Автомобиль добавлен\n\n" + _format_car_card(car),
             reply_markup=auto_vertical_menu(),
         )
         log_audit(user_id, "create", "auto_vertical", data["vin"])
@@ -277,21 +287,12 @@ async def auto_vertical_flow_handler(message: Message) -> None:
 
     if step == "search":
         _clear_flow(user_id)
-        query = text.lower()
         try:
-            vehicles = await AutomotiveInventoryEngineV1.list_vehicles(user_id, limit=200)
-        except AutomotiveInventoryEngineError as exc:
+            matched = await CarEngineV1.search_cars(user_id, text)
+        except CarEngineError as exc:
             await message.answer(str(exc), reply_markup=auto_vertical_menu())
             return
 
-        matched = [
-            v
-            for v in vehicles
-            if query in (v.get("vin") or "").lower()
-            or query in (v.get("stock_number") or "").lower()
-            or query in (v.get("make") or "").lower()
-            or query in (v.get("model") or "").lower()
-        ]
         if not matched:
             await message.answer(
                 f"🔎 По запросу «{text}» ничего не найдено.",
@@ -306,6 +307,47 @@ async def auto_vertical_flow_handler(message: Message) -> None:
         await message.answer("Выберите автомобиль:", reply_markup=auto_vertical_menu())
         return
 
+    if step == "profit_vin":
+        if text == "-":
+            flow["step"] = "profit_purchase"
+            await message.answer("Введите цену закупки (число):")
+            return
+        try:
+            car = await CarEngineV1.get_car_by_vin(user_id, text.upper())
+        except CarEngineError:
+            await message.answer("Авто не найдено. Введите другой VIN или «-»:")
+            return
+        data["car_id"] = car["id"]
+        flow["step"] = "profit_sale_for_car"
+        await message.answer(
+            _format_car_card(car) + "\n\nВведите цену продажи (число):"
+        )
+        return
+
+    if step == "profit_sale_for_car":
+        try:
+            sale = Decimal(text.replace(",", "."))
+        except InvalidOperation:
+            await message.answer("Введите число (цена продажи):")
+            return
+        car_id = uuid.UUID(data["car_id"])
+        _clear_flow(user_id)
+        try:
+            profit = await CarEngineV1.calculate_profit(
+                user_id,
+                car_id,
+                sale_price=sale,
+                persist=True,
+            )
+        except CarEngineError as exc:
+            await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
+            return
+        await message.answer(
+            _format_profit_breakdown(profit),
+            reply_markup=auto_vertical_menu(),
+        )
+        return
+
     if step == "profit_purchase":
         try:
             purchase = Decimal(text.replace(",", "."))
@@ -313,6 +355,29 @@ async def auto_vertical_flow_handler(message: Message) -> None:
             await message.answer("Введите число (цена закупки):")
             return
         data["purchase"] = purchase
+        flow["step"] = "profit_extra_costs"
+        await message.answer(
+            "Доп. расходы (delivery customs repair advertising) или «-»:\n"
+            "Пример: 800 1200 500 200"
+        )
+        return
+
+    if step == "profit_extra_costs":
+        delivery = customs = repair = advertising = Decimal("0")
+        if text != "-":
+            parts = text.split()
+            try:
+                values = [Decimal(p.replace(",", ".")) for p in parts[:4]]
+                while len(values) < 4:
+                    values.append(Decimal("0"))
+                delivery, customs, repair, advertising = values
+            except InvalidOperation:
+                await message.answer("Введите до 4 чисел или «-»:")
+                return
+        data["delivery_cost"] = delivery
+        data["customs_cost"] = customs
+        data["repair_cost"] = repair
+        data["advertising_cost"] = advertising
         flow["step"] = "profit_sale"
         await message.answer("Введите цену продажи (число):")
         return
@@ -323,10 +388,21 @@ async def auto_vertical_flow_handler(message: Message) -> None:
         except InvalidOperation:
             await message.answer("Введите число (цена продажи):")
             return
-        purchase = data.get("purchase", Decimal("0"))
+        from repositories.car_repository import CarRepository
+
+        profit = CarRepository.calculate_profit(
+            purchase_price=data.get("purchase", Decimal("0")),
+            delivery_cost=data.get("delivery_cost", Decimal("0")),
+            customs_cost=data.get("customs_cost", Decimal("0")),
+            repair_cost=data.get("repair_cost", Decimal("0")),
+            advertising_cost=data.get("advertising_cost", Decimal("0")),
+            sale_price=sale,
+        )
         _clear_flow(user_id)
         await message.answer(
-            _format_profit_result(purchase=purchase, sale=sale),
+            _format_profit_breakdown(
+                {key: str(value) if value is not None else None for key, value in profit.items()}
+            ),
             reply_markup=auto_vertical_menu(),
         )
 
@@ -345,15 +421,14 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
         return
 
     if data.startswith("car:open:"):
-        vehicle_id = data.split(":", 2)[2]
+        car_id = data.split(":", 2)[2]
         try:
-            vid = uuid.UUID(vehicle_id)
-            detail = await AutomotiveInventoryEngineV1.get_vehicle(user_id, vid)
-        except (ValueError, AutomotiveInventoryEngineError) as exc:
+            car = await CarEngineV1.get_car(user_id, uuid.UUID(car_id))
+        except (ValueError, CarEngineError) as exc:
             await callback.answer(str(exc), show_alert=True)
             return
         await callback.message.answer(
-            _format_vehicle_card(detail["vehicle"]),
+            _format_car_card(car),
             reply_markup=auto_vertical_menu(),
         )
         await callback.answer()

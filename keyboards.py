@@ -1493,7 +1493,7 @@ def auto_vertical_car_list_inline(vehicles: list) -> InlineKeyboardMarkup:
         make = vehicle.get("make", "")
         model = vehicle.get("model", "")
         year = vehicle.get("year", "")
-        stock = vehicle.get("stock_number", "")
+        stock = vehicle.get("stock_number", "") or vehicle.get("vin", "")[-6:]
         label = f"{year} {make} {model}".strip()
         if stock:
             label = f"{label} ({stock})"

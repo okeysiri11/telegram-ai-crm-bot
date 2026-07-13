@@ -136,6 +136,41 @@ class CarEngineV1:
             return CarEngineV1._car_snapshot(car)
 
     @staticmethod
+    async def get_car_by_vin(actor_id: int, vin: str) -> dict[str, Any]:
+        if not await CarEngineV1.user_can_access(actor_id):
+            raise CarEngineError("Access denied")
+
+        async with get_session() as session:
+            car = await CarRepository(session).get_by_vin(vin)
+            if car is None:
+                raise CarEngineError(f"Car not found: {vin}")
+            return CarEngineV1._car_snapshot(car)
+
+    @staticmethod
+    async def search_cars(
+        actor_id: int,
+        query: str,
+        *,
+        limit: int = 50,
+    ) -> list[dict[str, Any]]:
+        if not await CarEngineV1.user_can_access(actor_id):
+            raise CarEngineError("Access denied")
+
+        needle = query.strip().lower()
+        cars = await CarEngineV1.list_cars(actor_id, limit=200)
+        matched = [
+            car
+            for car in cars
+            if needle in (car.get("vin") or "").lower()
+            or needle in (car.get("make") or "").lower()
+            or needle in (car.get("model") or "").lower()
+            or needle in str(car.get("year") or "")
+            or needle in (car.get("color") or "").lower()
+            or needle in (car.get("status") or "").lower()
+        ]
+        return matched[:limit]
+
+    @staticmethod
     async def list_cars(
         actor_id: int,
         *,
