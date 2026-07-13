@@ -44,6 +44,7 @@ from api.handlers import (
     vehicles_list_handler,
 )
 from database.session import check_db_health
+from api.health_handlers import health_handler, liveness_handler, readiness_handler
 
 
 async def db_health_handler(request: web.Request) -> web.Response:
@@ -55,7 +56,10 @@ async def db_health_handler(request: web.Request) -> web.Response:
 def create_app() -> web.Application:
     app = web.Application()
 
-    # System
+    # System / production readiness
+    app.router.add_get("/liveness", liveness_handler)
+    app.router.add_get("/readiness", readiness_handler)
+    app.router.add_get("/health", health_handler)
     app.router.add_get("/system/db-health", db_health_handler)
 
     # Gateway info

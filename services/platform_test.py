@@ -37,6 +37,7 @@ class PlatformTestService:
         "🏢 Tenant Test": "tenant_isolation",
         "🔐 RBAC Test": "rbac_v2",
         "🚘 Onboarding Test": "dealer_onboarding",
+        "🏭 Production Test": "production_readiness",
     }
 
     @staticmethod
@@ -252,6 +253,18 @@ class PlatformTestService:
                     f"session: {result.get('session', {}).get('ok')}\n"
                     f"timeout: {result.get('timeout', {}).get('ok')}\n"
                     f"analytics: {result.get('analytics', {}).get('ok')}"
+                )
+            elif module_key == "production_readiness":
+                from services.production_readiness_test import run_production_readiness_tests
+
+                result = run_production_readiness_tests()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"liveness: {result.get('liveness', {}).get('ok')}\n"
+                    f"dependencies: {result.get('dependencies', {}).get('ok')}\n"
+                    f"report: {result.get('report', {}).get('ok')}"
                 )
             else:
                 raise RuntimeError(f"unknown module {module_key}")

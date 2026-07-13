@@ -17,6 +17,10 @@ DATABASE_URL = os.getenv(
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", "8080"))
 
+# Optional Redis (cache / queue)
+REDIS_URL = os.getenv("REDIS_URL", "")
+REDIS_REQUIRED = os.getenv("REDIS_REQUIRED", "").lower() in {"1", "true", "yes"}
+
 OWNER_ID = 1208044579
 MANAGER_ID = 8312013093
 

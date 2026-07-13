@@ -2771,11 +2771,12 @@ async def open_system_health(message: Message):
 
     readiness_payload = await PlatformReadinessTestSuite.run_suite()
     readiness_summary = (
-        f"\n\nReadiness: {readiness_payload.get('status')} "
+        f"\n\nPlatform audit: {readiness_payload.get('status')} "
         f"({readiness_payload.get('scores', {}).get('platform', 0)}%)"
     )
+    dashboard = await SystemHealthService.format_health_dashboard_async()
     await message.answer(
-        SystemHealthService.format_health_dashboard()
+        dashboard
         + "\n\n"
         + "\n".join(auto_lines)
         + readiness_summary,
@@ -2789,10 +2790,36 @@ async def readiness_command(message: Message):
     if not _can_access_admin(user_id):
         await message.answer("Нет доступа к /readiness.")
         return
-    payload = await PlatformReadinessTestSuite.run_suite()
-    report = PlatformReadinessTestSuite.format_report(payload)
-    await message.answer(report)
+    from services.production_readiness_suite import ProductionReadinessSuite
+
+    payload = await ProductionReadinessSuite.run_dependency_validation(persist=True)
+    prod_report = ProductionReadinessSuite.format_report(payload)
+    platform_payload = await PlatformReadinessTestSuite.run_suite()
+    platform_report = PlatformReadinessTestSuite.format_report(platform_payload)
+    await message.answer(
+        f"{prod_report}\n\n--- Platform Audit ---\n\n{platform_report}"
+    )
     log_audit(user_id, "readiness_test", "system", payload.get("status"))
+
+
+@router.message(Command("health"))
+async def health_command(message: Message):
+    user_id = message.from_user.id
+    if not _can_access_admin(user_id):
+        await message.answer("Нет доступа к /health.")
+        return
+    from services.production_readiness_suite import ProductionReadinessSuite
+
+    payload = await ProductionReadinessSuite.health()
+    report = ProductionReadinessSuite.format_report(payload)
+    alerts = payload.get("alerts") or []
+    alert_lines = ""
+    if alerts:
+        alert_lines = "\n\nAlerts:\n" + "\n".join(
+            f"• [{a['severity']}] {a['component']}: {a['message']}" for a in alerts[:10]
+        )
+    await message.answer(report + alert_lines)
+    log_audit(user_id, "health_check", "system", payload.get("status"))
 
 
 @router.message(Command("platform_test"))
