@@ -50,9 +50,10 @@ class AutomotiveRegistryPartner(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     code: Mapped[str] = mapped_column(String(64), nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
-    partner_type: Mapped[str] = mapped_column(String(32), nullable=False)
-    website: Mapped[str | None] = mapped_column(String(512), nullable=True)
-    telegram_channel: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    partner_type: Mapped[str] = mapped_column(String(64), nullable=False)
+    website: Mapped[str | None] = mapped_column(Text, nullable=True)
+    telegram_channel: Mapped[str | None] = mapped_column(Text, nullable=True)
+    logo_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     tenant_mode_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
