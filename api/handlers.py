@@ -339,6 +339,29 @@ async def ai_sales_agent_feature_handler(request: web.Request) -> web.Response:
     return _json(data)
 
 
+@require_api_auth
+async def recommendation_engine_handler(request: web.Request) -> web.Response:
+    from services.pg_recommendation_engine_v1 import RecommendationEngineV1Product
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    engine = await RecommendationEngineV1Product.get_engine(_actor(request), tenant_id)
+    return _json(engine)
+
+
+@require_api_auth
+async def recommendation_engine_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_recommendation_engine_v1 import RecommendationEngineV1Product
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    feature = request.match_info["feature"]
+    profile_id_raw = request.query.get("profile_id")
+    profile_id = uuid.UUID(profile_id_raw) if profile_id_raw else None
+    data = await RecommendationEngineV1Product.get_feature(
+        _actor(request), tenant_id, feature, profile_id=profile_id
+    )
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -383,6 +406,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/ai-advertising-agent/features/{feature}",
             "/v1/ai-sales-agent",
             "/v1/ai-sales-agent/features/{feature}",
+            "/v1/recommendation-engine",
+            "/v1/recommendation-engine/features/{feature}",
             "/v1/auth/token",
         ],
     })

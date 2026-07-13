@@ -15,6 +15,8 @@ from api.handlers import (
     dealer_portal_module_handler,
     lead_marketplace_handler,
     lead_marketplace_feature_handler,
+    recommendation_engine_feature_handler,
+    recommendation_engine_handler,
     deals_create_handler,
     deals_list_handler,
     documents_create_handler,
@@ -100,6 +102,12 @@ def create_app() -> web.Application:
     app.router.add_get(
         "/v1/ai-sales-agent/features/{feature}",
         ai_sales_agent_feature_handler,
+    )
+
+    app.router.add_get("/v1/recommendation-engine", recommendation_engine_handler)
+    app.router.add_get(
+        "/v1/recommendation-engine/features/{feature}",
+        recommendation_engine_feature_handler,
     )
 
     return app
