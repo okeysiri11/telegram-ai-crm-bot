@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from typing import Any
 
 from sqlalchemy import select
@@ -21,6 +22,8 @@ class AuditRepository:
         entity_id: str,
         action: str,
         user_id: int | None = None,
+        company_id: uuid.UUID | None = None,
+        tenant_id: uuid.UUID | None = None,
         old_value: dict | None = None,
         new_value: dict | None = None,
         ip_address: str | None = None,
@@ -35,6 +38,8 @@ class AuditRepository:
 
         entry = AuditLog(
             user_id=user_id,
+            company_id=company_id,
+            tenant_id=tenant_id,
             entity_type=entity_type,
             entity_id=entity_id,
             action=action,
@@ -69,6 +74,34 @@ class AuditRepository:
         result = await self._session.execute(
             select(AuditLog)
             .where(AuditLog.user_id == user_id)
+            .order_by(AuditLog.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def list_by_tenant(
+        self,
+        tenant_id: uuid.UUID,
+        *,
+        limit: int = 100,
+    ) -> list[AuditLog]:
+        result = await self._session.execute(
+            select(AuditLog)
+            .where(AuditLog.tenant_id == tenant_id)
+            .order_by(AuditLog.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def list_by_company(
+        self,
+        company_id: uuid.UUID,
+        *,
+        limit: int = 100,
+    ) -> list[AuditLog]:
+        result = await self._session.execute(
+            select(AuditLog)
+            .where(AuditLog.company_id == company_id)
             .order_by(AuditLog.created_at.desc())
             .limit(limit)
         )

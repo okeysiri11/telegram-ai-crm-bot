@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import enum
+import uuid
 
 from sqlalchemy import BigInteger, Index, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
@@ -41,6 +42,12 @@ class AuditAction(str, enum.Enum):
     MATCH_CREATED = "MATCH_CREATED"
     MATCH_EXECUTED = "MATCH_EXECUTED"
     MATCH_CANCELLED = "MATCH_CANCELLED"
+    CREATE_TENANT = "CREATE_TENANT"
+    UPDATE_TENANT = "UPDATE_TENANT"
+    SUSPEND_TENANT = "SUSPEND_TENANT"
+    ASSIGN_TENANT_USER = "ASSIGN_TENANT_USER"
+    TENANT_RESOURCE_BIND = "TENANT_RESOURCE_BIND"
+    TENANT_BILLING_PROVISION = "TENANT_BILLING_PROVISION"
 
 
 class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
@@ -50,9 +57,14 @@ class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         Index("ix_audit_engine_logs_entity_type", "entity_type"),
         Index("ix_audit_engine_logs_entity_id", "entity_id"),
         Index("ix_audit_engine_logs_created_at", "created_at"),
+        Index("ix_audit_engine_logs_company_id", "company_id"),
+        Index("ix_audit_engine_logs_tenant_id", "tenant_id"),
+        Index("ix_audit_engine_logs_tenant_created", "tenant_id", "created_at"),
     )
 
     user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    company_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
     entity_type: Mapped[str] = mapped_column(String(50), nullable=False)
     entity_id: Mapped[str] = mapped_column(String(100), nullable=False)
 
