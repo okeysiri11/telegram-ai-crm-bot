@@ -293,11 +293,11 @@ from keyboards import (
     search_module_actions_inline,
     workflow_module_menu,
     workflow_module_actions_inline,
+    AUTO_VERTICAL_MAIN_BUTTON,
 )
 router = Router()
 
 from deal_workflow_handlers import deal_workflow_router
-from auto_vertical_handlers import auto_vertical_router
 from ai_sales_handlers import ai_sales_router, sales_assistant_active
 from dealer_onboarding_handlers import (
     dealer_onboarding_router,
@@ -310,7 +310,6 @@ from automotive_partner_handlers import automotive_partner_router
 from automotive_revenue_handlers import automotive_revenue_router
 
 router.include_router(deal_workflow_router)
-router.include_router(auto_vertical_router)
 router.include_router(ai_sales_router)
 router.include_router(dealer_onboarding_router)
 router.include_router(dealer_quote_authority_router)
@@ -4505,6 +4504,12 @@ async def back_to_main(message: Message):
 async def handle_text(message: Message) -> None:
     user_id = message.from_user.id
     requests = []
+
+    if message.text in {AUTO_VERTICAL_MAIN_BUTTON, "🚗 Cars", "🚗 Auto"}:
+        from auto_vertical_handlers import handle_auto_menu_request
+
+        await handle_auto_menu_request(message)
+        return
 
     text_lower = message.text.lower()
 

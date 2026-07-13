@@ -62,7 +62,12 @@ def run_automotive_ui_self_test() -> dict:
         handler_count = len(router.message.handlers) + len(router.callback_query.handlers)
         source = inspect.getsource(avh)
         checks["automotive_handlers"] = {
-            "ok": handler_count >= 5 and "open_auto_vertical" in source,
+            "ok": (
+                handler_count >= 5
+                and "open_auto_vertical" in source
+                and "handle_auto_menu_request" in source
+                and 'F.data == "auto"' in source
+            ),
             "detail": f"{handler_count} handlers",
         }
         checks["billing_handlers"] = {
@@ -76,7 +81,9 @@ def run_automotive_ui_self_test() -> dict:
         from services.automotive_telegram_access import AUTOMOTIVE_UI_ROLES
 
         checks["rbac_roles"] = {
-            "ok": {"OWNER", "SUPER_MANAGER", "AUTO_MANAGER"}.issubset(AUTOMOTIVE_UI_ROLES),
+            "ok": {"OWNER", "ADMIN", "AUTO_MANAGER", "AUTO_DEALER"}.issubset(
+                AUTOMOTIVE_UI_ROLES
+            ),
             "detail": ",".join(sorted(AUTOMOTIVE_UI_ROLES)),
         }
     except Exception as exc:

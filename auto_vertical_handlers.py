@@ -66,6 +66,7 @@ from repositories.vin_repository import VinRepository
 logger = logging.getLogger(__name__)
 
 auto_vertical_router = Router()
+auto_router = auto_vertical_router
 
 auto_vertical_active: dict[int, bool] = {}
 auto_vertical_section: dict[int, str] = {}
@@ -504,22 +505,60 @@ async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: s
         return
 
 
-@auto_vertical_router.message(F.text.in_({AUTO_VERTICAL_MAIN_BUTTON, "🚗 Cars", "🚗 Auto"}))
-async def open_auto_vertical(message: Message) -> None:
+async def handle_auto_menu_request(message: Message) -> None:
     user_id = message.from_user.id
-    if not await can_access_automotive_ui(user_id):
+    logger.info("Auto menu requested by %s", user_id)
+    try:
+        if not await can_access_automotive_ui(user_id):
+            await message.answer(
+                "🚗 Авто\n\nНет доступа к модулю.",
+                reply_markup=await _main_menu_for(user_id),
+            )
+            return
+
+        auto_vertical_active[user_id] = True
+        _clear_flow(user_id)
+        auto_billing_flow.pop(user_id, None)
+        log_audit(user_id, "open", "auto_vertical")
+        await _open_auto_hub(message, user_id)
+    except Exception:
+        logger.exception("Automotive module unavailable for user %s", user_id)
         await message.answer(
-            "🚗 Auto\n\nНет доступа к модулю.",
+            "Automotive module temporarily unavailable.",
             reply_markup=await _main_menu_for(user_id),
         )
+
+
+@auto_vertical_router.message(F.text == AUTO_VERTICAL_MAIN_BUTTON)
+async def open_auto_vertical(message: Message) -> None:
+    await handle_auto_menu_request(message)
+
+
+@auto_vertical_router.message(F.text.in_({"🚗 Cars", "🚗 Auto"}))
+async def open_auto_vertical_legacy(message: Message) -> None:
+    await handle_auto_menu_request(message)
+
+
+@auto_vertical_router.callback_query(F.data == "auto")
+async def open_auto_vertical_callback(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+    logger.info("Auto menu requested by %s (callback)", user_id)
+    if callback.message is None:
+        await callback.answer("Automotive module temporarily unavailable.", show_alert=True)
         return
-
-    auto_vertical_active[user_id] = True
-    _clear_flow(user_id)
-    auto_billing_flow.pop(user_id, None)
-    log_audit(user_id, "open", "auto_vertical")
-
-    await _open_auto_hub(message, user_id)
+    try:
+        if not await can_access_automotive_ui(user_id):
+            await callback.answer("Нет доступа к модулю.", show_alert=True)
+            return
+        auto_vertical_active[user_id] = True
+        _clear_flow(user_id)
+        auto_billing_flow.pop(user_id, None)
+        log_audit(user_id, "open", "auto_vertical", "callback")
+        await _open_auto_hub(callback.message, user_id)
+        await callback.answer()
+    except Exception:
+        logger.exception("Automotive module unavailable for user %s (callback)", user_id)
+        await callback.answer("Automotive module temporarily unavailable.", show_alert=True)
 
 
 @auto_vertical_router.message(

@@ -312,8 +312,11 @@ class PlatformReadinessTestSuite:
 
         menu = owner_main_menu(show_automotive=True)
         texts = {btn.text for row in menu.keyboard for btn in row}
+        bot_source = (ROOT / "bot.py").read_text(encoding="utf-8")
+        if AUTO_VERTICAL_MAIN_BUTTON in texts and "include_router(auto_router)" in bot_source:
+            return _result("operational", f"{AUTO_VERTICAL_MAIN_BUTTON} + auto_router on dp")
         if AUTO_VERTICAL_MAIN_BUTTON in texts:
-            return _result("operational", AUTO_VERTICAL_MAIN_BUTTON)
+            return _result("partial", AUTO_VERTICAL_MAIN_BUTTON)
         return _result("failed", "auto button missing from main menu")
 
     @staticmethod

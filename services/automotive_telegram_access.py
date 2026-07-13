@@ -8,16 +8,26 @@ from repositories.user_role_repository import UserRoleRepository
 from database.session import get_session
 
 AUTOMOTIVE_UI_ROLES = frozenset(
-    {"OWNER", "SUPER_MANAGER", "AUTO_OWNER", "AUTO_MANAGER", "ADMIN", "MANAGER"}
+    {
+        "OWNER",
+        "ADMIN",
+        "SUPER_MANAGER",
+        "AUTO_OWNER",
+        "AUTO_MANAGER",
+        "AUTO_DEALER",
+        "MANAGER",
+    }
 )
-AUTOMOTIVE_MENU_ROLES = frozenset({"OWNER", "SUPER_MANAGER", "AUTO_OWNER", "AUTO_MANAGER"})
+AUTOMOTIVE_MENU_ROLES = frozenset(
+    {"OWNER", "ADMIN", "SUPER_MANAGER", "AUTO_OWNER", "AUTO_MANAGER", "AUTO_DEALER"}
+)
 
 
 async def can_access_automotive_ui(user_id: int) -> bool:
     if user_id == OWNER_ID:
         return True
     legacy_roles = set(get_user_roles(user_id))
-    if legacy_roles & {"OWNER", "SUPER_MANAGER", "AUTO_MANAGER", "ADMIN", "MANAGER"}:
+    if legacy_roles & {"OWNER", "ADMIN", "SUPER_MANAGER", "AUTO_MANAGER", "AUTO_DEALER", "MANAGER"}:
         return True
     async with get_session() as session:
         roles = await UserRoleRepository(session).get_user_roles(user_id)
