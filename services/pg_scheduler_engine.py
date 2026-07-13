@@ -107,6 +107,13 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "schedule_type": JobScheduleType.CRON.value,
         "cron_expression": "0 5 1 * *",
     },
+    {
+        "job_key": "revenue_sharing.monthly",
+        "name": "Revenue Sharing Monthly",
+        "description": "Calculate partner revenue, reports, and settlements",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 6 1 * *",
+    },
 )
 
 _defaults_seeded = False
@@ -277,6 +284,12 @@ class SchedulerEngineV1:
         return await TenantBillingEngineV1.run_monthly_billing()
 
     @staticmethod
+    async def _run_revenue_sharing_monthly(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.pg_revenue_sharing_engine import RevenueSharingEngineV1
+
+        return await RevenueSharingEngineV1.run_monthly_cycle()
+
+    @staticmethod
     def job_handlers() -> dict[str, JobHandler]:
         return {
             "nightly.reconciliation": SchedulerEngineV1._run_nightly_reconciliation,
@@ -289,6 +302,7 @@ class SchedulerEngineV1:
             "sales_pipeline_automation.process": SchedulerEngineV1._run_sales_pipeline_automation,
             "analytics_automation.compute": SchedulerEngineV1._run_analytics_automation_compute,
             "tenant_billing.monthly": SchedulerEngineV1._run_tenant_billing_monthly,
+            "revenue_sharing.monthly": SchedulerEngineV1._run_revenue_sharing_monthly,
         }
 
     @staticmethod
