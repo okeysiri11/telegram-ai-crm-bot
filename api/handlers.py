@@ -244,6 +244,27 @@ async def notifications_create_handler(request: web.Request) -> web.Response:
         )
 
 
+@require_api_auth
+async def dealer_portal_handler(request: web.Request) -> web.Response:
+    from services.pg_dealer_portal_v1 import DealerPortalV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    refresh = request.query.get("refresh", "").lower() in {"1", "true", "yes"}
+    portal = await DealerPortalV1.get_portal(_actor(request), tenant_id, refresh=refresh)
+    return _json(portal)
+
+
+@require_api_auth
+async def dealer_portal_module_handler(request: web.Request) -> web.Response:
+    from services.pg_dealer_portal_v1 import DealerPortalV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    module = request.match_info["module"]
+    refresh = request.query.get("refresh", "").lower() in {"1", "true", "yes"}
+    data = await DealerPortalV1.get_module(_actor(request), tenant_id, module, refresh=refresh)
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -278,6 +299,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/orders",
             "/v1/documents",
             "/v1/notifications",
+            "/v1/dealer-portal",
+            "/v1/dealer-portal/modules/{module}",
             "/v1/auth/token",
         ],
     })

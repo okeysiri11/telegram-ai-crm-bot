@@ -5,6 +5,8 @@ from aiohttp import web
 from api.handlers import (
     api_info_handler,
     auth_token_handler,
+    dealer_portal_handler,
+    dealer_portal_module_handler,
     deals_create_handler,
     deals_list_handler,
     documents_create_handler,
@@ -67,6 +69,9 @@ def create_app() -> web.Application:
 
     app.router.add_get("/v1/notifications", notifications_list_handler)
     app.router.add_post("/v1/notifications", notifications_create_handler)
+
+    app.router.add_get("/v1/dealer-portal", dealer_portal_handler)
+    app.router.add_get("/v1/dealer-portal/modules/{module}", dealer_portal_module_handler)
 
     return app
 

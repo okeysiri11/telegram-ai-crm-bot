@@ -245,6 +245,27 @@ class DealerPortalEngineV1:
             }
 
     @staticmethod
+    async def _build_vehicle_aging(session) -> dict[str, Any]:
+        now = datetime.now(timezone.utc)
+        result = await session.execute(
+            select(Car).where(Car.status != CarStatus.SOLD.value)
+        )
+        cars = list(result.scalars().all())
+        if not cars:
+            return {
+                "avg_days": 0,
+                "vehicles_over_90_days": 0,
+                "oldest_days": 0,
+            }
+
+        days_list = [max(0, (now - car.created_at).days) for car in cars]
+        return {
+            "avg_days": round(sum(days_list) / len(days_list), 1),
+            "vehicles_over_90_days": sum(1 for d in days_list if d >= 90),
+            "oldest_days": max(days_list),
+        }
+
+    @staticmethod
     async def _build_widgets(session, *, today: date) -> dict[str, Any]:
         leads_today_result = await session.execute(
             select(func.count())
@@ -269,6 +290,18 @@ class DealerPortalEngineV1:
             .where(Car.status != CarStatus.SOLD.value)
         )
         vehicle_inventory = int(inventory_result.scalar_one() or 0)
+
+        inventory_value_result = await session.execute(
+            select(func.coalesce(func.sum(Car.total_cost), 0))
+            .where(Car.status != CarStatus.SOLD.value)
+        )
+        inventory_value = str(
+            DealerPortalEngineV1._quantize(
+                Decimal(str(inventory_value_result.scalar_one() or 0))
+            )
+        )
+
+        vehicle_aging = await DealerPortalEngineV1._build_vehicle_aging(session)
 
         ad_spend_result = await session.execute(
             select(func.coalesce(func.sum(Car.advertising_cost), 0))
@@ -315,10 +348,15 @@ class DealerPortalEngineV1:
             "leads_today": leads_today,
             "active_deals": active_deals,
             "vehicle_inventory": vehicle_inventory,
+            "inventory_value": inventory_value,
             "ad_spend": ad_spend,
+            "advertising_spend": ad_spend,
             "roi_percent": roi,
             "profit_this_month": profit_month,
+            "monthly_profit": profit_month,
             "conversion_rate_percent": conversion,
+            "conversion_rate": conversion,
+            "vehicle_aging": vehicle_aging,
         }
 
     @staticmethod
@@ -341,7 +379,7 @@ class DealerPortalEngineV1:
                 "priority": RecommendationPriority.MEDIUM.value,
             })
 
-        conversion = widgets.get("conversion_rate_percent", 0)
+        conversion = widgets.get("conversion_rate_percent", 0) or widgets.get("conversion_rate", 0)
         if conversion and conversion < 5:
             recs.append({
                 "category": "conversion",
@@ -363,6 +401,18 @@ class DealerPortalEngineV1:
                     })
             except (TypeError, ValueError):
                 pass
+
+        aging = widgets.get("vehicle_aging", {})
+        if aging.get("vehicles_over_90_days", 0) > 0:
+            recs.append({
+                "category": "inventory",
+                "title": "Address aging inventory",
+                "body": (
+                    f"{aging['vehicles_over_90_days']} vehicles over 90 days in stock. "
+                    "Consider price reductions or targeted ads."
+                ),
+                "priority": RecommendationPriority.MEDIUM.value,
+            })
 
         if not recs:
             recs.append({
