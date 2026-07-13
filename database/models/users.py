@@ -13,7 +13,6 @@ from database.base import Base
 from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from database.models.audit_logs import AuditLog
     from database.models.roles import UserRole
 
 
@@ -38,9 +37,6 @@ class User(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         back_populates="user",
         cascade="all, delete-orphan",
         foreign_keys="UserRole.user_id",
-    )
-    audit_logs: Mapped[list[AuditLog]] = relationship(
-        back_populates="user",
     )
 
     def __repr__(self) -> str:

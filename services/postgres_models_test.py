@@ -1,7 +1,5 @@
 # PostgreSQL model integration test.
 
-from config import OWNER_ID
-
 
 class PostgresModelsTest:
     @staticmethod
@@ -22,7 +20,7 @@ class PostgresModelsTest:
                 "deals", "platform_events", "ledger_entries",
                 "commission_rules", "commissions", "commission_payments",
                 "partners", "partner_deal_assignments", "calendar_events",
-                "tasks", "notifications", "ai_agents", "audit_logs",
+                "tasks", "notifications", "ai_agents", "audit_engine_logs",
             }
             steps["required_present"] = sorted(required & set(tables))
             steps["missing"] = sorted(required - set(tables))
