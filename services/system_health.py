@@ -55,6 +55,13 @@ class SystemHealthService:
         last = snap.get("last_test") or {}
         tested_at = last.get("tested_at", "—")
         platform_status = last.get("status", "—")
+        scores = last.get("scores") or {}
         lines.append(f"\nПоследний тест:\n{tested_at}")
         lines.append(f"Platform: {platform_status}")
+        if scores:
+            lines.append(
+                f"Readiness: {scores.get('platform', '—')}% | "
+                f"Commercial: {scores.get('commercial', '—')}% | "
+                f"Debt: {scores.get('technical_debt', '—')}%"
+            )
         return "\n".join(lines)

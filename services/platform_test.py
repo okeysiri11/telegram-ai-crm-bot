@@ -33,6 +33,7 @@ class PlatformTestService:
         "⚙ Workflow Test": "workflow",
         "🔔 Notification Test": "notifications",
         "🚗 Auto Test": "automotive",
+        "📋 Readiness Test": "readiness",
     }
 
     @staticmethod
@@ -192,6 +193,28 @@ class PlatformTestService:
                         if not item.get("ok")
                     ]
                     raise RuntimeError("; ".join(failed[:5]))
+            elif module_key == "readiness":
+                from services.platform_readiness_test_suite import (
+                    PlatformReadinessTestSuite,
+                    run_platform_readiness_suite,
+                )
+
+                payload = run_platform_readiness_suite()
+                scores = payload.get("scores", {})
+                summary = (
+                    f"STATUS: {payload.get('status')}\n"
+                    f"Platform: {scores.get('platform', 0)}%\n"
+                    f"Commercial: {scores.get('commercial', 0)}%\n"
+                    f"Technical debt: {scores.get('technical_debt', 0)}%"
+                )
+                if payload.get("status") == "RED":
+                    failed = [
+                        key
+                        for key, item in payload.get("modules", {}).items()
+                        if item.get("status") == "failed"
+                    ]
+                    raise RuntimeError(f"{summary}\nFailed: {', '.join(failed[:5])}")
+                return f"STATUS: OK\n{summary}"
             else:
                 raise RuntimeError(f"unknown module {module_key}")
             return "STATUS: OK"

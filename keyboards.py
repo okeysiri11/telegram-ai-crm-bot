@@ -1444,6 +1444,7 @@ def test_center_menu() -> ReplyKeyboardMarkup:
             ],
             [
                 KeyboardButton(text="🚗 Auto Test"),
+                KeyboardButton(text="📋 Readiness Test"),
             ],
             [
                 KeyboardButton(text="⬅ Назад"),

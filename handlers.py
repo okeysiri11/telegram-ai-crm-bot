@@ -29,6 +29,7 @@ from services.hierarchical_rbac import HierarchicalRBAC
 from services.ai_agents import AIAgentService
 from services.ai_router import AIRouter
 from services.platform_test import PlatformTestService
+from services.platform_readiness_test_suite import PlatformReadinessTestSuite
 from services.system_health import SystemHealthService
 from services.notifications import NotificationService
 from services.dashboard import DashboardService
@@ -2747,12 +2748,31 @@ async def open_system_health(message: Message):
     for name, item in auto_test.get("checks", {}).items():
         mark = "OK" if item.get("ok") else "FAIL"
         auto_lines.append(f"• {name}: {mark} ({item.get('detail', '')})")
+
+    readiness_payload = await PlatformReadinessTestSuite.run_suite()
+    readiness_summary = (
+        f"\n\nReadiness: {readiness_payload.get('status')} "
+        f"({readiness_payload.get('scores', {}).get('platform', 0)}%)"
+    )
     await message.answer(
         SystemHealthService.format_health_dashboard()
         + "\n\n"
-        + "\n".join(auto_lines),
+        + "\n".join(auto_lines)
+        + readiness_summary,
         reply_markup=owner_main_menu(),
     )
+
+
+@router.message(Command("readiness"))
+async def readiness_command(message: Message):
+    user_id = message.from_user.id
+    if not _can_access_admin(user_id):
+        await message.answer("Нет доступа к /readiness.")
+        return
+    payload = await PlatformReadinessTestSuite.run_suite()
+    report = PlatformReadinessTestSuite.format_report(payload)
+    await message.answer(report)
+    log_audit(user_id, "readiness_test", "system", payload.get("status"))
 
 
 @router.message(Command("platform_test"))

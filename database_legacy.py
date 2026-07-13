@@ -1798,6 +1798,11 @@ def _seed_request_workflow_rules():
 
 def save_platform_health_run(payload: dict) -> int:
     import json
+    stored = {
+        "modules": payload.get("results", {}),
+        "scores": payload.get("scores"),
+        "suite": payload.get("suite"),
+    }
     cursor.execute(
         """
         INSERT INTO platform_health_log (status, results_json, tested_at)
@@ -1805,7 +1810,7 @@ def save_platform_health_run(payload: dict) -> int:
         """,
         (
             payload.get("status", "UNKNOWN"),
-            json.dumps(payload.get("results", {}), ensure_ascii=False),
+            json.dumps(stored, ensure_ascii=False),
             payload.get("tested_at"),
         ),
     )
@@ -1825,12 +1830,20 @@ def get_last_platform_health() -> dict:
     row = cursor.fetchone()
     if not row:
         return {}
-    results = {}
+    raw = {}
     try:
-        results = json.loads(row[1]) if row[1] else {}
+        raw = json.loads(row[1]) if row[1] else {}
     except json.JSONDecodeError:
-        results = {}
-    return {"status": row[0], "results": results, "tested_at": row[2]}
+        raw = {}
+    if isinstance(raw, dict) and "modules" in raw:
+        return {
+            "status": row[0],
+            "results": raw.get("modules", {}),
+            "scores": raw.get("scores") or {},
+            "suite": raw.get("suite"),
+            "tested_at": row[2],
+        }
+    return {"status": row[0], "results": raw, "tested_at": row[2]}
 
 
 def find_user_by_name(name_part: str):
