@@ -6,6 +6,7 @@ DEFAULT_ROLES: tuple[tuple[str, str, str], ...] = (
     ("OWNER", "Owner", "Full platform ownership"),
     ("ADMIN", "Administrator", "Platform administration"),
     ("MANAGER", "Manager", "CRM and deal management"),
+    ("AUTO_MANAGER", "Auto Manager", "Automotive vertical and billing"),
     ("LAWYER", "Lawyer", "Legal module access"),
     ("DRONE_ENGINEER", "Drone Engineer", "Drone operations access"),
     ("BEAUTY_MANAGER", "Beauty Manager", "Beauty vertical management"),

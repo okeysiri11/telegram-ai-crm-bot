@@ -1,24 +1,44 @@
-# Auto Vertical Telegram UI v1 — Cars module handlers (Car Entity Engine).
+# Auto Vertical Telegram UI v2 — Automotive module + commercial billing.
 
 from __future__ import annotations
 
+import logging
 import uuid
 from decimal import Decimal, InvalidOperation
 
-from aiogram import F, Router
+from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery, Message
 
+from config import BOT_TOKEN, OWNER_ID
 from database import log_audit
 from keyboards import (
+    AUTO_VERTICAL_LEGACY_BUTTONS,
     AUTO_VERTICAL_MAIN_BUTTON,
     AUTO_VERTICAL_MENU_BUTTONS,
+    auto_billing_owner_actions_inline,
+    auto_billing_payment_inline,
+    auto_billing_plans_inline,
+    auto_billing_pricing_inline,
     auto_vertical_actions_inline,
     auto_vertical_car_list_inline,
     auto_vertical_menu,
     owner_main_menu,
 )
+from services.automotive_telegram_access import (
+    can_access_automotive_ui,
+    can_see_automotive_menu_button,
+    is_billing_owner,
+)
 from services.pg_auto_marketing_engine import AutoMarketingEngineError, AutoMarketingEngineV1
 from services.pg_car_engine import CarEngineError, CarEngineV1
+from services.pg_commercial_billing_engine import (
+    CommercialBillingEngineError,
+    CommercialBillingEngineV1,
+    PAYMENT_METHOD_LABELS,
+    PLAN_MARKETING,
+    PRICING_MODEL_LABELS,
+)
+from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.vin_decoder import (
     build_auction_reference,
     build_history_event,
@@ -28,10 +48,22 @@ from services.vin_decoder import (
 from database.session import get_session
 from repositories.vin_repository import VinRepository
 
+logger = logging.getLogger(__name__)
+
 auto_vertical_router = Router()
 
 auto_vertical_active: dict[int, bool] = {}
 auto_vertical_flow: dict[int, dict] = {}
+auto_billing_flow: dict[int, dict] = {}
+
+
+def _normalize_screen(text: str) -> str:
+    return AUTO_VERTICAL_LEGACY_BUTTONS.get(text, text)
+
+
+async def _main_menu_for(user_id: int):
+    show = await can_see_automotive_menu_button(user_id)
+    return owner_main_menu(show_automotive=show)
 
 
 def _format_car_card(car: dict) -> str:
@@ -82,13 +114,13 @@ async def _show_car_list(message: Message, user_id: int) -> None:
 
     if not cars:
         await message.answer(
-            "📋 Car List\n\nИнвентарь пуст. Добавьте автомобиль через «➕ Add Car».",
+            "📋 Список авто\n\nИнвентарь пуст. Добавьте автомобиль через «🚗 Добавить авто».",
             reply_markup=auto_vertical_menu(),
         )
         return
 
     await message.answer(
-        f"📋 Car List\n\nВсего: {len(cars)}",
+        f"📋 Список авто\n\nВсего: {len(cars)}",
         reply_markup=auto_vertical_car_list_inline(cars),
     )
     await message.answer("Выберите автомобиль:", reply_markup=auto_vertical_menu())
@@ -97,7 +129,7 @@ async def _show_car_list(message: Message, user_id: int) -> None:
 async def _start_add_car(message: Message, user_id: int) -> None:
     auto_vertical_flow[user_id] = {"step": "vin", "data": {}}
     await message.answer(
-        "➕ Add Car\n\nВведите VIN автомобиля (17 символов):",
+        "🚗 Добавить авто\n\nВведите VIN автомобиля (17 символов):",
         reply_markup=auto_vertical_menu(),
     )
 
@@ -105,7 +137,7 @@ async def _start_add_car(message: Message, user_id: int) -> None:
 async def _start_search(message: Message, user_id: int) -> None:
     auto_vertical_flow[user_id] = {"step": "search", "data": {}}
     await message.answer(
-        "🔎 Search Car\n\n"
+        "🔍 Поиск авто\n\n"
         "Введите VIN, марку, модель, год или статус:",
         reply_markup=auto_vertical_menu(),
     )
@@ -114,7 +146,7 @@ async def _start_search(message: Message, user_id: int) -> None:
 async def _start_profit_calculator(message: Message, user_id: int) -> None:
     auto_vertical_flow[user_id] = {"step": "profit_vin", "data": {}}
     await message.answer(
-        "🧮 Profit Calculator\n\n"
+        "💰 Калькулятор прибыли\n\n"
         "Введите VIN существующего авто или «-» для ручного расчёта:",
         reply_markup=auto_vertical_menu(),
     )
@@ -152,7 +184,7 @@ async def _show_marketing(message: Message, user_id: int) -> None:
         return
 
     lines = [
-        "📣 Marketing",
+        "📢 Продвижение",
         "",
         "Каналы: Telegram, Instagram, Facebook, TikTok",
         "",
@@ -166,12 +198,137 @@ async def _show_marketing(message: Message, user_id: int) -> None:
 
     await message.answer("\n".join(lines), reply_markup=auto_vertical_menu())
     await message.answer(
-        "Для публикации авто отправьте VIN или нажмите «📋 Car List» "
-        "и выберите авто, затем вернитесь в Marketing.",
+        "Для публикации авто отправьте VIN или нажмите «📋 Список авто» "
+        "и выберите авто, затем вернитесь в Продвижение.",
         reply_markup=auto_vertical_actions_inline("marketing"),
     )
     auto_vertical_flow[user_id] = {"step": "marketing_vin", "data": {}}
     log_audit(user_id, "open", "auto_vertical", "marketing")
+
+
+async def _show_analytics(message: Message, user_id: int) -> None:
+    try:
+        from services.pg_analytics_engine import AnalyticsEngineV1
+        from database.models.partner_tenant_engine import PartnerTenant
+        from sqlalchemy import select
+
+        async with get_session() as session:
+            result = await session.execute(select(PartnerTenant).limit(1))
+            tenant = result.scalar_one_or_none()
+        if tenant is None:
+            await message.answer(
+                "📊 Аналитика\n\nTenant не настроен.",
+                reply_markup=auto_vertical_menu(),
+            )
+            return
+        dashboard = await AnalyticsEngineV1.get_dashboard(user_id, tenant.id)
+        lead = dashboard.get("lead_statistics") or {}
+        sales = dashboard.get("sales_statistics") or {}
+        await message.answer(
+            "📊 Аналитика\n\n"
+            f"Дата: {dashboard.get('metric_date', '—')}\n"
+            f"Leads: {lead.get('total_leads', 0)}\n"
+            f"CPL: {lead.get('cpl', '—')}\n"
+            f"Conversion: {lead.get('conversion_rate', '—')}\n"
+            f"Deals won: {sales.get('deals_won', 0)}\n"
+            f"Avg deal: {sales.get('average_deal_size', '—')}\n"
+            f"Vehicle turnover: {sales.get('vehicle_turnover', '—')}",
+            reply_markup=auto_vertical_menu(),
+        )
+    except Exception as exc:
+        await message.answer(
+            f"📊 Аналитика\n\nДанные временно недоступны: {exc}",
+            reply_markup=auto_vertical_menu(),
+        )
+
+
+async def _show_ai_manager(message: Message, user_id: int) -> None:
+    await message.answer(
+        "🤖 AI Менеджер\n\n"
+        "AI Sales Agent: квалификация лидов, рекомендации авто, "
+        "генерация офферов и follow-up.\n\n"
+        "Клиенты получают AI Sales Assistant через /start.\n"
+        "Менеджеры работают с лидами в разделе «👥 Лиды».",
+        reply_markup=auto_vertical_menu(),
+    )
+
+
+async def _show_leads(message: Message, user_id: int) -> None:
+    try:
+        leads = await LeadAutomationEngineV1.list_leads(user_id, limit=10)
+    except Exception as exc:
+        await message.answer(
+            f"👥 Лиды\n\nОшибка загрузки: {exc}",
+            reply_markup=auto_vertical_menu(),
+        )
+        return
+    if not leads:
+        await message.answer(
+            "👥 Лиды\n\nЛидов пока нет.",
+            reply_markup=auto_vertical_menu(),
+        )
+        return
+    lines = ["👥 Лиды", ""]
+    for lead in leads[:10]:
+        lines.append(
+            f"• {lead.get('source', '—')} | {lead.get('status', '—')} | "
+            f"{lead.get('customer_name') or lead.get('phone') or lead.get('id', '')[:8]}"
+        )
+    await message.answer("\n".join(lines), reply_markup=auto_vertical_menu())
+
+
+async def _show_billing(message: Message, user_id: int) -> None:
+    view = await CommercialBillingEngineV1.get_user_subscription_view(user_id)
+    lines = [
+        "💳 Тарифы и услуги",
+        "",
+        CommercialBillingEngineV1.list_plans_text(),
+        "",
+    ]
+    if view.get("active_payment"):
+        ap = view["active_payment"]
+        lines.append(f"✅ Активный план: {ap['plan_code']} ({ap['status']})")
+    elif view.get("pending_payment"):
+        pp = view["pending_payment"]
+        lines.append(f"⏳ Ожидает подтверждения: {pp['plan_code']}")
+    else:
+        lines.append("Выберите тариф для подключения:")
+    await message.answer("\n".join(lines), reply_markup=auto_vertical_menu())
+    await message.answer("Тарифы:", reply_markup=auto_billing_plans_inline())
+    if await is_billing_owner(user_id):
+        pending = await CommercialBillingEngineV1.list_pending_for_owner(user_id)
+        if pending:
+            await message.answer(f"🔐 Owner: pending payments — {len(pending)}")
+
+
+async def _show_settings(message: Message, user_id: int) -> None:
+    await message.answer(
+        "⚙ Настройки авто\n\n"
+        "• Каналы продвижения: Telegram, Instagram, Facebook, TikTok\n"
+        "• Уведомления о SLA и лидах\n"
+        "• Интеграция с Car Engine и Marketing Engine\n\n"
+        "Расширенные настройки — через админ-панель.",
+        reply_markup=auto_vertical_menu(),
+    )
+
+
+async def _notify_owner_payment(bot: Bot, payment: dict, user_id: int) -> None:
+    if not BOT_TOKEN:
+        return
+    try:
+        await bot.send_message(
+            OWNER_ID,
+            "💳 Новый платёж на проверку\n\n"
+            f"User: {user_id}\n"
+            f"Plan: {payment.get('plan_code')}\n"
+            f"Model: {payment.get('pricing_model')}\n"
+            f"Method: {payment.get('payment_method')}\n"
+            f"Amount: {payment.get('amount')} {payment.get('currency')}\n"
+            f"Payment ID: {payment.get('id')}",
+            reply_markup=auto_billing_owner_actions_inline(payment["id"]),
+        )
+    except Exception:
+        logger.exception("Failed to notify owner about payment %s", payment.get("id"))
 
 
 async def _schedule_marketing_for_car(
@@ -203,49 +360,74 @@ async def _schedule_marketing_for_car(
 
 
 async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: str) -> None:
+    screen = _normalize_screen(screen)
     if screen == "⬅ Назад":
         auto_vertical_active.pop(user_id, None)
         _clear_flow(user_id)
-        await message.answer("Главное меню", reply_markup=owner_main_menu())
+        auto_billing_flow.pop(user_id, None)
+        await message.answer("Главное меню", reply_markup=await _main_menu_for(user_id))
         return
 
-    if screen == "➕ Add Car":
+    if screen == "🚗 Добавить авто":
         await _start_add_car(message, user_id)
         return
 
-    if screen == "📋 Car List":
+    if screen == "📋 Список авто":
         await _show_car_list(message, user_id)
         return
 
-    if screen == "🔎 Search Car":
+    if screen == "🔍 Поиск авто":
         await _start_search(message, user_id)
         return
 
-    if screen == "🧮 Profit Calculator":
+    if screen == "💰 Калькулятор прибыли":
         await _start_profit_calculator(message, user_id)
         return
 
-    if screen == "📣 Marketing":
+    if screen == "📢 Продвижение":
         await _show_marketing(message, user_id)
+        return
+
+    if screen == "📊 Аналитика":
+        await _show_analytics(message, user_id)
+        return
+
+    if screen == "🤖 AI Менеджер":
+        await _show_ai_manager(message, user_id)
+        return
+
+    if screen == "👥 Лиды":
+        await _show_leads(message, user_id)
+        return
+
+    if screen == "💳 Тарифы и услуги":
+        await _show_billing(message, user_id)
+        return
+
+    if screen == "⚙ Настройки авто":
+        await _show_settings(message, user_id)
+        return
 
 
-@auto_vertical_router.message(F.text == AUTO_VERTICAL_MAIN_BUTTON)
+@auto_vertical_router.message(F.text.in_({AUTO_VERTICAL_MAIN_BUTTON, "🚗 Cars"}))
 async def open_auto_vertical(message: Message) -> None:
     user_id = message.from_user.id
-    if not await CarEngineV1.user_can_access(user_id):
+    if not await can_access_automotive_ui(user_id):
         await message.answer(
-            "🚗 Cars\n\nНет доступа к модулю.",
-            reply_markup=owner_main_menu(),
+            "🚗 Авто\n\nНет доступа к модулю.",
+            reply_markup=await _main_menu_for(user_id),
         )
         return
 
     auto_vertical_active[user_id] = True
     _clear_flow(user_id)
+    auto_billing_flow.pop(user_id, None)
     log_audit(user_id, "open", "auto_vertical")
 
     await message.answer(
-        "🚗 Cars\n\n"
-        "Автомобильный вертикаль — инвентарь, поиск, маржа и маркетинг.\n\n"
+        "🚗 Авто\n\n"
+        "Автомобильный модуль — инвентарь, продвижение, аналитика, "
+        "AI менеджер, лиды и тарифы.\n\n"
         "Выберите раздел:",
         reply_markup=auto_vertical_menu(),
     )
@@ -257,7 +439,8 @@ async def open_auto_vertical(message: Message) -> None:
 
 @auto_vertical_router.message(
     lambda m: (
-        m.text in AUTO_VERTICAL_MENU_BUTTONS
+        (_normalize_screen(m.text or "") in AUTO_VERTICAL_MENU_BUTTONS
+         or (m.text or "") in AUTO_VERTICAL_LEGACY_BUTTONS)
         and auto_vertical_active.get(m.from_user.id)
         and not auto_vertical_flow.get(m.from_user.id)
     )
@@ -278,7 +461,7 @@ async def auto_vertical_flow_handler(message: Message) -> None:
 
     if text == "⬅ Назад":
         _clear_flow(user_id)
-        await message.answer("🚗 Cars", reply_markup=auto_vertical_menu())
+        await message.answer("🚗 Авто", reply_markup=auto_vertical_menu())
         return
 
     if step == "vin":
@@ -537,7 +720,7 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
         return
 
     if not auto_vertical_active.get(user_id):
-        await callback.answer("Откройте раздел 🚗 Cars", show_alert=True)
+        await callback.answer("Откройте раздел 🚗 Авто", show_alert=True)
         return
 
     if data.startswith("car:open:"):
@@ -555,10 +738,10 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
         return
 
     action_map = {
-        "car:action:add": "➕ Add Car",
-        "car:action:list": "📋 Car List",
-        "car:action:search": "🔎 Search Car",
-        "car:action:profit": "🧮 Profit Calculator",
+        "car:action:add": "🚗 Добавить авто",
+        "car:action:list": "📋 Список авто",
+        "car:action:search": "🔍 Поиск авто",
+        "car:action:profit": "💰 Калькулятор прибыли",
     }
     if data in action_map:
         await _handle_auto_vertical_screen(
@@ -571,10 +754,179 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
 
     if data.startswith("car:section:back:"):
         await callback.message.answer(
-            "🚗 Cars",
+            "🚗 Авто",
             reply_markup=auto_vertical_menu(),
         )
         await callback.answer()
         return
 
     await callback.answer()
+
+
+@auto_vertical_router.callback_query(F.data.startswith("billing:"))
+async def auto_billing_callback(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+    data = callback.data or ""
+
+    if data == "billing:back:menu":
+        await callback.message.answer("🚗 Авто", reply_markup=auto_vertical_menu())
+        await callback.answer()
+        return
+
+    if data == "billing:back:plans":
+        await callback.message.answer(
+            "💳 Тарифы:",
+            reply_markup=auto_billing_plans_inline(),
+        )
+        await callback.answer()
+        return
+
+    if data.startswith("billing:back:pricing:"):
+        plan_code = data.split(":")[-1]
+        await callback.message.answer(
+            f"Модель оплаты для {plan_code}:",
+            reply_markup=auto_billing_pricing_inline(plan_code),
+        )
+        await callback.answer()
+        return
+
+    if data.startswith("billing:plan:"):
+        plan_code = data.split(":")[2]
+        text = PLAN_MARKETING.get(plan_code, plan_code)
+        await callback.message.answer(
+            f"{text}\n\nВыберите модель оплаты:",
+            reply_markup=auto_billing_pricing_inline(plan_code),
+        )
+        await callback.answer()
+        return
+
+    if data.startswith("billing:pricing:"):
+        _, _, plan_code, pricing_model = data.split(":", 3)
+        auto_billing_flow[user_id] = {
+            "plan_code": plan_code,
+            "pricing_model": pricing_model,
+        }
+        label = PRICING_MODEL_LABELS.get(pricing_model, pricing_model)
+        await callback.message.answer(
+            f"Plan: {plan_code}\nModel: {label}\n\nВыберите способ оплаты:",
+            reply_markup=auto_billing_payment_inline(plan_code, pricing_model),
+        )
+        await callback.answer()
+        return
+
+    if data.startswith("billing:pay:"):
+        _, _, plan_code, pricing_model, payment_method = data.split(":", 4)
+        try:
+            payment = await CommercialBillingEngineV1.create_payment_intent(
+                user_id,
+                plan_code=plan_code,
+                pricing_model=pricing_model,
+                payment_method=payment_method,
+            )
+        except CommercialBillingEngineError as exc:
+            await callback.answer(str(exc), show_alert=True)
+            return
+        auto_billing_flow[user_id] = {
+            "payment_id": payment["id"],
+            "plan_code": plan_code,
+            "pricing_model": pricing_model,
+            "payment_method": payment_method,
+            "awaiting_receipt": True,
+        }
+        method_label = PAYMENT_METHOD_LABELS.get(payment_method, payment_method)
+        await callback.message.answer(
+            "💳 Оплата\n\n"
+            f"Plan: {plan_code}\n"
+            f"Model: {PRICING_MODEL_LABELS.get(pricing_model, pricing_model)}\n"
+            f"Method: {method_label}\n"
+            f"Amount: {payment.get('amount')} {payment.get('currency')}\n\n"
+            "Загрузите фото или PDF квитанции об оплате.",
+            reply_markup=auto_vertical_menu(),
+        )
+        await callback.answer()
+        return
+
+    if data.startswith("billing:approve:"):
+        if not await is_billing_owner(user_id):
+            await callback.answer("Owner only", show_alert=True)
+            return
+        payment_id = uuid.UUID(data.split(":")[2])
+        try:
+            result = await CommercialBillingEngineV1.approve_payment(user_id, payment_id)
+        except CommercialBillingEngineError as exc:
+            await callback.answer(str(exc), show_alert=True)
+            return
+        await callback.message.answer(
+            "✅ Payment approved\n\n"
+            f"Tenant: {result['tenant_id']}\n"
+            f"Subscription: {result['subscription']['plan_code']}",
+        )
+        await callback.answer("Approved")
+        return
+
+    if data.startswith("billing:reject:"):
+        if not await is_billing_owner(user_id):
+            await callback.answer("Owner only", show_alert=True)
+            return
+        payment_id = uuid.UUID(data.split(":")[2])
+        try:
+            await CommercialBillingEngineV1.reject_payment(user_id, payment_id)
+        except CommercialBillingEngineError as exc:
+            await callback.answer(str(exc), show_alert=True)
+            return
+        await callback.message.answer("❌ Payment rejected")
+        await callback.answer("Rejected")
+        return
+
+    await callback.answer()
+
+
+@auto_vertical_router.message(
+    lambda m: auto_billing_flow.get(m.from_user.id, {}).get("awaiting_receipt")
+    and (m.photo or m.document)
+)
+async def auto_billing_receipt_upload(message: Message, bot: Bot) -> None:
+    user_id = message.from_user.id
+    flow = auto_billing_flow.get(user_id, {})
+    payment_id = uuid.UUID(flow["payment_id"])
+
+    file_id = None
+    file_unique_id = None
+    mime_type = None
+    if message.photo:
+        photo = message.photo[-1]
+        file_id = photo.file_id
+        file_unique_id = photo.file_unique_id
+        mime_type = "image/jpeg"
+    elif message.document:
+        file_id = message.document.file_id
+        file_unique_id = message.document.file_unique_id
+        mime_type = message.document.mime_type
+
+    if not file_id:
+        await message.answer("Отправьте фото или документ квитанции.")
+        return
+
+    try:
+        result = await CommercialBillingEngineV1.attach_receipt(
+            user_id,
+            payment_id,
+            telegram_file_id=file_id,
+            telegram_file_unique_id=file_unique_id,
+            mime_type=mime_type,
+        )
+        payment_view = await CommercialBillingEngineV1.get_user_subscription_view(user_id)
+        pending = payment_view.get("pending_payment") or {}
+        await _notify_owner_payment(bot, pending, user_id)
+    except CommercialBillingEngineError as exc:
+        await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
+        return
+
+    auto_billing_flow.pop(user_id, None)
+    await message.answer(
+        "✅ Квитанция получена\n\n"
+        "Платёж отправлен на ручную проверку. "
+        "После подтверждения OWNER будет активирован tenant и подписка.",
+        reply_markup=auto_vertical_menu(),
+    )
+    log_audit(user_id, "upload", "payment_receipt", result.get("receipt_id"))

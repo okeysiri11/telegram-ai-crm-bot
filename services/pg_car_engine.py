@@ -14,7 +14,7 @@ from repositories.audit_repository import AuditRepository
 from repositories.car_repository import CarRepository
 from repositories.user_role_repository import UserRoleRepository
 
-CAR_ROLES = frozenset({"OWNER", "ADMIN", "MANAGER"})
+CAR_ROLES = frozenset({"OWNER", "ADMIN", "MANAGER", "SUPER_MANAGER", "AUTO_MANAGER"})
 
 
 class CarEngineError(Exception):

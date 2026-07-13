@@ -15,6 +15,7 @@ class PlatformTestService:
         "NOTIFY",
         "AI_ROUTER",
         "AUDIT",
+        "AUTOMOTIVE_UI",
     )
 
     TEST_MODULES = {
@@ -31,6 +32,7 @@ class PlatformTestService:
         "🤖 AI Test": "ai",
         "⚙ Workflow Test": "workflow",
         "🔔 Notification Test": "notifications",
+        "🚗 Auto Test": "automotive",
     }
 
     @staticmethod
@@ -85,6 +87,17 @@ class PlatformTestService:
                 import database as db
                 db.cursor.execute("SELECT COUNT(*) FROM audit_log")
                 db.cursor.fetchone()
+                return True, "OK"
+            if name == "AUTOMOTIVE_UI":
+                from services.automotive_ui_self_test import run_automotive_ui_self_test
+
+                result = run_automotive_ui_self_test()
+                if not result.get("ok"):
+                    failed = [
+                        key for key, item in result.get("checks", {}).items()
+                        if not item.get("ok")
+                    ]
+                    return False, ",".join(failed[:3])
                 return True, "OK"
             return False, "unknown component"
         except Exception as exc:
@@ -168,6 +181,17 @@ class PlatformTestService:
             elif module_key == "notifications":
                 from services.notifications import NotificationService
                 NotificationService.get_notifications(user_id, limit=1)
+            elif module_key == "automotive":
+                from services.automotive_ui_self_test import run_automotive_ui_self_test
+
+                result = run_automotive_ui_self_test()
+                if not result.get("ok"):
+                    failed = [
+                        f"{key}: {item.get('detail')}"
+                        for key, item in result.get("checks", {}).items()
+                        if not item.get("ok")
+                    ]
+                    raise RuntimeError("; ".join(failed[:5]))
             else:
                 raise RuntimeError(f"unknown module {module_key}")
             return "STATUS: OK"

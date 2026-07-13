@@ -873,8 +873,16 @@ async def cmd_start(message: Message) -> None:
 
     await message.answer(
         "Добро пожаловать в систему управления.",
-        reply_markup=owner_main_menu(),
+        reply_markup=await _start_menu_for(user_id),
     )
+
+
+async def _start_menu_for(user_id: int):
+    from services.automotive_telegram_access import can_see_automotive_menu_button
+    from keyboards import owner_main_menu
+
+    show_auto = await can_see_automotive_menu_button(user_id)
+    return owner_main_menu(show_automotive=show_auto)
 
 @router.message(F.text == "💰 Crypto OTC")
 async def open_crypto_otc(message: Message):
@@ -2732,8 +2740,17 @@ async def open_system_health(message: Message):
         )
         return
     log_audit(user_id, "open", "system_health")
+    from services.automotive_ui_self_test import run_automotive_ui_self_test
+
+    auto_test = run_automotive_ui_self_test()
+    auto_lines = ["Automotive UI self-test:"]
+    for name, item in auto_test.get("checks", {}).items():
+        mark = "OK" if item.get("ok") else "FAIL"
+        auto_lines.append(f"• {name}: {mark} ({item.get('detail', '')})")
     await message.answer(
-        SystemHealthService.format_health_dashboard(),
+        SystemHealthService.format_health_dashboard()
+        + "\n\n"
+        + "\n".join(auto_lines),
         reply_markup=owner_main_menu(),
     )
 

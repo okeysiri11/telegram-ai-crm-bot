@@ -25,6 +25,7 @@ class SystemHealthService:
             "Search": "SEARCH",
             "Files": "FILES",
             "Audit": "AUDIT",
+            "Automotive UI": "AUTOMOTIVE_UI",
         }
         snapshot = {}
         for label, key in components.items():
@@ -47,6 +48,7 @@ class SystemHealthService:
         for label in (
             "Database", "PostgreSQL", "Telegram", "AI Router", "Workflow",
             "Calendar", "Notifications", "Search", "Files", "Audit",
+            "Automotive UI",
         ):
             status = snap.get(label, "OFFLINE")
             lines.append(f"{icons.get(status, '⚪')} {label}: {status}")

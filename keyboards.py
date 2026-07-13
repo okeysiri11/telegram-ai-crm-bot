@@ -6,24 +6,24 @@ from aiogram.types import (
 )
 
 
-def owner_main_menu():
-    keyboard = ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text="💰 Crypto OTC"),
-                KeyboardButton(text="🚁 Drone Engineering")
-            ],
-            [
-                KeyboardButton(text="⚖ Юриспруденция"),
-                KeyboardButton(text="☕ Cafe & Beauty")
-            ],
-            [
-                KeyboardButton(text="🌾 Agro Trading"),
-                KeyboardButton(text="🏢 Company Core"),
-            ],
-            [
-                KeyboardButton(text="🚗 Cars"),
-            ],
+def owner_main_menu(*, show_automotive: bool = True):
+    keyboard_rows = [
+        [
+            KeyboardButton(text="💰 Crypto OTC"),
+            KeyboardButton(text="🚁 Drone Engineering")
+        ],
+        [
+            KeyboardButton(text="⚖ Юриспруденция"),
+            KeyboardButton(text="☕ Cafe & Beauty")
+        ],
+        [
+            KeyboardButton(text="🌾 Agro Trading"),
+            KeyboardButton(text="🏢 Company Core"),
+        ],
+    ]
+    if show_automotive:
+        keyboard_rows.append([KeyboardButton(text=AUTO_VERTICAL_MAIN_BUTTON)])
+    keyboard_rows.extend([
             [
                 KeyboardButton(text="👥 Пользователи"),
             ],
@@ -59,8 +59,10 @@ def owner_main_menu():
             [
                 KeyboardButton(text="🧪 Тестовый центр"),
                 KeyboardButton(text="❤️ System Health"),
-            ]
-        ],
+            ],
+    ])
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=keyboard_rows,
         resize_keyboard=True
     )
 
@@ -1441,6 +1443,9 @@ def test_center_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="🔔 Notification Test"),
             ],
             [
+                KeyboardButton(text="🚗 Auto Test"),
+            ],
+            [
                 KeyboardButton(text="⬅ Назад"),
             ],
         ],
@@ -1449,40 +1454,163 @@ def test_center_menu() -> ReplyKeyboardMarkup:
 
 
 # ==========================================================
-# AUTO VERTICAL (Cars)
+# AUTO VERTICAL (Automotive Telegram UI v2)
 # ==========================================================
 
-AUTO_VERTICAL_MAIN_BUTTON = "🚗 Cars"
+AUTO_VERTICAL_MAIN_BUTTON = "🚗 Авто"
 
 AUTO_VERTICAL_MENU_BUTTONS = frozenset({
-    "➕ Add Car",
-    "📋 Car List",
-    "🔎 Search Car",
-    "🧮 Profit Calculator",
-    "📣 Marketing",
+    "🚗 Добавить авто",
+    "📋 Список авто",
+    "🔍 Поиск авто",
+    "💰 Калькулятор прибыли",
+    "📢 Продвижение",
+    "📊 Аналитика",
+    "🤖 AI Менеджер",
+    "👥 Лиды",
+    "💳 Тарифы и услуги",
+    "⚙ Настройки авто",
     "⬅ Назад",
 })
+
+# Legacy aliases (same flows, old labels)
+AUTO_VERTICAL_LEGACY_BUTTONS = {
+    "➕ Add Car": "🚗 Добавить авто",
+    "📋 Car List": "📋 Список авто",
+    "🔎 Search Car": "🔍 Поиск авто",
+    "🧮 Profit Calculator": "💰 Калькулятор прибыли",
+    "📣 Marketing": "📢 Продвижение",
+    "🚗 Cars": AUTO_VERTICAL_MAIN_BUTTON,
+}
 
 
 def auto_vertical_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="➕ Add Car"),
-                KeyboardButton(text="📋 Car List"),
+                KeyboardButton(text="🚗 Добавить авто"),
+                KeyboardButton(text="📋 Список авто"),
             ],
             [
-                KeyboardButton(text="🔎 Search Car"),
-                KeyboardButton(text="🧮 Profit Calculator"),
+                KeyboardButton(text="🔍 Поиск авто"),
+                KeyboardButton(text="💰 Калькулятор прибыли"),
             ],
             [
-                KeyboardButton(text="📣 Marketing"),
+                KeyboardButton(text="📢 Продвижение"),
+                KeyboardButton(text="📊 Аналитика"),
+            ],
+            [
+                KeyboardButton(text="🤖 AI Менеджер"),
+                KeyboardButton(text="👥 Лиды"),
+            ],
+            [
+                KeyboardButton(text="💳 Тарифы и услуги"),
+                KeyboardButton(text="⚙ Настройки авто"),
             ],
             [
                 KeyboardButton(text="⬅ Назад"),
             ],
         ],
         resize_keyboard=True,
+    )
+
+
+def auto_billing_plans_inline() -> InlineKeyboardMarkup:
+    from database.models.tenant_billing_engine import BillingPlanCode
+
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="STARTER",
+                    callback_data=f"billing:plan:{BillingPlanCode.STARTER.value}",
+                ),
+                InlineKeyboardButton(
+                    text="PRO",
+                    callback_data=f"billing:plan:{BillingPlanCode.PRO.value}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="BUSINESS",
+                    callback_data=f"billing:plan:{BillingPlanCode.BUSINESS.value}",
+                ),
+                InlineKeyboardButton(
+                    text="ENTERPRISE",
+                    callback_data=f"billing:plan:{BillingPlanCode.ENTERPRISE.value}",
+                ),
+            ],
+            [
+                InlineKeyboardButton(text="◀ Назад", callback_data="billing:back:menu"),
+            ],
+        ]
+    )
+
+
+def auto_billing_pricing_inline(plan_code: str) -> InlineKeyboardMarkup:
+    from database.models.commercial_billing_engine import PricingModel
+
+    models = (
+        PricingModel.SUBSCRIPTION,
+        PricingModel.PER_LEAD,
+        PricingModel.REVENUE_SHARE,
+        PricingModel.HYBRID,
+        PricingModel.CUSTOM,
+    )
+    rows = []
+    row: list[InlineKeyboardButton] = []
+    for model in models:
+        row.append(
+            InlineKeyboardButton(
+                text=model.value.replace("_", " ").title()[:20],
+                callback_data=f"billing:pricing:{plan_code}:{model.value}",
+            )
+        )
+        if len(row) == 2:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    rows.append([InlineKeyboardButton(text="◀ Назад", callback_data="billing:back:plans")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def auto_billing_payment_inline(plan_code: str, pricing_model: str) -> InlineKeyboardMarkup:
+    from database.models.commercial_billing_engine import PaymentMethod
+
+    methods = (
+        (PaymentMethod.BANK_CARD.value, "Bank Card"),
+        (PaymentMethod.BANK_TRANSFER.value, "Bank Transfer"),
+        (PaymentMethod.USDT_TRC20.value, "USDT TRC20"),
+        (PaymentMethod.USDT_ERC20.value, "USDT ERC20"),
+    )
+    rows = [
+        [
+            InlineKeyboardButton(
+                text=label,
+                callback_data=f"billing:pay:{plan_code}:{pricing_model}:{code}",
+            )
+        ]
+        for code, label in methods
+    ]
+    rows.append([InlineKeyboardButton(text="◀ Назад", callback_data=f"billing:back:pricing:{plan_code}")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def auto_billing_owner_actions_inline(payment_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Approve",
+                    callback_data=f"billing:approve:{payment_id}",
+                ),
+                InlineKeyboardButton(
+                    text="❌ Reject",
+                    callback_data=f"billing:reject:{payment_id}",
+                ),
+            ],
+        ]
     )
 
 
@@ -1517,21 +1645,21 @@ def auto_vertical_actions_inline(section: str = "overview") -> InlineKeyboardMar
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="➕ Add Car",
+                    text="➕ Добавить",
                     callback_data="car:action:add",
                 ),
                 InlineKeyboardButton(
-                    text="📋 Car List",
+                    text="📋 Список",
                     callback_data="car:action:list",
                 ),
             ],
             [
                 InlineKeyboardButton(
-                    text="🔎 Search",
+                    text="🔍 Поиск",
                     callback_data="car:action:search",
                 ),
                 InlineKeyboardButton(
-                    text="🧮 Profit",
+                    text="💰 Прибыль",
                     callback_data="car:action:profit",
                 ),
             ],
