@@ -23,6 +23,8 @@ from api.handlers import (
     ai_conversation_skills_handler,
     deal_pipeline_feature_handler,
     deal_pipeline_handler,
+    cross_posting_feature_handler,
+    cross_posting_handler,
     deals_create_handler,
     deals_list_handler,
     documents_create_handler,
@@ -132,6 +134,12 @@ def create_app() -> web.Application:
     app.router.add_get(
         "/v1/deal-pipeline/features/{feature}",
         deal_pipeline_feature_handler,
+    )
+
+    app.router.add_get("/v1/cross-posting", cross_posting_handler)
+    app.router.add_get(
+        "/v1/cross-posting/features/{feature}",
+        cross_posting_feature_handler,
     )
 
     return app

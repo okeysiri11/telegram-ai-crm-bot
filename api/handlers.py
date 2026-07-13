@@ -434,6 +434,33 @@ async def deal_pipeline_feature_handler(request: web.Request) -> web.Response:
     return _json(data)
 
 
+@require_api_auth
+async def cross_posting_handler(request: web.Request) -> web.Response:
+    from services.pg_cross_posting_v1 import CrossPostingV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    engine = await CrossPostingV1.get_engine(_actor(request), tenant_id)
+    return _json(engine)
+
+
+@require_api_auth
+async def cross_posting_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_cross_posting_v1 import CrossPostingV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    feature = request.match_info["feature"]
+    job_id_raw = request.query.get("job_id")
+    job_id = uuid.UUID(job_id_raw) if job_id_raw else None
+    data = await CrossPostingV1.get_feature(
+        _actor(request),
+        tenant_id,
+        feature,
+        job_id=job_id,
+        content=request.query.get("content"),
+    )
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -486,6 +513,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/ai-conversation-skills/features/{feature}",
             "/v1/deal-pipeline",
             "/v1/deal-pipeline/features/{feature}",
+            "/v1/cross-posting",
+            "/v1/cross-posting/features/{feature}",
             "/v1/auth/token",
         ],
     })

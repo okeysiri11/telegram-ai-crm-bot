@@ -101,6 +101,13 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "cron_expression": "0 4 * * *",
     },
     {
+        "job_key": "cross_posting.process",
+        "name": "Cross Posting Queue",
+        "description": "Process due cross-posting jobs across Telegram, Instagram, Facebook, TikTok",
+        "schedule_type": JobScheduleType.INTERVAL.value,
+        "interval_seconds": 60,
+    },
+    {
         "job_key": "tenant_billing.monthly",
         "name": "Tenant Billing Monthly",
         "description": "Collect usage and generate tenant invoices",
@@ -278,6 +285,13 @@ class SchedulerEngineV1:
         return await AnalyticsAutomationEngineV1.compute_metrics()
 
     @staticmethod
+    async def _run_cross_posting_process(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.pg_cross_posting_engine import CrossPostingEngineV1
+
+        limit = int((config or {}).get("limit", 20))
+        return await CrossPostingEngineV1.process_due_jobs(limit=limit)
+
+    @staticmethod
     async def _run_tenant_billing_monthly(config: dict[str, Any] | None) -> dict[str, Any]:
         from services.pg_tenant_billing_engine import TenantBillingEngineV1
 
@@ -301,6 +315,7 @@ class SchedulerEngineV1:
             "marketing_automation.process": SchedulerEngineV1._run_marketing_automation_process,
             "sales_pipeline_automation.process": SchedulerEngineV1._run_sales_pipeline_automation,
             "analytics_automation.compute": SchedulerEngineV1._run_analytics_automation_compute,
+            "cross_posting.process": SchedulerEngineV1._run_cross_posting_process,
             "tenant_billing.monthly": SchedulerEngineV1._run_tenant_billing_monthly,
             "revenue_sharing.monthly": SchedulerEngineV1._run_revenue_sharing_monthly,
         }
