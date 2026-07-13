@@ -31,6 +31,7 @@ from services.automotive_telegram_access import (
 )
 from services.pg_auto_marketing_engine import AutoMarketingEngineError, AutoMarketingEngineV1
 from services.pg_car_engine import CarEngineError, CarEngineV1
+from services.pg_automotive_treasury_engine import AutomotiveTreasuryEngineV1
 from services.pg_commercial_billing_engine import (
     CommercialBillingEngineError,
     CommercialBillingEngineV1,
@@ -86,6 +87,17 @@ def _format_car_card(car: dict) -> str:
         lines.append(f"Sale: {car['sale_price']}")
     if car.get("expected_profit"):
         lines.append(f"Expected profit: {car['expected_profit']}")
+    equivalents = car.get("price_equivalents")
+    if equivalents:
+        lines.append(
+            "FX (dealer): "
+            f"UAH {equivalents.get('UAH')} | "
+            f"USD {equivalents.get('USD')} | "
+            f"EUR {equivalents.get('EUR')} | "
+            f"USDT {equivalents.get('USDT')}"
+        )
+    elif car.get("rates_error"):
+        lines.append("FX: dealer rates not configured in Telegram channel")
     return "\n".join(lines)
 
 
@@ -110,6 +122,7 @@ def _clear_flow(user_id: int) -> None:
 async def _show_car_list(message: Message, user_id: int) -> None:
     try:
         cars = await CarEngineV1.list_cars(user_id, limit=50)
+        cars = await AutomotiveTreasuryEngineV1.enrich_cars_for_actor(user_id, cars)
     except CarEngineError as exc:
         await message.answer(str(exc), reply_markup=auto_vertical_menu())
         return
@@ -729,6 +742,8 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
         car_id = data.split(":", 2)[2]
         try:
             car = await CarEngineV1.get_car(user_id, uuid.UUID(car_id))
+            enriched = await AutomotiveTreasuryEngineV1.enrich_cars_for_actor(user_id, [car])
+            car = enriched[0] if enriched else car
         except (ValueError, CarEngineError) as exc:
             await callback.answer(str(exc), show_alert=True)
             return

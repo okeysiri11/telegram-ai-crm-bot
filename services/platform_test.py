@@ -38,6 +38,7 @@ class PlatformTestService:
         "🔐 RBAC Test": "rbac_v2",
         "🚘 Onboarding Test": "dealer_onboarding",
         "🏭 Production Test": "production_readiness",
+        "💱 Treasury Test": "automotive_treasury",
     }
 
     @staticmethod
@@ -265,6 +266,18 @@ class PlatformTestService:
                     f"liveness: {result.get('liveness', {}).get('ok')}\n"
                     f"dependencies: {result.get('dependencies', {}).get('ok')}\n"
                     f"report: {result.get('report', {}).get('ok')}"
+                )
+            elif module_key == "automotive_treasury":
+                from services.automotive_treasury_test import run_automotive_treasury_tests
+
+                result = run_automotive_treasury_tests()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"parser: {result.get('parser', {}).get('ok')}\n"
+                    f"equivalents: {result.get('equivalents', {}).get('ok')}\n"
+                    f"no_fallback: {result.get('no_fallback', {}).get('ok')}"
                 )
             else:
                 raise RuntimeError(f"unknown module {module_key}")

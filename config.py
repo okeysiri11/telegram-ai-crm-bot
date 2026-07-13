@@ -26,6 +26,9 @@ MANAGER_ID = 8312013093
 
 MARKETING_TELEGRAM_CHANNEL_ID = os.getenv("MARKETING_TELEGRAM_CHANNEL_ID")
 
+# Automotive Treasury — dealer FX rates channel (primary rate source)
+DEALER_RATES_TELEGRAM_CHANNEL_ID = os.getenv("DEALER_RATES_TELEGRAM_CHANNEL_ID")
+
 MANAGERS = {
     8312013093: "Tony"
 }

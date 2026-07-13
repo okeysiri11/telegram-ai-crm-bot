@@ -1455,6 +1455,9 @@ def test_center_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="🏭 Production Test"),
             ],
             [
+                KeyboardButton(text="💱 Treasury Test"),
+            ],
+            [
                 KeyboardButton(text="⬅ Назад"),
             ],
         ],
@@ -1478,6 +1481,7 @@ AUTO_VERTICAL_MENU_BUTTONS = frozenset({
     "🤖 AI Менеджер",
     "👥 Лиды",
     "💳 Тарифы и услуги",
+    "💱 Курсы дилера",
     "⚙ Настройки авто",
     "⬅ Назад",
 })
@@ -1514,6 +1518,9 @@ def auto_vertical_menu() -> ReplyKeyboardMarkup:
             ],
             [
                 KeyboardButton(text="💳 Тарифы и услуги"),
+                KeyboardButton(text="💱 Курсы дилера"),
+            ],
+            [
                 KeyboardButton(text="⚙ Настройки авто"),
             ],
             [

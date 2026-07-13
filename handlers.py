@@ -304,11 +304,13 @@ from dealer_onboarding_handlers import (
     present_onboarding_resume,
     present_onboarding_start,
 )
+from automotive_treasury_handlers import automotive_treasury_router
 
 router.include_router(deal_workflow_router)
 router.include_router(auto_vertical_router)
 router.include_router(ai_sales_router)
 router.include_router(dealer_onboarding_router)
+router.include_router(automotive_treasury_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1
