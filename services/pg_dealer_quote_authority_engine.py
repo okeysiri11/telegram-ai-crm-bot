@@ -9,7 +9,8 @@ from typing import Any
 
 import aiohttp
 
-from config import FOMA_RATES_TELEGRAM_CHANNEL_ID, OWNER_ID
+from config import FOMA_RATES_TELEGRAM_CHANNEL_ID
+from services.bidex_telegram_quote_parser import SOURCE_AUTHORITY as BIDEX_SOURCE_AUTHORITY, OWNER_ID
 from database.models.dealer_quote_authority_engine import (
     AlertSeverity,
     QuotePair,
@@ -58,7 +59,8 @@ class DealerQuoteAuthorityEngineV1:
         tenant_id: uuid.UUID | None = None,
     ) -> dict[str, Any]:
         sheet = await AutomotiveTreasuryEngineV1.get_active_rates(tenant_id=tenant_id)
-        sheet["authority"] = "foma_rates_telegram"
+        authority = sheet.get("source_authority") or BIDEX_SOURCE_AUTHORITY
+        sheet["authority"] = authority
         sheet["expires"] = False
         return sheet
 
@@ -294,7 +296,7 @@ class DealerQuoteAuthorityEngineV1:
         lines = [
             "🏦 Treasury Dashboard",
             "",
-            "Authority: Foma Rates (Telegram)",
+            "Authority: @bidex_Odesa (Telegram)",
             "Quotes do not expire automatically.",
             "",
             "Dealer spreads:",

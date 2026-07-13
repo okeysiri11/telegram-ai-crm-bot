@@ -77,6 +77,11 @@ class AutomotiveTreasuryRepository:
         source_message_id: int | None = None,
         source_text: str | None = None,
         updated_by_user_id: int | None = None,
+        source_authority: str | None = None,
+        eurusd_buy: Decimal | None = None,
+        eurusd_sell: Decimal | None = None,
+        usdt_buy_markup_percent: Decimal | None = None,
+        usdt_sell_markup_percent: Decimal | None = None,
     ) -> AutomotiveDealerRateSheet:
         await self.deactivate_sheets(tenant_id=tenant_id)
         row = AutomotiveDealerRateSheet(
@@ -88,8 +93,13 @@ class AutomotiveTreasuryRepository:
             eur_sell=rates["EUR_SELL"],
             usdt_buy=rates["USDT_BUY"],
             usdt_sell=rates["USDT_SELL"],
+            eurusd_buy=eurusd_buy or rates.get("eurusd_buy"),
+            eurusd_sell=eurusd_sell or rates.get("eurusd_sell"),
+            usdt_buy_markup_percent=usdt_buy_markup_percent or rates.get("usdt_buy_markup_percent"),
+            usdt_sell_markup_percent=usdt_sell_markup_percent or rates.get("usdt_sell_markup_percent"),
             usd_white_premium=rates.get("USD_WHITE_PREMIUM"),
             usd_blue_premium=rates.get("USD_BLUE_PREMIUM"),
+            source_authority=source_authority,
             source_channel_id=source_channel_id,
             source_message_id=source_message_id,
             source_text=source_text,

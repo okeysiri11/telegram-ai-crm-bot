@@ -102,8 +102,17 @@ class AutomotiveTreasuryEngineV1:
             "EUR_SELL": str(row.eur_sell),
             "USDT_BUY": str(row.usdt_buy),
             "USDT_SELL": str(row.usdt_sell),
+            "eurusd_buy": str(row.eurusd_buy) if row.eurusd_buy is not None else None,
+            "eurusd_sell": str(row.eurusd_sell) if row.eurusd_sell is not None else None,
+            "usdt_buy_markup_percent": (
+                str(row.usdt_buy_markup_percent) if row.usdt_buy_markup_percent is not None else None
+            ),
+            "usdt_sell_markup_percent": (
+                str(row.usdt_sell_markup_percent) if row.usdt_sell_markup_percent is not None else None
+            ),
             "USD_WHITE_PREMIUM": str(row.usd_white_premium) if row.usd_white_premium is not None else None,
             "USD_BLUE_PREMIUM": str(row.usd_blue_premium) if row.usd_blue_premium is not None else None,
+            "source_authority": row.source_authority,
             "source_channel_id": row.source_channel_id,
             "source_message_id": row.source_message_id,
             "source_updated_at": row.source_updated_at.isoformat(),
@@ -343,19 +352,26 @@ class AutomotiveTreasuryEngineV1:
 
     @staticmethod
     def format_rates_report(sheet: dict[str, Any]) -> str:
+        authority = sheet.get("source_authority") or "dealer_telegram"
         lines = [
             "💱 Dealer Rates (Telegram)",
             "",
-            f"USD: buy {sheet['USD_BUY']} / sell {sheet['USD_SELL']}",
-            f"EUR: buy {sheet['EUR_BUY']} / sell {sheet['EUR_SELL']}",
-            f"USDT: buy {sheet['USDT_BUY']} / sell {sheet['USDT_SELL']}",
+            f"USD/UAH: buy {sheet['USD_BUY']} / sell {sheet['USD_SELL']}",
+            f"EUR/UAH: buy {sheet['EUR_BUY']} / sell {sheet['EUR_SELL']}",
+            f"USDT/UAH: buy {sheet['USDT_BUY']} / sell {sheet['USDT_SELL']}",
         ]
+        if sheet.get("eurusd_buy") and sheet.get("eurusd_sell"):
+            lines.append(f"EUR/USD: buy {sheet['eurusd_buy']} / sell {sheet['eurusd_sell']}")
+        if sheet.get("usdt_buy_markup_percent") is not None:
+            lines.append(f"USDT buy markup: {sheet['usdt_buy_markup_percent']}%")
+        if sheet.get("usdt_sell_markup_percent") is not None:
+            lines.append(f"USDT sell markup: {sheet['usdt_sell_markup_percent']}%")
         if sheet.get("USD_WHITE_PREMIUM"):
             lines.append(f"USD white premium: {sheet['USD_WHITE_PREMIUM']}")
         if sheet.get("USD_BLUE_PREMIUM"):
             lines.append(f"USD blue premium: {sheet['USD_BLUE_PREMIUM']}")
         lines.append(f"\nUpdated: {sheet.get('source_updated_at', '—')}")
-        lines.append("Source: Telegram dealer channel (no bank/exchange fallback)")
+        lines.append(f"Source: {authority} (no bank/exchange fallback)")
         return "\n".join(lines)
 
     @staticmethod

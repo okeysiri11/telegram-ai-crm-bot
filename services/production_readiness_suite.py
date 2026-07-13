@@ -218,6 +218,45 @@ class ProductionReadinessSuite:
                 await bot.session.close()
 
     @classmethod
+    async def check_bidex_quote_parser(cls) -> dict[str, Any]:
+        try:
+            from services.bidex_telegram_quote_parser import BidExTelegramQuoteParserV1
+
+            health = await BidExTelegramQuoteParserV1.get_health_status()
+            status = health.get("status", "unknown")
+            if status == "healthy":
+                return _check_result(
+                    "bidex_quote_parser",
+                    ok=True,
+                    detail="active dealer quotes from @bidex_Odesa",
+                    payload=health,
+                )
+            if status in {"waiting", "degraded"}:
+                return _check_result(
+                    "bidex_quote_parser",
+                    ok=True,
+                    degraded=True,
+                    detail=f"parser {status}",
+                    payload=health,
+                )
+            if status == "unconfigured":
+                return _check_result(
+                    "bidex_quote_parser",
+                    ok=True,
+                    skipped=True,
+                    detail="BidEx channel not configured",
+                    payload=health,
+                )
+            return _check_result(
+                "bidex_quote_parser",
+                ok=False,
+                detail=health.get("last_error") or status,
+                payload=health,
+            )
+        except Exception as exc:
+            return _check_result("bidex_quote_parser", ok=False, detail=str(exc))
+
+    @classmethod
     async def check_market_sources(cls) -> dict[str, Any]:
         try:
             from database.models.market_data import MarketSourceCode
@@ -239,7 +278,7 @@ class ProductionReadinessSuite:
             return _check_result(
                 "market_sources",
                 ok=ok,
-                degraded=bool(missing) and not binance_used,
+                degraded=bool(missing) and binance_removed,
                 detail=detail,
                 payload={
                     "reference_only": sorted(REFERENCE_ONLY_SOURCES),
@@ -261,6 +300,7 @@ class ProductionReadinessSuite:
             cls.check_scheduler(),
             cls.check_telegram(),
             cls.check_market_sources(),
+            cls.check_bidex_quote_parser(),
         )
         by_name = {item["name"]: item for item in checks}
         critical_ready = True

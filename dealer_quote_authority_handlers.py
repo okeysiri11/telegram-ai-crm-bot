@@ -7,7 +7,7 @@ import logging
 from aiogram import F, Router
 from aiogram.types import Message
 
-from config import FOMA_RATES_TELEGRAM_CHANNEL_ID
+from config import BIDEX_TELEGRAM_CHANNEL_USERNAME
 from services.pg_dealer_quote_authority_engine import (
     DealerQuoteAuthorityEngineError,
     DealerQuoteAuthorityEngineV1,
@@ -64,7 +64,7 @@ async def treasury_dashboard(message: Message) -> None:
     except DealerQuoteAuthorityEngineError as exc:
         await message.answer(
             f"🏦 Treasury Dashboard\n\n{exc}\n\n"
-            f"Foma Rates channel: {FOMA_RATES_TELEGRAM_CHANNEL_ID or 'not configured'}"
+            f"BidEx channel: @{BIDEX_TELEGRAM_CHANNEL_USERNAME}"
         )
 
 
@@ -81,7 +81,7 @@ async def show_dealer_rates(message: Message) -> None:
         sheet = await DealerQuoteAuthorityEngineV1.get_authoritative_quotes()
         report = AutomotiveTreasuryEngineV1.format_rates_report(sheet)
         await message.answer(
-            f"{report}\n\nAuthority: Foma Rates (Telegram)\n"
+            f"{report}\n\nAuthority: @bidex_Odesa (Telegram)\n"
             "External sources are reference-only."
         )
     except DealerQuoteAuthorityEngineError as exc:

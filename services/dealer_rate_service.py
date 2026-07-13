@@ -11,7 +11,7 @@ from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngine
 
 
 class DealerRateService:
-    """All business calculations must use dealer quotes from Foma Rates only."""
+    """All business calculations must use dealer quotes from @bidex_Odesa only."""
 
     @staticmethod
     async def get_authoritative_rates(

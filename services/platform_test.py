@@ -40,6 +40,7 @@ class PlatformTestService:
         "🏭 Production Test": "production_readiness",
         "💱 Treasury Test": "automotive_treasury",
         "🏦 Quote Authority Test": "dealer_quote_authority",
+        "📡 BidEx Parser Test": "bidex_quote_parser",
     }
 
     @staticmethod
@@ -291,6 +292,18 @@ class PlatformTestService:
                     f"dealer_mid: {result.get('dealer_mid', {}).get('ok')}\n"
                     f"dashboard: {result.get('dashboard', {}).get('ok')}\n"
                     f"service: {result.get('service', {}).get('ok')}"
+                )
+            elif module_key == "bidex_quote_parser":
+                from services.bidex_telegram_quote_parser_test import run_bidex_quote_parser_tests
+
+                result = run_bidex_quote_parser_tests()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"should_parse: {result.get('should_parse', {}).get('ok')}\n"
+                    f"parse_fields: {result.get('parse_fields', {}).get('ok')}\n"
+                    f"channel_match: {result.get('channel_match', {}).get('ok')}"
                 )
             else:
                 raise RuntimeError(f"unknown module {module_key}")

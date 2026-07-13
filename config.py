@@ -26,7 +26,11 @@ MANAGER_ID = 8312013093
 
 MARKETING_TELEGRAM_CHANNEL_ID = os.getenv("MARKETING_TELEGRAM_CHANNEL_ID")
 
-# Automotive Treasury — dealer FX rates channel (Foma Rates authority)
+# BidEx @bidex_Odesa — authoritative dealer FX rates channel
+BIDEX_TELEGRAM_CHANNEL_USERNAME = os.getenv("BIDEX_TELEGRAM_CHANNEL_USERNAME", "bidex_Odesa")
+BIDEX_TELEGRAM_CHANNEL_ID = os.getenv("BIDEX_TELEGRAM_CHANNEL_ID")
+
+# Automotive Treasury — dealer FX rates channel (legacy / fallback)
 DEALER_RATES_TELEGRAM_CHANNEL_ID = os.getenv("DEALER_RATES_TELEGRAM_CHANNEL_ID")
 FOMA_RATES_TELEGRAM_CHANNEL_ID = os.getenv(
     "FOMA_RATES_TELEGRAM_CHANNEL_ID",
