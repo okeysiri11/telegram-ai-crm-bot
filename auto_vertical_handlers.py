@@ -31,7 +31,7 @@ from services.automotive_telegram_access import (
 )
 from services.pg_auto_marketing_engine import AutoMarketingEngineError, AutoMarketingEngineV1
 from services.pg_car_engine import CarEngineError, CarEngineV1
-from services.pg_automotive_treasury_engine import AutomotiveTreasuryEngineV1
+from services.dealer_rate_service import DealerRateService
 from services.pg_commercial_billing_engine import (
     CommercialBillingEngineError,
     CommercialBillingEngineV1,
@@ -122,7 +122,7 @@ def _clear_flow(user_id: int) -> None:
 async def _show_car_list(message: Message, user_id: int) -> None:
     try:
         cars = await CarEngineV1.list_cars(user_id, limit=50)
-        cars = await AutomotiveTreasuryEngineV1.enrich_cars_for_actor(user_id, cars)
+        cars = await DealerRateService.enrich_car_listings(user_id, cars)
     except CarEngineError as exc:
         await message.answer(str(exc), reply_markup=auto_vertical_menu())
         return
@@ -742,7 +742,7 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
         car_id = data.split(":", 2)[2]
         try:
             car = await CarEngineV1.get_car(user_id, uuid.UUID(car_id))
-            enriched = await AutomotiveTreasuryEngineV1.enrich_cars_for_actor(user_id, [car])
+            enriched = await DealerRateService.enrich_car_listings(user_id, [car])
             car = enriched[0] if enriched else car
         except (ValueError, CarEngineError) as exc:
             await callback.answer(str(exc), show_alert=True)

@@ -1482,6 +1482,7 @@ AUTO_VERTICAL_MENU_BUTTONS = frozenset({
     "👥 Лиды",
     "💳 Тарифы и услуги",
     "💱 Курсы дилера",
+    "🏦 Treasury Dashboard",
     "⚙ Настройки авто",
     "⬅ Назад",
 })
@@ -1519,6 +1520,9 @@ def auto_vertical_menu() -> ReplyKeyboardMarkup:
             [
                 KeyboardButton(text="💳 Тарифы и услуги"),
                 KeyboardButton(text="💱 Курсы дилера"),
+            ],
+            [
+                KeyboardButton(text="🏦 Treasury Dashboard"),
             ],
             [
                 KeyboardButton(text="⚙ Настройки авто"),

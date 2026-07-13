@@ -39,6 +39,7 @@ class PlatformTestService:
         "🚘 Onboarding Test": "dealer_onboarding",
         "🏭 Production Test": "production_readiness",
         "💱 Treasury Test": "automotive_treasury",
+        "🏦 Quote Authority Test": "dealer_quote_authority",
     }
 
     @staticmethod
@@ -278,6 +279,18 @@ class PlatformTestService:
                     f"parser: {result.get('parser', {}).get('ok')}\n"
                     f"equivalents: {result.get('equivalents', {}).get('ok')}\n"
                     f"no_fallback: {result.get('no_fallback', {}).get('ok')}"
+                )
+            elif module_key == "dealer_quote_authority":
+                from services.dealer_quote_authority_test import run_dealer_quote_authority_tests
+
+                result = run_dealer_quote_authority_tests()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"dealer_mid: {result.get('dealer_mid', {}).get('ok')}\n"
+                    f"dashboard: {result.get('dashboard', {}).get('ok')}\n"
+                    f"service: {result.get('service', {}).get('ok')}"
                 )
             else:
                 raise RuntimeError(f"unknown module {module_key}")

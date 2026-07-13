@@ -153,6 +153,16 @@ class AutomotiveTreasuryEngineV1:
 
         async with get_session() as session:
             repo = AutomotiveTreasuryRepository(session)
+            existing = await repo.get_active_sheet(tenant_id=tenant_id)
+            if (
+                existing is not None
+                and message_id
+                and existing.source_message_id is not None
+                and message_id <= existing.source_message_id
+            ):
+                await session.refresh(existing)
+                return AutomotiveTreasuryEngineV1._sheet_snapshot(existing)
+
             row = await repo.upsert_active_sheet(
                 tenant_id=tenant_id,
                 rates=rates,
@@ -185,13 +195,16 @@ class AutomotiveTreasuryEngineV1:
 
     @staticmethod
     def is_dealer_rates_channel(chat_id: int | str) -> bool:
-        if not DEALER_RATES_TELEGRAM_CHANNEL_ID:
+        from config import FOMA_RATES_TELEGRAM_CHANNEL_ID
+
+        configured = FOMA_RATES_TELEGRAM_CHANNEL_ID or DEALER_RATES_TELEGRAM_CHANNEL_ID
+        if not configured:
             return False
-        configured = str(DEALER_RATES_TELEGRAM_CHANNEL_ID).strip()
         chat = str(chat_id).strip()
-        if configured.startswith("@"):
+        cfg = str(configured).strip()
+        if cfg.startswith("@"):
             return False
-        return chat == configured or chat == configured.lstrip("-")
+        return chat == cfg or chat == cfg.lstrip("-")
 
     @staticmethod
     def _mid(buy: Decimal, sell: Decimal) -> Decimal:
