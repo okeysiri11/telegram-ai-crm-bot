@@ -18,6 +18,14 @@ from keyboards import (
     owner_main_menu,
 )
 from services.pg_car_engine import CarEngineError, CarEngineV1
+from services.vin_decoder import (
+    build_auction_reference,
+    build_history_event,
+    decode_vin,
+    validate_vin,
+)
+from database.session import get_session
+from repositories.vin_repository import VinRepository
 
 auto_vertical_router = Router()
 
@@ -208,14 +216,24 @@ async def auto_vertical_flow_handler(message: Message) -> None:
         return
 
     if step == "vin":
-        if len(text) < 5:
-            await message.answer("VIN слишком короткий. Введите корректный VIN:")
+        result = validate_vin(text)
+        if not result["is_valid"]:
+            await message.answer(
+                "❌ Некорректный VIN:\n"
+                + "\n".join(f"• {err}" for err in result["errors"])
+                + "\n\nВведите корректный VIN (17 символов):"
+            )
             return
-        data["vin"] = text.upper()
+        data["vin"] = result["vin"]
+        decoded = decode_vin(result["vin"])
+        data["decoded"] = decoded.get("decoded")
         flow["step"] = "make_model_year"
+        hint = ""
+        if decoded.get("decoded", {}).get("model_year"):
+            hint = f"\n\nПодсказка по VIN: год {decoded['decoded']['model_year']}"
         await message.answer(
             "Введите марку, модель и год через пробел:\n"
-            "Пример: Toyota Camry 2022"
+            "Пример: Toyota Camry 2022" + hint
         )
         return
 
@@ -277,6 +295,31 @@ async def auto_vertical_flow_handler(message: Message) -> None:
         except CarEngineError as exc:
             await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
             return
+
+        async with get_session() as session:
+            repo = VinRepository(session)
+            report = await repo.upsert_from_decoder(
+                data["vin"],
+                car_id=uuid.UUID(car["id"]),
+                created_by=user_id,
+            )
+            await repo.append_history(
+                data["vin"],
+                build_history_event(
+                    "car_created",
+                    source="telegram",
+                    description="Car added via Telegram Cars module",
+                    metadata={"car_id": car["id"]},
+                ),
+            )
+            if not report.auction_references:
+                await repo.add_auction_reference(
+                    data["vin"],
+                    build_auction_reference(
+                        "manual_intake",
+                        metadata={"channel": "telegram"},
+                    ),
+                )
 
         await message.answer(
             "✅ Автомобиль добавлен\n\n" + _format_car_card(car),
