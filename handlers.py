@@ -307,6 +307,7 @@ from dealer_onboarding_handlers import (
 from dealer_quote_authority_handlers import dealer_quote_authority_router
 from bidex_quote_handlers import bidex_quote_router
 from automotive_partner_handlers import automotive_partner_router
+from automotive_revenue_handlers import automotive_revenue_router
 
 router.include_router(deal_workflow_router)
 router.include_router(auto_vertical_router)
@@ -315,6 +316,7 @@ router.include_router(dealer_onboarding_router)
 router.include_router(dealer_quote_authority_router)
 router.include_router(bidex_quote_router)
 router.include_router(automotive_partner_router)
+router.include_router(automotive_revenue_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1
@@ -568,6 +570,7 @@ ADMIN_MENU_BUTTONS = {
     "🛡 Роли системы",
     "📋 Список пользователей",
     "📝 Журнал действий",
+    "💰 Revenue Dashboard",
     "⬅ Назад",
 }
 
@@ -2683,6 +2686,22 @@ async def admin_screen(message: Message):
             reply_markup=admin_module_menu(),
         )
         log_audit(user_id, "open", "admin", "audit")
+        return
+
+    if screen == "💰 Revenue Dashboard":
+        from services.pg_automotive_revenue_engine import AutomotiveRevenueEngineV1
+
+        try:
+            dashboard = await AutomotiveRevenueEngineV1.get_admin_dashboard()
+            text = AutomotiveRevenueEngineV1.format_admin_dashboard(dashboard)
+        except Exception as exc:
+            await message.answer(
+                f"💰 Revenue Dashboard\n\nUnable to load dashboard: {exc}",
+                reply_markup=admin_module_menu(),
+            )
+            return
+        await message.answer(text, reply_markup=admin_module_menu())
+        log_audit(user_id, "open", "admin", "revenue_dashboard")
         return
 
 

@@ -1405,6 +1405,9 @@ def admin_module_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="📝 Журнал действий"),
             ],
             [
+                KeyboardButton(text="💰 Revenue Dashboard"),
+            ],
+            [
                 KeyboardButton(text="⬅ Назад"),
             ],
         ],

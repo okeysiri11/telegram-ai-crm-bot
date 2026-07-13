@@ -9,6 +9,7 @@ from database.models.automotive_partner_integration import AutomotivePartnerType
 from database.models.lead_automation_engine import AutomationLeadSource
 from database.session import get_session
 from repositories.automotive_partner_repository import AutomotivePartnerRepository
+from services.pg_automotive_revenue_engine import AutomotiveRevenueEngineV1
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.tenant_context import TenantContextService
 
@@ -156,7 +157,7 @@ class AutomotivePartnerBrandingEngineV1:
         lead_notes = notes or f"Partner lead: {card['name']} ({card['partner_type']})"
         if cta_code:
             lead_notes += f" — CTA: {cta_code}"
-        return await LeadAutomationEngineV1.ingest_lead(
+        result = await LeadAutomationEngineV1.ingest_lead(
             source=AutomationLeadSource.TELEGRAM.value,
             customer_name=customer_name,
             phone=phone,
@@ -171,6 +172,19 @@ class AutomotivePartnerBrandingEngineV1:
             },
             external_reference=f"partner:{partner_code}:{actor_id}",
         )
+        if not result.get("duplicate_detected") and result.get("id"):
+            try:
+                result["revenue"] = await AutomotiveRevenueEngineV1.record_customer_action(
+                    partner_code=partner_code,
+                    lead_id=result["id"],
+                    actor_id=actor_id,
+                    source_id=f"partner:{partner_code}",
+                    customer_name=customer_name,
+                    payload={"cta_code": cta_code, "channel": "automotive_partner_branding_v1"},
+                )
+            except Exception as exc:
+                result["revenue_tracking_error"] = str(exc)
+        return result
 
     @staticmethod
     async def branding_health() -> dict[str, Any]:

@@ -43,6 +43,7 @@ class PlatformTestService:
         "📡 BidEx Parser Test": "bidex_quote_parser",
         "🤝 Partner Test": "automotive_partner",
         "🎨 Branding Test": "automotive_partner_branding",
+        "💰 Revenue Test": "automotive_revenue",
     }
 
     @staticmethod
@@ -330,6 +331,19 @@ class PlatformTestService:
                     f"labels: {result.get('labels', {}).get('ok')}\n"
                     f"card: {result.get('card', {}).get('ok')}\n"
                     f"logo: {result.get('logo', {}).get('ok')}"
+                )
+            elif module_key == "automotive_revenue":
+                from services.automotive_revenue_test import run_automotive_revenue_tests
+
+                result = run_automotive_revenue_tests()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"service_types: {result.get('service_types', {}).get('ok')}\n"
+                    f"commission: {result.get('commission', {}).get('ok')}\n"
+                    f"dashboard: {result.get('dashboard', {}).get('ok')}\n"
+                    f"modules: {result.get('modules', {}).get('ok')}"
                 )
             else:
                 raise RuntimeError(f"unknown module {module_key}")

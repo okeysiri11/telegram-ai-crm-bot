@@ -425,6 +425,34 @@ class PlatformReadinessTestSuite:
         return _result("partial", "subscription chain unclear")
 
     @staticmethod
+    def _check_automotive_revenue_engine() -> dict[str, Any]:
+        try:
+            from database.models.automotive_revenue_engine import REVENUE_SERVICE_TYPES
+            from services.pg_automotive_revenue_engine import AutomotiveRevenueEngineV1
+
+            required_services = {
+                "INSURANCE",
+                "CREDIT",
+                "LEASING",
+                "LOGISTICS",
+                "NOTARY",
+                "LEGAL",
+                "DEALER_REFERRAL",
+            }
+            checks = [
+                hasattr(AutomotiveRevenueEngineV1, "record_customer_action"),
+                hasattr(AutomotiveRevenueEngineV1, "get_admin_dashboard"),
+                hasattr(AutomotiveRevenueEngineV1, "LeadEngine"),
+                hasattr(AutomotiveRevenueEngineV1, "AnalyticsEngine"),
+                required_services.issubset(REVENUE_SERVICE_TYPES),
+            ]
+            if all(checks):
+                return _result("operational", "revenue engine + commission tracking")
+            return _result("partial", "revenue engine incomplete")
+        except Exception as exc:
+            return _result("failed", str(exc)[:80])
+
+    @staticmethod
     def _check_automotive_partner_branding() -> dict[str, Any]:
         try:
             from services.pg_automotive_partner_branding_engine import AutomotivePartnerBrandingEngineV1
@@ -586,6 +614,7 @@ class PlatformReadinessTestSuite:
             ("automotive_menu", "Automotive", cls._check_automotive_menu),
             ("automotive_partner_integration", "Automotive", cls._check_automotive_partner_integration),
             ("automotive_partner_branding", "Automotive", cls._check_automotive_partner_branding),
+            ("automotive_revenue_engine", "Automotive", cls._check_automotive_revenue_engine),
             ("add_car", "Automotive", cls._check_add_car),
             ("car_list", "Automotive", cls._check_car_list),
             ("search_car", "Automotive", cls._check_search_car),

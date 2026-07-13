@@ -21,6 +21,12 @@ class AutomotivePartnerRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
+    async def get_partner_by_id(self, partner_id: uuid.UUID) -> AutomotiveRegistryPartner | None:
+        result = await self._session.execute(
+            select(AutomotiveRegistryPartner).where(AutomotiveRegistryPartner.id == partner_id)
+        )
+        return result.scalar_one_or_none()
+
     async def get_partner_by_code(self, code: str) -> AutomotiveRegistryPartner | None:
         result = await self._session.execute(
             select(AutomotiveRegistryPartner).where(
