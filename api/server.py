@@ -21,6 +21,8 @@ from api.handlers import (
     communication_hub_handler,
     ai_conversation_skills_feature_handler,
     ai_conversation_skills_handler,
+    deal_pipeline_feature_handler,
+    deal_pipeline_handler,
     deals_create_handler,
     deals_list_handler,
     documents_create_handler,
@@ -124,6 +126,12 @@ def create_app() -> web.Application:
     app.router.add_get(
         "/v1/ai-conversation-skills/features/{feature}",
         ai_conversation_skills_feature_handler,
+    )
+
+    app.router.add_get("/v1/deal-pipeline", deal_pipeline_handler)
+    app.router.add_get(
+        "/v1/deal-pipeline/features/{feature}",
+        deal_pipeline_feature_handler,
     )
 
     return app

@@ -406,6 +406,34 @@ async def ai_conversation_skills_feature_handler(request: web.Request) -> web.Re
     return _json(data)
 
 
+@require_api_auth
+async def deal_pipeline_handler(request: web.Request) -> web.Response:
+    from services.pg_deal_pipeline_v1 import DealPipelineV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    pipeline = await DealPipelineV1.get_pipeline(_actor(request), tenant_id)
+    return _json(pipeline)
+
+
+@require_api_auth
+async def deal_pipeline_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_deal_pipeline_v1 import DealPipelineV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    feature = request.match_info["feature"]
+    deal_id_raw = request.query.get("deal_id")
+    deal_id = uuid.UUID(deal_id_raw) if deal_id_raw else None
+    data = await DealPipelineV1.get_feature(
+        _actor(request),
+        tenant_id,
+        feature,
+        deal_id=deal_id,
+        from_stage=request.query.get("from_stage"),
+        to_stage=request.query.get("to_stage"),
+    )
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -456,6 +484,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/communication-hub/features/{feature}",
             "/v1/ai-conversation-skills",
             "/v1/ai-conversation-skills/features/{feature}",
+            "/v1/deal-pipeline",
+            "/v1/deal-pipeline/features/{feature}",
             "/v1/auth/token",
         ],
     })
