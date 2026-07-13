@@ -7,7 +7,6 @@ from decimal import Decimal
 from typing import Any
 
 from services.pg_automotive_treasury_engine import AutomotiveTreasuryEngineV1
-from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1
 
 
 class DealerRateService:
@@ -18,6 +17,8 @@ class DealerRateService:
         *,
         tenant_id: uuid.UUID | None = None,
     ) -> dict[str, Any]:
+        from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1
+
         return await DealerQuoteAuthorityEngineV1.get_authoritative_quotes(tenant_id=tenant_id)
 
     @staticmethod
@@ -27,6 +28,8 @@ class DealerRateService:
         currency: str = "UAH",
         tenant_id: uuid.UUID | None = None,
     ) -> dict[str, str]:
+        from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1
+
         return await DealerQuoteAuthorityEngineV1.calculate_business_equivalents(
             amount,
             currency=currency,

@@ -10,7 +10,6 @@ from typing import Any
 import aiohttp
 
 from config import FOMA_RATES_TELEGRAM_CHANNEL_ID
-from services.bidex_telegram_quote_parser import SOURCE_AUTHORITY as BIDEX_SOURCE_AUTHORITY, OWNER_ID
 from database.models.dealer_quote_authority_engine import (
     AlertSeverity,
     QuotePair,
@@ -22,20 +21,18 @@ from repositories.dealer_quote_authority_repository import (
     QuoteDeviationRepository,
     ReferenceMarketQuoteRepository,
 )
+from services.dealer_quote_constants import (
+    BIDEX_SOURCE_AUTHORITY,
+    DEFAULT_DEVIATION_CRITICAL_PCT,
+    DEFAULT_DEVIATION_WARNING_PCT,
+    FOMA_SOURCE_AUTHORITY,
+    PAIR_DEALER_FIELDS,
+)
 from services.market_reference_connectors import REFERENCE_FETCHERS, ReferenceConnectorError
 from services.pg_automotive_treasury_engine import (
     AutomotiveTreasuryEngineError,
     AutomotiveTreasuryEngineV1,
 )
-
-DEFAULT_DEVIATION_WARNING_PCT = Decimal("1.5")
-DEFAULT_DEVIATION_CRITICAL_PCT = Decimal("3.0")
-
-PAIR_DEALER_FIELDS = {
-    QuotePair.USD_UAH.value: ("USD_BUY", "USD_SELL"),
-    QuotePair.EUR_UAH.value: ("EUR_BUY", "EUR_SELL"),
-    QuotePair.USDT_UAH.value: ("USDT_BUY", "USDT_SELL"),
-}
 
 
 class DealerQuoteAuthorityEngineError(Exception):
@@ -82,7 +79,7 @@ class DealerQuoteAuthorityEngineV1:
         )
         await DealerQuoteAuthorityEngineV1.refresh_reference_sources()
         await DealerQuoteAuthorityEngineV1.calculate_deviations(tenant_id=tenant_id)
-        sheet["authority"] = "foma_rates_telegram"
+        sheet["authority"] = FOMA_SOURCE_AUTHORITY
         return sheet
 
     @staticmethod
@@ -276,7 +273,7 @@ class DealerQuoteAuthorityEngineV1:
                     )
 
         return {
-            "authority": "foma_rates_telegram",
+            "authority": FOMA_SOURCE_AUTHORITY,
             "dealer_quotes": sheet,
             "spread_analysis": spread_analysis,
             "recent_deviations": latest_devs[:20],

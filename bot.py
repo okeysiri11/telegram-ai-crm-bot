@@ -21,8 +21,14 @@ dp.include_router(router)
 async def main() -> None:
     from api.server import start_api_server
     from database.session import shutdown_db
+    from services.bidex_telegram_quote_parser import configure_bidex_parser
+    from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1
     from services.pg_scheduler_engine import get_default_worker
     from services.pg_webhook_engine import WebhookEngineV1
+
+    configure_bidex_parser(DealerQuoteAuthorityEngineV1)
+    logger.info("Dealer quote engine initialized")
+    logger.info("BidEx parser initialized")
 
     WebhookEngineV1.register_event_handlers()
     scheduler = get_default_worker()

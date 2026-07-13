@@ -6,18 +6,19 @@ import re
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
-from typing import Any
+from typing import Any, Protocol
 
 from config import BIDEX_TELEGRAM_CHANNEL_ID, BIDEX_TELEGRAM_CHANNEL_USERNAME
 from database.models.audit_log import AuditAction
 from database.session import get_session
 from repositories.audit_repository import AuditRepository
 from repositories.automotive_treasury_repository import AutomotiveTreasuryRepository
+from services.dealer_quote_constants import (
+    BIDEX_RATES_TAG,
+    BIDEX_SOURCE_AUTHORITY,
+    SOURCE_AUTHORITY,
+)
 from services.pg_automotive_treasury_engine import AutomotiveTreasuryEngineV1
-from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1
-
-BIDEX_RATES_TAG = "#BIDEX_RATES"
-SOURCE_AUTHORITY = "bidex_odesa_telegram"
 
 USD_UAH_PATTERN = re.compile(
     r"USD\s*/\s*UAH\s*:?\s*([\d]+(?:[.,]\d+)?)\s*/\s*([\d]+(?:[.,]\d+)?)",
@@ -49,12 +50,30 @@ _parser_health: dict[str, Any] = {
     "quotes_active": False,
 }
 
+_configured_parser: "BidExTelegramQuoteParserV1 | None" = None
+
+
+class QuoteAuthorityService(Protocol):
+    @staticmethod
+    async def refresh_reference_sources(*, sources: list[str] | None = None) -> dict[str, Any]: ...
+
+    @staticmethod
+    async def calculate_deviations(
+        *,
+        tenant_id: uuid.UUID | None = None,
+        warning_pct: Decimal | None = None,
+        critical_pct: Decimal | None = None,
+    ) -> dict[str, Any]: ...
+
 
 class BidExQuoteParserError(Exception):
     pass
 
 
 class BidExTelegramQuoteParserV1:
+    def __init__(self, authority_service: QuoteAuthorityService | None = None) -> None:
+        self._authority_service = authority_service
+
     @staticmethod
     def _now() -> datetime:
         return datetime.now(timezone.utc)
@@ -170,7 +189,7 @@ class BidExTelegramQuoteParserV1:
         if refresh_quotes:
             try:
                 sheet = await AutomotiveTreasuryEngineV1.get_active_rates()
-                quotes_active = sheet.get("source_authority") == SOURCE_AUTHORITY
+                quotes_active = sheet.get("source_authority") == BIDEX_SOURCE_AUTHORITY
                 last_sheet_at = sheet.get("source_updated_at")
             except Exception:
                 quotes_active = False
@@ -202,8 +221,8 @@ class BidExTelegramQuoteParserV1:
         BidExTelegramQuoteParserV1._update_health(status=status, quotes_active=quotes_active)
         return {"status": status, **payload}
 
-    @staticmethod
-    async def ingest_channel_message(
+    async def _ingest_channel_message(
+        self,
         text: str,
         *,
         channel_id: str | int,
@@ -235,7 +254,7 @@ class BidExTelegramQuoteParserV1:
                 and message_id
                 and existing.source_message_id is not None
                 and message_id <= existing.source_message_id
-                and existing.source_authority == SOURCE_AUTHORITY
+                and existing.source_authority == BIDEX_SOURCE_AUTHORITY
             ):
                 await session.refresh(existing)
                 return AutomotiveTreasuryEngineV1._sheet_snapshot(existing)
@@ -248,7 +267,7 @@ class BidExTelegramQuoteParserV1:
                 source_message_id=message_id,
                 source_text=text,
                 updated_by_user_id=updated_by_user_id,
-                source_authority=SOURCE_AUTHORITY,
+                source_authority=BIDEX_SOURCE_AUTHORITY,
                 eurusd_buy=parsed["eurusd_buy"],
                 eurusd_sell=parsed["eurusd_sell"],
                 usdt_buy_markup_percent=parsed["usdt_buy_markup_percent"],
@@ -265,7 +284,7 @@ class BidExTelegramQuoteParserV1:
                 "usdt_sell_markup_percent": str(parsed["usdt_sell_markup_percent"]),
                 "USDT_BUY": str(parsed["USDT_BUY"]),
                 "USDT_SELL": str(parsed["USDT_SELL"]),
-                "source_authority": SOURCE_AUTHORITY,
+                "source_authority": BIDEX_SOURCE_AUTHORITY,
             }
             await repo.record_history(
                 tenant_id=tenant_id,
@@ -288,11 +307,12 @@ class BidExTelegramQuoteParserV1:
             await session.refresh(row)
             sheet = AutomotiveTreasuryEngineV1._sheet_snapshot(row)
 
-        try:
-            await DealerQuoteAuthorityEngineV1.refresh_reference_sources()
-            await DealerQuoteAuthorityEngineV1.calculate_deviations(tenant_id=tenant_id)
-        except Exception:
-            pass
+        if self._authority_service is not None:
+            try:
+                await self._authority_service.refresh_reference_sources()
+                await self._authority_service.calculate_deviations(tenant_id=tenant_id)
+            except Exception:
+                pass
 
         BidExTelegramQuoteParserV1._update_health(
             status="healthy",
@@ -301,5 +321,38 @@ class BidExTelegramQuoteParserV1:
             quotes_active=True,
             success=True,
         )
-        sheet["authority"] = SOURCE_AUTHORITY
+        sheet["authority"] = BIDEX_SOURCE_AUTHORITY
         return sheet
+
+    @classmethod
+    async def ingest_channel_message(
+        cls,
+        text: str,
+        *,
+        channel_id: str | int,
+        message_id: int,
+        tenant_id: uuid.UUID | None = None,
+        updated_by_user_id: int | None = None,
+    ) -> dict[str, Any] | None:
+        return await get_bidex_parser()._ingest_channel_message(
+            text,
+            channel_id=channel_id,
+            message_id=message_id,
+            tenant_id=tenant_id,
+            updated_by_user_id=updated_by_user_id,
+        )
+
+
+def configure_bidex_parser(
+    authority_service: QuoteAuthorityService | None = None,
+) -> BidExTelegramQuoteParserV1:
+    global _configured_parser
+    _configured_parser = BidExTelegramQuoteParserV1(authority_service=authority_service)
+    return _configured_parser
+
+
+def get_bidex_parser() -> BidExTelegramQuoteParserV1:
+    global _configured_parser
+    if _configured_parser is None:
+        _configured_parser = BidExTelegramQuoteParserV1()
+    return _configured_parser
