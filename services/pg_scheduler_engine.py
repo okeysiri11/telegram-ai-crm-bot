@@ -79,6 +79,13 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "schedule_type": JobScheduleType.INTERVAL.value,
         "interval_seconds": 60,
     },
+    {
+        "job_key": "marketing_automation.process",
+        "name": "Marketing Automation Cycle",
+        "description": "Process scheduled posts, repost rules, watermarks, and hashtags",
+        "schedule_type": JobScheduleType.INTERVAL.value,
+        "interval_seconds": 60,
+    },
 )
 
 _defaults_seeded = False
@@ -215,6 +222,17 @@ class SchedulerEngineV1:
         return await AutoMarketingEngineV1.process_due_publications(limit=limit)
 
     @staticmethod
+    async def _run_marketing_automation_process(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.pg_marketing_automation_engine import MarketingAutomationEngineV1
+
+        post_limit = int((config or {}).get("post_limit", 20))
+        repost_limit = int((config or {}).get("repost_limit", 10))
+        return await MarketingAutomationEngineV1.run_automation_cycle(
+            post_limit=post_limit,
+            repost_limit=repost_limit,
+        )
+
+    @staticmethod
     def job_handlers() -> dict[str, JobHandler]:
         return {
             "nightly.reconciliation": SchedulerEngineV1._run_nightly_reconciliation,
@@ -223,6 +241,7 @@ class SchedulerEngineV1:
             "liquidity.calculation": SchedulerEngineV1._run_liquidity_calculation,
             "inventory.aging": SchedulerEngineV1._run_inventory_aging,
             "marketing.publish_queue": SchedulerEngineV1._run_marketing_publish_queue,
+            "marketing_automation.process": SchedulerEngineV1._run_marketing_automation_process,
         }
 
     @staticmethod
