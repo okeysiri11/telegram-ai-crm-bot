@@ -297,11 +297,14 @@ router = Router()
 
 from deal_workflow_handlers import deal_workflow_router
 from auto_vertical_handlers import auto_vertical_router
+from ai_sales_handlers import ai_sales_router, sales_assistant_active
 
 router.include_router(deal_workflow_router)
 router.include_router(auto_vertical_router)
+router.include_router(ai_sales_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
+from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1
 
 logger = logging.getLogger(__name__)
 
@@ -848,13 +851,29 @@ async def cmd_start(message: Message) -> None:
         except Exception:
             logger.exception("Lead automation ingest failed for user %s", user_id)
 
-    await message.answer(
-        f"Ваш Telegram ID: {user_id}"
-    )
+        sales_assistant_active.add(user_id)
+        try:
+            await AiSalesAssistantEngineV1.start_session(
+                telegram_user_id=user_id,
+                username=user.username,
+                first_name=user.first_name,
+                last_name=user.last_name,
+            )
+        except Exception:
+            logger.exception("AI Sales Assistant start failed for user %s", user_id)
+
+    await message.answer(f"Ваш Telegram ID: {user_id}")
+
+    if user_id in sales_assistant_active:
+        await message.answer(
+            "🤖 AI Sales Assistant\n\n"
+            "Задайте вопрос об автомобилях, финансировании или напишите «менеджер»."
+        )
+        return
 
     await message.answer(
         "Добро пожаловать в систему управления.",
-        reply_markup=owner_main_menu()
+        reply_markup=owner_main_menu(),
     )
 
 @router.message(F.text == "💰 Crypto OTC")
