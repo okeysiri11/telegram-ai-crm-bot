@@ -301,6 +301,25 @@ async def ai_procurement_agent_feature_handler(request: web.Request) -> web.Resp
     return _json(data)
 
 
+@require_api_auth
+async def ai_advertising_agent_handler(request: web.Request) -> web.Response:
+    from services.pg_ai_advertising_agent_v1 import AdvertisingAgentV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    agent = await AdvertisingAgentV1.get_agent(_actor(request), tenant_id)
+    return _json(agent)
+
+
+@require_api_auth
+async def ai_advertising_agent_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_ai_advertising_agent_v1 import AdvertisingAgentV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    feature = request.match_info["feature"]
+    data = await AdvertisingAgentV1.get_feature(_actor(request), tenant_id, feature)
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -341,6 +360,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/lead-marketplace/features/{feature}",
             "/v1/ai-procurement-agent",
             "/v1/ai-procurement-agent/features/{feature}",
+            "/v1/ai-advertising-agent",
+            "/v1/ai-advertising-agent/features/{feature}",
             "/v1/auth/token",
         ],
     })

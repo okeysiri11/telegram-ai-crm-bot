@@ -809,6 +809,163 @@ class AiAdvertisingAgentV1:
             return [AiAdvertisingAgentV1._action_snapshot(r) for r in rows]
 
     @staticmethod
+    def list_platforms() -> list[dict[str, str]]:
+        return [
+            {"code": ch.value, "label": ch.value.title()}
+            for ch in AdvertisingChannel
+        ]
+
+    @staticmethod
+    async def optimize_campaign(
+        actor_id: int,
+        tenant_id: uuid.UUID,
+        campaign_id: uuid.UUID,
+    ) -> dict[str, Any]:
+        ctx = await AiAdvertisingAgentV1._require_access(actor_id, tenant_id)
+        bids = await AiAdvertisingAgentV1.optimize_bids(actor_id, tenant_id, campaign_id)
+        monitor = await AiAdvertisingAgentV1.monitor_campaign(actor_id, tenant_id, campaign_id)
+
+        performance = monitor["action"]["result"]
+        recommendations: list[str] = []
+        for alert in performance.get("alerts", []):
+            recommendations.append(alert)
+        if performance.get("health") == "HEALTHY":
+            recommendations.append("Campaign performing well — consider scaling budget on top channels.")
+
+        result = {
+            "bid_optimization": bids["action"]["result"],
+            "performance": performance,
+            "recommendations": recommendations,
+        }
+
+        async with get_session() as session:
+            campaign = await AiAdvertisingAgentV1._get_campaign_or_raise(
+                session, campaign_id, tenant_id
+            )
+            action = await AiAdvertisingAgentV1._log_action(
+                session,
+                campaign=campaign,
+                action_type=AdvertisingActionType.CAMPAIGN_OPTIMIZATION.value,
+                input_context={"campaign_id": str(campaign_id)},
+                result=result,
+                confidence=0.85,
+                summary=f"Campaign optimization: {performance.get('health', 'UNKNOWN')}",
+                actor_id=actor_id,
+            )
+            await AuditRepository(session).create_log(
+                user_id=actor_id,
+                company_id=ctx.company_id,
+                tenant_id=tenant_id,
+                entity_type="ai_advertising_campaign",
+                entity_id=str(campaign_id),
+                action=AuditAction.UPDATE.value,
+                new_value={"campaign_optimization": True},
+            )
+
+        return {
+            "campaign": monitor["campaign"],
+            "action": action,
+            "optimization": result,
+        }
+
+    @staticmethod
+    async def track_roi(
+        actor_id: int,
+        tenant_id: uuid.UUID,
+        campaign_id: uuid.UUID | None = None,
+    ) -> dict[str, Any]:
+        ctx = await AiAdvertisingAgentV1._require_access(actor_id, tenant_id)
+
+        async with get_session() as session:
+            if campaign_id is not None:
+                campaigns = [
+                    await AiAdvertisingAgentV1._get_campaign_or_raise(
+                        session, campaign_id, tenant_id
+                    )
+                ]
+            else:
+                campaigns = await AdvertisingAgentCampaignRepository(session).list_by_tenant(
+                    tenant_id, limit=50
+                )
+
+            tracking: list[dict[str, Any]] = []
+            total_spent = Decimal("0")
+            total_conversions = 0
+
+            for campaign in campaigns:
+                metrics = campaign.performance_metrics or {}
+                totals = metrics.get("totals", {})
+                spend = Decimal(str(totals.get("spend", campaign.budget_spent or 0)))
+                conversions = int(totals.get("conversions", 0))
+                total_spent += spend
+                total_conversions += conversions
+
+                revenue_est = Decimal(str(conversions)) * Decimal("150")
+                roi = (
+                    AiAdvertisingAgentV1._quantize(
+                        (revenue_est - spend) / spend * Decimal("100")
+                    )
+                    if spend > 0
+                    else Decimal("0")
+                )
+
+                tracking.append({
+                    "campaign_id": str(campaign.id),
+                    "name": campaign.name,
+                    "spend": str(spend),
+                    "conversions": conversions,
+                    "estimated_revenue": str(revenue_est),
+                    "roi_percent": str(roi),
+                    "health": metrics.get("health"),
+                })
+
+            aggregate_roi = (
+                AiAdvertisingAgentV1._quantize(
+                    (Decimal(str(total_conversions * 150)) - total_spent) / total_spent * Decimal("100")
+                )
+                if total_spent > 0
+                else Decimal("0")
+            )
+
+            result = {
+                "campaigns": tracking,
+                "aggregate": {
+                    "total_spent": str(AiAdvertisingAgentV1._quantize(total_spent)),
+                    "total_conversions": total_conversions,
+                    "roi_percent": str(aggregate_roi),
+                },
+                "platforms": AiAdvertisingAgentV1.list_platforms(),
+            }
+
+            if campaign_id is not None:
+                campaign = campaigns[0]
+                action = await AiAdvertisingAgentV1._log_action(
+                    session,
+                    campaign=campaign,
+                    action_type=AdvertisingActionType.ROI_TRACKING.value,
+                    input_context={"campaign_id": str(campaign_id)},
+                    result=result,
+                    confidence=0.88,
+                    summary=f"ROI tracking: {aggregate_roi}%",
+                    actor_id=actor_id,
+                )
+            else:
+                action = None
+
+            if action:
+                await AuditRepository(session).create_log(
+                    user_id=actor_id,
+                    company_id=ctx.company_id,
+                    tenant_id=tenant_id,
+                    entity_type="ai_advertising_campaign",
+                    entity_id=str(campaign_id),
+                    action=AuditAction.STATUS_CHANGE.value,
+                    new_value={"roi_tracking": result["aggregate"]},
+                )
+
+            return {"action": action, **result}
+
+    @staticmethod
     async def _optional_ai_ad_copy(
         *,
         campaign_name: str,
