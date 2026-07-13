@@ -384,6 +384,28 @@ async def communication_hub_feature_handler(request: web.Request) -> web.Respons
     return _json(data)
 
 
+@require_api_auth
+async def ai_conversation_skills_handler(request: web.Request) -> web.Response:
+    from services.pg_ai_conversation_skills_v1 import AiConversationSkillsV1Product
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    engine = await AiConversationSkillsV1Product.get_engine(_actor(request), tenant_id)
+    return _json(engine)
+
+
+@require_api_auth
+async def ai_conversation_skills_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_ai_conversation_skills_v1 import AiConversationSkillsV1Product
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    feature = request.match_info["feature"]
+    session_ref = request.query.get("session_ref", "demo-session")
+    data = await AiConversationSkillsV1Product.get_feature(
+        _actor(request), tenant_id, feature, session_ref=session_ref
+    )
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -432,6 +454,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/recommendation-engine/features/{feature}",
             "/v1/communication-hub",
             "/v1/communication-hub/features/{feature}",
+            "/v1/ai-conversation-skills",
+            "/v1/ai-conversation-skills/features/{feature}",
             "/v1/auth/token",
         ],
     })

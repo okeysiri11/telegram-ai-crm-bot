@@ -19,6 +19,8 @@ from api.handlers import (
     recommendation_engine_handler,
     communication_hub_feature_handler,
     communication_hub_handler,
+    ai_conversation_skills_feature_handler,
+    ai_conversation_skills_handler,
     deals_create_handler,
     deals_list_handler,
     documents_create_handler,
@@ -116,6 +118,12 @@ def create_app() -> web.Application:
     app.router.add_get(
         "/v1/communication-hub/features/{feature}",
         communication_hub_feature_handler,
+    )
+
+    app.router.add_get("/v1/ai-conversation-skills", ai_conversation_skills_handler)
+    app.router.add_get(
+        "/v1/ai-conversation-skills/features/{feature}",
+        ai_conversation_skills_feature_handler,
     )
 
     return app
