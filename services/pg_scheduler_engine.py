@@ -86,6 +86,13 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "schedule_type": JobScheduleType.INTERVAL.value,
         "interval_seconds": 60,
     },
+    {
+        "job_key": "sales_pipeline_automation.process",
+        "name": "Sales Pipeline Automation",
+        "description": "Sync leads, send reminders, and check inactivity alerts",
+        "schedule_type": JobScheduleType.INTERVAL.value,
+        "interval_seconds": 300,
+    },
 )
 
 _defaults_seeded = False
@@ -233,6 +240,17 @@ class SchedulerEngineV1:
         )
 
     @staticmethod
+    async def _run_sales_pipeline_automation(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.pg_sales_pipeline_automation_engine import SalesPipelineAutomationEngineV1
+
+        reminder_limit = int((config or {}).get("reminder_limit", 50))
+        inactive_days = int((config or {}).get("inactive_days", 3))
+        return await SalesPipelineAutomationEngineV1.run_automation_cycle(
+            reminder_limit=reminder_limit,
+            inactive_days=inactive_days,
+        )
+
+    @staticmethod
     def job_handlers() -> dict[str, JobHandler]:
         return {
             "nightly.reconciliation": SchedulerEngineV1._run_nightly_reconciliation,
@@ -242,6 +260,7 @@ class SchedulerEngineV1:
             "inventory.aging": SchedulerEngineV1._run_inventory_aging,
             "marketing.publish_queue": SchedulerEngineV1._run_marketing_publish_queue,
             "marketing_automation.process": SchedulerEngineV1._run_marketing_automation_process,
+            "sales_pipeline_automation.process": SchedulerEngineV1._run_sales_pipeline_automation,
         }
 
     @staticmethod
