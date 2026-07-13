@@ -25,7 +25,9 @@ from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKe
 class AutomotivePartnerType(str, enum.Enum):
     INSURANCE = "INSURANCE"
     DEALER = "DEALER"
+    CREDIT = "CREDIT"
     LEASING = "LEASING"
+    LOGISTICS = "LOGISTICS"
     DELIVERY = "DELIVERY"
     LEGAL = "LEGAL"
 
@@ -154,3 +156,57 @@ class AutomotiveInsuranceOffer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     def __repr__(self) -> str:
         return f"<AutomotiveInsuranceOffer title={self.title} product={self.product_id}>"
+
+
+class AutomotivePartnerBranding(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Partner branding card — logo, description, display settings."""
+
+    __tablename__ = "automotive_partner_v1_branding"
+    __table_args__ = (
+        UniqueConstraint("partner_id", name="uq_automotive_partner_v1_branding_partner"),
+        Index("ix_automotive_partner_v1_branding_active", "is_active"),
+    )
+
+    partner_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("automotive_partner_v1_partners.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    card_title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    short_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    logo_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
+    logo_file_id: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    logo_emoji: Mapped[str | None] = mapped_column(String(16), nullable=True)
+    logo_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    sort_order: Mapped[int] = mapped_column(default=0, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    payload: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    def __repr__(self) -> str:
+        return f"<AutomotivePartnerBranding partner={self.partner_id}>"
+
+
+class AutomotivePartnerCta(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """Partner call-to-action button."""
+
+    __tablename__ = "automotive_partner_v1_cta_buttons"
+    __table_args__ = (
+        UniqueConstraint("partner_id", "cta_code", name="uq_automotive_partner_v1_cta_code"),
+        Index("ix_automotive_partner_v1_cta_partner", "partner_id"),
+        Index("ix_automotive_partner_v1_cta_active", "is_active"),
+    )
+
+    partner_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("automotive_partner_v1_partners.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    cta_code: Mapped[str] = mapped_column(String(64), nullable=False)
+    label: Mapped[str] = mapped_column(String(128), nullable=False)
+    action_type: Mapped[str] = mapped_column(String(32), nullable=False)
+    action_value: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    sort_order: Mapped[int] = mapped_column(default=0, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    def __repr__(self) -> str:
+        return f"<AutomotivePartnerCta code={self.cta_code} partner={self.partner_id}>"

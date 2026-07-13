@@ -1474,16 +1474,18 @@ AUTO_VERTICAL_MAIN_BUTTON = "🚗 Авто"
 AUTO_VERTICAL_HUB_BUTTON = "🚗 Auto"
 AUTO_VERTICAL_CARS_BUTTON = "🚘 Cars"
 AUTO_VERTICAL_INSURANCE_BUTTON = "🛡 Insurance"
+AUTO_VERTICAL_CREDIT_BUTTON = "🏦 Credit"
 AUTO_VERTICAL_LEASING_BUTTON = "💳 Leasing"
-AUTO_VERTICAL_DELIVERY_BUTTON = "🚚 Delivery"
-AUTO_VERTICAL_LEGAL_BUTTON = "⚖ Legal Support"
+AUTO_VERTICAL_LOGISTICS_BUTTON = "🚚 Logistics"
+AUTO_VERTICAL_LEGAL_BUTTON = "⚖ Legal"
 
 AUTO_VERTICAL_HUB_BUTTONS = frozenset({
     AUTO_VERTICAL_HUB_BUTTON,
     AUTO_VERTICAL_CARS_BUTTON,
     AUTO_VERTICAL_INSURANCE_BUTTON,
+    AUTO_VERTICAL_CREDIT_BUTTON,
     AUTO_VERTICAL_LEASING_BUTTON,
-    AUTO_VERTICAL_DELIVERY_BUTTON,
+    AUTO_VERTICAL_LOGISTICS_BUTTON,
     AUTO_VERTICAL_LEGAL_BUTTON,
     "⬅ Назад",
 })
@@ -1525,16 +1527,46 @@ def auto_vertical_hub_menu() -> ReplyKeyboardMarkup:
             [KeyboardButton(text=AUTO_VERTICAL_CARS_BUTTON)],
             [
                 KeyboardButton(text=AUTO_VERTICAL_INSURANCE_BUTTON),
-                KeyboardButton(text=AUTO_VERTICAL_LEASING_BUTTON),
+                KeyboardButton(text=AUTO_VERTICAL_CREDIT_BUTTON),
             ],
             [
-                KeyboardButton(text=AUTO_VERTICAL_DELIVERY_BUTTON),
-                KeyboardButton(text=AUTO_VERTICAL_LEGAL_BUTTON),
+                KeyboardButton(text=AUTO_VERTICAL_LEASING_BUTTON),
+                KeyboardButton(text=AUTO_VERTICAL_LOGISTICS_BUTTON),
             ],
+            [KeyboardButton(text=AUTO_VERTICAL_LEGAL_BUTTON)],
             [KeyboardButton(text="⬅ Назад")],
         ],
         resize_keyboard=True,
     )
+
+
+def auto_partner_cards_inline(cards: list[dict], *, category: str) -> InlineKeyboardMarkup:
+    rows = []
+    for card in cards:
+        code = card.get("code", "partner")
+        emoji = (card.get("branding") or {}).get("logo_emoji") or "🤝"
+        name = card.get("name", code)
+        rows.append([
+            InlineKeyboardButton(
+                text=f"{emoji} {name}",
+                callback_data=f"partner:card:{category}:{code}",
+            )
+        ])
+    rows.append([InlineKeyboardButton(text="⬅ Back", callback_data=f"partner:back:{category}")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def auto_partner_cta_inline(partner_code: str, ctas: list[dict]) -> InlineKeyboardMarkup:
+    rows = []
+    for cta in ctas:
+        rows.append([
+            InlineKeyboardButton(
+                text=cta.get("label", "Action"),
+                callback_data=f"partner:cta:{partner_code}:{cta.get('cta_code')}",
+            )
+        ])
+    rows.append([InlineKeyboardButton(text="⬅ Back to partners", callback_data="partner:hub")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def auto_insurance_products_inline(products: list[dict]) -> InlineKeyboardMarkup:

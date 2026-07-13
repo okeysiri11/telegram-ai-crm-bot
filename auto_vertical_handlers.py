@@ -14,11 +14,12 @@ from database import log_audit
 from keyboards import (
     AUTO_VERTICAL_ALL_BUTTONS,
     AUTO_VERTICAL_CARS_BUTTON,
-    AUTO_VERTICAL_DELIVERY_BUTTON,
+    AUTO_VERTICAL_CREDIT_BUTTON,
     AUTO_VERTICAL_HUB_BUTTONS,
     AUTO_VERTICAL_INSURANCE_BUTTON,
     AUTO_VERTICAL_LEGAL_BUTTON,
     AUTO_VERTICAL_LEASING_BUTTON,
+    AUTO_VERTICAL_LOGISTICS_BUTTON,
     AUTO_VERTICAL_LEGACY_BUTTONS,
     AUTO_VERTICAL_MAIN_BUTTON,
     AUTO_VERTICAL_MENU_BUTTONS,
@@ -26,7 +27,6 @@ from keyboards import (
     auto_billing_payment_inline,
     auto_billing_plans_inline,
     auto_billing_pricing_inline,
-    auto_insurance_products_inline,
     auto_vertical_actions_inline,
     auto_vertical_car_list_inline,
     auto_vertical_hub_menu,
@@ -42,6 +42,8 @@ from services.pg_auto_marketing_engine import AutoMarketingEngineError, AutoMark
 from services.pg_car_engine import CarEngineError, CarEngineV1
 from services.dealer_rate_service import DealerRateService
 from services.pg_automotive_partner_integration_engine import AutomotivePartnerIntegrationEngineV1
+from automotive_partner_handlers import HUB_BUTTON_TO_CATEGORY, show_partner_category
+from database.models.automotive_partner_integration import AutomotivePartnerType
 from services.pg_commercial_billing_engine import (
     CommercialBillingEngineError,
     CommercialBillingEngineV1,
@@ -345,7 +347,7 @@ async def _open_auto_hub(message: Message, user_id: int) -> None:
     auto_vertical_section[user_id] = "hub"
     await message.answer(
         "🚗 Auto\n\n"
-        "Cars, insurance, leasing, delivery, and legal support.\n\n"
+        "Cars, insurance, credit, leasing, logistics, and legal support.\n\n"
         "Choose a section:",
         reply_markup=auto_vertical_hub_menu(),
     )
@@ -366,21 +368,15 @@ async def _open_cars_section(message: Message, user_id: int) -> None:
 
 async def _show_insurance(message: Message, user_id: int) -> None:
     auto_vertical_section[user_id] = "insurance"
-    partner = await AutomotivePartnerIntegrationEngineV1.get_insurance_partner()
-    products = await AutomotivePartnerIntegrationEngineV1.list_insurance_products(actor_id=user_id)
-    text = AutomotivePartnerIntegrationEngineV1.format_insurance_menu_text(partner, products)
-    await message.answer(text, reply_markup=auto_vertical_hub_menu())
-    await message.answer(
-        "Insurance products:",
-        reply_markup=auto_insurance_products_inline(products),
-    )
+    await show_partner_category(message, user_id, AutomotivePartnerType.INSURANCE.value)
 
 
-async def _show_partner_stub(message: Message, title: str, description: str) -> None:
-    await message.answer(
-        f"{title}\n\n{description}\n\nPartner integrations coming soon.",
-        reply_markup=auto_vertical_hub_menu(),
-    )
+async def _show_partner_category(message: Message, user_id: int, screen: str) -> None:
+    category = HUB_BUTTON_TO_CATEGORY.get(screen)
+    if not category:
+        return
+    auto_vertical_section[user_id] = category.lower()
+    await show_partner_category(message, user_id, category)
 
 
 async def _notify_owner_payment(bot: Bot, payment: dict, user_id: int) -> None:
@@ -460,28 +456,11 @@ async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: s
             await message.answer(f"🛡 Insurance\n\n{exc}", reply_markup=auto_vertical_hub_menu())
         return
 
-    if screen == AUTO_VERTICAL_LEASING_BUTTON:
-        await _show_partner_stub(
-            message,
-            "💳 Leasing",
-            "Leasing partners and payment plans will appear here.",
-        )
-        return
-
-    if screen == AUTO_VERTICAL_DELIVERY_BUTTON:
-        await _show_partner_stub(
-            message,
-            "🚚 Delivery",
-            "Vehicle delivery partners and tracking will appear here.",
-        )
-        return
-
-    if screen == AUTO_VERTICAL_LEGAL_BUTTON:
-        await _show_partner_stub(
-            message,
-            "⚖ Legal Support",
-            "Legal support partners for automotive deals will appear here.",
-        )
+    if screen in HUB_BUTTON_TO_CATEGORY:
+        try:
+            await _show_partner_category(message, user_id, screen)
+        except Exception as exc:
+            await message.answer(f"{screen}\n\n{exc}", reply_markup=auto_vertical_hub_menu())
         return
 
     if screen == "🚗 Добавить авто":

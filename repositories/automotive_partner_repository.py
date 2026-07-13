@@ -10,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models.automotive_partner_integration import (
     AutomotiveDealerSource,
     AutomotiveInsuranceOffer,
+    AutomotivePartnerBranding,
+    AutomotivePartnerCta,
     AutomotivePartnerProduct,
     AutomotiveRegistryPartner,
 )
@@ -134,3 +136,23 @@ class AutomotivePartnerRepository:
         stmt = stmt.order_by(AutomotiveInsuranceOffer.created_at.desc()).limit(1)
         result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
+
+    async def get_branding(self, partner_id: uuid.UUID) -> AutomotivePartnerBranding | None:
+        result = await self._session.execute(
+            select(AutomotivePartnerBranding).where(
+                AutomotivePartnerBranding.partner_id == partner_id,
+                AutomotivePartnerBranding.is_active.is_(True),
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def list_ctas(self, partner_id: uuid.UUID) -> list[AutomotivePartnerCta]:
+        result = await self._session.execute(
+            select(AutomotivePartnerCta)
+            .where(
+                AutomotivePartnerCta.partner_id == partner_id,
+                AutomotivePartnerCta.is_active.is_(True),
+            )
+            .order_by(AutomotivePartnerCta.sort_order, AutomotivePartnerCta.label)
+        )
+        return list(result.scalars().all())

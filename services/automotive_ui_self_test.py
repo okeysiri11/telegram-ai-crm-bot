@@ -31,7 +31,7 @@ def run_automotive_ui_self_test() -> dict:
             "detail": AUTO_VERTICAL_MAIN_BUTTON,
         }
         checks["automotive_hub_items"] = {
-            "ok": AUTO_VERTICAL_HUB_BUTTONS.issubset(hub_texts),
+            "ok": AUTO_VERTICAL_HUB_BUTTONS.issubset(hub_texts) and "🏦 Credit" in hub_texts,
             "detail": f"{len(hub_texts)} hub items",
         }
         checks["automotive_menu_items"] = {

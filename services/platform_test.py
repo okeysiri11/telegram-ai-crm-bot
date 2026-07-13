@@ -42,6 +42,7 @@ class PlatformTestService:
         "🏦 Quote Authority Test": "dealer_quote_authority",
         "📡 BidEx Parser Test": "bidex_quote_parser",
         "🤝 Partner Test": "automotive_partner",
+        "🎨 Branding Test": "automotive_partner_branding",
     }
 
     @staticmethod
@@ -317,6 +318,18 @@ class PlatformTestService:
                     f"codes: {result.get('codes', {}).get('ok')}\n"
                     f"menu: {result.get('menu', {}).get('ok')}\n"
                     f"dealer: {result.get('dealer', {}).get('ok')}"
+                )
+            elif module_key == "automotive_partner_branding":
+                from services.automotive_partner_branding_test import run_automotive_partner_branding_tests
+
+                result = run_automotive_partner_branding_tests()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"labels: {result.get('labels', {}).get('ok')}\n"
+                    f"card: {result.get('card', {}).get('ok')}\n"
+                    f"logo: {result.get('logo', {}).get('ok')}"
                 )
             else:
                 raise RuntimeError(f"unknown module {module_key}")

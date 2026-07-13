@@ -425,6 +425,22 @@ class PlatformReadinessTestSuite:
         return _result("partial", "subscription chain unclear")
 
     @staticmethod
+    def _check_automotive_partner_branding() -> dict[str, Any]:
+        try:
+            from services.pg_automotive_partner_branding_engine import AutomotivePartnerBrandingEngineV1
+
+            checks = [
+                hasattr(AutomotivePartnerBrandingEngineV1, "list_category_cards"),
+                hasattr(AutomotivePartnerBrandingEngineV1, "format_partner_card_text"),
+                hasattr(AutomotivePartnerBrandingEngineV1, "create_partner_lead"),
+            ]
+            if all(checks):
+                return _result("operational", "partner branding cards + CTAs")
+            return _result("partial", "partner branding incomplete")
+        except Exception as exc:
+            return _result("failed", str(exc)[:80])
+
+    @staticmethod
     def _check_automotive_partner_integration() -> dict[str, Any]:
         try:
             from services.pg_automotive_partner_integration_engine import AutomotivePartnerIntegrationEngineV1
@@ -569,6 +585,7 @@ class PlatformReadinessTestSuite:
             ("automotive_button", "Automotive", cls._check_automotive_button),
             ("automotive_menu", "Automotive", cls._check_automotive_menu),
             ("automotive_partner_integration", "Automotive", cls._check_automotive_partner_integration),
+            ("automotive_partner_branding", "Automotive", cls._check_automotive_partner_branding),
             ("add_car", "Automotive", cls._check_add_car),
             ("car_list", "Automotive", cls._check_car_list),
             ("search_car", "Automotive", cls._check_search_car),
