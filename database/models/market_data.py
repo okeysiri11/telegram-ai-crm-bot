@@ -40,9 +40,16 @@ MARKET_PAIRS: tuple[tuple[str, str], ...] = (
 
 
 class MarketSourceCode(str, enum.Enum):
-    BINANCE = "BINANCE"
+    OKX = "OKX"
     BYBIT = "BYBIT"
     WHITEBIT = "WHITEBIT"
+    NBU = "NBU"
+    PRIVATBANK = "PRIVATBANK"
+    MONOBANK = "MONOBANK"
+    UKRSIBBANK = "UKRSIBBANK"
+    MTB_BANK = "MTB_BANK"
+    OSCHADBANK = "OSCHADBANK"
+    TRADINGVIEW = "TRADINGVIEW"
     MANUAL = "MANUAL"
     FX = "FX"
     PRECIOUS_METALS = "PRECIOUS_METALS"
@@ -53,6 +60,8 @@ class MarketSourceType(str, enum.Enum):
     MANUAL = "MANUAL"
     FX = "FX"
     METALS = "METALS"
+    BANK = "BANK"
+    REFERENCE = "REFERENCE"
 
 
 class MarketSnapshotType(str, enum.Enum):

@@ -32,10 +32,10 @@ MARKET_DATA_ROLES = frozenset({"OWNER", "ADMIN", "MANAGER", "ACCOUNTANT"})
 
 EXCHANGE_CRYPTO_ASSETS = frozenset({"BTC", "ETH", "USDT"})
 
-BINANCE_SYMBOLS = {
-    "BTC": "BTCUSDT",
-    "ETH": "ETHUSDT",
-    "USDT": "USDCUSDT",
+OKX_SYMBOLS = {
+    "BTC": "BTC-USDT",
+    "ETH": "ETH-USDT",
+    "USDT": "USDC-USDT",
 }
 
 BYBIT_SYMBOLS = {
@@ -46,7 +46,25 @@ BYBIT_SYMBOLS = {
 WHITEBIT_SYMBOLS = {
     "BTC": "BTC_USDT",
     "ETH": "ETH_USDT",
+    "USDT": "USDT_UAH",
 }
+
+
+# Reference-only sources — not used for Automotive/OTC business calculations.
+REFERENCE_ONLY_SOURCES = frozenset({
+    MarketSourceCode.OKX.value,
+    MarketSourceCode.BYBIT.value,
+    MarketSourceCode.WHITEBIT.value,
+    MarketSourceCode.NBU.value,
+    MarketSourceCode.PRIVATBANK.value,
+    MarketSourceCode.MONOBANK.value,
+    MarketSourceCode.UKRSIBBANK.value,
+    MarketSourceCode.MTB_BANK.value,
+    MarketSourceCode.OSCHADBANK.value,
+    MarketSourceCode.TRADINGVIEW.value,
+    MarketSourceCode.FX.value,
+    MarketSourceCode.PRECIOUS_METALS.value,
+})
 
 DEFAULT_FX_RATES: dict[str, dict[str, str]] = {
     "USD": {"bid": "1.0", "ask": "1.0", "last": "1.0", "volume_24h": "0"},
@@ -147,41 +165,42 @@ class MarketDataEngineV1:
         }
 
     @staticmethod
-    async def _fetch_binance(session_http: aiohttp.ClientSession, symbol: str) -> dict:
+    async def _fetch_okx(session_http: aiohttp.ClientSession, symbol: str) -> dict:
         async with session_http.get(
-            "https://api.binance.com/api/v3/ticker/bookTicker",
-            params={"symbol": symbol},
+            "https://www.okx.com/api/v5/market/ticker",
+            params={"instId": symbol},
             timeout=aiohttp.ClientTimeout(total=10),
         ) as resp:
             resp.raise_for_status()
-            data = await resp.json()
-        async with session_http.get(
-            "https://api.binance.com/api/v3/ticker/24hr",
-            params={"symbol": symbol},
-            timeout=aiohttp.ClientTimeout(total=10),
-        ) as resp:
-            resp.raise_for_status()
-            stats = await resp.json()
-        bid = Decimal(data["bidPrice"])
-        ask = Decimal(data["askPrice"])
-        last = Decimal(stats.get("lastPrice", data["bidPrice"]))
-        volume = Decimal(stats.get("volume", "0"))
+            payload = await resp.json()
+        items = payload.get("data") or []
+        if not items:
+            raise MarketDataEngineError(f"OKX empty ticker for {symbol}")
+        item = items[0]
+        bid = Decimal(str(item.get("bidPx") or item.get("last") or 0))
+        ask = Decimal(str(item.get("askPx") or item.get("last") or 0))
+        last = Decimal(str(item.get("last") or bid))
+        volume = Decimal(str(item.get("vol24h", "0")))
         return {"bid": bid, "ask": ask, "last": last, "volume_24h": volume, "symbol": symbol}
 
     @staticmethod
-    async def _fetch_binance_orderbook(
+    async def _fetch_okx_orderbook(
         session_http: aiohttp.ClientSession,
         symbol: str,
         depth: int = 5,
     ) -> dict:
         async with session_http.get(
-            "https://api.binance.com/api/v3/depth",
-            params={"symbol": symbol, "limit": depth},
+            "https://www.okx.com/api/v5/market/books",
+            params={"instId": symbol, "sz": depth},
             timeout=aiohttp.ClientTimeout(total=10),
         ) as resp:
             resp.raise_for_status()
-            data = await resp.json()
-        return {"bids": data.get("bids", [])[:depth], "asks": data.get("asks", [])[:depth]}
+            payload = await resp.json()
+        data = (payload.get("data") or [{}])[0]
+        return {
+            "bids": data.get("bids", [])[:depth],
+            "asks": data.get("asks", [])[:depth],
+        }
 
     @staticmethod
     async def _fetch_bybit(session_http: aiohttp.ClientSession, symbol: str) -> dict:
@@ -223,13 +242,13 @@ class MarketDataEngineV1:
         session_http: aiohttp.ClientSession,
     ) -> list[dict[str, Any]]:
         symbol_map = {
-            MarketSourceCode.BINANCE.value: BINANCE_SYMBOLS,
+            MarketSourceCode.OKX.value: OKX_SYMBOLS,
             MarketSourceCode.BYBIT.value: BYBIT_SYMBOLS,
             MarketSourceCode.WHITEBIT.value: WHITEBIT_SYMBOLS,
         }.get(source_code, {})
 
         fetchers = {
-            MarketSourceCode.BINANCE.value: MarketDataEngineV1._fetch_binance,
+            MarketSourceCode.OKX.value: MarketDataEngineV1._fetch_okx,
             MarketSourceCode.BYBIT.value: MarketDataEngineV1._fetch_bybit,
             MarketSourceCode.WHITEBIT.value: MarketDataEngineV1._fetch_whitebit,
         }
@@ -261,14 +280,14 @@ class MarketDataEngineV1:
         source_code: str,
         session_http: aiohttp.ClientSession,
     ) -> list[dict[str, Any]]:
-        if source_code != MarketSourceCode.BINANCE.value:
+        if source_code != MarketSourceCode.OKX.value:
             return []
 
         books: list[dict[str, Any]] = []
-        for asset, symbol in BINANCE_SYMBOLS.items():
+        for asset, symbol in OKX_SYMBOLS.items():
             if asset not in EXCHANGE_CRYPTO_ASSETS:
                 continue
-            book = await MarketDataEngineV1._fetch_binance_orderbook(session_http, symbol)
+            book = await MarketDataEngineV1._fetch_okx_orderbook(session_http, symbol)
             books.append({"asset": asset, **book})
         return books
 
@@ -306,12 +325,14 @@ class MarketDataEngineV1:
     @staticmethod
     async def _sync_pricing(actor_id: int, source_code: str, quote) -> None:
         pricing_sources = {
-            MarketSourceCode.BINANCE.value,
+            MarketSourceCode.OKX.value,
             MarketSourceCode.BYBIT.value,
             MarketSourceCode.WHITEBIT.value,
             MarketSourceCode.MANUAL.value,
         }
         if source_code not in pricing_sources:
+            return
+        if source_code in REFERENCE_ONLY_SOURCES:
             return
         if quote.asset not in EXCHANGE_CRYPTO_ASSETS:
             return

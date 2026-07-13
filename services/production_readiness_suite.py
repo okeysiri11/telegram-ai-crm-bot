@@ -6,6 +6,7 @@ import asyncio
 import time
 import urllib.parse
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from config import API_HOST, API_PORT, BOT_TOKEN, REDIS_REQUIRED, REDIS_URL
@@ -217,6 +218,39 @@ class ProductionReadinessSuite:
                 await bot.session.close()
 
     @classmethod
+    async def check_market_sources(cls) -> dict[str, Any]:
+        try:
+            from database.models.market_data import MarketSourceCode
+            from services.pg_market_data_engine import REFERENCE_ONLY_SOURCES
+
+            active_refs = {
+                MarketSourceCode.OKX.value,
+                MarketSourceCode.WHITEBIT.value,
+            }
+            missing = active_refs - REFERENCE_ONLY_SOURCES
+            engine_src = Path(__file__).resolve().parent / "pg_market_data_engine.py"
+            binance_removed = "MarketSourceCode.BINANCE" not in engine_src.read_text(encoding="utf-8")
+            ok = not missing and binance_removed
+            detail = "OKX/WhiteBIT reference-only; Binance removed"
+            if missing:
+                detail = f"missing reference sources: {', '.join(sorted(missing))}"
+            elif not binance_removed:
+                detail = "Binance still referenced in market data engine"
+            return _check_result(
+                "market_sources",
+                ok=ok,
+                degraded=bool(missing) and not binance_used,
+                detail=detail,
+                payload={
+                    "reference_only": sorted(REFERENCE_ONLY_SOURCES),
+                    "okx": MarketSourceCode.OKX.value in REFERENCE_ONLY_SOURCES,
+                    "whitebit": MarketSourceCode.WHITEBIT.value in REFERENCE_ONLY_SOURCES,
+                },
+            )
+        except Exception as exc:
+            return _check_result("market_sources", ok=False, detail=str(exc))
+
+    @classmethod
     async def run_dependency_validation(cls, *, persist: bool = True) -> dict[str, Any]:
         started = time.perf_counter()
         checks = await asyncio.gather(
@@ -226,6 +260,7 @@ class ProductionReadinessSuite:
             cls.check_api(),
             cls.check_scheduler(),
             cls.check_telegram(),
+            cls.check_market_sources(),
         )
         by_name = {item["name"]: item for item in checks}
         critical_ready = True

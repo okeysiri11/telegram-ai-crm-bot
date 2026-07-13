@@ -28,12 +28,13 @@ import database.models.partner_engine  # noqa: F401 — register partner_engine_
 
 
 class PriceSourceName(str, enum.Enum):
-    BINANCE = "BINANCE"
+    OKX = "OKX"
     WHITEBIT = "WHITEBIT"
     BYBIT = "BYBIT"
     MANUAL = "MANUAL"
     AUTO_MARKET = "AUTO_MARKET"
     CUSTOM = "CUSTOM"
+    FOMA_RATES = "FOMA_RATES"
 
 
 class SpreadRuleType(str, enum.Enum):

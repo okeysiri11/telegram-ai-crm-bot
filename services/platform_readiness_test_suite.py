@@ -424,6 +424,47 @@ class PlatformReadinessTestSuite:
         return _result("partial", "subscription chain unclear")
 
     @staticmethod
+    def _check_dealer_quote_authority() -> dict[str, Any]:
+        try:
+            from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1
+            from services.dealer_rate_service import DealerRateService
+
+            checks = [
+                hasattr(DealerQuoteAuthorityEngineV1, "ingest_foma_rates"),
+                hasattr(DealerQuoteAuthorityEngineV1, "get_treasury_dashboard"),
+                hasattr(DealerQuoteAuthorityEngineV1, "calculate_deviations"),
+                hasattr(DealerRateService, "get_otc_usdt_mid"),
+            ]
+            if all(checks):
+                return _result("operational", "Foma Rates authority engine")
+            return _result("partial", "quote authority incomplete")
+        except Exception as exc:
+            return _result("failed", str(exc)[:80])
+
+    @staticmethod
+    def _check_market_reference_sources() -> dict[str, Any]:
+        try:
+            from database.models.market_data import MarketSourceCode
+            from services.pg_market_data_engine import REFERENCE_ONLY_SOURCES
+
+            required = {
+                MarketSourceCode.OKX.value,
+                MarketSourceCode.WHITEBIT.value,
+                MarketSourceCode.NBU.value,
+                MarketSourceCode.TRADINGVIEW.value,
+            }
+            missing = required - REFERENCE_ONLY_SOURCES
+            engine_src = (ROOT / "services" / "pg_market_data_engine.py").read_text(encoding="utf-8")
+            binance_removed = "BINANCE" not in engine_src or "MarketSourceCode.BINANCE" not in engine_src
+            if not missing and binance_removed:
+                return _result("operational", "OKX/WhiteBIT reference-only; Binance removed")
+            if missing:
+                return _result("partial", f"missing ref sources: {','.join(sorted(missing)[:3])}")
+            return _result("partial", "Binance references may remain in market engine")
+        except Exception as exc:
+            return _result("failed", str(exc)[:80])
+
+    @staticmethod
     def _check_engine_class(module_path: str, class_name: str, label: str) -> dict[str, Any]:
         try:
             mod = __import__(module_path, fromlist=[class_name])
@@ -507,6 +548,8 @@ class PlatformReadinessTestSuite:
             ("treasury_engine", "Finance Core", lambda: cls._check_engine_class("services.treasury_engine", "TreasuryEngine", "TreasuryEngine")),
             ("pricing_engine", "Finance Core", lambda: cls._check_engine_class("services.pg_pricing_engine", "PricingEngineV1", "PricingEngineV1")),
             ("fx_engine", "Finance Core", lambda: cls._check_engine_class("services.pg_market_data_engine", "MarketDataEngineV1", "FX/MarketData")),
+            ("dealer_quote_authority", "Finance Core", cls._check_dealer_quote_authority),
+            ("market_reference_sources", "Finance Core", cls._check_market_reference_sources),
             ("liquidity_engine", "Finance Core", lambda: cls._check_engine_class("services.pg_liquidity_engine", "LiquidityEngineV1", "LiquidityEngineV1")),
             ("settlement_engine", "Finance Core", lambda: cls._check_engine_class("services.pg_settlement_engine", "SettlementEngineV1", "SettlementEngineV1")),
             ("risk_engine", "Finance Core", lambda: cls._check_engine_class("services.pg_risk_engine", "RiskEngineV1", "RiskEngineV1")),
