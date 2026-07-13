@@ -100,6 +100,13 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "schedule_type": JobScheduleType.CRON.value,
         "cron_expression": "0 4 * * *",
     },
+    {
+        "job_key": "tenant_billing.monthly",
+        "name": "Tenant Billing Monthly",
+        "description": "Collect usage and generate tenant invoices",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 5 1 * *",
+    },
 )
 
 _defaults_seeded = False
@@ -264,6 +271,12 @@ class SchedulerEngineV1:
         return await AnalyticsAutomationEngineV1.compute_metrics()
 
     @staticmethod
+    async def _run_tenant_billing_monthly(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.pg_tenant_billing_engine import TenantBillingEngineV1
+
+        return await TenantBillingEngineV1.run_monthly_billing()
+
+    @staticmethod
     def job_handlers() -> dict[str, JobHandler]:
         return {
             "nightly.reconciliation": SchedulerEngineV1._run_nightly_reconciliation,
@@ -275,6 +288,7 @@ class SchedulerEngineV1:
             "marketing_automation.process": SchedulerEngineV1._run_marketing_automation_process,
             "sales_pipeline_automation.process": SchedulerEngineV1._run_sales_pipeline_automation,
             "analytics_automation.compute": SchedulerEngineV1._run_analytics_automation_compute,
+            "tenant_billing.monthly": SchedulerEngineV1._run_tenant_billing_monthly,
         }
 
     @staticmethod
