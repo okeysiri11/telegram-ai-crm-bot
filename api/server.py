@@ -7,6 +7,8 @@ from api.handlers import (
     auth_token_handler,
     dealer_portal_handler,
     dealer_portal_module_handler,
+    lead_marketplace_handler,
+    lead_marketplace_feature_handler,
     deals_create_handler,
     deals_list_handler,
     documents_create_handler,
@@ -72,6 +74,9 @@ def create_app() -> web.Application:
 
     app.router.add_get("/v1/dealer-portal", dealer_portal_handler)
     app.router.add_get("/v1/dealer-portal/modules/{module}", dealer_portal_module_handler)
+
+    app.router.add_get("/v1/lead-marketplace", lead_marketplace_handler)
+    app.router.add_get("/v1/lead-marketplace/features/{feature}", lead_marketplace_feature_handler)
 
     return app
 

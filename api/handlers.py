@@ -265,6 +265,25 @@ async def dealer_portal_module_handler(request: web.Request) -> web.Response:
     return _json(data)
 
 
+@require_api_auth
+async def lead_marketplace_handler(request: web.Request) -> web.Response:
+    from services.pg_lead_marketplace_v1 import LeadMarketplaceV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    marketplace = await LeadMarketplaceV1.get_marketplace(_actor(request), tenant_id)
+    return _json(marketplace)
+
+
+@require_api_auth
+async def lead_marketplace_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_lead_marketplace_v1 import LeadMarketplaceV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    feature = request.match_info["feature"]
+    data = await LeadMarketplaceV1.get_feature(_actor(request), tenant_id, feature)
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -301,6 +320,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/notifications",
             "/v1/dealer-portal",
             "/v1/dealer-portal/modules/{module}",
+            "/v1/lead-marketplace",
+            "/v1/lead-marketplace/features/{feature}",
             "/v1/auth/token",
         ],
     })
