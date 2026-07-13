@@ -17,6 +17,8 @@ from api.handlers import (
     lead_marketplace_feature_handler,
     recommendation_engine_feature_handler,
     recommendation_engine_handler,
+    communication_hub_feature_handler,
+    communication_hub_handler,
     deals_create_handler,
     deals_list_handler,
     documents_create_handler,
@@ -108,6 +110,12 @@ def create_app() -> web.Application:
     app.router.add_get(
         "/v1/recommendation-engine/features/{feature}",
         recommendation_engine_feature_handler,
+    )
+
+    app.router.add_get("/v1/communication-hub", communication_hub_handler)
+    app.router.add_get(
+        "/v1/communication-hub/features/{feature}",
+        communication_hub_feature_handler,
     )
 
     return app

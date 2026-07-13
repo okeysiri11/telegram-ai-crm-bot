@@ -362,6 +362,28 @@ async def recommendation_engine_feature_handler(request: web.Request) -> web.Res
     return _json(data)
 
 
+@require_api_auth
+async def communication_hub_handler(request: web.Request) -> web.Response:
+    from services.pg_communication_hub_v1 import CommunicationHubV1Product
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    hub = await CommunicationHubV1Product.get_hub(_actor(request), tenant_id)
+    return _json(hub)
+
+
+@require_api_auth
+async def communication_hub_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_communication_hub_v1 import CommunicationHubV1Product
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    feature = request.match_info["feature"]
+    conversation_id = request.query.get("conversation_id")
+    data = await CommunicationHubV1Product.get_feature(
+        _actor(request), tenant_id, feature, conversation_id=conversation_id
+    )
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -408,6 +430,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/ai-sales-agent/features/{feature}",
             "/v1/recommendation-engine",
             "/v1/recommendation-engine/features/{feature}",
+            "/v1/communication-hub",
+            "/v1/communication-hub/features/{feature}",
             "/v1/auth/token",
         ],
     })
