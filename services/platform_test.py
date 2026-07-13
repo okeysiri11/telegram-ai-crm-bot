@@ -41,6 +41,7 @@ class PlatformTestService:
         "💱 Treasury Test": "automotive_treasury",
         "🏦 Quote Authority Test": "dealer_quote_authority",
         "📡 BidEx Parser Test": "bidex_quote_parser",
+        "🤝 Partner Test": "automotive_partner",
     }
 
     @staticmethod
@@ -304,6 +305,18 @@ class PlatformTestService:
                     f"should_parse: {result.get('should_parse', {}).get('ok')}\n"
                     f"parse_fields: {result.get('parse_fields', {}).get('ok')}\n"
                     f"channel_match: {result.get('channel_match', {}).get('ok')}"
+                )
+            elif module_key == "automotive_partner":
+                from services.automotive_partner_integration_test import run_automotive_partner_integration_tests
+
+                result = run_automotive_partner_integration_tests()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"codes: {result.get('codes', {}).get('ok')}\n"
+                    f"menu: {result.get('menu', {}).get('ok')}\n"
+                    f"dealer: {result.get('dealer', {}).get('ok')}"
                 )
             else:
                 raise RuntimeError(f"unknown module {module_key}")

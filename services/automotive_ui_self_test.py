@@ -9,16 +9,20 @@ def run_automotive_ui_self_test() -> dict:
     checks: dict[str, dict] = {}
     try:
         from keyboards import (
+            AUTO_VERTICAL_HUB_BUTTONS,
             AUTO_VERTICAL_MAIN_BUTTON,
             AUTO_VERTICAL_MENU_BUTTONS,
             auto_billing_plans_inline,
+            auto_vertical_hub_menu,
             auto_vertical_menu,
             owner_main_menu,
         )
 
+        hub = auto_vertical_hub_menu()
         menu = auto_vertical_menu()
         main = owner_main_menu(show_automotive=True)
         main_hidden = owner_main_menu(show_automotive=False)
+        hub_texts = {btn.text for row in hub.keyboard for btn in row}
         menu_texts = {btn.text for row in menu.keyboard for btn in row}
         main_texts = {btn.text for row in main.keyboard for btn in row}
 
@@ -26,9 +30,13 @@ def run_automotive_ui_self_test() -> dict:
             "ok": AUTO_VERTICAL_MAIN_BUTTON == "🚗 Авто" and AUTO_VERTICAL_MAIN_BUTTON in main_texts,
             "detail": AUTO_VERTICAL_MAIN_BUTTON,
         }
+        checks["automotive_hub_items"] = {
+            "ok": AUTO_VERTICAL_HUB_BUTTONS.issubset(hub_texts),
+            "detail": f"{len(hub_texts)} hub items",
+        }
         checks["automotive_menu_items"] = {
-            "ok": AUTO_VERTICAL_MENU_BUTTONS.issubset(menu_texts),
-            "detail": f"{len(menu_texts)} items",
+            "ok": AUTO_VERTICAL_MENU_BUTTONS.issubset(menu_texts | hub_texts),
+            "detail": f"{len(menu_texts)} cars items",
         }
         checks["billing_menu"] = {
             "ok": "💳 Тарифы и услуги" in menu_texts,

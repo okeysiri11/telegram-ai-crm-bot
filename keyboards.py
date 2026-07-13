@@ -1471,6 +1471,23 @@ def test_center_menu() -> ReplyKeyboardMarkup:
 
 AUTO_VERTICAL_MAIN_BUTTON = "🚗 Авто"
 
+AUTO_VERTICAL_HUB_BUTTON = "🚗 Auto"
+AUTO_VERTICAL_CARS_BUTTON = "🚘 Cars"
+AUTO_VERTICAL_INSURANCE_BUTTON = "🛡 Insurance"
+AUTO_VERTICAL_LEASING_BUTTON = "💳 Leasing"
+AUTO_VERTICAL_DELIVERY_BUTTON = "🚚 Delivery"
+AUTO_VERTICAL_LEGAL_BUTTON = "⚖ Legal Support"
+
+AUTO_VERTICAL_HUB_BUTTONS = frozenset({
+    AUTO_VERTICAL_HUB_BUTTON,
+    AUTO_VERTICAL_CARS_BUTTON,
+    AUTO_VERTICAL_INSURANCE_BUTTON,
+    AUTO_VERTICAL_LEASING_BUTTON,
+    AUTO_VERTICAL_DELIVERY_BUTTON,
+    AUTO_VERTICAL_LEGAL_BUTTON,
+    "⬅ Назад",
+})
+
 AUTO_VERTICAL_MENU_BUTTONS = frozenset({
     "🚗 Добавить авто",
     "📋 Список авто",
@@ -1485,7 +1502,10 @@ AUTO_VERTICAL_MENU_BUTTONS = frozenset({
     "🏦 Treasury Dashboard",
     "⚙ Настройки авто",
     "⬅ Назад",
+    "⬅ К Auto",
 })
+
+AUTO_VERTICAL_ALL_BUTTONS = AUTO_VERTICAL_HUB_BUTTONS | AUTO_VERTICAL_MENU_BUTTONS
 
 # Legacy aliases (same flows, old labels)
 AUTO_VERTICAL_LEGACY_BUTTONS = {
@@ -1495,7 +1515,39 @@ AUTO_VERTICAL_LEGACY_BUTTONS = {
     "🧮 Profit Calculator": "💰 Калькулятор прибыли",
     "📣 Marketing": "📢 Продвижение",
     "🚗 Cars": AUTO_VERTICAL_MAIN_BUTTON,
+    "🚗 Auto": AUTO_VERTICAL_MAIN_BUTTON,
 }
+
+
+def auto_vertical_hub_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=AUTO_VERTICAL_CARS_BUTTON)],
+            [
+                KeyboardButton(text=AUTO_VERTICAL_INSURANCE_BUTTON),
+                KeyboardButton(text=AUTO_VERTICAL_LEASING_BUTTON),
+            ],
+            [
+                KeyboardButton(text=AUTO_VERTICAL_DELIVERY_BUTTON),
+                KeyboardButton(text=AUTO_VERTICAL_LEGAL_BUTTON),
+            ],
+            [KeyboardButton(text="⬅ Назад")],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def auto_insurance_products_inline(products: list[dict]) -> InlineKeyboardMarkup:
+    rows = []
+    for product in products:
+        rows.append([
+            InlineKeyboardButton(
+                text=product.get("name", product.get("product_code", "Product")),
+                callback_data=f"insurance:product:{product.get('product_code')}",
+            )
+        ])
+    rows.append([InlineKeyboardButton(text="⬅ Back", callback_data="insurance:back")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def auto_vertical_menu() -> ReplyKeyboardMarkup:
@@ -1528,7 +1580,7 @@ def auto_vertical_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="⚙ Настройки авто"),
             ],
             [
-                KeyboardButton(text="⬅ Назад"),
+                KeyboardButton(text="⬅ К Auto"),
             ],
         ],
         resize_keyboard=True,

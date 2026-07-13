@@ -12,6 +12,13 @@ from aiogram.types import CallbackQuery, Message
 from config import BOT_TOKEN, OWNER_ID
 from database import log_audit
 from keyboards import (
+    AUTO_VERTICAL_ALL_BUTTONS,
+    AUTO_VERTICAL_CARS_BUTTON,
+    AUTO_VERTICAL_DELIVERY_BUTTON,
+    AUTO_VERTICAL_HUB_BUTTONS,
+    AUTO_VERTICAL_INSURANCE_BUTTON,
+    AUTO_VERTICAL_LEGAL_BUTTON,
+    AUTO_VERTICAL_LEASING_BUTTON,
     AUTO_VERTICAL_LEGACY_BUTTONS,
     AUTO_VERTICAL_MAIN_BUTTON,
     AUTO_VERTICAL_MENU_BUTTONS,
@@ -19,8 +26,10 @@ from keyboards import (
     auto_billing_payment_inline,
     auto_billing_plans_inline,
     auto_billing_pricing_inline,
+    auto_insurance_products_inline,
     auto_vertical_actions_inline,
     auto_vertical_car_list_inline,
+    auto_vertical_hub_menu,
     auto_vertical_menu,
     owner_main_menu,
 )
@@ -32,6 +41,7 @@ from services.automotive_telegram_access import (
 from services.pg_auto_marketing_engine import AutoMarketingEngineError, AutoMarketingEngineV1
 from services.pg_car_engine import CarEngineError, CarEngineV1
 from services.dealer_rate_service import DealerRateService
+from services.pg_automotive_partner_integration_engine import AutomotivePartnerIntegrationEngineV1
 from services.pg_commercial_billing_engine import (
     CommercialBillingEngineError,
     CommercialBillingEngineV1,
@@ -56,6 +66,7 @@ logger = logging.getLogger(__name__)
 auto_vertical_router = Router()
 
 auto_vertical_active: dict[int, bool] = {}
+auto_vertical_section: dict[int, str] = {}
 auto_vertical_flow: dict[int, dict] = {}
 auto_billing_flow: dict[int, dict] = {}
 
@@ -317,13 +328,58 @@ async def _show_billing(message: Message, user_id: int) -> None:
 
 
 async def _show_settings(message: Message, user_id: int) -> None:
+    dealer_sources = await AutomotivePartnerIntegrationEngineV1.list_dealer_sources(actor_id=user_id)
+    sources_text = AutomotivePartnerIntegrationEngineV1.format_dealer_sources_report(dealer_sources)
     await message.answer(
         "⚙ Настройки авто\n\n"
         "• Каналы продвижения: Telegram, Instagram, Facebook, TikTok\n"
         "• Уведомления о SLA и лидах\n"
         "• Интеграция с Car Engine и Marketing Engine\n\n"
+        f"{sources_text}\n\n"
         "Расширенные настройки — через админ-панель.",
         reply_markup=auto_vertical_menu(),
+    )
+
+
+async def _open_auto_hub(message: Message, user_id: int) -> None:
+    auto_vertical_section[user_id] = "hub"
+    await message.answer(
+        "🚗 Auto\n\n"
+        "Cars, insurance, leasing, delivery, and legal support.\n\n"
+        "Choose a section:",
+        reply_markup=auto_vertical_hub_menu(),
+    )
+
+
+async def _open_cars_section(message: Message, user_id: int) -> None:
+    auto_vertical_section[user_id] = "cars"
+    await message.answer(
+        "🚘 Cars\n\n"
+        "Inventory, marketing, analytics, AI manager, leads, and billing.",
+        reply_markup=auto_vertical_menu(),
+    )
+    await message.answer(
+        "Быстрые действия:",
+        reply_markup=auto_vertical_actions_inline("overview"),
+    )
+
+
+async def _show_insurance(message: Message, user_id: int) -> None:
+    auto_vertical_section[user_id] = "insurance"
+    partner = await AutomotivePartnerIntegrationEngineV1.get_insurance_partner()
+    products = await AutomotivePartnerIntegrationEngineV1.list_insurance_products(actor_id=user_id)
+    text = AutomotivePartnerIntegrationEngineV1.format_insurance_menu_text(partner, products)
+    await message.answer(text, reply_markup=auto_vertical_hub_menu())
+    await message.answer(
+        "Insurance products:",
+        reply_markup=auto_insurance_products_inline(products),
+    )
+
+
+async def _show_partner_stub(message: Message, title: str, description: str) -> None:
+    await message.answer(
+        f"{title}\n\n{description}\n\nPartner integrations coming soon.",
+        reply_markup=auto_vertical_hub_menu(),
     )
 
 
@@ -376,11 +432,56 @@ async def _schedule_marketing_for_car(
 
 async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: str) -> None:
     screen = _normalize_screen(screen)
+    section = auto_vertical_section.get(user_id, "hub")
+
     if screen == "⬅ Назад":
+        if section == "cars":
+            await _open_auto_hub(message, user_id)
+            return
         auto_vertical_active.pop(user_id, None)
+        auto_vertical_section.pop(user_id, None)
         _clear_flow(user_id)
         auto_billing_flow.pop(user_id, None)
         await message.answer("Главное меню", reply_markup=await _main_menu_for(user_id))
+        return
+
+    if screen == "⬅ К Auto":
+        await _open_auto_hub(message, user_id)
+        return
+
+    if screen in {AUTO_VERTICAL_CARS_BUTTON, "🚗 Cars"}:
+        await _open_cars_section(message, user_id)
+        return
+
+    if screen == AUTO_VERTICAL_INSURANCE_BUTTON:
+        try:
+            await _show_insurance(message, user_id)
+        except Exception as exc:
+            await message.answer(f"🛡 Insurance\n\n{exc}", reply_markup=auto_vertical_hub_menu())
+        return
+
+    if screen == AUTO_VERTICAL_LEASING_BUTTON:
+        await _show_partner_stub(
+            message,
+            "💳 Leasing",
+            "Leasing partners and payment plans will appear here.",
+        )
+        return
+
+    if screen == AUTO_VERTICAL_DELIVERY_BUTTON:
+        await _show_partner_stub(
+            message,
+            "🚚 Delivery",
+            "Vehicle delivery partners and tracking will appear here.",
+        )
+        return
+
+    if screen == AUTO_VERTICAL_LEGAL_BUTTON:
+        await _show_partner_stub(
+            message,
+            "⚖ Legal Support",
+            "Legal support partners for automotive deals will appear here.",
+        )
         return
 
     if screen == "🚗 Добавить авто":
@@ -424,12 +525,12 @@ async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: s
         return
 
 
-@auto_vertical_router.message(F.text.in_({AUTO_VERTICAL_MAIN_BUTTON, "🚗 Cars"}))
+@auto_vertical_router.message(F.text.in_({AUTO_VERTICAL_MAIN_BUTTON, "🚗 Cars", "🚗 Auto"}))
 async def open_auto_vertical(message: Message) -> None:
     user_id = message.from_user.id
     if not await can_access_automotive_ui(user_id):
         await message.answer(
-            "🚗 Авто\n\nНет доступа к модулю.",
+            "🚗 Auto\n\nНет доступа к модулю.",
             reply_markup=await _main_menu_for(user_id),
         )
         return
@@ -439,22 +540,12 @@ async def open_auto_vertical(message: Message) -> None:
     auto_billing_flow.pop(user_id, None)
     log_audit(user_id, "open", "auto_vertical")
 
-    await message.answer(
-        "🚗 Авто\n\n"
-        "Автомобильный модуль — инвентарь, продвижение, аналитика, "
-        "AI менеджер, лиды и тарифы.\n\n"
-        "Выберите раздел:",
-        reply_markup=auto_vertical_menu(),
-    )
-    await message.answer(
-        "Быстрые действия:",
-        reply_markup=auto_vertical_actions_inline("overview"),
-    )
+    await _open_auto_hub(message, user_id)
 
 
 @auto_vertical_router.message(
     lambda m: (
-        (_normalize_screen(m.text or "") in AUTO_VERTICAL_MENU_BUTTONS
+        (_normalize_screen(m.text or "") in AUTO_VERTICAL_ALL_BUTTONS
          or (m.text or "") in AUTO_VERTICAL_LEGACY_BUTTONS)
         and auto_vertical_active.get(m.from_user.id)
         and not auto_vertical_flow.get(m.from_user.id)
@@ -476,7 +567,10 @@ async def auto_vertical_flow_handler(message: Message) -> None:
 
     if text == "⬅ Назад":
         _clear_flow(user_id)
-        await message.answer("🚗 Авто", reply_markup=auto_vertical_menu())
+        if auto_vertical_section.get(user_id) == "cars":
+            await message.answer("🚘 Cars", reply_markup=auto_vertical_menu())
+        else:
+            await _open_auto_hub(message, user_id)
         return
 
     if step == "vin":

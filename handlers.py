@@ -306,6 +306,7 @@ from dealer_onboarding_handlers import (
 )
 from dealer_quote_authority_handlers import dealer_quote_authority_router
 from bidex_quote_handlers import bidex_quote_router
+from automotive_partner_handlers import automotive_partner_router
 
 router.include_router(deal_workflow_router)
 router.include_router(auto_vertical_router)
@@ -313,6 +314,7 @@ router.include_router(ai_sales_router)
 router.include_router(dealer_onboarding_router)
 router.include_router(dealer_quote_authority_router)
 router.include_router(bidex_quote_router)
+router.include_router(automotive_partner_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1

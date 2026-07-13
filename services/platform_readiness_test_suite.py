@@ -318,13 +318,14 @@ class PlatformReadinessTestSuite:
 
     @staticmethod
     def _check_automotive_menu() -> dict[str, Any]:
-        from keyboards import AUTO_VERTICAL_MENU_BUTTONS, auto_vertical_menu
+        from keyboards import AUTO_VERTICAL_HUB_BUTTONS, AUTO_VERTICAL_MENU_BUTTONS, auto_vertical_hub_menu, auto_vertical_menu
 
+        hub_texts = {btn.text for row in auto_vertical_hub_menu().keyboard for btn in row}
         menu_texts = {btn.text for row in auto_vertical_menu().keyboard for btn in row}
-        if AUTO_VERTICAL_MENU_BUTTONS.issubset(menu_texts):
-            return _result("operational", f"{len(menu_texts)} items")
-        missing = AUTO_VERTICAL_MENU_BUTTONS - menu_texts
-        return _result("partial", f"missing: {','.join(sorted(missing)[:3])}")
+        if AUTO_VERTICAL_HUB_BUTTONS.issubset(hub_texts) and "🚘 Cars" in hub_texts:
+            return _result("operational", f"hub {len(hub_texts)} + cars {len(menu_texts)} items")
+        missing = AUTO_VERTICAL_HUB_BUTTONS - hub_texts
+        return _result("partial", f"missing hub: {','.join(sorted(missing)[:3])}")
 
     @staticmethod
     def _check_add_car() -> dict[str, Any]:
@@ -422,6 +423,22 @@ class PlatformReadinessTestSuite:
         if "subscribe_tenant" in src:
             return _result("operational", "approve → subscribe_tenant")
         return _result("partial", "subscription chain unclear")
+
+    @staticmethod
+    def _check_automotive_partner_integration() -> dict[str, Any]:
+        try:
+            from services.pg_automotive_partner_integration_engine import AutomotivePartnerIntegrationEngineV1
+
+            checks = [
+                hasattr(AutomotivePartnerIntegrationEngineV1, "list_insurance_products"),
+                hasattr(AutomotivePartnerIntegrationEngineV1, "list_dealer_sources"),
+                hasattr(AutomotivePartnerIntegrationEngineV1, "registry_health"),
+            ]
+            if all(checks):
+                return _result("operational", "SG TAS + Boroda Cars registry")
+            return _result("partial", "partner integration incomplete")
+        except Exception as exc:
+            return _result("failed", str(exc)[:80])
 
     @staticmethod
     def _check_bidex_quote_parser() -> dict[str, Any]:
@@ -551,6 +568,7 @@ class PlatformReadinessTestSuite:
             ("middleware", "Telegram", cls._check_middleware),
             ("automotive_button", "Automotive", cls._check_automotive_button),
             ("automotive_menu", "Automotive", cls._check_automotive_menu),
+            ("automotive_partner_integration", "Automotive", cls._check_automotive_partner_integration),
             ("add_car", "Automotive", cls._check_add_car),
             ("car_list", "Automotive", cls._check_car_list),
             ("search_car", "Automotive", cls._check_search_car),
