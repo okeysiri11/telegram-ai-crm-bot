@@ -56,6 +56,8 @@ class LeadAutomationRepository:
         source_metadata: dict | None = None,
         scoring_factors: dict | None = None,
         notes: str | None = None,
+        tenant_id: uuid.UUID | None = None,
+        company_id: uuid.UUID | None = None,
         **extra: Any,
     ) -> AutomationLead:
         if extra:
@@ -84,6 +86,8 @@ class LeadAutomationRepository:
             source_metadata=source_metadata or {},
             scoring_factors=scoring_factors or {},
             notes=notes,
+            tenant_id=tenant_id,
+            company_id=company_id,
         )
         self._session.add(lead)
         await self._session.flush()
@@ -167,6 +171,7 @@ class LeadAutomationRepository:
     async def list_leads(
         self,
         *,
+        tenant_id: uuid.UUID | None = None,
         source: str | None = None,
         status: str | None = None,
         assigned_manager_id: int | None = None,
@@ -174,6 +179,8 @@ class LeadAutomationRepository:
         limit: int = 50,
     ) -> list[AutomationLead]:
         query = select(AutomationLead).order_by(AutomationLead.created_at.desc())
+        if tenant_id is not None:
+            query = query.where(AutomationLead.tenant_id == tenant_id)
         if source is not None:
             query = query.where(AutomationLead.source == source)
         if status is not None:

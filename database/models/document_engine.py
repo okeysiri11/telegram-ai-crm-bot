@@ -77,6 +77,13 @@ class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_document_engine_v1_documents_type", "document_type"),
         Index("ix_document_engine_v1_documents_status", "status"),
         Index("ix_document_engine_v1_documents_entity", "entity_type", "entity_id"),
+        Index("ix_document_engine_v1_documents_tenant", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     template_id: Mapped[uuid.UUID | None] = mapped_column(

@@ -7,7 +7,8 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import BigInteger, DateTime, Index, Numeric, String
+from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, Numeric, String
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
@@ -36,6 +37,13 @@ class Deal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_deal_engine_deals_manager_id", "manager_id"),
         Index("ix_deal_engine_deals_client_id", "client_id"),
         Index("ix_deal_engine_deals_partner_id", "partner_id"),
+        Index("ix_deal_engine_deals_tenant_id", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     client_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)

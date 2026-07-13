@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, Index, String, UniqueConstraint, func
+from sqlalchemy import DateTime, ForeignKey, Index, String, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -36,6 +36,7 @@ class Event(UUIDPrimaryKeyMixin, Base):
         Index("ix_events_correlation_id", "correlation_id"),
         Index("ix_events_status", "status"),
         Index("ix_events_created_at", "created_at"),
+        Index("ix_events_tenant_id", "tenant_id"),
         UniqueConstraint(
             "event_type",
             "aggregate_type",
@@ -45,6 +46,11 @@ class Event(UUIDPrimaryKeyMixin, Base):
         ),
     )
 
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
+    )
     event_type: Mapped[str] = mapped_column(String(128), nullable=False)
     aggregate_type: Mapped[str] = mapped_column(String(128), nullable=False)
     aggregate_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False)

@@ -25,6 +25,13 @@ class Notification(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
         Index("ix_notifications_category", "category"),
         Index("ix_notifications_module", "module"),
         Index("ix_notifications_is_read", "is_read"),
+        Index("ix_notifications_tenant_id", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(

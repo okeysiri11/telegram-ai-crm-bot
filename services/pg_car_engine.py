@@ -12,7 +12,9 @@ from database.models.car import CarStatus
 from database.session import get_session
 from repositories.audit_repository import AuditRepository
 from repositories.car_repository import CarRepository
+from repositories.partner_tenant_repository import TenantUserRoleRepository
 from repositories.user_role_repository import UserRoleRepository
+from services.tenant_context import TenantContextService
 
 CAR_ROLES = frozenset({"OWNER", "ADMIN", "MANAGER", "SUPER_MANAGER", "AUTO_MANAGER"})
 
@@ -28,7 +30,10 @@ class CarEngineV1:
             return True
         async with get_session() as session:
             roles = await UserRoleRepository(session).get_user_roles(user_id)
-            return any(role.code in CAR_ROLES for role in roles)
+            if any(role.code in CAR_ROLES for role in roles):
+                return True
+            tenant_roles = await TenantUserRoleRepository(session).list_by_user(user_id)
+            return len(tenant_roles) > 0
 
     @staticmethod
     def _car_snapshot(car) -> dict[str, Any]:
@@ -69,8 +74,10 @@ class CarEngineV1:
             raise CarEngineError("Access denied")
 
         async with get_session() as session:
+            tenant_id = await TenantContextService.require_tenant_id(actor_id)
+            ctx = await TenantContextService.resolve_for_user(actor_id)
             repo = CarRepository(session)
-            if await repo.get_by_vin(vin):
+            if await repo.get_by_vin(vin, tenant_id=tenant_id):
                 raise CarEngineError(f"Car with VIN already exists: {vin}")
 
             car = await repo.create_car(
@@ -78,6 +85,8 @@ class CarEngineV1:
                 make=make,
                 model=model,
                 year=year,
+                tenant_id=tenant_id,
+                company_id=ctx.company_id if ctx else None,
                 manager_id=fields.pop("manager_id", actor_id),
                 **fields,
             )
@@ -125,6 +134,12 @@ class CarEngineV1:
             return CarEngineV1._car_snapshot(car)
 
     @staticmethod
+    async def _assert_car_tenant(actor_id: int, car) -> None:
+        tenant_id = await TenantContextService.require_tenant_id(actor_id)
+        if car.tenant_id is not None and car.tenant_id != tenant_id:
+            raise CarEngineError("Access denied: tenant mismatch")
+
+    @staticmethod
     async def get_car(actor_id: int, car_id: uuid.UUID) -> dict[str, Any]:
         if not await CarEngineV1.user_can_access(actor_id):
             raise CarEngineError("Access denied")
@@ -133,6 +148,7 @@ class CarEngineV1:
             car = await CarRepository(session).get_car(car_id)
             if car is None:
                 raise CarEngineError(f"Car not found: {car_id}")
+            await CarEngineV1._assert_car_tenant(actor_id, car)
             return CarEngineV1._car_snapshot(car)
 
     @staticmethod
@@ -140,8 +156,9 @@ class CarEngineV1:
         if not await CarEngineV1.user_can_access(actor_id):
             raise CarEngineError("Access denied")
 
+        tenant_id = await TenantContextService.require_tenant_id(actor_id)
         async with get_session() as session:
-            car = await CarRepository(session).get_by_vin(vin)
+            car = await CarRepository(session).get_by_vin(vin, tenant_id=tenant_id)
             if car is None:
                 raise CarEngineError(f"Car not found: {vin}")
             return CarEngineV1._car_snapshot(car)
@@ -182,7 +199,9 @@ class CarEngineV1:
             raise CarEngineError("Access denied")
 
         async with get_session() as session:
+            tenant_id = await TenantContextService.require_tenant_id(actor_id)
             cars = await CarRepository(session).list_cars(
+                tenant_id=tenant_id,
                 status=status,
                 manager_id=manager_id,
                 limit=limit,
@@ -199,6 +218,7 @@ class CarEngineV1:
             car = await repo.get_car(car_id)
             if car is None:
                 return False
+            await CarEngineV1._assert_car_tenant(actor_id, car)
             deleted = await repo.delete_car(car_id)
             if deleted:
                 await AuditRepository(session).create_log(

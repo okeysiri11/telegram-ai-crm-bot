@@ -29,6 +29,13 @@ class Deal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_deals_owner_id", "owner_id"),
         Index("ix_deals_manager_id", "manager_id"),
         Index("ix_deals_legacy_ref", "legacy_ref_type", "legacy_ref_id"),
+        Index("ix_deals_tenant_id", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     module: Mapped[str] = mapped_column(String(32), nullable=False)

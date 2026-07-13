@@ -5,12 +5,14 @@ from aiogram import Bot, Dispatcher
 
 from config import API_HOST, API_PORT, BOT_TOKEN
 from handlers import router
+from middleware.tenant_middleware import TenantMiddleware
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
+dp.update.middleware(TenantMiddleware())
 dp.include_router(router)
 
 

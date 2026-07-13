@@ -47,6 +47,13 @@ class Notification(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         Index("ix_notification_engine_deal_id", "deal_id"),
         Index("ix_notification_engine_status", "status"),
         Index("ix_notification_engine_notification_type", "notification_type"),
+        Index("ix_notification_engine_tenant_id", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     user_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)

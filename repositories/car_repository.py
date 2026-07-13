@@ -83,6 +83,8 @@ class CarRepository:
         sale_price: Decimal | float | int | None = None,
         manager_id: int | None = None,
         client_id: int | None = None,
+        tenant_id: uuid.UUID | None = None,
+        company_id: uuid.UUID | None = None,
         status: str = CarStatus.PURCHASED.value,
         **extra: Any,
     ) -> Car:
@@ -106,6 +108,8 @@ class CarRepository:
             sale_price=_decimal(sale_price) if sale_price is not None else None,
             manager_id=manager_id,
             client_id=client_id,
+            tenant_id=tenant_id,
+            company_id=company_id,
             status=status,
         )
         self._apply_costs(car)
@@ -137,6 +141,8 @@ class CarRepository:
             "sale_price",
             "manager_id",
             "client_id",
+            "tenant_id",
+            "company_id",
             "status",
         }
         unknown = set(fields) - allowed
@@ -170,20 +176,24 @@ class CarRepository:
         result = await self._session.execute(select(Car).where(Car.id == car_id))
         return result.scalar_one_or_none()
 
-    async def get_by_vin(self, vin: str) -> Car | None:
-        result = await self._session.execute(
-            select(Car).where(Car.vin == vin.upper())
-        )
+    async def get_by_vin(self, vin: str, *, tenant_id: uuid.UUID | None = None) -> Car | None:
+        query = select(Car).where(Car.vin == vin.upper())
+        if tenant_id is not None:
+            query = query.where(Car.tenant_id == tenant_id)
+        result = await self._session.execute(query)
         return result.scalar_one_or_none()
 
     async def list_cars(
         self,
         *,
+        tenant_id: uuid.UUID | None = None,
         status: str | None = None,
         manager_id: int | None = None,
         limit: int = 100,
     ) -> list[Car]:
         query = select(Car).order_by(Car.created_at.desc()).limit(limit)
+        if tenant_id is not None:
+            query = query.where(Car.tenant_id == tenant_id)
         if status is not None:
             if status not in CAR_STATUSES:
                 raise ValueError(f"Invalid status: {status}")

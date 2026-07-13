@@ -23,6 +23,13 @@ class AuditLog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_audit_logs_module", "module"),
         Index("ix_audit_logs_action", "action"),
         Index("ix_audit_logs_created_at", "created_at"),
+        Index("ix_audit_logs_tenant_id", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     user_id: Mapped[uuid.UUID | None] = mapped_column(

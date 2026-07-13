@@ -39,6 +39,13 @@ class InventoryMetrics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_automotive_analytics_v1_im_vehicle_id", "vehicle_id"),
         Index("ix_automotive_analytics_v1_im_metric_date", "metric_date"),
         Index("ix_automotive_analytics_v1_im_aging_bucket", "aging_bucket"),
+        Index("ix_automotive_analytics_v1_im_tenant", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     vehicle_id: Mapped[uuid.UUID | None] = mapped_column(
@@ -68,6 +75,13 @@ class SalesMetrics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "automotive_analytics_v1_sales_metrics"
     __table_args__ = (
         Index("ix_automotive_analytics_v1_sm_metric_date", "metric_date"),
+        Index("ix_automotive_analytics_v1_sm_tenant", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     metric_date: Mapped[date] = mapped_column(Date, nullable=False)
@@ -101,6 +115,13 @@ class ProfitabilityMetrics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_automotive_analytics_v1_pm_vehicle_id", "vehicle_id"),
         Index("ix_automotive_analytics_v1_pm_metric_date", "metric_date"),
         CheckConstraint("margin_percent >= -100", name="ck_automotive_analytics_v1_pm_margin"),
+        Index("ix_automotive_analytics_v1_pm_tenant", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
     )
 
     vehicle_id: Mapped[uuid.UUID] = mapped_column(

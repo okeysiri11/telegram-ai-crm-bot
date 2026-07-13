@@ -62,6 +62,18 @@ class AutomationLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_lead_automation_engine_v1_leads_telegram", "telegram_user_id"),
         Index("ix_lead_automation_engine_v1_leads_score", "score"),
         Index("ix_lead_automation_engine_v1_leads_duplicate", "is_duplicate"),
+        Index("ix_lead_automation_engine_v1_leads_tenant", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    company_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("multi_company_v1_companies.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     customer_name: Mapped[str] = mapped_column(String(255), nullable=False)

@@ -34,6 +34,7 @@ class PlatformTestService:
         "🔔 Notification Test": "notifications",
         "🚗 Auto Test": "automotive",
         "📋 Readiness Test": "readiness",
+        "🏢 Tenant Test": "tenant_isolation",
     }
 
     @staticmethod
@@ -215,6 +216,18 @@ class PlatformTestService:
                     ]
                     raise RuntimeError(f"{summary}\nFailed: {', '.join(failed[:5])}")
                 return f"STATUS: OK\n{summary}"
+            elif module_key == "tenant_isolation":
+                from services.multi_tenant_isolation_test import run_multi_tenant_isolation_test
+
+                result = run_multi_tenant_isolation_test()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"tenant_a={result.get('tenant_a')}\n"
+                    f"tenant_b={result.get('tenant_b')}\n"
+                    "isolation verified"
+                )
             else:
                 raise RuntimeError(f"unknown module {module_key}")
             return "STATUS: OK"

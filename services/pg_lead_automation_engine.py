@@ -16,7 +16,9 @@ from database.session import get_session
 from repositories.audit_repository import AuditRepository
 from repositories.car_repository import CarRepository
 from repositories.lead_automation_repository import LeadAutomationRepository
+from repositories.partner_tenant_repository import TenantUserRoleRepository
 from repositories.user_role_repository import UserRoleRepository
+from services.tenant_context import TenantContextService
 
 LEAD_AUTOMATION_ROLES = frozenset({"OWNER", "ADMIN", "MANAGER"})
 
@@ -41,7 +43,10 @@ class LeadAutomationEngineV1:
             return True
         async with get_session() as session:
             roles = await UserRoleRepository(session).get_user_roles(user_id)
-            return any(role.code in LEAD_AUTOMATION_ROLES for role in roles)
+            if any(role.code in LEAD_AUTOMATION_ROLES for role in roles):
+                return True
+            tenant_roles = await TenantUserRoleRepository(session).list_by_user(user_id)
+            return len(tenant_roles) > 0
 
     @staticmethod
     def _lead_snapshot(lead) -> dict[str, Any]:
@@ -117,6 +122,13 @@ class LeadAutomationEngineV1:
 
         async with get_session() as session:
             repo = LeadAutomationRepository(session)
+            tenant_id = None
+            company_id = None
+            if actor_id is not None:
+                ctx = await TenantContextService.resolve_for_user(actor_id)
+                if ctx is not None:
+                    tenant_id = ctx.tenant_id
+                    company_id = ctx.company_id
 
             if car_id is not None:
                 car = await CarRepository(session).get_car(car_id)
@@ -186,6 +198,8 @@ class LeadAutomationEngineV1:
                 source_metadata=source_metadata,
                 scoring_factors=factors,
                 notes=notes,
+                tenant_id=tenant_id,
+                company_id=company_id,
             )
 
             await repo.create_source_event(
@@ -353,7 +367,9 @@ class LeadAutomationEngineV1:
             raise LeadAutomationEngineError("Access denied")
 
         async with get_session() as session:
+            tenant_id = await TenantContextService.require_tenant_id(actor_id)
             leads = await LeadAutomationRepository(session).list_leads(
+                tenant_id=tenant_id,
                 source=source,
                 status=status,
                 assigned_manager_id=assigned_manager_id,

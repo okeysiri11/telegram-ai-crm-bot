@@ -66,6 +66,18 @@ class MarketingCampaign(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_auto_marketing_engine_v1_campaigns_status", "status"),
         Index("ix_auto_marketing_engine_v1_campaigns_car", "car_id"),
         Index("ix_auto_marketing_engine_v1_campaigns_owner", "owner_user_id"),
+        Index("ix_auto_marketing_engine_v1_campaigns_tenant", "tenant_id"),
+    )
+
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=True,
+    )
+    company_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("multi_company_v1_companies.id", ondelete="SET NULL"),
+        nullable=True,
     )
 
     name: Mapped[str] = mapped_column(String(200), nullable=False)

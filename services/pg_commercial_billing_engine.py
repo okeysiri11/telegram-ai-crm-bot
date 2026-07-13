@@ -23,6 +23,7 @@ from repositories.commercial_billing_repository import (
     SubscriptionHistoryRepository,
 )
 from services.automotive_telegram_access import is_billing_owner
+from services.pg_multi_tenant_foundation_engine import MultiTenantFoundationEngineV1
 from services.pg_partner_tenant_engine import PartnerTenantEngineV1
 from services.pg_tenant_billing_engine import PLAN_CATALOG, TenantBillingEngineV1
 
@@ -240,11 +241,28 @@ class CommercialBillingEngineV1:
                 actor_id=actor_id,
             )
             await session.refresh(updated)
-            return {
+            result = {
                 "payment": CommercialBillingEngineV1._payment_snapshot(updated),
                 "subscription": subscription,
                 "tenant_id": str(tenant_id),
+                "client_user_id": payment.user_id,
+                "plan_code": payment.plan_code,
+                "company_id": str(company_id),
             }
+
+        await MultiTenantFoundationEngineV1.sync_tenant_from_partner(
+            tenant_id=tenant_id,
+            company_id=company_id,
+            code=f"client_{result['client_user_id']}",
+            name=f"Automotive Client {result['client_user_id']}",
+            plan_code=result["plan_code"],
+            member_user_id=result["client_user_id"],
+        )
+        return {
+            "payment": result["payment"],
+            "subscription": result["subscription"],
+            "tenant_id": result["tenant_id"],
+        }
 
     @staticmethod
     async def reject_payment(

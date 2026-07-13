@@ -265,7 +265,18 @@ class PartnerTenantEngineV1:
             await session.refresh(tenant)
             snapshot = PartnerTenantEngineV1._tenant_snapshot(tenant)
             snapshot["billing_accounts"] = billing
-            return snapshot
+            sync_payload = {
+                "tenant_id": tenant.id,
+                "company_id": tenant.company_id,
+                "code": tenant.code,
+                "name": tenant.name,
+                "member_user_id": actor_id,
+            }
+
+        from services.pg_multi_tenant_foundation_engine import MultiTenantFoundationEngineV1
+
+        await MultiTenantFoundationEngineV1.sync_tenant_from_partner(**sync_payload)
+        return snapshot
 
     @staticmethod
     async def _provision_billing_accounts(session, *, tenant) -> list[dict[str, Any]]:
