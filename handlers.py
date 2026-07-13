@@ -6,6 +6,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton
 )
+import logging
 from openrouter import ask_openrouter, extract_memory_from_message
 from config import OWNER_ID, MANAGER_ID, MANAGERS
 from services.request_auth import RequestAuthService
@@ -299,6 +300,10 @@ from auto_vertical_handlers import auto_vertical_router
 
 router.include_router(deal_workflow_router)
 router.include_router(auto_vertical_router)
+
+from services.pg_lead_automation_engine import LeadAutomationEngineV1
+
+logger = logging.getLogger(__name__)
 
 STATUS_NAMES = {
     "NEW": "🆕 Новая",
@@ -829,9 +834,22 @@ AGRO_COUNTERPARTY_BUTTONS = set(AGRO_COUNTERPARTY_BUTTON_TO_TYPE.keys())
 
 @router.message(CommandStart())
 async def cmd_start(message: Message) -> None:
+    user = message.from_user
+    user_id = user.id
+
+    if not await LeadAutomationEngineV1.user_can_access(user_id):
+        try:
+            await LeadAutomationEngineV1.ingest_from_telegram(
+                user_id=user_id,
+                username=user.username,
+                first_name=user.first_name,
+                last_name=user.last_name,
+            )
+        except Exception:
+            logger.exception("Lead automation ingest failed for user %s", user_id)
 
     await message.answer(
-        f"Ваш Telegram ID: {message.from_user.id}"
+        f"Ваш Telegram ID: {user_id}"
     )
 
     await message.answer(
