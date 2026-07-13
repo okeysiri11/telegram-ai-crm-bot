@@ -295,8 +295,10 @@ from keyboards import (
 router = Router()
 
 from deal_workflow_handlers import deal_workflow_router
+from auto_vertical_handlers import auto_vertical_router
 
 router.include_router(deal_workflow_router)
+router.include_router(auto_vertical_router)
 
 STATUS_NAMES = {
     "NEW": "🆕 Новая",

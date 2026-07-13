@@ -22,6 +22,9 @@ def owner_main_menu():
                 KeyboardButton(text="🏢 Company Core"),
             ],
             [
+                KeyboardButton(text="🚗 Cars"),
+            ],
+            [
                 KeyboardButton(text="👥 Пользователи"),
             ],
             [
@@ -1442,4 +1445,101 @@ def test_center_menu() -> ReplyKeyboardMarkup:
             ],
         ],
         resize_keyboard=True,
+    )
+
+
+# ==========================================================
+# AUTO VERTICAL (Cars)
+# ==========================================================
+
+AUTO_VERTICAL_MAIN_BUTTON = "🚗 Cars"
+
+AUTO_VERTICAL_MENU_BUTTONS = frozenset({
+    "➕ Add Car",
+    "📋 Car List",
+    "🔎 Search Car",
+    "🧮 Profit Calculator",
+    "📣 Marketing",
+    "⬅ Назад",
+})
+
+
+def auto_vertical_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="➕ Add Car"),
+                KeyboardButton(text="📋 Car List"),
+            ],
+            [
+                KeyboardButton(text="🔎 Search Car"),
+                KeyboardButton(text="🧮 Profit Calculator"),
+            ],
+            [
+                KeyboardButton(text="📣 Marketing"),
+            ],
+            [
+                KeyboardButton(text="⬅ Назад"),
+            ],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def auto_vertical_car_list_inline(vehicles: list) -> InlineKeyboardMarkup:
+    rows = []
+    for vehicle in vehicles[:15]:
+        vid = vehicle.get("id", "")
+        make = vehicle.get("make", "")
+        model = vehicle.get("model", "")
+        year = vehicle.get("year", "")
+        stock = vehicle.get("stock_number", "")
+        label = f"{year} {make} {model}".strip()
+        if stock:
+            label = f"{label} ({stock})"
+        if len(label) > 40:
+            label = label[:37] + "..."
+        rows.append([
+            InlineKeyboardButton(
+                text=label or vid[:8],
+                callback_data=f"car:open:{vid}",
+            ),
+        ])
+    if not rows:
+        rows.append([
+            InlineKeyboardButton(text="—", callback_data="car:noop:0"),
+        ])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def auto_vertical_actions_inline(section: str = "overview") -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="➕ Add Car",
+                    callback_data="car:action:add",
+                ),
+                InlineKeyboardButton(
+                    text="📋 Car List",
+                    callback_data="car:action:list",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="🔎 Search",
+                    callback_data="car:action:search",
+                ),
+                InlineKeyboardButton(
+                    text="🧮 Profit",
+                    callback_data="car:action:profit",
+                ),
+            ],
+            [
+                InlineKeyboardButton(
+                    text="◀ К разделу",
+                    callback_data=f"car:section:back:{section}",
+                ),
+            ],
+        ]
     )
