@@ -31,6 +31,7 @@ class TenantResourceType(str, enum.Enum):
     CAR = "car"
     LEAD = "lead"
     CAMPAIGN = "campaign"
+    CHANNEL = "channel"
 
 
 class TenantBillingAccountType(str, enum.Enum):
