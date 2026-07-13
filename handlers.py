@@ -299,10 +299,16 @@ router = Router()
 from deal_workflow_handlers import deal_workflow_router
 from auto_vertical_handlers import auto_vertical_router
 from ai_sales_handlers import ai_sales_router, sales_assistant_active
+from dealer_onboarding_handlers import (
+    dealer_onboarding_router,
+    present_onboarding_resume,
+    present_onboarding_start,
+)
 
 router.include_router(deal_workflow_router)
 router.include_router(auto_vertical_router)
 router.include_router(ai_sales_router)
+router.include_router(dealer_onboarding_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1
@@ -840,6 +846,20 @@ AGRO_COUNTERPARTY_BUTTONS = set(AGRO_COUNTERPARTY_BUTTON_TO_TYPE.keys())
 async def cmd_start(message: Message) -> None:
     user = message.from_user
     user_id = user.id
+
+    from services.automotive_telegram_access import can_see_automotive_menu_button
+    from services.pg_dealer_onboarding_engine import DealerOnboardingEngineV1
+
+    show_automotive = await can_see_automotive_menu_button(user_id)
+
+    if not show_automotive:
+        active = await DealerOnboardingEngineV1.get_active_session(user_id)
+        await message.answer(f"Ваш Telegram ID: {user_id}")
+        if active and active["status"] == "ACTIVE":
+            await present_onboarding_resume(message, active)
+            return
+        await present_onboarding_start(message, user_id)
+        return
 
     if not await LeadAutomationEngineV1.user_can_access(user_id):
         try:

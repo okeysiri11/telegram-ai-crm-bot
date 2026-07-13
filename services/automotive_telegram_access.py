@@ -7,14 +7,17 @@ from database import get_user_roles
 from repositories.user_role_repository import UserRoleRepository
 from database.session import get_session
 
-AUTOMOTIVE_UI_ROLES = frozenset({"OWNER", "SUPER_MANAGER", "AUTO_MANAGER", "ADMIN", "MANAGER"})
+AUTOMOTIVE_UI_ROLES = frozenset(
+    {"OWNER", "SUPER_MANAGER", "AUTO_OWNER", "AUTO_MANAGER", "ADMIN", "MANAGER"}
+)
+AUTOMOTIVE_MENU_ROLES = frozenset({"OWNER", "SUPER_MANAGER", "AUTO_OWNER", "AUTO_MANAGER"})
 
 
 async def can_access_automotive_ui(user_id: int) -> bool:
     if user_id == OWNER_ID:
         return True
     legacy_roles = set(get_user_roles(user_id))
-    if legacy_roles & {"OWNER", "SUPER_MANAGER", "AUTO_MANAGER"}:
+    if legacy_roles & {"OWNER", "SUPER_MANAGER", "AUTO_MANAGER", "ADMIN", "MANAGER"}:
         return True
     async with get_session() as session:
         roles = await UserRoleRepository(session).get_user_roles(user_id)
@@ -25,7 +28,11 @@ async def can_see_automotive_menu_button(user_id: int) -> bool:
     if user_id == OWNER_ID:
         return True
     legacy_roles = set(get_user_roles(user_id))
-    return bool(legacy_roles & {"OWNER", "SUPER_MANAGER", "AUTO_MANAGER"})
+    if legacy_roles & AUTOMOTIVE_MENU_ROLES:
+        return True
+    async with get_session() as session:
+        roles = await UserRoleRepository(session).get_user_roles(user_id)
+        return any(role.code in AUTOMOTIVE_MENU_ROLES for role in roles)
 
 
 async def is_billing_owner(user_id: int) -> bool:

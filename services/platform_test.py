@@ -36,6 +36,7 @@ class PlatformTestService:
         "📋 Readiness Test": "readiness",
         "🏢 Tenant Test": "tenant_isolation",
         "🔐 RBAC Test": "rbac_v2",
+        "🚘 Onboarding Test": "dealer_onboarding",
     }
 
     @staticmethod
@@ -239,6 +240,18 @@ class PlatformTestService:
                     "STATUS: OK\n"
                     f"access_matrix: {result.get('access_matrix', {}).get('ok')}\n"
                     f"tenant_isolation: {result.get('tenant_isolation', {}).get('ok')}"
+                )
+            elif module_key == "dealer_onboarding":
+                from services.dealer_onboarding_test import run_dealer_onboarding_tests
+
+                result = run_dealer_onboarding_tests()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"session: {result.get('session', {}).get('ok')}\n"
+                    f"timeout: {result.get('timeout', {}).get('ok')}\n"
+                    f"analytics: {result.get('analytics', {}).get('ok')}"
                 )
             else:
                 raise RuntimeError(f"unknown module {module_key}")

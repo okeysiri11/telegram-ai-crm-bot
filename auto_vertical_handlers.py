@@ -38,6 +38,8 @@ from services.pg_commercial_billing_engine import (
     PLAN_MARKETING,
     PRICING_MODEL_LABELS,
 )
+from database.models.dealer_onboarding_engine import OnboardingStepName
+from services.pg_dealer_onboarding_engine import DealerOnboardingEngineV1
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.vin_decoder import (
     build_auction_reference,
@@ -792,6 +794,12 @@ async def auto_billing_callback(callback: CallbackQuery) -> None:
 
     if data.startswith("billing:plan:"):
         plan_code = data.split(":")[2]
+        await DealerOnboardingEngineV1.advance_for_user(
+            user_id,
+            OnboardingStepName.TARIFF_SELECTED.value,
+            payload={"plan_code": plan_code},
+            plan_code=plan_code,
+        )
         text = PLAN_MARKETING.get(plan_code, plan_code)
         await callback.message.answer(
             f"{text}\n\nВыберите модель оплаты:",
@@ -806,6 +814,13 @@ async def auto_billing_callback(callback: CallbackQuery) -> None:
             "plan_code": plan_code,
             "pricing_model": pricing_model,
         }
+        await DealerOnboardingEngineV1.advance_for_user(
+            user_id,
+            OnboardingStepName.PRICING_MODEL_SELECTED.value,
+            payload={"plan_code": plan_code, "pricing_model": pricing_model},
+            plan_code=plan_code,
+            pricing_model=pricing_model,
+        )
         label = PRICING_MODEL_LABELS.get(pricing_model, pricing_model)
         await callback.message.answer(
             f"Plan: {plan_code}\nModel: {label}\n\nВыберите способ оплаты:",
@@ -833,6 +848,13 @@ async def auto_billing_callback(callback: CallbackQuery) -> None:
             "payment_method": payment_method,
             "awaiting_receipt": True,
         }
+        await DealerOnboardingEngineV1.bind_payment(
+            user_id,
+            payment_id=uuid.UUID(payment["id"]),
+            plan_code=plan_code,
+            pricing_model=pricing_model,
+            payment_method=payment_method,
+        )
         method_label = PAYMENT_METHOD_LABELS.get(payment_method, payment_method)
         await callback.message.answer(
             "💳 Оплата\n\n"
@@ -856,10 +878,24 @@ async def auto_billing_callback(callback: CallbackQuery) -> None:
         except CommercialBillingEngineError as exc:
             await callback.answer(str(exc), show_alert=True)
             return
+        payment_row = result.get("payment") or {}
+        client_user_id = payment_row.get("user_id")
+        if client_user_id:
+            onboarding = await DealerOnboardingEngineV1.on_payment_approved(
+                payment_id=payment_id,
+                tenant_id=uuid.UUID(result["tenant_id"]),
+                client_user_id=int(client_user_id),
+            )
+        else:
+            onboarding = None
+        completion_note = ""
+        if onboarding and onboarding.get("status") == "COMPLETED":
+            completion_note = "\n\n🚗 Automotive menu activated for dealer."
         await callback.message.answer(
             "✅ Payment approved\n\n"
             f"Tenant: {result['tenant_id']}\n"
-            f"Subscription: {result['subscription']['plan_code']}",
+            f"Subscription: {result['subscription']['plan_code']}"
+            f"{completion_note}",
         )
         await callback.answer("Approved")
         return
@@ -888,7 +924,35 @@ async def auto_billing_callback(callback: CallbackQuery) -> None:
 async def auto_billing_receipt_upload(message: Message, bot: Bot) -> None:
     user_id = message.from_user.id
     flow = auto_billing_flow.get(user_id, {})
-    payment_id = uuid.UUID(flow["payment_id"])
+    await _process_billing_receipt(message, bot, user_id, uuid.UUID(flow["payment_id"]))
+    auto_billing_flow.pop(user_id, None)
+
+
+@auto_vertical_router.message(F.photo | F.document)
+async def auto_billing_receipt_upload_onboarding(message: Message, bot: Bot) -> None:
+    user_id = message.from_user.id
+    if auto_billing_flow.get(user_id, {}).get("awaiting_receipt"):
+        return
+    session = await DealerOnboardingEngineV1.get_awaiting_receipt_session(user_id)
+    if not session or not session.get("payment_id"):
+        return
+    await _process_billing_receipt(
+        message,
+        bot,
+        user_id,
+        uuid.UUID(session["payment_id"]),
+        from_onboarding=True,
+    )
+
+
+async def _process_billing_receipt(
+    message: Message,
+    bot: Bot,
+    user_id: int,
+    payment_id: uuid.UUID,
+    *,
+    from_onboarding: bool = False,
+) -> None:
 
     file_id = None
     file_unique_id = None
@@ -922,11 +986,14 @@ async def auto_billing_receipt_upload(message: Message, bot: Bot) -> None:
         await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
         return
 
-    auto_billing_flow.pop(user_id, None)
+    if from_onboarding:
+        await DealerOnboardingEngineV1.mark_receipt_uploaded(user_id)
+
+    menu = await _main_menu_for(user_id) if from_onboarding else auto_vertical_menu()
     await message.answer(
         "✅ Квитанция получена\n\n"
         "Платёж отправлен на ручную проверку. "
         "После подтверждения OWNER будет активирован tenant и подписка.",
-        reply_markup=auto_vertical_menu(),
+        reply_markup=menu,
     )
     log_audit(user_id, "upload", "payment_receipt", result.get("receipt_id"))

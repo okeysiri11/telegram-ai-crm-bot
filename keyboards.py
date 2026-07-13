@@ -1451,6 +1451,9 @@ def test_center_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="🔐 RBAC Test"),
             ],
             [
+                KeyboardButton(text="🚘 Onboarding Test"),
+            ],
+            [
                 KeyboardButton(text="⬅ Назад"),
             ],
         ],
@@ -1518,6 +1521,39 @@ def auto_vertical_menu() -> ReplyKeyboardMarkup:
         ],
         resize_keyboard=True,
     )
+
+
+def dealer_onboarding_automotive_inline() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="🚗 Automotive",
+                    callback_data="onboard:automotive",
+                ),
+            ],
+        ]
+    )
+
+
+def dealer_onboarding_resume_inline(current_step: str) -> InlineKeyboardMarkup:
+    rows = [
+        [
+            InlineKeyboardButton(
+                text="▶ Продолжить onboarding",
+                callback_data="onboard:resume",
+            ),
+        ],
+    ]
+    if current_step in {"started", "automotive_selected"}:
+        rows[0].insert(
+            0,
+            InlineKeyboardButton(
+                text="🚗 Automotive",
+                callback_data="onboard:automotive",
+            ),
+        )
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def auto_billing_plans_inline() -> InlineKeyboardMarkup:
