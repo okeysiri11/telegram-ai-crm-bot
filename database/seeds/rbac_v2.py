@@ -1,94 +1,236 @@
-# RBAC v2 default roles and permissions.
+# RBAC v2 — roles, permissions, inheritance, and role templates.
 
 from __future__ import annotations
 
-DEFAULT_ROLES: tuple[tuple[str, str, str], ...] = (
+RBAC_V2_ROLES: tuple[tuple[str, str, str], ...] = (
     ("OWNER", "Owner", "Full platform ownership"),
-    ("ADMIN", "Administrator", "Platform administration"),
-    ("MANAGER", "Manager", "CRM and deal management"),
-    ("AUTO_MANAGER", "Auto Manager", "Automotive vertical and billing"),
-    ("LAWYER", "Lawyer", "Legal module access"),
-    ("DRONE_ENGINEER", "Drone Engineer", "Drone operations access"),
-    ("BEAUTY_MANAGER", "Beauty Manager", "Beauty vertical management"),
-    ("ACCOUNTANT", "Accountant", "Finance and ledger access"),
-    ("PARTNER", "Partner", "Partner portal access"),
+    ("SUPER_MANAGER", "Super Manager", "Cross-vertical platform management"),
+    ("AUTO_OWNER", "Auto Owner", "Automotive tenant owner"),
+    ("AUTO_MANAGER", "Auto Manager", "Automotive operations manager"),
+    ("AUTO_OPERATOR", "Auto Operator", "Automotive day-to-day operator"),
+    ("FINANCE_MANAGER", "Finance Manager", "Finance and treasury access"),
+    ("LAW_MANAGER", "Law Manager", "Legal module access"),
+    ("AGRO_MANAGER", "Agro Manager", "Agro trading module access"),
+    ("DRONE_MANAGER", "Drone Manager", "Drone operations access"),
+    ("CLIENT_OWNER", "Client Owner", "Client tenant owner"),
+    ("CLIENT_MANAGER", "Client Manager", "Client tenant manager"),
 )
 
-DEFAULT_PERMISSIONS: tuple[tuple[str, str], ...] = (
-    ("crm.read", "Read CRM data"),
-    ("crm.write", "Create and update CRM data"),
-    ("users.read", "View users"),
-    ("users.write", "Create and update users"),
-    ("roles.manage", "Manage roles and assignments"),
-    ("finance.read", "View finance accounts and transactions"),
-    ("finance.write", "Create and update finance records"),
-    ("ledger.read", "View ledger entries"),
-    ("ledger.write", "Create and update ledger entries"),
-    ("partner.read", "View partners"),
-    ("partner.write", "Create and update partners"),
-    ("deal.read", "View deals"),
-    ("deal.write", "Create and update deals"),
-    ("commission.read", "View commissions"),
-    ("commission.write", "Create and update commissions"),
-    ("deal.created", "Emit or subscribe to deal created events"),
-    ("deal.updated", "Emit or subscribe to deal updated events"),
-    ("payment.received", "Emit or subscribe to payment received events"),
-    ("partner.assigned", "Emit or subscribe to partner assigned events"),
-    ("commission.created", "Emit or subscribe to commission created events"),
-    ("ledger.entry.created", "Emit or subscribe to ledger entry created events"),
+RBAC_V2_PERMISSIONS: tuple[tuple[str, str, str | None, str], ...] = (
+    # module access
+    ("auto.module", "module", None, "Automotive module access"),
+    ("agro.module", "module", None, "Agro module access"),
+    ("finance.module", "module", None, "Finance module access"),
+    ("legal.module", "module", None, "Legal module access"),
+    ("drone.module", "module", None, "Drone module access"),
+    ("billing.module", "module", None, "Billing module access"),
+    ("analytics.module", "module", None, "Analytics module access"),
+    # entity access
+    ("auto.car.read", "entity", "auto.module", "View automotive inventory"),
+    ("auto.car.write", "entity", "auto.car.read", "Manage automotive inventory"),
+    ("auto.lead.read", "entity", "auto.module", "View automotive leads"),
+    ("auto.lead.write", "entity", "auto.lead.read", "Manage automotive leads"),
+    ("deal.read", "entity", "finance.module", "View deals"),
+    ("deal.write", "entity", "deal.read", "Manage deals"),
+    # tenant access
+    ("tenant.read", "tenant", None, "View tenant metadata"),
+    ("tenant.write", "tenant", "tenant.read", "Update tenant settings"),
+    ("tenant.admin", "tenant", "tenant.write", "Administer tenant members"),
+    ("tenant.isolated", "tenant", "tenant.read", "Enforce tenant data isolation"),
+    # billing access
+    ("billing.view", "billing", "billing.module", "View billing and plans"),
+    ("billing.pay", "billing", "billing.view", "Submit payments"),
+    ("billing.approve", "billing", "billing.view", "Approve payments"),
+    ("billing.manage", "billing", "billing.approve", "Manage subscriptions"),
+    # analytics access
+    ("analytics.view", "analytics", "analytics.module", "View analytics dashboards"),
+    ("analytics.export", "analytics", "analytics.view", "Export analytics data"),
 )
 
-ALL_PERMISSION_CODES: frozenset[str] = frozenset(code for code, _ in DEFAULT_PERMISSIONS)
+ALL_RBAC_V2_PERMISSION_CODES: frozenset[str] = frozenset(p[0] for p in RBAC_V2_PERMISSIONS)
 
-DEFAULT_ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
-    "OWNER": ALL_PERMISSION_CODES,
-    "ADMIN": ALL_PERMISSION_CODES,
-    "MANAGER": frozenset(
+RBAC_V2_ROLE_INHERITANCE: dict[str, frozenset[str]] = {
+    "AUTO_OPERATOR": frozenset(),
+    "AUTO_MANAGER": frozenset({"AUTO_OPERATOR"}),
+    "AUTO_OWNER": frozenset({"AUTO_MANAGER"}),
+    "CLIENT_MANAGER": frozenset({"CLIENT_OWNER"}),
+    "FINANCE_MANAGER": frozenset(),
+    "LAW_MANAGER": frozenset(),
+    "AGRO_MANAGER": frozenset(),
+    "DRONE_MANAGER": frozenset(),
+    "SUPER_MANAGER": frozenset(
+        {"AUTO_OWNER", "FINANCE_MANAGER", "LAW_MANAGER", "AGRO_MANAGER", "DRONE_MANAGER"}
+    ),
+    "OWNER": frozenset({"SUPER_MANAGER"}),
+    "CLIENT_OWNER": frozenset(),
+}
+
+RBAC_V2_ROLE_TEMPLATES: tuple[tuple[str, str, str, tuple[str, ...], tuple[str, ...]], ...] = (
+    (
+        "platform_admin",
+        "Platform Admin",
+        "Full platform administration template",
+        ("OWNER", "SUPER_MANAGER"),
+        ALL_RBAC_V2_PERMISSION_CODES,
+    ),
+    (
+        "automotive_tenant",
+        "Automotive Tenant",
+        "Automotive dealership tenant template",
+        ("AUTO_OWNER", "AUTO_MANAGER", "AUTO_OPERATOR"),
+        (
+            "auto.module",
+            "auto.car.read",
+            "auto.car.write",
+            "auto.lead.read",
+            "auto.lead.write",
+            "tenant.read",
+            "tenant.write",
+            "tenant.isolated",
+            "billing.view",
+            "billing.pay",
+            "analytics.view",
+        ),
+    ),
+    (
+        "client_tenant",
+        "Client Tenant",
+        "External client tenant template",
+        ("CLIENT_OWNER", "CLIENT_MANAGER"),
+        (
+            "auto.module",
+            "auto.car.read",
+            "auto.lead.read",
+            "tenant.read",
+            "tenant.isolated",
+            "billing.view",
+            "billing.pay",
+            "analytics.view",
+        ),
+    ),
+)
+
+RBAC_V2_DIRECT_ROLE_PERMISSIONS: dict[str, frozenset[str]] = {
+    "OWNER": ALL_RBAC_V2_PERMISSION_CODES,
+    "SUPER_MANAGER": frozenset(
         {
-            "crm.read",
-            "crm.write",
-            "users.read",
+            "auto.module",
+            "agro.module",
+            "finance.module",
+            "legal.module",
+            "drone.module",
+            "billing.module",
+            "analytics.module",
+            "auto.car.read",
+            "auto.car.write",
+            "auto.lead.read",
+            "auto.lead.write",
             "deal.read",
             "deal.write",
-            "deal.created",
-            "deal.updated",
-            "partner.read",
-            "partner.assigned",
-            "commission.read",
-            "commission.created",
+            "tenant.read",
+            "tenant.write",
+            "tenant.admin",
+            "tenant.isolated",
+            "billing.view",
+            "billing.approve",
+            "billing.manage",
+            "analytics.view",
+            "analytics.export",
         }
     ),
-    "LAWYER": frozenset(
-        {"crm.read", "deal.read", "deal.created", "deal.updated", "ledger.read", "ledger.entry.created"}
-    ),
-    "DRONE_ENGINEER": frozenset(
-        {"crm.read", "deal.read", "deal.write", "deal.created", "deal.updated"}
-    ),
-    "BEAUTY_MANAGER": frozenset(
+    "AUTO_OWNER": frozenset(
         {
-            "crm.read",
-            "crm.write",
+            "auto.module",
+            "auto.car.read",
+            "auto.car.write",
+            "auto.lead.read",
+            "auto.lead.write",
+            "tenant.read",
+            "tenant.write",
+            "tenant.admin",
+            "tenant.isolated",
+            "billing.view",
+            "billing.manage",
+            "analytics.view",
+            "analytics.export",
+        }
+    ),
+    "AUTO_MANAGER": frozenset(
+        {
+            "auto.module",
+            "auto.car.read",
+            "auto.car.write",
+            "auto.lead.read",
+            "auto.lead.write",
+            "tenant.read",
+            "tenant.isolated",
+            "billing.view",
+            "analytics.view",
+        }
+    ),
+    "AUTO_OPERATOR": frozenset(
+        {
+            "auto.module",
+            "auto.car.read",
+            "auto.car.write",
+            "auto.lead.read",
+            "tenant.read",
+            "tenant.isolated",
+            "analytics.view",
+        }
+    ),
+    "FINANCE_MANAGER": frozenset(
+        {
+            "finance.module",
             "deal.read",
             "deal.write",
-            "deal.created",
-            "deal.updated",
-            "partner.read",
-            "partner.assigned",
+            "billing.module",
+            "billing.view",
+            "billing.approve",
+            "analytics.module",
+            "analytics.view",
+            "analytics.export",
+            "tenant.read",
         }
     ),
-    "ACCOUNTANT": frozenset(
+    "LAW_MANAGER": frozenset(
+        {"legal.module", "deal.read", "tenant.read", "analytics.view"}
+    ),
+    "AGRO_MANAGER": frozenset(
+        {"agro.module", "deal.read", "deal.write", "tenant.read", "analytics.view"}
+    ),
+    "DRONE_MANAGER": frozenset(
+        {"drone.module", "tenant.read", "analytics.view"}
+    ),
+    "CLIENT_OWNER": frozenset(
         {
-            "finance.read",
-            "finance.write",
-            "ledger.read",
-            "ledger.write",
-            "ledger.entry.created",
-            "commission.read",
-            "commission.created",
-            "payment.received",
+            "auto.module",
+            "auto.car.read",
+            "auto.lead.read",
+            "tenant.read",
+            "tenant.write",
+            "tenant.isolated",
+            "billing.module",
+            "billing.view",
+            "billing.pay",
+            "analytics.view",
         }
     ),
-    "PARTNER": frozenset(
-        {"partner.read", "deal.read", "deal.created", "partner.assigned"}
+    "CLIENT_MANAGER": frozenset(
+        {
+            "auto.module",
+            "auto.car.read",
+            "auto.lead.read",
+            "tenant.read",
+            "tenant.isolated",
+            "billing.view",
+            "analytics.view",
+        }
     ),
 }
+
+# Backward-compatible exports for existing rbac_repository seed
+DEFAULT_ROLES = RBAC_V2_ROLES
+DEFAULT_PERMISSIONS = tuple((code, desc) for code, _, _, desc in RBAC_V2_PERMISSIONS)
+ALL_PERMISSION_CODES = ALL_RBAC_V2_PERMISSION_CODES
+DEFAULT_ROLE_PERMISSIONS = RBAC_V2_DIRECT_ROLE_PERMISSIONS

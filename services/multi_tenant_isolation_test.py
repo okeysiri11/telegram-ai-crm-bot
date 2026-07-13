@@ -30,11 +30,12 @@ async def _ensure_company_id() -> uuid.UUID:
 
 async def _create_isolated_tenant(user_id: int, suffix: str) -> uuid.UUID:
     company_id = await _ensure_company_id()
+    unique = uuid.uuid4().hex[:8].upper()
     tenant = await PartnerTenantEngineV1.create_tenant(
         OWNER_ID,
         company_id=company_id,
-        code=f"ISO_{suffix}_{user_id}",
-        name=f"Isolation Tenant {suffix}",
+        code=f"ISO_{suffix}_{user_id}_{unique}",
+        name=f"Isolation Tenant {suffix} {unique}",
         provision_billing=False,
     )
     tenant_id = uuid.UUID(tenant["tenant_id"])

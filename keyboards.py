@@ -1447,6 +1447,10 @@ def test_center_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="📋 Readiness Test"),
             ],
             [
+                KeyboardButton(text="🏢 Tenant Test"),
+                KeyboardButton(text="🔐 RBAC Test"),
+            ],
+            [
                 KeyboardButton(text="⬅ Назад"),
             ],
         ],

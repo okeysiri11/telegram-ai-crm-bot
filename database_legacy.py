@@ -2061,6 +2061,9 @@ ROLE_PERMISSIONS = {
         "crypto_access", "agro_access", "calendar_access", "reports_access", "ai_access",
     },
     "DRONE_ENGINEER": {"drone_access", "calendar_access", "ai_access"},
+    "AUTO_MANAGER": {
+        "calendar_access", "reports_access", "ai_access",
+    },
     "CLIENT": {"calendar_access", "ai_access"},
 }
 

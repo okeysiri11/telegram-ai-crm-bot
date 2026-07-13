@@ -35,6 +35,7 @@ class PlatformTestService:
         "🚗 Auto Test": "automotive",
         "📋 Readiness Test": "readiness",
         "🏢 Tenant Test": "tenant_isolation",
+        "🔐 RBAC Test": "rbac_v2",
     }
 
     @staticmethod
@@ -227,6 +228,17 @@ class PlatformTestService:
                     f"tenant_a={result.get('tenant_a')}\n"
                     f"tenant_b={result.get('tenant_b')}\n"
                     "isolation verified"
+                )
+            elif module_key == "rbac_v2":
+                from services.rbac_v2_test import run_rbac_v2_tests
+
+                result = run_rbac_v2_tests()
+                if not result.get("ok"):
+                    raise RuntimeError(str(result))
+                return (
+                    "STATUS: OK\n"
+                    f"access_matrix: {result.get('access_matrix', {}).get('ok')}\n"
+                    f"tenant_isolation: {result.get('tenant_isolation', {}).get('ok')}"
                 )
             else:
                 raise RuntimeError(f"unknown module {module_key}")
