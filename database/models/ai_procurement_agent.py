@@ -32,6 +32,7 @@ class ProcurementAnalysisType(str, enum.Enum):
     SALE_PRICE_ESTIMATE = "SALE_PRICE_ESTIMATE"
     ROI_ESTIMATE = "ROI_ESTIMATE"
     FULL_EVALUATION = "FULL_EVALUATION"
+    SUPPLIER_SCORING = "SUPPLIER_SCORING"
 
 
 class ProcurementSubjectType(str, enum.Enum):

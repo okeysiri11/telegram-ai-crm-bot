@@ -3,6 +3,8 @@
 from aiohttp import web
 
 from api.handlers import (
+    ai_procurement_agent_feature_handler,
+    ai_procurement_agent_handler,
     api_info_handler,
     auth_token_handler,
     dealer_portal_handler,
@@ -77,6 +79,12 @@ def create_app() -> web.Application:
 
     app.router.add_get("/v1/lead-marketplace", lead_marketplace_handler)
     app.router.add_get("/v1/lead-marketplace/features/{feature}", lead_marketplace_feature_handler)
+
+    app.router.add_get("/v1/ai-procurement-agent", ai_procurement_agent_handler)
+    app.router.add_get(
+        "/v1/ai-procurement-agent/features/{feature}",
+        ai_procurement_agent_feature_handler,
+    )
 
     return app
 

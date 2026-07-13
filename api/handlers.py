@@ -284,6 +284,23 @@ async def lead_marketplace_feature_handler(request: web.Request) -> web.Response
     return _json(data)
 
 
+@require_api_auth
+async def ai_procurement_agent_handler(request: web.Request) -> web.Response:
+    from services.pg_ai_procurement_agent_v1 import ProcurementAgentV1
+
+    agent = await ProcurementAgentV1.get_agent(_actor(request))
+    return _json(agent)
+
+
+@require_api_auth
+async def ai_procurement_agent_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_ai_procurement_agent_v1 import ProcurementAgentV1
+
+    feature = request.match_info["feature"]
+    data = await ProcurementAgentV1.get_feature(_actor(request), feature)
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -322,6 +339,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/dealer-portal/modules/{module}",
             "/v1/lead-marketplace",
             "/v1/lead-marketplace/features/{feature}",
+            "/v1/ai-procurement-agent",
+            "/v1/ai-procurement-agent/features/{feature}",
             "/v1/auth/token",
         ],
     })

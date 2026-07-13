@@ -8,6 +8,8 @@ from datetime import datetime, timezone
 from decimal import Decimal, ROUND_HALF_UP
 from typing import Any
 
+from sqlalchemy import select
+
 from config import OWNER_ID
 from database.models.ai_procurement_agent import (
     ProcurementAnalysisType,
@@ -15,7 +17,12 @@ from database.models.ai_procurement_agent import (
     ProcurementSubjectType,
 )
 from database.models.automotive_cost import CostType
-from database.models.automotive_procurement import AuctionLotStatus
+from database.models.automotive_procurement import (
+    AuctionLotStatus,
+    SupplierOffer,
+    SupplierOfferStatus,
+    VehicleSourceType,
+)
 from database.session import get_session
 from repositories.ai_procurement_agent_repository import (
     ProcurementAnalysisRepository,
@@ -878,6 +885,122 @@ class AiProcurementAgentV1:
                 rows.sort(key=lambda r: r.created_at, reverse=True)
                 rows = rows[:limit]
             return [AiProcurementAgentV1._analysis_snapshot(r) for r in rows]
+
+    @staticmethod
+    async def score_suppliers(
+        actor_id: int,
+        *,
+        source: str | None = None,
+        limit: int = 20,
+    ) -> dict[str, Any]:
+        await AiProcurementAgentV1._require_access(actor_id)
+
+        async with get_session() as session:
+            lot_repo = AuctionLotRepository(session)
+
+            offers_result = await session.execute(
+                select(SupplierOffer).order_by(SupplierOffer.created_at.desc()).limit(500)
+            )
+            offers = list(offers_result.scalars().all())
+            lots = await lot_repo.list_by_status(AuctionLotStatus.WATCHING.value, limit=500)
+            won_lots = await lot_repo.list_by_status(AuctionLotStatus.WON.value, limit=200)
+            all_lots = lots + won_lots
+
+            supplier_stats: dict[str, dict[str, Any]] = {}
+
+            for src in VehicleSourceType:
+                supplier_stats[src.value] = {
+                    "source": src.value,
+                    "pending_offers": 0,
+                    "accepted_offers": 0,
+                    "watching_lots": 0,
+                    "won_lots": 0,
+                    "avg_offer_price": None,
+                    "avg_lot_bid": None,
+                    "score": 0,
+                }
+
+            offer_prices: dict[str, list[float]] = {}
+            for offer in offers:
+                if source and offer.source != source:
+                    continue
+                stats = supplier_stats.get(offer.source)
+                if stats is None:
+                    continue
+                if offer.status == SupplierOfferStatus.PENDING.value:
+                    stats["pending_offers"] += 1
+                elif offer.status == SupplierOfferStatus.ACCEPTED.value:
+                    stats["accepted_offers"] += 1
+                offer_prices.setdefault(offer.source, []).append(float(offer.offer_price))
+
+            lot_bids: dict[str, list[float]] = {}
+            for lot in all_lots:
+                if source and lot.source != source:
+                    continue
+                stats = supplier_stats.get(lot.source)
+                if stats is None:
+                    continue
+                if lot.status == AuctionLotStatus.WATCHING.value:
+                    stats["watching_lots"] += 1
+                elif lot.status == AuctionLotStatus.WON.value:
+                    stats["won_lots"] += 1
+                bid = lot.current_bid or lot.buy_now_price
+                if bid:
+                    lot_bids.setdefault(lot.source, []).append(float(bid))
+
+            scored: list[dict[str, Any]] = []
+            for src, stats in supplier_stats.items():
+                if source and src != source:
+                    continue
+                total_offers = stats["pending_offers"] + stats["accepted_offers"]
+                if total_offers == 0 and stats["watching_lots"] == 0 and stats["won_lots"] == 0:
+                    continue
+
+                if offer_prices.get(src):
+                    stats["avg_offer_price"] = str(
+                        AiProcurementAgentV1._quantize(
+                            Decimal(str(statistics.mean(offer_prices[src])))
+                        )
+                    )
+                if lot_bids.get(src):
+                    stats["avg_lot_bid"] = str(
+                        AiProcurementAgentV1._quantize(
+                            Decimal(str(statistics.mean(lot_bids[src])))
+                        )
+                    )
+
+                score = 40
+                if stats["accepted_offers"]:
+                    score += min(25, stats["accepted_offers"] * 5)
+                if stats["won_lots"]:
+                    score += min(20, stats["won_lots"] * 4)
+                if stats["watching_lots"]:
+                    score += min(10, stats["watching_lots"])
+                if stats["pending_offers"] > 10:
+                    score -= 5
+                stats["score"] = min(100, max(0, score))
+                scored.append(stats)
+
+            scored.sort(key=lambda item: item["score"], reverse=True)
+            scored = scored[:limit]
+
+            result = {"suppliers": scored, "count": len(scored)}
+            row = await ProcurementAnalysisRepository(session).create(
+                analysis_type=ProcurementAnalysisType.SUPPLIER_SCORING.value,
+                subject_type=ProcurementSubjectType.MARKET_SEGMENT.value,
+                subject_id=source or "all",
+                input_context={"source": source, "limit": limit},
+                result=result,
+                confidence_score=AiProcurementAgentV1._confidence(0.75 if scored else 0.4),
+                model_version=MODEL_VERSION,
+                summary=f"Scored {len(scored)} suppliers",
+                created_by=actor_id,
+            )
+            await session.refresh(row)
+            return {
+                "analysis": AiProcurementAgentV1._analysis_snapshot(row),
+                **result,
+            }
 
     @staticmethod
     async def _optional_ai_repair_notes(
