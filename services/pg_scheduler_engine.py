@@ -108,6 +108,13 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "interval_seconds": 60,
     },
     {
+        "job_key": "analytics_engine.aggregate",
+        "name": "Analytics Engine Daily Aggregation",
+        "description": "Aggregate lead, sales, advertising, and manager statistics",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 5 * * *",
+    },
+    {
         "job_key": "tenant_billing.monthly",
         "name": "Tenant Billing Monthly",
         "description": "Collect usage and generate tenant invoices",
@@ -292,6 +299,21 @@ class SchedulerEngineV1:
         return await CrossPostingEngineV1.process_due_jobs(limit=limit)
 
     @staticmethod
+    async def _run_analytics_engine_aggregate(config: dict[str, Any] | None) -> dict[str, Any]:
+        from sqlalchemy import select
+
+        from database.models.partner_tenant_engine import PartnerTenant
+        from database.session import get_session
+        from services.pg_analytics_engine import AnalyticsEngineV1
+
+        async with get_session() as session:
+            result = await session.execute(select(PartnerTenant).limit(1))
+            tenant = result.scalar_one_or_none()
+        if tenant is None:
+            return {"status": "skipped", "reason": "no_tenant"}
+        return await AnalyticsEngineV1.aggregate_daily(OWNER_ID, tenant.id)
+
+    @staticmethod
     async def _run_tenant_billing_monthly(config: dict[str, Any] | None) -> dict[str, Any]:
         from services.pg_tenant_billing_engine import TenantBillingEngineV1
 
@@ -316,6 +338,7 @@ class SchedulerEngineV1:
             "sales_pipeline_automation.process": SchedulerEngineV1._run_sales_pipeline_automation,
             "analytics_automation.compute": SchedulerEngineV1._run_analytics_automation_compute,
             "cross_posting.process": SchedulerEngineV1._run_cross_posting_process,
+            "analytics_engine.aggregate": SchedulerEngineV1._run_analytics_engine_aggregate,
             "tenant_billing.monthly": SchedulerEngineV1._run_tenant_billing_monthly,
             "revenue_sharing.monthly": SchedulerEngineV1._run_revenue_sharing_monthly,
         }

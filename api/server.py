@@ -25,6 +25,8 @@ from api.handlers import (
     deal_pipeline_handler,
     cross_posting_feature_handler,
     cross_posting_handler,
+    analytics_feature_handler,
+    analytics_handler,
     deals_create_handler,
     deals_list_handler,
     documents_create_handler,
@@ -140,6 +142,12 @@ def create_app() -> web.Application:
     app.router.add_get(
         "/v1/cross-posting/features/{feature}",
         cross_posting_feature_handler,
+    )
+
+    app.router.add_get("/v1/analytics", analytics_handler)
+    app.router.add_get(
+        "/v1/analytics/features/{feature}",
+        analytics_feature_handler,
     )
 
     return app

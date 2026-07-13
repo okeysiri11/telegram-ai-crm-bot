@@ -461,6 +461,30 @@ async def cross_posting_feature_handler(request: web.Request) -> web.Response:
     return _json(data)
 
 
+@require_api_auth
+async def analytics_handler(request: web.Request) -> web.Response:
+    from services.pg_analytics_v1 import AnalyticsV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    analytics = await AnalyticsV1.get_analytics(_actor(request), tenant_id)
+    return _json(analytics)
+
+
+@require_api_auth
+async def analytics_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_analytics_v1 import AnalyticsV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    feature = request.match_info["feature"]
+    data = await AnalyticsV1.get_feature(
+        _actor(request),
+        tenant_id,
+        feature,
+        export_format=request.query.get("format", "json"),
+    )
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -515,6 +539,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/deal-pipeline/features/{feature}",
             "/v1/cross-posting",
             "/v1/cross-posting/features/{feature}",
+            "/v1/analytics",
+            "/v1/analytics/features/{feature}",
             "/v1/auth/token",
         ],
     })
