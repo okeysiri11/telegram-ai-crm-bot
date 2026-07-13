@@ -93,6 +93,13 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "schedule_type": JobScheduleType.INTERVAL.value,
         "interval_seconds": 300,
     },
+    {
+        "job_key": "analytics_automation.compute",
+        "name": "Analytics Automation Compute",
+        "description": "Compute leads, conversion, profit, and campaign ROI metrics",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 4 * * *",
+    },
 )
 
 _defaults_seeded = False
@@ -251,6 +258,12 @@ class SchedulerEngineV1:
         )
 
     @staticmethod
+    async def _run_analytics_automation_compute(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.pg_analytics_automation_engine import AnalyticsAutomationEngineV1
+
+        return await AnalyticsAutomationEngineV1.compute_metrics()
+
+    @staticmethod
     def job_handlers() -> dict[str, JobHandler]:
         return {
             "nightly.reconciliation": SchedulerEngineV1._run_nightly_reconciliation,
@@ -261,6 +274,7 @@ class SchedulerEngineV1:
             "marketing.publish_queue": SchedulerEngineV1._run_marketing_publish_queue,
             "marketing_automation.process": SchedulerEngineV1._run_marketing_automation_process,
             "sales_pipeline_automation.process": SchedulerEngineV1._run_sales_pipeline_automation,
+            "analytics_automation.compute": SchedulerEngineV1._run_analytics_automation_compute,
         }
 
     @staticmethod
