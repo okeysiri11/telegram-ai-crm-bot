@@ -320,6 +320,25 @@ async def ai_advertising_agent_feature_handler(request: web.Request) -> web.Resp
     return _json(data)
 
 
+@require_api_auth
+async def ai_sales_agent_handler(request: web.Request) -> web.Response:
+    from services.pg_ai_sales_agent_v1 import SalesAgentV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    agent = await SalesAgentV1.get_agent(_actor(request), tenant_id)
+    return _json(agent)
+
+
+@require_api_auth
+async def ai_sales_agent_feature_handler(request: web.Request) -> web.Response:
+    from services.pg_ai_sales_agent_v1 import SalesAgentV1
+
+    tenant_id = uuid.UUID(request.query.get("tenant_id", ""))
+    feature = request.match_info["feature"]
+    data = await SalesAgentV1.get_feature(_actor(request), tenant_id, feature)
+    return _json(data)
+
+
 async def auth_token_handler(request: web.Request) -> web.Response:
     api_key = request.headers.get("X-API-Key")
     if not api_key:
@@ -362,6 +381,8 @@ async def api_info_handler(request: web.Request) -> web.Response:
             "/v1/ai-procurement-agent/features/{feature}",
             "/v1/ai-advertising-agent",
             "/v1/ai-advertising-agent/features/{feature}",
+            "/v1/ai-sales-agent",
+            "/v1/ai-sales-agent/features/{feature}",
             "/v1/auth/token",
         ],
     })

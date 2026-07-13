@@ -7,6 +7,8 @@ from api.handlers import (
     ai_advertising_agent_handler,
     ai_procurement_agent_feature_handler,
     ai_procurement_agent_handler,
+    ai_sales_agent_feature_handler,
+    ai_sales_agent_handler,
     api_info_handler,
     auth_token_handler,
     dealer_portal_handler,
@@ -92,6 +94,12 @@ def create_app() -> web.Application:
     app.router.add_get(
         "/v1/ai-advertising-agent/features/{feature}",
         ai_advertising_agent_feature_handler,
+    )
+
+    app.router.add_get("/v1/ai-sales-agent", ai_sales_agent_handler)
+    app.router.add_get(
+        "/v1/ai-sales-agent/features/{feature}",
+        ai_sales_agent_feature_handler,
     )
 
     return app
