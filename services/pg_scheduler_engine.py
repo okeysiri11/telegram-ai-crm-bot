@@ -72,6 +72,13 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "schedule_type": JobScheduleType.CRON.value,
         "cron_expression": "0 3 * * *",
     },
+    {
+        "job_key": "marketing.publish_queue",
+        "name": "Marketing Publication Queue",
+        "description": "Process due Telegram, Instagram, Facebook, and TikTok publications",
+        "schedule_type": JobScheduleType.INTERVAL.value,
+        "interval_seconds": 60,
+    },
 )
 
 _defaults_seeded = False
@@ -201,6 +208,13 @@ class SchedulerEngineV1:
         return await AutomotiveAnalyticsEngineV1.compute_inventory_metrics(OWNER_ID)
 
     @staticmethod
+    async def _run_marketing_publish_queue(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.pg_auto_marketing_engine import AutoMarketingEngineV1
+
+        limit = int((config or {}).get("limit", 20))
+        return await AutoMarketingEngineV1.process_due_publications(limit=limit)
+
+    @staticmethod
     def job_handlers() -> dict[str, JobHandler]:
         return {
             "nightly.reconciliation": SchedulerEngineV1._run_nightly_reconciliation,
@@ -208,6 +222,7 @@ class SchedulerEngineV1:
             "fx.update": SchedulerEngineV1._run_fx_update,
             "liquidity.calculation": SchedulerEngineV1._run_liquidity_calculation,
             "inventory.aging": SchedulerEngineV1._run_inventory_aging,
+            "marketing.publish_queue": SchedulerEngineV1._run_marketing_publish_queue,
         }
 
     @staticmethod

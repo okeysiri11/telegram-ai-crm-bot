@@ -17,6 +17,7 @@ from keyboards import (
     auto_vertical_menu,
     owner_main_menu,
 )
+from services.pg_auto_marketing_engine import AutoMarketingEngineError, AutoMarketingEngineV1
 from services.pg_car_engine import CarEngineError, CarEngineV1
 from services.vin_decoder import (
     build_auction_reference,
@@ -119,21 +120,86 @@ async def _start_profit_calculator(message: Message, user_id: int) -> None:
     )
 
 
+def _format_queue_stats(stats: dict) -> str:
+    lines = ["📊 Очереди публикаций:"]
+    by_channel = stats.get("by_channel", {})
+    channel_labels = {
+        "telegram": "Telegram",
+        "instagram": "Instagram",
+        "facebook": "Facebook",
+        "tiktok": "TikTok",
+    }
+    for channel, label in channel_labels.items():
+        channel_stats = by_channel.get(channel, {})
+        queued = channel_stats.get("queued", 0) + channel_stats.get("scheduled", 0)
+        published = channel_stats.get("published", 0)
+        failed = channel_stats.get("failed", 0)
+        lines.append(f"• {label}: в очереди {queued}, опубликовано {published}, ошибок {failed}")
+    return "\n".join(lines)
+
+
+def _format_campaign_line(campaign: dict) -> str:
+    channels = ", ".join(campaign.get("channels") or [])
+    return f"• {campaign.get('name')} [{campaign.get('status')}] — {channels}"
+
+
 async def _show_marketing(message: Message, user_id: int) -> None:
+    try:
+        stats = await AutoMarketingEngineV1.get_queue_stats(user_id)
+        campaigns = await AutoMarketingEngineV1.list_campaigns(user_id, limit=5)
+    except AutoMarketingEngineError as exc:
+        await message.answer(str(exc), reply_markup=auto_vertical_menu())
+        return
+
+    lines = [
+        "📣 Marketing",
+        "",
+        "Каналы: Telegram, Instagram, Facebook, TikTok",
+        "",
+        _format_queue_stats(stats),
+    ]
+    if campaigns:
+        lines.extend(["", "Кампании:"])
+        lines.extend(_format_campaign_line(c) for c in campaigns)
+    else:
+        lines.extend(["", "Кампаний пока нет."])
+
+    await message.answer("\n".join(lines), reply_markup=auto_vertical_menu())
     await message.answer(
-        "📣 Marketing\n\n"
-        "Маркетинговый модуль:\n"
-        "• публикация объявлений на площадках\n"
-        "• синхронизация цен и фото\n"
-        "• marketplace import jobs\n\n"
-        "Раздел находится в разработке.",
-        reply_markup=auto_vertical_menu(),
-    )
-    await message.answer(
-        "Действия:",
+        "Для публикации авто отправьте VIN или нажмите «📋 Car List» "
+        "и выберите авто, затем вернитесь в Marketing.",
         reply_markup=auto_vertical_actions_inline("marketing"),
     )
-    log_audit(user_id, "open_stub", "auto_vertical", "marketing")
+    auto_vertical_flow[user_id] = {"step": "marketing_vin", "data": {}}
+    log_audit(user_id, "open", "auto_vertical", "marketing")
+
+
+async def _schedule_marketing_for_car(
+    message: Message,
+    user_id: int,
+    car: dict,
+) -> None:
+    try:
+        result = await AutoMarketingEngineV1.schedule_car_campaign(
+            user_id,
+            car_id=uuid.UUID(car["id"]),
+        )
+    except AutoMarketingEngineError as exc:
+        await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
+        return
+
+    campaign = result["campaign"]
+    pubs = result["publications"]
+    _clear_flow(user_id)
+    await message.answer(
+        "✅ Кампания создана\n\n"
+        f"Название: {campaign['name']}\n"
+        f"Каналов: {len(pubs)}\n"
+        f"Статус: {campaign['status']}\n\n"
+        "Публикации поставлены в очередь. Scheduler обработает их автоматически.",
+        reply_markup=auto_vertical_menu(),
+    )
+    log_audit(user_id, "create", "marketing_campaign", campaign["id"])
 
 
 async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: str) -> None:
@@ -348,6 +414,17 @@ async def auto_vertical_flow_handler(message: Message) -> None:
             reply_markup=auto_vertical_car_list_inline(matched),
         )
         await message.answer("Выберите автомобиль:", reply_markup=auto_vertical_menu())
+        return
+
+    if step == "marketing_vin":
+        try:
+            car = await CarEngineV1.get_car_by_vin(user_id, text.upper())
+        except CarEngineError:
+            await message.answer(
+                "Авто не найдено. Введите VIN из инвентаря или «⬅ Назад»:"
+            )
+            return
+        await _schedule_marketing_for_car(message, user_id, car)
         return
 
     if step == "profit_vin":
