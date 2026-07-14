@@ -23,8 +23,16 @@ router = Router()
 LANGUAGE_PICKER_TEXT = "🇺🇦 Выберите язык"
 
 
-@router.message(Command("start_auto_client"))
+@router.message(Command("start_auto_client", ignore_mention=True))
 async def cmd_start_auto_client(message: Message, state: FSMContext) -> None:
+    print("========== AUTO CLIENT HANDLER STARTED ==========")
+    print(f"TEXT={message.text}")
+    print(f"USER={message.from_user.id}")
+
+    await message.answer(
+        "DEBUG: AUTO CLIENT HANDLER WORKS"
+    )
+
     user = message.from_user
     await state.clear()
 

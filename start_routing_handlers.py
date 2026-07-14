@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from aiogram import F, Router
-from aiogram.filters import CommandStart
+from aiogram.filters import Command
 from aiogram.filters.command import CommandObject
 from aiogram.types import Message
 
@@ -21,8 +21,11 @@ logger = logging.getLogger(__name__)
 start_routing_router = Router()
 
 
-@start_routing_router.message(CommandStart())
+@start_routing_router.message(Command("start", ignore_mention=True))
 async def cmd_start(message: Message, command: CommandObject) -> None:
+    # Только /start — не перехватывать /start_auto_client и другие команды.
+    if command.command != "start":
+        return
     user = message.from_user
     user_id = user.id
 

@@ -20,6 +20,9 @@ class EntryPointMiddleware(BaseMiddleware):
         if EntryPointEngineV1.is_exempt_event(event):
             return await handler(event, data)
 
+        if isinstance(event, Message) and event.text and "start_auto_client" in event.text:
+            print(f"[EntryPointMiddleware] PASS start_auto_client text={event.text!r}")
+
         user_id = None
         text = None
         callback_data = None

@@ -4483,6 +4483,10 @@ async def back_to_main(message: Message):
 
 @router.message(F.text)
 async def handle_text(message: Message) -> None:
+    # Не перехватывать slash-команды — их обрабатывают Command-роутеры.
+    if message.text and message.text.startswith("/"):
+        return
+
     user_id = message.from_user.id
     requests = []
 

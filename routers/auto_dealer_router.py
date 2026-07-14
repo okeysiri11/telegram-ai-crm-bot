@@ -23,7 +23,7 @@ router = Router()
 LANGUAGE_PICKER_TEXT = "🇺🇦 Выберите язык"
 
 
-@router.message(Command("start_auto_dealer"))
+@router.message(Command("start_auto_dealer", ignore_mention=True))
 async def cmd_start_auto_dealer(message: Message, state: FSMContext) -> None:
     user = message.from_user
     await state.clear()
