@@ -16,14 +16,14 @@ def run_cart_engine_test_suite() -> dict:
             "detail": CartEngineV1Order.__tablename__,
         }
         checks["methods"] = {
-            "ok": CartPaymentMethod.USDT.value == "USDT",
-            "detail": CartPaymentMethod.USDT.value,
+            "ok": len(CartPaymentMethod) >= 4,
+            "detail": CartPaymentMethod.CARD.value,
         }
     except Exception as exc:
         checks["model"] = {"ok": False, "detail": str(exc)[:80]}
 
     try:
-        from services.pg_cart_engine_v1 import CartEngineV1, PAYMENT_SUCCESS_MESSAGE
+        from services.pg_cart_engine_v1 import CartEngineV1
         from services.cart_service_catalog import AUTO_SERVICES
 
         cart = CartEngineV1.new_cart_session(vertical="auto")
@@ -38,9 +38,9 @@ def run_cart_engine_test_suite() -> dict:
             "ok": "IBAN" in CartEngineV1.payment_instructions("IBAN", amount=Decimal("100"), currency="USD"),
             "detail": "iban",
         }
-        checks["success_msg"] = {
-            "ok": "Оплата успешно получена" in PAYMENT_SUCCESS_MESSAGE,
-            "detail": "message",
+        checks["payment_methods"] = {
+            "ok": len(CartEngineV1.payment_methods_keyboard().inline_keyboard) == 5,
+            "detail": "5 methods",
         }
     except Exception as exc:
         checks["cart_total"] = {"ok": False, "detail": str(exc)[:80]}

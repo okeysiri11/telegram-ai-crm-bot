@@ -13,11 +13,8 @@ from database import has_permission, log_audit
 from keyboards import admin_module_menu
 from services.automotive_localization import normalize_language
 from services.cart_service_catalog import service_by_code
-from services.pg_cart_engine_v1 import (
-    PAYMENT_SUCCESS_MESSAGE,
-    CartEngineV1,
-    CartEngineV1Error,
-)
+from payment_engine_state import pending_payment_upload
+from services.pg_cart_engine_v1 import CartEngineV1, CartEngineV1Error
 from services.pg_vertical_onboarding_engine import VerticalOnboardingEngineV1
 
 logger = logging.getLogger(__name__)
@@ -132,32 +129,18 @@ async def cart_select_payment(callback: CallbackQuery) -> None:
         await callback.answer(str(exc), show_alert=True)
         return
 
-    pending_checkout[user_id] = uuid.UUID(order["id"])
+    order_id = uuid.UUID(order["id"])
+    payment_id = uuid.UUID(order["payment_id"])
+    pending_checkout[user_id] = order_id
+    pending_payment_upload[user_id] = payment_id
     cart_sessions.pop(user_id, None)
     await callback.answer()
     await callback.message.answer(order["payment_instructions"])
     await callback.message.answer(
-        "После перевода подтвердите оплату:",
-        reply_markup=CartEngineV1.confirm_payment_keyboard(uuid.UUID(order["id"])),
+        "📷 После оплаты отправьте скриншот перевода (фото) в этот чат.",
+        reply_markup=CartEngineV1.cancel_order_keyboard(order_id),
     )
     log_audit(user_id, "checkout", "cart_engine", order["id"])
-
-
-@cart_engine_router.callback_query(F.data.startswith("cart:confirm:"))
-async def cart_confirm_payment(callback: CallbackQuery) -> None:
-    if callback.message is None or callback.from_user is None:
-        await callback.answer()
-        return
-    user_id = callback.from_user.id
-    order_id = uuid.UUID(callback.data.rsplit(":", 1)[-1])
-    order = await CartEngineV1.confirm_payment(order_id)
-    if order is None:
-        await callback.answer("Заказ не найден", show_alert=True)
-        return
-    pending_checkout.pop(user_id, None)
-    await callback.answer("Оплата подтверждена")
-    await callback.message.answer(PAYMENT_SUCCESS_MESSAGE)
-    log_audit(user_id, "paid", "cart_engine", str(order_id))
 
 
 @cart_engine_router.callback_query(F.data.startswith("cart:cancel:"))
@@ -169,6 +152,7 @@ async def cart_cancel_order(callback: CallbackQuery) -> None:
     order_id = uuid.UUID(callback.data.rsplit(":", 1)[-1])
     await CartEngineV1.cancel_order(order_id)
     pending_checkout.pop(user_id, None)
+    pending_payment_upload.pop(user_id, None)
     await callback.answer("Заказ отменён")
     await callback.message.answer("❌ Заказ отменён.")
 

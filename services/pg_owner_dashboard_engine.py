@@ -11,6 +11,7 @@ from services.pg_crm_pipeline_boards_engine import CrmPipelineBoardsEngineV1
 from services.pg_sla_tracking_v1 import SlaTrackingV1
 from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
 from services.pg_marketing_analytics_v1 import MarketingAnalyticsV1
+from services.pg_payment_engine_v1 import PaymentEngineV1
 
 
 class OwnerDashboardEngineV1:
@@ -68,6 +69,7 @@ class OwnerDashboardEngineV1:
         sla = await SlaTrackingV1.get_owner_metrics()
         anti_loss = await AntiLossLayerV1.get_owner_metrics()
         marketing_v1 = await MarketingAnalyticsV1.get_owner_metrics()
+        payments = await PaymentEngineV1.get_owner_metrics()
 
         return {
             "auto": auto,
@@ -79,6 +81,7 @@ class OwnerDashboardEngineV1:
             "pipeline": pipeline,
             "sla": sla,
             "anti_loss": anti_loss,
+            "payments": payments,
         }
 
     @staticmethod
@@ -135,6 +138,13 @@ class OwnerDashboardEngineV1:
             lines.append(
                 f"  Best source: {best['source']} (ROI {best['roi']}%)"
             )
+        pay = data.get("payments") or {}
+        if pay:
+            lines.append("")
+            lines.append("💳 Payment snapshot:")
+            lines.append(f"  Pending: {pay.get('pending', 0)}")
+            lines.append(f"  Confirmed: {pay.get('confirmed', 0)}")
+            lines.append(f"  Rejected: {pay.get('rejected', 0)}")
         return "\n".join(lines)
 
     @staticmethod
@@ -209,6 +219,10 @@ class OwnerDashboardEngineV1:
     @staticmethod
     def format_anti_loss_analytics(data: dict[str, Any]) -> str:
         return AntiLossLayerV1.format_owner_anti_loss_analytics(data)
+
+    @staticmethod
+    def format_payment_analytics(data: dict[str, Any]) -> str:
+        return PaymentEngineV1.format_owner_payment_analytics(data.get("payments") or {})
 
     @staticmethod
     def _format_ranking(

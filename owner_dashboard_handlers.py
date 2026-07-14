@@ -26,6 +26,7 @@ _ANALYTICS_HANDLERS = {
     "📋 Pipeline Analytics": OwnerDashboardEngineV1.format_pipeline_analytics,
     "⏱ SLA Analytics": OwnerDashboardEngineV1.format_sla_analytics,
     "🛡 Anti Loss Analytics": OwnerDashboardEngineV1.format_anti_loss_analytics,
+    "💳 Payment Analytics": OwnerDashboardEngineV1.format_payment_analytics,
 }
 
 

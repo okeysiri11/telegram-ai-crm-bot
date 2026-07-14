@@ -127,6 +127,9 @@ def owner_dashboard_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="🛡 Anti Loss Analytics"),
             ],
             [
+                KeyboardButton(text="💳 Payment Analytics"),
+            ],
+            [
                 KeyboardButton(text="📋 Pipeline Board"),
             ],
             [KeyboardButton(text="⬅ Назад")],

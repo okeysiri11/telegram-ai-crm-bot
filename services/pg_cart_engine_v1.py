@@ -10,7 +10,8 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy import select
 
 from database import ensure_user
-from database.models.cart_engine_v1 import CartOrderStatus, CartPaymentMethod
+from database.models.cart_engine_v1 import CartOrderStatus
+from database.models.payment_engine_v1 import PAYMENT_ENGINE_METHODS
 from database.models.users import User
 from database.session import get_session
 from repositories.cart_engine_v1_repository import CartEngineV1Repository
@@ -30,14 +31,6 @@ PAYMENT_SUCCESS_MESSAGE = (
     "Оплата успешно получена.\n"
     "Наш менеджер свяжется с вами в ближайшее время и приступит к обработке вашего заказа."
 )
-
-_PAYMENT_METHOD_LABELS: dict[str, dict[str, str]] = {
-    "CARD": {"ru": "💳 Карта", "uk": "💳 Картка"},
-    "IBAN": {"ru": "🏦 IBAN", "uk": "🏦 IBAN"},
-    "USDT": {"ru": "💎 USDT", "uk": "💎 USDT"},
-    "CASH": {"ru": "💵 Наличные", "uk": "💵 Готівка"},
-}
-
 
 class CartEngineV1Error(Exception):
     pass
@@ -136,70 +129,23 @@ class CartEngineV1:
 
     @staticmethod
     def payment_methods_keyboard(*, lang: str | None = None) -> InlineKeyboardMarkup:
-        language = normalize_language(lang)
-        rows = []
-        for method in CartPaymentMethod:
-            label = _PAYMENT_METHOD_LABELS[method.value].get(language, method.value)
-            rows.append([
-                InlineKeyboardButton(
-                    text=label,
-                    callback_data=f"cart:pay:{method.value}",
-                )
-            ])
-        return InlineKeyboardMarkup(inline_keyboard=rows)
+        from services.pg_payment_engine_v1 import PaymentEngineV1
+
+        return PaymentEngineV1.payment_methods_keyboard(lang=lang)
 
     @staticmethod
     def payment_instructions(method: str, *, amount: Decimal, currency: str) -> str:
-        method = method.upper()
-        if method == CartPaymentMethod.CARD.value:
-            return (
-                f"💳 Оплата картой\n\n"
-                f"Сумма: {amount} {currency}\n"
-                f"Карта: 5375 4141 0000 0000\n"
-                f"Получатель: Platform Services LLC\n"
-                f"Назначение: Order payment\n\n"
-                f"После оплаты нажмите «✅ Я оплатил»."
-            )
-        if method == CartPaymentMethod.IBAN.value:
-            return (
-                f"🏦 Банковский перевод (IBAN)\n\n"
-                f"Сумма: {amount} {currency}\n"
-                f"IBAN: UA21322313000002600723356601\n"
-                f"Получатель: Platform Services LLC\n"
-                f"Назначение: Order payment\n\n"
-                f"После оплаты нажмите «✅ Я оплатил»."
-            )
-        if method == CartPaymentMethod.USDT.value:
-            return (
-                f"💎 USDT (TRC20)\n\n"
-                f"Сумма: {amount} {currency}\n"
-                f"Адрес: TXYZplatformWalletTRC20Example\n"
-                f"Сеть: TRON (TRC20)\n\n"
-                f"После оплаты нажмите «✅ Я оплатил»."
-            )
-        if method == CartPaymentMethod.CASH.value:
-            return (
-                f"💵 Наличные\n\n"
-                f"Сумма: {amount} {currency}\n"
-                f"Офис: Киев, ул. Примерная 1\n"
-                f"Часы: Пн–Пт 10:00–18:00\n\n"
-                f"После оплаты нажмите «✅ Я оплатил»."
-            )
-        return f"Сумма: {amount} {currency}"
+        from services.pg_payment_engine_v1 import PaymentEngineV1
+
+        return PaymentEngineV1.payment_instructions(method, amount=amount, currency=currency)
 
     @staticmethod
-    def confirm_payment_keyboard(order_id: uuid.UUID) -> InlineKeyboardMarkup:
+    def cancel_order_keyboard(order_id: uuid.UUID) -> InlineKeyboardMarkup:
         return InlineKeyboardMarkup(
             inline_keyboard=[
                 [
                     InlineKeyboardButton(
-                        text="✅ Я оплатил",
-                        callback_data=f"cart:confirm:{order_id}",
-                    )
-                ],
-                [
-                    InlineKeyboardButton(
-                        text="❌ Отменить",
+                        text="❌ Отменить заказ",
                         callback_data=f"cart:cancel:{order_id}",
                     )
                 ],
@@ -215,7 +161,7 @@ class CartEngineV1:
         full_name: str = "",
         username: str = "",
     ) -> dict[str, Any]:
-        if payment_method not in {m.value for m in CartPaymentMethod}:
+        if payment_method not in PAYMENT_ENGINE_METHODS:
             raise CartEngineV1Error(f"Unsupported payment method: {payment_method}")
 
         items = cart.get("items", {})
@@ -259,8 +205,12 @@ class CartEngineV1:
                     line_total=(unit_price * qty).quantize(_MONEY, rounding=ROUND_HALF_UP),
                 )
 
+        from services.pg_payment_engine_v1 import PaymentEngineV1
+
+        payment = await PaymentEngineV1.create_from_order(order.id)
         snapshot = await CartEngineV1._order_snapshot(order.id)
         snapshot["payment_instructions"] = instructions
+        snapshot["payment_id"] = payment["id"]
         return snapshot
 
     @staticmethod
