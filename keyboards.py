@@ -103,6 +103,12 @@ def owner_dashboard_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="👥 Manager Analytics"),
                 KeyboardButton(text="🤝 Partner Analytics"),
             ],
+            [
+                KeyboardButton(text="📋 Pipeline Analytics"),
+            ],
+            [
+                KeyboardButton(text="📋 Pipeline Board"),
+            ],
             [KeyboardButton(text="⬅ Назад")],
         ],
         resize_keyboard=True,
@@ -1488,6 +1494,9 @@ def admin_module_menu() -> ReplyKeyboardMarkup:
             ],
             [
                 KeyboardButton(text="🛒 Cart Dashboard"),
+            ],
+            [
+                KeyboardButton(text="📋 Pipeline Board"),
             ],
             [
                 KeyboardButton(text="⬅ Назад"),

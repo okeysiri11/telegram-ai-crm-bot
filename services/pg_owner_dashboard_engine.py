@@ -7,6 +7,7 @@ from typing import Any
 
 from database.session import get_session
 from repositories.owner_dashboard_repository import OwnerDashboardRepository
+from services.pg_crm_pipeline_boards_engine import CrmPipelineBoardsEngineV1
 
 
 class OwnerDashboardEngineV1:
@@ -60,12 +61,15 @@ class OwnerDashboardEngineV1:
 
             revenue_detail = await repo.revenue_breakdown(since=month)
 
+        pipeline = await CrmPipelineBoardsEngineV1.get_pipeline_metrics()
+
         return {
             "auto": auto,
             "agro": agro,
             "global": global_metrics,
             "marketing": marketing,
             "revenue_detail": revenue_detail,
+            "pipeline": pipeline,
         }
 
     @staticmethod
@@ -175,6 +179,12 @@ class OwnerDashboardEngineV1:
         if not g.get("top_partners"):
             lines.append("  • —")
         return "\n".join(lines)
+
+    @staticmethod
+    def format_pipeline_analytics(data: dict[str, Any]) -> str:
+        return CrmPipelineBoardsEngineV1.format_pipeline_analytics(
+            data.get("pipeline") or {}
+        )
 
     @staticmethod
     def _format_ranking(

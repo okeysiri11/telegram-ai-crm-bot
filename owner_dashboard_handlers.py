@@ -23,6 +23,7 @@ _ANALYTICS_HANDLERS = {
     "💰 Revenue Analytics": OwnerDashboardEngineV1.format_revenue_analytics,
     "👥 Manager Analytics": OwnerDashboardEngineV1.format_manager_analytics,
     "🤝 Partner Analytics": OwnerDashboardEngineV1.format_partner_analytics,
+    "📋 Pipeline Analytics": OwnerDashboardEngineV1.format_pipeline_analytics,
 }
 
 

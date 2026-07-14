@@ -38,6 +38,7 @@ class DealEngineV1Deal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_deal_engine_v1_lead", "lead_id"),
         Index("ix_deal_engine_v1_vertical", "vertical"),
         Index("ix_deal_engine_v1_status", "status"),
+        Index("ix_deal_engine_v1_pipeline_stage", "pipeline_stage"),
         Index("ix_deal_engine_v1_client", "client_id"),
         Index("ix_deal_engine_v1_manager", "manager_id"),
         Index("ix_deal_engine_v1_partner", "partner_id"),
@@ -74,6 +75,11 @@ class DealEngineV1Deal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     currency: Mapped[str] = mapped_column(String(10), default="USD", nullable=False)
 
     status: Mapped[str] = mapped_column(
+        String(50),
+        default=DealEngineV1Status.NEW.value,
+        nullable=False,
+    )
+    pipeline_stage: Mapped[str] = mapped_column(
         String(50),
         default=DealEngineV1Status.NEW.value,
         nullable=False,

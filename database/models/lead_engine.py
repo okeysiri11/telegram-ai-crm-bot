@@ -36,6 +36,7 @@ class LeadEngineLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __table_args__ = (
         Index("ix_lead_engine_v1_vertical", "vertical"),
         Index("ix_lead_engine_v1_status", "status"),
+        Index("ix_lead_engine_v1_pipeline_stage", "pipeline_stage"),
         Index("ix_lead_engine_v1_source_link", "source_link"),
         Index("ix_lead_engine_v1_telegram", "telegram_user_id"),
         Index("ix_lead_engine_v1_manager", "assigned_manager_id"),
@@ -63,6 +64,11 @@ class LeadEngineLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=True,
     )
     status: Mapped[str] = mapped_column(
+        String(50),
+        default=LeadEngineStatus.NEW.value,
+        nullable=False,
+    )
+    pipeline_stage: Mapped[str] = mapped_column(
         String(50),
         default=LeadEngineStatus.NEW.value,
         nullable=False,
