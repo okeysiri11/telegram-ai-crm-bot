@@ -8,6 +8,8 @@ from aiogram import BaseMiddleware
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
 from services.pg_entry_point_engine import EntryPointEngineV1
+from services.entry_point_routing import EntryPoint, FlowState
+from states.entry_flow_states import AutoClientFlow
 
 
 class EntryPointMiddleware(BaseMiddleware):
@@ -36,6 +38,14 @@ class EntryPointMiddleware(BaseMiddleware):
 
         if user_id is None:
             return await handler(event, data)
+
+        state = data.get("state")
+        if state is not None and isinstance(event, Message):
+            ctx = await EntryPointEngineV1.get_flow_context(user_id)
+            if ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value or ctx.get("source_link") == "auto_client":
+                fsm_state = await state.get_state()
+                if fsm_state is None and ctx.get("current_flow") == FlowState.AUTO_CLIENT_MENU.value:
+                    await state.set_state(AutoClientFlow.menu)
 
         denial = await EntryPointEngineV1.check_transition(
             user_id,

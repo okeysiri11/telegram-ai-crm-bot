@@ -31,9 +31,33 @@ REQUEST_MANAGER = "manager_callback"
 
 async def _ensure_auto_client(message: Message) -> bool:
     if message.from_user is None:
+        logger.info("AUTO_CLIENT skip: message has no from_user")
         return False
     ctx = await EntryPointEngineV1.get_flow_context(message.from_user.id)
-    return ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value
+    entry_point = ctx.get("entry_point")
+    source_link = ctx.get("source_link")
+    if entry_point == EntryPoint.AUTO_CLIENT.value or source_link == "auto_client":
+        return True
+    logger.info(
+        "AUTO_CLIENT skip: user=%s entry_point=%s source_link=%s",
+        message.from_user.id,
+        entry_point,
+        source_link,
+    )
+    return False
+
+
+async def _sync_auto_client_menu_state(message: Message, state: FSMContext) -> None:
+    """Restore FSM after bot restart or menu shown outside auto_client_router."""
+    if message.from_user is None:
+        return
+    ctx = await EntryPointEngineV1.get_flow_context(message.from_user.id)
+    if ctx.get("entry_point") != EntryPoint.AUTO_CLIENT.value and ctx.get("source_link") != "auto_client":
+        return
+    current = await state.get_state()
+    if current is None and ctx.get("current_flow") == FlowState.AUTO_CLIENT_MENU.value:
+        await state.set_state(AutoClientFlow.menu)
+        logger.info("AUTO_CLIENT FSM synced to menu for user=%s", message.from_user.id)
 
 
 async def _finish_request(
@@ -135,23 +159,41 @@ async def auto_client_language_selected(callback: CallbackQuery, state: FSMConte
         )
 
     await state.set_state(AutoClientFlow.menu)
+    logger.info("AUTO_CLIENT language selected user=%s state=menu", user_id)
 
 
 def _auto_client_menu_filter(message: Message) -> bool:
     if not message.from_user or not message.text:
         return False
-    return is_auto_client_menu_text(message.text)
+    matched = is_auto_client_menu_text(message.text)
+    if matched:
+        logger.info(
+            "AUTO_CLIENT menu filter matched text=%r user=%s",
+            message.text,
+            message.from_user.id,
+        )
+    return matched
 
 
-@router.message(_auto_client_menu_filter, StateFilter(AutoClientFlow.menu))
+@router.message(_auto_client_menu_filter)
 async def auto_client_menu_action(message: Message, state: FSMContext) -> None:
+    logger.info(
+        "AUTO_CLIENT menu handler entered text=%r user=%s fsm_state=%s",
+        message.text,
+        message.from_user.id if message.from_user else None,
+        await state.get_state(),
+    )
+    await _sync_auto_client_menu_state(message, state)
+
     if not await _ensure_auto_client(message):
+        await message.answer("Сессия Auto Client не активна. Отправьте /start_auto_client")
         return
 
     user_id = message.from_user.id
     lang = await VerticalOnboardingEngineV1.get_language(user_id)
     text = (message.text or "").strip()
     await EntryPointEngineV1.set_current_flow(user_id, FlowState.AUTO_CLIENT_MENU)
+    await state.set_state(AutoClientFlow.menu)
 
     buy_label = btn("client_buy_car", lang)
     sell_label = btn("client_sell_car", lang)
@@ -160,28 +202,31 @@ async def auto_client_menu_action(message: Message, state: FSMContext) -> None:
     manager_label = btn("client_manager", lang)
 
     if text == buy_label:
+        logger.info("AUTO SEARCH BUTTON CLICKED user=%s", user_id)
         await state.set_state(AutoClientFlow.awaiting_description)
         await state.update_data(request_type=REQUEST_BUY)
         await message.answer(
-            "🚗 Поиск автомобиля.\nОпишите марку, бюджет и город.",
+            "Опишите марку, бюджет и город.",
             reply_markup=auto_client_menu(lang),
         )
         return
 
     if text == sell_label:
+        logger.info("AUTO SELL BUTTON CLICKED user=%s", user_id)
         await state.set_state(AutoClientFlow.awaiting_description)
         await state.update_data(request_type=REQUEST_SELL)
         await message.answer(
-            "💰 Продажа автомобиля.\nУкажите марку, год и пробег.",
+            "Укажите марку, год и пробег.",
             reply_markup=auto_client_menu(lang),
         )
         return
 
     if text == listing_label:
+        logger.info("AUTO LISTING BUTTON CLICKED user=%s", user_id)
         await state.set_state(AutoClientFlow.awaiting_photo)
         await state.update_data(request_type=REQUEST_LISTING, photo_file_id=None)
         await message.answer(
-            "📢 Размещение объявления.\nПришлите фото автомобиля.",
+            "Пришлите фото и описание автомобиля.",
             reply_markup=auto_client_menu(lang),
         )
         return

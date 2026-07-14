@@ -44,6 +44,7 @@ def test_router_handlers_registered() -> None:
         "auto_client_language_selected",
         "auto_client_menu_action",
         "auto_client_listing_photo",
+        "auto_client_listing_photo_required",
         "auto_client_description",
         "auto_client_listing_description",
     }
