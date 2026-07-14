@@ -251,7 +251,9 @@ class VerticalOnboardingEngineV1:
     @staticmethod
     def parse_entry_link_code(args: str | None) -> str | None:
         """Returns entry link code (auto_client, agro, ...)."""
-        entry = resolve_entry_link(args)
-        if entry:
-            return entry.code
+        from services.start_payload_parser import parse_start_payload
+
+        payload = parse_start_payload(args)
+        if payload.link_code and payload.link_code in ENTRY_LINK_REGISTRY:
+            return payload.link_code
         return legacy_vertical_from_args(args)

@@ -45,7 +45,7 @@ async def open_owner_panel(message: Message) -> None:
 
 
 @owner_panel_router.message(
-    lambda m: m.from_user.id in owner_panel_active and m.text in {"🔗 Entry Links", "📝 Notes", "⬅ Назад"}
+    lambda m: m.from_user.id in owner_panel_active and m.text in {"🔗 Entry Links", "📝 Notes", "📈 Lead Dashboard", "⬅ Назад"}
 )
 async def owner_panel_screen(message: Message, bot: Bot) -> None:
     user_id = message.from_user.id
@@ -68,6 +68,13 @@ async def owner_panel_screen(message: Message, bot: Bot) -> None:
             parse_mode="Markdown",
             reply_markup=TenantRoutingEngineV1.entry_links_inline(links, bot_username=username),
         )
+        return
+
+    if message.text == "📈 Lead Dashboard":
+        from services.pg_lead_engine import LeadEngineV1
+
+        dashboard = await LeadEngineV1.get_admin_dashboard()
+        await message.answer(LeadEngineV1.format_admin_dashboard(dashboard))
         return
 
     if message.text == "📝 Notes":

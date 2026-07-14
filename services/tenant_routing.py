@@ -11,6 +11,8 @@ TENANT_ENTRY_LINK_CODES = frozenset({
     "auto_client",
     "auto_dealer",
     "agro",
+    "agro_farmer",
+    "agro_supplier",
     "drones",
     "legal",
     "insurance_partner",
@@ -68,6 +70,22 @@ ENTRY_LINK_REGISTRY: dict[str, TenantEntryConfig] = {
         title_ru="🌾 Agro Trading",
         title_uk="🌾 Agro Trading",
     ),
+    "agro_farmer": TenantEntryConfig(
+        code="agro_farmer",
+        tenant_code="agro_farmer",
+        vertical="agro",
+        title_ru="🌾 Agro — фермер",
+        title_uk="🌾 Agro — фермер",
+        preset_role="farmer",
+    ),
+    "agro_supplier": TenantEntryConfig(
+        code="agro_supplier",
+        tenant_code="agro_supplier",
+        vertical="agro",
+        title_ru="🌾 Agro — поставщик",
+        title_uk="🌾 Agro — постачальник",
+        preset_role="supplier",
+    ),
     "drones": TenantEntryConfig(
         code="drones",
         tenant_code="drones",
@@ -115,6 +133,8 @@ TENANT_ALLOWED_MODULES: dict[str, frozenset[str]] = {
     "auto_client": frozenset({"auto", "settings"}),
     "auto_dealer": frozenset({"auto", "settings"}),
     "agro": frozenset({"agro", "settings"}),
+    "agro_farmer": frozenset({"agro", "settings"}),
+    "agro_supplier": frozenset({"agro", "settings"}),
     "drones": frozenset({"drones", "settings"}),
     "legal": frozenset({"legal", "settings"}),
     "insurance_partner": frozenset({"auto", "settings"}),
@@ -137,8 +157,11 @@ VERTICAL_TO_MODULE: dict[str, str] = {
 def parse_entry_link(args: str | None) -> TenantEntryConfig | None:
     if not args:
         return None
-    code = args.strip().lower().split()[0]
-    if code in ENTRY_LINK_REGISTRY:
+    from services.start_payload_parser import parse_start_payload
+
+    payload = parse_start_payload(args)
+    code = payload.link_code
+    if code and code in ENTRY_LINK_REGISTRY:
         return ENTRY_LINK_REGISTRY[code]
     return None
 
@@ -146,8 +169,10 @@ def parse_entry_link(args: str | None) -> TenantEntryConfig | None:
 def legacy_vertical_from_args(args: str | None) -> str | None:
     if not args:
         return None
-    code = args.strip().lower().split()[0]
-    if code in LEGACY_VERTICAL_LINKS:
+    from services.start_payload_parser import parse_start_payload
+
+    code = parse_start_payload(args).link_code
+    if code and code in LEGACY_VERTICAL_LINKS:
         return code
     return None
 

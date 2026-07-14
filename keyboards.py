@@ -78,7 +78,10 @@ def owner_main_menu(*, show_automotive: bool = True):
 def owner_panel_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🔗 Entry Links")],
+            [
+                KeyboardButton(text="🔗 Entry Links"),
+                KeyboardButton(text="📈 Lead Dashboard"),
+            ],
             [KeyboardButton(text="📝 Notes")],
             [KeyboardButton(text="⬅ Назад")],
         ],
@@ -1449,6 +1452,10 @@ def admin_module_menu() -> ReplyKeyboardMarkup:
             ],
             [
                 KeyboardButton(text="💰 Revenue Dashboard"),
+            ],
+            [
+                KeyboardButton(text="📈 Lead Dashboard"),
+                KeyboardButton(text="📋 Lead List"),
             ],
             [
                 KeyboardButton(text="⬅ Назад"),

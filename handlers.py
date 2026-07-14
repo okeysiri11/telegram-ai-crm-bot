@@ -317,6 +317,7 @@ from vertical_onboarding_handlers import (
 )
 from owner_panel_handlers import owner_panel_router
 from tenant_guard_handlers import tenant_guard_router
+from lead_engine_handlers import lead_engine_router
 
 router.include_router(tenant_guard_router)
 router.include_router(deal_workflow_router)
@@ -328,6 +329,7 @@ router.include_router(automotive_partner_router)
 router.include_router(automotive_revenue_router)
 router.include_router(vertical_onboarding_router)
 router.include_router(owner_panel_router)
+router.include_router(lead_engine_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1
@@ -582,6 +584,8 @@ ADMIN_MENU_BUTTONS = {
     "📋 Список пользователей",
     "📝 Журнал действий",
     "💰 Revenue Dashboard",
+    "📈 Lead Dashboard",
+    "📋 Lead List",
     "⬅ Назад",
 }
 
@@ -874,12 +878,12 @@ async def cmd_start(message: Message, command: CommandObject) -> None:
 
     entry_link = VerticalOnboardingEngineV1.parse_entry_link_code(command.args)
     if entry_link and entry_link in ENTRY_LINK_REGISTRY:
-        await begin_entry_link_onboarding(message, entry_link)
+        await begin_entry_link_onboarding(message, entry_link, start_args=command.args)
         return
 
     deep_link_vertical = VerticalOnboardingEngineV1.parse_deep_link(command.args)
     if deep_link_vertical and entry_link not in ENTRY_LINK_REGISTRY:
-        await begin_vertical_onboarding(message, deep_link_vertical)
+        await begin_vertical_onboarding(message, deep_link_vertical, start_args=command.args)
         return
 
     prefs = await VerticalOnboardingEngineV1.get_preferences(user_id)

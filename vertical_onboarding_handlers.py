@@ -28,13 +28,29 @@ onboarding_role_flow: set[int] = set()
 settings_flow: set[int] = set()
 
 
-async def begin_entry_link_onboarding(message: Message, source_link: str) -> None:
+async def begin_entry_link_onboarding(
+    message: Message,
+    source_link: str,
+    *,
+    start_args: str | None = None,
+) -> None:
     user = message.from_user
     result = await VerticalOnboardingEngineV1.save_entry_link(
         telegram_user_id=user.id,
         source_link=source_link,
         full_name=user.full_name or "",
         username=user.username or "",
+    )
+    from services.pg_lead_engine import LeadEngineV1
+
+    await LeadEngineV1.ingest_from_deep_link(
+        telegram_user_id=user.id,
+        telegram_username=user.username,
+        full_name=user.full_name,
+        start_args=start_args or source_link,
+        vertical=result.get("vertical"),
+        role=result.get("preset_role"),
+        source_link=source_link,
     )
     log_audit(user.id, "onboard", "entry_link", source_link)
     await message.answer(
@@ -43,13 +59,28 @@ async def begin_entry_link_onboarding(message: Message, source_link: str) -> Non
     )
 
 
-async def begin_vertical_onboarding(message: Message, vertical: str) -> None:
+async def begin_vertical_onboarding(
+    message: Message,
+    vertical: str,
+    *,
+    start_args: str | None = None,
+) -> None:
     user = message.from_user
     await VerticalOnboardingEngineV1.save_vertical_entry(
         telegram_user_id=user.id,
         vertical=vertical,
         full_name=user.full_name or "",
         username=user.username or "",
+    )
+    from services.pg_lead_engine import LeadEngineV1
+
+    await LeadEngineV1.ingest_from_deep_link(
+        telegram_user_id=user.id,
+        telegram_username=user.username,
+        full_name=user.full_name,
+        start_args=start_args or vertical,
+        vertical=vertical,
+        source_link=vertical,
     )
     log_audit(user.id, "onboard", "vertical", vertical)
     await message.answer(
@@ -182,6 +213,16 @@ async def onboarding_language_callback(callback: CallbackQuery) -> None:
     await callback.answer()
     await callback.message.answer(t("language_saved", language))
 
+    from services.pg_lead_engine import LeadEngineV1
+
+    prefs = await VerticalOnboardingEngineV1.get_preferences(user_id)
+    await LeadEngineV1.enrich_latest_for_user(
+        telegram_user_id=user_id,
+        source_link=prefs.get("source_link"),
+        language=language,
+        role=result.get("role"),
+    )
+
     if result.get("onboarding_step") == "role" and result.get("vertical") == "auto":
         onboarding_role_flow.add(user_id)
         await callback.message.answer(
@@ -204,6 +245,15 @@ async def onboarding_role_selected(message: Message) -> None:
     await VerticalOnboardingEngineV1.save_role(telegram_user_id=user_id, role=role_code)
     onboarding_role_flow.discard(user_id)
     log_audit(user_id, "onboard", "role", role_code)
+    from services.pg_lead_engine import LeadEngineV1
+
+    prefs = await VerticalOnboardingEngineV1.get_preferences(user_id)
+    await LeadEngineV1.enrich_latest_for_user(
+        telegram_user_id=user_id,
+        source_link=prefs.get("source_link"),
+        language=lang,
+        role=role_code,
+    )
     await message.answer(t("onboarding_complete", lang))
     await enter_tenant_vertical(message, user_id, lang)
 
