@@ -115,7 +115,10 @@ class LeadEngineV1:
             agro_volume=lead_agro_volume,
             agro_location=lead_agro_location,
         )
-        return snapshot
+        from services.pg_auto_dealer_manager_engine import AutoDealerManagerEngineV1
+
+        assigned = await AutoDealerManagerEngineV1.auto_assign_dealer_lead(snapshot)
+        return assigned or snapshot
 
     @staticmethod
     async def enrich_latest_for_user(
