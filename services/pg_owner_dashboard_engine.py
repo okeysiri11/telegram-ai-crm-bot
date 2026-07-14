@@ -10,6 +10,7 @@ from repositories.owner_dashboard_repository import OwnerDashboardRepository
 from services.pg_crm_pipeline_boards_engine import CrmPipelineBoardsEngineV1
 from services.pg_sla_tracking_v1 import SlaTrackingV1
 from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
+from services.pg_financial_settlement_engine_v1 import FinancialSettlementEngineV1
 from services.pg_marketing_analytics_v1 import MarketingAnalyticsV1
 from services.pg_payment_engine_v1 import PaymentEngineV1
 
@@ -70,6 +71,7 @@ class OwnerDashboardEngineV1:
         anti_loss = await AntiLossLayerV1.get_owner_metrics()
         marketing_v1 = await MarketingAnalyticsV1.get_owner_metrics()
         payments = await PaymentEngineV1.get_owner_metrics()
+        settlement = await FinancialSettlementEngineV1.get_owner_metrics()
 
         return {
             "auto": auto,
@@ -82,6 +84,7 @@ class OwnerDashboardEngineV1:
             "sla": sla,
             "anti_loss": anti_loss,
             "payments": payments,
+            "settlement": settlement,
         }
 
     @staticmethod
@@ -145,6 +148,13 @@ class OwnerDashboardEngineV1:
             lines.append(f"  Pending: {pay.get('pending', 0)}")
             lines.append(f"  Confirmed: {pay.get('confirmed', 0)}")
             lines.append(f"  Rejected: {pay.get('rejected', 0)}")
+        fin = data.get("settlement") or {}
+        if fin:
+            lines.append("")
+            lines.append("🏦 Settlement snapshot:")
+            lines.append(f"  Today revenue: {fin.get('revenue_today', 0)}")
+            lines.append(f"  Pending settlements: {fin.get('pending_settlements', 0)}")
+            lines.append(f"  Partner liabilities: {fin.get('partner_liabilities', 0)}")
         return "\n".join(lines)
 
     @staticmethod
@@ -223,6 +233,12 @@ class OwnerDashboardEngineV1:
     @staticmethod
     def format_payment_analytics(data: dict[str, Any]) -> str:
         return PaymentEngineV1.format_owner_payment_analytics(data.get("payments") or {})
+
+    @staticmethod
+    def format_settlement_analytics(data: dict[str, Any]) -> str:
+        return FinancialSettlementEngineV1.format_owner_settlement_analytics(
+            data.get("settlement") or {}
+        )
 
     @staticmethod
     def _format_ranking(

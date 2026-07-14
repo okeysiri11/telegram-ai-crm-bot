@@ -27,6 +27,7 @@ _ANALYTICS_HANDLERS = {
     "⏱ SLA Analytics": OwnerDashboardEngineV1.format_sla_analytics,
     "🛡 Anti Loss Analytics": OwnerDashboardEngineV1.format_anti_loss_analytics,
     "💳 Payment Analytics": OwnerDashboardEngineV1.format_payment_analytics,
+    "🏦 Settlement Analytics": OwnerDashboardEngineV1.format_settlement_analytics,
 }
 
 

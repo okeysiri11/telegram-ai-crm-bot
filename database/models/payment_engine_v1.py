@@ -26,19 +26,26 @@ class PaymentEngineMethod(str, enum.Enum):
 class PaymentEngineStatus(str, enum.Enum):
     CREATED = "CREATED"
     WAITING_PAYMENT = "WAITING_PAYMENT"
-    PAYMENT_UPLOADED = "PAYMENT_UPLOADED"
-    UNDER_REVIEW = "UNDER_REVIEW"
+    SCREENSHOT_UPLOADED = "SCREENSHOT_UPLOADED"
+    UNDER_VERIFICATION = "UNDER_VERIFICATION"
     CONFIRMED = "CONFIRMED"
     REJECTED = "REJECTED"
     REFUNDED = "REFUNDED"
+
+
+# Legacy aliases for backward compatibility in reads
+_PAYMENT_STATUS_ALIASES = {
+    "PAYMENT_UPLOADED": "SCREENSHOT_UPLOADED",
+    "UNDER_REVIEW": "UNDER_VERIFICATION",
+}
 
 
 PAYMENT_ENGINE_METHODS = frozenset(m.value for m in PaymentEngineMethod)
 PAYMENT_ENGINE_STATUSES = frozenset(s.value for s in PaymentEngineStatus)
 PAYMENT_ENGINE_PENDING_STATUSES = frozenset({
     PaymentEngineStatus.WAITING_PAYMENT.value,
-    PaymentEngineStatus.PAYMENT_UPLOADED.value,
-    PaymentEngineStatus.UNDER_REVIEW.value,
+    PaymentEngineStatus.SCREENSHOT_UPLOADED.value,
+    PaymentEngineStatus.UNDER_VERIFICATION.value,
 })
 
 

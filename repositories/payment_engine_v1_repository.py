@@ -83,7 +83,7 @@ class PaymentEngineV1Repository:
             select(PaymentEngineV1Payment)
             .where(
                 PaymentEngineV1Payment.status.in_(
-                    ("PAYMENT_UPLOADED", "UNDER_REVIEW")
+                    ("SCREENSHOT_UPLOADED", "UNDER_VERIFICATION")
                 )
             )
             .order_by(PaymentEngineV1Payment.uploaded_at.asc().nullslast())
@@ -104,7 +104,7 @@ class PaymentEngineV1Repository:
             select(PaymentEngineV1Payment)
             .where(
                 PaymentEngineV1Payment.client_id == client_id,
-                PaymentEngineV1Payment.status.in_(("WAITING_PAYMENT", "PAYMENT_UPLOADED")),
+                PaymentEngineV1Payment.status.in_(("WAITING_PAYMENT", "SCREENSHOT_UPLOADED")),
             )
             .order_by(PaymentEngineV1Payment.created_at.desc())
             .limit(1)

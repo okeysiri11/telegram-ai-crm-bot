@@ -32,8 +32,8 @@ def run_payment_engine_test_suite() -> dict:
             "detail": str(len(PAYMENT_ENGINE_METHODS)),
         }
         checks["statuses"] = {
-            "ok": PaymentEngineStatus.CONFIRMED.value in PAYMENT_ENGINE_STATUSES,
-            "detail": PaymentEngineStatus.CONFIRMED.value,
+            "ok": PaymentEngineStatus.SCREENSHOT_UPLOADED.value in PAYMENT_ENGINE_STATUSES,
+            "detail": PaymentEngineStatus.SCREENSHOT_UPLOADED.value,
         }
         checks["usdt_split"] = {
             "ok": PaymentEngineMethod.USDT_TRC20.value in PAYMENT_ENGINE_METHODS,

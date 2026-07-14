@@ -119,8 +119,8 @@ class PaymentEngineV1:
                 raise PaymentEngineV1Error(f"Payment {payment_id} not found")
             if row.status not in {
                 PaymentEngineStatus.WAITING_PAYMENT.value,
-                PaymentEngineStatus.PAYMENT_UPLOADED.value,
-                PaymentEngineStatus.UNDER_REVIEW.value,
+                PaymentEngineStatus.SCREENSHOT_UPLOADED.value,
+                PaymentEngineStatus.UNDER_VERIFICATION.value,
                 PaymentEngineStatus.REJECTED.value,
             }:
                 raise PaymentEngineV1Error(f"Payment cannot accept upload in status {row.status}")
@@ -130,13 +130,24 @@ class PaymentEngineV1:
                 screenshot_file_id=screenshot_file_id,
                 payment_reference=payment_reference,
                 uploaded_at=now,
-                status=PaymentEngineStatus.PAYMENT_UPLOADED.value,
+                status=PaymentEngineStatus.SCREENSHOT_UPLOADED.value,
             )
         if row is None:
             raise PaymentEngineV1Error(f"Payment {payment_id} not found")
         snapshot = PaymentEngineV1._snapshot(row)
         snapshot["order"] = await PaymentEngineV1._order_context(row.order_id)
         return snapshot
+
+    @staticmethod
+    async def begin_verification(payment_id: uuid.UUID) -> dict[str, Any] | None:
+        async with get_session() as session:
+            row = await PaymentEngineV1Repository(session).update(
+                payment_id,
+                status=PaymentEngineStatus.UNDER_VERIFICATION.value,
+            )
+        if row is None:
+            return None
+        return PaymentEngineV1._snapshot(row)
 
     @staticmethod
     async def confirm_payment(
@@ -154,8 +165,8 @@ class PaymentEngineV1:
             if payment is None:
                 raise PaymentEngineV1Error(f"Payment {payment_id} not found")
             if payment.status not in {
-                PaymentEngineStatus.PAYMENT_UPLOADED.value,
-                PaymentEngineStatus.UNDER_REVIEW.value,
+                PaymentEngineStatus.SCREENSHOT_UPLOADED.value,
+                PaymentEngineStatus.UNDER_VERIFICATION.value,
             }:
                 raise PaymentEngineV1Error(f"Payment cannot be confirmed from status {payment.status}")
 
@@ -188,8 +199,20 @@ class PaymentEngineV1:
                 deal_id=uuid.UUID(deal_snapshot["id"]),
             )
 
+        from services.pg_financial_settlement_engine_v1 import FinancialSettlementEngineV1
+
+        try:
+            settlement = await FinancialSettlementEngineV1.on_payment_confirmed(payment_id)
+        except Exception:
+            logger.exception("Financial settlement failed for payment %s", payment_id)
+            settlement = None
+
         snapshot = PaymentEngineV1._snapshot(payment)
         snapshot["deal"] = deal_snapshot
+        if settlement:
+            snapshot["settlement"] = settlement
+            if settlement.get("manager_telegram_id"):
+                snapshot["manager_telegram_id"] = settlement["manager_telegram_id"]
         return snapshot
 
     @staticmethod
@@ -204,8 +227,8 @@ class PaymentEngineV1:
             if payment is None:
                 raise PaymentEngineV1Error(f"Payment {payment_id} not found")
             if payment.status not in {
-                PaymentEngineStatus.PAYMENT_UPLOADED.value,
-                PaymentEngineStatus.UNDER_REVIEW.value,
+                PaymentEngineStatus.SCREENSHOT_UPLOADED.value,
+                PaymentEngineStatus.UNDER_VERIFICATION.value,
             }:
                 raise PaymentEngineV1Error(f"Payment cannot be rejected from status {payment.status}")
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from decimal import Decimal
 
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
@@ -12,6 +13,7 @@ from config import OWNER_ID
 from database import has_permission, log_audit
 from payment_engine_state import pending_payment_upload
 from services.pg_cart_engine_v1 import CartEngineV1
+from services.pg_financial_settlement_engine_v1 import FinancialSettlementEngineV1
 from services.pg_payment_engine_v1 import (
     PAYMENT_CONFIRMED_MESSAGE,
     PAYMENT_REJECTED_MESSAGE,
@@ -38,6 +40,12 @@ async def _resolve_manager_uuid(telegram_user_id: int, *, full_name: str = "", u
 
 
 async def _notify_owner_review(message: Message, payment: dict) -> None:
+    payment_id = uuid.UUID(payment["id"])
+    try:
+        await PaymentEngineV1.begin_verification(payment_id)
+    except PaymentEngineV1Error:
+        logger.exception("Failed to mark payment under verification %s", payment_id)
+
     text = PaymentEngineV1.format_manager_notification(payment)
     keyboard = PaymentEngineV1.manager_review_keyboard(uuid.UUID(payment["id"]))
     file_id = payment.get("screenshot_file_id")
@@ -53,6 +61,32 @@ async def _notify_owner_review(message: Message, payment: dict) -> None:
             await message.bot.send_message(OWNER_ID, text, reply_markup=keyboard)
     except Exception:
         logger.exception("Failed to notify owner about payment %s", payment.get("id"))
+
+
+async def _notify_settlement_confirmed(bot, payment: dict) -> None:
+    settlement = payment.get("settlement") or {}
+    if not settlement:
+        return
+    manager_tid = settlement.get("manager_telegram_id") or payment.get("manager_telegram_id")
+    try:
+        await bot.send_message(
+            OWNER_ID,
+            FinancialSettlementEngineV1.format_owner_notification(settlement),
+        )
+    except Exception:
+        logger.exception("Failed to notify owner about settlement %s", settlement.get("id"))
+
+    if manager_tid and Decimal(str(settlement.get("manager_share", "0"))) > 0:
+        try:
+            await bot.send_message(
+                manager_tid,
+                FinancialSettlementEngineV1.format_manager_notification(settlement),
+            )
+        except Exception:
+            logger.exception(
+                "Failed to notify manager %s about settlement",
+                manager_tid,
+            )
 
 
 @payment_engine_router.message(F.photo)
@@ -109,6 +143,7 @@ async def payment_confirm_callback(callback: CallbackQuery) -> None:
         f"Сделка: {payment.get('deal', {}).get('id', '—')}"
     )
     log_audit(user_id, "confirm", "payment_engine", str(payment_id))
+    await _notify_settlement_confirmed(callback.message.bot, payment)
 
     client_id = payment.get("client_id")
     if client_id:
@@ -204,6 +239,7 @@ async def confirm_payment_command(message: Message) -> None:
         f"✅ Платёж подтверждён.\nСделка: {payment.get('deal', {}).get('id', '—')}"
     )
     log_audit(user_id, "confirm", "payment_engine", str(payment_id))
+    await _notify_settlement_confirmed(message.bot, payment)
 
 
 @payment_engine_router.message(F.text.startswith("/reject_payment"))
