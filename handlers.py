@@ -324,6 +324,7 @@ from cart_engine_handlers import cart_engine_router
 from owner_dashboard_handlers import owner_dashboard_router
 from crm_pipeline_boards_handlers import crm_pipeline_boards_router
 from anti_loss_layer_handlers import anti_loss_layer_router
+from partner_cabinet_handlers import partner_cabinet_router
 
 router.include_router(tenant_guard_router)
 router.include_router(deal_workflow_router)
@@ -342,6 +343,7 @@ router.include_router(cart_engine_router)
 router.include_router(owner_dashboard_router)
 router.include_router(crm_pipeline_boards_router)
 router.include_router(anti_loss_layer_router)
+router.include_router(partner_cabinet_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1

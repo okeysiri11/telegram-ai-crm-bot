@@ -59,7 +59,21 @@ class RevenueEngineV1:
                 lead = await LeadEngineRepository(session).get_by_id(deal.lead_id)
                 has_referral = bool(lead and lead.referral_code)
 
-            split = RevenueEngineV1._calculate_split(deal, has_referral=has_referral)
+            partner_rate = None
+            if deal.partner_id:
+                from repositories.partner_cabinet_v1_repository import PartnerCabinetV1Repository
+
+                profile = await PartnerCabinetV1Repository(session).get_profile_by_partner(
+                    deal.partner_id
+                )
+                if profile and profile.commission_rate is not None:
+                    partner_rate = profile.commission_rate
+
+            split = RevenueEngineV1._calculate_split(
+                deal,
+                has_referral=has_referral,
+                partner_rate=partner_rate,
+            )
             row = await revenue_repo.create(
                 deal_id=deal.id,
                 gross_amount=split["gross_amount"],
@@ -70,10 +84,26 @@ class RevenueEngineV1:
                 currency=deal.currency,
                 payment_status=RevenueEngineV1PaymentStatus.PENDING.value,
             )
-        return RevenueEngineV1._snapshot(row)
+        snapshot = RevenueEngineV1._snapshot(row)
+        if deal.partner_id and split["partner_income"] > 0:
+            from services.pg_partner_cabinet_v1 import PartnerCabinetV1
+
+            await PartnerCabinetV1.on_revenue_created(
+                deal_id=deal.id,
+                partner_id=deal.partner_id,
+                revenue_entry_id=row.id,
+                partner_income=split["partner_income"],
+                currency=deal.currency,
+            )
+        return snapshot
 
     @staticmethod
-    def _calculate_split(deal: DealEngineV1Deal, *, has_referral: bool) -> dict[str, Decimal]:
+    def _calculate_split(
+        deal: DealEngineV1Deal,
+        *,
+        has_referral: bool,
+        partner_rate: Decimal | None = None,
+    ) -> dict[str, Decimal]:
         vertical = deal.vertical.lower()
         if vertical not in REVENUE_ENGINE_V1_SUPPORTED_VERTICALS:
             raise RevenueEngineV1Error(f"Unsupported vertical: {deal.vertical}")
@@ -81,8 +111,9 @@ class RevenueEngineV1:
         gross = Decimal(deal.amount).quantize(_MONEY, rounding=ROUND_HALF_UP)
         rates = _VERTICAL_RATES[vertical]
 
+        effective_partner_rate = partner_rate if partner_rate is not None else rates["partner"]
         partner_income = (
-            (gross * rates["partner"]).quantize(_MONEY, rounding=ROUND_HALF_UP)
+            (gross * effective_partner_rate).quantize(_MONEY, rounding=ROUND_HALF_UP)
             if deal.partner_id
             else Decimal("0")
         )

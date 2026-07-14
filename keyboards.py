@@ -60,6 +60,9 @@ def owner_main_menu(*, show_automotive: bool = True):
                 KeyboardButton(text="👑 Owner Panel"),
             ],
             [
+                KeyboardButton(text="🤝 Partner Cabinet"),
+            ],
+            [
                 KeyboardButton(text="📊 Owner Dashboard"),
             ],
             [
@@ -83,13 +86,24 @@ def owner_panel_menu() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text="📊 Owner Dashboard")],
             [
+                KeyboardButton(text="🤝 Partner Cabinet"),
                 KeyboardButton(text="🔗 Entry Links"),
+            ],
+            [
                 KeyboardButton(text="📝 Notes"),
             ],
             [KeyboardButton(text="⬅ Назад")],
         ],
         resize_keyboard=True,
     )
+
+
+def partner_cabinet_menu(*, owner: bool = False) -> ReplyKeyboardMarkup:
+    rows = [[KeyboardButton(text="🔄 Обновить")]]
+    if owner:
+        rows.append([KeyboardButton(text="🤝 Partner Cabinet")])
+    rows.append([KeyboardButton(text="⬅ Назад")])
+    return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
 
 
 def owner_dashboard_menu() -> ReplyKeyboardMarkup:
