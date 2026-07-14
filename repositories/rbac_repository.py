@@ -8,7 +8,7 @@ from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.permissions import Permission, RolePermission
-from database.models.roles import Role, UserRole
+from database.models.roles import RbacRole, UserRoleLink
 from database.seeds.rbac_v2 import (
     DEFAULT_PERMISSIONS,
     DEFAULT_ROLE_PERMISSIONS,
@@ -20,9 +20,9 @@ class RbacRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def get_role_by_code(self, role_code: str) -> Role | None:
+    async def get_role_by_code(self, role_code: str) -> RbacRole | None:
         result = await self._session.execute(
-            select(Role).where(Role.code == role_code)
+            select(RbacRole).where(RbacRole.code == role_code)
         )
         return result.scalar_one_or_none()
 
@@ -40,9 +40,9 @@ class RbacRepository:
         stmt = (
             select(Permission.id)
             .join(RolePermission, RolePermission.permission_id == Permission.id)
-            .join(Role, Role.id == RolePermission.role_id)
-            .join(UserRole, UserRole.role_id == Role.id)
-            .where(UserRole.user_id == user_id, Permission.code == permission_code)
+            .join(RbacRole, RbacRole.id == RolePermission.role_id)
+            .join(UserRoleLink, UserRoleLink.role_id == RbacRole.id)
+            .where(UserRoleLink.user_id == user_id, Permission.code == permission_code)
             .limit(1)
         )
         result = await self._session.execute(stmt)
@@ -59,16 +59,16 @@ class RbacRepository:
             return False
 
         existing = await self._session.execute(
-            select(UserRole).where(
-                UserRole.user_id == user_id,
-                UserRole.role_id == role.id,
+            select(UserRoleLink).where(
+                UserRoleLink.user_id == user_id,
+                UserRoleLink.role_id == role.id,
             )
         )
         if existing.scalar_one_or_none() is not None:
             return True
 
         self._session.add(
-            UserRole(
+            UserRoleLink(
                 user_id=user_id,
                 role_id=role.id,
                 assigned_by=assigned_by,
@@ -83,20 +83,20 @@ class RbacRepository:
             return False
 
         result = await self._session.execute(
-            delete(UserRole).where(
-                UserRole.user_id == user_id,
-                UserRole.role_id == role.id,
+            delete(UserRoleLink).where(
+                UserRoleLink.user_id == user_id,
+                UserRoleLink.role_id == role.id,
             )
         )
         await self._session.flush()
         return result.rowcount > 0
 
     async def seed_defaults(self) -> dict[str, int]:
-        roles_by_code: dict[str, Role] = {}
+        roles_by_code: dict[str, RbacRole] = {}
         for code, name, description in DEFAULT_ROLES:
             role = await self.get_role_by_code(code)
             if role is None:
-                role = Role(code=code, name=name, description=description)
+                role = RbacRole(code=code, name=name, description=description)
                 self._session.add(role)
                 await self._session.flush()
             roles_by_code[code] = role

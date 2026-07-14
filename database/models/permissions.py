@@ -13,7 +13,7 @@ from database.base import Base
 from database.models.mixins import UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from database.models.roles import Role
+    from database.models.roles import RbacRole
 
 
 class Permission(UUIDPrimaryKeyMixin, Base):
@@ -51,5 +51,8 @@ class RolePermission(Base):
         primary_key=True,
     )
 
-    role: Mapped[Role] = relationship(back_populates="permission_links")
+    role: Mapped["RbacRole"] = relationship(
+        "database.models.roles.RbacRole",
+        back_populates="permission_links",
+    )
     permission: Mapped[Permission] = relationship(back_populates="role_links")

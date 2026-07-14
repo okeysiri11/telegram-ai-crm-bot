@@ -38,10 +38,10 @@ class Role(UUIDPrimaryKeyMixin, Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     user_links: Mapped[list["UserRole"]] = relationship(
-        "UserRole",
+        "database.models.user_role.UserRole",
         back_populates="role",
         cascade="all, delete-orphan",
-        foreign_keys="UserRole.role_id",
+        foreign_keys="database.models.user_role.UserRole.role_id",
     )
 
     def __repr__(self) -> str:

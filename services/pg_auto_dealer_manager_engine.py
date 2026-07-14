@@ -6,7 +6,7 @@ import logging
 import uuid
 from typing import Any
 
-from database.models.roles import Role
+from database.models.roles import RbacRole
 from database.session import get_session
 from repositories.rbac_repository import RbacRepository
 from repositories.users_repository import UsersRepository
@@ -42,7 +42,7 @@ class AutoDealerManagerEngineV1:
                 rbac = RbacRepository(session)
                 role = await rbac.get_role_by_code(BORIS_ROLE_CODE)
                 if role is None:
-                    role = Role(
+                    role = RbacRole(
                         code=BORIS_ROLE_CODE,
                         name=BORIS_ROLE_NAME,
                         description=BORIS_ROLE_DESCRIPTION,

@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from database.models.users import User
 
 
-class Role(UUIDPrimaryKeyMixin, Base):
+class RbacRole(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "roles"
     __table_args__ = (
         UniqueConstraint("code", name="uq_roles_code"),
@@ -29,17 +29,19 @@ class Role(UUIDPrimaryKeyMixin, Base):
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user_links: Mapped[list["UserRole"]] = relationship(
+    user_links: Mapped[list["UserRoleLink"]] = relationship(
+        "database.models.roles.UserRoleLink",
         back_populates="role",
         cascade="all, delete-orphan",
     )
-    permission_links: Mapped[list[RolePermission]] = relationship(
+    permission_links: Mapped[list["RolePermission"]] = relationship(
+        "database.models.permissions.RolePermission",
         back_populates="role",
         cascade="all, delete-orphan",
     )
 
 
-class UserRole(Base):
+class UserRoleLink(Base):
     __tablename__ = "user_roles"
     __table_args__ = (
         Index("ix_user_roles_user_id", "user_id"),
@@ -67,13 +69,21 @@ class UserRole(Base):
         nullable=True,
     )
 
-    user: Mapped[User] = relationship(
+    user: Mapped["User"] = relationship(
+        "database.models.users.User",
         foreign_keys=[user_id],
     )
-    role: Mapped[Role] = relationship(
+    role: Mapped["RbacRole"] = relationship(
+        "database.models.roles.RbacRole",
         back_populates="user_links",
         foreign_keys=[role_id],
     )
-    assigner: Mapped[User | None] = relationship(
+    assigner: Mapped["User | None"] = relationship(
+        "database.models.users.User",
         foreign_keys=[assigned_by],
     )
+
+
+# Backward-compatible aliases for RBAC models.
+Role = RbacRole
+UserRole = UserRoleLink
