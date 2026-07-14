@@ -45,6 +45,9 @@ class LeadEngineLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_lead_engine_v1_manager", "assigned_manager_id"),
         Index("ix_lead_engine_v1_created", "created_at"),
         Index("ix_lead_engine_v1_utm_source", "utm_source"),
+        Index("ix_lead_engine_v1_utm_campaign", "utm_campaign"),
+        Index("ix_lead_engine_v1_marketing_source", "marketing_source"),
+        Index("ix_lead_engine_v1_referrer", "referrer"),
     )
 
     vertical: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -55,6 +58,8 @@ class LeadEngineLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     utm_campaign: Mapped[str | None] = mapped_column(String(255), nullable=True)
     utm_medium: Mapped[str | None] = mapped_column(String(255), nullable=True)
     referral_code: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    referrer: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    marketing_source: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     telegram_username: Mapped[str | None] = mapped_column(String(255), nullable=True)

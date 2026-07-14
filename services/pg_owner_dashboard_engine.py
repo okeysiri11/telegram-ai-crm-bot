@@ -10,6 +10,7 @@ from repositories.owner_dashboard_repository import OwnerDashboardRepository
 from services.pg_crm_pipeline_boards_engine import CrmPipelineBoardsEngineV1
 from services.pg_sla_tracking_v1 import SlaTrackingV1
 from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
+from services.pg_marketing_analytics_v1 import MarketingAnalyticsV1
 
 
 class OwnerDashboardEngineV1:
@@ -66,12 +67,14 @@ class OwnerDashboardEngineV1:
         pipeline = await CrmPipelineBoardsEngineV1.get_pipeline_metrics()
         sla = await SlaTrackingV1.get_owner_metrics()
         anti_loss = await AntiLossLayerV1.get_owner_metrics()
+        marketing_v1 = await MarketingAnalyticsV1.get_owner_metrics()
 
         return {
             "auto": auto,
             "agro": agro,
             "global": global_metrics,
             "marketing": marketing,
+            "marketing_v1": marketing_v1,
             "revenue_detail": revenue_detail,
             "pipeline": pipeline,
             "sla": sla,
@@ -124,30 +127,19 @@ class OwnerDashboardEngineV1:
         lines.append("🛡 Anti Loss snapshot:")
         lines.append(f"  Leads prevented: {anti.get('duplicate_leads_prevented', 0)}")
         lines.append(f"  Deals prevented: {anti.get('duplicate_deals_prevented', 0)}")
+        mkt = data.get("marketing_v1") or {}
+        best = mkt.get("best_source")
+        if best:
+            lines.append("")
+            lines.append("📈 Marketing snapshot:")
+            lines.append(
+                f"  Best source: {best['source']} (ROI {best['roi']}%)"
+            )
         return "\n".join(lines)
 
     @staticmethod
     def format_marketing_analytics(data: dict[str, Any]) -> str:
-        m = data["marketing"]
-        lines = [
-            "📈 Marketing Analytics",
-            "",
-            f"Leads today: {m['leads_today']}",
-            f"Leads this month: {m['leads_month']}",
-            "",
-            "By source link:",
-        ]
-        for source, count in m.get("by_source") or []:
-            lines.append(f"  • {source or '—'}: {count}")
-        if not m.get("by_source"):
-            lines.append("  • —")
-        lines.append("")
-        lines.append("By UTM source:")
-        for utm, count in m.get("by_utm") or []:
-            lines.append(f"  • {utm or '—'}: {count}")
-        if not m.get("by_utm"):
-            lines.append("  • —")
-        return "\n".join(lines)
+        return MarketingAnalyticsV1.format_owner_marketing_analytics(data)
 
     @staticmethod
     def format_revenue_analytics(data: dict[str, Any]) -> str:

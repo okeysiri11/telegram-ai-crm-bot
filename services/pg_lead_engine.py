@@ -61,6 +61,15 @@ class LeadEngineV1:
 
         async with get_session() as session:
             repo = LeadEngineRepository(session)
+            from services.pg_marketing_analytics_v1 import MarketingAnalyticsV1
+
+            attribution = MarketingAnalyticsV1.lead_attribution_fields(
+                source_link=resolved_source,
+                utm_source=payload.utm_source,
+                utm_campaign=payload.utm_campaign,
+                utm_medium=payload.utm_medium,
+                referral_code=payload.referral_code,
+            )
             row = await repo.create(
                 vertical=resolved_vertical,
                 role=resolved_role,
@@ -70,6 +79,8 @@ class LeadEngineV1:
                 utm_campaign=payload.utm_campaign,
                 utm_medium=payload.utm_medium,
                 referral_code=payload.referral_code,
+                referrer=attribution["referrer"],
+                marketing_source=attribution["marketing_source"],
                 telegram_user_id=telegram_user_id,
                 telegram_username=telegram_username,
                 full_name=full_name,
@@ -278,6 +289,8 @@ class LeadEngineV1:
             "utm_campaign": row.utm_campaign,
             "utm_medium": row.utm_medium,
             "referral_code": row.referral_code,
+            "referrer": row.referrer,
+            "marketing_source": row.marketing_source,
             "telegram_user_id": row.telegram_user_id,
             "telegram_username": row.telegram_username,
             "full_name": row.full_name,
