@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, DateTime, ForeignKey, Index, func
+from sqlalchemy import DateTime, ForeignKey, Index, func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
 
-import database.models.role  # noqa: F401 — register permission_engine_roles for FK resolution
+if TYPE_CHECKING:
+    from database.models.role import Role
+    from database.models.users import User
 
 
 class UserRole(Base):
@@ -21,7 +24,11 @@ class UserRole(Base):
         Index("ix_permission_engine_user_roles_role_id", "role_id"),
     )
 
-    user_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        primary_key=True,
+    )
     role_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("permission_engine_roles.id", ondelete="CASCADE"),
@@ -31,6 +38,17 @@ class UserRole(Base):
         DateTime(timezone=True),
         server_default=func.now(),
         nullable=False,
+    )
+
+    user: Mapped[User] = relationship(
+        "User",
+        back_populates="role_links",
+        foreign_keys=[user_id],
+    )
+    role: Mapped[Role] = relationship(
+        "Role",
+        back_populates="user_links",
+        foreign_keys=[role_id],
     )
 
     def __repr__(self) -> str:

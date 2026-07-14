@@ -29,7 +29,7 @@ class Role(UUIDPrimaryKeyMixin, Base):
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user_links: Mapped[list[UserRole]] = relationship(
+    user_links: Mapped[list["UserRole"]] = relationship(
         back_populates="role",
         cascade="all, delete-orphan",
     )
@@ -68,10 +68,12 @@ class UserRole(Base):
     )
 
     user: Mapped[User] = relationship(
-        back_populates="role_links",
         foreign_keys=[user_id],
     )
-    role: Mapped[Role] = relationship(back_populates="user_links")
+    role: Mapped[Role] = relationship(
+        back_populates="user_links",
+        foreign_keys=[role_id],
+    )
     assigner: Mapped[User | None] = relationship(
         foreign_keys=[assigned_by],
     )

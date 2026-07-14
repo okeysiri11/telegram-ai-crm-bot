@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import uuid
+
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,6 +15,7 @@ from database.models.rbac_v2_engine import (
 )
 from database.models.role import Role
 from database.models.user_role import UserRole
+from database.models.users import User
 from database.seeds.rbac_v2 import (
     RBAC_V2_DIRECT_ROLE_PERMISSIONS,
     RBAC_V2_PERMISSIONS,
@@ -25,6 +28,12 @@ from database.seeds.rbac_v2 import (
 class RbacV2Repository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
+
+    async def _user_id_for_telegram(self, telegram_user_id: int) -> uuid.UUID | None:
+        result = await self._session.execute(
+            select(User.id).where(User.telegram_id == telegram_user_id)
+        )
+        return result.scalar_one_or_none()
 
     async def seed_v2(self) -> dict[str, int]:
         perm_count = 0
@@ -128,33 +137,42 @@ class RbacV2Repository:
         return list(result.scalars().all())
 
     async def get_user_role_codes(self, telegram_user_id: int) -> list[str]:
+        user_id = await self._user_id_for_telegram(telegram_user_id)
+        if user_id is None:
+            return []
         result = await self._session.execute(
             select(Role.code)
             .join(UserRole, UserRole.role_id == Role.id)
-            .where(UserRole.user_id == telegram_user_id)
+            .where(UserRole.user_id == user_id)
             .order_by(Role.code.asc())
         )
         return list(result.scalars().all())
 
     async def assign_role_by_code(self, telegram_user_id: int, role_code: str) -> bool:
+        user_id = await self._user_id_for_telegram(telegram_user_id)
+        if user_id is None:
+            return False
         role_result = await self._session.execute(select(Role).where(Role.code == role_code))
         role = role_result.scalar_one_or_none()
         if role is None:
             return False
         existing = await self._session.execute(
             select(UserRole).where(
-                UserRole.user_id == telegram_user_id,
+                UserRole.user_id == user_id,
                 UserRole.role_id == role.id,
             )
         )
         if existing.scalar_one_or_none() is not None:
             return True
-        self._session.add(UserRole(user_id=telegram_user_id, role_id=role.id))
+        self._session.add(UserRole(user_id=user_id, role_id=role.id))
         await self._session.flush()
         return True
 
     async def clear_user_roles(self, telegram_user_id: int) -> None:
+        user_id = await self._user_id_for_telegram(telegram_user_id)
+        if user_id is None:
+            return
         await self._session.execute(
-            delete(UserRole).where(UserRole.user_id == telegram_user_id)
+            delete(UserRole).where(UserRole.user_id == user_id)
         )
         await self._session.flush()
