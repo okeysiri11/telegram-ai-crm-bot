@@ -232,8 +232,10 @@ class VerticalOnboardingEngineV1:
     @staticmethod
     def settings_menu_keyboard(lang: str | None = None) -> ReplyKeyboardMarkup:
         language = normalize_language(lang)
+        cart_label = "🛒 Кошик" if language == "uk" else "🛒 Корзина"
         return ReplyKeyboardMarkup(
             keyboard=[
+                [KeyboardButton(text=cart_label)],
                 [KeyboardButton(text=t("settings_language", language))],
                 [KeyboardButton(text=btn("back", language))],
             ],

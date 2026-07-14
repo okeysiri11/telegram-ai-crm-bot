@@ -114,6 +114,8 @@ def tenant_scoped_menu(ctx: dict | None = None, lang: str | None = None) -> Repl
         rows.append([KeyboardButton(text="💰 Crypto OTC")])
 
     rows.append([KeyboardButton(text="🏠 Мой раздел")])
+    cart_label = "🛒 Кошик" if language == "uk" else "🛒 Корзина"
+    rows.append([KeyboardButton(text=cart_label)])
     rows.append([KeyboardButton(text=t("settings_title", language))])
     return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
 
@@ -1466,6 +1468,9 @@ def admin_module_menu() -> ReplyKeyboardMarkup:
             ],
             [
                 KeyboardButton(text="💵 Revenue Engine"),
+            ],
+            [
+                KeyboardButton(text="🛒 Cart Dashboard"),
             ],
             [
                 KeyboardButton(text="⬅ Назад"),
