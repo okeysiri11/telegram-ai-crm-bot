@@ -58,6 +58,26 @@ class DealEngineV1:
             resolved_manager = manager_id or lead.assigned_manager_id
             deal_title = title or DealEngineV1._default_title(lead)
 
+            from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
+
+            dup = await AntiLossLayerV1.check_active_deal_duplicate(
+                vertical=lead.vertical,
+                lead_id=lead.id,
+                client_id=client_id,
+                title=deal_title,
+            )
+            if dup.get("duplicate"):
+                await AntiLossLayerV1.log_deal_duplicate_prevented(
+                    vertical=lead.vertical,
+                    matched_deal_id=dup["matched_deal"].id,
+                    match_type=dup["match_type"],
+                    lead_id=lead.id,
+                )
+                raise DealEngineV1Error(
+                    f"Active deal duplicate prevented ({dup['match_type']}): "
+                    f"{dup['matched_deal_id']}"
+                )
+
             row = await deal_repo.create(
                 lead_id=lead.id,
                 vertical=lead.vertical,
@@ -95,6 +115,25 @@ class DealEngineV1:
         vertical_key = vertical.strip().lower()
         if vertical_key not in DEAL_ENGINE_V1_SUPPORTED_VERTICALS:
             raise DealEngineV1Error(f"Unsupported vertical: {vertical}")
+
+        from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
+
+        dup = await AntiLossLayerV1.check_active_deal_duplicate(
+            vertical=vertical_key,
+            lead_id=lead_id,
+            client_id=client_id,
+            title=title,
+        )
+        if dup.get("duplicate"):
+            await AntiLossLayerV1.log_deal_duplicate_prevented(
+                vertical=vertical_key,
+                matched_deal_id=dup["matched_deal"].id,
+                match_type=dup["match_type"],
+                lead_id=lead_id,
+            )
+            raise DealEngineV1Error(
+                f"Active deal duplicate prevented ({dup['match_type']})"
+            )
 
         async with get_session() as session:
             row = await DealEngineV1Repository(session).create(

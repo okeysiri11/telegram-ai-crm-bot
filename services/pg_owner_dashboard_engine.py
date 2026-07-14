@@ -9,6 +9,7 @@ from database.session import get_session
 from repositories.owner_dashboard_repository import OwnerDashboardRepository
 from services.pg_crm_pipeline_boards_engine import CrmPipelineBoardsEngineV1
 from services.pg_sla_tracking_v1 import SlaTrackingV1
+from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
 
 
 class OwnerDashboardEngineV1:
@@ -64,6 +65,7 @@ class OwnerDashboardEngineV1:
 
         pipeline = await CrmPipelineBoardsEngineV1.get_pipeline_metrics()
         sla = await SlaTrackingV1.get_owner_metrics()
+        anti_loss = await AntiLossLayerV1.get_owner_metrics()
 
         return {
             "auto": auto,
@@ -73,6 +75,7 @@ class OwnerDashboardEngineV1:
             "revenue_detail": revenue_detail,
             "pipeline": pipeline,
             "sla": sla,
+            "anti_loss": anti_loss,
         }
 
     @staticmethod
@@ -116,6 +119,11 @@ class OwnerDashboardEngineV1:
             )
             lines.append(f"  Overdue leads: {sla.get('overdue_leads', 0)}")
             lines.append(f"  Violations: {sla.get('sla_violations', 0)}")
+        anti = data.get("anti_loss") or {}
+        lines.append("")
+        lines.append("🛡 Anti Loss snapshot:")
+        lines.append(f"  Leads prevented: {anti.get('duplicate_leads_prevented', 0)}")
+        lines.append(f"  Deals prevented: {anti.get('duplicate_deals_prevented', 0)}")
         return "\n".join(lines)
 
     @staticmethod
@@ -205,6 +213,10 @@ class OwnerDashboardEngineV1:
     @staticmethod
     def format_sla_analytics(data: dict[str, Any]) -> str:
         return SlaTrackingV1.format_owner_sla_analytics(data)
+
+    @staticmethod
+    def format_anti_loss_analytics(data: dict[str, Any]) -> str:
+        return AntiLossLayerV1.format_owner_anti_loss_analytics(data)
 
     @staticmethod
     def _format_ranking(

@@ -39,6 +39,26 @@ class LeadEngineV1:
             legacy = legacy_vertical_from_args(start_args)
             resolved_vertical = legacy or "unknown"
 
+        from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
+
+        dup = await AntiLossLayerV1.check_lead_duplicate(
+            vertical=resolved_vertical,
+            telegram_user_id=telegram_user_id,
+        )
+        if dup.get("duplicate"):
+            matched = dup["matched_lead"]
+            await AntiLossLayerV1.log_lead_duplicate_prevented(
+                vertical=resolved_vertical,
+                matched_lead_id=matched.id,
+                match_type=dup["match_type"],
+                attempted_telegram_id=telegram_user_id,
+            )
+            return AntiLossLayerV1.lead_snapshot_with_anti_loss(
+                matched,
+                duplicate_prevented=True,
+                match_type=dup["match_type"],
+            )
+
         async with get_session() as session:
             repo = LeadEngineRepository(session)
             row = await repo.create(
@@ -62,6 +82,17 @@ class LeadEngineV1:
             lead_id=row.id,
             vertical=resolved_vertical,
             created_at=row.created_at,
+        )
+        await AntiLossLayerV1.register_lead_fingerprints(
+            row.id,
+            vertical=resolved_vertical,
+            telegram_user_id=telegram_user_id,
+            phone=row.phone,
+            vin=row.vin,
+            vehicle_registration=row.vehicle_registration,
+            agro_product=row.agro_product,
+            agro_volume=row.agro_volume,
+            agro_location=row.agro_location,
         )
         return snapshot
 
@@ -89,9 +120,40 @@ class LeadEngineV1:
                 updates["role"] = role
             if phone is not None:
                 updates["phone"] = phone
+                from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
+
+                updates["phone_normalized"] = AntiLossLayerV1.normalize_phone(phone)
             if not updates:
                 return LeadEngineV1._snapshot(row)
+            if phone is not None:
+                dup = await AntiLossLayerV1.check_lead_duplicate(
+                    vertical=row.vertical,
+                    phone=phone,
+                    telegram_user_id=row.telegram_user_id,
+                    exclude_lead_id=row.id,
+                )
+                if dup.get("duplicate"):
+                    await AntiLossLayerV1.log_lead_duplicate_prevented(
+                        vertical=row.vertical,
+                        matched_lead_id=dup["matched_lead"].id,
+                        match_type=dup["match_type"],
+                        attempted_telegram_id=telegram_user_id,
+                    )
+                    return AntiLossLayerV1.lead_snapshot_with_anti_loss(
+                        dup["matched_lead"],
+                        duplicate_prevented=True,
+                        match_type=dup["match_type"],
+                    )
             row = await repo.update(row.id, **updates)
+            if phone is not None:
+                from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
+
+                await AntiLossLayerV1.register_lead_fingerprints(
+                    row.id,
+                    vertical=row.vertical,
+                    telegram_user_id=row.telegram_user_id,
+                    phone=row.phone,
+                )
             return LeadEngineV1._snapshot(row)
 
     @staticmethod
@@ -222,6 +284,15 @@ class LeadEngineV1:
             "phone": row.phone,
             "assigned_manager_id": str(row.assigned_manager_id) if row.assigned_manager_id else None,
             "status": row.status,
+            "phone_normalized": row.phone_normalized,
+            "vin": row.vin,
+            "vehicle_registration": row.vehicle_registration,
+            "agro_product": row.agro_product,
+            "agro_volume": row.agro_volume,
+            "agro_location": row.agro_location,
+            "is_duplicate": row.is_duplicate,
+            "duplicate_of_id": str(row.duplicate_of_id) if row.duplicate_of_id else None,
+            "merged_into_id": str(row.merged_into_id) if row.merged_into_id else None,
             "created_at": row.created_at.isoformat() if row.created_at else None,
             "updated_at": row.updated_at.isoformat() if row.updated_at else None,
         }

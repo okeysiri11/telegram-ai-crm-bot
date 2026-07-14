@@ -5,7 +5,7 @@ from __future__ import annotations
 import enum
 import uuid
 
-from sqlalchemy import BigInteger, ForeignKey, Index, String
+from sqlalchemy import BigInteger, Boolean, ForeignKey, Index, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -39,6 +39,9 @@ class LeadEngineLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_lead_engine_v1_pipeline_stage", "pipeline_stage"),
         Index("ix_lead_engine_v1_source_link", "source_link"),
         Index("ix_lead_engine_v1_telegram", "telegram_user_id"),
+        Index("ix_lead_engine_v1_phone_norm", "phone_normalized"),
+        Index("ix_lead_engine_v1_vin", "vin"),
+        Index("ix_lead_engine_v1_vehicle_reg", "vehicle_registration"),
         Index("ix_lead_engine_v1_manager", "assigned_manager_id"),
         Index("ix_lead_engine_v1_created", "created_at"),
         Index("ix_lead_engine_v1_utm_source", "utm_source"),
@@ -57,6 +60,25 @@ class LeadEngineLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     telegram_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    phone_normalized: Mapped[str | None] = mapped_column(String(32), nullable=True)
+
+    vin: Mapped[str | None] = mapped_column(String(17), nullable=True)
+    vehicle_registration: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    agro_product: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    agro_volume: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    agro_location: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
+    is_duplicate: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    duplicate_of_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lead_engine_v1_leads.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    merged_into_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("lead_engine_v1_leads.id", ondelete="SET NULL"),
+        nullable=True,
+    )
 
     assigned_manager_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
