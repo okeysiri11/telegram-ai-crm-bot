@@ -107,6 +107,9 @@ def owner_dashboard_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="📋 Pipeline Analytics"),
             ],
             [
+                KeyboardButton(text="⏱ SLA Analytics"),
+            ],
+            [
                 KeyboardButton(text="📋 Pipeline Board"),
             ],
             [KeyboardButton(text="⬅ Назад")],

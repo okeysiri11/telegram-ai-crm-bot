@@ -55,7 +55,15 @@ class LeadEngineV1:
                 full_name=full_name,
                 status=LeadEngineStatus.NEW.value,
             )
-        return LeadEngineV1._snapshot(row)
+        snapshot = LeadEngineV1._snapshot(row)
+        from services.pg_sla_tracking_v1 import SlaTrackingV1
+
+        await SlaTrackingV1.on_lead_created(
+            lead_id=row.id,
+            vertical=resolved_vertical,
+            created_at=row.created_at,
+        )
+        return snapshot
 
     @staticmethod
     async def enrich_latest_for_user(
@@ -95,6 +103,9 @@ class LeadEngineV1:
             row = await LeadEngineRepository(session).assign_manager(lead_id, manager_id)
         if row is None:
             return None
+        from services.pg_sla_tracking_v1 import SlaTrackingV1
+
+        await SlaTrackingV1.on_manager_assigned(lead_id, manager_id)
         return LeadEngineV1._snapshot(row)
 
     @staticmethod
@@ -105,6 +116,9 @@ class LeadEngineV1:
             row = await LeadEngineRepository(session).update(lead_id, status=status)
         if row is None:
             return None
+        from services.pg_sla_tracking_v1 import SlaTrackingV1
+
+        await SlaTrackingV1.on_lead_status(lead_id, status)
         return LeadEngineV1._snapshot(row)
 
     @staticmethod

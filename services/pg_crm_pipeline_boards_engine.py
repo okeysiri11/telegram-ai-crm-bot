@@ -138,6 +138,11 @@ class CrmPipelineBoardsEngineV1:
                 pipeline_stage_id=stage_row.id,
             )
 
+            if entity_type == CrmPipelineEntityType.LEAD.value:
+                from services.pg_sla_tracking_v1 import SlaTrackingV1
+
+                await SlaTrackingV1.on_pipeline_stage(entity_id, new_stage)
+
         return {
             "entity_type": entity_type,
             "entity_id": str(entity_id),

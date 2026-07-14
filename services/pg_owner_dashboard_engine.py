@@ -8,6 +8,7 @@ from typing import Any
 from database.session import get_session
 from repositories.owner_dashboard_repository import OwnerDashboardRepository
 from services.pg_crm_pipeline_boards_engine import CrmPipelineBoardsEngineV1
+from services.pg_sla_tracking_v1 import SlaTrackingV1
 
 
 class OwnerDashboardEngineV1:
@@ -62,6 +63,7 @@ class OwnerDashboardEngineV1:
             revenue_detail = await repo.revenue_breakdown(since=month)
 
         pipeline = await CrmPipelineBoardsEngineV1.get_pipeline_metrics()
+        sla = await SlaTrackingV1.get_owner_metrics()
 
         return {
             "auto": auto,
@@ -70,6 +72,7 @@ class OwnerDashboardEngineV1:
             "marketing": marketing,
             "revenue_detail": revenue_detail,
             "pipeline": pipeline,
+            "sla": sla,
         }
 
     @staticmethod
@@ -100,6 +103,19 @@ class OwnerDashboardEngineV1:
         lines.append("")
         lines.append("👥 Top managers (month):")
         lines.extend(OwnerDashboardEngineV1._format_ranking(g.get("top_managers"), income_key=1))
+        sla = data.get("sla") or {}
+        avg_resp = sla.get("avg_response_minutes")
+        if avg_resp is not None:
+            from services.pg_sla_tracking_v1 import SlaTrackingV1
+
+            lines.append("")
+            lines.append("⏱ SLA snapshot:")
+            lines.append(
+                f"  Avg response: {avg_resp} min "
+                f"{SlaTrackingV1.traffic_light_emoji(int(avg_resp))}"
+            )
+            lines.append(f"  Overdue leads: {sla.get('overdue_leads', 0)}")
+            lines.append(f"  Violations: {sla.get('sla_violations', 0)}")
         return "\n".join(lines)
 
     @staticmethod
@@ -185,6 +201,10 @@ class OwnerDashboardEngineV1:
         return CrmPipelineBoardsEngineV1.format_pipeline_analytics(
             data.get("pipeline") or {}
         )
+
+    @staticmethod
+    def format_sla_analytics(data: dict[str, Any]) -> str:
+        return SlaTrackingV1.format_owner_sla_analytics(data)
 
     @staticmethod
     def _format_ranking(

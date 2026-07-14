@@ -74,6 +74,9 @@ class DealEngineV1:
             if lead.status not in {LeadEngineStatus.WON.value, LeadEngineStatus.LOST.value}:
                 await lead_repo.update(lead.id, status=LeadEngineStatus.WON.value)
 
+        from services.pg_sla_tracking_v1 import SlaTrackingV1
+
+        await SlaTrackingV1.on_deal_linked(lead.id, row.id)
         return DealEngineV1._snapshot(row)
 
     @staticmethod
@@ -131,6 +134,17 @@ class DealEngineV1:
                     snapshot["revenue_entry_id"] = revenue["id"]
             except Exception:
                 logger.exception("Revenue entry creation failed for deal %s", deal_id)
+        if status in DEAL_ENGINE_V1_TERMINAL_STATUSES:
+            from services.pg_sla_tracking_v1 import SlaTrackingV1
+
+            lead_uuid = uuid.UUID(snapshot["lead_id"]) if snapshot.get("lead_id") else None
+            await SlaTrackingV1.on_deal_closed(
+                deal_id=deal_id,
+                lead_id=lead_uuid,
+                closed_at=datetime.fromisoformat(snapshot["closed_at"])
+                if snapshot.get("closed_at")
+                else None,
+            )
         return snapshot
 
     @staticmethod
