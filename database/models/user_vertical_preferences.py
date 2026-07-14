@@ -15,10 +15,14 @@ class UserVerticalPreferences(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_user_vertical_prefs_telegram", "telegram_user_id", unique=True),
         Index("ix_user_vertical_prefs_vertical", "vertical"),
         Index("ix_user_vertical_prefs_language", "language"),
+        Index("ix_user_vertical_prefs_tenant", "tenant_code"),
+        Index("ix_user_vertical_prefs_source_link", "source_link"),
     )
 
     telegram_user_id: Mapped[int] = mapped_column(BigInteger, nullable=False, unique=True)
     vertical: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    tenant_code: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    source_link: Mapped[str | None] = mapped_column(String(64), nullable=True)
     language: Mapped[str] = mapped_column(String(8), default="ru", nullable=False)
     role: Mapped[str | None] = mapped_column(String(64), nullable=True)
     onboarding_step: Mapped[str | None] = mapped_column(String(32), nullable=True)

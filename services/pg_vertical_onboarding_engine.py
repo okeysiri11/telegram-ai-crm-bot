@@ -18,6 +18,11 @@ from services.automotive_localization import (
     role_label,
     t,
 )
+from services.tenant_routing import (
+    ENTRY_LINK_REGISTRY,
+    legacy_vertical_from_args,
+    parse_entry_link as resolve_entry_link,
+)
 
 
 class VerticalOnboardingEngineV1:
@@ -31,6 +36,8 @@ class VerticalOnboardingEngineV1:
             return {
                 "telegram_user_id": telegram_user_id,
                 "vertical": None,
+                "tenant_code": None,
+                "source_link": None,
                 "language": DEFAULT_LANGUAGE,
                 "role": None,
                 "onboarding_step": None,
@@ -39,6 +46,8 @@ class VerticalOnboardingEngineV1:
         return {
             "telegram_user_id": row.telegram_user_id,
             "vertical": row.vertical,
+            "tenant_code": row.tenant_code,
+            "source_link": row.source_link,
             "language": normalize_language(row.language),
             "role": row.role,
             "onboarding_step": row.onboarding_step,
@@ -49,6 +58,37 @@ class VerticalOnboardingEngineV1:
     async def get_language(telegram_user_id: int) -> str:
         prefs = await VerticalOnboardingEngineV1.get_preferences(telegram_user_id)
         return normalize_language(prefs.get("language"))
+
+    @staticmethod
+    async def save_entry_link(
+        *,
+        telegram_user_id: int,
+        source_link: str,
+        full_name: str = "",
+        username: str = "",
+    ) -> dict[str, Any]:
+        ensure_user(telegram_user_id, full_name=full_name, username=username)
+        cfg = ENTRY_LINK_REGISTRY.get(source_link)
+        if cfg is None:
+            raise ValueError(f"Unsupported entry link: {source_link}")
+        async with get_session() as session:
+            row = await UserVerticalPreferencesRepository(session).upsert(
+                telegram_user_id=telegram_user_id,
+                vertical=cfg.vertical,
+                tenant_code=cfg.tenant_code,
+                source_link=cfg.code,
+                onboarding_step="language",
+                onboarding_completed=False,
+            )
+        return {
+            "vertical": row.vertical,
+            "tenant_code": row.tenant_code,
+            "source_link": row.source_link,
+            "language": normalize_language(row.language),
+            "onboarding_step": row.onboarding_step,
+            "preset_role": cfg.preset_role,
+            "entry_target": cfg.entry_target,
+        }
 
     @staticmethod
     async def save_vertical_entry(
@@ -76,24 +116,55 @@ class VerticalOnboardingEngineV1:
         }
 
     @staticmethod
+    def _needs_role_picker(prefs) -> bool:
+        if prefs is None or prefs.vertical != "auto":
+            return False
+        if prefs.source_link:
+            cfg = ENTRY_LINK_REGISTRY.get(prefs.source_link)
+            if cfg and cfg.preset_role:
+                return False
+        return True
+
+    @staticmethod
     async def save_language(*, telegram_user_id: int, language: str) -> dict[str, Any]:
         lang = normalize_language(language)
         async with get_session() as session:
             repo = UserVerticalPreferencesRepository(session)
             prefs = await repo.get_by_telegram_id(telegram_user_id)
-            next_step = "role" if prefs and prefs.vertical == "auto" else "completed"
-            completed = next_step == "completed"
-            row = await repo.upsert(
-                telegram_user_id=telegram_user_id,
-                language=lang,
-                onboarding_step=next_step,
-                onboarding_completed=completed,
-            )
+            preset_role = None
+            if prefs and prefs.source_link:
+                cfg = ENTRY_LINK_REGISTRY.get(prefs.source_link)
+                if cfg:
+                    preset_role = cfg.preset_role
+
+            if preset_role:
+                next_step = "completed"
+                completed = True
+                row = await repo.upsert(
+                    telegram_user_id=telegram_user_id,
+                    language=lang,
+                    role=preset_role,
+                    onboarding_step=next_step,
+                    onboarding_completed=completed,
+                )
+            else:
+                next_step = "role" if VerticalOnboardingEngineV1._needs_role_picker(prefs) else "completed"
+                completed = next_step == "completed"
+                row = await repo.upsert(
+                    telegram_user_id=telegram_user_id,
+                    language=lang,
+                    onboarding_step=next_step,
+                    onboarding_completed=completed,
+                )
         return {
             "language": normalize_language(row.language),
             "onboarding_step": row.onboarding_step,
             "onboarding_completed": row.onboarding_completed,
             "vertical": row.vertical,
+            "tenant_code": row.tenant_code,
+            "source_link": row.source_link,
+            "role": row.role,
+            "preset_role": preset_role,
         }
 
     @staticmethod
@@ -111,6 +182,8 @@ class VerticalOnboardingEngineV1:
             "role": row.role,
             "language": normalize_language(row.language),
             "vertical": row.vertical,
+            "tenant_code": row.tenant_code,
+            "source_link": row.source_link,
             "onboarding_completed": row.onboarding_completed,
         }
 
@@ -169,9 +242,16 @@ class VerticalOnboardingEngineV1:
 
     @staticmethod
     def parse_deep_link(args: str | None) -> str | None:
-        if not args:
-            return None
-        vertical = args.strip().lower().split()[0]
-        if vertical in VERTICAL_DEEP_LINKS:
-            return vertical
-        return None
+        """Legacy parser — returns vertical key only."""
+        entry = resolve_entry_link(args)
+        if entry:
+            return entry.vertical
+        return legacy_vertical_from_args(args)
+
+    @staticmethod
+    def parse_entry_link_code(args: str | None) -> str | None:
+        """Returns entry link code (auto_client, agro, ...)."""
+        entry = resolve_entry_link(args)
+        if entry:
+            return entry.code
+        return legacy_vertical_from_args(args)

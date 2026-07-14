@@ -57,6 +57,9 @@ def owner_main_menu(*, show_automotive: bool = True):
                 KeyboardButton(text="⚙ Администрирование")
             ],
             [
+                KeyboardButton(text="👑 Owner Panel"),
+            ],
+            [
                 KeyboardButton(text="⚙ Настройки"),
             ],
             [
@@ -70,6 +73,43 @@ def owner_main_menu(*, show_automotive: bool = True):
     )
 
     return keyboard
+
+
+def owner_panel_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="🔗 Entry Links")],
+            [KeyboardButton(text="📝 Notes")],
+            [KeyboardButton(text="⬅ Назад")],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def tenant_scoped_menu(ctx: dict | None = None, lang: str | None = None) -> ReplyKeyboardMarkup | None:
+    from services.automotive_localization import normalize_language, t
+
+    if not ctx or not ctx.get("tenant_scoped"):
+        return None
+    language = normalize_language(lang or ctx.get("language"))
+    tenant_code = ctx.get("tenant_code") or ""
+    vertical = ctx.get("vertical") or "auto"
+    rows: list[list[KeyboardButton]] = []
+
+    if vertical == "auto" or tenant_code.startswith("auto_") or tenant_code.endswith("_partner"):
+        rows.append([KeyboardButton(text=AUTO_VERTICAL_MAIN_BUTTON)])
+    elif vertical == "agro":
+        rows.append([KeyboardButton(text="🌾 Agro Trading")])
+    elif vertical == "drones":
+        rows.append([KeyboardButton(text="🚁 Drone Engineering")])
+    elif vertical == "legal":
+        rows.append([KeyboardButton(text="⚖ Юриспруденция")])
+    elif vertical in {"finance", "crypto"}:
+        rows.append([KeyboardButton(text="💰 Crypto OTC")])
+
+    rows.append([KeyboardButton(text="🏠 Мой раздел")])
+    rows.append([KeyboardButton(text=t("settings_title", language))])
+    return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
 
 
 def notifications_module_menu():

@@ -309,8 +309,16 @@ from dealer_quote_authority_handlers import dealer_quote_authority_router
 from bidex_quote_handlers import bidex_quote_router
 from automotive_partner_handlers import automotive_partner_router
 from automotive_revenue_handlers import automotive_revenue_router
-from vertical_onboarding_handlers import begin_vertical_onboarding, vertical_onboarding_router
+from vertical_onboarding_handlers import (
+    begin_entry_link_onboarding,
+    begin_vertical_onboarding,
+    enter_tenant_vertical,
+    vertical_onboarding_router,
+)
+from owner_panel_handlers import owner_panel_router
+from tenant_guard_handlers import tenant_guard_router
 
+router.include_router(tenant_guard_router)
 router.include_router(deal_workflow_router)
 router.include_router(ai_sales_router)
 router.include_router(dealer_onboarding_router)
@@ -319,6 +327,7 @@ router.include_router(bidex_quote_router)
 router.include_router(automotive_partner_router)
 router.include_router(automotive_revenue_router)
 router.include_router(vertical_onboarding_router)
+router.include_router(owner_panel_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1
@@ -861,10 +870,23 @@ async def cmd_start(message: Message, command: CommandObject) -> None:
     from services.automotive_telegram_access import can_see_automotive_menu_button
     from services.pg_dealer_onboarding_engine import DealerOnboardingEngineV1
     from services.pg_vertical_onboarding_engine import VerticalOnboardingEngineV1
+    from services.tenant_routing import ENTRY_LINK_REGISTRY
+
+    entry_link = VerticalOnboardingEngineV1.parse_entry_link_code(command.args)
+    if entry_link and entry_link in ENTRY_LINK_REGISTRY:
+        await begin_entry_link_onboarding(message, entry_link)
+        return
 
     deep_link_vertical = VerticalOnboardingEngineV1.parse_deep_link(command.args)
-    if deep_link_vertical:
+    if deep_link_vertical and entry_link not in ENTRY_LINK_REGISTRY:
         await begin_vertical_onboarding(message, deep_link_vertical)
+        return
+
+    prefs = await VerticalOnboardingEngineV1.get_preferences(user_id)
+    if prefs.get("onboarding_completed") and prefs.get("tenant_code"):
+        lang = prefs.get("language") or "ru"
+        await message.answer(f"Ваш Telegram ID: {user_id}")
+        await enter_tenant_vertical(message, user_id, lang)
         return
 
     show_automotive = await can_see_automotive_menu_button(user_id)
@@ -917,7 +939,14 @@ async def cmd_start(message: Message, command: CommandObject) -> None:
 
 async def _start_menu_for(user_id: int):
     from services.automotive_telegram_access import can_see_automotive_menu_button
-    from keyboards import owner_main_menu
+    from keyboards import owner_main_menu, tenant_scoped_menu
+    from services.pg_tenant_entry_registry_engine import TenantRoutingEngineV1
+
+    ctx = await TenantRoutingEngineV1.get_tenant_context(user_id)
+    if ctx.get("tenant_scoped"):
+        scoped = tenant_scoped_menu(ctx, ctx.get("language"))
+        if scoped:
+            return scoped
 
     show_auto = await can_see_automotive_menu_button(user_id)
     return owner_main_menu(show_automotive=show_auto)

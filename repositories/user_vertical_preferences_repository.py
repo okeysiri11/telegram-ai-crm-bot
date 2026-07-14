@@ -25,6 +25,8 @@ class UserVerticalPreferencesRepository:
         *,
         telegram_user_id: int,
         vertical: str | None = None,
+        tenant_code: str | None = None,
+        source_link: str | None = None,
         language: str | None = None,
         role: str | None = None,
         onboarding_step: str | None = None,
@@ -35,6 +37,8 @@ class UserVerticalPreferencesRepository:
             row = UserVerticalPreferences(
                 telegram_user_id=telegram_user_id,
                 vertical=vertical,
+                tenant_code=tenant_code,
+                source_link=source_link,
                 language=language or "ru",
                 role=role,
                 onboarding_step=onboarding_step,
@@ -44,6 +48,10 @@ class UserVerticalPreferencesRepository:
         else:
             if vertical is not None:
                 row.vertical = vertical
+            if tenant_code is not None:
+                row.tenant_code = tenant_code
+            if source_link is not None:
+                row.source_link = source_link
             if language is not None:
                 row.language = language
             if role is not None:

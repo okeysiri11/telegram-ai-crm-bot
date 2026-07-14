@@ -82,6 +82,14 @@ def _normalize_screen(text: str) -> str | None:
 
 
 async def _main_menu_for(user_id: int):
+    from keyboards import tenant_scoped_menu
+    from services.pg_tenant_entry_registry_engine import TenantRoutingEngineV1
+
+    ctx = await TenantRoutingEngineV1.get_tenant_context(user_id)
+    if ctx.get("tenant_scoped"):
+        scoped = tenant_scoped_menu(ctx, ctx.get("language"))
+        if scoped:
+            return scoped
     show = await can_see_automotive_menu_button(user_id)
     return owner_main_menu(show_automotive=show)
 

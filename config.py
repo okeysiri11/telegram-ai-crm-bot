@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+BOT_USERNAME = os.getenv("BOT_USERNAME", "")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 # PostgreSQL (SQLAlchemy 2 async + asyncpg)
