@@ -33,28 +33,32 @@ automotive_partner_router = Router()
 partner_lead_flow: dict[int, dict] = {}
 
 HUB_BUTTON_TO_CATEGORY = {
-    "🛡 Insurance": AutomotivePartnerType.INSURANCE.value,
-    "🏦 Credit": AutomotivePartnerType.CREDIT.value,
-    "💳 Leasing": AutomotivePartnerType.LEASING.value,
-    "🚚 Logistics": AutomotivePartnerType.LOGISTICS.value,
-    "⚖ Legal": AutomotivePartnerType.LEGAL.value,
+    "INSURANCE": AutomotivePartnerType.INSURANCE.value,
+    "CREDIT": AutomotivePartnerType.CREDIT.value,
+    "LEASING": AutomotivePartnerType.LEASING.value,
+    "LOGISTICS": AutomotivePartnerType.LOGISTICS.value,
+    "LEGAL": AutomotivePartnerType.LEGAL.value,
 }
 
 
 async def show_partner_category(message: Message, user_id: int, category: str) -> None:
+    from services.automotive_localization import category_header, t
+    from services.pg_vertical_onboarding_engine import VerticalOnboardingEngineV1
+
+    lang = await VerticalOnboardingEngineV1.get_language(user_id)
     cards = await AutomotivePartnerBrandingEngineV1.list_category_cards(category, actor_id=user_id)
     if not cards:
         await message.answer(
-            f"{AutomotivePartnerBrandingEngineV1.format_category_header(category)}\n\n"
-            "No partners configured yet.",
-            reply_markup=auto_vertical_hub_menu(),
+            f"{AutomotivePartnerBrandingEngineV1.format_category_header(category, lang=lang)}\n\n"
+            f"{t('no_partners', lang)}",
+            reply_markup=auto_vertical_hub_menu(lang),
         )
         return
-    header = AutomotivePartnerBrandingEngineV1.format_category_header(category)
-    await message.answer(header, reply_markup=auto_vertical_hub_menu())
+    header = AutomotivePartnerBrandingEngineV1.format_category_header(category, lang=lang)
+    await message.answer(header, reply_markup=auto_vertical_hub_menu(lang))
     await message.answer(
-        "Partner cards:",
-        reply_markup=auto_partner_cards_inline(cards, category=category),
+        t("partner_cards", lang),
+        reply_markup=auto_partner_cards_inline(cards, category=category, lang=lang),
     )
 
 

@@ -14,17 +14,11 @@ from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.tenant_context import TenantContextService
 
 
+from services.automotive_localization import category_header
+
+
 class AutomotivePartnerBrandingError(Exception):
     pass
-
-
-CATEGORY_LABELS = {
-    AutomotivePartnerType.INSURANCE.value: "🛡 Insurance",
-    AutomotivePartnerType.CREDIT.value: "🏦 Credit",
-    AutomotivePartnerType.LEASING.value: "💳 Leasing",
-    AutomotivePartnerType.LOGISTICS.value: "🚚 Logistics",
-    AutomotivePartnerType.LEGAL.value: "⚖ Legal",
-}
 
 
 class AutomotivePartnerBrandingEngineV1:
@@ -116,9 +110,10 @@ class AutomotivePartnerBrandingEngineV1:
         }
 
     @staticmethod
-    def format_category_header(category: str) -> str:
-        label = CATEGORY_LABELS.get(category, category.title())
-        return f"{label}\n\nSelect a partner:"
+    def format_category_header(category: str, *, lang: str | None = None) -> str:
+        label = category_header(category, lang)
+        pick = "Выберите партнёра:" if (lang or "ru") != "uk" else "Оберіть партнера:"
+        return f"{label}\n\n{pick}"
 
     @staticmethod
     def format_partner_card_text(card: dict[str, Any]) -> str:

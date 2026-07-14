@@ -322,10 +322,11 @@ class PlatformReadinessTestSuite:
     @staticmethod
     def _check_automotive_menu() -> dict[str, Any]:
         from keyboards import AUTO_VERTICAL_HUB_BUTTONS, AUTO_VERTICAL_MENU_BUTTONS, auto_vertical_hub_menu, auto_vertical_menu
+        from services.automotive_localization import btn
 
         hub_texts = {btn.text for row in auto_vertical_hub_menu().keyboard for btn in row}
         menu_texts = {btn.text for row in auto_vertical_menu().keyboard for btn in row}
-        if AUTO_VERTICAL_HUB_BUTTONS.issubset(hub_texts) and "🚘 Cars" in hub_texts:
+        if AUTO_VERTICAL_HUB_BUTTONS.issubset(hub_texts) and btn("hub_cars", "ru") in hub_texts:
             return _result("operational", f"hub {len(hub_texts)} + cars {len(menu_texts)} items")
         missing = AUTO_VERTICAL_HUB_BUTTONS - hub_texts
         return _result("partial", f"missing hub: {','.join(sorted(missing)[:3])}")

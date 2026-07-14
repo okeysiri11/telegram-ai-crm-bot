@@ -12,17 +12,7 @@ from aiogram.types import CallbackQuery, Message
 from config import BOT_TOKEN, OWNER_ID
 from database import log_audit
 from keyboards import (
-    AUTO_VERTICAL_ALL_BUTTONS,
-    AUTO_VERTICAL_CARS_BUTTON,
-    AUTO_VERTICAL_CREDIT_BUTTON,
-    AUTO_VERTICAL_HUB_BUTTONS,
-    AUTO_VERTICAL_INSURANCE_BUTTON,
-    AUTO_VERTICAL_LEGAL_BUTTON,
-    AUTO_VERTICAL_LEASING_BUTTON,
-    AUTO_VERTICAL_LOGISTICS_BUTTON,
-    AUTO_VERTICAL_LEGACY_BUTTONS,
     AUTO_VERTICAL_MAIN_BUTTON,
-    AUTO_VERTICAL_MENU_BUTTONS,
     auto_billing_owner_actions_inline,
     auto_billing_payment_inline,
     auto_billing_plans_inline,
@@ -33,6 +23,15 @@ from keyboards import (
     auto_vertical_menu,
     owner_main_menu,
 )
+from services.automotive_localization import (
+    all_auto_button_labels,
+    btn,
+    category_header,
+    hub_screen_to_category,
+    resolve_auto_screen,
+    t,
+)
+from services.pg_vertical_onboarding_engine import VerticalOnboardingEngineV1
 from services.automotive_telegram_access import (
     can_access_automotive_ui,
     can_see_automotive_menu_button,
@@ -74,8 +73,12 @@ auto_vertical_flow: dict[int, dict] = {}
 auto_billing_flow: dict[int, dict] = {}
 
 
-def _normalize_screen(text: str) -> str:
-    return AUTO_VERTICAL_LEGACY_BUTTONS.get(text, text)
+async def _user_lang(user_id: int) -> str:
+    return await VerticalOnboardingEngineV1.get_language(user_id)
+
+
+def _normalize_screen(text: str) -> str | None:
+    return resolve_auto_screen(text)
 
 
 async def _main_menu_for(user_id: int):
@@ -138,13 +141,13 @@ async def _show_car_list(message: Message, user_id: int) -> None:
         cars = await CarEngineV1.list_cars(user_id, limit=50)
         cars = await DealerRateService.enrich_car_listings(user_id, cars)
     except CarEngineError as exc:
-        await message.answer(str(exc), reply_markup=auto_vertical_menu())
+        await message.answer(str(exc), reply_markup=auto_vertical_menu(await _user_lang(user_id)))
         return
 
     if not cars:
         await message.answer(
             "📋 Список авто\n\nИнвентарь пуст. Добавьте автомобиль через «🚗 Добавить авто».",
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
         return
 
@@ -152,14 +155,14 @@ async def _show_car_list(message: Message, user_id: int) -> None:
         f"📋 Список авто\n\nВсего: {len(cars)}",
         reply_markup=auto_vertical_car_list_inline(cars),
     )
-    await message.answer("Выберите автомобиль:", reply_markup=auto_vertical_menu())
+    await message.answer("Выберите автомобиль:", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
 
 
 async def _start_add_car(message: Message, user_id: int) -> None:
     auto_vertical_flow[user_id] = {"step": "vin", "data": {}}
     await message.answer(
         "🚗 Добавить авто\n\nВведите VIN автомобиля (17 символов):",
-        reply_markup=auto_vertical_menu(),
+        reply_markup=auto_vertical_menu(await _user_lang(user_id)),
     )
 
 
@@ -168,7 +171,7 @@ async def _start_search(message: Message, user_id: int) -> None:
     await message.answer(
         "🔍 Поиск авто\n\n"
         "Введите VIN, марку, модель, год или статус:",
-        reply_markup=auto_vertical_menu(),
+        reply_markup=auto_vertical_menu(await _user_lang(user_id)),
     )
 
 
@@ -177,7 +180,7 @@ async def _start_profit_calculator(message: Message, user_id: int) -> None:
     await message.answer(
         "💰 Калькулятор прибыли\n\n"
         "Введите VIN существующего авто или «-» для ручного расчёта:",
-        reply_markup=auto_vertical_menu(),
+        reply_markup=auto_vertical_menu(await _user_lang(user_id)),
     )
 
 
@@ -209,7 +212,7 @@ async def _show_marketing(message: Message, user_id: int) -> None:
         stats = await AutoMarketingEngineV1.get_queue_stats(user_id)
         campaigns = await AutoMarketingEngineV1.list_campaigns(user_id, limit=5)
     except AutoMarketingEngineError as exc:
-        await message.answer(str(exc), reply_markup=auto_vertical_menu())
+        await message.answer(str(exc), reply_markup=auto_vertical_menu(await _user_lang(user_id)))
         return
 
     lines = [
@@ -225,7 +228,7 @@ async def _show_marketing(message: Message, user_id: int) -> None:
     else:
         lines.extend(["", "Кампаний пока нет."])
 
-    await message.answer("\n".join(lines), reply_markup=auto_vertical_menu())
+    await message.answer("\n".join(lines), reply_markup=auto_vertical_menu(await _user_lang(user_id)))
     await message.answer(
         "Для публикации авто отправьте VIN или нажмите «📋 Список авто» "
         "и выберите авто, затем вернитесь в Продвижение.",
@@ -247,7 +250,7 @@ async def _show_analytics(message: Message, user_id: int) -> None:
         if tenant is None:
             await message.answer(
                 "📊 Аналитика\n\nTenant не настроен.",
-                reply_markup=auto_vertical_menu(),
+                reply_markup=auto_vertical_menu(await _user_lang(user_id)),
             )
             return
         dashboard = await AnalyticsEngineV1.get_dashboard(user_id, tenant.id)
@@ -262,12 +265,12 @@ async def _show_analytics(message: Message, user_id: int) -> None:
             f"Deals won: {sales.get('deals_won', 0)}\n"
             f"Avg deal: {sales.get('average_deal_size', '—')}\n"
             f"Vehicle turnover: {sales.get('vehicle_turnover', '—')}",
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
     except Exception as exc:
         await message.answer(
             f"📊 Аналитика\n\nДанные временно недоступны: {exc}",
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
 
 
@@ -278,7 +281,7 @@ async def _show_ai_manager(message: Message, user_id: int) -> None:
         "генерация офферов и follow-up.\n\n"
         "Клиенты получают AI Sales Assistant через /start.\n"
         "Менеджеры работают с лидами в разделе «👥 Лиды».",
-        reply_markup=auto_vertical_menu(),
+        reply_markup=auto_vertical_menu(await _user_lang(user_id)),
     )
 
 
@@ -288,13 +291,13 @@ async def _show_leads(message: Message, user_id: int) -> None:
     except Exception as exc:
         await message.answer(
             f"👥 Лиды\n\nОшибка загрузки: {exc}",
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
         return
     if not leads:
         await message.answer(
             "👥 Лиды\n\nЛидов пока нет.",
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
         return
     lines = ["👥 Лиды", ""]
@@ -303,7 +306,7 @@ async def _show_leads(message: Message, user_id: int) -> None:
             f"• {lead.get('source', '—')} | {lead.get('status', '—')} | "
             f"{lead.get('customer_name') or lead.get('phone') or lead.get('id', '')[:8]}"
         )
-    await message.answer("\n".join(lines), reply_markup=auto_vertical_menu())
+    await message.answer("\n".join(lines), reply_markup=auto_vertical_menu(await _user_lang(user_id)))
 
 
 async def _show_billing(message: Message, user_id: int) -> None:
@@ -322,7 +325,7 @@ async def _show_billing(message: Message, user_id: int) -> None:
         lines.append(f"⏳ Ожидает подтверждения: {pp['plan_code']}")
     else:
         lines.append("Выберите тариф для подключения:")
-    await message.answer("\n".join(lines), reply_markup=auto_vertical_menu())
+    await message.answer("\n".join(lines), reply_markup=auto_vertical_menu(await _user_lang(user_id)))
     await message.answer("Тарифы:", reply_markup=auto_billing_plans_inline())
     if await is_billing_owner(user_id):
         pending = await CommercialBillingEngineV1.list_pending_for_owner(user_id)
@@ -331,6 +334,7 @@ async def _show_billing(message: Message, user_id: int) -> None:
 
 
 async def _show_settings(message: Message, user_id: int) -> None:
+    lang = await _user_lang(user_id)
     dealer_sources = await AutomotivePartnerIntegrationEngineV1.list_dealer_sources(actor_id=user_id)
     sources_text = AutomotivePartnerIntegrationEngineV1.format_dealer_sources_report(dealer_sources)
     await message.answer(
@@ -340,29 +344,52 @@ async def _show_settings(message: Message, user_id: int) -> None:
         "• Интеграция с Car Engine и Marketing Engine\n\n"
         f"{sources_text}\n\n"
         "Расширенные настройки — через админ-панель.",
-        reply_markup=auto_vertical_menu(),
+        reply_markup=auto_vertical_menu(lang),
     )
 
 
+async def _show_dealer_rates(message: Message, user_id: int) -> None:
+    from services.pg_automotive_treasury_engine import AutomotiveTreasuryEngineV1
+
+    lang = await _user_lang(user_id)
+    try:
+        rates = await DealerRateService.get_authoritative_rates()
+        text = AutomotiveTreasuryEngineV1.format_rates_report(rates)
+    except Exception as exc:
+        text = str(exc)
+    await message.answer(text, reply_markup=auto_vertical_menu(lang))
+
+
+async def _show_treasury(message: Message, user_id: int) -> None:
+    from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1
+
+    lang = await _user_lang(user_id)
+    try:
+        dashboard = await DealerQuoteAuthorityEngineV1.get_treasury_dashboard()
+        text = DealerQuoteAuthorityEngineV1.format_treasury_dashboard(dashboard)
+    except Exception as exc:
+        text = f"{btn('treasury', lang)}\n\n{exc}"
+    await message.answer(text, reply_markup=auto_vertical_menu(lang))
+
+
 async def _open_auto_hub(message: Message, user_id: int) -> None:
+    lang = await _user_lang(user_id)
     auto_vertical_section[user_id] = "hub"
     await message.answer(
-        "🚗 Auto\n\n"
-        "Cars, insurance, credit, leasing, logistics, and legal support.\n\n"
-        "Choose a section:",
-        reply_markup=auto_vertical_hub_menu(),
+        t("auto_hub_title", lang),
+        reply_markup=auto_vertical_hub_menu(lang),
     )
 
 
 async def _open_cars_section(message: Message, user_id: int) -> None:
+    lang = await _user_lang(user_id)
     auto_vertical_section[user_id] = "cars"
     await message.answer(
-        "🚘 Cars\n\n"
-        "Inventory, marketing, analytics, AI manager, leads, and billing.",
-        reply_markup=auto_vertical_menu(),
+        t("auto_cars_title", lang),
+        reply_markup=auto_vertical_menu(lang),
     )
     await message.answer(
-        "Быстрые действия:",
+        t("auto_quick_actions", lang),
         reply_markup=auto_vertical_actions_inline("overview"),
     )
 
@@ -372,11 +399,7 @@ async def _show_insurance(message: Message, user_id: int) -> None:
     await show_partner_category(message, user_id, AutomotivePartnerType.INSURANCE.value)
 
 
-async def _show_partner_category(message: Message, user_id: int, screen: str) -> None:
-    category = HUB_BUTTON_TO_CATEGORY.get(screen)
-    if not category:
-        return
-    auto_vertical_section[user_id] = category.lower()
+async def _show_partner_category(message: Message, user_id: int, category: str) -> None:
     await show_partner_category(message, user_id, category)
 
 
@@ -410,7 +433,7 @@ async def _schedule_marketing_for_car(
             car_id=uuid.UUID(car["id"]),
         )
     except AutoMarketingEngineError as exc:
-        await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
+        await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
         return
 
     campaign = result["campaign"]
@@ -422,16 +445,17 @@ async def _schedule_marketing_for_car(
         f"Каналов: {len(pubs)}\n"
         f"Статус: {campaign['status']}\n\n"
         "Публикации поставлены в очередь. Scheduler обработает их автоматически.",
-        reply_markup=auto_vertical_menu(),
+        reply_markup=auto_vertical_menu(await _user_lang(user_id)),
     )
     log_audit(user_id, "create", "marketing_campaign", campaign["id"])
 
 
 async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: str) -> None:
-    screen = _normalize_screen(screen)
+    screen_key = _normalize_screen(screen)
+    lang = await _user_lang(user_id)
     section = auto_vertical_section.get(user_id, "hub")
 
-    if screen == "⬅ Назад":
+    if screen_key == "back":
         if section == "cars":
             await _open_auto_hub(message, user_id)
             return
@@ -439,79 +463,96 @@ async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: s
         auto_vertical_section.pop(user_id, None)
         _clear_flow(user_id)
         auto_billing_flow.pop(user_id, None)
-        await message.answer("Главное меню", reply_markup=await _main_menu_for(user_id))
+        await message.answer(t("main_menu", lang), reply_markup=await _main_menu_for(user_id))
         return
 
-    if screen == "⬅ К Auto":
+    if screen_key == "back_to_hub":
         await _open_auto_hub(message, user_id)
         return
 
-    if screen in {AUTO_VERTICAL_CARS_BUTTON, "🚗 Cars"}:
+    if screen_key == "hub_cars":
         await _open_cars_section(message, user_id)
         return
 
-    if screen == AUTO_VERTICAL_INSURANCE_BUTTON:
+    if screen_key == "hub_insurance":
         try:
             await _show_insurance(message, user_id)
         except Exception as exc:
-            await message.answer(f"🛡 Insurance\n\n{exc}", reply_markup=auto_vertical_hub_menu())
+            await message.answer(
+                f"{category_header('INSURANCE', lang)}\n\n{exc}",
+                reply_markup=auto_vertical_hub_menu(lang),
+            )
         return
 
-    if screen in HUB_BUTTON_TO_CATEGORY:
+    category = hub_screen_to_category(screen_key)
+    if category:
+        auto_vertical_section[user_id] = category.lower()
         try:
-            await _show_partner_category(message, user_id, screen)
+            await _show_partner_category(message, user_id, category)
         except Exception as exc:
-            await message.answer(f"{screen}\n\n{exc}", reply_markup=auto_vertical_hub_menu())
+            await message.answer(
+                f"{category_header(category, lang)}\n\n{exc}",
+                reply_markup=auto_vertical_hub_menu(lang),
+            )
         return
 
-    if screen == "🚗 Добавить авто":
+    if screen_key == "add_car":
         await _start_add_car(message, user_id)
         return
 
-    if screen == "📋 Список авто":
+    if screen_key == "list_cars":
         await _show_car_list(message, user_id)
         return
 
-    if screen == "🔍 Поиск авто":
+    if screen_key == "search_car":
         await _start_search(message, user_id)
         return
 
-    if screen == "💰 Калькулятор прибыли":
+    if screen_key == "profit_calc":
         await _start_profit_calculator(message, user_id)
         return
 
-    if screen == "📢 Продвижение":
+    if screen_key == "marketing":
         await _show_marketing(message, user_id)
         return
 
-    if screen == "📊 Аналитика":
+    if screen_key == "analytics":
         await _show_analytics(message, user_id)
         return
 
-    if screen == "🤖 AI Менеджер":
+    if screen_key == "ai_manager":
         await _show_ai_manager(message, user_id)
         return
 
-    if screen == "👥 Лиды":
+    if screen_key == "leads":
         await _show_leads(message, user_id)
         return
 
-    if screen == "💳 Тарифы и услуги":
+    if screen_key == "billing":
         await _show_billing(message, user_id)
         return
 
-    if screen == "⚙ Настройки авто":
+    if screen_key == "dealer_rates":
+        await _show_dealer_rates(message, user_id)
+        return
+
+    if screen_key == "treasury":
+        await _show_treasury(message, user_id)
+        return
+
+    if screen_key == "auto_settings":
         await _show_settings(message, user_id)
         return
 
 
 async def handle_auto_menu_request(message: Message) -> None:
     user_id = message.from_user.id
+    lang = await _user_lang(user_id)
     logger.info("Auto menu requested by %s", user_id)
     try:
         if not await can_access_automotive_ui(user_id):
             await message.answer(
-                "🚗 Авто\n\nНет доступа к модулю.",
+                t("auto_no_access", lang),
                 reply_markup=await _main_menu_for(user_id),
             )
             return
@@ -524,13 +565,15 @@ async def handle_auto_menu_request(message: Message) -> None:
     except Exception:
         logger.exception("Automotive module unavailable for user %s", user_id)
         await message.answer(
-            "Automotive module temporarily unavailable.",
+            t("auto_unavailable", lang),
             reply_markup=await _main_menu_for(user_id),
         )
 
 
-@auto_vertical_router.message(F.text == AUTO_VERTICAL_MAIN_BUTTON)
+@auto_vertical_router.message(F.text.in_(all_auto_button_labels()))
 async def open_auto_vertical(message: Message) -> None:
+    if resolve_auto_screen(message.text) != "main":
+        return
     await handle_auto_menu_request(message)
 
 
@@ -563,8 +606,8 @@ async def open_auto_vertical_callback(callback: CallbackQuery) -> None:
 
 @auto_vertical_router.message(
     lambda m: (
-        (_normalize_screen(m.text or "") in AUTO_VERTICAL_ALL_BUTTONS
-         or (m.text or "") in AUTO_VERTICAL_LEGACY_BUTTONS)
+        resolve_auto_screen(m.text or "") is not None
+        and resolve_auto_screen(m.text or "") != "main"
         and auto_vertical_active.get(m.from_user.id)
         and not auto_vertical_flow.get(m.from_user.id)
     )
@@ -586,7 +629,11 @@ async def auto_vertical_flow_handler(message: Message) -> None:
     if text == "⬅ Назад":
         _clear_flow(user_id)
         if auto_vertical_section.get(user_id) == "cars":
-            await message.answer("🚘 Cars", reply_markup=auto_vertical_menu())
+            lang = await _user_lang(user_id)
+            await message.answer(
+                t("auto_cars_title", lang),
+                reply_markup=auto_vertical_menu(lang),
+            )
         else:
             await _open_auto_hub(message, user_id)
         return
@@ -669,7 +716,7 @@ async def auto_vertical_flow_handler(message: Message) -> None:
                 **fields,
             )
         except CarEngineError as exc:
-            await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
+            await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
             return
 
         async with get_session() as session:
@@ -699,7 +746,7 @@ async def auto_vertical_flow_handler(message: Message) -> None:
 
         await message.answer(
             "✅ Автомобиль добавлен\n\n" + _format_car_card(car),
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
         log_audit(user_id, "create", "auto_vertical", data["vin"])
         return
@@ -709,13 +756,13 @@ async def auto_vertical_flow_handler(message: Message) -> None:
         try:
             matched = await CarEngineV1.search_cars(user_id, text)
         except CarEngineError as exc:
-            await message.answer(str(exc), reply_markup=auto_vertical_menu())
+            await message.answer(str(exc), reply_markup=auto_vertical_menu(await _user_lang(user_id)))
             return
 
         if not matched:
             await message.answer(
                 f"🔎 По запросу «{text}» ничего не найдено.",
-                reply_markup=auto_vertical_menu(),
+                reply_markup=auto_vertical_menu(await _user_lang(user_id)),
             )
             return
 
@@ -723,7 +770,7 @@ async def auto_vertical_flow_handler(message: Message) -> None:
             f"🔎 Найдено: {len(matched)}",
             reply_markup=auto_vertical_car_list_inline(matched),
         )
-        await message.answer("Выберите автомобиль:", reply_markup=auto_vertical_menu())
+        await message.answer("Выберите автомобиль:", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
         return
 
     if step == "marketing_vin":
@@ -770,11 +817,11 @@ async def auto_vertical_flow_handler(message: Message) -> None:
                 persist=True,
             )
         except CarEngineError as exc:
-            await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
+            await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
             return
         await message.answer(
             _format_profit_breakdown(profit),
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
         return
 
@@ -833,7 +880,7 @@ async def auto_vertical_flow_handler(message: Message) -> None:
             _format_profit_breakdown(
                 {key: str(value) if value is not None else None for key, value in profit.items()}
             ),
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
 
 
@@ -861,7 +908,7 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
             return
         await callback.message.answer(
             _format_car_card(car),
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
         await callback.answer()
         return
@@ -884,7 +931,7 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
     if data.startswith("car:section:back:"):
         await callback.message.answer(
             "🚗 Авто",
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
         await callback.answer()
         return
@@ -898,7 +945,7 @@ async def auto_billing_callback(callback: CallbackQuery) -> None:
     data = callback.data or ""
 
     if data == "billing:back:menu":
-        await callback.message.answer("🚗 Авто", reply_markup=auto_vertical_menu())
+        await callback.message.answer("🚗 Авто", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
         await callback.answer()
         return
 
@@ -990,7 +1037,7 @@ async def auto_billing_callback(callback: CallbackQuery) -> None:
             f"Method: {method_label}\n"
             f"Amount: {payment.get('amount')} {payment.get('currency')}\n\n"
             "Загрузите фото или PDF квитанции об оплате.",
-            reply_markup=auto_vertical_menu(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
         await callback.answer()
         return
@@ -1110,13 +1157,13 @@ async def _process_billing_receipt(
         pending = payment_view.get("pending_payment") or {}
         await _notify_owner_payment(bot, pending, user_id)
     except CommercialBillingEngineError as exc:
-        await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu())
+        await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
         return
 
     if from_onboarding:
         await DealerOnboardingEngineV1.mark_receipt_uploaded(user_id)
 
-    menu = await _main_menu_for(user_id) if from_onboarding else auto_vertical_menu()
+    menu = await _main_menu_for(user_id) if from_onboarding else auto_vertical_menu(await _user_lang(user_id))
     await message.answer(
         "✅ Квитанция получена\n\n"
         "Платёж отправлен на ручную проверку. "

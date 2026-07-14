@@ -26,14 +26,14 @@ SAMPLE_CARD = {
 
 def run_category_labels_test() -> dict:
     checks = {
-        "insurance": "Insurance" in AutomotivePartnerBrandingEngineV1.format_category_header(
-            AutomotivePartnerType.INSURANCE.value
+        "insurance": "Страхование" in AutomotivePartnerBrandingEngineV1.format_category_header(
+            AutomotivePartnerType.INSURANCE.value, lang="ru"
         ),
-        "credit": "Credit" in AutomotivePartnerBrandingEngineV1.format_category_header(
-            AutomotivePartnerType.CREDIT.value
+        "credit": "Кредит" in AutomotivePartnerBrandingEngineV1.format_category_header(
+            AutomotivePartnerType.CREDIT.value, lang="ru"
         ),
-        "legal": "Legal" in AutomotivePartnerBrandingEngineV1.format_category_header(
-            AutomotivePartnerType.LEGAL.value
+        "legal": "Юридическая" in AutomotivePartnerBrandingEngineV1.format_category_header(
+            AutomotivePartnerType.LEGAL.value, lang="ru"
         ),
     }
     return {"ok": all(checks.values()), "checks": checks}

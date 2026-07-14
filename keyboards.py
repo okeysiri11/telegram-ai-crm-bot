@@ -57,6 +57,9 @@ def owner_main_menu(*, show_automotive: bool = True):
                 KeyboardButton(text="⚙ Администрирование")
             ],
             [
+                KeyboardButton(text="⚙ Настройки"),
+            ],
+            [
                 KeyboardButton(text="🧪 Тестовый центр"),
                 KeyboardButton(text="❤️ System Health"),
             ],
@@ -1472,78 +1475,99 @@ def test_center_menu() -> ReplyKeyboardMarkup:
 # AUTO VERTICAL (Automotive Telegram UI v2)
 # ==========================================================
 
+from services.automotive_localization import btn, normalize_language, t
+
 AUTO_VERTICAL_MAIN_BUTTON = "🚗 Авто"
 
-AUTO_VERTICAL_HUB_BUTTON = "🚗 Auto"
-AUTO_VERTICAL_CARS_BUTTON = "🚘 Cars"
-AUTO_VERTICAL_INSURANCE_BUTTON = "🛡 Insurance"
-AUTO_VERTICAL_CREDIT_BUTTON = "🏦 Credit"
-AUTO_VERTICAL_LEASING_BUTTON = "💳 Leasing"
-AUTO_VERTICAL_LOGISTICS_BUTTON = "🚚 Logistics"
-AUTO_VERTICAL_LEGAL_BUTTON = "⚖ Legal"
-
-AUTO_VERTICAL_HUB_BUTTONS = frozenset({
-    AUTO_VERTICAL_HUB_BUTTON,
-    AUTO_VERTICAL_CARS_BUTTON,
-    AUTO_VERTICAL_INSURANCE_BUTTON,
-    AUTO_VERTICAL_CREDIT_BUTTON,
-    AUTO_VERTICAL_LEASING_BUTTON,
-    AUTO_VERTICAL_LOGISTICS_BUTTON,
-    AUTO_VERTICAL_LEGAL_BUTTON,
-    "⬅ Назад",
-})
-
-AUTO_VERTICAL_MENU_BUTTONS = frozenset({
-    "🚗 Добавить авто",
-    "📋 Список авто",
-    "🔍 Поиск авто",
-    "💰 Калькулятор прибыли",
-    "📢 Продвижение",
-    "📊 Аналитика",
-    "🤖 AI Менеджер",
-    "👥 Лиды",
-    "💳 Тарифы и услуги",
-    "💱 Курсы дилера",
-    "🏦 Treasury Dashboard",
-    "⚙ Настройки авто",
-    "⬅ Назад",
-    "⬅ К Auto",
-})
-
-AUTO_VERTICAL_ALL_BUTTONS = AUTO_VERTICAL_HUB_BUTTONS | AUTO_VERTICAL_MENU_BUTTONS
-
-# Legacy aliases (same flows, old labels)
-AUTO_VERTICAL_LEGACY_BUTTONS = {
-    "➕ Add Car": "🚗 Добавить авто",
-    "📋 Car List": "📋 Список авто",
-    "🔎 Search Car": "🔍 Поиск авто",
-    "🧮 Profit Calculator": "💰 Калькулятор прибыли",
-    "📣 Marketing": "📢 Продвижение",
-    "🚗 Cars": AUTO_VERTICAL_MAIN_BUTTON,
-    "🚗 Auto": AUTO_VERTICAL_MAIN_BUTTON,
-}
+_HUB_BUTTON_KEYS = (
+    "hub_cars",
+    "hub_insurance",
+    "hub_credit",
+    "hub_leasing",
+    "hub_logistics",
+    "hub_legal",
+    "back",
+)
+_MENU_BUTTON_KEYS = (
+    "add_car",
+    "list_cars",
+    "search_car",
+    "profit_calc",
+    "marketing",
+    "analytics",
+    "ai_manager",
+    "leads",
+    "billing",
+    "dealer_rates",
+    "treasury",
+    "auto_settings",
+    "back_to_hub",
+)
 
 
-def auto_vertical_hub_menu() -> ReplyKeyboardMarkup:
+def _localized_button_set(keys: tuple[str, ...], lang: str | None = None) -> frozenset[str]:
+    language = normalize_language(lang)
+    return frozenset(btn(key, language) for key in keys)
+
+
+AUTO_VERTICAL_HUB_BUTTONS = _localized_button_set(_HUB_BUTTON_KEYS, "ru")
+AUTO_VERTICAL_MENU_BUTTONS = _localized_button_set(_MENU_BUTTON_KEYS, "ru")
+
+
+def auto_vertical_hub_menu(lang: str | None = None) -> ReplyKeyboardMarkup:
+    language = normalize_language(lang)
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text=AUTO_VERTICAL_CARS_BUTTON)],
+            [KeyboardButton(text=btn("hub_cars", language))],
             [
-                KeyboardButton(text=AUTO_VERTICAL_INSURANCE_BUTTON),
-                KeyboardButton(text=AUTO_VERTICAL_CREDIT_BUTTON),
+                KeyboardButton(text=btn("hub_insurance", language)),
+                KeyboardButton(text=btn("hub_credit", language)),
             ],
             [
-                KeyboardButton(text=AUTO_VERTICAL_LEASING_BUTTON),
-                KeyboardButton(text=AUTO_VERTICAL_LOGISTICS_BUTTON),
+                KeyboardButton(text=btn("hub_leasing", language)),
+                KeyboardButton(text=btn("hub_logistics", language)),
             ],
-            [KeyboardButton(text=AUTO_VERTICAL_LEGAL_BUTTON)],
-            [KeyboardButton(text="⬅ Назад")],
+            [KeyboardButton(text=btn("hub_legal", language))],
+            [KeyboardButton(text=btn("back", language))],
         ],
         resize_keyboard=True,
     )
 
 
-def auto_partner_cards_inline(cards: list[dict], *, category: str) -> InlineKeyboardMarkup:
+def auto_vertical_menu(lang: str | None = None) -> ReplyKeyboardMarkup:
+    language = normalize_language(lang)
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text=btn("add_car", language)),
+                KeyboardButton(text=btn("list_cars", language)),
+            ],
+            [
+                KeyboardButton(text=btn("search_car", language)),
+                KeyboardButton(text=btn("profit_calc", language)),
+            ],
+            [
+                KeyboardButton(text=btn("marketing", language)),
+                KeyboardButton(text=btn("analytics", language)),
+            ],
+            [
+                KeyboardButton(text=btn("ai_manager", language)),
+                KeyboardButton(text=btn("leads", language)),
+            ],
+            [
+                KeyboardButton(text=btn("billing", language)),
+                KeyboardButton(text=btn("dealer_rates", language)),
+            ],
+            [KeyboardButton(text=btn("treasury", language))],
+            [KeyboardButton(text=btn("auto_settings", language))],
+            [KeyboardButton(text=btn("back_to_hub", language))],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def auto_partner_cards_inline(cards: list[dict], *, category: str, lang: str | None = None) -> InlineKeyboardMarkup:
+    language = normalize_language(lang)
     rows = []
     for card in cards:
         code = card.get("code", "partner")
@@ -1555,11 +1579,12 @@ def auto_partner_cards_inline(cards: list[dict], *, category: str) -> InlineKeyb
                 callback_data=f"partner:card:{category}:{code}",
             )
         ])
-    rows.append([InlineKeyboardButton(text="⬅ Back", callback_data=f"partner:back:{category}")])
+    rows.append([InlineKeyboardButton(text=t("back_inline", language), callback_data=f"partner:back:{category}")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def auto_partner_cta_inline(partner_code: str, ctas: list[dict]) -> InlineKeyboardMarkup:
+def auto_partner_cta_inline(partner_code: str, ctas: list[dict], lang: str | None = None) -> InlineKeyboardMarkup:
+    language = normalize_language(lang)
     rows = []
     for cta in ctas:
         rows.append([
@@ -1568,11 +1593,14 @@ def auto_partner_cta_inline(partner_code: str, ctas: list[dict]) -> InlineKeyboa
                 callback_data=f"partner:cta:{partner_code}:{cta.get('cta_code')}",
             )
         ])
-    rows.append([InlineKeyboardButton(text="⬅ Back to partners", callback_data="partner:hub")])
+    rows.append([
+        InlineKeyboardButton(text=t("back_partners", language), callback_data="partner:hub")
+    ])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
-def auto_insurance_products_inline(products: list[dict]) -> InlineKeyboardMarkup:
+def auto_insurance_products_inline(products: list[dict], lang: str | None = None) -> InlineKeyboardMarkup:
+    language = normalize_language(lang)
     rows = []
     for product in products:
         rows.append([
@@ -1581,45 +1609,8 @@ def auto_insurance_products_inline(products: list[dict]) -> InlineKeyboardMarkup
                 callback_data=f"insurance:product:{product.get('product_code')}",
             )
         ])
-    rows.append([InlineKeyboardButton(text="⬅ Back", callback_data="insurance:back")])
+    rows.append([InlineKeyboardButton(text=t("back_inline", language), callback_data="insurance:back")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
-
-
-def auto_vertical_menu() -> ReplyKeyboardMarkup:
-    return ReplyKeyboardMarkup(
-        keyboard=[
-            [
-                KeyboardButton(text="🚗 Добавить авто"),
-                KeyboardButton(text="📋 Список авто"),
-            ],
-            [
-                KeyboardButton(text="🔍 Поиск авто"),
-                KeyboardButton(text="💰 Калькулятор прибыли"),
-            ],
-            [
-                KeyboardButton(text="📢 Продвижение"),
-                KeyboardButton(text="📊 Аналитика"),
-            ],
-            [
-                KeyboardButton(text="🤖 AI Менеджер"),
-                KeyboardButton(text="👥 Лиды"),
-            ],
-            [
-                KeyboardButton(text="💳 Тарифы и услуги"),
-                KeyboardButton(text="💱 Курсы дилера"),
-            ],
-            [
-                KeyboardButton(text="🏦 Treasury Dashboard"),
-            ],
-            [
-                KeyboardButton(text="⚙ Настройки авто"),
-            ],
-            [
-                KeyboardButton(text="⬅ К Auto"),
-            ],
-        ],
-        resize_keyboard=True,
-    )
 
 
 def dealer_onboarding_automotive_inline() -> InlineKeyboardMarkup:
