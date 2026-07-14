@@ -53,7 +53,8 @@ async def lead_list(message: Message) -> None:
     dashboard = await LeadEngineV1.get_admin_dashboard()
     text = LeadEngineV1.format_lead_list(dashboard.get("recent") or [])
     await message.answer(
-        text + "\n\nДля назначения менеджера: /assign_lead <lead_uuid> <manager_uuid>",
+        text + "\n\nДля назначения менеджера: /assign_lead <lead_uuid> <manager_uuid>\n"
+        "Конвертация в deal: /convert_lead <lead_uuid> [amount] [currency]",
         reply_markup=admin_module_menu(),
     )
     log_audit(user_id, "open", "admin", "lead_list")

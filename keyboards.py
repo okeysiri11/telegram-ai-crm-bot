@@ -82,7 +82,10 @@ def owner_panel_menu() -> ReplyKeyboardMarkup:
                 KeyboardButton(text="🔗 Entry Links"),
                 KeyboardButton(text="📈 Lead Dashboard"),
             ],
-            [KeyboardButton(text="📝 Notes")],
+            [
+                KeyboardButton(text="🤝 Deal Dashboard"),
+                KeyboardButton(text="📝 Notes"),
+            ],
             [KeyboardButton(text="⬅ Назад")],
         ],
         resize_keyboard=True,
@@ -1456,6 +1459,10 @@ def admin_module_menu() -> ReplyKeyboardMarkup:
             [
                 KeyboardButton(text="📈 Lead Dashboard"),
                 KeyboardButton(text="📋 Lead List"),
+            ],
+            [
+                KeyboardButton(text="🤝 Deal Dashboard"),
+                KeyboardButton(text="📋 Deal List"),
             ],
             [
                 KeyboardButton(text="⬅ Назад"),

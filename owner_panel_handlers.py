@@ -45,7 +45,8 @@ async def open_owner_panel(message: Message) -> None:
 
 
 @owner_panel_router.message(
-    lambda m: m.from_user.id in owner_panel_active and m.text in {"🔗 Entry Links", "📝 Notes", "📈 Lead Dashboard", "⬅ Назад"}
+    lambda m: m.from_user.id in owner_panel_active
+    and m.text in {"🔗 Entry Links", "📝 Notes", "📈 Lead Dashboard", "🤝 Deal Dashboard", "⬅ Назад"}
 )
 async def owner_panel_screen(message: Message, bot: Bot) -> None:
     user_id = message.from_user.id
@@ -75,6 +76,13 @@ async def owner_panel_screen(message: Message, bot: Bot) -> None:
 
         dashboard = await LeadEngineV1.get_admin_dashboard()
         await message.answer(LeadEngineV1.format_admin_dashboard(dashboard))
+        return
+
+    if message.text == "🤝 Deal Dashboard":
+        from services.pg_deal_engine_v1 import DealEngineV1
+
+        dashboard = await DealEngineV1.get_owner_dashboard()
+        await message.answer(DealEngineV1.format_owner_dashboard(dashboard))
         return
 
     if message.text == "📝 Notes":

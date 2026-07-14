@@ -318,6 +318,7 @@ from vertical_onboarding_handlers import (
 from owner_panel_handlers import owner_panel_router
 from tenant_guard_handlers import tenant_guard_router
 from lead_engine_handlers import lead_engine_router
+from deal_engine_handlers import deal_engine_router
 
 router.include_router(tenant_guard_router)
 router.include_router(deal_workflow_router)
@@ -330,6 +331,7 @@ router.include_router(automotive_revenue_router)
 router.include_router(vertical_onboarding_router)
 router.include_router(owner_panel_router)
 router.include_router(lead_engine_router)
+router.include_router(deal_engine_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1
@@ -586,6 +588,8 @@ ADMIN_MENU_BUTTONS = {
     "💰 Revenue Dashboard",
     "📈 Lead Dashboard",
     "📋 Lead List",
+    "🤝 Deal Dashboard",
+    "📋 Deal List",
     "⬅ Назад",
 }
 
