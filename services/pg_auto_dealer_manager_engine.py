@@ -25,9 +25,9 @@ BORIS_ROLE_DESCRIPTION = "CRM manager"
 class AutoDealerManagerEngineV1:
     @staticmethod
     def is_auto_dealer_lead(*, source_link: str | None, vertical: str | None) -> bool:
-        if source_link == "auto_dealer":
+        if source_link in {"auto_dealer", "auto_client"}:
             return True
-        return vertical == "automotive"
+        return vertical in {"automotive", "auto"}
 
     @staticmethod
     async def ensure_default_manager() -> uuid.UUID | None:
@@ -124,3 +124,70 @@ class AutoDealerManagerEngineV1:
             BORIS_FULL_NAME,
         )
         return result
+
+    @staticmethod
+    def request_type_label(request_type: str | None) -> str:
+        labels = {
+            "buy_car": "🚗 Поиск автомобиля",
+            "sell_car": "💰 Продажа автомобиля",
+            "listing": "📢 Размещение объявления",
+            "manager_callback": "📞 Связаться с менеджером",
+        }
+        return labels.get(request_type or "", request_type or "—")
+
+    @staticmethod
+    async def notify_manager_for_lead(snapshot: dict[str, Any]) -> None:
+        from aiogram import Bot
+
+        from config import BOT_TOKEN
+
+        if not BOT_TOKEN:
+            return
+
+        request_type = snapshot.get("client_request_type")
+        description = (snapshot.get("client_description") or "").strip()
+        photo_file_id = snapshot.get("client_photo_file_id")
+        username = snapshot.get("telegram_username")
+        full_name = snapshot.get("full_name")
+        telegram_user_id = snapshot.get("telegram_user_id")
+        lead_id = snapshot.get("id")
+
+        client_line = full_name or "—"
+        if username:
+            client_line = f"{client_line} (@{username})"
+        if telegram_user_id:
+            client_line = f"{client_line} [id: {telegram_user_id}]"
+
+        label = AutoDealerManagerEngineV1.request_type_label(request_type)
+        text_lines = [
+            "🔔 Новая заявка — Auto Client",
+            "",
+            f"Тип: {label}",
+            f"Клиент: {client_line}",
+            f"Lead: {lead_id}",
+        ]
+        if description:
+            text_lines.extend(["", "Описание:", description[:3500]])
+        text = "\n".join(text_lines)
+
+        bot = Bot(token=BOT_TOKEN)
+        try:
+            if photo_file_id:
+                caption = text[:1024]
+                await bot.send_photo(
+                    chat_id=BORIS_TELEGRAM_ID,
+                    photo=photo_file_id,
+                    caption=caption,
+                )
+                if len(text) > 1024:
+                    await bot.send_message(chat_id=BORIS_TELEGRAM_ID, text=text[1024:])
+            else:
+                await bot.send_message(chat_id=BORIS_TELEGRAM_ID, text=text)
+        except Exception:
+            logger.exception(
+                "Failed to notify manager telegram_id=%s for lead=%s",
+                BORIS_TELEGRAM_ID,
+                lead_id,
+            )
+        finally:
+            await bot.session.close()

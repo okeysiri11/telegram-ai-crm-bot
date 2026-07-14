@@ -5,7 +5,7 @@ from __future__ import annotations
 import enum
 import uuid
 
-from sqlalchemy import BigInteger, Boolean, ForeignKey, Index, String
+from sqlalchemy import BigInteger, Boolean, ForeignKey, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -72,6 +72,10 @@ class LeadEngineLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     agro_product: Mapped[str | None] = mapped_column(String(120), nullable=True)
     agro_volume: Mapped[str | None] = mapped_column(String(64), nullable=True)
     agro_location: Mapped[str | None] = mapped_column(String(120), nullable=True)
+
+    client_request_type: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    client_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    client_photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     is_duplicate: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     duplicate_of_id: Mapped[uuid.UUID | None] = mapped_column(

@@ -121,6 +121,72 @@ class LeadEngineV1:
         return assigned or snapshot
 
     @staticmethod
+    async def submit_auto_client_request(
+        *,
+        telegram_user_id: int,
+        request_type: str,
+        description: str | None = None,
+        photo_file_id: str | None = None,
+        source_link: str = "auto_client",
+        telegram_username: str | None = None,
+        full_name: str | None = None,
+        language: str | None = None,
+    ) -> dict[str, Any]:
+        role_by_type = {
+            "buy_car": "buyer",
+            "sell_car": "seller",
+            "listing": "seller",
+            "manager_callback": "buyer",
+        }
+        resolved_role = role_by_type.get(request_type, "buyer")
+        snapshot: dict[str, Any]
+
+        async with get_session() as session:
+            repo = LeadEngineRepository(session)
+            row = await repo.get_latest_for_telegram(
+                telegram_user_id,
+                source_link=source_link,
+            )
+            updates: dict[str, Any] = {
+                "client_request_type": request_type,
+                "client_description": description,
+                "client_photo_file_id": photo_file_id,
+                "role": resolved_role,
+                "status": LeadEngineStatus.CONTACTED.value,
+                "pipeline_stage": LeadEngineStatus.CONTACTED.value,
+            }
+            if language is not None:
+                updates["language"] = normalize_language(language)
+
+            if row is None:
+                cfg = ENTRY_LINK_REGISTRY.get(source_link)
+                row = await repo.create(
+                    vertical=cfg.vertical if cfg else "auto",
+                    role=resolved_role,
+                    language=normalize_language(language) if language else None,
+                    source_link=source_link,
+                    telegram_user_id=telegram_user_id,
+                    telegram_username=telegram_username,
+                    full_name=full_name,
+                    status=LeadEngineStatus.CONTACTED.value,
+                    pipeline_stage=LeadEngineStatus.CONTACTED.value,
+                    client_request_type=request_type,
+                    client_description=description,
+                    client_photo_file_id=photo_file_id,
+                )
+            else:
+                row = await repo.update(row.id, **updates)
+            snapshot = await LeadEngineV1._snapshot_in_session(session, row)
+
+        from services.pg_auto_dealer_manager_engine import AutoDealerManagerEngineV1
+
+        assigned = await AutoDealerManagerEngineV1.auto_assign_dealer_lead(snapshot)
+        if assigned:
+            snapshot = assigned
+        await AutoDealerManagerEngineV1.notify_manager_for_lead(snapshot)
+        return snapshot
+
+    @staticmethod
     async def enrich_latest_for_user(
         *,
         telegram_user_id: int,
@@ -284,6 +350,9 @@ class LeadEngineV1:
             "agro_product": row.agro_product,
             "agro_volume": row.agro_volume,
             "agro_location": row.agro_location,
+            "client_request_type": row.client_request_type,
+            "client_description": row.client_description,
+            "client_photo_file_id": row.client_photo_file_id,
             "is_duplicate": row.is_duplicate,
             "duplicate_of_id": str(row.duplicate_of_id) if row.duplicate_of_id else None,
             "merged_into_id": str(row.merged_into_id) if row.merged_into_id else None,

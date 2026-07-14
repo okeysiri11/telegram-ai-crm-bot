@@ -41,12 +41,12 @@ class UserRole(Base):
     )
 
     user: Mapped["User"] = relationship(
-        "database.models.users.User",
+        "User",
         back_populates="role_links",
         foreign_keys=[user_id],
     )
     role: Mapped["Role"] = relationship(
-        "database.models.role.Role",
+        "Role",
         back_populates="user_links",
         foreign_keys=[role_id],
     )

@@ -30,12 +30,10 @@ class RbacRole(UUIDPrimaryKeyMixin, Base):
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     user_links: Mapped[list["UserRoleLink"]] = relationship(
-        "database.models.roles.UserRoleLink",
         back_populates="role",
         cascade="all, delete-orphan",
     )
     permission_links: Mapped[list["RolePermission"]] = relationship(
-        "database.models.permissions.RolePermission",
         back_populates="role",
         cascade="all, delete-orphan",
     )
@@ -70,16 +68,13 @@ class UserRoleLink(Base):
     )
 
     user: Mapped["User"] = relationship(
-        "database.models.users.User",
         foreign_keys=[user_id],
     )
     role: Mapped["RbacRole"] = relationship(
-        "database.models.roles.RbacRole",
         back_populates="user_links",
         foreign_keys=[role_id],
     )
     assigner: Mapped["User | None"] = relationship(
-        "database.models.users.User",
         foreign_keys=[assigned_by],
     )
 
