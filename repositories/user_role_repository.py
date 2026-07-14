@@ -70,3 +70,30 @@ class UserRoleRepository:
             .order_by(Role.code.asc())
         )
         return list(result.scalars().all())
+
+    async def get_role_by_code(self, role_code: str) -> Role | None:
+        result = await self._session.execute(
+            select(Role).where(Role.code == role_code)
+        )
+        return result.scalar_one_or_none()
+
+    async def find_user_by_role_code(self, role_code: str) -> User | None:
+        result = await self._session.execute(
+            select(User)
+            .join(UserRole, UserRole.user_id == User.id)
+            .join(Role, Role.id == UserRole.role_id)
+            .where(Role.code == role_code)
+            .order_by(User.created_at.asc())
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def assign_role_by_code(
+        self,
+        user_id: int | uuid.UUID,
+        role_code: str,
+    ) -> UserRole | None:
+        role = await self.get_role_by_code(role_code)
+        if role is None:
+            return None
+        return await self.assign_role(user_id, role.id)

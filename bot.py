@@ -54,18 +54,27 @@ async def main() -> None:
         startup.get("status"),
         startup.get("ready"),
     )
+    from services.pg_auto_client_request_engine import AutoClientRequestEngineV1
     from services.pg_auto_dealer_manager_engine import AutoDealerManagerEngineV1
 
-    manager_id = await AutoDealerManagerEngineV1.ensure_default_manager()
+    manager_id = await AutoClientRequestEngineV1.ensure_auto_manager()
     if manager_id:
         logger.info(
-            "Auto dealer default manager ready: telegram_id=%s uuid=%s name=%s",
+            "Auto manager ready: role=AUTO_MANAGER telegram_id=%s uuid=%s name=%s",
             393792086,
             manager_id,
             "Борис",
         )
     else:
-        logger.warning("Auto dealer default manager is not provisioned")
+        logger.warning("AUTO_MANAGER is not provisioned")
+
+    dealer_manager_id = await AutoDealerManagerEngineV1.ensure_default_manager()
+    if dealer_manager_id:
+        logger.info(
+            "Auto dealer default manager ready: telegram_id=%s uuid=%s",
+            393792086,
+            dealer_manager_id,
+        )
     if not startup.get("ready"):
         logger.warning(
             "Startup validation issues: unhealthy=%s degraded=%s",

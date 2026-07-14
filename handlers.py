@@ -4490,13 +4490,12 @@ async def handle_text(message: Message) -> None:
     user_id = message.from_user.id
 
     # Auto Client menu — обрабатывается routers/auto_client_router (подключён раньше).
-    from services.entry_point_routing import EntryPoint, is_auto_client_menu_text
+    from services.entry_point_routing import EntryPoint
     from services.pg_entry_point_engine import EntryPointEngineV1
 
-    if message.text and is_auto_client_menu_text(message.text):
-        ctx = await EntryPointEngineV1.get_flow_context(user_id)
-        if ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value or ctx.get("source_link") == "auto_client":
-            return
+    ctx = await EntryPointEngineV1.get_flow_context(user_id)
+    if ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value or ctx.get("source_link") == "auto_client":
+        return
 
     requests = []
 

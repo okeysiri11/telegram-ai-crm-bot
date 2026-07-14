@@ -45,10 +45,16 @@ def test_router_handlers_registered() -> None:
         "auto_client_menu_action",
         "auto_client_listing_photo",
         "auto_client_listing_photo_required",
-        "auto_client_description",
-        "auto_client_listing_description",
+        "auto_client_text_input",
     }
     assert required.issubset(handler_names)
+
+
+def test_flow_type_mapping() -> None:
+    from database.models.auto_client_request import AutoClientRequestType
+    from services.pg_auto_client_request_engine import FLOW_TYPE_TO_DB
+
+    assert FLOW_TYPE_TO_DB["buy_car"] == AutoClientRequestType.AUTO_SEARCH.value
 
 
 def test_lead_snapshot_has_client_fields() -> None:
@@ -99,6 +105,7 @@ def main() -> None:
     test_request_type_labels()
     test_fsm_states_exist()
     test_router_handlers_registered()
+    test_flow_type_mapping()
     test_lead_snapshot_has_client_fields()
     print("auto_client_pipeline: OK")
 

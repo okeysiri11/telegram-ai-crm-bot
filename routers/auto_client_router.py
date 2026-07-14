@@ -12,8 +12,8 @@ from aiogram.types import CallbackQuery, Message
 from keyboards import auto_client_menu, entry_flow_language_inline
 from services.automotive_localization import btn, normalize_language, t
 from services.entry_point_routing import EntryPoint, FlowState, is_auto_client_menu_text
+from services.pg_auto_client_request_engine import AutoClientRequestEngineV1
 from services.pg_entry_point_engine import EntryPointEngineV1
-from services.pg_lead_engine import LeadEngineV1
 from services.pg_vertical_onboarding_engine import VerticalOnboardingEngineV1
 from states.entry_flow_states import AutoClientFlow
 
@@ -71,31 +71,63 @@ async def _finish_request(
     user = message.from_user
     lang = await VerticalOnboardingEngineV1.get_language(user.id)
 
-    await LeadEngineV1.submit_auto_client_request(
-        telegram_user_id=user.id,
-        request_type=request_type,
-        description=description,
-        photo_file_id=photo_file_id,
-        source_link="auto_client",
-        telegram_username=user.username,
-        full_name=user.full_name,
-        language=lang,
+    logger.info(
+        "AUTO_CLIENT finish_request type=%s user=%s description_len=%s",
+        request_type,
+        user.id,
+        len(description or ""),
     )
 
-    await state.clear()
-    await EntryPointEngineV1.set_current_flow(user.id, FlowState.AUTO_CLIENT_MENU)
-    await state.set_state(AutoClientFlow.menu)
+    try:
+        result = await AutoClientRequestEngineV1.submit(
+            flow_request_type=request_type,
+            client_telegram_id=user.id,
+            client_username=user.username,
+            client_full_name=user.full_name,
+            description=description,
+            photo_file_id=photo_file_id,
+        )
 
-    confirmations = {
-        REQUEST_BUY: "✅ Заявка на поиск автомобиля создана.\nМенеджер получил уведомление.",
-        REQUEST_SELL: "✅ Заявка на продажу автомобиля создана.\nМенеджер получил уведомление.",
-        REQUEST_LISTING: "✅ Объявление отправлено.\nМенеджер получил фото и описание.",
-        REQUEST_MANAGER: "✅ Менеджер получил запрос и свяжется с вами.",
-    }
-    await message.answer(
-        confirmations.get(request_type, "✅ Заявка создана."),
-        reply_markup=auto_client_menu(lang),
-    )
+        # Best-effort CRM lead sync.
+        try:
+            from services.pg_lead_engine import LeadEngineV1
+
+            await LeadEngineV1.submit_auto_client_request(
+                telegram_user_id=user.id,
+                request_type=request_type,
+                description=description,
+                photo_file_id=photo_file_id,
+                source_link="auto_client",
+                telegram_username=user.username,
+                full_name=user.full_name,
+                language=lang,
+            )
+        except Exception:
+            logger.warning("Lead engine sync failed for auto client request", exc_info=True)
+
+        await message.answer(
+            f"✅ Заявка создана\n"
+            f"Номер: {result['request_number']}\n"
+            f"Менеджер: {result['manager_name']}",
+            reply_markup=auto_client_menu(lang),
+        )
+    except RuntimeError as exc:
+        if "AUTO_MANAGER NOT FOUND" in str(exc):
+            logger.error("AUTO_MANAGER NOT FOUND")
+        await message.answer(
+            "❌ Менеджер временно недоступен. Попробуйте позже.",
+            reply_markup=auto_client_menu(lang),
+        )
+    except Exception:
+        logger.exception("AUTO_CLIENT request submission failed user=%s", user.id)
+        await message.answer(
+            "❌ Не удалось создать заявку. Попробуйте ещё раз.",
+            reply_markup=auto_client_menu(lang),
+        )
+    finally:
+        await state.update_data(request_type=None, photo_file_id=None)
+        await EntryPointEngineV1.set_current_flow(user.id, FlowState.AUTO_CLIENT_MENU)
+        await state.set_state(AutoClientFlow.menu)
 
 
 @router.message(Command("start_auto_client", ignore_mention=True))
@@ -143,6 +175,8 @@ async def auto_client_language_selected(callback: CallbackQuery, state: FSMConte
     await callback.message.answer(t("language_saved", language))
 
     prefs = await VerticalOnboardingEngineV1.get_preferences(user_id)
+    from services.pg_lead_engine import LeadEngineV1
+
     await LeadEngineV1.enrich_latest_for_user(
         telegram_user_id=user_id,
         source_link=prefs.get("source_link") or "auto_client",
@@ -281,57 +315,82 @@ async def auto_client_listing_photo_required(message: Message, state: FSMContext
     )
 
 
-@router.message(StateFilter(AutoClientFlow.awaiting_description), F.text)
-async def auto_client_description(message: Message, state: FSMContext) -> None:
+async def _resolve_pending_request(state: FSMContext) -> tuple[str | None, str | None]:
+    data = await state.get_data()
+    current = await state.get_state()
+    request_type = data.get("request_type")
+    photo_file_id = data.get("photo_file_id")
+
+    if current == AutoClientFlow.awaiting_description.state:
+        return request_type or REQUEST_BUY, None
+    if current == AutoClientFlow.awaiting_listing_description.state:
+        return REQUEST_LISTING, photo_file_id
+    if current == AutoClientFlow.awaiting_photo.state:
+        return REQUEST_LISTING, None
+    if request_type in {REQUEST_BUY, REQUEST_SELL}:
+        return request_type, None
+    if request_type == REQUEST_LISTING and photo_file_id:
+        return REQUEST_LISTING, photo_file_id
+    if request_type == REQUEST_LISTING:
+        return REQUEST_LISTING, None
+    return None, None
+
+
+async def _auto_client_text_filter(message: Message) -> bool:
+    if not message.from_user or not message.text:
+        return False
+    text = message.text.strip()
+    if not text or text.startswith("/"):
+        return False
+    if is_auto_client_menu_text(text):
+        return False
+    ctx = await EntryPointEngineV1.get_flow_context(message.from_user.id)
+    return (
+        ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value
+        or ctx.get("source_link") == "auto_client"
+    )
+
+
+@router.message(_auto_client_text_filter)
+async def auto_client_text_input(message: Message, state: FSMContext) -> None:
+    if not message.from_user or not message.text:
+        return
+    text = message.text.strip()
     if not await _ensure_auto_client(message):
         return
 
-    text = (message.text or "").strip()
-    if not text or text.startswith("/"):
-        return
-    if is_auto_client_menu_text(text):
-        await state.set_state(AutoClientFlow.menu)
-        await auto_client_menu_action(message, state)
+    request_type, photo_file_id = await _resolve_pending_request(state)
+    logger.info(
+        "AUTO_CLIENT text_input user=%s state=%s request_type=%s text=%r",
+        message.from_user.id,
+        await state.get_state(),
+        request_type,
+        text[:80],
+    )
+
+    if request_type is None:
+        lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
+        await message.answer(
+            "Выберите действие в меню, затем отправьте описание.",
+            reply_markup=auto_client_menu(lang),
+        )
         return
 
-    data = await state.get_data()
-    request_type = data.get("request_type") or REQUEST_BUY
+    if request_type == REQUEST_LISTING and not photo_file_id:
+        current = await state.get_state()
+        if current != AutoClientFlow.awaiting_listing_description.state:
+            lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
+            await state.set_state(AutoClientFlow.awaiting_photo)
+            await message.answer(
+                "Сначала пришлите фото автомобиля.",
+                reply_markup=auto_client_menu(lang),
+            )
+            return
+
     await _finish_request(
         message,
         state,
         request_type=request_type,
         description=text,
-    )
-
-
-@router.message(StateFilter(AutoClientFlow.awaiting_listing_description), F.text)
-async def auto_client_listing_description(message: Message, state: FSMContext) -> None:
-    if not await _ensure_auto_client(message):
-        return
-
-    text = (message.text or "").strip()
-    if not text or text.startswith("/"):
-        return
-    if is_auto_client_menu_text(text):
-        await state.set_state(AutoClientFlow.menu)
-        await auto_client_menu_action(message, state)
-        return
-
-    data = await state.get_data()
-    photo_file_id = data.get("photo_file_id")
-    if not photo_file_id:
-        lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
-        await state.set_state(AutoClientFlow.awaiting_photo)
-        await message.answer(
-            "Сначала пришлите фото автомобиля.",
-            reply_markup=auto_client_menu(lang),
-        )
-        return
-
-    await _finish_request(
-        message,
-        state,
-        request_type=REQUEST_LISTING,
-        description=text,
-        photo_file_id=photo_file_id,
+        photo_file_id=photo_file_id if request_type == REQUEST_LISTING else None,
     )
