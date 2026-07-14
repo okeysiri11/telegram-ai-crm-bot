@@ -321,6 +321,7 @@ from lead_engine_handlers import lead_engine_router
 from deal_engine_handlers import deal_engine_router
 from revenue_engine_handlers import revenue_engine_router
 from cart_engine_handlers import cart_engine_router
+from owner_dashboard_handlers import owner_dashboard_router
 
 router.include_router(tenant_guard_router)
 router.include_router(deal_workflow_router)
@@ -336,6 +337,7 @@ router.include_router(lead_engine_router)
 router.include_router(deal_engine_router)
 router.include_router(revenue_engine_router)
 router.include_router(cart_engine_router)
+router.include_router(owner_dashboard_router)
 
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1

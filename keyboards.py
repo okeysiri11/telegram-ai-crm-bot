@@ -60,6 +60,9 @@ def owner_main_menu(*, show_automotive: bool = True):
                 KeyboardButton(text="👑 Owner Panel"),
             ],
             [
+                KeyboardButton(text="📊 Owner Dashboard"),
+            ],
+            [
                 KeyboardButton(text="⚙ Настройки"),
             ],
             [
@@ -78,13 +81,27 @@ def owner_main_menu(*, show_automotive: bool = True):
 def owner_panel_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[
+            [KeyboardButton(text="📊 Owner Dashboard")],
             [
                 KeyboardButton(text="🔗 Entry Links"),
-                KeyboardButton(text="📈 Lead Dashboard"),
+                KeyboardButton(text="📝 Notes"),
+            ],
+            [KeyboardButton(text="⬅ Назад")],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def owner_dashboard_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📈 Marketing Analytics"),
+                KeyboardButton(text="💰 Revenue Analytics"),
             ],
             [
-                KeyboardButton(text="🤝 Deal Dashboard"),
-                KeyboardButton(text="💵 Revenue Engine"),
+                KeyboardButton(text="👥 Manager Analytics"),
+                KeyboardButton(text="🤝 Partner Analytics"),
             ],
             [KeyboardButton(text="⬅ Назад")],
         ],

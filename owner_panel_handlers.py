@@ -49,9 +49,6 @@ async def open_owner_panel(message: Message) -> None:
     and m.text in {
         "🔗 Entry Links",
         "📝 Notes",
-        "📈 Lead Dashboard",
-        "🤝 Deal Dashboard",
-        "💵 Revenue Engine",
         "⬅ Назад",
     }
 )
@@ -76,27 +73,6 @@ async def owner_panel_screen(message: Message, bot: Bot) -> None:
             parse_mode="Markdown",
             reply_markup=TenantRoutingEngineV1.entry_links_inline(links, bot_username=username),
         )
-        return
-
-    if message.text == "📈 Lead Dashboard":
-        from services.pg_lead_engine import LeadEngineV1
-
-        dashboard = await LeadEngineV1.get_admin_dashboard()
-        await message.answer(LeadEngineV1.format_admin_dashboard(dashboard))
-        return
-
-    if message.text == "🤝 Deal Dashboard":
-        from services.pg_deal_engine_v1 import DealEngineV1
-
-        dashboard = await DealEngineV1.get_owner_dashboard()
-        await message.answer(DealEngineV1.format_owner_dashboard(dashboard))
-        return
-
-    if message.text == "💵 Revenue Engine":
-        from services.pg_revenue_engine_v1 import RevenueEngineV1
-
-        dashboard = await RevenueEngineV1.get_owner_dashboard()
-        await message.answer(RevenueEngineV1.format_owner_dashboard(dashboard))
         return
 
     if message.text == "📝 Notes":
