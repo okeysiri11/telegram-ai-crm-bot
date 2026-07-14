@@ -39,7 +39,7 @@ async def open_owner_panel(message: Message) -> None:
     owner_panel_active.add(user_id)
     log_audit(user_id, "open", "owner_panel")
     await message.answer(
-        "👑 Owner Panel\n\nУправление точками входа и заметками.",
+        "👑 Owner Panel\n\nУправление точками входа, заметками и платёжным профилем.",
         reply_markup=owner_panel_menu(),
     )
 
@@ -49,6 +49,7 @@ async def open_owner_panel(message: Message) -> None:
     and m.text in {
         "🔗 Entry Links",
         "📝 Notes",
+        "💳 Payment Profile",
         "⬅ Назад",
     }
 )
@@ -82,6 +83,17 @@ async def owner_panel_screen(message: Message, bot: Bot) -> None:
             text,
             reply_markup=TenantRoutingEngineV1.notes_vertical_inline(verticals),
         )
+        return
+
+    if message.text == "💳 Payment Profile":
+        from services.pg_owner_payment_profile_v1 import OwnerPaymentProfileEngineV1
+
+        profile = await OwnerPaymentProfileEngineV1.get_profile()
+        await message.answer(
+            OwnerPaymentProfileEngineV1.format_owner_profile(profile),
+            reply_markup=OwnerPaymentProfileEngineV1.owner_settings_keyboard(profile),
+        )
+        return
 
 
 @owner_panel_router.callback_query(F.data.startswith("owner:link:copy:"))

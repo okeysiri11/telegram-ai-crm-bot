@@ -15,7 +15,6 @@ from database.models.crm_pipeline_boards_v1 import CrmPipelineEntityType
 from database.models.deal_engine_v1 import DealEngineV1Status
 from database.models.payment_engine_v1 import (
     PAYMENT_ENGINE_METHODS,
-    PaymentEngineMethod,
     PaymentEngineStatus,
 )
 from database.session import get_session
@@ -23,14 +22,6 @@ from repositories.cart_engine_v1_repository import CartEngineV1Repository
 from repositories.payment_engine_v1_repository import PaymentEngineV1Repository
 
 logger = logging.getLogger(__name__)
-
-_PAYMENT_METHOD_LABELS: dict[str, dict[str, str]] = {
-    "CARD": {"ru": "💳 Карта", "uk": "💳 Картка"},
-    "IBAN": {"ru": "🏦 IBAN", "uk": "🏦 IBAN"},
-    "USDT_TRC20": {"ru": "💎 USDT TRC20", "uk": "💎 USDT TRC20"},
-    "USDT_ERC20": {"ru": "💎 USDT ERC20", "uk": "💎 USDT ERC20"},
-    "CASH": {"ru": "💵 Наличные", "uk": "💵 Готівка"},
-}
 
 PAYMENT_UPLOADED_MESSAGE = (
     "Скриншот оплаты получен.\n"
@@ -54,67 +45,20 @@ class PaymentEngineV1Error(Exception):
 
 class PaymentEngineV1:
     @staticmethod
-    def payment_methods_keyboard(*, lang: str | None = None) -> InlineKeyboardMarkup:
-        from services.automotive_localization import normalize_language
+    async def payment_methods_keyboard(*, lang: str | None = None) -> InlineKeyboardMarkup:
+        from services.pg_owner_payment_profile_v1 import OwnerPaymentProfileEngineV1
 
-        language = normalize_language(lang)
-        rows = []
-        for method in PaymentEngineMethod:
-            label = _PAYMENT_METHOD_LABELS[method.value].get(language, method.value)
-            rows.append([
-                InlineKeyboardButton(
-                    text=label,
-                    callback_data=f"cart:pay:{method.value}",
-                )
-            ])
-        return InlineKeyboardMarkup(inline_keyboard=rows)
+        return await OwnerPaymentProfileEngineV1.payment_methods_keyboard(lang=lang)
 
     @staticmethod
-    def payment_instructions(method: str, *, amount: Decimal, currency: str) -> str:
-        method = method.upper()
-        if method == PaymentEngineMethod.CARD.value:
-            return (
-                f"💳 Оплата картой\n\n"
-                f"Сумма: {amount} {currency}\n"
-                f"Карта: 5375 4141 0000 0000\n"
-                f"Получатель: Platform Services LLC\n"
-                f"Назначение: Order payment\n\n"
-                f"После оплаты отправьте скриншот перевода в этот чат."
-            )
-        if method == PaymentEngineMethod.IBAN.value:
-            return (
-                f"🏦 Банковский перевод (IBAN)\n\n"
-                f"Сумма: {amount} {currency}\n"
-                f"IBAN: UA21322313000002600723356601\n"
-                f"Получатель: Platform Services LLC\n"
-                f"Назначение: Order payment\n\n"
-                f"После оплаты отправьте скриншот перевода в этот чат."
-            )
-        if method == PaymentEngineMethod.USDT_TRC20.value:
-            return (
-                f"💎 USDT (TRC20)\n\n"
-                f"Сумма: {amount} {currency}\n"
-                f"Адрес: TXYZplatformWalletTRC20Example\n"
-                f"Сеть: TRON (TRC20)\n\n"
-                f"После оплаты отправьте скриншот перевода в этот чат."
-            )
-        if method == PaymentEngineMethod.USDT_ERC20.value:
-            return (
-                f"💎 USDT (ERC20)\n\n"
-                f"Сумма: {amount} {currency}\n"
-                f"Адрес: 0xPlatformWalletERC20Example\n"
-                f"Сеть: Ethereum (ERC20)\n\n"
-                f"После оплаты отправьте скриншот перевода в этот чат."
-            )
-        if method == PaymentEngineMethod.CASH.value:
-            return (
-                f"💵 Наличные\n\n"
-                f"Сумма: {amount} {currency}\n"
-                f"Офис: Киев, ул. Примерная 1\n"
-                f"Часы: Пн–Пт 10:00–18:00\n\n"
-                f"После оплаты отправьте фото чека или квитанции в этот чат."
-            )
-        return f"Сумма: {amount} {currency}"
+    async def payment_instructions(method: str, *, amount: Decimal, currency: str) -> str:
+        from services.pg_owner_payment_profile_v1 import OwnerPaymentProfileEngineV1
+
+        return await OwnerPaymentProfileEngineV1.build_payment_instructions(
+            method,
+            amount=amount,
+            currency=currency,
+        )
 
     @staticmethod
     def manager_review_keyboard(payment_id: uuid.UUID) -> InlineKeyboardMarkup:

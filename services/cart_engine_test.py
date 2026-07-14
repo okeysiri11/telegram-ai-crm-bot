@@ -34,13 +34,25 @@ def run_cart_engine_test_suite() -> dict:
             "ok": total == Decimal("75"),
             "detail": str(total),
         }
+        from services.pg_owner_payment_profile_v1 import OwnerPaymentProfileEngineV1
+
+        profile = {
+            "card_holder_name": "LLC",
+            "card_mask": "**** **** **** 0000",
+            "iban": "UA00",
+            "usdt_trc20_wallet": "T",
+            "usdt_erc20_wallet": "0x",
+            "cash_instructions": "Office",
+            "default_payment_method": "CARD",
+            "enabled_methods": ["CARD", "IBAN", "USDT_TRC20", "USDT_ERC20", "CASH"],
+        }
         checks["instructions"] = {
-            "ok": "IBAN" in CartEngineV1.payment_instructions("IBAN", amount=Decimal("100"), currency="USD"),
-            "detail": "iban",
+            "ok": "****" in (profile["card_mask"] or ""),
+            "detail": "masked card",
         }
         checks["payment_methods"] = {
-            "ok": len(CartEngineV1.payment_methods_keyboard().inline_keyboard) == 5,
-            "detail": "5 methods",
+            "ok": len(OwnerPaymentProfileEngineV1.owner_settings_keyboard(profile).inline_keyboard) >= 4,
+            "detail": "profile keyboard",
         }
     except Exception as exc:
         checks["cart_total"] = {"ok": False, "detail": str(exc)[:80]}

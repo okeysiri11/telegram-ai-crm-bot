@@ -128,16 +128,20 @@ class CartEngineV1:
         return InlineKeyboardMarkup(inline_keyboard=rows)
 
     @staticmethod
-    def payment_methods_keyboard(*, lang: str | None = None) -> InlineKeyboardMarkup:
+    async def payment_methods_keyboard(*, lang: str | None = None) -> InlineKeyboardMarkup:
         from services.pg_payment_engine_v1 import PaymentEngineV1
 
-        return PaymentEngineV1.payment_methods_keyboard(lang=lang)
+        return await PaymentEngineV1.payment_methods_keyboard(lang=lang)
 
     @staticmethod
-    def payment_instructions(method: str, *, amount: Decimal, currency: str) -> str:
+    async def payment_instructions(method: str, *, amount: Decimal, currency: str) -> str:
         from services.pg_payment_engine_v1 import PaymentEngineV1
 
-        return PaymentEngineV1.payment_instructions(method, amount=amount, currency=currency)
+        return await PaymentEngineV1.payment_instructions(
+            method,
+            amount=amount,
+            currency=currency,
+        )
 
     @staticmethod
     def cancel_order_keyboard(order_id: uuid.UUID) -> InlineKeyboardMarkup:
@@ -164,6 +168,11 @@ class CartEngineV1:
         if payment_method not in PAYMENT_ENGINE_METHODS:
             raise CartEngineV1Error(f"Unsupported payment method: {payment_method}")
 
+        from services.pg_owner_payment_profile_v1 import OwnerPaymentProfileEngineV1
+
+        if not await OwnerPaymentProfileEngineV1.is_method_enabled(payment_method):
+            raise CartEngineV1Error("Этот способ оплаты временно недоступен")
+
         items = cart.get("items", {})
         if not items:
             raise CartEngineV1Error("Cart is empty")
@@ -176,7 +185,7 @@ class CartEngineV1:
             full_name=full_name,
             username=username,
         )
-        instructions = CartEngineV1.payment_instructions(
+        instructions = await CartEngineV1.payment_instructions(
             payment_method,
             amount=total,
             currency=currency,

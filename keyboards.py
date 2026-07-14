@@ -92,6 +92,9 @@ def owner_panel_menu() -> ReplyKeyboardMarkup:
             [
                 KeyboardButton(text="📝 Notes"),
             ],
+            [
+                KeyboardButton(text="💳 Payment Profile"),
+            ],
             [KeyboardButton(text="⬅ Назад")],
         ],
         resize_keyboard=True,

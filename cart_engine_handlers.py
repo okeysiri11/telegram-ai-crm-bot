@@ -104,7 +104,7 @@ async def cart_checkout(callback: CallbackQuery) -> None:
     pick = "Выберите способ оплаты:" if lang != "uk" else "Оберіть спосіб оплати:"
     await callback.message.answer(
         f"{CartEngineV1.format_cart_text(cart, lang=lang)}\n\n{pick}",
-        reply_markup=CartEngineV1.payment_methods_keyboard(lang=lang),
+        reply_markup=await CartEngineV1.payment_methods_keyboard(lang=lang),
     )
 
 

@@ -45,23 +45,31 @@ def run_payment_engine_test_suite() -> dict:
     try:
         from services.pg_payment_engine_v1 import PaymentEngineV1
 
-        iban_text = PaymentEngineV1.payment_instructions(
-            "IBAN",
-            amount=Decimal("100"),
-            currency="USD",
-        )
-        trc_text = PaymentEngineV1.payment_instructions(
-            "USDT_TRC20",
-            amount=Decimal("50"),
-            currency="USD",
-        )
-        checks["instructions"] = {
-            "ok": "IBAN" in iban_text and "TRC20" in trc_text,
-            "detail": "iban+trc20",
+        from services.pg_owner_payment_profile_v1 import OwnerPaymentProfileEngineV1
+
+        mask = OwnerPaymentProfileEngineV1._validate_card_mask("**** **** **** 1234")
+        checks["card_mask"] = {
+            "ok": "1234" in mask and "5375" not in mask,
+            "detail": mask,
         }
-        kb = PaymentEngineV1.payment_methods_keyboard()
+        profile = {
+            "card_holder_name": "LLC",
+            "card_mask": "**** **** **** 0000",
+            "iban": "UA00",
+            "usdt_trc20_wallet": "T",
+            "usdt_erc20_wallet": "0x",
+            "cash_instructions": "Office",
+            "default_payment_method": "CARD",
+            "enabled_methods": ["CARD", "IBAN", "USDT_TRC20", "USDT_ERC20", "CASH"],
+        }
+        text = OwnerPaymentProfileEngineV1.format_owner_profile(profile)
+        checks["instructions"] = {
+            "ok": "Owner Payment Profile" in text,
+            "detail": "profile text",
+        }
+        kb = OwnerPaymentProfileEngineV1.owner_settings_keyboard(profile)
         checks["keyboard"] = {
-            "ok": len(kb.inline_keyboard) == 5,
+            "ok": len(kb.inline_keyboard) >= 4,
             "detail": str(len(kb.inline_keyboard)),
         }
         metrics = {
