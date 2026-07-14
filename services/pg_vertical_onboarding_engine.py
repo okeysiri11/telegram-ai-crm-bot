@@ -146,6 +146,10 @@ class VerticalOnboardingEngineV1:
                     preset_role = cfg.preset_role
 
             entry_point = prefs.entry_point if prefs else None
+            if not entry_point and prefs and prefs.source_link:
+                mapped = SOURCE_LINK_TO_ENTRY_POINT.get(prefs.source_link)
+                if mapped:
+                    entry_point = mapped.value
             if entry_point in {"AUTO_CLIENT", "AUTO_DEALER"}:
                 row = await repo.upsert(
                     telegram_user_id=telegram_user_id,

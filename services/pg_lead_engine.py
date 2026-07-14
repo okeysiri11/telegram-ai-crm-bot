@@ -6,6 +6,8 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from database.models.lead_engine import LeadEngineLead, LeadEngineStatus
 from database.session import get_session
 from repositories.lead_engine_repository import LeadEngineRepository
@@ -86,24 +88,32 @@ class LeadEngineV1:
                 full_name=full_name,
                 status=LeadEngineStatus.NEW.value,
             )
-        snapshot = LeadEngineV1._snapshot(row)
+            snapshot = await LeadEngineV1._snapshot_in_session(session, row)
+            lead_id = row.id
+            lead_created_at = snapshot["created_at"]
+            lead_phone = snapshot.get("phone")
+            lead_vin = snapshot.get("vin")
+            lead_vehicle_registration = snapshot.get("vehicle_registration")
+            lead_agro_product = snapshot.get("agro_product")
+            lead_agro_volume = snapshot.get("agro_volume")
+            lead_agro_location = snapshot.get("agro_location")
         from services.pg_sla_tracking_v1 import SlaTrackingV1
 
         await SlaTrackingV1.on_lead_created(
-            lead_id=row.id,
+            lead_id=lead_id,
             vertical=resolved_vertical,
-            created_at=row.created_at,
+            created_at=datetime.fromisoformat(lead_created_at) if lead_created_at else datetime.now(timezone.utc),
         )
         await AntiLossLayerV1.register_lead_fingerprints(
-            row.id,
+            lead_id,
             vertical=resolved_vertical,
             telegram_user_id=telegram_user_id,
-            phone=row.phone,
-            vin=row.vin,
-            vehicle_registration=row.vehicle_registration,
-            agro_product=row.agro_product,
-            agro_volume=row.agro_volume,
-            agro_location=row.agro_location,
+            phone=lead_phone,
+            vin=lead_vin,
+            vehicle_registration=lead_vehicle_registration,
+            agro_product=lead_agro_product,
+            agro_volume=lead_agro_volume,
+            agro_location=lead_agro_location,
         )
         return snapshot
 
@@ -116,6 +126,7 @@ class LeadEngineV1:
         role: str | None = None,
         phone: str | None = None,
     ) -> dict[str, Any] | None:
+        snapshot: dict[str, Any] | None = None
         async with get_session() as session:
             repo = LeadEngineRepository(session)
             row = await repo.get_latest_for_telegram(
@@ -135,8 +146,10 @@ class LeadEngineV1:
 
                 updates["phone_normalized"] = AntiLossLayerV1.normalize_phone(phone)
             if not updates:
-                return LeadEngineV1._snapshot(row)
-            if phone is not None:
+                snapshot = await LeadEngineV1._snapshot_in_session(session, row)
+            elif phone is not None:
+                from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
+
                 dup = await AntiLossLayerV1.check_lead_duplicate(
                     vertical=row.vertical,
                     phone=phone,
@@ -144,55 +157,63 @@ class LeadEngineV1:
                     exclude_lead_id=row.id,
                 )
                 if dup.get("duplicate"):
+                    matched = dup["matched_lead"]
+                    await session.refresh(matched)
                     await AntiLossLayerV1.log_lead_duplicate_prevented(
                         vertical=row.vertical,
-                        matched_lead_id=dup["matched_lead"].id,
+                        matched_lead_id=matched.id,
                         match_type=dup["match_type"],
                         attempted_telegram_id=telegram_user_id,
                     )
-                    return AntiLossLayerV1.lead_snapshot_with_anti_loss(
-                        dup["matched_lead"],
+                    snapshot = AntiLossLayerV1.lead_snapshot_with_anti_loss(
+                        matched,
                         duplicate_prevented=True,
                         match_type=dup["match_type"],
                     )
-            row = await repo.update(row.id, **updates)
-            if phone is not None:
-                from services.pg_anti_loss_layer_v1 import AntiLossLayerV1
-
-                await AntiLossLayerV1.register_lead_fingerprints(
-                    row.id,
-                    vertical=row.vertical,
-                    telegram_user_id=row.telegram_user_id,
-                    phone=row.phone,
-                )
-            return LeadEngineV1._snapshot(row)
+                else:
+                    row = await repo.update(row.id, **updates)
+                    await AntiLossLayerV1.register_lead_fingerprints(
+                        row.id,
+                        vertical=row.vertical,
+                        telegram_user_id=row.telegram_user_id,
+                        phone=row.phone,
+                    )
+                    snapshot = await LeadEngineV1._snapshot_in_session(session, row)
+            else:
+                row = await repo.update(row.id, **updates)
+                snapshot = await LeadEngineV1._snapshot_in_session(session, row)
+        return snapshot
 
     @staticmethod
     async def assign_manager(
         lead_id: uuid.UUID,
         manager_id: uuid.UUID | None,
     ) -> dict[str, Any] | None:
+        snapshot: dict[str, Any] | None = None
         async with get_session() as session:
             row = await LeadEngineRepository(session).assign_manager(lead_id, manager_id)
-        if row is None:
-            return None
+            if row is None:
+                return None
+            snapshot = await LeadEngineV1._snapshot_in_session(session, row)
         from services.pg_sla_tracking_v1 import SlaTrackingV1
 
         await SlaTrackingV1.on_manager_assigned(lead_id, manager_id)
-        return LeadEngineV1._snapshot(row)
+        return snapshot
 
     @staticmethod
     async def update_status(lead_id: uuid.UUID, status: str) -> dict[str, Any] | None:
         if status not in {s.value for s in LeadEngineStatus}:
             raise ValueError(f"Unsupported status: {status}")
+        snapshot: dict[str, Any] | None = None
         async with get_session() as session:
             row = await LeadEngineRepository(session).update(lead_id, status=status)
-        if row is None:
-            return None
+            if row is None:
+                return None
+            snapshot = await LeadEngineV1._snapshot_in_session(session, row)
         from services.pg_sla_tracking_v1 import SlaTrackingV1
 
         await SlaTrackingV1.on_lead_status(lead_id, status)
-        return LeadEngineV1._snapshot(row)
+        return snapshot
 
     @staticmethod
     async def get_admin_dashboard() -> dict[str, Any]:
@@ -208,7 +229,11 @@ class LeadEngineV1:
             total = await repo.count_since(datetime_min())
             by_source = await repo.group_count(LeadEngineLead.source_link, since=week)
             by_vertical = await repo.group_count(LeadEngineLead.vertical, since=week)
-            recent = await repo.list_recent(limit=10)
+            recent_rows = await repo.list_recent(limit=10)
+            recent = [
+                await LeadEngineV1._snapshot_in_session(session, row)
+                for row in recent_rows
+            ]
 
         closed = won + lost
         conversion_rate = round((won / closed) * 100, 1) if closed else 0.0
@@ -222,7 +247,45 @@ class LeadEngineV1:
             "conversion_rate": conversion_rate,
             "by_source": by_source,
             "by_vertical": by_vertical,
-            "recent": [LeadEngineV1._snapshot(row) for row in recent],
+            "recent": recent,
+        }
+
+    @staticmethod
+    async def _snapshot_in_session(session: AsyncSession, row: LeadEngineLead) -> dict[str, Any]:
+        await session.refresh(row)
+        return LeadEngineV1._snapshot(row)
+
+    @staticmethod
+    def _snapshot(row: LeadEngineLead) -> dict[str, Any]:
+        return {
+            "id": str(row.id),
+            "vertical": row.vertical,
+            "role": row.role,
+            "language": row.language,
+            "source_link": row.source_link,
+            "utm_source": row.utm_source,
+            "utm_campaign": row.utm_campaign,
+            "utm_medium": row.utm_medium,
+            "referral_code": row.referral_code,
+            "referrer": row.referrer,
+            "marketing_source": row.marketing_source,
+            "telegram_user_id": row.telegram_user_id,
+            "telegram_username": row.telegram_username,
+            "full_name": row.full_name,
+            "phone": row.phone,
+            "assigned_manager_id": str(row.assigned_manager_id) if row.assigned_manager_id else None,
+            "status": row.status,
+            "phone_normalized": row.phone_normalized,
+            "vin": row.vin,
+            "vehicle_registration": row.vehicle_registration,
+            "agro_product": row.agro_product,
+            "agro_volume": row.agro_volume,
+            "agro_location": row.agro_location,
+            "is_duplicate": row.is_duplicate,
+            "duplicate_of_id": str(row.duplicate_of_id) if row.duplicate_of_id else None,
+            "merged_into_id": str(row.merged_into_id) if row.merged_into_id else None,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
         }
 
     @staticmethod
@@ -276,39 +339,6 @@ class LeadEngineV1:
                 f"@{lead.get('telegram_username') or lead.get('telegram_user_id')}"
             )
         return "\n".join(lines)
-
-    @staticmethod
-    def _snapshot(row: LeadEngineLead) -> dict[str, Any]:
-        return {
-            "id": str(row.id),
-            "vertical": row.vertical,
-            "role": row.role,
-            "language": row.language,
-            "source_link": row.source_link,
-            "utm_source": row.utm_source,
-            "utm_campaign": row.utm_campaign,
-            "utm_medium": row.utm_medium,
-            "referral_code": row.referral_code,
-            "referrer": row.referrer,
-            "marketing_source": row.marketing_source,
-            "telegram_user_id": row.telegram_user_id,
-            "telegram_username": row.telegram_username,
-            "full_name": row.full_name,
-            "phone": row.phone,
-            "assigned_manager_id": str(row.assigned_manager_id) if row.assigned_manager_id else None,
-            "status": row.status,
-            "phone_normalized": row.phone_normalized,
-            "vin": row.vin,
-            "vehicle_registration": row.vehicle_registration,
-            "agro_product": row.agro_product,
-            "agro_volume": row.agro_volume,
-            "agro_location": row.agro_location,
-            "is_duplicate": row.is_duplicate,
-            "duplicate_of_id": str(row.duplicate_of_id) if row.duplicate_of_id else None,
-            "merged_into_id": str(row.merged_into_id) if row.merged_into_id else None,
-            "created_at": row.created_at.isoformat() if row.created_at else None,
-            "updated_at": row.updated_at.isoformat() if row.updated_at else None,
-        }
 
 
 def datetime_min() -> datetime:

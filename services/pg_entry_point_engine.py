@@ -27,6 +27,30 @@ from services.tenant_routing import ENTRY_LINK_REGISTRY, is_owner
 
 class EntryPointEngineV1:
     @staticmethod
+    def _resolve_entry_point(ctx: dict[str, Any]) -> EntryPoint | None:
+        entry_raw = ctx.get("entry_point")
+        if entry_raw:
+            try:
+                return EntryPoint(entry_raw)
+            except ValueError:
+                pass
+        source_link = ctx.get("source_link")
+        if source_link:
+            return SOURCE_LINK_TO_ENTRY_POINT.get(source_link)
+        return None
+
+    @staticmethod
+    async def _ensure_entry_point_persisted(user_id: int, entry_point: EntryPoint) -> None:
+        ctx = await EntryPointEngineV1.get_flow_context(user_id)
+        if ctx.get("entry_point") == entry_point.value:
+            return
+        async with get_session() as session:
+            await UserVerticalPreferencesRepository(session).upsert(
+                telegram_user_id=user_id,
+                entry_point=entry_point.value,
+            )
+
+    @staticmethod
     async def get_flow_context(telegram_user_id: int) -> dict[str, Any]:
         async with get_session() as session:
             row = await UserVerticalPreferencesRepository(session).get_by_telegram_id(
@@ -192,11 +216,11 @@ class EntryPointEngineV1:
     @staticmethod
     async def route_after_language(message: Message, user_id: int, language: str) -> bool:
         ctx = await EntryPointEngineV1.get_flow_context(user_id)
-        entry_raw = ctx.get("entry_point")
-        if not entry_raw:
+        entry_point = EntryPointEngineV1._resolve_entry_point(ctx)
+        if entry_point is None:
             return False
 
-        entry_point = EntryPoint(entry_raw)
+        await EntryPointEngineV1._ensure_entry_point_persisted(user_id, entry_point)
         lang = normalize_language(language)
 
         if entry_point == EntryPoint.AUTO_CLIENT:
@@ -207,6 +231,7 @@ class EntryPointEngineV1:
                     role="buyer",
                     onboarding_step="completed",
                     onboarding_completed=True,
+                    entry_point=EntryPoint.AUTO_CLIENT.value,
                     current_flow=FlowState.AUTO_CLIENT_MENU.value,
                 )
             await EntryPointEngineV1._show_auto_client_menu(message, lang)

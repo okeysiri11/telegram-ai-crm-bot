@@ -61,7 +61,8 @@ async def auto_client_language_selected(callback: CallbackQuery, state: FSMConte
 
     user_id = callback.from_user.id
     ctx = await EntryPointEngineV1.get_flow_context(user_id)
-    if ctx.get("entry_point") != EntryPoint.AUTO_CLIENT.value:
+    entry_point = EntryPointEngineV1._resolve_entry_point(ctx)
+    if entry_point != EntryPoint.AUTO_CLIENT and ctx.get("source_link") != "auto_client":
         await callback.answer()
         return
 
@@ -79,12 +80,19 @@ async def auto_client_language_selected(callback: CallbackQuery, state: FSMConte
     prefs = await VerticalOnboardingEngineV1.get_preferences(user_id)
     await LeadEngineV1.enrich_latest_for_user(
         telegram_user_id=user_id,
-        source_link=prefs.get("source_link"),
+        source_link=prefs.get("source_link") or "auto_client",
         language=language,
         role="buyer",
     )
 
-    await EntryPointEngineV1.route_after_language(callback.message, user_id, language)
+    routed = await EntryPointEngineV1.route_after_language(callback.message, user_id, language)
+    if not routed:
+        await EntryPointEngineV1.set_current_flow(user_id, FlowState.AUTO_CLIENT_MENU)
+        await callback.message.answer(
+            "Выберите действие:",
+            reply_markup=auto_client_menu(language),
+        )
+
     await state.set_state(AutoClientFlow.menu)
 
 
