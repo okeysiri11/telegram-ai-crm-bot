@@ -1,5 +1,5 @@
 from aiogram import F, Router
-from aiogram.filters import CommandStart, Command
+from aiogram.filters import Command
 from aiogram.filters.command import CommandObject
 from aiogram.types import (
     Message,
@@ -299,22 +299,13 @@ from keyboards import (
 router = Router()
 
 from deal_workflow_handlers import deal_workflow_router
-from ai_sales_handlers import ai_sales_router, sales_assistant_active
-from dealer_onboarding_handlers import (
-    dealer_onboarding_router,
-    present_onboarding_resume,
-    present_onboarding_start,
-)
+from ai_sales_handlers import ai_sales_router
+from dealer_onboarding_handlers import dealer_onboarding_router
 from dealer_quote_authority_handlers import dealer_quote_authority_router
 from bidex_quote_handlers import bidex_quote_router
 from automotive_partner_handlers import automotive_partner_router
 from automotive_revenue_handlers import automotive_revenue_router
-from vertical_onboarding_handlers import (
-    begin_entry_link_onboarding,
-    begin_vertical_onboarding,
-    enter_tenant_vertical,
-    vertical_onboarding_router,
-)
+from vertical_onboarding_handlers import vertical_onboarding_router
 from owner_panel_handlers import owner_panel_router
 from tenant_guard_handlers import tenant_guard_router
 from lead_engine_handlers import lead_engine_router
@@ -327,7 +318,11 @@ from anti_loss_layer_handlers import anti_loss_layer_router
 from partner_cabinet_handlers import partner_cabinet_router
 from payment_engine_handlers import payment_engine_router
 from owner_payment_profile_handlers import owner_payment_profile_router
+from start_routing_handlers import start_routing_router
+from auto_client_handlers import auto_client_router
 
+router.include_router(start_routing_router)
+router.include_router(auto_client_router)
 router.include_router(tenant_guard_router)
 router.include_router(deal_workflow_router)
 router.include_router(ai_sales_router)
@@ -348,9 +343,6 @@ router.include_router(anti_loss_layer_router)
 router.include_router(partner_cabinet_router)
 router.include_router(payment_engine_router)
 router.include_router(owner_payment_profile_router)
-
-from services.pg_lead_automation_engine import LeadAutomationEngineV1
-from services.pg_ai_sales_assistant_engine import AiSalesAssistantEngineV1
 
 logger = logging.getLogger(__name__)
 
@@ -888,80 +880,6 @@ AGRO_DEAL_HUB_BUTTON_TO_SECTION = {
 }
 
 AGRO_COUNTERPARTY_BUTTONS = set(AGRO_COUNTERPARTY_BUTTON_TO_TYPE.keys())
-
-@router.message(CommandStart())
-async def cmd_start(message: Message, command: CommandObject) -> None:
-    user = message.from_user
-    user_id = user.id
-
-    from services.automotive_telegram_access import can_see_automotive_menu_button
-    from services.pg_dealer_onboarding_engine import DealerOnboardingEngineV1
-    from services.pg_vertical_onboarding_engine import VerticalOnboardingEngineV1
-    from services.tenant_routing import ENTRY_LINK_REGISTRY
-
-    entry_link = VerticalOnboardingEngineV1.parse_entry_link_code(command.args)
-    if entry_link and entry_link in ENTRY_LINK_REGISTRY:
-        await begin_entry_link_onboarding(message, entry_link, start_args=command.args)
-        return
-
-    deep_link_vertical = VerticalOnboardingEngineV1.parse_deep_link(command.args)
-    if deep_link_vertical and entry_link not in ENTRY_LINK_REGISTRY:
-        await begin_vertical_onboarding(message, deep_link_vertical, start_args=command.args)
-        return
-
-    prefs = await VerticalOnboardingEngineV1.get_preferences(user_id)
-    if prefs.get("onboarding_completed") and prefs.get("tenant_code"):
-        lang = prefs.get("language") or "ru"
-        await message.answer(f"Ваш Telegram ID: {user_id}")
-        await enter_tenant_vertical(message, user_id, lang)
-        return
-
-    show_automotive = await can_see_automotive_menu_button(user_id)
-
-    if not show_automotive:
-        active = await DealerOnboardingEngineV1.get_active_session(user_id)
-        await message.answer(f"Ваш Telegram ID: {user_id}")
-        if active and active["status"] == "ACTIVE":
-            await present_onboarding_resume(message, active)
-            return
-        await present_onboarding_start(message, user_id)
-        return
-
-    if not await LeadAutomationEngineV1.user_can_access(user_id):
-        try:
-            await LeadAutomationEngineV1.ingest_from_telegram(
-                user_id=user_id,
-                username=user.username,
-                first_name=user.first_name,
-                last_name=user.last_name,
-            )
-        except Exception:
-            logger.exception("Lead automation ingest failed for user %s", user_id)
-
-        sales_assistant_active.add(user_id)
-        try:
-            await AiSalesAssistantEngineV1.start_session(
-                telegram_user_id=user_id,
-                username=user.username,
-                first_name=user.first_name,
-                last_name=user.last_name,
-            )
-        except Exception:
-            logger.exception("AI Sales Assistant start failed for user %s", user_id)
-
-    await message.answer(f"Ваш Telegram ID: {user_id}")
-
-    if user_id in sales_assistant_active:
-        await message.answer(
-            "🤖 AI Sales Assistant\n\n"
-            "Задайте вопрос об автомобилях, финансировании или напишите «менеджер»."
-        )
-        return
-
-    await message.answer(
-        "Добро пожаловать в систему управления.",
-        reply_markup=await _start_menu_for(user_id),
-    )
 
 
 async def _start_menu_for(user_id: int):

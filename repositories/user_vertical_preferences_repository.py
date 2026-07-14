@@ -31,6 +31,8 @@ class UserVerticalPreferencesRepository:
         role: str | None = None,
         onboarding_step: str | None = None,
         onboarding_completed: bool | None = None,
+        entry_point: str | None = None,
+        current_flow: str | None = None,
     ) -> UserVerticalPreferences:
         row = await self.get_by_telegram_id(telegram_user_id)
         if row is None:
@@ -43,6 +45,8 @@ class UserVerticalPreferencesRepository:
                 role=role,
                 onboarding_step=onboarding_step,
                 onboarding_completed=onboarding_completed or False,
+                entry_point=entry_point,
+                current_flow=current_flow,
             )
             self._session.add(row)
         else:
@@ -60,5 +64,9 @@ class UserVerticalPreferencesRepository:
                 row.onboarding_step = onboarding_step
             if onboarding_completed is not None:
                 row.onboarding_completed = onboarding_completed
+            if entry_point is not None:
+                row.entry_point = entry_point
+            if current_flow is not None:
+                row.current_flow = current_flow
         await self._session.flush()
         return row

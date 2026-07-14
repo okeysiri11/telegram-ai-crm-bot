@@ -23,6 +23,7 @@ from services.tenant_routing import (
     legacy_vertical_from_args,
     parse_entry_link as resolve_entry_link,
 )
+from services.entry_point_routing import SOURCE_LINK_TO_ENTRY_POINT, FlowState
 
 
 class VerticalOnboardingEngineV1:
@@ -42,6 +43,8 @@ class VerticalOnboardingEngineV1:
                 "role": None,
                 "onboarding_step": None,
                 "onboarding_completed": False,
+                "entry_point": None,
+                "current_flow": None,
             }
         return {
             "telegram_user_id": row.telegram_user_id,
@@ -52,6 +55,8 @@ class VerticalOnboardingEngineV1:
             "role": row.role,
             "onboarding_step": row.onboarding_step,
             "onboarding_completed": row.onboarding_completed,
+            "entry_point": row.entry_point,
+            "current_flow": row.current_flow,
         }
 
     @staticmethod
@@ -71,6 +76,7 @@ class VerticalOnboardingEngineV1:
         cfg = ENTRY_LINK_REGISTRY.get(source_link)
         if cfg is None:
             raise ValueError(f"Unsupported entry link: {source_link}")
+        entry_point = SOURCE_LINK_TO_ENTRY_POINT.get(source_link)
         async with get_session() as session:
             row = await UserVerticalPreferencesRepository(session).upsert(
                 telegram_user_id=telegram_user_id,
@@ -79,6 +85,8 @@ class VerticalOnboardingEngineV1:
                 source_link=cfg.code,
                 onboarding_step="language",
                 onboarding_completed=False,
+                entry_point=entry_point.value if entry_point else None,
+                current_flow=FlowState.LANGUAGE_SELECT.value,
             )
         return {
             "vertical": row.vertical,
@@ -136,6 +144,26 @@ class VerticalOnboardingEngineV1:
                 cfg = ENTRY_LINK_REGISTRY.get(prefs.source_link)
                 if cfg:
                     preset_role = cfg.preset_role
+
+            entry_point = prefs.entry_point if prefs else None
+            if entry_point in {"AUTO_CLIENT", "AUTO_DEALER"}:
+                row = await repo.upsert(
+                    telegram_user_id=telegram_user_id,
+                    language=lang,
+                    onboarding_step="language",
+                    onboarding_completed=False,
+                )
+                return {
+                    "language": normalize_language(row.language),
+                    "onboarding_step": row.onboarding_step,
+                    "onboarding_completed": row.onboarding_completed,
+                    "vertical": row.vertical,
+                    "tenant_code": row.tenant_code,
+                    "source_link": row.source_link,
+                    "role": row.role,
+                    "preset_role": preset_role,
+                    "entry_point": row.entry_point,
+                }
 
             if preset_role:
                 next_step = "completed"

@@ -25,6 +25,14 @@ def _is_customer_message(message: Message) -> bool:
     return message.from_user.id in sales_assistant_active
 
 
+async def _block_entry_point_customers(message: Message) -> bool:
+    from services.entry_point_routing import EntryPoint
+    from services.pg_entry_point_engine import EntryPointEngineV1
+
+    ctx = await EntryPointEngineV1.get_flow_context(message.from_user.id)
+    return ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value
+
+
 @ai_sales_router.message(Command("sales"))
 async def cmd_sales(message: Message) -> None:
     user = message.from_user
@@ -54,6 +62,8 @@ async def cmd_sales(message: Message) -> None:
 @ai_sales_router.message(_is_customer_message, F.text)
 async def sales_assistant_message(message: Message) -> None:
     user = message.from_user
+    if await _block_entry_point_customers(message):
+        return
     try:
         reply = await AiSalesAssistantEngineV1.handle_message(
             telegram_user_id=user.id,

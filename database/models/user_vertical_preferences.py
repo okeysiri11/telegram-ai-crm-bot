@@ -27,6 +27,8 @@ class UserVerticalPreferences(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     role: Mapped[str | None] = mapped_column(String(64), nullable=True)
     onboarding_step: Mapped[str | None] = mapped_column(String(32), nullable=True)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    entry_point: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    current_flow: Mapped[str | None] = mapped_column(String(32), nullable=True)
 
     def __repr__(self) -> str:
         return (

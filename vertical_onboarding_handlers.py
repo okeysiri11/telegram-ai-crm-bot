@@ -111,8 +111,15 @@ async def enter_vertical_after_onboarding(
     tenant_scoped: bool = False,
 ) -> None:
     from keyboards import tenant_scoped_menu
+    from services.pg_entry_point_engine import EntryPointEngineV1
+    from services.entry_point_routing import EntryPoint
 
     user_id = message.from_user.id
+    ctx = await EntryPointEngineV1.get_flow_context(user_id)
+    if ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value:
+        await EntryPointEngineV1._show_auto_client_menu(message, lang)
+        return
+
     scoped_markup = tenant_scoped_menu(
         await TenantRoutingEngineV1.get_tenant_context(user_id),
         lang,
@@ -214,6 +221,7 @@ async def onboarding_language_callback(callback: CallbackQuery) -> None:
     await callback.message.answer(t("language_saved", language))
 
     from services.pg_lead_engine import LeadEngineV1
+    from services.pg_entry_point_engine import EntryPointEngineV1
 
     prefs = await VerticalOnboardingEngineV1.get_preferences(user_id)
     await LeadEngineV1.enrich_latest_for_user(
@@ -222,6 +230,9 @@ async def onboarding_language_callback(callback: CallbackQuery) -> None:
         language=language,
         role=result.get("role"),
     )
+
+    if await EntryPointEngineV1.route_after_language(callback.message, user_id, language):
+        return
 
     if result.get("onboarding_step") == "role" and result.get("vertical") == "auto":
         onboarding_role_flow.add(user_id)

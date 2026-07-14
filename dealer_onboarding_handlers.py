@@ -32,7 +32,10 @@ async def _main_menu_for(user_id: int):
 
 
 async def present_onboarding_start(message: Message, user_id: int) -> None:
+    from services.pg_entry_point_engine import EntryPointEngineV1
+
     session = await DealerOnboardingEngineV1.start_session(user_id)
+    await EntryPointEngineV1.sync_dealer_flow_state(user_id, session.get("current_step"))
     await message.answer(
         "🚗 Dealer Onboarding\n\n"
         "Подключите Automotive-модуль для вашего автосалона.\n\n"
@@ -111,6 +114,11 @@ async def onboard_select_automotive(callback: CallbackQuery) -> None:
         uuid.UUID(session["id"]),
         OnboardingStepName.AUTOMOTIVE_SELECTED.value,
         payload={"vertical": "automotive"},
+    )
+    from services.pg_entry_point_engine import EntryPointEngineV1
+
+    await EntryPointEngineV1.sync_dealer_flow_state(
+        user_id, OnboardingStepName.AUTOMOTIVE_SELECTED.value
     )
     await callback.message.answer(
         "✅ Automotive выбран\n\n"

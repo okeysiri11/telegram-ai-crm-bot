@@ -1651,6 +1651,22 @@ def auto_vertical_hub_menu(lang: str | None = None) -> ReplyKeyboardMarkup:
     )
 
 
+def auto_client_menu(lang: str | None = None) -> ReplyKeyboardMarkup:
+    from services.automotive_localization import btn, normalize_language
+
+    language = normalize_language(lang)
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=btn("client_buy_car", language))],
+            [KeyboardButton(text=btn("client_sell_car", language))],
+            [KeyboardButton(text=btn("client_listing", language))],
+            [KeyboardButton(text=btn("client_services", language))],
+            [KeyboardButton(text=btn("client_manager", language))],
+        ],
+        resize_keyboard=True,
+    )
+
+
 def auto_vertical_menu(lang: str | None = None) -> ReplyKeyboardMarkup:
     language = normalize_language(lang)
     return ReplyKeyboardMarkup(

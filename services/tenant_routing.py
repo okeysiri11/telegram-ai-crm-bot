@@ -52,7 +52,7 @@ ENTRY_LINK_REGISTRY: dict[str, TenantEntryConfig] = {
         title_ru="🚗 Авто — клиент",
         title_uk="🚗 Авто — клієнт",
         preset_role="buyer",
-        entry_target="hub_cars",
+        entry_target=None,
     ),
     "auto_dealer": TenantEntryConfig(
         code="auto_dealer",
@@ -61,7 +61,7 @@ ENTRY_LINK_REGISTRY: dict[str, TenantEntryConfig] = {
         title_ru="🏢 Авто — дилер",
         title_uk="🏢 Авто — дилер",
         preset_role="dealer",
-        entry_target="hub_cars",
+        entry_target=None,
     ),
     "agro": TenantEntryConfig(
         code="agro",
@@ -130,8 +130,8 @@ ENTRY_LINK_REGISTRY: dict[str, TenantEntryConfig] = {
 }
 
 TENANT_ALLOWED_MODULES: dict[str, frozenset[str]] = {
-    "auto_client": frozenset({"auto", "settings"}),
-    "auto_dealer": frozenset({"auto", "settings"}),
+    "auto_client": frozenset({"auto_client", "settings"}),
+    "auto_dealer": frozenset({"auto_dealer", "settings"}),
     "agro": frozenset({"agro", "settings"}),
     "agro_farmer": frozenset({"agro", "settings"}),
     "agro_supplier": frozenset({"agro", "settings"}),

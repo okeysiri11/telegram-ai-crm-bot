@@ -250,9 +250,9 @@ class PlatformReadinessTestSuite:
 
     @staticmethod
     def _check_start_handler() -> dict[str, Any]:
-        import handlers
+        import start_routing_handlers
 
-        if hasattr(handlers, "cmd_start"):
+        if hasattr(start_routing_handlers, "cmd_start"):
             return _result("operational", "CommandStart handler registered")
         return _result("failed", "cmd_start missing")
 
