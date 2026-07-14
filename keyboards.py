@@ -1667,6 +1667,15 @@ def auto_client_menu(lang: str | None = None) -> ReplyKeyboardMarkup:
     )
 
 
+def entry_flow_language_inline(*, prefix: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🇺🇦 Русский", callback_data=f"{prefix}:lang:ru")],
+            [InlineKeyboardButton(text="🇺🇦 Українська", callback_data=f"{prefix}:lang:uk")],
+        ]
+    )
+
+
 def auto_vertical_menu(lang: str | None = None) -> ReplyKeyboardMarkup:
     language = normalize_language(lang)
     return ReplyKeyboardMarkup(

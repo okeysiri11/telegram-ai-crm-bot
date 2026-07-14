@@ -64,25 +64,25 @@ FLOW_STATE_TO_ENTRY_POINT: dict[FlowState, EntryPoint] = {
 START_ROUTE_TABLE: list[dict[str, str]] = [
     {
         "command": "/start_auto_client",
-        "router": "start_routing_handlers",
+        "router": "routers/auto_client_router",
         "flow": EntryPoint.AUTO_CLIENT,
         "first_state": FlowState.LANGUAGE_SELECT,
     },
     {
         "command": "/start auto_client",
-        "router": "start_routing_handlers",
+        "router": "routers/auto_client_router",
         "flow": EntryPoint.AUTO_CLIENT,
         "first_state": FlowState.LANGUAGE_SELECT,
     },
     {
         "command": "/start_auto_dealer",
-        "router": "start_routing_handlers",
+        "router": "routers/auto_dealer_router",
         "flow": EntryPoint.AUTO_DEALER,
         "first_state": FlowState.LANGUAGE_SELECT,
     },
     {
         "command": "/start auto_dealer",
-        "router": "start_routing_handlers",
+        "router": "routers/auto_dealer_router",
         "flow": EntryPoint.AUTO_DEALER,
         "first_state": FlowState.LANGUAGE_SELECT,
     },

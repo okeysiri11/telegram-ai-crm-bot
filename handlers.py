@@ -319,10 +319,8 @@ from partner_cabinet_handlers import partner_cabinet_router
 from payment_engine_handlers import payment_engine_router
 from owner_payment_profile_handlers import owner_payment_profile_router
 from start_routing_handlers import start_routing_router
-from auto_client_handlers import auto_client_router
 
 router.include_router(start_routing_router)
-router.include_router(auto_client_router)
 router.include_router(tenant_guard_router)
 router.include_router(deal_workflow_router)
 router.include_router(ai_sales_router)

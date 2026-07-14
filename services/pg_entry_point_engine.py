@@ -97,7 +97,12 @@ class EntryPointEngineV1:
             username=user.username or "",
         )
         await EntryPointEngineV1._ingest_lead(user, "auto_client", result)
-        await EntryPointEngineV1._show_language_picker(message)
+        from keyboards import entry_flow_language_inline
+
+        await message.answer(
+            "🇺🇦 Выберите язык",
+            reply_markup=entry_flow_language_inline(prefix="auto_client"),
+        )
 
     @staticmethod
     async def begin_auto_dealer(message: Message) -> None:
@@ -110,7 +115,12 @@ class EntryPointEngineV1:
             username=user.username or "",
         )
         await EntryPointEngineV1._ingest_lead(user, "auto_dealer", result)
-        await EntryPointEngineV1._show_language_picker(message)
+        from keyboards import entry_flow_language_inline
+
+        await message.answer(
+            "🇺🇦 Выберите язык",
+            reply_markup=entry_flow_language_inline(prefix="auto_dealer"),
+        )
 
     @staticmethod
     async def begin_owner_start(message: Message) -> None:
@@ -251,6 +261,8 @@ class EntryPointEngineV1:
                 return True
         if isinstance(event, CallbackQuery) and event.data:
             if event.data.startswith("onboard:lang:"):
+                return True
+            if event.data.startswith(("auto_client:lang:", "auto_dealer:lang:")):
                 return True
         return False
 
@@ -397,7 +409,7 @@ class EntryPointEngineV1:
         from keyboards import auto_client_menu
 
         await message.answer(
-            "🚘 Auto Client\n\nВыберите действие:",
+            "Выберите действие:",
             reply_markup=auto_client_menu(lang),
         )
 

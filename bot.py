@@ -2,20 +2,25 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import API_HOST, API_PORT, BOT_TOKEN
 from auto_vertical_handlers import auto_vertical_router as auto_router
 from handlers import router
 from middleware.tenant_middleware import TenantMiddleware
 from middleware.entry_point_middleware import EntryPointMiddleware
+from routers.auto_client_router import router as auto_client_entry_router
+from routers.auto_dealer_router import router as auto_dealer_entry_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
+dp = Dispatcher(storage=MemoryStorage())
 dp.update.middleware(EntryPointMiddleware())
 dp.update.middleware(TenantMiddleware())
+dp.include_router(auto_client_entry_router)
+dp.include_router(auto_dealer_entry_router)
 dp.include_router(auto_router)
 dp.include_router(router)
 

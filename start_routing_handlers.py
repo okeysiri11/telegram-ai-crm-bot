@@ -5,7 +5,8 @@ from __future__ import annotations
 import logging
 
 from aiogram import F, Router
-from aiogram.filters import Command, CommandObject, CommandStart
+from aiogram.filters import CommandStart
+from aiogram.filters.command import CommandObject
 from aiogram.types import Message
 
 from config import OWNER_ID
@@ -18,16 +19,6 @@ from vertical_onboarding_handlers import begin_vertical_onboarding
 logger = logging.getLogger(__name__)
 
 start_routing_router = Router()
-
-
-@start_routing_router.message(Command("start_auto_client"))
-async def cmd_start_auto_client(message: Message) -> None:
-    await EntryPointEngineV1.begin_auto_client(message)
-
-
-@start_routing_router.message(Command("start_auto_dealer"))
-async def cmd_start_auto_dealer(message: Message) -> None:
-    await EntryPointEngineV1.begin_auto_dealer(message)
 
 
 @start_routing_router.message(CommandStart())
