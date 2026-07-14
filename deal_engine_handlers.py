@@ -128,6 +128,8 @@ async def deal_status_command(message: Message) -> None:
         await message.answer("Deal не найден.")
         return
     await message.answer(f"✅ Deal {deal['id'][:8]}… → {deal['status']}")
+    if deal.get("revenue_entry_id"):
+        await message.answer(f"💰 Revenue entry: {deal['revenue_entry_id'][:8]}…")
     log_audit(user_id, "update", "deal_engine", f"{deal_id}:{status}")
 
 

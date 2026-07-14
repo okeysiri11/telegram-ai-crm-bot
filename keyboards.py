@@ -84,7 +84,7 @@ def owner_panel_menu() -> ReplyKeyboardMarkup:
             ],
             [
                 KeyboardButton(text="🤝 Deal Dashboard"),
-                KeyboardButton(text="📝 Notes"),
+                KeyboardButton(text="💵 Revenue Engine"),
             ],
             [KeyboardButton(text="⬅ Назад")],
         ],
@@ -1463,6 +1463,9 @@ def admin_module_menu() -> ReplyKeyboardMarkup:
             [
                 KeyboardButton(text="🤝 Deal Dashboard"),
                 KeyboardButton(text="📋 Deal List"),
+            ],
+            [
+                KeyboardButton(text="💵 Revenue Engine"),
             ],
             [
                 KeyboardButton(text="⬅ Назад"),

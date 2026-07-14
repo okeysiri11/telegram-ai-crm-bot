@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -24,6 +25,9 @@ from repositories.lead_engine_repository import LeadEngineRepository
 
 class DealEngineV1Error(Exception):
     pass
+
+
+logger = logging.getLogger(__name__)
 
 
 class DealEngineV1:
@@ -117,7 +121,17 @@ class DealEngineV1:
             row = await DealEngineV1Repository(session).update(deal_id, **updates)
         if row is None:
             return None
-        return DealEngineV1._snapshot(row)
+        snapshot = DealEngineV1._snapshot(row)
+        if status == DealEngineV1Status.COMPLETED.value:
+            from services.pg_revenue_engine_v1 import RevenueEngineV1
+
+            try:
+                revenue = await RevenueEngineV1.create_from_completed_deal(deal_id)
+                if revenue:
+                    snapshot["revenue_entry_id"] = revenue["id"]
+            except Exception:
+                logger.exception("Revenue entry creation failed for deal %s", deal_id)
+        return snapshot
 
     @staticmethod
     async def attach_partner(deal_id: uuid.UUID, partner_id: uuid.UUID | None) -> dict[str, Any] | None:
