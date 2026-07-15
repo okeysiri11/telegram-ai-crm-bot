@@ -393,6 +393,12 @@ class EntryPointEngineV1:
 
     @staticmethod
     async def reply_markup_for_user(telegram_user_id: int):
+        from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
+
+        return await ManagerDeliveryEngineV1.reply_markup_for_user(telegram_user_id)
+
+    @staticmethod
+    async def _reply_markup_for_user_legacy(telegram_user_id: int):
         from keyboards import auto_client_menu, owner_dashboard_menu, owner_main_menu
 
         ctx = await EntryPointEngineV1.get_flow_context(telegram_user_id)

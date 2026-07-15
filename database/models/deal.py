@@ -30,7 +30,7 @@ class DealStatus(str, enum.Enum):
 TERMINAL_DEAL_STATUSES = frozenset({DealStatus.COMPLETED.value, DealStatus.CANCELLED.value})
 
 
-class Deal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class DealEngineDeal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "deal_engine_deals"
     __table_args__ = (
         Index("ix_deal_engine_deals_status", "status"),
@@ -72,4 +72,8 @@ class Deal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     def __repr__(self) -> str:
-        return f"<Deal id={self.id} status={self.status}>"
+        return f"<DealEngineDeal id={self.id} status={self.status}>"
+
+
+# Backward-compatible import alias (deal engine).
+Deal = DealEngineDeal

@@ -31,7 +31,7 @@ class CommissionStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
-class Commission(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class DealEngineCommission(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     __tablename__ = "commission_engine_commissions"
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_commission_engine_amount_non_negative"),
@@ -67,6 +67,6 @@ class Commission(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
 
     def __repr__(self) -> str:
         return (
-            f"<Commission id={self.id} type={self.commission_type} "
+            f"<DealEngineCommission id={self.id} type={self.commission_type} "
             f"amount={self.amount} {self.asset} status={self.status}>"
         )

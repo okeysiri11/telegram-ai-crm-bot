@@ -15,7 +15,7 @@ from services.entry_point_routing import EntryPoint, FlowState, is_auto_client_m
 from services.pg_auto_client_request_engine import AutoClientRequestEngineV1
 from services.pg_entry_point_engine import EntryPointEngineV1
 from services.pg_vertical_onboarding_engine import VerticalOnboardingEngineV1
-from states.entry_flow_states import AutoClientFlow
+from states.entry_flow_states import AutoClientFlow, AUTO_CLIENT_PENDING_RESTORE
 
 logger = logging.getLogger(__name__)
 
@@ -27,6 +27,26 @@ REQUEST_BUY = "buy_car"
 REQUEST_SELL = "sell_car"
 REQUEST_LISTING = "listing"
 REQUEST_MANAGER = "manager_callback"
+
+
+async def _restore_auto_client_fsm(message: Message, state: FSMContext) -> None:
+    if message.from_user is None:
+        return
+    pending = await VerticalOnboardingEngineV1.get_auto_client_pending(message.from_user.id)
+    if not pending:
+        return
+    mapping = AUTO_CLIENT_PENDING_RESTORE.get(pending)
+    if mapping is None:
+        return
+    fsm_state, request_type = mapping
+    await state.set_state(fsm_state)
+    await state.update_data(request_type=request_type)
+    logger.info(
+        "AUTO_CLIENT FSM restored pending=%s state=%s user=%s",
+        pending,
+        fsm_state.state,
+        message.from_user.id,
+    )
 
 
 async def _ensure_auto_client(message: Message) -> bool:
@@ -58,6 +78,7 @@ async def _sync_auto_client_menu_state(message: Message, state: FSMContext) -> N
     if current is None and ctx.get("current_flow") == FlowState.AUTO_CLIENT_MENU.value:
         await state.set_state(AutoClientFlow.menu)
         logger.info("AUTO_CLIENT FSM synced to menu for user=%s", message.from_user.id)
+    await _restore_auto_client_fsm(message, state)
 
 
 async def _finish_request(
@@ -67,14 +88,18 @@ async def _finish_request(
     request_type: str,
     description: str | None = None,
     photo_file_id: str | None = None,
+    client_phone: str | None = None,
 ) -> None:
     user = message.from_user
     lang = await VerticalOnboardingEngineV1.get_language(user.id)
+    prefs = await VerticalOnboardingEngineV1.get_preferences(user.id)
+    source_link = prefs.get("source_link") or "auto_client"
 
     logger.info(
-        "AUTO_CLIENT finish_request type=%s user=%s description_len=%s",
+        "AUTO_CLIENT finish_request type=%s user=%s phone=%s description_len=%s",
         request_type,
         user.id,
+        bool(client_phone),
         len(description or ""),
     )
 
@@ -84,6 +109,8 @@ async def _finish_request(
             client_telegram_id=user.id,
             client_username=user.username,
             client_full_name=user.full_name,
+            client_phone=client_phone,
+            source_link=source_link,
             description=description,
             photo_file_id=photo_file_id,
         )
@@ -97,10 +124,12 @@ async def _finish_request(
                 request_type=request_type,
                 description=description,
                 photo_file_id=photo_file_id,
-                source_link="auto_client",
+                phone=client_phone,
+                source_link=source_link,
                 telegram_username=user.username,
                 full_name=user.full_name,
                 language=lang,
+                notify=False,
             )
         except Exception:
             logger.warning("Lead engine sync failed for auto client request", exc_info=True)
@@ -125,7 +154,8 @@ async def _finish_request(
             reply_markup=auto_client_menu(lang),
         )
     finally:
-        await state.update_data(request_type=None, photo_file_id=None)
+        await VerticalOnboardingEngineV1.clear_auto_client_pending(user.id)
+        await state.update_data(request_type=None, photo_file_id=None, client_phone=None)
         await EntryPointEngineV1.set_current_flow(user.id, FlowState.AUTO_CLIENT_MENU)
         await state.set_state(AutoClientFlow.menu)
 
@@ -237,6 +267,10 @@ async def auto_client_menu_action(message: Message, state: FSMContext) -> None:
 
     if text == buy_label:
         logger.info("AUTO SEARCH BUTTON CLICKED user=%s", user_id)
+        await VerticalOnboardingEngineV1.save_auto_client_pending(
+            telegram_user_id=user_id,
+            pending="ac:desc:buy_car",
+        )
         await state.set_state(AutoClientFlow.awaiting_description)
         await state.update_data(request_type=REQUEST_BUY)
         await message.answer(
@@ -247,6 +281,10 @@ async def auto_client_menu_action(message: Message, state: FSMContext) -> None:
 
     if text == sell_label:
         logger.info("AUTO SELL BUTTON CLICKED user=%s", user_id)
+        await VerticalOnboardingEngineV1.save_auto_client_pending(
+            telegram_user_id=user_id,
+            pending="ac:desc:sell_car",
+        )
         await state.set_state(AutoClientFlow.awaiting_description)
         await state.update_data(request_type=REQUEST_SELL)
         await message.answer(
@@ -257,6 +295,10 @@ async def auto_client_menu_action(message: Message, state: FSMContext) -> None:
 
     if text == listing_label:
         logger.info("AUTO LISTING BUTTON CLICKED user=%s", user_id)
+        await VerticalOnboardingEngineV1.save_auto_client_pending(
+            telegram_user_id=user_id,
+            pending="ac:photo:listing",
+        )
         await state.set_state(AutoClientFlow.awaiting_photo)
         await state.update_data(request_type=REQUEST_LISTING, photo_file_id=None)
         await message.answer(
@@ -274,11 +316,15 @@ async def auto_client_menu_action(message: Message, state: FSMContext) -> None:
         return
 
     if text == manager_label:
-        await _finish_request(
-            message,
-            state,
-            request_type=REQUEST_MANAGER,
-            description="Клиент запросил связь с менеджером.",
+        await VerticalOnboardingEngineV1.save_auto_client_pending(
+            telegram_user_id=user_id,
+            pending="ac:phone:manager",
+        )
+        await state.set_state(AutoClientFlow.awaiting_phone)
+        await state.update_data(request_type=REQUEST_MANAGER)
+        await message.answer(
+            "📞 Отправьте номер телефона или нажмите «Поделиться контактом».",
+            reply_markup=auto_client_menu(lang),
         )
         return
 
@@ -293,6 +339,10 @@ async def auto_client_listing_photo(message: Message, state: FSMContext) -> None
     photo = message.photo[-1]
     lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
     await state.update_data(photo_file_id=photo.file_id, request_type=REQUEST_LISTING)
+    await VerticalOnboardingEngineV1.save_auto_client_pending(
+        telegram_user_id=message.from_user.id,
+        pending="ac:ldsc:listing",
+    )
     await state.set_state(AutoClientFlow.awaiting_listing_description)
     await message.answer(
         "Фото получено.\nТеперь опишите автомобиль: марка, год, цена, город.",
@@ -325,6 +375,8 @@ async def _resolve_pending_request(state: FSMContext) -> tuple[str | None, str |
         return request_type or REQUEST_BUY, None
     if current == AutoClientFlow.awaiting_listing_description.state:
         return REQUEST_LISTING, photo_file_id
+    if current == AutoClientFlow.awaiting_phone.state:
+        return REQUEST_MANAGER, None
     if current == AutoClientFlow.awaiting_photo.state:
         return REQUEST_LISTING, None
     if request_type in {REQUEST_BUY, REQUEST_SELL}:
@@ -344,10 +396,61 @@ async def _auto_client_text_filter(message: Message) -> bool:
         return False
     if is_auto_client_menu_text(text):
         return False
+    pending = await VerticalOnboardingEngineV1.get_auto_client_pending(message.from_user.id)
+    if pending == "ac:phone:manager":
+        return False
     ctx = await EntryPointEngineV1.get_flow_context(message.from_user.id)
     return (
         ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value
         or ctx.get("source_link") == "auto_client"
+    )
+
+
+@router.message(StateFilter(AutoClientFlow.awaiting_phone), F.contact)
+async def auto_client_manager_contact(message: Message, state: FSMContext) -> None:
+    if not await _ensure_auto_client(message) or message.contact is None:
+        return
+    phone = message.contact.phone_number
+    if not phone:
+        lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
+        await message.answer(
+            "Не удалось прочитать номер. Введите телефон текстом.",
+            reply_markup=auto_client_menu(lang),
+        )
+        return
+    await _finish_request(
+        message,
+        state,
+        request_type=REQUEST_MANAGER,
+        description="Клиент запросил связь с менеджером.",
+        client_phone=phone,
+    )
+
+
+@router.message(StateFilter(AutoClientFlow.awaiting_phone))
+async def auto_client_manager_phone_text(message: Message, state: FSMContext) -> None:
+    if not await _ensure_auto_client(message) or not message.text:
+        return
+    text = message.text.strip()
+    if is_auto_client_menu_text(text):
+        await VerticalOnboardingEngineV1.clear_auto_client_pending(message.from_user.id)
+        await state.set_state(AutoClientFlow.menu)
+        await auto_client_menu_action(message, state)
+        return
+    lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
+    digits = "".join(ch for ch in text if ch.isdigit() or ch == "+")
+    if len(digits.replace("+", "")) < 7:
+        await message.answer(
+            "Введите корректный номер телефона или отправьте контакт.",
+            reply_markup=auto_client_menu(lang),
+        )
+        return
+    await _finish_request(
+        message,
+        state,
+        request_type=REQUEST_MANAGER,
+        description="Клиент запросил связь с менеджером.",
+        client_phone=digits,
     )
 
 

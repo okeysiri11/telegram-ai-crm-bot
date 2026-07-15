@@ -30,6 +30,7 @@ def test_fsm_states_exist() -> None:
     assert AutoClientFlow.awaiting_description
     assert AutoClientFlow.awaiting_photo
     assert AutoClientFlow.awaiting_listing_description
+    assert AutoClientFlow.awaiting_phone
 
 
 def test_router_handlers_registered() -> None:

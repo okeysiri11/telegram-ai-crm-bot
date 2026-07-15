@@ -11,9 +11,9 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.commission import (
-    Commission,
     CommissionStatus,
     CommissionType,
+    DealEngineCommission,
 )
 
 
@@ -33,7 +33,7 @@ class CommissionRepository:
         percentage: Decimal | None = None,
         status: str = CommissionStatus.PENDING.value,
         **extra: Any,
-    ) -> Commission:
+    ) -> DealEngineCommission:
         if extra:
             raise TypeError(f"Unsupported fields: {', '.join(sorted(extra))}")
 
@@ -44,7 +44,7 @@ class CommissionRepository:
         if amount < 0:
             raise ValueError("amount must be non-negative")
 
-        commission = Commission(
+        commission = DealEngineCommission(
             deal_id=deal_id,
             manager_id=manager_id,
             partner_id=partner_id,
@@ -58,26 +58,26 @@ class CommissionRepository:
         await self._session.flush()
         return commission
 
-    async def get_by_deal(self, deal_id: uuid.UUID) -> list[Commission]:
+    async def get_by_deal(self, deal_id: uuid.UUID) -> list[DealEngineCommission]:
         result = await self._session.execute(
-            select(Commission)
-            .where(Commission.deal_id == deal_id)
-            .order_by(Commission.created_at.asc())
+            select(DealEngineCommission)
+            .where(DealEngineCommission.deal_id == deal_id)
+            .order_by(DealEngineCommission.created_at.asc())
         )
         return list(result.scalars().all())
 
-    async def list_pending(self, *, limit: int = 100) -> list[Commission]:
+    async def list_pending(self, *, limit: int = 100) -> list[DealEngineCommission]:
         result = await self._session.execute(
-            select(Commission)
-            .where(Commission.status == CommissionStatus.PENDING.value)
-            .order_by(Commission.created_at.asc())
+            select(DealEngineCommission)
+            .where(DealEngineCommission.status == CommissionStatus.PENDING.value)
+            .order_by(DealEngineCommission.created_at.asc())
             .limit(limit)
         )
         return list(result.scalars().all())
 
-    async def mark_paid(self, commission_id: uuid.UUID) -> Commission | None:
+    async def mark_paid(self, commission_id: uuid.UUID) -> DealEngineCommission | None:
         result = await self._session.execute(
-            select(Commission).where(Commission.id == commission_id)
+            select(DealEngineCommission).where(DealEngineCommission.id == commission_id)
         )
         commission = result.scalar_one_or_none()
         if commission is None:
@@ -90,12 +90,12 @@ class CommissionRepository:
 
     async def calculate_company_profit(self, deal_id: uuid.UUID) -> Decimal:
         result = await self._session.execute(
-            select(Commission.commission_type, func.sum(Commission.amount))
+            select(DealEngineCommission.commission_type, func.sum(DealEngineCommission.amount))
             .where(
-                Commission.deal_id == deal_id,
-                Commission.status != CommissionStatus.CANCELLED.value,
+                DealEngineCommission.deal_id == deal_id,
+                DealEngineCommission.status != CommissionStatus.CANCELLED.value,
             )
-            .group_by(Commission.commission_type)
+            .group_by(DealEngineCommission.commission_type)
         )
         totals = {row[0]: Decimal(row[1] or 0) for row in result.all()}
 

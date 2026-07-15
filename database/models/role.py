@@ -12,7 +12,7 @@ from database.base import Base
 from database.models.mixins import UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from database.models.user_role import UserRole
+    from database.models.user_role import PermissionUserRole
 
 
 class EngineRoleCode(str, enum.Enum):
@@ -26,7 +26,7 @@ class EngineRoleCode(str, enum.Enum):
     VIEWER = "VIEWER"
 
 
-class Role(UUIDPrimaryKeyMixin, Base):
+class PermissionRole(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "permission_engine_roles"
     __table_args__ = (
         UniqueConstraint("code", name="uq_permission_engine_roles_code"),
@@ -37,11 +37,15 @@ class Role(UUIDPrimaryKeyMixin, Base):
     name: Mapped[str] = mapped_column(String(128), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    user_links: Mapped[list["UserRole"]] = relationship(
-        "UserRole",
+    user_links: Mapped[list["PermissionUserRole"]] = relationship(
+        "PermissionUserRole",
         back_populates="role",
         cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:
-        return f"<Role id={self.id} code={self.code}>"
+        return f"<PermissionRole id={self.id} code={self.code}>"
+
+
+# Backward-compatible import alias (permission engine).
+Role = PermissionRole

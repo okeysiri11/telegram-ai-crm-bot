@@ -229,6 +229,41 @@ class VerticalOnboardingEngineV1:
             )
         return lang
 
+    # Auto Client — persist pending scenario across bot restarts (MemoryStorage FSM).
+    _AUTO_PENDING_PREFIX = "ac:"
+
+    @staticmethod
+    async def save_auto_client_pending(
+        *,
+        telegram_user_id: int,
+        pending: str | None,
+    ) -> None:
+        step = pending if pending else "completed"
+        async with get_session() as session:
+            await UserVerticalPreferencesRepository(session).upsert(
+                telegram_user_id=telegram_user_id,
+                onboarding_step=step,
+            )
+
+    @staticmethod
+    async def get_auto_client_pending(telegram_user_id: int) -> str | None:
+        prefs = await VerticalOnboardingEngineV1.get_preferences(telegram_user_id)
+        step = prefs.get("onboarding_step")
+        if isinstance(step, str) and step.startswith(VerticalOnboardingEngineV1._AUTO_PENDING_PREFIX):
+            return step
+        return None
+
+    @staticmethod
+    async def clear_auto_client_pending(telegram_user_id: int) -> None:
+        prefs = await VerticalOnboardingEngineV1.get_preferences(telegram_user_id)
+        step = prefs.get("onboarding_step")
+        if isinstance(step, str) and step.startswith(VerticalOnboardingEngineV1._AUTO_PENDING_PREFIX):
+            async with get_session() as session:
+                await UserVerticalPreferencesRepository(session).upsert(
+                    telegram_user_id=telegram_user_id,
+                    onboarding_step="completed",
+                )
+
     @staticmethod
     def language_picker_inline() -> InlineKeyboardMarkup:
         return InlineKeyboardMarkup(

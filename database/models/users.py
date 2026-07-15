@@ -13,7 +13,7 @@ from database.base import Base
 from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
 
 if TYPE_CHECKING:
-    from database.models.user_role import UserRole
+    from database.models.user_role import PermissionUserRole
 
 
 class User(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
@@ -33,8 +33,8 @@ class User(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         nullable=True,
     )
 
-    role_links: Mapped[list["UserRole"]] = relationship(
-        "UserRole",
+    role_links: Mapped[list["PermissionUserRole"]] = relationship(
+        "PermissionUserRole",
         back_populates="user",
         cascade="all, delete-orphan",
     )

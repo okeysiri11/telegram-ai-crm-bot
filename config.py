@@ -39,5 +39,6 @@ FOMA_RATES_TELEGRAM_CHANNEL_ID = os.getenv(
 )
 
 MANAGERS = {
-    8312013093: "Tony"
+    8312013093: "Tony",
+    393792086: "Борис",
 }

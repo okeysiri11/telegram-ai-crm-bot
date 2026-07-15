@@ -881,9 +881,9 @@ AGRO_COUNTERPARTY_BUTTONS = set(AGRO_COUNTERPARTY_BUTTON_TO_TYPE.keys())
 
 
 async def _start_menu_for(user_id: int):
-    from services.automotive_telegram_access import can_see_automotive_menu_button
-    from keyboards import owner_main_menu, tenant_scoped_menu
+    from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
     from services.pg_tenant_entry_registry_engine import TenantRoutingEngineV1
+    from keyboards import tenant_scoped_menu
 
     ctx = await TenantRoutingEngineV1.get_tenant_context(user_id)
     if ctx.get("tenant_scoped"):
@@ -891,8 +891,7 @@ async def _start_menu_for(user_id: int):
         if scoped:
             return scoped
 
-    show_auto = await can_see_automotive_menu_button(user_id)
-    return owner_main_menu(show_automotive=show_auto)
+    return await ManagerDeliveryEngineV1.reply_markup_for_user(user_id)
 
 @router.message(F.text == "💰 Crypto OTC")
 async def open_crypto_otc(message: Message):

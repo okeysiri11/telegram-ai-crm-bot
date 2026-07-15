@@ -10,7 +10,6 @@ from database.models.roles import RbacRole
 from database.session import get_session
 from repositories.rbac_repository import RbacRepository
 from repositories.users_repository import UsersRepository
-from services.pg_lead_engine import LeadEngineV1
 
 logger = logging.getLogger(__name__)
 
@@ -75,19 +74,7 @@ class AutoDealerManagerEngineV1:
         ):
             return None
 
-        if snapshot.get("assigned_manager_id"):
-            return None
-
-        manager_uuid = await AutoDealerManagerEngineV1.ensure_default_manager()
-        if manager_uuid is None:
-            manager_uuid = await AutoDealerManagerEngineV1.resolve_manager_uuid()
-        if manager_uuid is None:
-            logger.warning(
-                "AUTO DEALER: manager missing in system telegram_id=%s — lead=%s not assigned",
-                BORIS_TELEGRAM_ID,
-                snapshot.get("id"),
-            )
-            return None
+        from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
         try:
             lead_id = uuid.UUID(str(snapshot["id"]))
@@ -96,34 +83,12 @@ class AutoDealerManagerEngineV1:
                 "AUTO DEALER: invalid lead id in snapshot — assignment skipped: %s",
                 snapshot.get("id"),
             )
-            return None
+            return snapshot
 
-        try:
-            result = await LeadEngineV1.assign_manager(lead_id, manager_uuid)
-        except Exception:
-            logger.warning(
-                "AUTO DEALER: assign_manager failed lead=%s manager=%s",
-                lead_id,
-                manager_uuid,
-                exc_info=True,
-            )
-            return None
-
-        if result is None:
-            logger.warning(
-                "AUTO DEALER: assign_manager returned None lead=%s manager=%s",
-                lead_id,
-                manager_uuid,
-            )
-            return None
-
-        logger.info(
-            "AUTO DEALER:\nlead=%s\nassigned_manager=%s\nmanager_name=%s",
-            lead_id,
-            manager_uuid,
-            BORIS_FULL_NAME,
+        return await ManagerDeliveryEngineV1.assign_lead_manager(
+            lead_id=lead_id,
+            snapshot=snapshot,
         )
-        return result
 
     @staticmethod
     def request_type_label(request_type: str | None) -> str:
@@ -137,57 +102,21 @@ class AutoDealerManagerEngineV1:
 
     @staticmethod
     async def notify_manager_for_lead(snapshot: dict[str, Any]) -> None:
-        from aiogram import Bot
+        from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
-        from config import BOT_TOKEN
-
-        if not BOT_TOKEN:
-            return
-
-        request_type = snapshot.get("client_request_type")
-        description = (snapshot.get("client_description") or "").strip()
-        photo_file_id = snapshot.get("client_photo_file_id")
-        username = snapshot.get("telegram_username")
-        full_name = snapshot.get("full_name")
-        telegram_user_id = snapshot.get("telegram_user_id")
-        lead_id = snapshot.get("id")
-
-        client_line = full_name or "—"
-        if username:
-            client_line = f"{client_line} (@{username})"
-        if telegram_user_id:
-            client_line = f"{client_line} [id: {telegram_user_id}]"
-
-        label = AutoDealerManagerEngineV1.request_type_label(request_type)
-        text_lines = [
-            "🔔 Новая заявка — Auto Client",
-            "",
-            f"Тип: {label}",
-            f"Клиент: {client_line}",
-            f"Lead: {lead_id}",
-        ]
-        if description:
-            text_lines.extend(["", "Описание:", description[:3500]])
-        text = "\n".join(text_lines)
-
-        bot = Bot(token=BOT_TOKEN)
-        try:
-            if photo_file_id:
-                caption = text[:1024]
-                await bot.send_photo(
-                    chat_id=BORIS_TELEGRAM_ID,
-                    photo=photo_file_id,
-                    caption=caption,
-                )
-                if len(text) > 1024:
-                    await bot.send_message(chat_id=BORIS_TELEGRAM_ID, text=text[1024:])
-            else:
-                await bot.send_message(chat_id=BORIS_TELEGRAM_ID, text=text)
-        except Exception:
-            logger.exception(
-                "Failed to notify manager telegram_id=%s for lead=%s",
-                BORIS_TELEGRAM_ID,
-                lead_id,
-            )
-        finally:
-            await bot.session.close()
+        request_type = snapshot.get("client_request_type") or "buy_car"
+        db_type_map = {
+            "buy_car": "AUTO_SEARCH",
+            "sell_car": "AUTO_SELL",
+            "listing": "AUTO_LISTING",
+            "manager_callback": "AUTO_MANAGER_CALLBACK",
+        }
+        await ManagerDeliveryEngineV1.notify_auto_client_request(
+            request_number=str(snapshot.get("id", ""))[:8],
+            request_type=db_type_map.get(request_type, request_type),
+            description=snapshot.get("client_description"),
+            client_username=snapshot.get("telegram_username"),
+            client_full_name=snapshot.get("full_name"),
+            photo_file_id=snapshot.get("client_photo_file_id"),
+            lead_id=snapshot.get("id"),
+        )

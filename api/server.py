@@ -157,10 +157,23 @@ def create_app() -> web.Application:
     return app
 
 
-async def start_api_server(host: str = "0.0.0.0", port: int = 8080) -> web.AppRunner:
+async def start_api_server(host: str = "0.0.0.0", port: int = 8080) -> web.AppRunner | None:
+    import logging
+
+    logger = logging.getLogger(__name__)
     app = create_app()
     runner = web.AppRunner(app)
     await runner.setup()
     site = web.TCPSite(runner, host, port)
-    await site.start()
+    try:
+        await site.start()
+    except OSError as exc:
+        await runner.cleanup()
+        logger.warning(
+            "API server not started on %s:%s (%s). Bot polling will continue.",
+            host,
+            port,
+            exc,
+        )
+        return None
     return runner

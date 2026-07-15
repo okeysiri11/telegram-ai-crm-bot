@@ -48,6 +48,8 @@ class AutoClientRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     client_telegram_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     client_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
     client_full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    client_phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    source_link: Mapped[str | None] = mapped_column(String(64), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
     manager_id: Mapped[uuid.UUID | None] = mapped_column(

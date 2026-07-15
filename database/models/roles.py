@@ -77,8 +77,3 @@ class UserRoleLink(Base):
     assigner: Mapped["User | None"] = relationship(
         foreign_keys=[assigned_by],
     )
-
-
-# Backward-compatible aliases for RBAC models.
-Role = RbacRole
-UserRole = UserRoleLink

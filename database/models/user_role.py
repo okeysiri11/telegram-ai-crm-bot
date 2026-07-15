@@ -13,11 +13,11 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database.base import Base
 
 if TYPE_CHECKING:
-    from database.models.role import Role
+    from database.models.role import PermissionRole
     from database.models.users import User
 
 
-class UserRole(Base):
+class PermissionUserRole(Base):
     __tablename__ = "permission_engine_user_roles"
     __table_args__ = (
         Index("ix_permission_engine_user_roles_user_id", "user_id"),
@@ -45,11 +45,15 @@ class UserRole(Base):
         back_populates="role_links",
         foreign_keys=[user_id],
     )
-    role: Mapped["Role"] = relationship(
-        "Role",
+    role: Mapped["PermissionRole"] = relationship(
+        "PermissionRole",
         back_populates="user_links",
         foreign_keys=[role_id],
     )
 
     def __repr__(self) -> str:
-        return f"<UserRole user_id={self.user_id} role_id={self.role_id}>"
+        return f"<PermissionUserRole user_id={self.user_id} role_id={self.role_id}>"
+
+
+# Backward-compatible import alias (permission engine).
+UserRole = PermissionUserRole

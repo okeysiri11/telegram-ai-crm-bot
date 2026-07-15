@@ -6,10 +6,6 @@ import logging
 import uuid
 from typing import Any
 
-from aiogram import Bot
-from aiogram.exceptions import TelegramForbiddenError
-
-from config import BOT_TOKEN
 from database.models.auto_client_request import (
     AutoClientRequestStatus,
     AutoClientRequestType,
@@ -114,6 +110,8 @@ class AutoClientRequestEngineV1:
         client_telegram_id: int,
         client_username: str | None = None,
         client_full_name: str | None = None,
+        client_phone: str | None = None,
+        source_link: str | None = "auto_client",
         description: str | None = None,
         photo_file_id: str | None = None,
     ) -> dict[str, Any]:
@@ -137,6 +135,8 @@ class AutoClientRequestEngineV1:
                 client_telegram_id=client_telegram_id,
                 client_username=client_username,
                 client_full_name=client_full_name,
+                client_phone=client_phone,
+                source_link=source_link,
                 description=description,
                 photo_file_id=photo_file_id,
                 manager_id=manager_uuid,
@@ -146,14 +146,18 @@ class AutoClientRequestEngineV1:
 
         logger.info(f"REQUEST CREATED {request_id}")
 
-        await AutoClientRequestEngineV1._notify_manager(
-            manager_telegram_id=manager_telegram_id,
-            request_type=db_type,
+        from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
+
+        await ManagerDeliveryEngineV1.notify_auto_client_request(
             request_number=created_number,
+            request_type=db_type,
+            description=description,
             client_username=client_username,
             client_full_name=client_full_name,
-            description=description,
+            client_phone=client_phone,
+            client_telegram_id=client_telegram_id,
             photo_file_id=photo_file_id,
+            lead_id=str(request_id),
         )
 
         return {
@@ -176,46 +180,13 @@ class AutoClientRequestEngineV1:
         description: str | None,
         photo_file_id: str | None,
     ) -> None:
-        if not BOT_TOKEN:
-            logger.error("SEND MESSAGE FAILED: BOT_TOKEN missing")
-            return
+        from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
-        title = MANAGER_NOTIFICATION_TITLES.get(
-            request_type,
-            "🔔 Новая заявка Auto Client",
+        await ManagerDeliveryEngineV1.notify_auto_client_request(
+            request_number=request_number,
+            request_type=request_type,
+            description=description,
+            client_username=client_username,
+            client_full_name=client_full_name,
+            photo_file_id=photo_file_id,
         )
-        client_ref = f"@{client_username}" if client_username else (client_full_name or "—")
-        lines = [
-            title,
-            "",
-            "Клиент:",
-            client_ref,
-        ]
-        if description:
-            lines.extend(["", "Запрос:", description[:3500]])
-        lines.extend(["", f"Заявка:", request_number])
-        text = "\n".join(lines)
-
-        bot = Bot(token=BOT_TOKEN)
-        try:
-            if photo_file_id:
-                await bot.send_photo(
-                    chat_id=manager_telegram_id,
-                    photo=photo_file_id,
-                    caption=text[:1024],
-                )
-                if len(text) > 1024:
-                    await bot.send_message(chat_id=manager_telegram_id, text=text[1024:])
-            else:
-                await bot.send_message(chat_id=manager_telegram_id, text=text)
-            logger.info("REQUEST SENT TO MANAGER")
-        except TelegramForbiddenError:
-            logger.error(
-                "SEND MESSAGE FAILED: Forbidden — bot was blocked by the user "
-                f"(manager_telegram_id={manager_telegram_id}). "
-                "Manager must start the bot at least once."
-            )
-        except Exception:
-            logger.exception("SEND MESSAGE FAILED")
-        finally:
-            await bot.session.close()

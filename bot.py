@@ -11,6 +11,7 @@ from middleware.tenant_middleware import TenantMiddleware
 from middleware.entry_point_middleware import EntryPointMiddleware
 from routers.auto_client_router import router as auto_client_entry_router
 from routers.auto_dealer_router import router as auto_dealer_entry_router
+from routers.manager_debug_router import router as manager_debug_router
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,6 +22,7 @@ dp.update.middleware(EntryPointMiddleware())
 dp.update.middleware(TenantMiddleware())
 dp.include_router(auto_client_entry_router)
 dp.include_router(auto_dealer_entry_router)
+dp.include_router(manager_debug_router)
 dp.include_router(auto_router)
 dp.include_router(router)
 
@@ -41,11 +43,17 @@ async def main() -> None:
     scheduler = get_default_worker()
     await scheduler.start()
     runner = await start_api_server(host=API_HOST, port=API_PORT)
-    logger.info(
-        "API server listening on http://%s:%s/health (liveness/readiness enabled)",
-        API_HOST,
-        API_PORT,
-    )
+    if runner is not None:
+        logger.info(
+            "API server listening on http://%s:%s/health (liveness/readiness enabled)",
+            API_HOST,
+            API_PORT,
+        )
+    else:
+        logger.warning(
+            "API server skipped — port %s busy or unavailable. Set API_PORT in .env to change.",
+            API_PORT,
+        )
     from services.production_readiness_suite import ProductionReadinessSuite
 
     startup = await ProductionReadinessSuite.validate_startup()
@@ -54,27 +62,21 @@ async def main() -> None:
         startup.get("status"),
         startup.get("ready"),
     )
-    from services.pg_auto_client_request_engine import AutoClientRequestEngineV1
-    from services.pg_auto_dealer_manager_engine import AutoDealerManagerEngineV1
+    from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
-    manager_id = await AutoClientRequestEngineV1.ensure_auto_manager()
+    diagnostics = await ManagerDeliveryEngineV1.startup_diagnostics()
+    logger.info("Manager startup diagnostics: %s", diagnostics)
+
+    manager_id = diagnostics.get("internal_user_id")
     if manager_id:
         logger.info(
-            "Auto manager ready: role=AUTO_MANAGER telegram_id=%s uuid=%s name=%s",
+            "Auto manager ready: telegram_id=%s uuid=%s roles=%s",
             393792086,
             manager_id,
-            "Борис",
+            diagnostics.get("roles"),
         )
     else:
         logger.warning("AUTO_MANAGER is not provisioned")
-
-    dealer_manager_id = await AutoDealerManagerEngineV1.ensure_default_manager()
-    if dealer_manager_id:
-        logger.info(
-            "Auto dealer default manager ready: telegram_id=%s uuid=%s",
-            393792086,
-            dealer_manager_id,
-        )
     if not startup.get("ready"):
         logger.warning(
             "Startup validation issues: unhealthy=%s degraded=%s",
@@ -85,7 +87,8 @@ async def main() -> None:
         await dp.start_polling(bot)
     finally:
         await scheduler.shutdown()
-        await runner.cleanup()
+        if runner is not None:
+            await runner.cleanup()
         await shutdown_db()
 
 

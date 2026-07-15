@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -14,6 +15,8 @@ from repositories.lead_engine_repository import LeadEngineRepository
 from services.automotive_localization import DEFAULT_LANGUAGE, normalize_language
 from services.start_payload_parser import StartPayload, parse_start_payload
 from services.tenant_routing import ENTRY_LINK_REGISTRY, legacy_vertical_from_args
+
+logger = logging.getLogger(__name__)
 
 
 class LeadEngineV1:
@@ -88,6 +91,11 @@ class LeadEngineV1:
                 full_name=full_name,
                 status=LeadEngineStatus.NEW.value,
             )
+            logger.info(
+                "LEAD_CREATED lead_id=%s telegram_id=%s",
+                row.id,
+                row.telegram_user_id,
+            )
             snapshot = await LeadEngineV1._snapshot_in_session(session, row)
             lead_id = row.id
             lead_created_at = snapshot["created_at"]
@@ -127,10 +135,12 @@ class LeadEngineV1:
         request_type: str,
         description: str | None = None,
         photo_file_id: str | None = None,
+        phone: str | None = None,
         source_link: str = "auto_client",
         telegram_username: str | None = None,
         full_name: str | None = None,
         language: str | None = None,
+        notify: bool = True,
     ) -> dict[str, Any]:
         role_by_type = {
             "buy_car": "buyer",
@@ -157,6 +167,8 @@ class LeadEngineV1:
             }
             if language is not None:
                 updates["language"] = normalize_language(language)
+            if phone is not None:
+                updates["phone"] = phone
 
             if row is None:
                 cfg = ENTRY_LINK_REGISTRY.get(source_link)
@@ -174,16 +186,39 @@ class LeadEngineV1:
                     client_description=description,
                     client_photo_file_id=photo_file_id,
                 )
+                logger.info(
+                    "LEAD_CREATED lead_id=%s telegram_id=%s",
+                    row.id,
+                    row.telegram_user_id,
+                )
             else:
                 row = await repo.update(row.id, **updates)
+                logger.info(
+                    "LEAD_CREATED lead_id=%s telegram_id=%s",
+                    row.id,
+                    row.telegram_user_id,
+                )
             snapshot = await LeadEngineV1._snapshot_in_session(session, row)
 
-        from services.pg_auto_dealer_manager_engine import AutoDealerManagerEngineV1
+        from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
-        assigned = await AutoDealerManagerEngineV1.auto_assign_dealer_lead(snapshot)
+        assigned = await ManagerDeliveryEngineV1.assign_lead_manager(
+            lead_id=uuid.UUID(str(snapshot["id"])),
+            snapshot=snapshot,
+        )
         if assigned:
             snapshot = assigned
-        await AutoDealerManagerEngineV1.notify_manager_for_lead(snapshot)
+
+        if notify and (description or photo_file_id or request_type):
+            await ManagerDeliveryEngineV1.notify_auto_client_request(
+                request_number=snapshot.get("id", "")[:8],
+                request_type=request_type,
+                description=description,
+                client_username=telegram_username,
+                client_full_name=full_name,
+                photo_file_id=photo_file_id,
+                lead_id=snapshot.get("id"),
+            )
         return snapshot
 
     @staticmethod
