@@ -172,50 +172,40 @@ def build_manager_notification_lines(
     client_phone: str | None,
 ) -> list[str]:
     type_label = REQUEST_TYPE_LABELS.get(flow_type, flow_type)
-    client_ref = f"@{client_username}" if client_username else (client_full_name or "—")
     photos = data.get("photo_file_ids") or []
 
-    lines = [
-        "🔔 Новая заявка",
-        "",
-        f"Тип: {type_label}",
-        "",
-        "Клиент:",
-        client_ref,
-    ]
-    if client_phone:
-        lines.append(f"Телефон: {client_phone}")
+    lines = ["🚗 Новый лид", "", "Type:", type_label]
 
     field_map = (
-        ("service_type", "Услуга"),
-        ("brand", "Марка"),
-        ("model", "Модель"),
-        ("year", "Год"),
-        ("budget", "Бюджет"),
-        ("mileage", "Пробег"),
-        ("price", "Цена"),
+        ("brand", "Brand"),
+        ("model", "Model"),
+        ("year", "Year"),
+        ("mileage", "Mileage"),
+        ("budget", "Budget"),
+        ("price", "Price"),
+        ("service_type", "Service"),
     )
     for key, label in field_map:
         value = data.get(key)
         if value is not None and value != "":
-            suffix = ""
-            if key in {"budget", "price"} and isinstance(value, (int, float)):
-                suffix = "$"
+            suffix = " USD" if key in {"budget", "price"} and isinstance(value, (int, float)) else ""
             lines.extend(["", f"{label}:", f"{value}{suffix}"])
 
     user_desc = (data.get("user_description") or "").strip()
     if user_desc:
-        lines.extend(["", "Описание:", user_desc[:3500]])
-
-    vin = data.get("vin")
-    lines.extend(["", "VIN:", vin if vin else "Не указан"])
+        lines.extend(["", "Description:", user_desc[:3500]])
 
     if photos:
-        lines.extend(["", f"Фото: {len(photos)} прикреплено"])
+        lines.extend(["", "Photos:", f"{len(photos)} attached"])
     else:
-        lines.extend(["", "Фото: нет"])
+        lines.extend(["", "Photos:", "none"])
 
-    lines.extend(["", f"Заявка: {request_number}"])
+    client_line = f"@{client_username}" if client_username else (client_full_name or "—")
+    lines.extend(["", "Client:", client_line])
+    if client_phone:
+        lines.append(client_phone)
+
+    lines.extend(["", f"Request: {request_number}"])
     return lines
 
 

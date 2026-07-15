@@ -875,25 +875,27 @@ def crm_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
-                KeyboardButton(text="📂 Активные заявки"),
-                KeyboardButton(text="👤 Мои заявки")
+                KeyboardButton(text="📥 New Leads"),
+                KeyboardButton(text="📋 My Leads"),
             ],
-
             [
                 KeyboardButton(text="🆕 Новые заявки"),
-                KeyboardButton(text="✅ Завершенные")
+                KeyboardButton(text="👤 Мои заявки"),
             ],
-
             [
-                KeyboardButton(text="❌ Отмененные")
+                KeyboardButton(text="👥 Clients"),
+                KeyboardButton(text="📊 Statistics"),
             ],
-
+            [
+                KeyboardButton(text="✅ Завершенные"),
+                KeyboardButton(text="❌ Отмененные"),
+            ],
             [
                 KeyboardButton(text="📋 CRM"),
-                KeyboardButton(text="⬅️ Назад")
-            ]
+                KeyboardButton(text="⬅️ Назад"),
+            ],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
     )
 
     return keyboard
@@ -1681,6 +1683,37 @@ def auto_client_menu(lang: str | None = None) -> ReplyKeyboardMarkup:
             [KeyboardButton(text=btn("client_listing", language))],
             [KeyboardButton(text=btn("client_services", language))],
             [KeyboardButton(text=btn("client_manager", language))],
+            [KeyboardButton(text=btn("client_my_requests", language))],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def auto_client_phone_keyboard(lang: str | None = None) -> ReplyKeyboardMarkup:
+    from services.automotive_localization import btn, normalize_language
+
+    language = normalize_language(lang)
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📱 Share phone number", request_contact=True)],
+            [KeyboardButton(text=btn("client_buy_car", language))],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def manager_dashboard_menu() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="📥 New Leads"),
+                KeyboardButton(text="📋 My Leads"),
+            ],
+            [
+                KeyboardButton(text="👥 Clients"),
+                KeyboardButton(text="📊 Statistics"),
+            ],
+            [KeyboardButton(text="⬅️ Назад")],
         ],
         resize_keyboard=True,
     )

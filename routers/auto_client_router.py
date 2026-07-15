@@ -11,6 +11,7 @@ from aiogram.types import CallbackQuery, Message
 
 from keyboards import (
     auto_client_menu,
+    auto_client_phone_keyboard,
     auto_client_photos_inline,
     auto_client_vin_inline,
     entry_flow_language_inline,
@@ -139,7 +140,7 @@ async def _set_flow_step(
         await state.set_state(AutoClientFlow.awaiting_phone)
         await message.answer(
             step_prompt(flow_type, flow_step),
-            reply_markup=auto_client_menu(lang),
+            reply_markup=auto_client_phone_keyboard(lang),
         )
         return
 
@@ -171,6 +172,19 @@ async def _finish_request(message: Message, state: FSMContext) -> None:
     user_description = data.get("user_description") or data.get("description")
     photo_file_ids: list[str] = list(data.get("photo_file_ids") or [])
     client_phone = data.get("client_phone")
+
+    ai_qualification = None
+    if user_description:
+        try:
+            from services.pg_ai_manager_engine import AiManagerEngineV1
+
+            ai_qualification = await AiManagerEngineV1.qualify_message(
+                user_description,
+                context={"flow_type": flow_type, "brand": data.get("brand"), "model": data.get("model")},
+            )
+        except Exception:
+            logger.debug("AI qualification skipped", exc_info=True)
+
     description = build_description(flow_type, {**data, "user_description": user_description})
 
     logger.info(
@@ -187,6 +201,9 @@ async def _finish_request(message: Message, state: FSMContext) -> None:
             client_telegram_id=user.id,
             client_username=user.username,
             client_full_name=user.full_name,
+            client_first_name=user.first_name,
+            client_last_name=user.last_name,
+            client_language_code=user.language_code,
             client_phone=client_phone,
             source_link=source_link,
             description=description,
@@ -200,6 +217,9 @@ async def _finish_request(message: Message, state: FSMContext) -> None:
             budget=data.get("budget"),
             price=data.get("price"),
             service_type=data.get("service_type"),
+            fuel=data.get("fuel"),
+            city=data.get("city"),
+            ai_qualification=ai_qualification,
         )
 
         try:
@@ -473,10 +493,15 @@ async def auto_client_collect_photos(message: Message, state: FSMContext) -> Non
     if not await _ensure_auto_client(message):
         return
 
-    photo = message.photo[-1]
+    from services.photo_album_collector import photo_album_collector
+
+    album = await photo_album_collector.add_photo(message)
+    if album is None:
+        return
+
     data = await state.get_data()
     photos: list[str] = list(data.get("photo_file_ids") or [])
-    photos.append(photo.file_id)
+    photos.extend(album)
     await state.update_data(photo_file_ids=photos)
     lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
     await message.answer(
@@ -587,10 +612,12 @@ async def auto_client_manager_contact(message: Message, state: FSMContext) -> No
         )
         return
     await state.update_data(client_phone=phone)
+    lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
     data = await state.get_data()
     flow_type = data.get("flow_type")
     if flow_type in {REQUEST_BUY, REQUEST_SELL, REQUEST_LISTING}:
         await state.update_data(flow_step="vin_optional")
+        await message.answer("✅ Номер получен.", reply_markup=auto_client_menu(lang))
         await _set_flow_step(message, state, flow_type=flow_type, flow_step="vin_optional")
         return
     await _finish_request(message, state)

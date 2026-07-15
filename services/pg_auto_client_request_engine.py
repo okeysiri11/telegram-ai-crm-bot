@@ -129,6 +129,12 @@ class AutoClientRequestEngineV1:
         budget: float | None = None,
         price: float | None = None,
         service_type: str | None = None,
+        client_first_name: str | None = None,
+        client_last_name: str | None = None,
+        client_language_code: str | None = None,
+        fuel: str | None = None,
+        city: str | None = None,
+        ai_qualification: dict | None = None,
     ) -> dict[str, Any]:
         db_type = FLOW_TYPE_TO_DB.get(
             flow_request_type,
@@ -168,12 +174,63 @@ class AutoClientRequestEngineV1:
                 service_type=service_type,
                 photo_file_id=primary_photo,
                 photo_file_ids=resolved_photos or None,
+                fuel=fuel,
+                city=city,
                 manager_id=manager_uuid,
             )
             request_id = row.id
             created_number = row.request_number
 
         logger.info(f"REQUEST CREATED {request_id}")
+
+        from services.pg_client_request_crm_engine import ClientRequestCrmEngineV1
+
+        crm_result = await ClientRequestCrmEngineV1.sync_from_auto_request(
+            auto_request_id=request_id,
+            request_number=created_number,
+            flow_request_type=flow_request_type,
+            manager_id=manager_uuid,
+            client_telegram_id=client_telegram_id,
+            client_username=client_username,
+            client_first_name=client_first_name,
+            client_last_name=client_last_name,
+            client_phone=client_phone,
+            client_language_code=client_language_code,
+            description=description,
+            photo_file_ids=resolved_photos or None,
+            vin=vin,
+            brand=brand,
+            model=model,
+            year=year,
+            mileage=mileage,
+            budget=budget,
+            price=price,
+            fuel=fuel,
+            city=city,
+            service_type=service_type,
+            ai_qualification=ai_qualification,
+        )
+
+        if flow_request_type == "listing" and crm_result.get("id"):
+            from services.pg_marketplace_listing_engine import MarketplaceListingEngineV1
+
+            await MarketplaceListingEngineV1.create_from_client_request(
+                client_request_id=uuid.UUID(crm_result["id"]),
+                seller_telegram_id=client_telegram_id,
+                seller_username=client_username,
+                data={
+                    "brand": brand,
+                    "model": model,
+                    "year": year,
+                    "price": price,
+                    "mileage": mileage,
+                    "vin": vin,
+                    "fuel": fuel,
+                    "city": city,
+                    "user_description": user_description or description,
+                },
+                photo_file_ids=resolved_photos or None,
+            )
 
         from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
@@ -207,6 +264,7 @@ class AutoClientRequestEngineV1:
             "manager_id": str(manager_uuid),
             "manager_name": manager_name,
             "manager_telegram_id": manager_telegram_id,
+            "client_request_id": crm_result.get("id"),
         }
 
     @staticmethod

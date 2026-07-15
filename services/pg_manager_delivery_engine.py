@@ -276,13 +276,23 @@ class ManagerDeliveryEngineV1:
 
     @staticmethod
     def lead_notification_keyboard(*, request_number: str | None = None, lead_id: str | None = None):
+        from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
         buttons = []
         if request_number:
             buttons.append([
                 InlineKeyboardButton(
-                    text=f"📋 Открыть {request_number}",
+                    text=f"📋 {request_number}",
                     callback_data=f"mgr:req:{request_number}",
                 )
+            ])
+            buttons.append([
+                InlineKeyboardButton(text="✅ Take", callback_data=f"mgr:take:{request_number}"),
+                InlineKeyboardButton(text="🟡 In Progress", callback_data=f"mgr:status:{request_number}:IN_PROGRESS"),
+            ])
+            buttons.append([
+                InlineKeyboardButton(text="✔ Complete", callback_data=f"mgr:status:{request_number}:COMPLETED"),
+                InlineKeyboardButton(text="❌ Cancel", callback_data=f"mgr:status:{request_number}:CANCELLED"),
             ])
         elif lead_id:
             buttons.append([
@@ -294,6 +304,31 @@ class ManagerDeliveryEngineV1:
         if not buttons:
             return None
         return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+    @staticmethod
+    def request_action_keyboard(request_number: str):
+        from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+
+        return InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(text="✅ Take Lead", callback_data=f"mgr:take:{request_number}"),
+                    InlineKeyboardButton(text="📞 Call Client", callback_data=f"mgr:call:{request_number}"),
+                ],
+                [
+                    InlineKeyboardButton(text="💬 Message", callback_data=f"mgr:msg:{request_number}"),
+                    InlineKeyboardButton(text="🔄 Reassign", callback_data=f"mgr:reassign:{request_number}"),
+                ],
+                [
+                    InlineKeyboardButton(text="✔ Complete", callback_data=f"mgr:status:{request_number}:COMPLETED"),
+                    InlineKeyboardButton(text="❌ Cancel", callback_data=f"mgr:status:{request_number}:CANCELLED"),
+                ],
+                [
+                    InlineKeyboardButton(text="🟡 In Progress", callback_data=f"mgr:status:{request_number}:IN_PROGRESS"),
+                    InlineKeyboardButton(text="⏳ Waiting Client", callback_data=f"mgr:status:{request_number}:WAITING_CLIENT"),
+                ],
+            ]
+        )
 
     @staticmethod
     async def send_to_manager(
@@ -331,52 +366,24 @@ class ManagerDeliveryEngineV1:
             if not photos and photo_file_id:
                 photos = [photo_file_id]
 
-            if photos:
-                if len(photos) == 1:
-                    await bot.send_photo(
-                        chat_id=manager_telegram_id,
-                        photo=photos[0],
-                        caption=text[:1024],
-                        reply_markup=markup,
-                    )
-                    if len(text) > 1024:
-                        await bot.send_message(
-                            chat_id=manager_telegram_id,
-                            text=text[1024:],
-                            reply_markup=markup,
-                        )
-                else:
-                    from aiogram.types import InputMediaPhoto
+            # Always send text first, then photos (spec: text → media group).
+            await bot.send_message(
+                chat_id=manager_telegram_id,
+                text=text,
+                reply_markup=markup,
+            )
 
-                    media = [
-                        InputMediaPhoto(
-                            media=fid,
-                            caption=text[:1024] if idx == 0 else None,
-                        )
-                        for idx, fid in enumerate(photos[:10])
-                    ]
-                    await bot.send_media_group(
-                        chat_id=manager_telegram_id,
-                        media=media,
-                    )
-                    if len(text) > 1024:
-                        await bot.send_message(
-                            chat_id=manager_telegram_id,
-                            text=text[1024:],
-                            reply_markup=markup,
-                        )
-                    elif markup:
-                        await bot.send_message(
-                            chat_id=manager_telegram_id,
-                            text=f"Заявка {request_number or ''}".strip(),
-                            reply_markup=markup,
-                        )
-            else:
-                await bot.send_message(
-                    chat_id=manager_telegram_id,
-                    text=text,
-                    reply_markup=markup,
-                )
+            if photos:
+                from aiogram.types import InputMediaPhoto
+
+                batch_size = 10
+                for offset in range(0, len(photos), batch_size):
+                    batch = photos[offset : offset + batch_size]
+                    if len(batch) == 1:
+                        await bot.send_photo(chat_id=manager_telegram_id, photo=batch[0])
+                    else:
+                        media = [InputMediaPhoto(media=fid) for fid in batch]
+                        await bot.send_media_group(chat_id=manager_telegram_id, media=media)
             logger.info("REQUEST SENT TO MANAGER")
             return True
         except TelegramForbiddenError:

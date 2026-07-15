@@ -283,13 +283,13 @@ async def _show_analytics(message: Message, user_id: int) -> None:
 
 
 async def _show_ai_manager(message: Message, user_id: int) -> None:
+    lang = await _user_lang(user_id)
+    auto_vertical_section[user_id] = "ai_manager"
     await message.answer(
         "🤖 AI Менеджер\n\n"
-        "AI Sales Agent: квалификация лидов, рекомендации авто, "
-        "генерация офферов и follow-up.\n\n"
-        "Клиенты получают AI Sales Assistant через /start.\n"
-        "Менеджеры работают с лидами в разделе «👥 Лиды».",
-        reply_markup=auto_vertical_menu(await _user_lang(user_id)),
+        "Задайте вопрос — AI поможет с подбором авто, услугами и квалификацией заявки.\n"
+        "Пример: «Ищу BMW X5 дизель до 40000$ в Одессе»",
+        reply_markup=auto_vertical_menu(lang),
     )
 
 
@@ -1222,3 +1222,35 @@ async def _process_billing_receipt(
         reply_markup=menu,
     )
     log_audit(user_id, "upload", "payment_receipt", result.get("receipt_id"))
+
+
+@auto_vertical_router.message(
+    lambda m: (
+        auto_vertical_active.get(m.from_user.id)
+        and auto_vertical_section.get(m.from_user.id) == "ai_manager"
+        and m.text
+        and not m.text.startswith("/")
+    )
+)
+async def auto_vertical_ai_manager_chat(message: Message) -> None:
+    user_id = message.from_user.id
+    lang = await _user_lang(user_id)
+    from services.pg_ai_manager_engine import AiManagerEngineV1
+
+    try:
+        result = await AiManagerEngineV1.qualify_message(message.text or "")
+        reply = result.get("reply") or "Спасибо за сообщение."
+        meta = (
+            f"\n\n📊 Score: {result.get('lead_score')} | "
+            f"Priority: {result.get('priority')} | "
+            f"Dept: {result.get('department')} | "
+            f"Intent: {result.get('intent')}"
+        )
+        await message.answer(reply + meta, reply_markup=auto_vertical_menu(lang))
+    except Exception as exc:
+        logger.warning("AI manager chat failed user=%s", user_id, exc_info=True)
+        await message.answer(
+            "AI Manager временно недоступен. Попробуйте позже.",
+            reply_markup=auto_vertical_menu(lang),
+        )
+

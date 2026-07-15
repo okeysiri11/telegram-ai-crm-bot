@@ -106,6 +106,7 @@ _AUTO_CLIENT_MENU_KEYS = (
     "client_listing",
     "client_services",
     "client_manager",
+    "client_my_requests",
 )
 
 ECOSYSTEM_MENU_BUTTONS = frozenset({

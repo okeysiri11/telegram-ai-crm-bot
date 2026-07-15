@@ -124,6 +124,7 @@ _AUTO_BUTTONS: dict[str, dict[str, str]] = {
     "client_listing": {"ru": "📢 Размещение объявления", "uk": "📢 Розміщення оголошення"},
     "client_services": {"ru": "🛠 Автоуслуги", "uk": "🛠 Авто послуги"},
     "client_manager": {"ru": "📞 Связаться с менеджером", "uk": "📞 Зв'язатися з менеджером"},
+    "client_my_requests": {"ru": "📂 Мои заявки", "uk": "📂 Мої заявки"},
 }
 
 _CATEGORY_HEADERS: dict[str, dict[str, str]] = {

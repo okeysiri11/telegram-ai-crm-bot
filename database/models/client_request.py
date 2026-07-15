@@ -1,4 +1,4 @@
-# Auto Client — client request records (search / sell / listing).
+# Unified client request CRM records (history, pipeline, funnel).
 
 from __future__ import annotations
 
@@ -13,46 +13,56 @@ from database.base import Base
 from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 
 
-class AutoClientRequestType(str, enum.Enum):
-    AUTO_SEARCH = "AUTO_SEARCH"
-    AUTO_SELL = "AUTO_SELL"
-    AUTO_LISTING = "AUTO_LISTING"
-    AUTO_MANAGER_CALLBACK = "AUTO_MANAGER_CALLBACK"
-    AUTO_SERVICES = "AUTO_SERVICES"
-
-
-class AutoClientRequestStatus(str, enum.Enum):
+class ClientRequestStatus(str, enum.Enum):
     NEW = "NEW"
     ASSIGNED = "ASSIGNED"
     IN_PROGRESS = "IN_PROGRESS"
     WAITING_CLIENT = "WAITING_CLIENT"
-    DONE = "DONE"
     COMPLETED = "COMPLETED"
     CANCELLED = "CANCELLED"
 
 
-class AutoClientRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    __tablename__ = "auto_client_requests_v1"
+class CrmFunnelStage(str, enum.Enum):
+    NEW_LEAD = "NEW_LEAD"
+    CONTACTED = "CONTACTED"
+    NEGOTIATION = "NEGOTIATION"
+    PROPOSAL = "PROPOSAL"
+    DEAL = "DEAL"
+    CLOSED = "CLOSED"
+    LOST = "LOST"
+
+
+class ClientRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "client_requests"
     __table_args__ = (
-        Index("ix_auto_client_requests_v1_number", "request_number", unique=True),
-        Index("ix_auto_client_requests_v1_client", "client_telegram_id"),
-        Index("ix_auto_client_requests_v1_manager", "manager_id"),
-        Index("ix_auto_client_requests_v1_status", "status"),
-        Index("ix_auto_client_requests_v1_type", "request_type"),
+        Index("ix_client_requests_client", "client_telegram_id"),
+        Index("ix_client_requests_manager", "manager_id"),
+        Index("ix_client_requests_status", "status"),
+        Index("ix_client_requests_funnel", "funnel_stage"),
+        Index("ix_client_requests_type", "request_type"),
+        Index("ix_client_requests_number", "request_number", unique=True),
     )
 
     request_number: Mapped[str] = mapped_column(String(32), nullable=False)
     request_type: Mapped[str] = mapped_column(String(32), nullable=False)
     status: Mapped[str] = mapped_column(
         String(32),
-        default=AutoClientRequestStatus.NEW.value,
+        default=ClientRequestStatus.NEW.value,
         nullable=False,
     )
+    funnel_stage: Mapped[str] = mapped_column(
+        String(32),
+        default=CrmFunnelStage.NEW_LEAD.value,
+        nullable=False,
+    )
+
     client_telegram_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     client_username: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    client_full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    client_first_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    client_last_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     client_phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    source_link: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    client_language_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
+
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     vin: Mapped[str | None] = mapped_column(String(17), nullable=True)
     brand: Mapped[str | None] = mapped_column(String(128), nullable=True)
@@ -61,25 +71,26 @@ class AutoClientRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     mileage: Mapped[int | None] = mapped_column(Integer, nullable=True)
     budget: Mapped[float | None] = mapped_column(Numeric(14, 2), nullable=True)
     price: Mapped[float | None] = mapped_column(Numeric(14, 2), nullable=True)
-    service_type: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    photo_file_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     fuel: Mapped[str | None] = mapped_column(String(64), nullable=True)
     engine: Mapped[str | None] = mapped_column(String(64), nullable=True)
     transmission: Mapped[str | None] = mapped_column(String(64), nullable=True)
     city: Mapped[str | None] = mapped_column(String(128), nullable=True)
-    funnel_stage: Mapped[str | None] = mapped_column(String(32), nullable=True)
-    client_request_id: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True),
-        nullable=True,
-    )
+    service_type: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    photo_file_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
+    ai_qualification: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
     manager_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
-    lead_id: Mapped[uuid.UUID | None] = mapped_column(
+    auto_request_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("lead_engine_v1_leads.id", ondelete="SET NULL"),
+        ForeignKey("auto_client_requests_v1.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    marketplace_listing_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("marketplace_listings.id", ondelete="SET NULL"),
         nullable=True,
     )

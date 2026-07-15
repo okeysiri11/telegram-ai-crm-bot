@@ -59,7 +59,10 @@ async def open_auto_client_request_card(callback: CallbackQuery) -> None:
         f"Telegram ID: {row.client_telegram_id}\n\n"
         f"Описание:\n{row.description or '—'}"
     )
-    await callback.message.answer(text, reply_markup=crm_menu())
+    await callback.message.answer(
+        text,
+        reply_markup=ManagerDeliveryEngineV1.request_action_keyboard(row.request_number),
+    )
     await callback.answer()
 
 
