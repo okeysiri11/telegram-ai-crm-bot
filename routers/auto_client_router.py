@@ -10,6 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from keyboards import auto_client_menu, entry_flow_language_inline
+from routers.auto_hub_router import open_auto_client_services
 from services.automotive_localization import btn, normalize_language, t
 from services.entry_point_routing import EntryPoint, FlowState, is_auto_client_menu_text
 from services.pg_auto_client_request_engine import AutoClientRequestEngineV1
@@ -27,6 +28,14 @@ REQUEST_BUY = "buy_car"
 REQUEST_SELL = "sell_car"
 REQUEST_LISTING = "listing"
 REQUEST_MANAGER = "manager_callback"
+
+
+def _auto_client_services_labels(lang: str | None = None) -> frozenset[str]:
+    from services.automotive_localization import normalize_language
+
+    language = normalize_language(lang)
+    keys = ("hub_insurance", "hub_credit", "hub_leasing", "hub_logistics", "hub_legal", "back")
+    return frozenset(btn(key, language) for key in keys)
 
 
 async def _restore_auto_client_fsm(message: Message, state: FSMContext) -> None:
@@ -308,11 +317,7 @@ async def auto_client_menu_action(message: Message, state: FSMContext) -> None:
         return
 
     if text == services_label:
-        await message.answer(
-            "🛠 Автоуслуги: сервис, страхование, кредит, логистика.\n"
-            "Выберите «Связаться с менеджером» для персональной консультации.",
-            reply_markup=auto_client_menu(lang),
-        )
+        await open_auto_client_services(message, state)
         return
 
     if text == manager_label:
@@ -396,6 +401,9 @@ async def _auto_client_text_filter(message: Message) -> bool:
         return False
     if is_auto_client_menu_text(text):
         return False
+    for check_lang in ("ru", "uk"):
+        if text in _auto_client_services_labels(check_lang):
+            return False
     pending = await VerticalOnboardingEngineV1.get_auto_client_pending(message.from_user.id)
     if pending == "ac:phone:manager":
         return False

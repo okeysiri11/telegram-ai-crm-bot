@@ -24,7 +24,6 @@ from keyboards import (
     owner_main_menu,
 )
 from services.automotive_localization import (
-    all_auto_button_labels,
     btn,
     category_header,
     hub_screen_to_category,
@@ -380,13 +379,12 @@ async def _show_treasury(message: Message, user_id: int) -> None:
     await message.answer(text, reply_markup=auto_vertical_menu(lang))
 
 
-async def _open_auto_hub(message: Message, user_id: int) -> None:
+async def _open_auto_hub(message: Message, user_id: int, *, quiet: bool = False) -> None:
     lang = await _user_lang(user_id)
     auto_vertical_section[user_id] = "hub"
-    await message.answer(
-        t("auto_hub_title", lang),
-        reply_markup=auto_vertical_hub_menu(lang),
-    )
+    markup = auto_vertical_hub_menu(lang)
+    text = t("auto_hub_title", lang) if not quiet else f"◀ {t('auto_hub_title', lang)}"
+    await message.answer(text, reply_markup=markup)
 
 
 async def _open_cars_section(message: Message, user_id: int) -> None:
@@ -465,7 +463,10 @@ async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: s
 
     if screen_key == "back":
         if section == "cars":
-            await _open_auto_hub(message, user_id)
+            await _open_auto_hub(message, user_id, quiet=True)
+            return
+        if section != "hub":
+            await _open_auto_hub(message, user_id, quiet=True)
             return
         auto_vertical_active.pop(user_id, None)
         auto_vertical_section.pop(user_id, None)
@@ -578,10 +579,12 @@ async def handle_auto_menu_request(message: Message) -> None:
         )
 
 
-@auto_vertical_router.message(F.text.in_(all_auto_button_labels()))
+def _is_auto_main_entry(message: Message) -> bool:
+    return resolve_auto_screen(message.text or "") == "main"
+
+
+@auto_vertical_router.message(_is_auto_main_entry)
 async def open_auto_vertical(message: Message) -> None:
-    if resolve_auto_screen(message.text) != "main":
-        return
     await handle_auto_menu_request(message)
 
 
@@ -633,17 +636,17 @@ async def auto_vertical_flow_handler(message: Message) -> None:
     step = flow.get("step")
     data = flow.setdefault("data", {})
     text = (message.text or "").strip()
+    lang = await _user_lang(user_id)
 
-    if text == "⬅ Назад":
+    if text == btn("back", lang) or text == "⬅ Назад":
         _clear_flow(user_id)
         if auto_vertical_section.get(user_id) == "cars":
-            lang = await _user_lang(user_id)
             await message.answer(
                 t("auto_cars_title", lang),
                 reply_markup=auto_vertical_menu(lang),
             )
         else:
-            await _open_auto_hub(message, user_id)
+            await _open_auto_hub(message, user_id, quiet=True)
         return
 
     if step == "vin":

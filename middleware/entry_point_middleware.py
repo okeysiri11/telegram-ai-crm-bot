@@ -50,7 +50,8 @@ class EntryPointMiddleware(BaseMiddleware):
                     mapping = AUTO_CLIENT_PENDING_RESTORE.get(pending or "")
                     if mapping is not None:
                         await state.set_state(mapping[0])
-                        await state.update_data(request_type=mapping[1])
+                        if mapping[1] != "services":
+                            await state.update_data(request_type=mapping[1])
                     elif ctx.get("current_flow") == FlowState.AUTO_CLIENT_MENU.value:
                         await state.set_state(AutoClientFlow.menu)
 

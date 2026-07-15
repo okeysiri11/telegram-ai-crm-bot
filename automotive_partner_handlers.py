@@ -41,21 +41,28 @@ HUB_BUTTON_TO_CATEGORY = {
 }
 
 
-async def show_partner_category(message: Message, user_id: int, category: str) -> None:
+async def show_partner_category(
+    message: Message,
+    user_id: int,
+    category: str,
+    *,
+    reply_markup=None,
+) -> None:
     from services.automotive_localization import category_header, t
     from services.pg_vertical_onboarding_engine import VerticalOnboardingEngineV1
 
     lang = await VerticalOnboardingEngineV1.get_language(user_id)
+    menu = reply_markup or auto_vertical_hub_menu(lang)
     cards = await AutomotivePartnerBrandingEngineV1.list_category_cards(category, actor_id=user_id)
     if not cards:
         await message.answer(
             f"{AutomotivePartnerBrandingEngineV1.format_category_header(category, lang=lang)}\n\n"
             f"{t('no_partners', lang)}",
-            reply_markup=auto_vertical_hub_menu(lang),
+            reply_markup=menu,
         )
         return
     header = AutomotivePartnerBrandingEngineV1.format_category_header(category, lang=lang)
-    await message.answer(header, reply_markup=auto_vertical_hub_menu(lang))
+    await message.answer(header, reply_markup=menu)
     await message.answer(
         t("partner_cards", lang),
         reply_markup=auto_partner_cards_inline(cards, category=category, lang=lang),

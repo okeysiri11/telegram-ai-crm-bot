@@ -7,10 +7,41 @@ from dataclasses import dataclass
 from typing import Any
 
 from aiohttp import web
+from aiogram import Dispatcher
+from aiogram.fsm.storage.base import BaseStorage
 
 from config import API_HOST, API_PORT, DEFAULT_AUTO_MANAGER_ID
+from middleware.entry_point_middleware import EntryPointMiddleware
+from middleware.tenant_middleware import TenantMiddleware
 
 logger = logging.getLogger(__name__)
+
+# Registered bot routers (order matters — first match wins).
+BOT_ROUTER_PATHS: tuple[str, ...] = (
+    "routers.auto_client_router",
+    "routers.auto_dealer_router",
+    "routers.manager_debug_router",
+    "routers.auto_hub_router",
+    "auto_vertical_handlers",
+    "handlers",
+)
+
+
+def register_routers(dp: Dispatcher) -> None:
+    from auto_vertical_handlers import auto_vertical_router as auto_router
+    from handlers import router
+    from routers.auto_client_router import router as auto_client_entry_router
+    from routers.auto_dealer_router import router as auto_dealer_entry_router
+    from routers.auto_hub_router import router as auto_hub_router
+    from routers.manager_debug_router import router as manager_debug_router
+
+    dp.include_router(auto_client_entry_router)
+    dp.include_router(auto_dealer_entry_router)
+    dp.include_router(manager_debug_router)
+    dp.include_router(auto_hub_router)
+    dp.include_router(auto_router)
+    dp.include_router(router)
+    logger.info("Registered routers: %s", ", ".join(BOT_ROUTER_PATHS))
 
 
 @dataclass
