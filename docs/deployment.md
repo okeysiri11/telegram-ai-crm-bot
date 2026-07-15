@@ -86,3 +86,8 @@ MEDIA_CDN_BASE_URL=https://cdn.example.com/
 - `GET /liveness`
 - `GET /readiness`
 - `GET /system/db-health`
+
+## Architecture scaffold (night task)
+
+New code under `src/` and `container.py` is **not** required at deploy time.
+Optional: `from api.v1 import register_api_v1_routes` when enabling `/api/v1` stubs.
