@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from bootstrap import bot, build_dispatcher, create_fsm_storage
+from bootstrap import bot, build_dispatcher, close_fsm_storage, create_fsm_storage
 from startup import run_startup, shutdown_startup
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,8 @@ async def main() -> None:
     try:
         await dp.start_polling(bot)
     finally:
-        await shutdown_startup(context, redis_storage=redis_storage)
+        await shutdown_startup(context)
+        await close_fsm_storage(redis_storage)
 
 
 if __name__ == "__main__":

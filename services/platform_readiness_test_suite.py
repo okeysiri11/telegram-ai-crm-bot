@@ -289,9 +289,9 @@ class PlatformReadinessTestSuite:
         import auto_vertical_handlers as avh
 
         if hasattr(avh, "auto_vertical_flow") and hasattr(avh, "auto_billing_flow"):
-            bot_src = (ROOT / "bot.py").read_text(encoding="utf-8")
-            if "MemoryStorage" in bot_src or "FSMContext" in bot_src:
-                return _result("operational", "aiogram FSM storage")
+            fsm_src = (ROOT / "fsm_storage.py").read_text(encoding="utf-8")
+            if "RedisStorage" in fsm_src and "create_fsm_storage" in fsm_src:
+                return _result("operational", "aiogram FSM storage (Redis + fallback)")
             return _result("partial", "dict-based flow state (no aiogram FSM)")
         return _result("failed", "flow storage missing")
 

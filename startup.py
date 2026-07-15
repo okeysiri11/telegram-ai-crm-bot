@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from aiohttp import web
-from aiogram.fsm.storage.base import BaseStorage
 
 from config import API_HOST, API_PORT, DEFAULT_AUTO_MANAGER_ID
 
@@ -88,16 +87,10 @@ async def run_startup() -> StartupContext:
     )
 
 
-async def shutdown_startup(
-    context: StartupContext,
-    *,
-    redis_storage: BaseStorage | None,
-) -> None:
+async def shutdown_startup(context: StartupContext) -> None:
     from database.session import shutdown_db
 
     await context.scheduler.shutdown()
     if context.runner is not None:
         await context.runner.cleanup()
-    if redis_storage is not None:
-        await redis_storage.close()
     await shutdown_db()
