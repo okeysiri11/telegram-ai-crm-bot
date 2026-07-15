@@ -10,7 +10,6 @@ from aiogram.types import CallbackQuery, Message
 
 from keyboards import crm_menu
 from database.session import get_session
-from services.pg_auto_dealer_manager_engine import BORIS_TELEGRAM_ID
 from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
 logger = logging.getLogger(__name__)
@@ -47,10 +46,9 @@ async def open_auto_client_request_card(callback: CallbackQuery) -> None:
         await callback.answer("Заявка не найдена", show_alert=True)
         return
 
-    if callback.from_user.id != BORIS_TELEGRAM_ID:
-        if not await ManagerDeliveryEngineV1.is_platform_manager(callback.from_user.id):
-            await callback.answer("Нет доступа", show_alert=True)
-            return
+    if not await ManagerDeliveryEngineV1.is_platform_manager(callback.from_user.id):
+        await callback.answer("Нет доступа", show_alert=True)
+        return
 
     client = row.client_username or row.client_full_name or str(row.client_telegram_id)
     text = (

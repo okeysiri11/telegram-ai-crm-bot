@@ -6,7 +6,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from config import API_HOST, API_PORT, BOT_TOKEN, REDIS_REQUIRED, REDIS_URL
+from config import API_HOST, API_PORT, BOT_TOKEN, DEFAULT_AUTO_MANAGER_ID, REDIS_REQUIRED, REDIS_URL
 from auto_vertical_handlers import auto_vertical_router as auto_router
 from handlers import router
 from middleware.tenant_middleware import TenantMiddleware
@@ -113,7 +113,7 @@ async def main() -> None:
     if manager_id:
         logger.info(
             "Auto manager ready: telegram_id=%s uuid=%s roles=%s",
-            393792086,
+            DEFAULT_AUTO_MANAGER_ID,
             manager_id,
             diagnostics.get("roles"),
         )

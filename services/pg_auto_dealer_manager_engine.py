@@ -6,6 +6,7 @@ import logging
 import uuid
 from typing import Any
 
+from config import DEFAULT_DEALER_MANAGER_ID
 from database.models.roles import RbacRole
 from database.session import get_session
 from repositories.rbac_repository import RbacRepository
@@ -13,7 +14,7 @@ from repositories.users_repository import UsersRepository
 
 logger = logging.getLogger(__name__)
 
-BORIS_TELEGRAM_ID = 393792086
+BORIS_TELEGRAM_ID = DEFAULT_DEALER_MANAGER_ID  # backward-compatible alias
 BORIS_USERNAME = "Boroda_0003"
 BORIS_FULL_NAME = "Борис"
 BORIS_ROLE_CODE = "manager"
@@ -30,10 +31,13 @@ class AutoDealerManagerEngineV1:
 
     @staticmethod
     async def ensure_default_manager() -> uuid.UUID | None:
+        if DEFAULT_DEALER_MANAGER_ID is None:
+            logger.warning("DEFAULT_DEALER_MANAGER_ID is not configured — dealer manager skipped")
+            return None
         try:
             async with get_session() as session:
                 user = await UsersRepository(session).ensure_user(
-                    telegram_id=BORIS_TELEGRAM_ID,
+                    telegram_id=DEFAULT_DEALER_MANAGER_ID,
                     username=BORIS_USERNAME,
                     full_name=BORIS_FULL_NAME,
                     is_active=True,
@@ -53,15 +57,17 @@ class AutoDealerManagerEngineV1:
         except Exception:
             logger.warning(
                 "Auto dealer manager provisioning failed for telegram_id=%s",
-                BORIS_TELEGRAM_ID,
+                DEFAULT_DEALER_MANAGER_ID,
                 exc_info=True,
             )
             return None
 
     @staticmethod
     async def resolve_manager_uuid() -> uuid.UUID | None:
+        if DEFAULT_DEALER_MANAGER_ID is None:
+            return None
         async with get_session() as session:
-            user = await UsersRepository(session).get_by_telegram_id(BORIS_TELEGRAM_ID)
+            user = await UsersRepository(session).get_by_telegram_id(DEFAULT_DEALER_MANAGER_ID)
             if user is None:
                 return None
             return user.id

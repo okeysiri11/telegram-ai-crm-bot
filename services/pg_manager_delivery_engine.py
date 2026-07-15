@@ -10,14 +10,13 @@ from aiogram import Bot
 from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from config import BOT_TOKEN
+from config import BOT_TOKEN, DEFAULT_AUTO_MANAGER_ID, DEFAULT_DEALER_MANAGER_ID
 from database.session import get_session
 from repositories.rbac_repository import RbacRepository
 from repositories.user_role_repository import UserRoleRepository
 from repositories.users_repository import UsersRepository
 from services.pg_auto_dealer_manager_engine import (
     BORIS_FULL_NAME,
-    BORIS_TELEGRAM_ID,
     BORIS_USERNAME,
 )
 
@@ -44,7 +43,9 @@ class ManagerDeliveryEngineV1:
 
     @staticmethod
     async def get_manager_user(*, telegram_id: int | None = None) -> Any | None:
-        tid = telegram_id or BORIS_TELEGRAM_ID
+        tid = telegram_id or DEFAULT_AUTO_MANAGER_ID
+        if tid is None:
+            return None
         async with get_session() as session:
             return await UsersRepository(session).get_by_telegram_id(tid)
 
@@ -67,7 +68,9 @@ class ManagerDeliveryEngineV1:
 
     @staticmethod
     async def is_platform_manager(telegram_user_id: int) -> bool:
-        if telegram_user_id == BORIS_TELEGRAM_ID:
+        if DEFAULT_AUTO_MANAGER_ID is not None and telegram_user_id == DEFAULT_AUTO_MANAGER_ID:
+            return True
+        if DEFAULT_DEALER_MANAGER_ID is not None and telegram_user_id == DEFAULT_DEALER_MANAGER_ID:
             return True
         user = await ManagerDeliveryEngineV1.get_manager_user(telegram_id=telegram_user_id)
         if user is None:
@@ -78,7 +81,10 @@ class ManagerDeliveryEngineV1:
     @staticmethod
     async def resolve_default_manager() -> tuple[uuid.UUID, int, str] | None:
         await ManagerDeliveryEngineV1.ensure_boris()
-        user = await ManagerDeliveryEngineV1.get_manager_user(telegram_id=BORIS_TELEGRAM_ID)
+        if DEFAULT_AUTO_MANAGER_ID is None:
+            logger.error("DEFAULT_AUTO_MANAGER_ID is not configured")
+            return None
+        user = await ManagerDeliveryEngineV1.get_manager_user(telegram_id=DEFAULT_AUTO_MANAGER_ID)
         if user is None or user.telegram_id is None:
             logger.error("MANAGER_NOT_FOUND lead_id=%s", "—")
             return None
@@ -88,7 +94,13 @@ class ManagerDeliveryEngineV1:
     @staticmethod
     async def startup_diagnostics() -> dict[str, Any]:
         await ManagerDeliveryEngineV1.ensure_boris()
-        manager = await ManagerDeliveryEngineV1.get_manager_user(telegram_id=BORIS_TELEGRAM_ID)
+        if DEFAULT_AUTO_MANAGER_ID is None:
+            logger.warning("DEFAULT_AUTO_MANAGER_ID is not configured — manager diagnostics limited")
+            manager = None
+        else:
+            manager = await ManagerDeliveryEngineV1.get_manager_user(
+                telegram_id=DEFAULT_AUTO_MANAGER_ID,
+            )
         logger.info(
             "MANAGER_CHECK exists=%s username=%s user_id=%s",
             bool(manager),
@@ -131,11 +143,19 @@ class ManagerDeliveryEngineV1:
             except Exception:
                 logger.warning("Lead count diagnostics failed", exc_info=True)
 
-        is_mgr = await ManagerDeliveryEngineV1.is_platform_manager(BORIS_TELEGRAM_ID)
-        menu_type = await ManagerDeliveryEngineV1.resolve_menu_type(BORIS_TELEGRAM_ID)
+        is_mgr = (
+            await ManagerDeliveryEngineV1.is_platform_manager(DEFAULT_AUTO_MANAGER_ID)
+            if DEFAULT_AUTO_MANAGER_ID is not None
+            else False
+        )
+        menu_type = (
+            await ManagerDeliveryEngineV1.resolve_menu_type(DEFAULT_AUTO_MANAGER_ID)
+            if DEFAULT_AUTO_MANAGER_ID is not None
+            else "default"
+        )
 
         return {
-            "telegram_id": BORIS_TELEGRAM_ID,
+            "telegram_id": DEFAULT_AUTO_MANAGER_ID,
             "internal_user_id": str(manager.id) if manager else None,
             "username": manager.username if manager else BORIS_USERNAME,
             "roles": roles,
@@ -428,7 +448,7 @@ class ManagerDeliveryEngineV1:
 
         ctx = await EntryPointEngineV1.get_flow_context(telegram_user_id)
         default_mgr = await ManagerDeliveryEngineV1.get_manager_user(
-            telegram_id=BORIS_TELEGRAM_ID,
+            telegram_id=DEFAULT_AUTO_MANAGER_ID,
         )
 
         lines = [
@@ -445,6 +465,6 @@ class ManagerDeliveryEngineV1:
             f"entry_point: {ctx.get('entry_point')}",
             f"current_flow: {ctx.get('current_flow')}",
             f"default_manager_enabled: {default_mgr is not None}",
-            f"default_manager_telegram_id: {BORIS_TELEGRAM_ID}",
+            f"default_manager_telegram_id: {DEFAULT_AUTO_MANAGER_ID}",
         ]
         return "\n".join(lines)

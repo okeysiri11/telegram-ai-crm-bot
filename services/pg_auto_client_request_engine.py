@@ -6,6 +6,7 @@ import logging
 import uuid
 from typing import Any
 
+from config import DEFAULT_AUTO_MANAGER_ID
 from database.models.auto_client_request import (
     AutoClientRequestStatus,
     AutoClientRequestType,
@@ -17,7 +18,6 @@ from repositories.user_role_repository import UserRoleRepository
 from repositories.users_repository import UsersRepository
 from services.pg_auto_dealer_manager_engine import (
     BORIS_FULL_NAME,
-    BORIS_TELEGRAM_ID,
     BORIS_USERNAME,
 )
 
@@ -43,14 +43,17 @@ MANAGER_NOTIFICATION_TITLES: dict[str, str] = {
 class AutoClientRequestEngineV1:
     @staticmethod
     async def ensure_auto_manager() -> uuid.UUID | None:
-        """Provision Boris with permission-engine role AUTO_MANAGER."""
+        """Provision default auto manager with permission-engine role AUTO_MANAGER."""
+        if DEFAULT_AUTO_MANAGER_ID is None:
+            logger.warning("DEFAULT_AUTO_MANAGER_ID is not configured — AUTO_MANAGER skipped")
+            return None
         try:
             async with get_session() as session:
                 users = UsersRepository(session)
                 roles = UserRoleRepository(session)
 
                 manager = await users.ensure_user(
-                    telegram_id=BORIS_TELEGRAM_ID,
+                    telegram_id=DEFAULT_AUTO_MANAGER_ID,
                     username=BORIS_USERNAME,
                     full_name=BORIS_FULL_NAME,
                     is_active=True,
@@ -70,7 +73,7 @@ class AutoClientRequestEngineV1:
                 logger.info(
                     "AUTO_MANAGER ensured user_id=%s telegram_id=%s",
                     manager.id,
-                    BORIS_TELEGRAM_ID,
+                    DEFAULT_AUTO_MANAGER_ID,
                 )
                 return manager.id
         except Exception:
@@ -88,7 +91,7 @@ class AutoClientRequestEngineV1:
             )
             if manager is None:
                 manager = await UsersRepository(session).get_by_telegram_id(
-                    BORIS_TELEGRAM_ID
+                    DEFAULT_AUTO_MANAGER_ID
                 )
             if manager is None or manager.telegram_id is None:
                 logger.error("AUTO_MANAGER NOT FOUND")
