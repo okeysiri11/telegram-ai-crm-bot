@@ -54,13 +54,20 @@ async def db_health_handler(request: web.Request) -> web.Response:
 
 
 def create_app() -> web.Application:
-    app = web.Application()
+    from api.crm_api import register_crm_api_routes
+    from services.observability import metrics_handler, prometheus_middleware
+
+    app = web.Application(middlewares=[prometheus_middleware])
 
     # System / production readiness
     app.router.add_get("/liveness", liveness_handler)
     app.router.add_get("/readiness", readiness_handler)
     app.router.add_get("/health", health_handler)
     app.router.add_get("/system/db-health", db_health_handler)
+    app.router.add_get("/metrics", metrics_handler)
+
+    # CRM Marketplace REST API (/api/*)
+    register_crm_api_routes(app)
 
     # Gateway info
     app.router.add_get("/v1", api_info_handler)

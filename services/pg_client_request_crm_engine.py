@@ -180,6 +180,30 @@ class ClientRequestCrmEngineV1:
             request_id,
             {"request_number": request_number, "request_type": db_type},
         )
+        try:
+            from services.pg_platform_audit_engine import PlatformAuditEngineV1
+            from services.pg_lead_sla_engine import LeadSlaEngineV1
+
+            await PlatformAuditEngineV1.lead_created(
+                str(request_id),
+                user_id=client_telegram_id,
+                request_number=request_number,
+                request_type=db_type,
+            )
+            await LeadSlaEngineV1.on_lead_created(
+                client_request_id=request_id,
+                request_number=request_number,
+            )
+            if manager_id:
+                await LeadSlaEngineV1.on_assigned(request_number=request_number)
+                await PlatformAuditEngineV1.manager_assigned(
+                    str(request_id),
+                    request_number=request_number,
+                    manager_id=str(manager_id),
+                )
+        except Exception:
+            logger.warning("Post-create audit/SLA hook failed", exc_info=True)
+
         logger.info("CLIENT_REQUEST synced id=%s number=%s", request_id, request_number)
         return {"id": str(request_id), "request_number": request_number}
 
@@ -259,6 +283,26 @@ class ClientRequestCrmEngineV1:
             request_id,
             {"request_number": request_number, "status": new_status, "actor": actor_telegram_id},
         )
+        try:
+            from services.pg_platform_audit_engine import PlatformAuditEngineV1
+            from services.pg_lead_sla_engine import LeadSlaEngineV1
+
+            await PlatformAuditEngineV1.status_changed(
+                str(request_id),
+                user_id=actor_telegram_id,
+                request_number=request_number,
+                status=new_status,
+            )
+            if new_status == ClientRequestStatus.IN_PROGRESS.value:
+                await LeadSlaEngineV1.on_first_response(request_number)
+            if new_status in {
+                ClientRequestStatus.COMPLETED.value,
+                ClientRequestStatus.CANCELLED.value,
+            }:
+                await LeadSlaEngineV1.on_closed(request_number)
+        except Exception:
+            logger.warning("Status audit/SLA hook failed", exc_info=True)
+
         await ClientRequestCrmEngineV1._notify_client_status(client_telegram_id, request_number, new_status)
         return snapshot
 

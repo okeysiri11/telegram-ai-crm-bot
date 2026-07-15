@@ -77,3 +77,29 @@ FOMA_RATES_TELEGRAM_CHANNEL_ID = os.getenv(
     "FOMA_RATES_TELEGRAM_CHANNEL_ID",
     DEALER_RATES_TELEGRAM_CHANNEL_ID,
 )
+
+# Media storage (telegram | local | s3)
+MEDIA_STORAGE_PROVIDER = os.getenv("MEDIA_STORAGE_PROVIDER", "telegram")
+MEDIA_LOCAL_CACHE = os.getenv("MEDIA_LOCAL_CACHE", "true").lower() in {"1", "true", "yes"}
+LOCAL_STORAGE_DIR = os.getenv("LOCAL_STORAGE_DIR", "data/media_cache")
+MEDIA_CDN_BASE_URL = os.getenv("MEDIA_CDN_BASE_URL", "")
+S3_BUCKET = os.getenv("S3_BUCKET", "")
+S3_REGION = os.getenv("S3_REGION", "eu-central-1")
+S3_ENDPOINT_URL = os.getenv("S3_ENDPOINT_URL", "")
+S3_ACCESS_KEY = os.getenv("S3_ACCESS_KEY", "")
+S3_SECRET_KEY = os.getenv("S3_SECRET_KEY", "")
+
+# JWT / REST API
+JWT_SECRET = os.getenv("JWT_SECRET", "change-me-in-production")
+JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+JWT_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "1440"))
+
+# Observability
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+PROMETHEUS_ENABLED = os.getenv("PROMETHEUS_ENABLED", "true").lower() in {"1", "true", "yes"}
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+
+# SLA / Escalation (seconds)
+SLA_ASSIGNMENT_SEC = int(os.getenv("SLA_ASSIGNMENT_SEC", str(15 * 60)))
+SLA_FIRST_RESPONSE_SEC = int(os.getenv("SLA_FIRST_RESPONSE_SEC", str(30 * 60)))
+SLA_CLOSE_SEC = int(os.getenv("SLA_CLOSE_SEC", str(72 * 3600)))

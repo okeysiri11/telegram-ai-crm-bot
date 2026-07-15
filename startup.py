@@ -56,6 +56,7 @@ class StartupContext:
     runner: web.AppRunner | None
     startup: dict[str, Any]
     diagnostics: dict[str, Any]
+    escalation_task: Any = None
 
 
 async def run_startup() -> StartupContext:
@@ -94,6 +95,23 @@ async def run_startup() -> StartupContext:
         startup.get("ready"),
     )
 
+    try:
+        from services.observability import configure_structured_logging, init_sentry
+        from config import LOG_LEVEL
+
+        configure_structured_logging(LOG_LEVEL)
+        init_sentry()
+    except Exception:
+        logger.warning("Observability init failed", exc_info=True)
+
+    try:
+        from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
+
+        seed = await PlatformPermissionsEngineV1.ensure_seeded()
+        logger.info("Platform permissions seed: %s", seed)
+    except Exception:
+        logger.warning("Platform permissions seed failed", exc_info=True)
+
     from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
     diagnostics = await ManagerDeliveryEngineV1.startup_diagnostics()
@@ -116,17 +134,38 @@ async def run_startup() -> StartupContext:
             startup.get("degraded"),
         )
 
+    # Background escalation poller (every 60s)
+    import asyncio
+
+    async def _escalation_loop() -> None:
+        from services.pg_escalation_engine import EscalationEngineV1
+
+        while True:
+            try:
+                result = await EscalationEngineV1.process_pending()
+                if result.get("acted"):
+                    logger.info("Escalation acted=%s", result)
+            except Exception:
+                logger.warning("Escalation loop error", exc_info=True)
+            await asyncio.sleep(60)
+
+    escalation_task = asyncio.create_task(_escalation_loop(), name="escalation_loop")
+
     return StartupContext(
         scheduler=scheduler,
         runner=runner,
         startup=startup,
         diagnostics=diagnostics,
+        escalation_task=escalation_task,
     )
 
 
 async def shutdown_startup(context: StartupContext) -> None:
     from database.session import shutdown_db
 
+    task = getattr(context, "escalation_task", None)
+    if task is not None:
+        task.cancel()
     await context.scheduler.shutdown()
     if context.runner is not None:
         await context.runner.cleanup()

@@ -52,7 +52,17 @@ class AiManagerEngineV1:
         try:
             raw = await _call_openrouter(messages)
             parsed = AiManagerEngineV1._parse_json(raw)
-            return AiManagerEngineV1._normalize(parsed, fallback_reply=raw[:500])
+            result = AiManagerEngineV1._normalize(parsed, fallback_reply=raw[:500])
+            try:
+                from services.pg_platform_audit_engine import PlatformAuditEngineV1
+
+                await PlatformAuditEngineV1.ai_action(
+                    result.get("intent", "OTHER"),
+                    payload=result,
+                )
+            except Exception:
+                pass
+            return result
         except Exception:
             logger.warning("AI Manager qualification failed", exc_info=True)
             return AiManagerEngineV1._fallback(user_message)

@@ -75,6 +75,18 @@ class MarketplaceListingEngineV1:
                 .values(marketplace_listing_id=listing_id)
             )
 
+        try:
+            from services.pg_marketplace_inventory_engine import InventoryEngineV1
+
+            await InventoryEngineV1.from_listing_payload(
+                seller_id=seller_telegram_id,
+                payload=payload,
+                photos=photo_file_ids,
+                marketplace_listing_id=listing_id,
+            )
+        except Exception:
+            logger.warning("Inventory sync from listing failed", exc_info=True)
+
         logger.info("MARKETPLACE_LISTING created id=%s client_request=%s", listing_id, client_request_id)
         return {"id": str(listing_id), "payload": payload}
 
