@@ -231,7 +231,10 @@ class PlatformReadinessTestSuite:
     def _check_bot_startup() -> dict[str, Any]:
         try:
             from config import BOT_TOKEN
-            from bot import bot, dp
+            from aiogram.fsm.storage.memory import MemoryStorage
+            from bot import bot, build_dispatcher
+
+            dp = build_dispatcher(MemoryStorage())
 
             if not BOT_TOKEN:
                 return _result("failed", "BOT_TOKEN missing")

@@ -1,10 +1,12 @@
 import asyncio
 import logging
+import sys
 
 from aiogram import Bot, Dispatcher
+from aiogram.fsm.storage.base import BaseStorage
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from config import API_HOST, API_PORT, BOT_TOKEN
+from config import API_HOST, API_PORT, BOT_TOKEN, REDIS_REQUIRED, REDIS_URL
 from auto_vertical_handlers import auto_vertical_router as auto_router
 from handlers import router
 from middleware.tenant_middleware import TenantMiddleware
@@ -17,14 +19,51 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher(storage=MemoryStorage())
-dp.update.middleware(EntryPointMiddleware())
-dp.update.middleware(TenantMiddleware())
-dp.include_router(auto_client_entry_router)
-dp.include_router(auto_dealer_entry_router)
-dp.include_router(manager_debug_router)
-dp.include_router(auto_router)
-dp.include_router(router)
+
+
+async def create_fsm_storage() -> tuple[BaseStorage, BaseStorage | None]:
+    """Return (storage, closable_redis_storage). closable is set when Redis is used."""
+    if not REDIS_URL:
+        message = "REDIS_URL is not set"
+        if REDIS_REQUIRED:
+            logger.error("%s and REDIS_REQUIRED=True — aborting startup", message)
+            sys.exit(1)
+        logger.warning("%s — using MemoryStorage (FSM will not survive restarts)", message)
+        return MemoryStorage(), None
+
+    try:
+        from aiogram.fsm.storage.redis import RedisStorage
+
+        storage = RedisStorage.from_url(REDIS_URL)
+        await storage.redis.ping()
+        logger.info("FSM storage: Redis (%s)", REDIS_URL)
+        return storage, storage
+    except Exception as exc:
+        if REDIS_REQUIRED:
+            logger.error(
+                "Redis is required (REDIS_REQUIRED=True) but unavailable at %s: %s",
+                REDIS_URL,
+                exc,
+            )
+            sys.exit(1)
+        logger.warning(
+            "Redis unavailable at %s (%s) — falling back to MemoryStorage",
+            REDIS_URL,
+            exc,
+        )
+        return MemoryStorage(), None
+
+
+def build_dispatcher(storage: BaseStorage) -> Dispatcher:
+    dp = Dispatcher(storage=storage)
+    dp.update.middleware(EntryPointMiddleware())
+    dp.update.middleware(TenantMiddleware())
+    dp.include_router(auto_client_entry_router)
+    dp.include_router(auto_dealer_entry_router)
+    dp.include_router(manager_debug_router)
+    dp.include_router(auto_router)
+    dp.include_router(router)
+    return dp
 
 
 async def main() -> None:
@@ -34,6 +73,9 @@ async def main() -> None:
     from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1
     from services.pg_scheduler_engine import get_default_worker
     from services.pg_webhook_engine import WebhookEngineV1
+
+    storage, redis_storage = await create_fsm_storage()
+    dp = build_dispatcher(storage)
 
     configure_bidex_parser(DealerQuoteAuthorityEngineV1)
     logger.info("Dealer quote engine initialized")
@@ -89,6 +131,8 @@ async def main() -> None:
         await scheduler.shutdown()
         if runner is not None:
             await runner.cleanup()
+        if redis_storage is not None:
+            await redis_storage.close()
         await shutdown_db()
 
 
