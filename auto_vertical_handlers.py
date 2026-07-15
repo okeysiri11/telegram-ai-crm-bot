@@ -27,6 +27,7 @@ from services.automotive_localization import (
     btn,
     category_header,
     hub_screen_to_category,
+    is_back_button,
     resolve_auto_screen,
     t,
 )
@@ -379,12 +380,50 @@ async def _show_treasury(message: Message, user_id: int) -> None:
     await message.answer(text, reply_markup=auto_vertical_menu(lang))
 
 
-async def _open_auto_hub(message: Message, user_id: int, *, quiet: bool = False) -> None:
-    lang = await _user_lang(user_id)
+async def _open_auto_hub(message: Message, user_id: int) -> None:
+    """First entry into Auto Hub."""
     auto_vertical_section[user_id] = "hub"
-    markup = auto_vertical_hub_menu(lang)
-    text = t("auto_hub_title", lang) if not quiet else f"◀ {t('auto_hub_title', lang)}"
-    await message.answer(text, reply_markup=markup)
+    lang = await _user_lang(user_id)
+    await message.answer(
+        t("auto_hub_title", lang),
+        reply_markup=auto_vertical_hub_menu(lang),
+    )
+
+
+async def _return_to_auto_hub(message: Message, user_id: int) -> None:
+    """Back navigation — reset section/flow and restore hub keyboard (one message)."""
+    _clear_flow(user_id)
+    auto_billing_flow.pop(user_id, None)
+    auto_vertical_section[user_id] = "hub"
+    lang = await _user_lang(user_id)
+    await message.answer(
+        t("auto_hub_title", lang),
+        reply_markup=auto_vertical_hub_menu(lang),
+    )
+
+
+async def _return_to_cars_menu(message: Message, user_id: int) -> None:
+    """Back from in-flow actions to the cars submenu."""
+    _clear_flow(user_id)
+    auto_vertical_section[user_id] = "cars"
+    lang = await _user_lang(user_id)
+    await message.answer(
+        t("auto_cars_title", lang),
+        reply_markup=auto_vertical_menu(lang),
+    )
+
+
+async def _exit_auto_vertical(message: Message, user_id: int) -> None:
+    """Leave Auto vertical entirely — back from hub to platform main menu."""
+    _clear_flow(user_id)
+    auto_billing_flow.pop(user_id, None)
+    auto_vertical_active.pop(user_id, None)
+    auto_vertical_section.pop(user_id, None)
+    lang = await _user_lang(user_id)
+    await message.answer(
+        t("main_menu", lang),
+        reply_markup=await _main_menu_for(user_id),
+    )
 
 
 async def _open_cars_section(message: Message, user_id: int) -> None:
@@ -462,21 +501,19 @@ async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: s
     section = auto_vertical_section.get(user_id, "hub")
 
     if screen_key == "back":
-        if section == "cars":
-            await _open_auto_hub(message, user_id, quiet=True)
-            return
-        if section != "hub":
-            await _open_auto_hub(message, user_id, quiet=True)
-            return
-        auto_vertical_active.pop(user_id, None)
-        auto_vertical_section.pop(user_id, None)
         _clear_flow(user_id)
         auto_billing_flow.pop(user_id, None)
-        await message.answer(t("main_menu", lang), reply_markup=await _main_menu_for(user_id))
+        if section == "cars":
+            await _return_to_auto_hub(message, user_id)
+            return
+        if section != "hub":
+            await _return_to_auto_hub(message, user_id)
+            return
+        await _exit_auto_vertical(message, user_id)
         return
 
     if screen_key == "back_to_hub":
-        await _open_auto_hub(message, user_id)
+        await _return_to_auto_hub(message, user_id)
         return
 
     if screen_key == "hub_cars":
@@ -638,15 +675,12 @@ async def auto_vertical_flow_handler(message: Message) -> None:
     text = (message.text or "").strip()
     lang = await _user_lang(user_id)
 
-    if text == btn("back", lang) or text == "⬅ Назад":
+    if is_back_button(text, lang):
         _clear_flow(user_id)
         if auto_vertical_section.get(user_id) == "cars":
-            await message.answer(
-                t("auto_cars_title", lang),
-                reply_markup=auto_vertical_menu(lang),
-            )
+            await _return_to_cars_menu(message, user_id)
         else:
-            await _open_auto_hub(message, user_id, quiet=True)
+            await _return_to_auto_hub(message, user_id)
         return
 
     if step == "vin":

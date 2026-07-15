@@ -4,14 +4,20 @@ from __future__ import annotations
 
 import logging
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from automotive_partner_handlers import HUB_BUTTON_TO_CATEGORY, show_partner_category
 from keyboards import auto_client_menu, auto_client_services_menu
-from services.automotive_localization import btn, category_header, hub_screen_to_category, resolve_auto_screen, t
+from services.automotive_localization import (
+    category_header,
+    hub_screen_to_category,
+    is_back_button,
+    resolve_auto_screen,
+    t,
+)
 from services.entry_point_routing import FlowState
 from services.pg_entry_point_engine import EntryPointEngineV1
 from services.pg_vertical_onboarding_engine import VerticalOnboardingEngineV1
@@ -32,7 +38,7 @@ _SERVICES_SCREEN_KEYS = frozenset({
 
 
 def _auto_client_services_labels(lang: str | None = None) -> frozenset[str]:
-    from services.automotive_localization import normalize_language
+    from services.automotive_localization import btn, normalize_language
 
     language = normalize_language(lang)
     return frozenset(btn(key, language) for key in _SERVICES_SCREEN_KEYS)
@@ -45,6 +51,20 @@ async def _ensure_auto_client_services(message: Message) -> bool:
     return ctx.get("source_link") == "auto_client" or ctx.get("entry_point") == "AUTO_CLIENT"
 
 
+async def return_auto_client_menu(message: Message, state: FSMContext) -> None:
+    """Reset Auto Client FSM and show main client menu (single navigation message)."""
+    user_id = message.from_user.id
+    lang = await VerticalOnboardingEngineV1.get_language(user_id)
+    await VerticalOnboardingEngineV1.clear_auto_client_pending(user_id)
+    await EntryPointEngineV1.set_current_flow(user_id, FlowState.AUTO_CLIENT_MENU)
+    await state.set_state(AutoClientFlow.menu)
+    await state.update_data(request_type=None, photo_file_id=None, client_phone=None)
+    await message.answer(
+        t("auto_client_menu_hint", lang),
+        reply_markup=auto_client_menu(lang),
+    )
+
+
 async def open_auto_client_services(message: Message, state: FSMContext) -> None:
     """Entry from auto_client_router «Автоуслуги» button."""
     user_id = message.from_user.id
@@ -54,19 +74,11 @@ async def open_auto_client_services(message: Message, state: FSMContext) -> None
         pending="ac:services:hub",
     )
     await state.set_state(AutoClientFlow.services_hub)
+    await state.update_data(request_type=None, photo_file_id=None, client_phone=None)
     await message.answer(
-        "🛠 Выберите услугу:",
+        t("auto_client_services_hint", lang),
         reply_markup=auto_client_services_menu(lang),
     )
-
-
-async def _return_auto_client_menu(message: Message, state: FSMContext) -> None:
-    user_id = message.from_user.id
-    lang = await VerticalOnboardingEngineV1.get_language(user_id)
-    await VerticalOnboardingEngineV1.clear_auto_client_pending(user_id)
-    await EntryPointEngineV1.set_current_flow(user_id, FlowState.AUTO_CLIENT_MENU)
-    await state.set_state(AutoClientFlow.menu)
-    await message.answer("Выберите действие:", reply_markup=auto_client_menu(lang))
 
 
 async def _services_hub_text_filter(message: Message) -> bool:
@@ -85,14 +97,14 @@ async def auto_client_services_action(message: Message, state: FSMContext) -> No
     screen_key = resolve_auto_screen(message.text)
     logger.info("AUTO_CLIENT services action user=%s screen=%s", user_id, screen_key)
 
-    if screen_key == "back":
-        await _return_auto_client_menu(message, state)
+    if screen_key == "back" or is_back_button(message.text, lang):
+        await return_auto_client_menu(message, state)
         return
 
     category = hub_screen_to_category(screen_key or "")
     if category is None:
         await message.answer(
-            "Выберите услугу из меню.",
+            t("auto_client_services_hint", lang),
             reply_markup=auto_client_services_menu(lang),
         )
         return
@@ -109,6 +121,6 @@ async def auto_client_services_action(message: Message, state: FSMContext) -> No
         logger.warning("AUTO_CLIENT services category failed user=%s cat=%s", user_id, category, exc_info=True)
         await message.answer(
             f"{category_header(category, lang)}\n\n"
-            "Раздел временно недоступен. Свяжитесь с менеджером через главное меню.",
+            f"{t('auto_client_service_unavailable', lang)}",
             reply_markup=auto_client_services_menu(lang),
         )

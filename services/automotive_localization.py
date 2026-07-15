@@ -81,6 +81,18 @@ _TEXTS: dict[str, dict[str, str]] = {
         "uk": "Партнери поки не налаштовані.",
     },
     "choose_car": {"ru": "Выберите автомобиль:", "uk": "Оберіть автомобіль:"},
+    "auto_client_menu_hint": {
+        "ru": "Выберите действие:",
+        "uk": "Оберіть дію:",
+    },
+    "auto_client_services_hint": {
+        "ru": "🛠 Выберите услугу:",
+        "uk": "🛠 Оберіть послугу:",
+    },
+    "auto_client_service_unavailable": {
+        "ru": "Раздел временно недоступен. Свяжитесь с менеджером через главное меню.",
+        "uk": "Розділ тимчасово недоступний. Зв'яжіться з менеджером через головне меню.",
+    },
     "back_inline": {"ru": "⬅ Назад", "uk": "⬅ Назад"},
     "back_partners": {"ru": "⬅ К партнёрам", "uk": "⬅ До партнерів"},
 }
@@ -206,6 +218,10 @@ def resolve_auto_screen(text: str | None) -> str | None:
         if stripped in labels.values():
             return key
     return None
+
+
+def is_back_button(text: str | None, lang: str | None = None) -> bool:
+    return resolve_auto_screen(text) == "back"
 
 
 def all_auto_button_labels() -> frozenset[str]:

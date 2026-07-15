@@ -10,8 +10,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from keyboards import auto_client_menu, entry_flow_language_inline
-from routers.auto_hub_router import open_auto_client_services
-from services.automotive_localization import btn, normalize_language, t
+from routers.auto_hub_router import open_auto_client_services, return_auto_client_menu
+from services.automotive_localization import btn, is_back_button, normalize_language, t
 from services.entry_point_routing import EntryPoint, FlowState, is_auto_client_menu_text
 from services.pg_auto_client_request_engine import AutoClientRequestEngineV1
 from services.pg_entry_point_engine import EntryPointEngineV1
@@ -336,6 +336,40 @@ async def auto_client_menu_action(message: Message, state: FSMContext) -> None:
     await message.answer("Выберите действие:", reply_markup=auto_client_menu(lang))
 
 
+async def _auto_client_back_filter(message: Message) -> bool:
+    if not message.from_user or not message.text:
+        return False
+    if not is_back_button(message.text):
+        return False
+    ctx = await EntryPointEngineV1.get_flow_context(message.from_user.id)
+    return (
+        ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value
+        or ctx.get("source_link") == "auto_client"
+    )
+
+
+@router.message(_auto_client_back_filter)
+async def auto_client_back_navigation(message: Message, state: FSMContext) -> None:
+    """«⬅ Назад» in Auto Client — return to menu, never echo the button label."""
+    if not await _ensure_auto_client(message):
+        return
+    current = await state.get_state()
+    logger.info(
+        "AUTO_CLIENT back user=%s state=%s",
+        message.from_user.id,
+        current,
+    )
+    if current == AutoClientFlow.services_hub.state:
+        await return_auto_client_menu(message, state)
+        return
+    await VerticalOnboardingEngineV1.clear_auto_client_pending(message.from_user.id)
+    await state.set_state(AutoClientFlow.menu)
+    await state.update_data(request_type=None, photo_file_id=None, client_phone=None)
+    lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
+    await EntryPointEngineV1.set_current_flow(message.from_user.id, FlowState.AUTO_CLIENT_MENU)
+    await message.answer(t("auto_client_menu_hint", lang), reply_markup=auto_client_menu(lang))
+
+
 @router.message(StateFilter(AutoClientFlow.awaiting_photo), F.photo)
 async def auto_client_listing_photo(message: Message, state: FSMContext) -> None:
     if not await _ensure_auto_client(message):
@@ -440,6 +474,9 @@ async def auto_client_manager_phone_text(message: Message, state: FSMContext) ->
     if not await _ensure_auto_client(message) or not message.text:
         return
     text = message.text.strip()
+    if is_back_button(text):
+        await return_auto_client_menu(message, state)
+        return
     if is_auto_client_menu_text(text):
         await VerticalOnboardingEngineV1.clear_auto_client_pending(message.from_user.id)
         await state.set_state(AutoClientFlow.menu)
@@ -467,6 +504,9 @@ async def auto_client_text_input(message: Message, state: FSMContext) -> None:
     if not message.from_user or not message.text:
         return
     text = message.text.strip()
+    if is_back_button(text):
+        await return_auto_client_menu(message, state)
+        return
     if not await _ensure_auto_client(message):
         return
 
