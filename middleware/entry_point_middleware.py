@@ -49,9 +49,10 @@ class EntryPointMiddleware(BaseMiddleware):
                     pending = await VerticalOnboardingEngineV1.get_auto_client_pending(user_id)
                     mapping = AUTO_CLIENT_PENDING_RESTORE.get(pending or "")
                     if mapping is not None:
+                        flow_step = (pending or "").rsplit(":", 1)[-1]
                         await state.set_state(mapping[0])
                         if mapping[1] != "services":
-                            await state.update_data(request_type=mapping[1])
+                            await state.update_data(flow_type=mapping[1], flow_step=flow_step)
                     elif ctx.get("current_flow") == FlowState.AUTO_CLIENT_MENU.value:
                         await state.set_state(AutoClientFlow.menu)
 

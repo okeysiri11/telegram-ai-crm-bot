@@ -303,6 +303,7 @@ class ManagerDeliveryEngineV1:
         lead_id: str | uuid.UUID | None = None,
         request_number: str | None = None,
         photo_file_id: str | None = None,
+        photo_file_ids: list[str] | None = None,
     ) -> bool:
         if not BOT_TOKEN:
             logger.error(
@@ -326,19 +327,50 @@ class ManagerDeliveryEngineV1:
 
         bot = Bot(token=BOT_TOKEN)
         try:
-            if photo_file_id:
-                await bot.send_photo(
-                    chat_id=manager_telegram_id,
-                    photo=photo_file_id,
-                    caption=text[:1024],
-                    reply_markup=markup,
-                )
-                if len(text) > 1024:
-                    await bot.send_message(
+            photos = list(photo_file_ids or [])
+            if not photos and photo_file_id:
+                photos = [photo_file_id]
+
+            if photos:
+                if len(photos) == 1:
+                    await bot.send_photo(
                         chat_id=manager_telegram_id,
-                        text=text[1024:],
+                        photo=photos[0],
+                        caption=text[:1024],
                         reply_markup=markup,
                     )
+                    if len(text) > 1024:
+                        await bot.send_message(
+                            chat_id=manager_telegram_id,
+                            text=text[1024:],
+                            reply_markup=markup,
+                        )
+                else:
+                    from aiogram.types import InputMediaPhoto
+
+                    media = [
+                        InputMediaPhoto(
+                            media=fid,
+                            caption=text[:1024] if idx == 0 else None,
+                        )
+                        for idx, fid in enumerate(photos[:10])
+                    ]
+                    await bot.send_media_group(
+                        chat_id=manager_telegram_id,
+                        media=media,
+                    )
+                    if len(text) > 1024:
+                        await bot.send_message(
+                            chat_id=manager_telegram_id,
+                            text=text[1024:],
+                            reply_markup=markup,
+                        )
+                    elif markup:
+                        await bot.send_message(
+                            chat_id=manager_telegram_id,
+                            text=f"Заявка {request_number or ''}".strip(),
+                            reply_markup=markup,
+                        )
             else:
                 await bot.send_message(
                     chat_id=manager_telegram_id,
@@ -371,36 +403,71 @@ class ManagerDeliveryEngineV1:
         request_number: str,
         request_type: str,
         description: str | None,
+        user_description: str | None = None,
         client_username: str | None,
         client_full_name: str | None,
         client_phone: str | None = None,
         client_telegram_id: int | None = None,
         photo_file_id: str | None = None,
+        photo_file_ids: list[str] | None = None,
+        flow_request_type: str | None = None,
+        vin: str | None = None,
+        brand: str | None = None,
+        model: str | None = None,
+        year: int | None = None,
+        mileage: int | None = None,
+        budget: float | None = None,
+        price: float | None = None,
+        service_type: str | None = None,
         lead_id: str | uuid.UUID | None = None,
     ) -> bool:
-        from services.pg_auto_client_request_engine import (
-            FLOW_TYPE_TO_DB,
-            MANAGER_NOTIFICATION_TITLES,
+        from services.auto_client_flow_engine import (
+            REQUEST_TYPE_LABELS,
+            build_manager_notification_lines,
         )
+        from services.pg_auto_client_request_engine import FLOW_TYPE_TO_DB
 
         db_type = FLOW_TYPE_TO_DB.get(request_type, request_type)
+        if db_type == request_type and request_type in FLOW_TYPE_TO_DB.values():
+            db_type = request_type
 
         manager_info = await ManagerDeliveryEngineV1.resolve_default_manager()
         if manager_info is None:
             return False
 
         _, manager_telegram_id, _ = manager_info
-        title = MANAGER_NOTIFICATION_TITLES.get(db_type, "🔔 Новая заявка Auto Client")
-        client_ref = f"@{client_username}" if client_username else (client_full_name or "—")
 
-        lines = [title, "", "Клиент:", client_ref]
-        if client_telegram_id:
-            lines.append(f"Telegram ID: {client_telegram_id}")
-        if client_phone:
-            lines.append(f"Телефон: {client_phone}")
-        if description:
-            lines.extend(["", "Запрос:", description[:3500]])
-        lines.extend(["", f"Заявка:", request_number])
+        flow_key = flow_request_type or request_type
+        if flow_key in FLOW_TYPE_TO_DB:
+            pass
+        else:
+            for k, v in FLOW_TYPE_TO_DB.items():
+                if v == db_type:
+                    flow_key = k
+                    break
+
+        data = {
+            "brand": brand,
+            "model": model,
+            "year": year,
+            "mileage": mileage,
+            "budget": budget,
+            "price": price,
+            "vin": vin,
+            "service_type": service_type,
+            "user_description": user_description or description,
+            "photo_file_ids": photo_file_ids or ([photo_file_id] if photo_file_id else []),
+        }
+        lines = build_manager_notification_lines(
+            flow_type=flow_key,
+            request_number=request_number,
+            data=data,
+            client_username=client_username,
+            client_full_name=client_full_name,
+            client_phone=client_phone,
+        )
+        if client_telegram_id and flow_key not in REQUEST_TYPE_LABELS:
+            lines.insert(4, f"Telegram ID: {client_telegram_id}")
 
         return await ManagerDeliveryEngineV1.send_to_manager(
             manager_telegram_id=manager_telegram_id,
@@ -408,6 +475,7 @@ class ManagerDeliveryEngineV1:
             lead_id=lead_id,
             request_number=request_number,
             photo_file_id=photo_file_id,
+            photo_file_ids=photo_file_ids,
         )
 
     @staticmethod

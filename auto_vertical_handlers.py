@@ -675,6 +675,12 @@ async def auto_vertical_flow_handler(message: Message) -> None:
     text = (message.text or "").strip()
     lang = await _user_lang(user_id)
 
+    screen_key = resolve_auto_screen(text)
+    if screen_key is not None:
+        _clear_flow(user_id)
+        await _handle_auto_vertical_screen(message, user_id, text)
+        return
+
     if is_back_button(text, lang):
         _clear_flow(user_id)
         if auto_vertical_section.get(user_id) == "cars":

@@ -5,8 +5,8 @@ from __future__ import annotations
 import enum
 import uuid
 
-from sqlalchemy import BigInteger, ForeignKey, Index, String, Text
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import BigInteger, ForeignKey, Index, Integer, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
@@ -18,6 +18,7 @@ class AutoClientRequestType(str, enum.Enum):
     AUTO_SELL = "AUTO_SELL"
     AUTO_LISTING = "AUTO_LISTING"
     AUTO_MANAGER_CALLBACK = "AUTO_MANAGER_CALLBACK"
+    AUTO_SERVICES = "AUTO_SERVICES"
 
 
 class AutoClientRequestStatus(str, enum.Enum):
@@ -51,7 +52,16 @@ class AutoClientRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     client_phone: Mapped[str | None] = mapped_column(String(32), nullable=True)
     source_link: Mapped[str | None] = mapped_column(String(64), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    vin: Mapped[str | None] = mapped_column(String(17), nullable=True)
+    brand: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    model: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    year: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    mileage: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    budget: Mapped[float | None] = mapped_column(Numeric(14, 2), nullable=True)
+    price: Mapped[float | None] = mapped_column(Numeric(14, 2), nullable=True)
+    service_type: Mapped[str | None] = mapped_column(String(128), nullable=True)
     photo_file_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    photo_file_ids: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     manager_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),

@@ -30,6 +30,7 @@ FLOW_TYPE_TO_DB: dict[str, str] = {
     "sell_car": AutoClientRequestType.AUTO_SELL.value,
     "listing": AutoClientRequestType.AUTO_LISTING.value,
     "manager_callback": AutoClientRequestType.AUTO_MANAGER_CALLBACK.value,
+    "services": AutoClientRequestType.AUTO_SERVICES.value,
 }
 
 MANAGER_NOTIFICATION_TITLES: dict[str, str] = {
@@ -37,6 +38,7 @@ MANAGER_NOTIFICATION_TITLES: dict[str, str] = {
     AutoClientRequestType.AUTO_SELL.value: "💰 Новая заявка на продажу автомобиля",
     AutoClientRequestType.AUTO_LISTING.value: "📢 Новое объявление от клиента",
     AutoClientRequestType.AUTO_MANAGER_CALLBACK.value: "📞 Клиент запросил менеджера",
+    AutoClientRequestType.AUTO_SERVICES.value: "🛠 Новая заявка на автоуслуги",
 }
 
 
@@ -116,7 +118,17 @@ class AutoClientRequestEngineV1:
         client_phone: str | None = None,
         source_link: str | None = "auto_client",
         description: str | None = None,
+        user_description: str | None = None,
         photo_file_id: str | None = None,
+        photo_file_ids: list[str] | None = None,
+        vin: str | None = None,
+        brand: str | None = None,
+        model: str | None = None,
+        year: int | None = None,
+        mileage: int | None = None,
+        budget: float | None = None,
+        price: float | None = None,
+        service_type: str | None = None,
     ) -> dict[str, Any]:
         db_type = FLOW_TYPE_TO_DB.get(
             flow_request_type,
@@ -128,6 +140,11 @@ class AutoClientRequestEngineV1:
             raise RuntimeError("AUTO_MANAGER NOT FOUND")
 
         manager_uuid, manager_telegram_id, manager_name = manager_info
+
+        resolved_photos = list(photo_file_ids or [])
+        if not resolved_photos and photo_file_id:
+            resolved_photos = [photo_file_id]
+        primary_photo = resolved_photos[0] if resolved_photos else photo_file_id
 
         async with get_session() as session:
             request_number = await AutoClientRequestEngineV1._next_request_number(session)
@@ -141,7 +158,16 @@ class AutoClientRequestEngineV1:
                 client_phone=client_phone,
                 source_link=source_link,
                 description=description,
-                photo_file_id=photo_file_id,
+                vin=vin,
+                brand=brand,
+                model=model,
+                year=year,
+                mileage=mileage,
+                budget=budget,
+                price=price,
+                service_type=service_type,
+                photo_file_id=primary_photo,
+                photo_file_ids=resolved_photos or None,
                 manager_id=manager_uuid,
             )
             request_id = row.id
@@ -154,12 +180,23 @@ class AutoClientRequestEngineV1:
         await ManagerDeliveryEngineV1.notify_auto_client_request(
             request_number=created_number,
             request_type=db_type,
+            flow_request_type=flow_request_type,
             description=description,
+            user_description=user_description,
             client_username=client_username,
             client_full_name=client_full_name,
             client_phone=client_phone,
             client_telegram_id=client_telegram_id,
-            photo_file_id=photo_file_id,
+            photo_file_id=primary_photo,
+            photo_file_ids=resolved_photos or None,
+            vin=vin,
+            brand=brand,
+            model=model,
+            year=year,
+            mileage=mileage,
+            budget=budget,
+            price=price,
+            service_type=service_type,
             lead_id=str(request_id),
         )
 

@@ -27,10 +27,42 @@ def test_request_type_labels() -> None:
 def test_fsm_states_exist() -> None:
     from states.entry_flow_states import AutoClientFlow
 
-    assert AutoClientFlow.awaiting_description
-    assert AutoClientFlow.awaiting_photo
-    assert AutoClientFlow.awaiting_listing_description
+    assert AutoClientFlow.collecting
+    assert AutoClientFlow.awaiting_photos
+    assert AutoClientFlow.awaiting_vin
     assert AutoClientFlow.awaiting_phone
+
+
+def test_flow_steps_defined() -> None:
+    from services.auto_client_flow_engine import (
+        FLOW_STEPS,
+        REQUEST_BUY,
+        REQUEST_LISTING,
+        REQUEST_MANAGER,
+        REQUEST_SELL,
+        REQUEST_SERVICES,
+        first_step,
+        next_step,
+    )
+
+    assert first_step(REQUEST_BUY) == "brand"
+    assert "vin_optional" in FLOW_STEPS[REQUEST_BUY]
+    assert "photos" in FLOW_STEPS[REQUEST_SELL]
+    assert next_step(REQUEST_MANAGER, "description") == "phone"
+    assert REQUEST_SERVICES not in {REQUEST_BUY, REQUEST_SELL}
+    assert "vin_optional" not in FLOW_STEPS[REQUEST_SERVICES]
+    assert "vin_optional" not in FLOW_STEPS[REQUEST_MANAGER]
+
+
+def test_vin_validation_only_when_entering() -> None:
+    from services.auto_client_flow_engine import validate_text_step
+
+    ok, error, _ = validate_text_step("brand", "BMW", flow_type="buy_car")
+    assert ok
+
+    ok, error, _ = validate_text_step("vin", "SHORT", flow_type="buy_car")
+    assert not ok
+    assert error
 
 
 def test_router_handlers_registered() -> None:
@@ -44,9 +76,10 @@ def test_router_handlers_registered() -> None:
         "cmd_start_auto_client",
         "auto_client_language_selected",
         "auto_client_menu_action",
-        "auto_client_listing_photo",
-        "auto_client_listing_photo_required",
-        "auto_client_text_input",
+        "auto_client_collect_photos",
+        "auto_client_collecting_text",
+        "auto_client_vin_action",
+        "auto_client_phone_text",
     }
     assert required.issubset(handler_names)
 
@@ -56,6 +89,7 @@ def test_flow_type_mapping() -> None:
     from services.pg_auto_client_request_engine import FLOW_TYPE_TO_DB
 
     assert FLOW_TYPE_TO_DB["buy_car"] == AutoClientRequestType.AUTO_SEARCH.value
+    assert FLOW_TYPE_TO_DB["services"] == AutoClientRequestType.AUTO_SERVICES.value
 
 
 def test_lead_snapshot_has_client_fields() -> None:
@@ -105,6 +139,8 @@ def main() -> None:
     test_is_auto_dealer_lead_includes_auto_client()
     test_request_type_labels()
     test_fsm_states_exist()
+    test_flow_steps_defined()
+    test_vin_validation_only_when_entering()
     test_router_handlers_registered()
     test_flow_type_mapping()
     test_lead_snapshot_has_client_fields()

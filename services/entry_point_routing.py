@@ -161,6 +161,23 @@ def is_auto_client_menu_text(text: str | None, lang: str | None = None) -> bool:
     return False
 
 
+def is_auto_client_interrupt_text(text: str | None, lang: str | None = None) -> bool:
+    """Main menu / back labels that must break out of any Auto Client FSM step."""
+    if not text:
+        return False
+    from services.automotive_localization import btn, is_back_button, normalize_language
+
+    normalized = text.strip()
+    if is_back_button(normalized, lang):
+        return True
+    if is_auto_client_menu_text(normalized, lang):
+        return True
+    language = normalize_language(lang)
+    if normalized == btn("main_menu", language):
+        return True
+    return False
+
+
 def flow_for_dealer_step(step: str | None) -> FlowState | None:
     if step in {None, "started", "STARTED"}:
         return FlowState.DEALER_TYPE_SELECT

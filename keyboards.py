@@ -1686,6 +1686,28 @@ def auto_client_menu(lang: str | None = None) -> ReplyKeyboardMarkup:
     )
 
 
+def auto_client_photos_inline() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Готово", callback_data="ac:photos:done"),
+                InlineKeyboardButton(text="⏭ Пропустить", callback_data="ac:photos:skip"),
+            ],
+        ]
+    )
+
+
+def auto_client_vin_inline() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="➕ Добавить VIN", callback_data="ac:vin:add"),
+                InlineKeyboardButton(text="⏭ Пропустить", callback_data="ac:vin:skip"),
+            ],
+        ]
+    )
+
+
 def entry_flow_language_inline(*, prefix: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[

@@ -147,6 +147,7 @@ class LeadEngineV1:
             "sell_car": "seller",
             "listing": "seller",
             "manager_callback": "buyer",
+            "services": "buyer",
         }
         resolved_role = role_by_type.get(request_type, "buyer")
         snapshot: dict[str, Any]
