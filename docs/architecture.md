@@ -1,75 +1,53 @@
-# Architecture — Auto CRM Marketplace Platform
+# Architecture Overview
 
-## Overview
+## Goals
 
-The platform combines:
+Transform the Telegram CRM bot into a **modular automotive platform** without disrupting live user flows.
 
-- **Telegram CRM** for auto clients and managers
-- **Marketplace** inventory & listings
-- **AI Manager** lead qualification and routing
-- **Dealer vertical** (cars, billing, partners)
-- **Owner analytics** and SLA monitoring
-- **REST API** with JWT and OpenAPI/Swagger
-- **Notification center** (Telegram / Email / SMS / Push)
-- **Media storage** abstraction (Telegram / Local / S3 + CDN)
+## Principles
 
-## Layer diagram
+1. **Strangler Fig** — new code in `src/` absorbs domains gradually.
+2. **No big-bang rewrite** — legacy routers/handlers remain authoritative until cutover.
+3. **Interfaces first** — DI container, storage, notifications, events defined before migration.
+4. **Domain boundaries** — `src/domains/<name>/{models,schemas,services,repositories,routers,events}`.
+
+## Package map
 
 ```
-Telegram Bot (aiogram)
-  ├── Auto Client FSM / Dealer / Manager CRM routers
-  ├── AI Manager
-  └── Entry / Permission middleware
-
-HTTP API (aiohttp)
-  ├── /health /metrics
-  ├── /api/* CRM REST (JWT)
-  └── /v1/* legacy gateway
-
-Services
-  ├── ClientRequestCrmEngine / LeadSla / Escalation
-  ├── Inventory / Search / Recommendations
-  ├── StorageProvider / NotificationCenter
-  ├── PlatformAudit / PlatformPermissions
-  └── OwnerAnalytics / AI Manager
-
-PostgreSQL + Redis
-  ├── client_requests, inventory, audit_log, lead_sla_records
-  ├── marketplace_listings, auto_client_requests_v1
-  └── permission_engine_* roles/permissions
+src/
+  domains/          # 14 domain scaffolds (empty facades)
+  events/           # LeadCreated, LeadAssigned, … + EventDispatcher
+  platform/
+    notifications/  # NotificationProvider stack
+    storage/        # StorageProvider stack
+    permissions/    # Role/Permission dataclasses
+    analytics/      # LeadMetrics / ManagerMetrics / RevenueMetrics
+container.py        # DI registry (not wired into startup yet)
+api/v1/             # /api/v1 stub routes (501 scaffold)
 ```
 
-## Key entities
+## Legacy runtime (unchanged)
 
-| Entity | Table | Notes |
-|--------|-------|-------|
-| Client request | `client_requests` | Pipeline + funnel |
-| Auto request | `auto_client_requests_v1` | Legacy-compatible lead record |
-| Inventory | `inventory` | Marketplace catalog |
-| Listing | `marketplace_listings` | Generated listings |
-| Audit | `audit_log` | Platform action trail |
-| SLA | `lead_sla_records` | Response / assignment / close timers |
+- `routers/*` — Auto Client / Dealer / Manager CRM
+- `handlers.py` + `*_handlers.py`
+- `services/pg_*` engines
+- `services/crm_event_bus.py` + root `events.py`
 
-## Media storage
+## Wiring status
 
-`MEDIA_STORAGE_PROVIDER=telegram|local|s3`
+| Component | Wired to bot startup? |
+|-----------|----------------------|
+| `container.py` | No (opt-in import) |
+| `src/events` | No |
+| `api/v1` | No (call `register_api_v1_routes`) |
+| Domain packages | Scaffold only |
 
-- `TelegramStorage` — file_id primary
-- `LocalStorage` — filesystem cache + optional CDN URL
-- `S3Storage` — S3-compatible object store
-- `CompositeStorage` — primary + local cache
+## Related docs
 
-## Escalation
-
-| Delay | Action |
-|-------|--------|
-| 5 min | Reminder to manager |
-| 15 min | Repeat notification |
-| 30 min | Reassign to AUTO_MANAGER |
-| 60 min | Notify OWNER |
-
-## Security
-
-- Role codes: OWNER, ADMIN, MANAGER, AUTO_MANAGER, DEALER_MANAGER, CLIENT, AI_AGENT
-- Permissions via `permission_engine_*` tables
-- REST API JWT (`JWT_SECRET`)
+- [Current architecture audit](architecture/current_architecture.md)
+- [Deployment](deployment.md)
+- [Database](database.md)
+- [FSM](fsm.md)
+- [Events](events.md)
+- [Permissions](permissions.md)
+- [Technical debt](technical_debt.md)
