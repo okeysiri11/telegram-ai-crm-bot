@@ -53,7 +53,9 @@ def _month_key(dt: datetime | None = None) -> str:
     return value.strftime("%Y-%m")
 
 
-class LeadEngineV1:
+class AutomotiveRevenueLeadRecorder:
+    """Partner-lead commission recorder (not the CRM LeadEngineV1)."""
+
     @staticmethod
     async def record_partner_lead(
         *,
@@ -168,7 +170,9 @@ class CommissionEngineV1:
         }
 
 
-class DealEngineV1:
+class AutomotiveRevenueDealRecorder:
+    """Deal profit/commission recorder (not the CRM DealEngineV1)."""
+
     @staticmethod
     async def record_deal_completion(
         *,
@@ -282,10 +286,10 @@ class RevenueAnalyticsEngineV1:
 
 
 class AutomotiveRevenueEngineV1:
-    LeadEngine = LeadEngineV1
+    LeadEngine = AutomotiveRevenueLeadRecorder
     ReferralEngine = ReferralEngineV1
     CommissionEngine = CommissionEngineV1
-    DealEngine = DealEngineV1
+    DealEngine = AutomotiveRevenueDealRecorder
     PartnerSettlementEngine = PartnerSettlementEngineV1
     AnalyticsEngine = RevenueAnalyticsEngineV1
 
@@ -328,7 +332,7 @@ class AutomotiveRevenueEngineV1:
             base_amount=base_amount,
         )
 
-        partner_lead = await LeadEngineV1.record_partner_lead(
+        partner_lead = await AutomotiveRevenueLeadRecorder.record_partner_lead(
             partner_id=partner.id,
             lead_id=lead_uuid,
             tenant_id=tenant_id,

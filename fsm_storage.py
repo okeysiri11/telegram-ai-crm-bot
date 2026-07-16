@@ -21,11 +21,13 @@ async def create_fsm_storage() -> tuple[BaseStorage, BaseStorage | None]:
     is used and must be closed on shutdown; otherwise None.
     """
     if not REDIS_URL:
-        message = "REDIS_URL is not set"
         if REDIS_REQUIRED:
-            logger.error("%s and REDIS_REQUIRED=True — aborting startup", message)
+            logger.error(
+                "REDIS_URL is not set and REDIS_REQUIRED=true — aborting startup"
+            )
             sys.exit(1)
-        logger.warning("%s — using MemoryStorage (FSM will not survive restarts)", message)
+        logger.warning("Redis unavailable, falling back to MemoryStorage")
+        logger.info("Storage backend: MemoryStorage")
         return MemoryStorage(), None
 
     try:
@@ -33,21 +35,18 @@ async def create_fsm_storage() -> tuple[BaseStorage, BaseStorage | None]:
 
         storage = RedisStorage.from_url(REDIS_URL)
         await storage.redis.ping()
-        logger.info("FSM storage: Redis (%s)", REDIS_URL)
+        logger.info("Storage backend: RedisStorage")
         return storage, storage
     except Exception as exc:
         if REDIS_REQUIRED:
             logger.error(
-                "Redis is required (REDIS_REQUIRED=True) but unavailable at %s: %s",
+                "Redis is required (REDIS_REQUIRED=true) but unavailable at %s: %s",
                 REDIS_URL,
                 exc,
             )
             sys.exit(1)
-        logger.warning(
-            "Redis unavailable at %s (%s) — falling back to MemoryStorage",
-            REDIS_URL,
-            exc,
-        )
+        logger.warning("Redis unavailable, falling back to MemoryStorage")
+        logger.info("Storage backend: MemoryStorage")
         return MemoryStorage(), None
 
 
