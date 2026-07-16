@@ -211,8 +211,8 @@ def test_vin_buttons_are_yes_no() -> None:
     callbacks = [btn.callback_data for row in markup.inline_keyboard for btn in row]
     assert "Да" in texts
     assert "Нет" in texts
-    assert "ac:vin:add" in callbacks
-    assert "ac:vin:skip" in callbacks
+    assert "vin_yes" in callbacks
+    assert "vin_no" in callbacks
 
 
 def test_dealer_add_car_starts_with_make() -> None:

@@ -29,6 +29,7 @@ def test_fsm_states_exist() -> None:
 
     assert AutoClientFlow.collecting
     assert AutoClientFlow.awaiting_photos
+    assert AutoClientFlow.awaiting_vin_choice
     assert AutoClientFlow.awaiting_vin
     assert AutoClientFlow.awaiting_phone
 
@@ -83,7 +84,8 @@ def test_router_handlers_registered() -> None:
         "auto_client_menu_action",
         "auto_client_collect_photos",
         "auto_client_collecting_text",
-        "auto_client_vin_action",
+        "auto_client_vin_yes",
+        "auto_client_vin_no",
         "auto_client_phone_text",
     }
     assert required.issubset(handler_names)

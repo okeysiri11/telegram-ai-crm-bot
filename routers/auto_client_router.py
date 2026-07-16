@@ -171,7 +171,7 @@ async def _set_flow_step(
         return
 
     if flow_step == "vin_optional":
-        await state.set_state(AutoClientFlow.awaiting_vin)
+        await state.set_state(AutoClientFlow.awaiting_vin_choice)
         await message.answer(
             step_prompt(flow_type, flow_step),
             reply_markup=auto_client_vin_inline(),
@@ -618,8 +618,21 @@ async def auto_client_photos_action(callback: CallbackQuery, state: FSMContext) 
     await _advance_after_step(callback.message, state, actor=callback.from_user)
 
 
-@router.callback_query(F.data.in_({"ac:vin:add", "ac:vin:skip"}))
-async def auto_client_vin_action(callback: CallbackQuery, state: FSMContext) -> None:
+async def _remove_inline_keyboard(callback: CallbackQuery) -> None:
+    if callback.message is None:
+        return
+    try:
+        await callback.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        logger.debug("Could not remove VIN inline keyboard", exc_info=True)
+
+
+@router.callback_query(
+    StateFilter(AutoClientFlow.awaiting_vin_choice),
+    F.data.in_({"vin_no", "ac:vin:skip"}),
+)
+async def auto_client_vin_no(callback: CallbackQuery, state: FSMContext) -> None:
+    """VIN branch: Нет → create request without VIN, no waiting_vin state."""
     if callback.message is None or callback.from_user is None:
         await callback.answer()
         return
@@ -627,21 +640,42 @@ async def auto_client_vin_action(callback: CallbackQuery, state: FSMContext) -> 
         await callback.answer()
         return
 
-    current = await state.get_state()
-    if current != AutoClientFlow.awaiting_vin.state:
+    logger.warning("VIN_NO user=%s", callback.from_user.id)
+    await callback.answer()
+    await _remove_inline_keyboard(callback)
+    await state.update_data(vin=None, flow_step="vin_optional")
+    await _finish_request(callback.message, state, actor=callback.from_user)
+
+
+@router.callback_query(
+    StateFilter(AutoClientFlow.awaiting_vin_choice),
+    F.data.in_({"vin_yes", "ac:vin:add"}),
+)
+async def auto_client_vin_yes(callback: CallbackQuery, state: FSMContext) -> None:
+    """VIN branch: Да → waiting_vin → ask for VIN text."""
+    if callback.message is None or callback.from_user is None:
+        await callback.answer()
+        return
+    if not await _ensure_auto_client_user(callback.from_user.id):
         await callback.answer()
         return
 
+    logger.warning("VIN_YES user=%s", callback.from_user.id)
     await callback.answer()
-    if callback.data == "ac:vin:skip":
-        await state.update_data(vin=None, awaiting_vin_input=False)
-        await _finish_request(callback.message, state, actor=callback.from_user)
-        return
-
+    await _remove_inline_keyboard(callback)
     await state.set_state(AutoClientFlow.awaiting_vin)
     await state.update_data(flow_step="vin", awaiting_vin_input=True)
-    await callback.message.answer(
-        "Введите VIN автомобиля:",
+    await callback.message.answer("Введите VIN автомобиля:")
+
+
+@router.message(StateFilter(AutoClientFlow.awaiting_vin_choice))
+async def auto_client_vin_choice_text(message: Message, state: FSMContext) -> None:
+    if not await _ensure_auto_client(message):
+        return
+    if await _handle_interrupt(message, state):
+        return
+    await message.answer(
+        "Хотите добавить VIN автомобиля?",
         reply_markup=auto_client_vin_inline(),
     )
 
@@ -653,27 +687,19 @@ async def auto_client_vin_text(message: Message, state: FSMContext) -> None:
     if await _handle_interrupt(message, state):
         return
 
-    data = await state.get_data()
-    if not data.get("awaiting_vin_input"):
-        await message.answer(
-            "Хотите добавить VIN автомобиля?",
-            reply_markup=auto_client_vin_inline(),
-        )
-        return
-
     text = (message.text or "").strip()
-    from services.auto_client_flow_engine import SKIP_TOKENS
-
-    if text.lower() in SKIP_TOKENS:
-        await state.update_data(vin=None, awaiting_vin_input=False)
-        await _finish_request(message, state)
-        return
-
-    ok, error, value = validate_text_step("vin", text, flow_type=data.get("flow_type") or REQUEST_BUY)
+    data = await state.get_data()
+    ok, error, value = validate_text_step(
+        "vin",
+        text,
+        flow_type=data.get("flow_type") or REQUEST_BUY,
+    )
     if not ok:
         await message.answer(
-            f"❌ {error}\n\nВведите VIN ещё раз или нажмите «Нет».",
-            reply_markup=auto_client_vin_inline(),
+            f"❌ {error}\n\nВведите корректный VIN или начните заново из меню.",
+            reply_markup=auto_client_menu(
+                await VerticalOnboardingEngineV1.get_language(message.from_user.id)
+            ),
         )
         return
 

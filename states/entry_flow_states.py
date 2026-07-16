@@ -10,7 +10,8 @@ class AutoClientFlow(StatesGroup):
     menu = State()
     collecting = State()
     awaiting_photos = State()
-    awaiting_vin = State()
+    awaiting_vin_choice = State()  # "Хотите добавить VIN?" Да/Нет
+    awaiting_vin = State()  # waiting for VIN text after "Да"
     awaiting_phone = State()
     services_hub = State()
 
@@ -24,7 +25,7 @@ def _build_pending_restore() -> dict[str, tuple[State, str]]:
             if step == "photos":
                 fsm_state = AutoClientFlow.awaiting_photos
             elif step == "vin_optional":
-                fsm_state = AutoClientFlow.awaiting_vin
+                fsm_state = AutoClientFlow.awaiting_vin_choice
             elif step == "phone":
                 fsm_state = AutoClientFlow.awaiting_phone
             else:
