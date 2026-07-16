@@ -35,3 +35,8 @@ def _build_pending_restore() -> dict[str, tuple[State, str]]:
 
 
 AUTO_CLIENT_PENDING_RESTORE: dict[str, tuple[State, str]] = _build_pending_restore()
+
+
+class AutoDealerFlow(StatesGroup):
+    language_select = State()
+    dealer_onboarding = State()
