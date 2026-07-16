@@ -558,7 +558,7 @@ async def auto_client_vin_action(callback: CallbackQuery, state: FSMContext) -> 
 
     await callback.answer()
     if callback.data == "ac:vin:skip":
-        await _finish_request(callback.message, state)
+        await _advance_after_step(callback.message, state)
         return
 
     await state.set_state(AutoClientFlow.awaiting_vin)
@@ -578,7 +578,6 @@ async def auto_client_vin_text(message: Message, state: FSMContext) -> None:
 
     data = await state.get_data()
     if not data.get("awaiting_vin_input"):
-        lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
         await message.answer(
             "Хотите добавить VIN автомобиля?",
             reply_markup=auto_client_vin_inline(),
@@ -589,21 +588,20 @@ async def auto_client_vin_text(message: Message, state: FSMContext) -> None:
     from services.auto_client_flow_engine import SKIP_TOKENS
 
     if text.lower() in SKIP_TOKENS:
-        await state.update_data(awaiting_vin_input=False)
-        await _finish_request(message, state)
+        await state.update_data(awaiting_vin_input=False, flow_step="vin_optional")
+        await _advance_after_step(message, state)
         return
 
     ok, error, value = validate_text_step("vin", text, flow_type=data.get("flow_type") or REQUEST_BUY)
     if not ok:
-        lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
         await message.answer(
             f"❌ {error}\n\nВведите VIN ещё раз или нажмите «Пропустить».",
             reply_markup=auto_client_vin_inline(),
         )
         return
 
-    await state.update_data(vin=value, awaiting_vin_input=False)
-    await _finish_request(message, state)
+    await state.update_data(vin=value, awaiting_vin_input=False, flow_step="vin_optional")
+    await _advance_after_step(message, state)
 
 
 @router.message(StateFilter(AutoClientFlow.awaiting_phone), F.contact)
@@ -620,13 +618,7 @@ async def auto_client_manager_contact(message: Message, state: FSMContext) -> No
         return
     await state.update_data(client_phone=phone)
     lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
-    data = await state.get_data()
-    flow_type = data.get("flow_type")
-    if flow_type in {REQUEST_BUY, REQUEST_SELL, REQUEST_LISTING}:
-        await state.update_data(flow_step="vin_optional")
-        await message.answer("✅ Номер получен.", reply_markup=auto_client_menu(lang))
-        await _set_flow_step(message, state, flow_type=flow_type, flow_step="vin_optional")
-        return
+    await message.answer("✅ Номер получен.", reply_markup=auto_client_menu(lang))
     await _finish_request(message, state)
 
 
@@ -647,10 +639,6 @@ async def auto_client_phone_text(message: Message, state: FSMContext) -> None:
         return
 
     await state.update_data(client_phone=value)
-    if flow_type in {REQUEST_BUY, REQUEST_SELL, REQUEST_LISTING}:
-        await state.update_data(flow_step="vin_optional")
-        await _set_flow_step(message, state, flow_type=flow_type, flow_step="vin_optional")
-        return
     await _finish_request(message, state)
 
 
