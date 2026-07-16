@@ -465,6 +465,12 @@ class ManagerDeliveryEngineV1:
             "user_description": user_description or description,
             "photo_file_ids": photo_file_ids or ([photo_file_id] if photo_file_id else []),
         }
+        logger.info(
+            "MANAGER_NOTIFY request=%s VIN_PRESENT=%s photos=%s",
+            request_number,
+            bool(vin and str(vin).strip()),
+            len(data["photo_file_ids"] or []),
+        )
         lines = build_manager_notification_lines(
             flow_type=flow_key,
             request_number=request_number,

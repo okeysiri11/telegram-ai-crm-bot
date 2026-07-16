@@ -18,6 +18,7 @@ from keyboards import (
 )
 from routers.auto_hub_router import open_auto_client_services, return_auto_client_menu
 from services.auto_client_flow_engine import (
+    CAR_FLOW_TYPES,
     REQUEST_BUY,
     REQUEST_LISTING,
     REQUEST_MANAGER,
@@ -29,6 +30,7 @@ from services.auto_client_flow_engine import (
     pending_key,
     step_prompt,
     validate_text_step,
+    vin_present,
 )
 from services.automotive_localization import btn, is_back_button, normalize_language, t
 from services.entry_point_routing import (
@@ -187,12 +189,14 @@ async def _finish_request(message: Message, state: FSMContext) -> None:
 
     description = build_description(flow_type, {**data, "user_description": user_description})
 
+    has_vin = vin_present(data)
     logger.info(
-        "AUTO_CLIENT finish_request type=%s user=%s phone=%s photos=%s",
+        "AUTO_CLIENT finish_request type=%s user=%s phone=%s photos=%s VIN_PRESENT=%s",
         flow_type,
         user.id,
         bool(client_phone),
         len(photo_file_ids),
+        has_vin,
     )
 
     try:
@@ -558,13 +562,14 @@ async def auto_client_vin_action(callback: CallbackQuery, state: FSMContext) -> 
 
     await callback.answer()
     if callback.data == "ac:vin:skip":
-        await _advance_after_step(callback.message, state)
+        await state.update_data(vin=None, awaiting_vin_input=False)
+        await _finish_request(callback.message, state)
         return
 
     await state.set_state(AutoClientFlow.awaiting_vin)
     await state.update_data(flow_step="vin", awaiting_vin_input=True)
     await callback.message.answer(
-        "Введите VIN автомобиля (или нажмите «Пропустить»):",
+        "Введите VIN автомобиля:",
         reply_markup=auto_client_vin_inline(),
     )
 
@@ -588,20 +593,20 @@ async def auto_client_vin_text(message: Message, state: FSMContext) -> None:
     from services.auto_client_flow_engine import SKIP_TOKENS
 
     if text.lower() in SKIP_TOKENS:
-        await state.update_data(awaiting_vin_input=False, flow_step="vin_optional")
-        await _advance_after_step(message, state)
+        await state.update_data(vin=None, awaiting_vin_input=False)
+        await _finish_request(message, state)
         return
 
     ok, error, value = validate_text_step("vin", text, flow_type=data.get("flow_type") or REQUEST_BUY)
     if not ok:
         await message.answer(
-            f"❌ {error}\n\nВведите VIN ещё раз или нажмите «Пропустить».",
+            f"❌ {error}\n\nВведите VIN ещё раз или нажмите «Нет».",
             reply_markup=auto_client_vin_inline(),
         )
         return
 
-    await state.update_data(vin=value, awaiting_vin_input=False, flow_step="vin_optional")
-    await _advance_after_step(message, state)
+    await state.update_data(vin=value, awaiting_vin_input=False)
+    await _finish_request(message, state)
 
 
 @router.message(StateFilter(AutoClientFlow.awaiting_phone), F.contact)
@@ -619,6 +624,13 @@ async def auto_client_manager_contact(message: Message, state: FSMContext) -> No
     await state.update_data(client_phone=phone)
     lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
     await message.answer("✅ Номер получен.", reply_markup=auto_client_menu(lang))
+
+    data = await state.get_data()
+    flow_type = data.get("flow_type")
+    if flow_type in CAR_FLOW_TYPES:
+        await state.update_data(flow_step="phone")
+        await _advance_after_step(message, state)
+        return
     await _finish_request(message, state)
 
 
@@ -638,7 +650,10 @@ async def auto_client_phone_text(message: Message, state: FSMContext) -> None:
         await message.answer(error or "Некорректный номер.", reply_markup=auto_client_menu(lang))
         return
 
-    await state.update_data(client_phone=value)
+    await state.update_data(client_phone=value, flow_step="phone")
+    if flow_type in CAR_FLOW_TYPES:
+        await _advance_after_step(message, state)
+        return
     await _finish_request(message, state)
 
 

@@ -823,32 +823,30 @@ async def auto_vertical_flow_handler(message: Message) -> None:
         flow["step"] = "vin_optional"
         await message.answer(
             "Хотите добавить VIN автомобиля?\n\n"
-            "• Да, добавить VIN\n"
-            "• Пропустить"
+            "• Да\n"
+            "• Нет"
         )
         return
 
     if step == "vin_optional":
         lowered = text.lower()
-        if lowered in {"пропустить", "skip", "-", "нет"}:
+        if lowered in {"нет", "пропустить", "skip", "-"}:
             data["vin"] = None
+            logger.info("ADD_CAR VIN_PRESENT=False user=%s", user_id)
             await _finalize_add_car(message, user_id, data)
             return
-        if lowered in {"да, добавить vin", "да", "добавить vin", "vin"}:
+        if lowered in {"да", "yes", "добавить vin", "vin"}:
             flow["step"] = "vin_input"
-            await message.answer(
-                "Введите VIN автомобиля (или «Пропустить»):"
-            )
+            await message.answer("Введите VIN автомобиля:")
             return
-        await message.answer(
-            "Выберите:\n• Да, добавить VIN\n• Пропустить"
-        )
+        await message.answer("Выберите:\n• Да\n• Нет")
         return
 
     if step == "vin_input":
         lowered = text.lower()
-        if lowered in {"пропустить", "skip", "-", "нет"}:
+        if lowered in {"нет", "пропустить", "skip", "-"}:
             data["vin"] = None
+            logger.info("ADD_CAR VIN_PRESENT=False user=%s", user_id)
             await _finalize_add_car(message, user_id, data)
             return
         result = validate_vin(text)
@@ -856,10 +854,11 @@ async def auto_vertical_flow_handler(message: Message) -> None:
             await message.answer(
                 "❌ Некорректный VIN:\n"
                 + "\n".join(f"• {err}" for err in result["errors"])
-                + "\n\nВведите VIN ещё раз или «Пропустить»:"
+                + "\n\nВведите VIN ещё раз или «Нет»:"
             )
             return
         data["vin"] = result["vin"]
+        logger.info("ADD_CAR VIN_PRESENT=True user=%s", user_id)
         await _finalize_add_car(message, user_id, data)
         return
 

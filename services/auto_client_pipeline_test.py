@@ -48,10 +48,11 @@ def test_flow_steps_defined() -> None:
     assert first_step(REQUEST_BUY) == "brand"
     assert "vin_optional" in FLOW_STEPS[REQUEST_BUY]
     assert "photos" in FLOW_STEPS[REQUEST_BUY]
-    assert FLOW_STEPS[REQUEST_BUY].index("photos") < FLOW_STEPS[REQUEST_BUY].index("vin_optional")
-    assert FLOW_STEPS[REQUEST_BUY].index("vin_optional") < FLOW_STEPS[REQUEST_BUY].index("phone")
-    assert "photos" in FLOW_STEPS[REQUEST_SELL]
-    assert FLOW_STEPS[REQUEST_SELL].index("photos") < FLOW_STEPS[REQUEST_SELL].index("vin_optional")
+    assert FLOW_STEPS[REQUEST_BUY].index("photos") < FLOW_STEPS[REQUEST_BUY].index("phone")
+    assert FLOW_STEPS[REQUEST_BUY].index("phone") < FLOW_STEPS[REQUEST_BUY].index("vin_optional")
+    assert FLOW_STEPS[REQUEST_BUY][-1] == "vin_optional"
+    assert FLOW_STEPS[REQUEST_SELL] == FLOW_STEPS[REQUEST_BUY]
+    assert FLOW_STEPS[REQUEST_LISTING] == FLOW_STEPS[REQUEST_BUY]
     assert next_step(REQUEST_MANAGER, "description") == "phone"
     assert REQUEST_SERVICES not in {REQUEST_BUY, REQUEST_SELL}
     assert "vin_optional" not in FLOW_STEPS[REQUEST_SERVICES]

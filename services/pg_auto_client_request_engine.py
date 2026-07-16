@@ -184,6 +184,11 @@ class AutoClientRequestEngineV1:
             created_number = row.request_number
 
         logger.info(f"REQUEST CREATED {request_id}")
+        logger.info(
+            "REQUEST_VIN request=%s VIN_PRESENT=%s",
+            created_number,
+            bool(vin and str(vin).strip()),
+        )
 
         from services.pg_client_request_crm_engine import ClientRequestCrmEngineV1
 

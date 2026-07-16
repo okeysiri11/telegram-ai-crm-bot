@@ -14,42 +14,23 @@ REQUEST_MANAGER = "manager_callback"
 
 SKIP_TOKENS = frozenset({"-", "пропустить", "skip", "нет"})
 
+# Unified car questionnaire: VIN is always last and optional.
+_CAR_FLOW_STEPS = (
+    "brand",
+    "model",
+    "year",
+    "engine",
+    "color",
+    "description",
+    "photos",
+    "phone",
+    "vin_optional",
+)
+
 FLOW_STEPS: dict[str, tuple[str, ...]] = {
-    REQUEST_BUY: (
-        "brand",
-        "model",
-        "year",
-        "budget",
-        "description",
-        "photos",
-        "vin_optional",
-        "phone",
-    ),
-    REQUEST_SELL: (
-        "brand",
-        "model",
-        "year",
-        "engine",
-        "color",
-        "mileage",
-        "price",
-        "description",
-        "photos",
-        "vin_optional",
-        "phone",
-    ),
-    REQUEST_LISTING: (
-        "brand",
-        "model",
-        "year",
-        "engine",
-        "color",
-        "price",
-        "description",
-        "photos",
-        "vin_optional",
-        "phone",
-    ),
+    REQUEST_BUY: _CAR_FLOW_STEPS,
+    REQUEST_SELL: _CAR_FLOW_STEPS,
+    REQUEST_LISTING: _CAR_FLOW_STEPS,
     REQUEST_SERVICES: ("description", "photos", "phone"),
     REQUEST_MANAGER: ("description", "phone"),
 }
@@ -60,9 +41,6 @@ STEP_PROMPTS: dict[str, str] = {
     "year": "Укажите год (или «-» чтобы пропустить):",
     "engine": "Укажите объём двигателя (или «-» чтобы пропустить):",
     "color": "Укажите цвет (или «-» чтобы пропустить):",
-    "budget": "Укажите бюджет (сумма и валюта):",
-    "mileage": "Укажите пробег (км) или «-» чтобы пропустить:",
-    "price": "Укажите цену:",
     "description": "Опишите ваш запрос:",
     "phone": "📞 Отправьте номер телефона или нажмите «Поделиться контактом».",
     "vin_optional": "Хотите добавить VIN автомобиля?",
@@ -76,6 +54,8 @@ REQUEST_TYPE_LABELS: dict[str, str] = {
     REQUEST_SERVICES: "Автоуслуги",
     REQUEST_MANAGER: "Связь с менеджером",
 }
+
+CAR_FLOW_TYPES = frozenset({REQUEST_BUY, REQUEST_SELL, REQUEST_LISTING})
 
 
 def first_step(flow_type: str) -> str | None:
@@ -99,7 +79,7 @@ def step_prompt(flow_type: str, step: str) -> str:
         return "Опишите ваш вопрос или запрос:"
     if step == "description" and flow_type == REQUEST_SERVICES:
         return "Опишите, какая услуга вам нужна:"
-    if step == "year" and flow_type in {REQUEST_SELL, REQUEST_LISTING}:
+    if step == "year" and flow_type in CAR_FLOW_TYPES:
         return "Укажите год выпуска:"
     return STEP_PROMPTS.get(step, "Введите значение:")
 
@@ -127,24 +107,6 @@ def validate_text_step(step: str, text: str, *, flow_type: str) -> tuple[bool, s
         if _is_skip(cleaned):
             return True, None, None
         return True, None, cleaned
-
-    if step == "mileage":
-        if _is_skip(cleaned):
-            return True, None, None
-        digits = "".join(ch for ch in cleaned if ch.isdigit())
-        if not digits:
-            return False, "Укажите пробег числом (км) или «-» чтобы пропустить.", None
-        return True, None, int(digits)
-
-    if step in {"budget", "price"}:
-        normalized = cleaned.replace(",", ".").replace(" ", "")
-        digits = "".join(ch for ch in normalized if ch.isdigit() or ch == ".")
-        if not digits:
-            return False, "Укажите сумму.", None
-        try:
-            return True, None, float(digits)
-        except ValueError:
-            return False, "Укажите корректную сумму.", None
 
     if step == "phone":
         digits = "".join(ch for ch in cleaned if ch.isdigit() or ch == "+")
@@ -234,8 +196,15 @@ def build_manager_notification_lines(
         lines.append(client_phone)
 
     lines.extend(["", f"Request: {request_number}"])
+    vin_present = bool(data.get("vin"))
+    lines.extend(["", f"VIN_PRESENT={vin_present}"])
     return lines
 
 
 def pending_key(flow_type: str, step: str) -> str:
     return f"ac:{flow_type}:{step}"
+
+
+def vin_present(data: dict[str, Any] | None) -> bool:
+    vin = (data or {}).get("vin")
+    return bool(vin and str(vin).strip())
