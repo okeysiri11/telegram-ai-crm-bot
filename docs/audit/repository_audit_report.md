@@ -1,305 +1,299 @@
-# Repository Audit Report
+# Полный аудит репозитория
 
-**Date:** 2026-07-15  
-**Scope:** Full static audit of TelegramBotCourse  
-**Mode:** Analysis + recommended fixes only (no feature expansion)
-
----
-
-## Executive summary
-
-The product core (Auto Client → manager delivery → CRM pipeline) works, but the repository has accumulated **layers of parallel engines** (RBAC ×3, inventory ×3, events ×3, notifications ×2, storage ×2). Rough scale:
-
-| Metric | Value |
-|--------|------:|
-| Python LOC (approx, excl. venv) | ~73k+ |
-| `database/models` classes | ~530 |
-| `services/*.py` | ~204 |
-| `repositories` | ~99 |
-| Root `*handlers.py` | 24 |
-| Modular `routers/` | 6 active |
-
-**Recommendation:** stop Mega Tasks 1–10 feature expansion until P0–P2 hygiene below is done. Scaffold for domains/API already exists under `src/` — migrate behind it incrementally.
+**Дата:** 2026-07-16  
+**Репозиторий:** TelegramBotCourse  
+**Метод:** статический анализ AST + grep + сверка регистрации роутеров  
+**Режим:** только отчёт и предложения (код прод-потоков не менялся)
 
 ---
 
-## 1. Dead / unused code
+## Краткий вердикт
 
-### 1.1 Models never referenced outside defining file (23)
+Рабочий CRM-путь (клиент → заявка → менеджер) жив, но репозиторий перегружен параллельными движками и «god»-файлами.
 
-Examples (static name scan — may still be used only via Alembic/metadata):
+| Метрика | Значение |
+|---------|----------:|
+| Классов в `database/models` | ~530 |
+| Неиспользуемых снаружи define-файла | **23** |
+| Активных `routers/*` | 6 (все в `startup.py`) |
+| Мёртвый handler-роутер | `automotive_treasury_handlers.py` (0 внешних ссылок) |
+| Опасные дубли имён классов | `LeadEngineV1`, `DealEngineV1`, `Permission`, … |
+| In-memory flow dicts (race/restart) | **11** |
+| Блокирующих `time.sleep`/`requests` в async | **0** |
+| Подозрений N+1 (await в цикле) | **24** |
+| Дубликаты ключей в `.env` | `BOT_TOKEN`×2, `OPENROUTER_API_KEY`×2 |
 
-| Class | File |
+---
+
+## 1. Мёртвый код
+
+### 1.1 Модели без внешних ссылок (23)
+
+| Класс | Файл |
 |-------|------|
 | `AiAgent`, `AiDialog`, `AiAgentMemory`, `AiAgentSetting` | `database/models/ai_agents.py` |
 | `CommissionRule` | `database/models/commissions.py` |
-| `DealAgroExt`, `DealAutoExt`, `DealDroneExt`, … | `database/models/deals.py` |
+| `DealAgroExt`, `DealAutoExt`, `DealDroneExt`, `DealFinanceExt`, `DealLegalExt`, `DealLogisticsExt` | `database/models/deals.py` |
 | `DealEngineDeal` | `database/models/deal.py` |
 | `FinanceAccount` | `database/models/finance.py` |
-| `PartnerKpi` | `database/models/partners.py` |
-| `AutomotivePartnerPayout` | `database/models/automotive_revenue_engine.py` |
+| `AutomotivePartnerPayout`, `PayoutStatus` | `database/models/automotive_revenue_engine.py` |
+| `PartnerKpi`, `PartnerCabinetRole` | partners / partner_cabinet |
+| `PermissionCategory` | `rbac_v2_engine.py` |
+| `RecommendationFeedbackType`, `SalesMessageRole`, `MediaType`, `ExportFormat`, `IntegrationChannelType` | соответствующие модули |
 
-**Fix:** mark `# LEGACY — candidate for archive` for one sprint; delete only after Alembic + mapper audit confirms no FK dependents.
+> Примечание: модели могут использоваться только через Alembic/metadata. Перед удалением — проверка FK и `configure_mappers()`.
 
-### 1.2 Handlers with weak registration
+### 1.2 Мёртвый роутер
 
-| Module | External refs | Status |
-|--------|--------------:|--------|
-| `automotive_treasury_handlers.py` | **0** | Likely **dead router** (engine used elsewhere; handler router unused) |
-| Most other `*_handlers.py` | 1–6 | Pulled via `handlers.py` includes |
-| `handlers.py` | 61 | Live mega-router |
+- **`automotive_treasury_handlers.py`** — `external_refs=0`, **не** входит в `handlers.py` `include_router(...)`.
+- Engine treasury используется из других мест; сам Telegram-роутер — мёртвый.
 
-**Fix:** either `include_router(automotive_treasury_router)` where intended, or delete/archive the empty router file.
+### 1.3 Scaffold-дубли (осознанные, но опасные при росте)
 
-### 1.3 Routers (`routers/`)
+- `services/storage` ↔ `src/platform/storage`
+- `services/notification_center` ↔ `src/platform/notifications`
+- `events.py` / `crm_event_bus` / `src/events`
 
-All 6 feature routers are registered in `startup.py` ✅
-
-### 1.4 Scaffold duplication (intentional for now)
-
-`src/platform/{storage,notifications}` duplicates `services/storage` and `services/notification_center`. Acceptable during strangler phase; **do not grow both**.
+**Исправление:** пометить LEGACY-кандидаты; удалить/зарегистрировать treasury router; не развивать обе копии storage/notifications.
 
 ---
 
-## 2. Duplication (high cost)
+## 2. Дублирование
 
-| Concern | Live copies | Risk |
-|---------|-------------|------|
-| RBAC | `permission_engine_*`, `rbac_v2_*`, `database/models/permissions.py`, hierarchical RBAC | Mapper conflicts, wrong grants |
-| Events | `events.py`, `crm_event_bus.py`, `src/events/` | Missed subscribers |
-| Notifications | `notification_center.py`, `src/platform/notifications`, legacy `notifications.py` | Split delivery |
-| Storage | `services/storage`, `src/platform/storage` | Config drift |
-| Inventory | automotive vehicles / `inventory` / `marketplace_listings` / lead marketplace | Confused product semantics |
-| SLA | `pg_sla_tracking_v1` vs `pg_lead_sla_engine` | Split metrics |
-| Audit | `audit_engine_logs` vs `audit_log` | Incomplete trail |
-| Class name collisions | `Permission`, `RolePermission`, `Partner`, `Notification`, `SettlementStatus`, `MarketplaceListingStatus`, … | SQLAlchemy / import bugs |
+| Область | Копии | Риск |
+|---------|-------|------|
+| RBAC | `permission_engine_*`, `rbac_v2_*`, `permissions.py` | неверные гранты, mapper conflicts |
+| Events | 3 поколения | пропуск подписчиков |
+| Notifications / Storage | по 2 | расхождение конфигов |
+| Inventory | vehicles / `inventory` / listings / lead marketplace | путаница продукта |
+| SLA / Audit | по 2 | разрозненная аналитика |
 
-### Critical naming collision
+### P0 — коллизия имён
 
-`services/pg_automotive_revenue_engine.py` defines **`class LeadEngineV1`** and **`class DealEngineV1`**, colliding with:
+В `services/pg_automotive_revenue_engine.py` объявлены классы:
 
-- `services/pg_lead_engine.py::LeadEngineV1`
-- `services/pg_deal_engine_v1.py::DealEngineV1`
+- `LeadEngineV1` (есть также в `pg_lead_engine.py`)
+- `DealEngineV1` (есть также в `pg_deal_engine_v1.py`)
 
-Any careless `from services.pg_automotive_revenue_engine import LeadEngineV1` silently binds the wrong type.
+Неосторожный импорт подменит тип.
 
-**Fix (P0):** rename to `AutomotiveRevenueLeadRecorder` / `AutomotiveRevenueDealRecorder` (or nest under `AutomotiveRevenueEngineV1`).
+**Исправление:** переименовать в `AutomotiveRevenueLeadRecorder` / `AutomotiveRevenueDealRecorder`.
 
 ---
 
-## 3. Cyclic / fragile dependencies
+## 3. Циклические зависимости
 
-| Pair | Issue |
-|------|--------|
-| `routers.auto_client_router` ↔ `routers.auto_hub_router` | Cross-router imports |
-| `handlers.py` → many routers → services → lazy imports back | Opaque graph |
-| Widespread `from services.X import Y` inside methods | Hides cycles; hard to refactor |
-| Root `events.py` vs package `events/` | Name clash → scaffold correctly placed in `src/events/` |
+| Связка | Проблема |
+|--------|----------|
+| `auto_client_router` ↔ `auto_hub_router` | cross-router import |
+| `handlers.py` → handlers → services → lazy imports | скрытые циклы |
+| Lazy `from services.X import` внутри методов | граф непрозрачен |
+| Корневой `events.py` vs пакет `events/` | конфликт имён (scaffold в `src/events/` — ок) |
 
-**Fix:** extract shared Auto Client navigation helpers to `services/auto_client_navigation.py` (no router→router imports).
+**Исправление:** вынести навигацию Auto Client в `services/auto_client_navigation.py`.
 
 ---
 
-## 4. Unused imports
+## 4. Неиспользуемые импорты
 
-Not exhaustively auto-fixed (would require ruff). Recommended:
+Полный автофикс не делался. Рекомендуемый прогон:
 
 ```bash
 .venv/bin/pip install ruff
-.venv/bin/ruff check . --select F401,F841 --output-format=concise
+.venv/bin/ruff check routers services/pg_auto_client_request_engine.py \
+  services/pg_client_request_crm_engine.py auto_vertical_handlers.py \
+  --select F401,F841
 ```
 
-Expect heavy noise in `handlers.py`, `database_legacy.py`, test suites.
+Ожидаемый шум: `handlers.py`, `database_legacy.py`, тестовые suites.
 
 ---
 
-## 5. Race conditions / in-memory state
+## 5. Неиспользуемые модели
 
-Global mutable dicts (lost on restart, unsafe with multiple workers):
+См. §1.1 (23 класса).  
+Дополнительно: десятки «лёгких» enum/status-классов используются только в одном модуле — не мёртвые, но кандидаты на сжатие API.
 
-| Location | State |
-|----------|--------|
-| `auto_vertical_handlers.py` | `auto_vertical_flow`, `auto_vertical_active`, `auto_billing_flow`, `auto_vertical_section` |
-| `lead_engine_handlers.py` | `lead_assign_flow` |
-| `cart_engine_handlers.py` | `cart_sessions`, `pending_checkout` |
-| `payment_engine_state.py` | `pending_payment_upload` |
+---
+
+## 6. Неиспользуемые / незарегистрированные роутеры
+
+| Роутер | Статус |
+|--------|--------|
+| `routers/auto_client_router` … `manager_debug_router` | ✅ в `startup.py` |
+| `auto_vertical_handlers.auto_vertical_router` | ✅ |
+| `handlers.router` (+ вложенные) | ✅ |
+| `automotive_treasury_handlers.automotive_treasury_router` | ❌ не подключён |
+
+Список include в `handlers.py`: start_routing, tenant_guard, deal_workflow, ai_sales, dealer_onboarding, dealer_quote_authority, bidex, automotive_partner, automotive_revenue, vertical_onboarding, owner_panel, lead_engine, deal_engine, revenue, cart, owner_dashboard, crm_pipeline, anti_loss, partner_cabinet, payment, owner_payment_profile — **без treasury**.
+
+---
+
+## 7. Race conditions / shared mutable state
+
+Глобальные dict без lock (теряются при рестарте, опасны при >1 worker):
+
+| Файл | Состояние |
+|------|-----------|
+| `auto_vertical_handlers.py` | `auto_vertical_active`, `auto_vertical_flow`, `auto_billing_flow` |
 | `automotive_partner_handlers.py` | `partner_lead_flow` |
-| `owner_*_handlers.py` | edit flows |
+| `cart_engine_handlers.py` | `cart_sessions`, `pending_checkout` |
+| `lead_engine_handlers.py` | `lead_assign_flow` |
+| `owner_panel_handlers.py` | `owner_notes_edit_flow` |
+| `owner_payment_profile_handlers.py` | `owner_payment_edit_flow` |
+| `payment_engine_state.py` | `pending_payment_upload` |
 | `services/tenant_context.py` | `_active_tenant_by_user` |
 
-**Also:** escalation background loop + multi-process bot would double-fire without distributed lock.
+Дополнительно: escalation loop каждые 60с без distributed lock → при 2 репликах бота двойные уведомления.
 
-**Fix:** move flows to Redis FSM / Redis hashes; use Redis lock for escalation (`SET escalation:lock NX EX 55`).
+**Исправление:** Redis FSM/hashes; `SET escalation:lock NX EX 55`.
 
 ---
 
-## 6. Blocking operations inside async
+## 8. Блокирующие операции в async
 
-Automated `time.sleep` / `requests.*` in `async def` scan: **0 hits** (good).
+Скан `time.sleep` / `requests.*` / `subprocess.run` внутри `async def`: **0 находок**.
 
-Remaining latency risks (async but **blocking UX**):
+Остаточные UX-блокировки (async I/O, но долгие):
 
-| Area | Issue |
+- OpenRouter при finish заявки (`pg_ai_manager_engine`)
+- Новый `Bot()` session на каждое notify менеджеру
+- Последовательная рассылка в escalation/SLA
+
+**Исправление:** вынести AI qualify в фон; шарить Bot instance; ограничить concurrency.
+
+---
+
+## 9. SQL без индексов
+
+CRM-путь в целом покрыт:
+
+- `client_requests` — client, manager, status, funnel, type, number ✅  
+- `auto_client_requests_v1` — аналогично ✅  
+- `inventory` — status, seller, brand+model, year, price, city, fuel ✅  
+
+**Пробелы:**
+
+| Риск | Предложение |
+|------|-------------|
+| Escalation scan `closed_at IS NULL AND first_response_at IS NULL` | partial index на `lead_sla_records` |
+| Сложный search inventory (status+price+brand) | composite index по мере роста |
+| JSONB photos | GIN обычно не нужен |
+
+---
+
+## 10. N+1 / await в цикле (24 подозрения)
+
+Критичнее для runtime:
+
+| Место | Почему важно |
+|-------|----------------|
+| `crm_event_bus._dispatch_event` | handlers по одному |
+| `pg_webhook_engine.process_pending_retries` | сеть в цикле |
+| `pg_automotive_marketplace_engine._sync_images` | поштучная синхронизация |
+| `crm_pipeline_boards_repository.list_*_by_stage` | возможные доп. запросы |
+
+Seed/bootstrap циклы (RBAC seed) — приемлемы на старте.
+
+**Исправление:** `asyncio.gather` с semaphore; bulk insert; batch webhook.
+
+---
+
+## 11. Секреты
+
+| Факт | Оценка |
 |------|--------|
-| `pg_ai_manager_engine` → OpenRouter on lead finish | Can stall request confirmation seconds–tens of seconds |
-| New Bot session per manager notify | Session churn |
-| Escalation / SLA notify loops | Sequential Telegram sends |
+| `.env` в `.gitignore` | ✅ |
+| Дубликаты ключей `BOT_TOKEN`, `OPENROUTER_API_KEY` | ⚠ путаница, last-wins |
+| `JWT_SECRET` default `change-me-in-production` | 🔴 слабо для API |
+| `REDIS_REQUIRED=false` | ⚠ тихая потеря FSM |
+| Live tokens в локальном `.env` | нормально локально; **ротировать**, если среда шарится/логируется |
 
-**Fix:** queue AI qualification + optional notifies via scheduler/worker; share Bot instance.
-
----
-
-## 7. SQL indexes / N+1
-
-### Indexes (CRM path)
-
-`client_requests`, `auto_client_requests_v1`, `inventory`, `lead_sla_records` — **indexed** on primary filters ✅
-
-Gaps / watch list:
-
-| Risk | Note |
-|------|------|
-| Composite filters on inventory search | brand+model+price+status may need composite later |
-| `lead_sla_records` scan for escalation | filter `closed_at IS NULL AND first_response_at IS NULL` — consider partial index |
-| JSONB `photo_file_ids` | no GIN (usually OK) |
-
-### Await-in-loop suspects (24)
-
-Notably:
-
-- `services/crm_event_bus.py::_dispatch_event`
-- `services/pg_webhook_engine.py::process_pending_retries`
-- `services/pg_automotive_marketplace_engine.py::_sync_images`
-- Several repository seed helpers (acceptable at boot)
-
-**Fix:** batch webhook retries; gather with concurrency limit; prefer bulk inserts for seeds.
+**Не коммитить** `.env` / `.env.production` с реальными токенами.
 
 ---
 
-## 8. Secrets / security
+## 12. Потеря FSM-состояния
 
-| Finding | Severity |
-|---------|----------|
-| `.env` gitignored ✅ | OK |
-| Real `BOT_TOKEN` + `OPENROUTER_API_KEY` present in local `.env` | Expected locally |
-| Duplicate `BOT_TOKEN` / key lines in `.env` | Confusing; last wins via dotenv |
-| `JWT_SECRET` default `change-me-in-production` | API auth weak if enabled |
-| `REDIS_REQUIRED=false` | Silent FSM loss on Redis down |
-| Secrets appeared in agent tooling context | **Rotate Telegram bot token and OpenRouter key** if this workspace is shared / logged |
+| Риск | Механизм |
+|------|----------|
+| MemoryStorage fallback | `fsm_storage.py` при недоступном Redis |
+| `REDIS_REQUIRED=false` | рестарт → обрыв mid-flow |
+| Auto Client pending restore | только step key, не полный draft bag |
+| `auto_vertical_flow` in-memory | VIN/search mid-flow теряется |
+| Photo album collector | буфер медиагруппы в процессе |
 
-**Do not commit** `.env`, `.env.production` with real tokens. Prefer secrets manager in prod.
+`state.clear()` встречается ~9 раз — меню/submit в целом чистят FSM; проблема именно в **хранилище и in-memory vertical flows**.
 
----
-
-## 9. FSM state loss risks
-
-| Risk | Mechanism |
-|------|-----------|
-| MemoryStorage fallback | `fsm_storage.py` when Redis unavailable |
-| `REDIS_REQUIRED=false` | Restart → mid-flow users drop to menu / wrong state |
-| Auto-client pending restore | Relies on `onboarding_step` + `AUTO_CLIENT_PENDING_RESTORE` — better than pure memory, but incomplete for multi-step field bag |
-| In-memory vertical VIN flows | Lost on restart mid-VIN |
-| Photo album collector in-process | Media group buffer lost on process restart |
-
-**Fix:** `REDIS_REQUIRED=true` in prod; persist draft payload JSON with pending key; persist vertical flows in Redis.
+**Исправление:** prod `REDIS_REQUIRED=true`; draft payload в Redis/DB; vertical flow → Redis.
 
 ---
 
-## 10. God classes / coupling
+## План исправлений (приоритет)
 
-| File | Lines | Action |
-|------|------:|--------|
-| `database_legacy.py` | ~11142 | Freeze; quarantine |
-| `handlers.py` | ~5080 | Split by include already started — continue extraction |
-| `keyboards.py` | ~2019 | Split per vertical |
-| `auto_vertical_handlers.py` | ~1256 | FSM → Redis; split screens |
-| Large `pg_*` engines | 700–1050 | One concern per module |
+### P0 — безопасность / коллизии (1–2 дня)
 
----
+1. Почистить дубли в `.env`; выставить сильный `JWT_SECRET`; для prod — `REDIS_REQUIRED=true`.
+2. Ротировать bot token / OpenRouter key при подозрении на утечку.
+3. Переименовать `LeadEngineV1`/`DealEngineV1` в revenue-engine.
+4. Удалить или `include_router` для `automotive_treasury_handlers`.
 
-## 11. Mega Tasks 1–10 vs reality
+### P1 — стабильность (1–2 недели)
 
-Much of Mega Tasks **already partially exists** as parallel implementations:
+5. In-memory flows → Redis.
+6. Distributed lock для escalation.
+7. AI qualification в фон (не блокировать ответ клиенту).
+8. Разорвать цикл auto_client ↔ auto_hub.
+9. `ruff F401` на `routers/` + новые CRM-сервисы.
 
-| Mega task | Already present (partial) | Gap |
-|-----------|---------------------------|-----|
-| Tests | Several `*_test.py` / regression scripts | No unified 70% coverage / pytest |
-| OpenAPI | `api/crm_api.py` + `api/v1` scaffold | Not full RBAC gateway |
-| Marketplace | `inventory` + listing + recommend | Product polish |
-| Multi-tenant | `multi_tenant_foundation`, partner tenant | Not enforced on Auto Client CRM rows |
-| Financial | revenue / commission engines | Naming collisions, incomplete P&L UX |
-| AI qualification | `pg_ai_manager_engine` | No manager recommendation / probability |
-| Recommendations | marketplace + `pg_recommendation_engine` | Two systems |
-| Monitoring | `/metrics`, prometheus compose | Loki not present |
-| Deploy | `docker-compose.prod.yml`, nginx, backups | Needs ops hardening |
-| Docs | `docs/*` | Diagram generators not automated |
+### P2 — консолидация (2–4 недели)
 
-**Do not stack another parallel mega-engine.** Extend the surviving one.
+10. Один путь notifications/storage.
+11. Один RBAC = `permission_engine_*`.
+12. Dual-write `src.events` с CRM submit; позже убрать дубли.
+13. Partial index для open SLA; concurrency limit на webhooks.
+14. Заморозить `database_legacy.py` / `handlers.py` god-рост.
 
----
+### P3 — платформа (после гигиены)
 
-## Proposed fix plan (ordered)
-
-### P0 — Safety (this week)
-
-1. **Rotate** Telegram `BOT_TOKEN` and OpenRouter key (exposed in tooling).
-2. Clean `.env` duplicates; set `REDIS_REQUIRED=true` for prod intent.
-3. Rename colliding `LeadEngineV1` / `DealEngineV1` inside `pg_automotive_revenue_engine.py`.
-4. Confirm `automotive_treasury_handlers` delete or register.
-
-### P1 — Stability (1–2 weeks)
-
-5. Move `auto_vertical_flow*` and sibling dict flows → Redis.
-6. Escalation distributed lock.
-7. Time-box / background AI qualification on lead submit.
-8. Extract `auto_client_navigation` to break router cycle.
-9. Run `ruff` F401 sweep on `routers/` + new services only.
-
-### P2 — Consolidation (2–4 weeks)
-
-10. Single notification + storage import path (prefer `services/*`, re-export from `src` or vice versa).
-11. Single RBAC system of record = `permission_engine_*`.
-12. Dual-write domain events (`src.events`) from CRM submit; retire duplicates later.
-13. Add partial index for open SLA rows; concurrency limit on webhook retries.
-14. Freeze `database_legacy.py` / stop new features there.
-
-### P3 — Platform (after hygiene)
-
-15. Wire `api/v1` to **existing** engines (not new ones).
-16. Tenant columns on `client_requests` + query filters.
-17. Unified pytest suite with coverage gate — target 70% on **crm/marketplace** packages only first (not whole 73k LOC).
+15. Подключить `api/v1` к **существующим** engines.
+16. Tenant filters на `client_requests`.
+17. Pytest coverage ≥70% **только на CRM/marketplace пакетах**, не на всём 70k+ LOC.
 
 ---
 
-## Suggested immediate patches (smallest diff)
+## Минимальные патчи (наименьший diff)
 
 ```text
-1) Rename revenue engine inner classes (avoid LeadEngineV1 collision)
-2) Register or delete automotive_treasury_router
-3) .env hygiene + REDIS_REQUIRED
-4) auto_client shared navigation module (breaks cycle)
+1) rename colliding classes in pg_automotive_revenue_engine.py
+2) register OR delete automotive_treasury_router
+3) .env hygiene + REDIS_REQUIRED + JWT_SECRET
+4) services/auto_client_navigation.py (break router cycle)
 ```
 
-No FSM behavior change required for (1)–(3).
+Пункты 1–3 **не требуют** изменения FSM/сценариев клиента.
 
 ---
 
-## Verification commands
+## Команды проверки
 
 ```bash
-# duplicate class names / quick health
-PYTHONPATH=. python -c "from services.pg_lead_engine import LeadEngineV1; print(LeadEngineV1)"
-PYTHONPATH=. python -c "import services.pg_automotive_revenue_engine as m; print(m.LeadEngineV1)"
+# коллизия имён
+PYTHONPATH=. python -c "from services.pg_lead_engine import LeadEngineV1 as A; import services.pg_automotive_revenue_engine as m; print(A, m.LeadEngineV1, A is m.LeadEngineV1)"
 
-# unused imports (install ruff)
-ruff check routers services/pg_auto_client_request_engine.py services/pg_client_request_crm_engine.py --select F401
+# мёртвый treasury router
+rg "automotive_treasury_router" -g '*.py'
 
-# FSM storage mode
-grep REDIS_ .env
+# FSM storage
+rg "REDIS_REQUIRED|MemoryStorage" .env fsm_storage.py config.py
+
+# unused imports (точечно)
+ruff check routers --select F401
 ```
 
 ---
 
-## Conclusion
+## Вывод
 
-The honest next step is **hygiene and consolidation**, not Mega Tasks 1–10. The architecture scaffold (`src/domains`, `container.py`, docs) already provides a strangler path. Use it to absorb living systems; delete ghosts (`unused models`, empty treasury router, duplicate class names) before adding another marketplace/financial/AI layer.
+Главный долг — **не недостаток фич**, а **дубли, коллизии имён, in-memory state и слабая дисциплина секретов/Redis**.  
+Сначала P0–P1 hygiene, затем расширение платформы через уже созданный `src/` strangler — без новых параллельных движков.
