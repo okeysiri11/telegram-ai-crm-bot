@@ -219,6 +219,7 @@ async def _finish_request(message: Message, state: FSMContext) -> None:
             service_type=data.get("service_type"),
             fuel=data.get("fuel"),
             city=data.get("city"),
+            engine=data.get("engine"),
             ai_qualification=ai_qualification,
         )
 
@@ -560,12 +561,11 @@ async def auto_client_vin_action(callback: CallbackQuery, state: FSMContext) -> 
         await _finish_request(callback.message, state)
         return
 
-    lang = await VerticalOnboardingEngineV1.get_language(callback.from_user.id)
-    await state.set_state(AutoClientFlow.collecting)
+    await state.set_state(AutoClientFlow.awaiting_vin)
     await state.update_data(flow_step="vin", awaiting_vin_input=True)
     await callback.message.answer(
-        "Введите VIN (17 символов):",
-        reply_markup=auto_client_menu(lang),
+        "Введите VIN автомобиля (или нажмите «Пропустить»):",
+        reply_markup=auto_client_vin_inline(),
     )
 
 
@@ -580,18 +580,25 @@ async def auto_client_vin_text(message: Message, state: FSMContext) -> None:
     if not data.get("awaiting_vin_input"):
         lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
         await message.answer(
-            "Используйте кнопки «Добавить VIN» или «Пропустить».",
+            "Хотите добавить VIN автомобиля?",
             reply_markup=auto_client_vin_inline(),
         )
         return
 
     text = (message.text or "").strip()
+    from services.auto_client_flow_engine import SKIP_TOKENS
+
+    if text.lower() in SKIP_TOKENS:
+        await state.update_data(awaiting_vin_input=False)
+        await _finish_request(message, state)
+        return
+
     ok, error, value = validate_text_step("vin", text, flow_type=data.get("flow_type") or REQUEST_BUY)
     if not ok:
         lang = await VerticalOnboardingEngineV1.get_language(message.from_user.id)
         await message.answer(
-            f"❌ {error}\n\nВведите корректный VIN (17 символов):",
-            reply_markup=auto_client_menu(lang),
+            f"❌ {error}\n\nВведите VIN ещё раз или нажмите «Пропустить».",
+            reply_markup=auto_client_vin_inline(),
         )
         return
 

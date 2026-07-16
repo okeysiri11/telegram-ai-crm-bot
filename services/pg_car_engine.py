@@ -64,10 +64,10 @@ class CarEngineV1:
     async def create_car(
         actor_id: int,
         *,
-        vin: str,
         make: str,
         model: str,
         year: int,
+        vin: str | None = None,
         **fields: Any,
     ) -> dict[str, Any]:
         if not await CarEngineV1.user_can_access(actor_id):
@@ -77,7 +77,7 @@ class CarEngineV1:
             tenant_id = await TenantContextService.require_tenant_id(actor_id)
             ctx = await TenantContextService.resolve_for_user(actor_id)
             repo = CarRepository(session)
-            if await repo.get_by_vin(vin, tenant_id=tenant_id):
+            if vin and await repo.get_by_vin(vin, tenant_id=tenant_id):
                 raise CarEngineError(f"Car with VIN already exists: {vin}")
 
             car = await repo.create_car(

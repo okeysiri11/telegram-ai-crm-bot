@@ -337,8 +337,10 @@ class PlatformReadinessTestSuite:
     @staticmethod
     def _check_add_car() -> dict[str, Any]:
         src = PlatformReadinessTestSuite._automotive_source()
+        if "vin_optional" in src and ("step\": \"make\"" in src or "'step': 'make'" in src):
+            return _result("operational", "optional VIN add-car flow")
         if "step\": \"vin\"" in src or "'step': 'vin'" in src:
-            return _result("operational", "VIN add-car flow")
+            return _result("partial", "legacy VIN-first add-car flow")
         return _result("failed", "add car flow missing")
 
     @staticmethod

@@ -134,6 +134,7 @@ class AutoClientRequestEngineV1:
         client_language_code: str | None = None,
         fuel: str | None = None,
         city: str | None = None,
+        engine: str | None = None,
         ai_qualification: dict | None = None,
     ) -> dict[str, Any]:
         db_type = FLOW_TYPE_TO_DB.get(
@@ -176,6 +177,7 @@ class AutoClientRequestEngineV1:
                 photo_file_ids=resolved_photos or None,
                 fuel=fuel,
                 city=city,
+                engine=engine,
                 manager_id=manager_uuid,
             )
             request_id = row.id

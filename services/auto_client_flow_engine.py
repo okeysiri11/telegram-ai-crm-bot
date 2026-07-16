@@ -15,15 +15,26 @@ REQUEST_MANAGER = "manager_callback"
 SKIP_TOKENS = frozenset({"-", "пропустить", "skip", "нет"})
 
 FLOW_STEPS: dict[str, tuple[str, ...]] = {
-    REQUEST_BUY: ("brand", "model", "year", "budget", "description", "phone", "vin_optional"),
+    REQUEST_BUY: (
+        "brand",
+        "model",
+        "year",
+        "budget",
+        "description",
+        "photos",
+        "phone",
+        "vin_optional",
+    ),
     REQUEST_SELL: (
         "brand",
         "model",
         "year",
+        "engine",
+        "color",
         "mileage",
         "price",
-        "photos",
         "description",
+        "photos",
         "phone",
         "vin_optional",
     ),
@@ -31,9 +42,11 @@ FLOW_STEPS: dict[str, tuple[str, ...]] = {
         "brand",
         "model",
         "year",
+        "engine",
+        "color",
         "price",
-        "photos",
         "description",
+        "photos",
         "phone",
         "vin_optional",
     ),
@@ -45,12 +58,14 @@ STEP_PROMPTS: dict[str, str] = {
     "brand": "Укажите марку автомобиля:",
     "model": "Укажите модель:",
     "year": "Укажите год (или «-» чтобы пропустить):",
+    "engine": "Укажите объём двигателя (или «-» чтобы пропустить):",
+    "color": "Укажите цвет (или «-» чтобы пропустить):",
     "budget": "Укажите бюджет (сумма и валюта):",
-    "mileage": "Укажите пробег (км):",
+    "mileage": "Укажите пробег (км) или «-» чтобы пропустить:",
     "price": "Укажите цену:",
     "description": "Опишите ваш запрос:",
     "phone": "📞 Отправьте номер телефона или нажмите «Поделиться контактом».",
-    "vin_optional": "Хотите добавить VIN для более точного поиска?",
+    "vin_optional": "Хотите добавить VIN автомобиля?",
     "photos": "Пришлите фото (можно несколько). Когда закончите — нажмите «Готово» или «Пропустить».",
 }
 
@@ -108,10 +123,17 @@ def validate_text_step(step: str, text: str, *, flow_type: str) -> tuple[bool, s
             return False, "Укажите год четырёхзначным числом (например 2021).", None
         return True, None, int(cleaned)
 
+    if step in {"engine", "color"}:
+        if _is_skip(cleaned):
+            return True, None, None
+        return True, None, cleaned
+
     if step == "mileage":
+        if _is_skip(cleaned):
+            return True, None, None
         digits = "".join(ch for ch in cleaned if ch.isdigit())
         if not digits:
-            return False, "Укажите пробег числом (км).", None
+            return False, "Укажите пробег числом (км) или «-» чтобы пропустить.", None
         return True, None, int(digits)
 
     if step in {"budget", "price"}:
@@ -131,6 +153,7 @@ def validate_text_step(step: str, text: str, *, flow_type: str) -> tuple[bool, s
         return True, None, digits
 
     if step == "vin":
+        # Validated only when the user voluntarily enters a VIN.
         result = validate_vin(cleaned)
         if not result["is_valid"]:
             return False, "\n".join(result["errors"]), None
@@ -148,6 +171,8 @@ def build_description(flow_type: str, data: dict[str, Any]) -> str:
         ("brand", "Марка"),
         ("model", "Модель"),
         ("year", "Год"),
+        ("engine", "Объём двигателя"),
+        ("color", "Цвет"),
         ("mileage", "Пробег"),
         ("budget", "Бюджет"),
         ("price", "Цена"),
@@ -180,10 +205,13 @@ def build_manager_notification_lines(
         ("brand", "Brand"),
         ("model", "Model"),
         ("year", "Year"),
+        ("engine", "Engine"),
+        ("color", "Color"),
         ("mileage", "Mileage"),
         ("budget", "Budget"),
         ("price", "Price"),
         ("service_type", "Service"),
+        ("vin", "VIN"),
     )
     for key, label in field_map:
         value = data.get(key)

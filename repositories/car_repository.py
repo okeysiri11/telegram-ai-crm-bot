@@ -69,7 +69,7 @@ class CarRepository:
     async def create_car(
         self,
         *,
-        vin: str,
+        vin: str | None = None,
         make: str,
         model: str,
         year: int,
@@ -94,7 +94,7 @@ class CarRepository:
             raise ValueError(f"Invalid status: {status}")
 
         car = Car(
-            vin=vin.upper(),
+            vin=vin.upper() if vin else None,
             make=make,
             model=model,
             year=year,

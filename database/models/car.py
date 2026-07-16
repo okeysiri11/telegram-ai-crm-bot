@@ -60,7 +60,7 @@ class Car(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         nullable=True,
     )
 
-    vin: Mapped[str] = mapped_column(String(50), nullable=False)
+    vin: Mapped[str | None] = mapped_column(String(50), nullable=True)
     make: Mapped[str] = mapped_column(String(100), nullable=False)
     model: Mapped[str] = mapped_column(String(100), nullable=False)
     year: Mapped[int] = mapped_column(Integer, nullable=False)

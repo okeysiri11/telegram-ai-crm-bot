@@ -1734,8 +1734,10 @@ def auto_client_vin_inline() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="➕ Добавить VIN", callback_data="ac:vin:add"),
-                InlineKeyboardButton(text="⏭ Пропустить", callback_data="ac:vin:skip"),
+                InlineKeyboardButton(text="Да, добавить VIN", callback_data="ac:vin:add"),
+            ],
+            [
+                InlineKeyboardButton(text="Пропустить", callback_data="ac:vin:skip"),
             ],
         ]
     )

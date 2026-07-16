@@ -167,11 +167,61 @@ async def _show_car_list(message: Message, user_id: int) -> None:
 
 
 async def _start_add_car(message: Message, user_id: int) -> None:
-    auto_vertical_flow[user_id] = {"step": "vin", "data": {}}
+    auto_vertical_flow[user_id] = {"step": "make", "data": {}}
     await message.answer(
-        "🚗 Добавить авто\n\nВведите VIN автомобиля (17 символов):",
+        "🚗 Добавить авто\n\nУкажите марку автомобиля:",
         reply_markup=auto_vertical_menu(await _user_lang(user_id)),
     )
+
+
+async def _finalize_add_car(message: Message, user_id: int, data: dict) -> None:
+    fields = dict(data.get("fields") or {})
+    vin = data.get("vin")
+    _clear_flow(user_id)
+    try:
+        car = await CarEngineV1.create_car(
+            user_id,
+            vin=vin,
+            make=data["make"],
+            model=data["model"],
+            year=data["year"],
+            **fields,
+        )
+    except CarEngineError as exc:
+        await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
+        return
+
+    if vin:
+        async with get_session() as session:
+            repo = VinRepository(session)
+            report = await repo.upsert_from_decoder(
+                vin,
+                car_id=uuid.UUID(car["id"]),
+                created_by=user_id,
+            )
+            await repo.append_history(
+                vin,
+                build_history_event(
+                    "car_created",
+                    source="telegram",
+                    description="Car added via Telegram Cars module",
+                    metadata={"car_id": car["id"]},
+                ),
+            )
+            if not report.auction_references:
+                await repo.add_auction_reference(
+                    vin,
+                    build_auction_reference(
+                        "manual_intake",
+                        metadata={"channel": "telegram"},
+                    ),
+                )
+
+    await message.answer(
+        "✅ Автомобиль добавлен\n\n" + _format_car_card(car),
+        reply_markup=auto_vertical_menu(await _user_lang(user_id)),
+    )
+    log_audit(user_id, "create", "auto_vertical", vin or car["id"])
 
 
 async def _start_search(message: Message, user_id: int) -> None:
@@ -689,38 +739,47 @@ async def auto_vertical_flow_handler(message: Message) -> None:
             await _return_to_auto_hub(message, user_id)
         return
 
-    if step == "vin":
-        result = validate_vin(text)
-        if not result["is_valid"]:
-            await message.answer(
-                "❌ Некорректный VIN:\n"
-                + "\n".join(f"• {err}" for err in result["errors"])
-                + "\n\nВведите корректный VIN (17 символов):"
-            )
+    if step == "make":
+        if not text:
+            await message.answer("Укажите марку автомобиля:")
             return
-        data["vin"] = result["vin"]
-        decoded = decode_vin(result["vin"])
-        data["decoded"] = decoded.get("decoded")
-        flow["step"] = "make_model_year"
-        hint = ""
-        if decoded.get("decoded", {}).get("model_year"):
-            hint = f"\n\nПодсказка по VIN: год {decoded['decoded']['model_year']}"
-        await message.answer(
-            "Введите марку, модель и год через пробел:\n"
-            "Пример: Toyota Camry 2022" + hint
-        )
+        data["make"] = text
+        flow["step"] = "model"
+        await message.answer("Укажите модель:")
         return
 
-    if step == "make_model_year":
-        parts = text.split()
-        if len(parts) < 3 or not parts[-1].isdigit():
-            await message.answer(
-                "Формат: Make Model Year\nПример: Toyota Camry 2022"
-            )
+    if step == "model":
+        if not text:
+            await message.answer("Укажите модель:")
             return
-        data["year"] = int(parts[-1])
-        data["model"] = parts[-2]
-        data["make"] = " ".join(parts[:-2])
+        data["model"] = text
+        flow["step"] = "year"
+        await message.answer("Укажите год выпуска:")
+        return
+
+    if step == "year":
+        if not text.isdigit() or len(text) != 4:
+            await message.answer("Укажите год четырёхзначным числом (например 2022):")
+            return
+        data["year"] = int(text)
+        flow["step"] = "color"
+        await message.answer("Укажите цвет (или «-» чтобы пропустить):")
+        return
+
+    if step == "color":
+        if text != "-":
+            data["color"] = text
+        flow["step"] = "mileage"
+        await message.answer("Укажите пробег в км (или «-» чтобы пропустить):")
+        return
+
+    if step == "mileage":
+        if text != "-":
+            digits = "".join(ch for ch in text if ch.isdigit())
+            if not digits:
+                await message.answer("Укажите пробег числом или «-»:")
+                return
+            data["mileage"] = int(digits)
         flow["step"] = "purchase_price"
         await message.answer(
             "Введите цену закупки (число) или «-» чтобы пропустить:"
@@ -735,6 +794,10 @@ async def auto_vertical_flow_handler(message: Message) -> None:
             except InvalidOperation:
                 await message.answer("Введите число или «-»:")
                 return
+        if data.get("color"):
+            fields["color"] = data["color"]
+        if data.get("mileage") is not None:
+            fields["mileage"] = data["mileage"]
         data["fields"] = fields
         flow["step"] = "optional_costs"
         await message.answer(
@@ -756,50 +819,48 @@ async def auto_vertical_flow_handler(message: Message) -> None:
             except InvalidOperation:
                 await message.answer("Введите до 4 чисел или «-»:")
                 return
-        _clear_flow(user_id)
-        try:
-            car = await CarEngineV1.create_car(
-                user_id,
-                vin=data["vin"],
-                make=data["make"],
-                model=data["model"],
-                year=data["year"],
-                **fields,
-            )
-        except CarEngineError as exc:
-            await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
-            return
-
-        async with get_session() as session:
-            repo = VinRepository(session)
-            report = await repo.upsert_from_decoder(
-                data["vin"],
-                car_id=uuid.UUID(car["id"]),
-                created_by=user_id,
-            )
-            await repo.append_history(
-                data["vin"],
-                build_history_event(
-                    "car_created",
-                    source="telegram",
-                    description="Car added via Telegram Cars module",
-                    metadata={"car_id": car["id"]},
-                ),
-            )
-            if not report.auction_references:
-                await repo.add_auction_reference(
-                    data["vin"],
-                    build_auction_reference(
-                        "manual_intake",
-                        metadata={"channel": "telegram"},
-                    ),
-                )
-
+        data["fields"] = fields
+        flow["step"] = "vin_optional"
         await message.answer(
-            "✅ Автомобиль добавлен\n\n" + _format_car_card(car),
-            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
+            "Хотите добавить VIN автомобиля?\n\n"
+            "• Да, добавить VIN\n"
+            "• Пропустить"
         )
-        log_audit(user_id, "create", "auto_vertical", data["vin"])
+        return
+
+    if step == "vin_optional":
+        lowered = text.lower()
+        if lowered in {"пропустить", "skip", "-", "нет"}:
+            data["vin"] = None
+            await _finalize_add_car(message, user_id, data)
+            return
+        if lowered in {"да, добавить vin", "да", "добавить vin", "vin"}:
+            flow["step"] = "vin_input"
+            await message.answer(
+                "Введите VIN автомобиля (или «Пропустить»):"
+            )
+            return
+        await message.answer(
+            "Выберите:\n• Да, добавить VIN\n• Пропустить"
+        )
+        return
+
+    if step == "vin_input":
+        lowered = text.lower()
+        if lowered in {"пропустить", "skip", "-", "нет"}:
+            data["vin"] = None
+            await _finalize_add_car(message, user_id, data)
+            return
+        result = validate_vin(text)
+        if not result["is_valid"]:
+            await message.answer(
+                "❌ Некорректный VIN:\n"
+                + "\n".join(f"• {err}" for err in result["errors"])
+                + "\n\nВведите VIN ещё раз или «Пропустить»:"
+            )
+            return
+        data["vin"] = result["vin"]
+        await _finalize_add_car(message, user_id, data)
         return
 
     if step == "search":
