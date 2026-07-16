@@ -12,8 +12,10 @@ logger = logging.getLogger(__name__)
 PLATFORM_ROLES = (
     "OWNER",
     "ADMIN",
+    "SUPER_ADMIN",
     "MANAGER",
     "AUTO_MANAGER",
+    "AGRO_MANAGER",
     "DEALER_MANAGER",
     "CLIENT",
     "AI_AGENT",
@@ -50,6 +52,7 @@ ROLE_PERMISSION_MAP: dict[str, tuple[str, ...]] = {
         "ai.use",
         "api.access",
     ),
+    "SUPER_ADMIN": tuple(PLATFORM_PERMISSIONS.keys()),
     "MANAGER": (
         "leads.view",
         "leads.assign",
@@ -64,6 +67,13 @@ ROLE_PERMISSION_MAP: dict[str, tuple[str, ...]] = {
         "leads.update_status",
         "clients.view",
         "inventory.view",
+        "ai.use",
+    ),
+    "AGRO_MANAGER": (
+        "leads.view",
+        "leads.assign",
+        "leads.update_status",
+        "clients.view",
         "ai.use",
     ),
     "DEALER_MANAGER": (

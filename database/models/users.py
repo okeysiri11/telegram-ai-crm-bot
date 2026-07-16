@@ -6,7 +6,7 @@ import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy import BigInteger, Boolean, ForeignKey, Index, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
@@ -27,6 +27,11 @@ class User(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     username: Mapped[str | None] = mapped_column(String(64), nullable=True)
     full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    # Canonical CRM role (SUPER_ADMIN / AUTO_MANAGER / AGRO_MANAGER / CLIENT).
+    # Permission-engine M2M roles remain the source of fine-grained grants.
+    role: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Subscribed verticals for managers, e.g. ["auto"] or ["agro", "auto"].
+    verticals: Mapped[list | None] = mapped_column(JSONB, nullable=True)
     tenant_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("tenants.id", ondelete="SET NULL"),

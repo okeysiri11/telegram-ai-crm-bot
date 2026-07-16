@@ -81,6 +81,33 @@ def owner_main_menu(*, show_automotive: bool = True):
     return keyboard
 
 
+def super_admin_menu() -> ReplyKeyboardMarkup:
+    """Top-level SUPER_ADMIN panel — no client menus."""
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="🏢 Авто"),
+                KeyboardButton(text="🌾 Агро"),
+            ],
+            [
+                KeyboardButton(text="🏠 Недвижимость"),
+                KeyboardButton(text="🚛 Логистика"),
+            ],
+            [KeyboardButton(text="👥 Пользователи")],
+            [KeyboardButton(text="📋 Все заявки")],
+            [
+                KeyboardButton(text="📊 Аналитика"),
+                KeyboardButton(text="💰 Финансы"),
+            ],
+            [
+                KeyboardButton(text="⚙️ Настройки"),
+                KeyboardButton(text="🤖 AI Центр управления"),
+            ],
+        ],
+        resize_keyboard=True,
+    )
+
+
 def owner_panel_menu() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         keyboard=[

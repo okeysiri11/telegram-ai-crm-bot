@@ -24,10 +24,14 @@ logger = logging.getLogger(__name__)
 
 MANAGER_ROLE_CODES = frozenset({
     "AUTO_MANAGER",
+    "AGRO_MANAGER",
+    "SUPER_ADMIN",
     "manager",
     "sales_manager",
     "MANAGER",
     "SUPER_MANAGER",
+    "OWNER",
+    "ADMIN",
 })
 
 
@@ -79,17 +83,32 @@ class ManagerDeliveryEngineV1:
         return bool(set(roles) & MANAGER_ROLE_CODES)
 
     @staticmethod
-    async def resolve_default_manager() -> tuple[uuid.UUID, int, str] | None:
+    async def resolve_default_manager(
+        *,
+        vertical: str | None = "auto",
+    ) -> tuple[uuid.UUID, int, str] | None:
+        from services.pg_vertical_routing_engine import VerticalRoutingEngineV1
+        from services.system_roles import Vertical
+
         await ManagerDeliveryEngineV1.ensure_boris()
-        if DEFAULT_AUTO_MANAGER_ID is None:
-            logger.error("DEFAULT_AUTO_MANAGER_ID is not configured")
-            return None
-        user = await ManagerDeliveryEngineV1.get_manager_user(telegram_id=DEFAULT_AUTO_MANAGER_ID)
-        if user is None or user.telegram_id is None:
-            logger.error("MANAGER_NOT_FOUND lead_id=%s", "—")
-            return None
-        name = user.full_name or BORIS_FULL_NAME
-        return user.id, user.telegram_id, name
+        key = vertical or Vertical.AUTO.value
+        routed = await VerticalRoutingEngineV1.resolve_manager_for_vertical(key)
+        if routed is not None:
+            return routed
+
+        if key == Vertical.AUTO.value:
+            if DEFAULT_AUTO_MANAGER_ID is None:
+                logger.error("DEFAULT_AUTO_MANAGER_ID is not configured")
+                return None
+            user = await ManagerDeliveryEngineV1.get_manager_user(
+                telegram_id=DEFAULT_AUTO_MANAGER_ID
+            )
+            if user is None or user.telegram_id is None:
+                logger.error("MANAGER_NOT_FOUND lead_id=%s", "—")
+                return None
+            name = user.full_name or BORIS_FULL_NAME
+            return user.id, user.telegram_id, name
+        return None
 
     @staticmethod
     async def startup_diagnostics() -> dict[str, Any]:
@@ -168,10 +187,20 @@ class ManagerDeliveryEngineV1:
 
     @staticmethod
     async def resolve_menu_type(telegram_user_id: int) -> str:
-        from services.pg_entry_point_engine import EntryPointEngineV1
+        from config import OWNER_ID
         from services.entry_point_routing import EntryPoint
+        from services.pg_entry_point_engine import EntryPointEngineV1
+        from services.pg_vertical_routing_engine import VerticalRoutingEngineV1
+        from services.system_roles import SystemRole
 
-        if await ManagerDeliveryEngineV1.is_platform_manager(telegram_user_id):
+        system_role = await VerticalRoutingEngineV1.resolve_system_role(telegram_user_id)
+        if system_role == SystemRole.SUPER_ADMIN.value or (
+            OWNER_ID is not None and telegram_user_id == OWNER_ID
+        ):
+            menu_type = "super_admin"
+        elif system_role in {SystemRole.AUTO_MANAGER.value, SystemRole.AGRO_MANAGER.value}:
+            menu_type = "manager_crm"
+        elif await ManagerDeliveryEngineV1.is_platform_manager(telegram_user_id):
             menu_type = "manager_crm"
         else:
             ctx = await EntryPointEngineV1.get_flow_context(telegram_user_id)
@@ -187,7 +216,7 @@ class ManagerDeliveryEngineV1:
         logger.info(
             "MENU_BUILD telegram_id=%s roles=%s menu_type=%s",
             telegram_user_id,
-            await ManagerDeliveryEngineV1._role_codes_for_telegram(telegram_user_id),
+            system_role or await ManagerDeliveryEngineV1._role_codes_for_telegram(telegram_user_id),
             menu_type,
         )
         return menu_type
@@ -201,7 +230,13 @@ class ManagerDeliveryEngineV1:
 
     @staticmethod
     async def reply_markup_for_user(telegram_user_id: int):
-        from keyboards import auto_client_menu, crm_menu, owner_dashboard_menu, owner_main_menu
+        from keyboards import (
+            auto_client_menu,
+            crm_menu,
+            owner_dashboard_menu,
+            owner_main_menu,
+            super_admin_menu,
+        )
         from services.automotive_telegram_access import can_see_automotive_menu_button
         from services.pg_entry_point_engine import EntryPointEngineV1
         from services.entry_point_routing import EntryPoint
@@ -210,14 +245,16 @@ class ManagerDeliveryEngineV1:
         ctx = await EntryPointEngineV1.get_flow_context(telegram_user_id)
         lang = ctx.get("language") or "ru"
 
+        if menu_type == "super_admin":
+            return super_admin_menu()
+
         if menu_type == "manager_crm":
             if ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value:
                 logger.warning(
                     "WRONG_MENU_FOR_MANAGER telegram_id=%s",
                     telegram_user_id,
                 )
-            show_auto = await can_see_automotive_menu_button(telegram_user_id)
-            return crm_menu() if not show_auto else owner_main_menu(show_automotive=True)
+            return crm_menu()
 
         if ctx.get("entry_point") == EntryPoint.AUTO_CLIENT.value:
             from keyboards import auto_client_menu as acm
@@ -239,9 +276,10 @@ class ManagerDeliveryEngineV1:
     ) -> dict[str, Any]:
         from services.pg_lead_engine import LeadEngineV1
 
-        manager_info = await ManagerDeliveryEngineV1.resolve_default_manager()
+        vertical = snapshot.get("vertical") or "auto"
+        manager_info = await ManagerDeliveryEngineV1.resolve_default_manager(vertical=vertical)
         if manager_info is None:
-            logger.error("MANAGER_NOT_FOUND lead_id=%s", lead_id)
+            logger.error("MANAGER_NOT_FOUND lead_id=%s vertical=%s", lead_id, vertical)
             return snapshot
 
         manager_uuid, manager_telegram_id, manager_name = manager_info

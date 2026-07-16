@@ -112,6 +112,14 @@ async def run_startup() -> StartupContext:
     except Exception:
         logger.warning("Platform permissions seed failed", exc_info=True)
 
+    try:
+        from services.pg_vertical_routing_engine import VerticalRoutingEngineV1
+
+        routing_seed = await VerticalRoutingEngineV1.ensure_platform_actors()
+        logger.info("Vertical routing seed: %s", routing_seed)
+    except Exception:
+        logger.warning("Vertical routing seed failed", exc_info=True)
+
     from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
     diagnostics = await ManagerDeliveryEngineV1.startup_diagnostics()

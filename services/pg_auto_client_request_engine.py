@@ -84,8 +84,15 @@ class AutoClientRequestEngineV1:
 
     @staticmethod
     async def find_auto_manager() -> tuple[uuid.UUID, int, str] | None:
-        """Return (user_uuid, telegram_id, display_name)."""
+        """Return (user_uuid, telegram_id, display_name) for AUTO vertical."""
         await AutoClientRequestEngineV1.ensure_auto_manager()
+
+        from services.pg_vertical_routing_engine import VerticalRoutingEngineV1
+        from services.system_roles import Vertical
+
+        routed = await VerticalRoutingEngineV1.resolve_manager_for_vertical(Vertical.AUTO.value)
+        if routed is not None:
+            return routed
 
         async with get_session() as session:
             manager = await UserRoleRepository(session).find_user_by_role_code(

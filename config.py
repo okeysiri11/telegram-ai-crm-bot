@@ -49,6 +49,7 @@ REDIS_REQUIRED = os.getenv("REDIS_REQUIRED", "").lower() in {"1", "true", "yes"}
 OWNER_ID = _optional_telegram_id("OWNER_ID")
 DEFAULT_AUTO_MANAGER_ID = _optional_telegram_id("DEFAULT_AUTO_MANAGER_ID")
 DEFAULT_DEALER_MANAGER_ID = _optional_telegram_id("DEFAULT_DEALER_MANAGER_ID")
+DEFAULT_AGRO_MANAGER_ID = _optional_telegram_id("DEFAULT_AGRO_MANAGER_ID")
 
 # Legacy alias used across CRM engines
 MANAGER_ID = DEFAULT_DEALER_MANAGER_ID
@@ -62,7 +63,12 @@ if DEFAULT_DEALER_MANAGER_ID is not None:
 if DEFAULT_AUTO_MANAGER_ID is not None and DEFAULT_AUTO_MANAGER_ID not in MANAGERS:
     MANAGERS[DEFAULT_AUTO_MANAGER_ID] = os.getenv(
         "DEFAULT_AUTO_MANAGER_NAME",
-        "Auto Manager",
+        "Борода",
+    )
+if DEFAULT_AGRO_MANAGER_ID is not None and DEFAULT_AGRO_MANAGER_ID not in MANAGERS:
+    MANAGERS[DEFAULT_AGRO_MANAGER_ID] = os.getenv(
+        "DEFAULT_AGRO_MANAGER_NAME",
+        "Christopher Moltisanti",
     )
 
 MARKETING_TELEGRAM_CHANNEL_ID = os.getenv("MARKETING_TELEGRAM_CHANNEL_ID")
