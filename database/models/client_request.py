@@ -12,6 +12,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from database.base import Base
 from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 
+# Register FK targets on Base.metadata (avoids NoReferencedTableError on flush).
+import database.models.marketplace_listing  # noqa: F401
+import database.models.auto_client_request  # noqa: F401
+
 
 class ClientRequestStatus(str, enum.Enum):
     NEW = "NEW"

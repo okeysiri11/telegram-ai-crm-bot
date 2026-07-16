@@ -144,6 +144,12 @@ class AutoClientRequestEngineV1:
         engine: str | None = None,
         ai_qualification: dict | None = None,
     ) -> dict[str, Any]:
+        # Normalize optional fields — empty string must not be stored as VIN.
+        if isinstance(vin, str):
+            vin = vin.strip() or None
+        if isinstance(client_phone, str):
+            client_phone = client_phone.strip() or None
+
         db_type = FLOW_TYPE_TO_DB.get(
             flow_request_type,
             AutoClientRequestType.AUTO_SEARCH.value,
@@ -197,79 +203,99 @@ class AutoClientRequestEngineV1:
             bool(vin and str(vin).strip()),
         )
 
-        from services.pg_client_request_crm_engine import ClientRequestCrmEngineV1
+        crm_result: dict[str, Any] = {}
+        try:
+            from services.pg_client_request_crm_engine import ClientRequestCrmEngineV1
 
-        crm_result = await ClientRequestCrmEngineV1.sync_from_auto_request(
-            auto_request_id=request_id,
-            request_number=created_number,
-            flow_request_type=flow_request_type,
-            manager_id=manager_uuid,
-            client_telegram_id=client_telegram_id,
-            client_username=client_username,
-            client_first_name=client_first_name,
-            client_last_name=client_last_name,
-            client_phone=client_phone,
-            client_language_code=client_language_code,
-            description=description,
-            photo_file_ids=resolved_photos or None,
-            vin=vin,
-            brand=brand,
-            model=model,
-            year=year,
-            mileage=mileage,
-            budget=budget,
-            price=price,
-            fuel=fuel,
-            city=city,
-            service_type=service_type,
-            ai_qualification=ai_qualification,
-        )
+            crm_result = await ClientRequestCrmEngineV1.sync_from_auto_request(
+                auto_request_id=request_id,
+                request_number=created_number,
+                flow_request_type=flow_request_type,
+                manager_id=manager_uuid,
+                client_telegram_id=client_telegram_id,
+                client_username=client_username,
+                client_first_name=client_first_name,
+                client_last_name=client_last_name,
+                client_phone=client_phone,
+                client_language_code=client_language_code,
+                description=description,
+                photo_file_ids=resolved_photos or None,
+                vin=vin,
+                brand=brand,
+                model=model,
+                year=year,
+                mileage=mileage,
+                budget=budget,
+                price=price,
+                fuel=fuel,
+                city=city,
+                service_type=service_type,
+                ai_qualification=ai_qualification,
+            )
+        except Exception:
+            logger.exception(
+                "AUTO REQUEST CREATE FAILED: CRM sync failed request=%s "
+                "(auto_client_requests row already saved)",
+                created_number,
+            )
 
         if flow_request_type == "listing" and crm_result.get("id"):
-            from services.pg_marketplace_listing_engine import MarketplaceListingEngineV1
+            try:
+                from services.pg_marketplace_listing_engine import MarketplaceListingEngineV1
 
-            await MarketplaceListingEngineV1.create_from_client_request(
-                client_request_id=uuid.UUID(crm_result["id"]),
-                seller_telegram_id=client_telegram_id,
-                seller_username=client_username,
-                data={
-                    "brand": brand,
-                    "model": model,
-                    "year": year,
-                    "price": price,
-                    "mileage": mileage,
-                    "vin": vin,
-                    "fuel": fuel,
-                    "city": city,
-                    "user_description": user_description or description,
-                },
-                photo_file_ids=resolved_photos or None,
-            )
+                await MarketplaceListingEngineV1.create_from_client_request(
+                    client_request_id=uuid.UUID(crm_result["id"]),
+                    seller_telegram_id=client_telegram_id,
+                    seller_username=client_username,
+                    data={
+                        "brand": brand,
+                        "model": model,
+                        "year": year,
+                        "price": price,
+                        "mileage": mileage,
+                        "vin": vin,
+                        "fuel": fuel,
+                        "city": city,
+                        "user_description": user_description or description,
+                    },
+                    photo_file_ids=resolved_photos or None,
+                )
+            except Exception:
+                logger.exception(
+                    "AUTO REQUEST CREATE FAILED: marketplace listing failed request=%s",
+                    created_number,
+                )
 
         from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
-        await ManagerDeliveryEngineV1.notify_auto_client_request(
-            request_number=created_number,
-            request_type=db_type,
-            flow_request_type=flow_request_type,
-            description=description,
-            user_description=user_description,
-            client_username=client_username,
-            client_full_name=client_full_name,
-            client_phone=client_phone,
-            client_telegram_id=client_telegram_id,
-            photo_file_id=primary_photo,
-            photo_file_ids=resolved_photos or None,
-            vin=vin,
-            brand=brand,
-            model=model,
-            year=year,
-            mileage=mileage,
-            budget=budget,
-            price=price,
-            service_type=service_type,
-            lead_id=str(request_id),
-        )
+        try:
+            await ManagerDeliveryEngineV1.notify_auto_client_request(
+                request_number=created_number,
+                request_type=db_type,
+                flow_request_type=flow_request_type,
+                description=description,
+                user_description=user_description,
+                client_username=client_username,
+                client_full_name=client_full_name,
+                client_phone=client_phone,
+                client_telegram_id=client_telegram_id,
+                photo_file_id=primary_photo,
+                photo_file_ids=resolved_photos or None,
+                vin=vin,
+                brand=brand,
+                model=model,
+                year=year,
+                mileage=mileage,
+                budget=budget,
+                price=price,
+                service_type=service_type,
+                lead_id=str(request_id),
+            )
+        except Exception:
+            logger.exception(
+                "AUTO REQUEST CREATE FAILED: manager notify failed request=%s",
+                created_number,
+            )
 
         return {
             "id": str(request_id),

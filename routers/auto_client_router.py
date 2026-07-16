@@ -261,7 +261,7 @@ async def _finish_request(
             description=description,
             user_description=user_description,
             photo_file_ids=photo_file_ids or None,
-            vin=data.get("vin"),
+            vin=(str(data["vin"]).strip() or None) if data.get("vin") else None,
             brand=data.get("brand"),
             model=data.get("model"),
             year=data.get("year"),
@@ -299,15 +299,16 @@ async def _finish_request(
             f"Менеджер: {result['manager_name']}",
             reply_markup=auto_client_menu(lang),
         )
-    except RuntimeError as exc:
-        if "AUTO_MANAGER NOT FOUND" in str(exc):
+    except RuntimeError as e:
+        if "AUTO_MANAGER NOT FOUND" in str(e):
             logger.error("AUTO_MANAGER NOT FOUND")
+        logger.exception("AUTO REQUEST CREATE FAILED: %s", e)
         await message.answer(
             "❌ Менеджер временно недоступен. Попробуйте позже.",
             reply_markup=auto_client_menu(lang),
         )
-    except Exception:
-        logger.exception("AUTO_CLIENT request submission failed user=%s", user.id)
+    except Exception as e:
+        logger.exception("AUTO REQUEST CREATE FAILED: %s", e)
         await message.answer(
             "❌ Не удалось создать заявку. Попробуйте ещё раз.",
             reply_markup=auto_client_menu(lang),
