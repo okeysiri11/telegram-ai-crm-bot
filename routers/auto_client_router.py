@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
+from typing import Any, Awaitable, Callable
 
-from aiogram import F, Router
-from aiogram.filters import Command, StateFilter
+from aiogram import BaseMiddleware, F, Router
+from aiogram.filters import BaseFilter, Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, TelegramObject
 
 from keyboards import (
     auto_client_menu,
@@ -51,6 +52,34 @@ router = Router()
 LANGUAGE_PICKER_TEXT = "🇺🇦 Выберите язык"
 
 
+class _AutoClientDebugMiddleware(BaseMiddleware):
+    """Temporary debug logging for all auto-client messages/callbacks."""
+
+    async def __call__(
+        self,
+        handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
+        event: TelegramObject,
+        data: dict[str, Any],
+    ) -> Any:
+        if isinstance(event, CallbackQuery):
+            logger.warning(
+                "CALLBACK RECEIVED: %s user=%s",
+                event.data,
+                event.from_user.id if event.from_user else None,
+            )
+        elif isinstance(event, Message):
+            logger.warning(
+                "MESSAGE RECEIVED: %s user=%s",
+                event.text,
+                event.from_user.id if event.from_user else None,
+            )
+        return await handler(event, data)
+
+
+router.message.middleware(_AutoClientDebugMiddleware())
+router.callback_query.middleware(_AutoClientDebugMiddleware())
+
+
 async def _restore_auto_client_fsm(message: Message, state: FSMContext) -> None:
     if message.from_user is None:
         return
@@ -72,22 +101,29 @@ async def _restore_auto_client_fsm(message: Message, state: FSMContext) -> None:
     )
 
 
-async def _ensure_auto_client(message: Message) -> bool:
-    if message.from_user is None:
-        logger.info("AUTO_CLIENT skip: message has no from_user")
+async def _ensure_auto_client_user(user_id: int | None) -> bool:
+    if user_id is None:
+        logger.info("AUTO_CLIENT skip: no user_id")
         return False
-    ctx = await EntryPointEngineV1.get_flow_context(message.from_user.id)
+    ctx = await EntryPointEngineV1.get_flow_context(user_id)
     entry_point = ctx.get("entry_point")
     source_link = ctx.get("source_link")
     if entry_point == EntryPoint.AUTO_CLIENT.value or source_link == "auto_client":
         return True
     logger.info(
         "AUTO_CLIENT skip: user=%s entry_point=%s source_link=%s",
-        message.from_user.id,
+        user_id,
         entry_point,
         source_link,
     )
     return False
+
+
+async def _ensure_auto_client(message: Message) -> bool:
+    if message.from_user is None:
+        logger.info("AUTO_CLIENT skip: message has no from_user")
+        return False
+    return await _ensure_auto_client_user(message.from_user.id)
 
 
 async def _sync_auto_client_menu_state(message: Message, state: FSMContext) -> None:
@@ -116,10 +152,14 @@ async def _set_flow_step(
     *,
     flow_type: str,
     flow_step: str,
+    user_id: int | None = None,
 ) -> None:
-    user_id = message.from_user.id
-    lang = await VerticalOnboardingEngineV1.get_language(user_id)
-    await _save_flow_pending(user_id, flow_type, flow_step)
+    uid = user_id or (message.from_user.id if message.from_user else None)
+    if uid is None:
+        logger.error("AUTO_CLIENT _set_flow_step without user_id")
+        return
+    lang = await VerticalOnboardingEngineV1.get_language(uid)
+    await _save_flow_pending(uid, flow_type, flow_step)
 
     if flow_step == "photos":
         await state.set_state(AutoClientFlow.awaiting_photos)
@@ -163,8 +203,16 @@ async def _start_flow(message: Message, state: FSMContext, flow_type: str, **ext
     await _set_flow_step(message, state, flow_type=flow_type, flow_step=step)
 
 
-async def _finish_request(message: Message, state: FSMContext) -> None:
-    user = message.from_user
+async def _finish_request(
+    message: Message,
+    state: FSMContext,
+    *,
+    actor=None,
+) -> None:
+    user = actor or message.from_user
+    if user is None:
+        logger.error("AUTO_CLIENT finish_request without actor")
+        return
     data = await state.get_data()
     flow_type = data.get("flow_type") or REQUEST_BUY
     lang = await VerticalOnboardingEngineV1.get_language(user.id)
@@ -270,7 +318,12 @@ async def _finish_request(message: Message, state: FSMContext) -> None:
         await state.clear()
 
 
-async def _advance_after_step(message: Message, state: FSMContext) -> None:
+async def _advance_after_step(
+    message: Message,
+    state: FSMContext,
+    *,
+    actor=None,
+) -> None:
     data = await state.get_data()
     flow_type = data.get("flow_type")
     flow_step = data.get("flow_step")
@@ -280,11 +333,20 @@ async def _advance_after_step(message: Message, state: FSMContext) -> None:
 
     nxt = next_step(flow_type, flow_step)
     if nxt is None:
-        await _finish_request(message, state)
+        await _finish_request(message, state, actor=actor)
         return
 
+    user_id = (actor.id if actor is not None else None) or (
+        message.from_user.id if message.from_user else None
+    )
     await state.update_data(flow_step=nxt)
-    await _set_flow_step(message, state, flow_type=flow_type, flow_step=nxt)
+    await _set_flow_step(
+        message,
+        state,
+        flow_type=flow_type,
+        flow_step=nxt,
+        user_id=user_id,
+    )
 
 
 async def _handle_interrupt(message: Message, state: FSMContext) -> bool:
@@ -528,22 +590,31 @@ async def auto_client_photos_non_photo(message: Message, state: FSMContext) -> N
     )
 
 
-@router.callback_query(F.data.in_({"ac:photos:done", "ac:photos:skip"}))
+@router.callback_query(
+    StateFilter(AutoClientFlow.awaiting_photos),
+    F.data.in_({"ac:photos:done", "ac:photos:skip"}),
+)
 async def auto_client_photos_action(callback: CallbackQuery, state: FSMContext) -> None:
     if callback.message is None or callback.from_user is None:
         await callback.answer()
         return
-    if not await _ensure_auto_client(callback.message):
+    if not await _ensure_auto_client_user(callback.from_user.id):
         await callback.answer()
         return
 
     current = await state.get_state()
+    logger.warning(
+        "PHOTO_ACTION data=%s user=%s fsm_state=%s",
+        callback.data,
+        callback.from_user.id,
+        current,
+    )
     if current != AutoClientFlow.awaiting_photos.state:
-        await callback.answer()
+        await callback.answer("Сначала пришлите фото или начните шаг заново.", show_alert=True)
         return
 
     await callback.answer()
-    await _advance_after_step(callback.message, state)
+    await _advance_after_step(callback.message, state, actor=callback.from_user)
 
 
 @router.callback_query(F.data.in_({"ac:vin:add", "ac:vin:skip"}))
@@ -551,7 +622,7 @@ async def auto_client_vin_action(callback: CallbackQuery, state: FSMContext) -> 
     if callback.message is None or callback.from_user is None:
         await callback.answer()
         return
-    if not await _ensure_auto_client(callback.message):
+    if not await _ensure_auto_client_user(callback.from_user.id):
         await callback.answer()
         return
 
@@ -563,7 +634,7 @@ async def auto_client_vin_action(callback: CallbackQuery, state: FSMContext) -> 
     await callback.answer()
     if callback.data == "ac:vin:skip":
         await state.update_data(vin=None, awaiting_vin_input=False)
-        await _finish_request(callback.message, state)
+        await _finish_request(callback.message, state, actor=callback.from_user)
         return
 
     await state.set_state(AutoClientFlow.awaiting_vin)
@@ -666,3 +737,31 @@ async def start_auto_client_service_flow(
     """Called from auto_hub_router after user picks a service category."""
     await state.clear()
     await _start_flow(message, state, REQUEST_SERVICES, service_type=service_type)
+
+
+# Temporary catch-all debug handlers (only Auto Client session — do not block other routers).
+class _AutoClientSessionFilter(BaseFilter):
+    async def __call__(self, event: Message | CallbackQuery) -> bool:
+        user = event.from_user
+        if user is None:
+            return False
+        return await _ensure_auto_client_user(user.id)
+
+
+@router.callback_query(_AutoClientSessionFilter())
+async def debug_callback(callback: CallbackQuery) -> None:
+    logger.warning(
+        "CALLBACK RECEIVED: %s user=%s",
+        callback.data,
+        callback.from_user.id if callback.from_user else None,
+    )
+    await callback.answer()
+
+
+@router.message(_AutoClientSessionFilter())
+async def debug_message(message: Message) -> None:
+    logger.warning(
+        "MESSAGE RECEIVED: %s user=%s",
+        message.text,
+        message.from_user.id if message.from_user else None,
+    )

@@ -7,6 +7,7 @@ import logging
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.filters.command import CommandObject
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
 from config import OWNER_ID
@@ -22,19 +23,29 @@ start_routing_router = Router()
 
 
 @start_routing_router.message(Command("start", ignore_mention=True))
-async def cmd_start(message: Message, command: CommandObject) -> None:
+async def cmd_start(message: Message, command: CommandObject, state: FSMContext) -> None:
     # Только /start — не перехватывать /start_auto_client и другие команды.
     if command.command != "start":
         return
+
+    await state.clear()
+    logger.info("START cleared FSM user=%s args=%r", message.from_user.id, command.args)
+
     user = message.from_user
     user_id = user.id
 
     entry_link = VerticalOnboardingEngineV1.parse_entry_link_code(command.args)
     if entry_link == "auto_client":
         await EntryPointEngineV1.begin_auto_client(message)
+        from states.entry_flow_states import AutoClientFlow
+
+        await state.set_state(AutoClientFlow.language_select)
         return
     if entry_link == "auto_dealer":
         await EntryPointEngineV1.begin_auto_dealer(message)
+        from states.entry_flow_states import AutoDealerFlow
+
+        await state.set_state(AutoDealerFlow.language_select)
         return
 
     if entry_link and entry_link in ENTRY_LINK_REGISTRY:
