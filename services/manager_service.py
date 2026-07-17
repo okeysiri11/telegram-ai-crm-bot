@@ -10,6 +10,7 @@ from config import (
     DEFAULT_AGRO_MANAGER_ID,
     DEFAULT_AUTO_MANAGER_ID,
     DEFAULT_DEALER_MANAGER_ID,
+    DEFAULT_REALTY_MANAGER_ID,
     OWNER_ID,
 )
 from database.session import get_session
@@ -26,7 +27,7 @@ NON_ASSIGNABLE_ROLES = frozenset({SystemRole.SUPER_ADMIN.value, "OWNER", "ADMIN"
 DEFAULT_ASSIGNEES: dict[str, int | None] = {
     Vertical.AUTO.value: DEFAULT_AUTO_MANAGER_ID,
     Vertical.AGRO.value: DEFAULT_AGRO_MANAGER_ID,
-    Vertical.REALTY.value: None,
+    Vertical.REALTY.value: DEFAULT_REALTY_MANAGER_ID,
     Vertical.LEGAL.value: None,
     Vertical.LOGISTICS.value: None,
 }
@@ -35,6 +36,7 @@ DEFAULT_ASSIGNEES: dict[str, int | None] = {
 ASSIGNEE_LABELS: dict[str, str] = {
     Vertical.AUTO.value: "Boroda_0003 (AUTO_MANAGER)",
     Vertical.AGRO.value: "Christopher Moltisanti (AGRO_MANAGER)",
+    Vertical.REALTY.value: "Luc (REALTY_MANAGER)",
 }
 
 
