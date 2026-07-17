@@ -1,9 +1,5 @@
-# Base repository pattern for future PostgreSQL adapters.
+# Base repository pattern — re-export platform layer for backward compatibility.
 
+from src.platform.layers.base_repository import BaseRepository
 
-class BaseRepository:
-    """Thin wrapper delegating to service layer (backward compatible)."""
-
-    @staticmethod
-    def _not_implemented():
-        raise NotImplementedError("Override in subclass")
+__all__ = ["BaseRepository"]

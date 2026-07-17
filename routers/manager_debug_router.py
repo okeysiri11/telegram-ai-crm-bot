@@ -9,7 +9,7 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 
 from keyboards import crm_menu
-from database.session import get_session
+from services.pg_auto_client_request_engine import AutoClientRequestEngineV1
 from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
 logger = logging.getLogger(__name__)
@@ -31,18 +31,9 @@ async def open_auto_client_request_card(callback: CallbackQuery) -> None:
         return
 
     request_number = callback.data.removeprefix("mgr:req:")
-    from sqlalchemy import select
-    from database.models.auto_client_request import AutoClientRequest
+    summary = await AutoClientRequestEngineV1.get_request_summary(request_number)
 
-    async with get_session() as session:
-        result = await session.execute(
-            select(AutoClientRequest).where(
-                AutoClientRequest.request_number == request_number
-            )
-        )
-        row = result.scalar_one_or_none()
-
-    if row is None:
+    if summary is None:
         await callback.answer("Заявка не найдена", show_alert=True)
         return
 
@@ -50,18 +41,10 @@ async def open_auto_client_request_card(callback: CallbackQuery) -> None:
         await callback.answer("Нет доступа", show_alert=True)
         return
 
-    client = row.client_username or row.client_full_name or str(row.client_telegram_id)
-    text = (
-        f"📋 Заявка {row.request_number}\n\n"
-        f"Тип: {row.request_type}\n"
-        f"Статус: {row.status}\n"
-        f"Клиент: {client}\n"
-        f"Telegram ID: {row.client_telegram_id}\n\n"
-        f"Описание:\n{row.description or '—'}"
-    )
+    text = ManagerDeliveryEngineV1.format_auto_client_request_card(summary)
     await callback.message.answer(
         text,
-        reply_markup=ManagerDeliveryEngineV1.request_action_keyboard(row.request_number),
+        reply_markup=ManagerDeliveryEngineV1.request_action_keyboard(summary["request_number"]),
     )
     await callback.answer()
 
@@ -71,28 +54,10 @@ async def manager_new_requests(message: Message) -> None:
     if not await ManagerDeliveryEngineV1.is_platform_manager(message.from_user.id):
         return
 
-    from sqlalchemy import select
-    from database.models.auto_client_request import AutoClientRequest, AutoClientRequestStatus
-    from database.session import get_session
-
-    async with get_session() as session:
-        result = await session.execute(
-            select(AutoClientRequest)
-            .where(AutoClientRequest.status == AutoClientRequestStatus.NEW.value)
-            .order_by(AutoClientRequest.created_at.desc())
-            .limit(10)
-        )
-        rows = list(result.scalars().all())
-
-    if not rows:
-        await message.answer("Новых заявок нет.", reply_markup=crm_menu())
+    summaries = await AutoClientRequestEngineV1.list_new_request_summaries(limit=10)
+    text = ManagerDeliveryEngineV1.format_new_auto_client_requests(summaries)
+    if not summaries:
+        await message.answer(text, reply_markup=crm_menu())
         return
 
-    lines = ["🆕 Новые заявки", ""]
-    for row in rows:
-        client = row.client_username or row.client_full_name or row.client_telegram_id
-        lines.append(
-            f"• {row.request_number} | {row.request_type}\n"
-            f"  {client}: {(row.description or '')[:80]}"
-        )
-    await message.answer("\n".join(lines), reply_markup=crm_menu())
+    await message.answer(text, reply_markup=crm_menu())

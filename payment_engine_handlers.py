@@ -148,16 +148,7 @@ async def payment_confirm_callback(callback: CallbackQuery) -> None:
     client_id = payment.get("client_id")
     if client_id:
         try:
-            from sqlalchemy import select
-
-            from database.models.users import User
-            from database.session import get_session
-
-            async with get_session() as session:
-                result = await session.execute(
-                    select(User.telegram_id).where(User.id == uuid.UUID(client_id))
-                )
-                telegram_id = result.scalar_one_or_none()
+            telegram_id = await PaymentEngineV1.resolve_client_telegram_id(client_id)
             if telegram_id:
                 await callback.message.bot.send_message(telegram_id, PAYMENT_CONFIRMED_MESSAGE)
         except Exception:
@@ -193,16 +184,7 @@ async def payment_reject_callback(callback: CallbackQuery) -> None:
     client_id = payment.get("client_id")
     if client_id:
         try:
-            from sqlalchemy import select
-
-            from database.models.users import User
-            from database.session import get_session
-
-            async with get_session() as session:
-                result = await session.execute(
-                    select(User.telegram_id).where(User.id == uuid.UUID(client_id))
-                )
-                telegram_id = result.scalar_one_or_none()
+            telegram_id = await PaymentEngineV1.resolve_client_telegram_id(client_id)
             if telegram_id:
                 await callback.message.bot.send_message(telegram_id, PAYMENT_REJECTED_MESSAGE)
                 pending_payment_upload[telegram_id] = payment_id

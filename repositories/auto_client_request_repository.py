@@ -31,3 +31,25 @@ class AutoClientRequestRepository:
             select(AutoClientRequest).where(AutoClientRequest.id == request_id)
         )
         return result.scalar_one_or_none()
+
+    async def get_by_number(self, request_number: str) -> AutoClientRequest | None:
+        result = await self._session.execute(
+            select(AutoClientRequest).where(
+                AutoClientRequest.request_number == request_number
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def list_by_status(
+        self,
+        status: str,
+        *,
+        limit: int = 10,
+    ) -> list[AutoClientRequest]:
+        result = await self._session.execute(
+            select(AutoClientRequest)
+            .where(AutoClientRequest.status == status)
+            .order_by(AutoClientRequest.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())

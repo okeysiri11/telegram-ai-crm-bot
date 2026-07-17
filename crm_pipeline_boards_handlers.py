@@ -133,19 +133,12 @@ async def pipeline_open_item(callback: CallbackQuery) -> None:
         return
 
     try:
-        from database.session import get_session
-        from repositories.crm_pipeline_boards_repository import CrmPipelineBoardsRepository
-
-        async with get_session() as session:
-            repo = CrmPipelineBoardsRepository(session)
-            if entity_type == "lead":
-                row = await repo.get_lead(entity_id)
-            else:
-                row = await repo.get_deal(entity_id)
-            if row is None:
-                await callback.answer("Не найдено", show_alert=True)
-                return
-            vertical = row.vertical
+        vertical = await CrmPipelineBoardsEngineV1.resolve_entity_vertical(
+            entity_type, entity_id
+        )
+        if vertical is None:
+            await callback.answer("Не найдено", show_alert=True)
+            return
         card = await CrmPipelineBoardsEngineV1.get_entity_card(vertical, entity_type, entity_id)
         text = CrmPipelineBoardsEngineV1.format_entity_card(card)
         keyboard = CrmPipelineBoardsEngineV1.entity_card_keyboard(card)
@@ -180,19 +173,12 @@ async def pipeline_move_item(callback: CallbackQuery) -> None:
         return
 
     try:
-        from database.session import get_session
-        from repositories.crm_pipeline_boards_repository import CrmPipelineBoardsRepository
-
-        async with get_session() as session:
-            repo = CrmPipelineBoardsRepository(session)
-            if entity_type == "lead":
-                row = await repo.get_lead(entity_id)
-            else:
-                row = await repo.get_deal(entity_id)
-            if row is None:
-                await callback.answer("Не найдено", show_alert=True)
-                return
-            vertical = row.vertical
+        vertical = await CrmPipelineBoardsEngineV1.resolve_entity_vertical(
+            entity_type, entity_id
+        )
+        if vertical is None:
+            await callback.answer("Не найдено", show_alert=True)
+            return
 
         result = await CrmPipelineBoardsEngineV1.move_entity(
             vertical=vertical,

@@ -54,13 +54,10 @@ from database.models.dealer_onboarding_engine import OnboardingStepName
 from services.pg_dealer_onboarding_engine import DealerOnboardingEngineV1
 from services.pg_lead_automation_engine import LeadAutomationEngineV1
 from services.vin_decoder import (
-    build_auction_reference,
-    build_history_event,
     decode_vin,
     validate_vin,
 )
-from database.session import get_session
-from repositories.vin_repository import VinRepository
+from src.verticals.auto.service import AutoVerticalService
 
 logger = logging.getLogger(__name__)
 
@@ -192,30 +189,11 @@ async def _finalize_add_car(message: Message, user_id: int, data: dict) -> None:
         return
 
     if vin:
-        async with get_session() as session:
-            repo = VinRepository(session)
-            report = await repo.upsert_from_decoder(
-                vin,
-                car_id=uuid.UUID(car["id"]),
-                created_by=user_id,
-            )
-            await repo.append_history(
-                vin,
-                build_history_event(
-                    "car_created",
-                    source="telegram",
-                    description="Car added via Telegram Cars module",
-                    metadata={"car_id": car["id"]},
-                ),
-            )
-            if not report.auction_references:
-                await repo.add_auction_reference(
-                    vin,
-                    build_auction_reference(
-                        "manual_intake",
-                        metadata={"channel": "telegram"},
-                    ),
-                )
+        await AutoVerticalService.record_vin_intake(
+            vin=vin,
+            car_id=uuid.UUID(car["id"]),
+            created_by=user_id,
+        )
 
     await message.answer(
         "✅ Автомобиль добавлен\n\n" + _format_car_card(car),
@@ -299,19 +277,15 @@ async def _show_marketing(message: Message, user_id: int) -> None:
 async def _show_analytics(message: Message, user_id: int) -> None:
     try:
         from services.pg_analytics_engine import AnalyticsEngineV1
-        from database.models.partner_tenant_engine import PartnerTenant
-        from sqlalchemy import select
 
-        async with get_session() as session:
-            result = await session.execute(select(PartnerTenant).limit(1))
-            tenant = result.scalar_one_or_none()
-        if tenant is None:
+        tenant_id = await AutoVerticalService.resolve_default_tenant_id()
+        if tenant_id is None:
             await message.answer(
                 "📊 Аналитика\n\nTenant не настроен.",
                 reply_markup=auto_vertical_menu(await _user_lang(user_id)),
             )
             return
-        dashboard = await AnalyticsEngineV1.get_dashboard(user_id, tenant.id)
+        dashboard = await AnalyticsEngineV1.get_dashboard(user_id, tenant_id)
         lead = dashboard.get("lead_statistics") or {}
         sales = dashboard.get("sales_statistics") or {}
         await message.answer(

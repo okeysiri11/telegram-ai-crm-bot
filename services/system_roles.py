@@ -20,6 +20,7 @@ class Vertical(str, Enum):
     AUTO = "auto"
     AGRO = "agro"
     REALTY = "realty"
+    LEGAL = "legal"
     LOGISTICS = "logistics"
 
 
@@ -45,6 +46,7 @@ ROLE_DEFAULT_VERTICALS: dict[str, tuple[str, ...]] = {
         Vertical.AUTO.value,
         Vertical.AGRO.value,
         Vertical.REALTY.value,
+        Vertical.LEGAL.value,
         Vertical.LOGISTICS.value,
     ),
     SystemRole.AUTO_MANAGER.value: (Vertical.AUTO.value,),

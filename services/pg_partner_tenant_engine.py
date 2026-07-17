@@ -54,6 +54,14 @@ class TenantAccessDeniedError(PartnerTenantEngineError):
 
 class PartnerTenantEngineV1:
     @staticmethod
+    async def get_default_tenant_id() -> uuid.UUID | None:
+        async with get_session() as session:
+            tenants = await PartnerTenantRepository(session).list_active(limit=1)
+            if not tenants:
+                return None
+            return tenants[0].id
+
+    @staticmethod
     async def is_platform_admin(user_id: int) -> bool:
         if user_id == OWNER_ID:
             return True

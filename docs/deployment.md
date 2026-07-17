@@ -1,93 +1,115 @@
-# Deployment Guide
+# Deployment
 
-## Prerequisites
+Production deployment guide for the Telegram CRM platform.
 
-- Docker + Docker Compose
-- Telegram bot token
-- PostgreSQL 16 / Redis 7 (or use compose services)
+## Requirements
 
-## Quick start (prod compose)
+| Component | Version |
+|-----------|---------|
+| Python | 3.10+ (tested on 3.14) |
+| PostgreSQL | 14+ |
+| Redis | 6+ (optional, for FSM) |
+| Docker | For local infra |
+
+## Environment variables
+
+Key settings in `.env` (see `.env.example`):
+
+| Variable | Purpose |
+|----------|---------|
+| `BOT_TOKEN` | Telegram bot token |
+| `DATABASE_URL` | PostgreSQL async URL |
+| `REDIS_URL` | FSM storage (optional) |
+| `DEFAULT_AUTO_MANAGER_ID` | Default auto manager Telegram ID |
+| `OWNER_ID` | Platform owner Telegram ID |
+| `API_HOST` / `API_PORT` | HTTP API bind (default `0.0.0.0:8080`) |
+| `OPENROUTER_API_KEY` | LLM integration |
+
+## Local development
 
 ```bash
-cp .env.production .env.production.local
-# edit secrets: BOT_TOKEN, DATABASE_URL, JWT_SECRET, OWNER_ID, managers
-
-docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
-.venv/bin/alembic upgrade head
-```
-
-Local development:
-
-```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
 docker compose up -d postgres redis
-.venv/bin/alembic upgrade head
-PYTHONPATH=. .venv/bin/python bot.py
+alembic upgrade head
+PYTHONPATH=. python bot.py
 ```
 
-## Migrations
+## Docker Compose services
+
+`docker-compose.yml` provides:
+
+- **postgres** — primary database
+- **redis** — FSM and caching
+
+Bot process runs on host or in a separate container (not included in default compose).
+
+## Startup sequence
+
+`startup.py` runs on bot launch:
+
+1. Register Telegram routers (modular first, legacy last)
+2. Ensure permission seeds
+3. Ensure auto manager provisioning
+4. Start background scheduler (SLA, escalations)
+5. Start HTTP API server (`api/server.py`)
+6. Run startup diagnostics
+
+## HTTP API
+
+Default: `http://localhost:8080`
+
+| Endpoint | Purpose |
+|----------|---------|
+| `/health` | Liveness |
+| `/ready` | Readiness (includes DB check) |
+| `/metrics` | Prometheus metrics |
+
+## Database migrations
+
+Always run migrations before deploying new code:
 
 ```bash
-.venv/bin/alembic upgrade head
-.venv/bin/alembic current
+alembic upgrade head
 ```
 
-Relevant revisions:
-
-- `f9s901234567` — client_requests, marketplace_listings
-- `f9t012345678` — audit_log, inventory, lead_sla_records
-
-## Backup
-
-```bash
-chmod +x scripts/backup_db.sh
-./scripts/backup_db.sh
-```
-
-Schedule via cron (daily 03:00):
-
-```
-0 3 * * * cd /opt/TelegramBotCourse && ./scripts/backup_db.sh >> /var/log/crm-backup.log 2>&1
-```
-
-Retention: 14 days (override with `RETENTION_DAYS`).
-
-## Nginx
-
-`nginx.conf` proxies:
-
-- `/api/` → bot:8080
-- `/metrics` → Prometheus scrape target
-- `/swagger` → OpenAPI UI
-
-TLS termination can be added with Let's Encrypt certificates mounted into nginx.
+Rollback strategy: keep backward-compatible migrations; avoid destructive changes without dual-write period.
 
 ## Observability
 
-| Component | URL |
-|-----------|-----|
-| Prometheus | http://host:9090 |
-| Grafana | http://host:3000 |
-| Bot metrics | http://host:8080/metrics |
-| Sentry | set `SENTRY_DSN` |
+- Structured logging (`logging` module)
+- Prometheus metrics in `services/observability.py`
+- Sentry hook (configure via env)
+- Audit log: `PlatformAuditEngineV1`
 
-## Media storage switch
+## CI checks
 
-```env
-MEDIA_STORAGE_PROVIDER=telegram   # or local | s3
-MEDIA_LOCAL_CACHE=true
-S3_BUCKET=
-S3_ENDPOINT_URL=
-MEDIA_CDN_BASE_URL=https://cdn.example.com/
+Recommended pipeline steps:
+
+```bash
+PYTHONPATH=. python3 scripts/check_handler_session_access.py
+PYTHONPATH=. python -m pytest tests/   # when available
+alembic check                          # migration consistency
 ```
 
-## Health checks
+## Production checklist
 
-- `GET /health`
-- `GET /liveness`
-- `GET /readiness`
-- `GET /system/db-health`
+- [ ] `DATABASE_URL` points to production PostgreSQL
+- [ ] `BOT_TOKEN` set and webhook/polling mode chosen
+- [ ] `DEFAULT_AUTO_MANAGER_ID` configured
+- [ ] Redis available for FSM (or accept memory fallback risk)
+- [ ] Alembic at head
+- [ ] Permission seeds applied (automatic on startup)
+- [ ] API auth configured (`api/middleware.py`)
+- [ ] Backups enabled for PostgreSQL
 
-## Architecture scaffold (night task)
+## Scaling notes
 
-New code under `src/` and `container.py` is **not** required at deploy time.
-Optional: `from api.v1 import register_api_v1_routes` when enabling `/api/v1` stubs.
+- Bot polling: single active poller per `BOT_TOKEN`
+- Webhook mode: configure reverse proxy + aiogram webhook
+- DB pool: `database/engine.py` — pool_size=20, max_overflow=40
+- Horizontal API: stateless; scale aiohttp workers behind load balancer
+
+See also [deployment.md](deployment.md) for legacy deployment notes.

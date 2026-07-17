@@ -397,3 +397,14 @@ class PaymentEngineV1:
             "status": row.status,
             "created_at": row.created_at.isoformat() if row.created_at else None,
         }
+
+    @staticmethod
+    async def resolve_client_telegram_id(client_id: uuid.UUID | str) -> int | None:
+        from repositories.users_repository import UsersRepository
+
+        user_uuid = client_id if isinstance(client_id, uuid.UUID) else uuid.UUID(str(client_id))
+        async with get_session() as session:
+            user = await UsersRepository(session).get_by_id(user_uuid)
+            if user is None or user.telegram_id is None:
+                return None
+            return int(user.telegram_id)

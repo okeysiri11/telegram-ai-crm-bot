@@ -85,6 +85,23 @@ class AppContainer:
             "repositories.client_request",
             lambda: _lazy("repositories.client_request_repository", "ClientRequestRepository"),
         )
+        self.registry.register(
+            "repositories.auto_client_request",
+            lambda: _lazy(
+                "repositories.auto_client_request_repository",
+                "AutoClientRequestRepository",
+            ),
+        )
+
+        # Vertical services (strangler layer)
+        for code in ("auto", "agro", "realty", "legal", "logistics"):
+            self.registry.register(
+                f"verticals.{code}",
+                lambda c=code: _lazy(f"src.verticals.{c}.service", f"{c.title()}VerticalService"),
+            )
+
+    def vertical(self, code: str) -> Any:
+        return self.registry.resolve(f"verticals.{code}")
 
     def storage(self) -> Any:
         return self.registry.resolve("storage")

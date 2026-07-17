@@ -369,6 +369,30 @@ class ManagerDeliveryEngineV1:
         )
 
     @staticmethod
+    def format_auto_client_request_card(summary: dict[str, Any]) -> str:
+        return (
+            f"📋 Заявка {summary['request_number']}\n\n"
+            f"Тип: {summary['request_type']}\n"
+            f"Статус: {summary['status']}\n"
+            f"Клиент: {summary['client']}\n"
+            f"Telegram ID: {summary['client_telegram_id']}\n\n"
+            f"Описание:\n{summary['description']}"
+        )
+
+    @staticmethod
+    def format_new_auto_client_requests(summaries: list[dict[str, Any]]) -> str:
+        if not summaries:
+            return "Новых заявок нет."
+        lines = ["🆕 Новые заявки", ""]
+        for summary in summaries:
+            desc = (summary.get("description") or "")[:80]
+            lines.append(
+                f"• {summary['request_number']} | {summary['request_type']}\n"
+                f"  {summary['client']}: {desc}"
+            )
+        return "\n".join(lines)
+
+    @staticmethod
     async def send_to_manager(
         *,
         manager_telegram_id: int,

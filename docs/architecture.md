@@ -44,6 +44,9 @@ api/v1/             # /api/v1 stub routes (501 scaffold)
 
 ## Related docs
 
+- [System overview](SYSTEM_OVERVIEW.md)
+- [Developer guide](DEVELOPER_GUIDE.md)
+- [Verticals](VERTICALS.md)
 - [Current architecture audit](architecture/current_architecture.md)
 - [Deployment](deployment.md)
 - [Database](database.md)

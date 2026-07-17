@@ -328,3 +328,32 @@ class AutoClientRequestEngineV1:
             client_full_name=client_full_name,
             photo_file_id=photo_file_id,
         )
+
+    @staticmethod
+    def _request_summary(row) -> dict[str, Any]:
+        client = row.client_username or row.client_full_name or str(row.client_telegram_id)
+        return {
+            "request_number": row.request_number,
+            "request_type": row.request_type,
+            "status": row.status,
+            "client": client,
+            "client_telegram_id": row.client_telegram_id,
+            "description": row.description or "—",
+        }
+
+    @staticmethod
+    async def get_request_summary(request_number: str) -> dict[str, Any] | None:
+        async with get_session() as session:
+            row = await AutoClientRequestRepository(session).get_by_number(request_number)
+            if row is None:
+                return None
+            return AutoClientRequestEngineV1._request_summary(row)
+
+    @staticmethod
+    async def list_new_request_summaries(*, limit: int = 10) -> list[dict[str, Any]]:
+        async with get_session() as session:
+            rows = await AutoClientRequestRepository(session).list_by_status(
+                AutoClientRequestStatus.NEW.value,
+                limit=limit,
+            )
+            return [AutoClientRequestEngineV1._request_summary(row) for row in rows]

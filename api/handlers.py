@@ -9,10 +9,8 @@ from typing import Any
 from aiohttp import web
 
 from api.middleware import api_context, require_api_auth
-from database.models.notification import NotificationChannel, NotificationType
-from database.session import get_session
-from repositories.notification_repository import NotificationRepository
 from services.pg_api_gateway_engine import ApiGatewayEngineV1
+from services.pg_notification_api_engine import NotificationApiEngineV1
 
 
 def _json(data: Any, *, status: int = 200) -> web.Response:
@@ -212,36 +210,15 @@ async def documents_create_handler(request: web.Request) -> web.Response:
 
 @require_api_auth
 async def notifications_list_handler(request: web.Request) -> web.Response:
-    async with get_session() as session:
-        notifications = await NotificationRepository(session).list_pending(limit=100)
-        return _json([
-            {
-                "id": str(n.id),
-                "title": n.title,
-                "message": n.message,
-                "notification_type": n.notification_type,
-                "status": n.status,
-                "created_at": n.created_at.isoformat(),
-            }
-            for n in notifications
-        ])
+    notifications = await NotificationApiEngineV1.list_pending(limit=100)
+    return _json(notifications)
 
 
 @require_api_auth
 async def notifications_create_handler(request: web.Request) -> web.Response:
     body = await request.json()
-    async with get_session() as session:
-        notification = await NotificationRepository(session).create(
-            user_id=body.get("user_id"),
-            notification_type=body.get("notification_type", NotificationType.SYSTEM_ALERT.value),
-            channel=body.get("channel", NotificationChannel.INTERNAL.value),
-            title=body["title"],
-            message=body["message"],
-        )
-        return _json(
-            {"id": str(notification.id), "status": notification.status},
-            status=201,
-        )
+    result = await NotificationApiEngineV1.create(body)
+    return _json(result, status=201)
 
 
 @require_api_auth

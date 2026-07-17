@@ -188,6 +188,21 @@ class CrmPipelineBoardsEngineV1:
         }
 
     @staticmethod
+    async def resolve_entity_vertical(
+        entity_type: str,
+        entity_id: uuid.UUID,
+    ) -> str | None:
+        async with get_session() as session:
+            repo = CrmPipelineBoardsRepository(session)
+            if entity_type == CrmPipelineEntityType.LEAD.value:
+                row = await repo.get_lead(entity_id)
+            else:
+                row = await repo.get_deal(entity_id)
+            if row is None:
+                return None
+            return row.vertical
+
+    @staticmethod
     def _stage_label(stage: dict[str, Any], lang: str) -> str:
         return stage["name_uk"] if lang == "uk" else stage["name_ru"]
 
