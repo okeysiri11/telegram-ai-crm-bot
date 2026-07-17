@@ -71,6 +71,15 @@ async def run_startup() -> StartupContext:
     logger.info("BidEx parser initialized")
 
     WebhookEngineV1.register_event_handlers()
+    from services.platform_metrics_bridge import register_platform_metrics_handlers
+
+    register_platform_metrics_handlers()
+
+    from services import crm_event_bus as event_bus
+
+    await event_bus.get_default_worker().start()
+    logger.info("CRM event bus workers started for platform metrics and webhooks")
+
     scheduler = get_default_worker()
     await scheduler.start()
     runner = await start_api_server(host=API_HOST, port=API_PORT)
@@ -179,6 +188,13 @@ async def run_startup() -> StartupContext:
 
 async def shutdown_startup(context: StartupContext) -> None:
     from database.session import shutdown_db
+
+    try:
+        from services import crm_event_bus as event_bus
+
+        await event_bus.get_default_worker().shutdown()
+    except Exception:
+        logger.warning("Event bus shutdown failed", exc_info=True)
 
     task = getattr(context, "escalation_task", None)
     if task is not None:

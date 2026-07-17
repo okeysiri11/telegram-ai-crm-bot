@@ -96,6 +96,7 @@ class RequestService:
         manager: dict[str, Any] | None,
     ) -> None:
         from services.notification_service import notification_service
+        from services.platform_metrics_service import platform_metrics_service
 
         await notification_service.notify_managers_new_request(
             vertical=vertical,
@@ -104,6 +105,17 @@ class RequestService:
             product=request.get("description") or request.get("request_type") or "",
             manager_telegram_id=manager.get("telegram_id") if manager else None,
         )
+
+        if vertical != "auto":
+            await platform_metrics_service.track_request_created(
+                request_number=str(request.get("request_number")),
+                request_type=str(request.get("request_type") or f"{vertical.upper()}_REQUEST"),
+                status=str(request.get("status") or "NEW"),
+                vertical=vertical,
+                request_id=request.get("id"),
+                manager_id=request.get("manager_id"),
+                client_telegram_id=request.get("client_telegram_id"),
+            )
 
     @staticmethod
     async def get_request(request_number: str) -> dict[str, Any] | None:

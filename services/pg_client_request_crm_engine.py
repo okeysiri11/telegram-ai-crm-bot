@@ -174,11 +174,19 @@ class ClientRequestCrmEngineV1:
             )
 
             request_id = row.id
+            request_status = row.status
 
         await ClientRequestCrmEngineV1._publish_event(
             "client_request.created",
             request_id,
-            {"request_number": request_number, "request_type": db_type},
+            {
+                "request_number": request_number,
+                "request_type": db_type,
+                "status": request_status,
+                "vertical": "auto",
+                "manager_id": str(manager_id) if manager_id else None,
+                "client_telegram_id": client_telegram_id,
+            },
         )
         try:
             from services.pg_platform_audit_engine import PlatformAuditEngineV1
@@ -277,11 +285,19 @@ class ClientRequestCrmEngineV1:
             snapshot = ClientRequestCrmEngineV1._snapshot(row)
             client_telegram_id = row.client_telegram_id
             request_id = row.id
+            funnel_stage = row.funnel_stage
+            manager_id = row.manager_id
 
         await ClientRequestCrmEngineV1._publish_event(
             "client_request.status_changed",
             request_id,
-            {"request_number": request_number, "status": new_status, "actor": actor_telegram_id},
+            {
+                "request_number": request_number,
+                "status": new_status,
+                "actor": actor_telegram_id,
+                "funnel_stage": funnel_stage,
+                "manager_id": str(manager_id) if manager_id else None,
+            },
         )
         try:
             from services.pg_platform_audit_engine import PlatformAuditEngineV1

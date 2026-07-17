@@ -235,6 +235,22 @@ EVENT_REGISTRY: dict[str, dict[str, str]] = {
         "aggregate_type": "user",
         "description": "User role changed",
     },
+    "client_request.created": {
+        "aggregate_type": "client_request",
+        "description": "Client request created",
+    },
+    "client_request.assigned": {
+        "aggregate_type": "client_request",
+        "description": "Manager assigned to client request",
+    },
+    "client_request.status_changed": {
+        "aggregate_type": "client_request",
+        "description": "Client request status changed",
+    },
+    "client_request.funnel_changed": {
+        "aggregate_type": "client_request",
+        "description": "Client request funnel stage changed",
+    },
 }
 
 EVENT_TYPES: frozenset[str] = frozenset(EVENT_REGISTRY)
