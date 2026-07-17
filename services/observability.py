@@ -27,19 +27,9 @@ def configure_structured_logging(level: str = "INFO") -> None:
 
 
 def init_sentry() -> bool:
-    from config import SENTRY_DSN
+    from services.error_tracking_service import ErrorTrackingService
 
-    if not SENTRY_DSN:
-        return False
-    try:
-        import sentry_sdk
-
-        sentry_sdk.init(dsn=SENTRY_DSN, traces_sample_rate=0.1)
-        logger.info("Sentry initialized")
-        return True
-    except Exception:
-        logger.warning("Sentry init failed", exc_info=True)
-        return False
+    return ErrorTrackingService.ensure_sentry()
 
 
 def inc_metric(name: str, value: float = 1.0) -> None:

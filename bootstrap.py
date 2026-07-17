@@ -24,6 +24,9 @@ def build_dispatcher(storage: BaseStorage) -> Dispatcher:
 
     dp.update.middleware(EntryPointMiddleware())
     dp.update.middleware(TenantMiddleware())
+    from middleware.error_tracking_middleware import ErrorTrackingMiddleware
+
+    dp.update.middleware(ErrorTrackingMiddleware())
     register_routers(dp)
     return dp
 
