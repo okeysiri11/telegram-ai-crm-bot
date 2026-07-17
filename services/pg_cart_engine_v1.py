@@ -9,7 +9,7 @@ from typing import Any
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from sqlalchemy import select
 
-from database import ensure_user
+from services.user_service import user_service
 from database.models.cart_engine_v1 import CartOrderStatus
 from database.models.payment_engine_v1 import PAYMENT_ENGINE_METHODS
 from database.models.users import User
@@ -47,7 +47,11 @@ class CartEngineV1:
 
     @staticmethod
     async def resolve_user_id(telegram_user_id: int, *, full_name: str = "", username: str = "") -> uuid.UUID:
-        ensure_user(telegram_user_id, full_name=full_name, username=username)
+        await user_service.ensure_user(
+            telegram_id=telegram_user_id,
+            full_name=full_name,
+            username=username,
+        )
         async with get_session() as session:
             result = await session.execute(
                 select(User).where(User.telegram_id == telegram_user_id)

@@ -4690,15 +4690,18 @@ async def handle_text(message: Message) -> None:
 
     # обработка заявки на покупку
     if waiting_buy_request.get(user_id):
+        from services.request_service import request_service
+
         product = buy_requests[user_id]["product"]
 
-        request_number = create_request(
-            client_id=user_id,
-            client_name=message.from_user.full_name,
+        result = await request_service.create_request(
+            vertical="agro",
+            client_telegram_id=user_id,
+            client_name=message.from_user.full_name or "",
             product=product,
-            request_text=message.text,
-            manager_id=MANAGER_ID
+            description=message.text or "",
         )
+        request_number = result.get("request_number")
 
         await message.answer(
             f"""

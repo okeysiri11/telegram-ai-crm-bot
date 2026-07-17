@@ -104,6 +104,13 @@ async def run_startup() -> StartupContext:
     except Exception:
         logger.warning("Observability init failed", exc_info=True)
 
+    from config import POSTGRES_ONLY
+
+    logger.info(
+        "Storage policy: POSTGRES_ONLY=%s (production entities → PostgreSQL)",
+        POSTGRES_ONLY,
+    )
+
     try:
         from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
 

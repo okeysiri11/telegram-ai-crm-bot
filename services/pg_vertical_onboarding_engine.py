@@ -6,7 +6,7 @@ from typing import Any
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 
-from database import ensure_user
+from services.user_service import user_service
 from database.session import get_session
 from repositories.user_vertical_preferences_repository import UserVerticalPreferencesRepository
 from services.automotive_localization import (
@@ -72,7 +72,11 @@ class VerticalOnboardingEngineV1:
         full_name: str = "",
         username: str = "",
     ) -> dict[str, Any]:
-        ensure_user(telegram_user_id, full_name=full_name, username=username)
+        await user_service.ensure_user(
+            telegram_id=telegram_user_id,
+            full_name=full_name,
+            username=username,
+        )
         cfg = ENTRY_LINK_REGISTRY.get(source_link)
         if cfg is None:
             raise ValueError(f"Unsupported entry link: {source_link}")
@@ -106,7 +110,11 @@ class VerticalOnboardingEngineV1:
         full_name: str = "",
         username: str = "",
     ) -> dict[str, Any]:
-        ensure_user(telegram_user_id, full_name=full_name, username=username)
+        await user_service.ensure_user(
+            telegram_id=telegram_user_id,
+            full_name=full_name,
+            username=username,
+        )
         vertical_key = vertical.strip().lower()
         if vertical_key not in VERTICAL_DEEP_LINKS:
             raise ValueError(f"Unsupported vertical: {vertical}")

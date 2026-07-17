@@ -6,7 +6,7 @@ from typing import Any
 
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
-from database import ensure_user
+from services.user_service import user_service
 from database.session import get_session
 from repositories.user_vertical_preferences_repository import UserVerticalPreferencesRepository
 from services.automotive_localization import normalize_language, t
@@ -84,7 +84,11 @@ class EntryPointEngineV1:
         tenant_code: str | None = None,
         reset_onboarding: bool = True,
     ) -> dict[str, Any]:
-        ensure_user(telegram_user_id, full_name=full_name, username=username)
+        await user_service.ensure_user(
+            telegram_id=telegram_user_id,
+            full_name=full_name,
+            username=username,
+        )
         async with get_session() as session:
             row = await UserVerticalPreferencesRepository(session).upsert(
                 telegram_user_id=telegram_user_id,

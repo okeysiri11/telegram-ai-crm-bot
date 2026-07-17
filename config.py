@@ -37,7 +37,8 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem",
 )
 
-# HTTP API (health checks)
+# When true (default), SQLite memory.db is blocked — PostgreSQL is the only data store.
+POSTGRES_ONLY = os.getenv("POSTGRES_ONLY", "true").lower() in {"1", "true", "yes"}
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", "8080"))
 

@@ -1,8 +1,9 @@
 import sqlite3
 
+from config import POSTGRES_ONLY
+
 conn = sqlite3.connect("memory.db")
 cursor = conn.cursor()
-
 # ----------------------------
 # Память пользователя
 # ----------------------------
@@ -2580,6 +2581,21 @@ _seed_roles()
 
 
 def ensure_user(telegram_id: int, full_name: str = "", username: str = ""):
+    if POSTGRES_ONLY:
+        from database.async_bridge import run_async
+        from services.user_service import user_service
+
+        result = run_async(
+            user_service.ensure_user(
+                telegram_id=telegram_id,
+                full_name=full_name,
+                username=username,
+            )
+        )
+        if isinstance(result, dict):
+            return result.get("id")
+        return result
+
     cursor.execute(
         "SELECT id FROM users WHERE telegram_id = ?",
         (telegram_id,),
@@ -2669,6 +2685,12 @@ def revoke_role(telegram_id: int, role_name: str) -> bool:
 
 
 def has_permission(telegram_id: int, permission: str) -> bool:
+    if POSTGRES_ONLY:
+        from database.async_bridge import run_async
+        from services.role_service import role_service
+
+        return bool(run_async(role_service.has_permission(telegram_id, permission)))
+
     from services.permissions import PermissionService
     return PermissionService.has_permission(telegram_id, permission)
 
@@ -2679,6 +2701,21 @@ def has_module_access(telegram_id: int, module: str) -> bool:
 
 
 def log_audit(user_id: int, action: str, module: str, details: str = ""):
+    if POSTGRES_ONLY:
+        from database.async_bridge import fire_and_forget
+        from services.pg_platform_audit_engine import PlatformAuditEngineV1
+
+        fire_and_forget(
+            PlatformAuditEngineV1.log(
+                event_type=action.upper(),
+                entity_type=module,
+                entity_id=details or str(user_id),
+                user_id=user_id,
+                payload={"action": action, "module": module, "details": details},
+            )
+        )
+        return
+
     cursor.execute(
         """
         INSERT INTO audit_log (user_id, action, module, details)
@@ -2791,6 +2828,23 @@ def create_request(
     request_text: str,
     manager_id: int
 ):
+    if POSTGRES_ONLY:
+        from database.async_bridge import run_async
+        from services.request_service import request_service
+
+        result = run_async(
+            request_service.create_request(
+                vertical="agro",
+                client_telegram_id=client_id,
+                client_name=client_name,
+                product=product,
+                description=request_text,
+            )
+        )
+        if isinstance(result, dict):
+            return result.get("request_number")
+        return result
+
     from services.statuses import normalize_status
 
     cursor.execute(
