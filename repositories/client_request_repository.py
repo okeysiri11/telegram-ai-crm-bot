@@ -72,6 +72,83 @@ class ClientRequestRepository:
         )
         return list(result.scalars().all())
 
+    async def list_new_for_manager(
+        self,
+        manager_id: uuid.UUID,
+        *,
+        limit: int = 20,
+    ) -> list[ClientRequest]:
+        from sqlalchemy import or_
+
+        result = await self._session.execute(
+            select(ClientRequest)
+            .where(
+                ClientRequest.status == "NEW",
+                or_(
+                    ClientRequest.manager_id == manager_id,
+                    ClientRequest.manager_id.is_(None),
+                ),
+            )
+            .order_by(ClientRequest.created_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def list_active_for_manager(
+        self,
+        manager_id: uuid.UUID,
+        *,
+        limit: int = 20,
+    ) -> list[ClientRequest]:
+        active = ("ASSIGNED", "IN_PROGRESS", "WAITING_CLIENT")
+        result = await self._session.execute(
+            select(ClientRequest)
+            .where(
+                ClientRequest.manager_id == manager_id,
+                ClientRequest.status.in_(active),
+            )
+            .order_by(ClientRequest.updated_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def list_completed_for_manager(
+        self,
+        manager_id: uuid.UUID,
+        *,
+        limit: int = 20,
+    ) -> list[ClientRequest]:
+        result = await self._session.execute(
+            select(ClientRequest)
+            .where(
+                ClientRequest.manager_id == manager_id,
+                ClientRequest.status.in_(("COMPLETED", "CANCELLED")),
+            )
+            .order_by(ClientRequest.updated_at.desc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def list_overdue_for_manager(
+        self,
+        manager_id: uuid.UUID,
+        *,
+        before,
+        limit: int = 20,
+    ) -> list[ClientRequest]:
+        open_statuses = ("NEW", "ASSIGNED", "IN_PROGRESS", "WAITING_CLIENT")
+        result = await self._session.execute(
+            select(ClientRequest)
+            .where(
+                ClientRequest.manager_id == manager_id,
+                ClientRequest.status.in_(open_statuses),
+                ClientRequest.created_at <= before,
+            )
+            .order_by(ClientRequest.created_at.asc())
+            .limit(limit)
+        )
+        return list(result.scalars().all())
+
     async def update(self, row: ClientRequest, **fields) -> ClientRequest:
         for key, value in fields.items():
             setattr(row, key, value)

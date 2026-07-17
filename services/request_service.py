@@ -194,6 +194,7 @@ class RequestService:
             "client_name": row.client_first_name or row.client_username,
             "description": row.description,
             "manager_id": str(row.manager_id) if row.manager_id else None,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
         }
 
     @staticmethod
@@ -208,7 +209,174 @@ class RequestService:
             "client_name": row.client_full_name or row.client_username,
             "description": row.description,
             "manager_id": str(row.manager_id) if row.manager_id else None,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
         }
+
+    @staticmethod
+    def _merge_request_snapshots(crm_rows, auto_rows, *, limit: int = 20) -> list[dict[str, Any]]:
+        merged: list[dict[str, Any]] = []
+        for row in crm_rows:
+            merged.append(RequestService._crm_snapshot(row))
+        for row in auto_rows:
+            snap = RequestService._auto_snapshot(row)
+            if not any(item["request_number"] == snap["request_number"] for item in merged):
+                merged.append(snap)
+        merged.sort(key=lambda item: item.get("created_at") or "", reverse=True)
+        return merged[:limit]
+
+    @staticmethod
+    async def _resolve_request_number(request_id: str) -> str | None:
+        raw = str(request_id).strip()
+        try:
+            rid = uuid.UUID(raw)
+        except ValueError:
+            existing = await RequestService.get_request(raw)
+            return existing.get("request_number") if existing else None
+
+        async with get_session() as session:
+            repo = RequestRepository(session)
+            crm = await repo.get_crm_by_id(rid)
+            if crm is not None:
+                return crm.request_number
+            auto = await repo.get_auto_by_id(rid)
+            if auto is not None:
+                return auto.request_number
+        return None
+
+    @staticmethod
+    async def get_new_requests(
+        manager_id: uuid.UUID | str,
+        *,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        mid = uuid.UUID(str(manager_id))
+        async with get_session() as session:
+            crm_rows, auto_rows = await RequestRepository(session).list_new_for_manager(mid, limit=limit)
+        return RequestService._merge_request_snapshots(crm_rows, auto_rows, limit=limit)
+
+    @staticmethod
+    async def get_active_requests(
+        manager_id: uuid.UUID | str,
+        *,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        mid = uuid.UUID(str(manager_id))
+        async with get_session() as session:
+            crm_rows, auto_rows = await RequestRepository(session).list_active_for_manager(mid, limit=limit)
+        return RequestService._merge_request_snapshots(crm_rows, auto_rows, limit=limit)
+
+    @staticmethod
+    async def get_completed_requests(
+        manager_id: uuid.UUID | str,
+        *,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        mid = uuid.UUID(str(manager_id))
+        async with get_session() as session:
+            crm_rows, auto_rows = await RequestRepository(session).list_completed_for_manager(mid, limit=limit)
+        return RequestService._merge_request_snapshots(crm_rows, auto_rows, limit=limit)
+
+    @staticmethod
+    async def get_overdue_requests(
+        manager_id: uuid.UUID | str,
+        *,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        from datetime import datetime, timedelta, timezone
+
+        from config import SLA_FIRST_RESPONSE_SEC
+
+        mid = uuid.UUID(str(manager_id))
+        before = datetime.now(timezone.utc) - timedelta(seconds=SLA_FIRST_RESPONSE_SEC)
+        async with get_session() as session:
+            crm_rows, auto_rows = await RequestRepository(session).list_overdue_for_manager(
+                mid,
+                before=before,
+                limit=limit,
+            )
+        return RequestService._merge_request_snapshots(crm_rows, auto_rows, limit=limit)
+
+    @staticmethod
+    async def take_request(
+        request_id: str,
+        manager_id: uuid.UUID | str,
+    ) -> dict[str, Any] | None:
+        from services.pg_client_request_crm_engine import ClientRequestCrmEngineV1
+
+        request_number = await RequestService._resolve_request_number(request_id)
+        if request_number is None:
+            return None
+
+        mid = uuid.UUID(str(manager_id))
+        result = await ClientRequestCrmEngineV1.assign_manager(request_number, mid)
+        if result is not None:
+            return {
+                "id": result.get("id"),
+                "request_number": result.get("request_number"),
+                "request_type": result.get("request_type"),
+                "status": result.get("status"),
+                "vertical": (result.get("request_type") or "").split("_")[0].lower(),
+                "client_telegram_id": result.get("client_telegram_id"),
+                "client_name": result.get("client_username"),
+                "description": result.get("description"),
+                "manager_id": str(mid),
+            }
+
+        async with get_session() as session:
+            repo = RequestRepository(session)
+            auto = await repo.get_auto_by_number(request_number)
+            if auto is None:
+                return None
+            row = await repo._auto().update(
+                auto,
+                manager_id=mid,
+                status=ClientRequestStatus.ASSIGNED.value,
+            )
+            return RequestService._auto_snapshot(row)
+
+    @staticmethod
+    async def complete_request(request_id: str) -> dict[str, Any] | None:
+        from services.pg_client_request_crm_engine import ClientRequestCrmEngineV1
+
+        request_number = await RequestService._resolve_request_number(request_id)
+        if request_number is None:
+            return None
+
+        try:
+            result = await ClientRequestCrmEngineV1.update_status(
+                request_number,
+                ClientRequestStatus.COMPLETED.value,
+            )
+        except ValueError:
+            result = None
+
+        if result is not None:
+            return {
+                "id": result.get("id"),
+                "request_number": result.get("request_number"),
+                "request_type": result.get("request_type"),
+                "status": result.get("status"),
+                "vertical": (result.get("request_type") or "").split("_")[0].lower(),
+                "client_telegram_id": result.get("client_telegram_id"),
+                "client_name": result.get("client_username"),
+                "description": result.get("description"),
+                "manager_id": None,
+            }
+
+        async with get_session() as session:
+            repo = RequestRepository(session)
+            auto = await repo.get_auto_by_number(request_number)
+            if auto is None:
+                return None
+            row = await repo._auto().update(auto, status="DONE")
+            return RequestService._auto_snapshot(row)
+
+    @staticmethod
+    async def reassign_request(
+        request_id: str,
+        manager_id: uuid.UUID | str,
+    ) -> dict[str, Any] | None:
+        return await RequestService.take_request(request_id, manager_id)
 
 
 request_service = RequestService()

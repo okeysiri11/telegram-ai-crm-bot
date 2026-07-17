@@ -44,6 +44,9 @@ class RequestRepository(BaseRepository):
     async def get_auto_by_number(self, request_number: str) -> AutoClientRequest | None:
         return await self._auto().get_by_number(request_number)
 
+    async def get_auto_by_id(self, request_id: uuid.UUID) -> AutoClientRequest | None:
+        return await self._auto().get_by_id(request_id)
+
     async def get_crm_by_id(self, request_id: uuid.UUID) -> ClientRequest | None:
         return await self._crm().get_by_id(request_id)
 
@@ -68,3 +71,34 @@ class RequestRepository(BaseRepository):
             .where(ClientRequest.request_type.ilike(f"{vertical}%"))
         )
         return int(result.scalar_one())
+
+    async def list_new_for_manager(self, manager_id: uuid.UUID, *, limit: int = 20):
+        crm = await self._crm().list_new_for_manager(manager_id, limit=limit)
+        auto = await self._auto().list_new_for_manager(manager_id, limit=limit)
+        return crm, auto
+
+    async def list_active_for_manager(self, manager_id: uuid.UUID, *, limit: int = 20):
+        active = ("ASSIGNED", "IN_PROGRESS", "WAITING_CLIENT")
+        crm = await self._crm().list_active_for_manager(manager_id, limit=limit)
+        auto = await self._auto().list_for_manager(manager_id, statuses=active, limit=limit)
+        return crm, auto
+
+    async def list_completed_for_manager(self, manager_id: uuid.UUID, *, limit: int = 20):
+        crm = await self._crm().list_completed_for_manager(manager_id, limit=limit)
+        auto = await self._auto().list_for_manager(
+            manager_id,
+            statuses=("COMPLETED", "DONE", "CANCELLED"),
+            limit=limit,
+        )
+        return crm, auto
+
+    async def list_overdue_for_manager(
+        self,
+        manager_id: uuid.UUID,
+        *,
+        before,
+        limit: int = 20,
+    ):
+        crm = await self._crm().list_overdue_for_manager(manager_id, before=before, limit=limit)
+        auto = await self._auto().list_overdue_for_manager(manager_id, before=before, limit=limit)
+        return crm, auto

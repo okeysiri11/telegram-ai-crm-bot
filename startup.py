@@ -22,6 +22,7 @@ BOT_ROUTER_PATHS: tuple[str, ...] = (
     "routers.auto_dealer_router",
     "routers.client_history_router",
     "routers.manager_crm_router",
+    "routers.manager_dashboard_router",
     "routers.manager_debug_router",
     "routers.auto_hub_router",
     "routers.realty_router",
@@ -38,6 +39,7 @@ def register_routers(dp: Dispatcher) -> None:
     from routers.auto_hub_router import router as auto_hub_router
     from routers.client_history_router import router as client_history_router
     from routers.manager_crm_router import router as manager_crm_router
+    from routers.manager_dashboard_router import router as manager_dashboard_router
     from routers.manager_debug_router import router as manager_debug_router
     from routers.realty_router import router as realty_router
 
@@ -45,6 +47,7 @@ def register_routers(dp: Dispatcher) -> None:
     dp.include_router(auto_dealer_entry_router)
     dp.include_router(client_history_router)
     dp.include_router(manager_crm_router)
+    dp.include_router(manager_dashboard_router)
     dp.include_router(manager_debug_router)
     dp.include_router(auto_hub_router)
     dp.include_router(realty_router)
