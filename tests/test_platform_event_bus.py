@@ -80,7 +80,7 @@ async def test_request_created_triggers_all_handlers():
         "services.notification_service.notification_service.notify_managers_new_request",
         new=AsyncMock(),
     ) as notify, patch(
-        "services.pg_platform_audit_engine.PlatformAuditEngineV1.lead_created",
+        "audit.audit_service.AuditService._record_from_event",
         new=AsyncMock(),
     ) as audit, patch(
         "services.platform_metrics_service.platform_metrics_service.track_request_created",
@@ -158,7 +158,7 @@ async def test_handlers_registered():
     register_platform_event_handlers()
     subs = PlatformEventBus.list_subscribers("RequestCreatedEvent")["RequestCreatedEvent"]
     assert "notification" in subs
-    assert "audit" in subs
+    assert "audit_trail_RequestCreatedEvent" in subs
     assert "metrics" in subs
     assert "sla" in subs
 

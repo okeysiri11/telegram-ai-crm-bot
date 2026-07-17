@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from audit.audit_service import audit_service
 from events.event_bus import subscribe
-from events.handlers.audit_handler import AuditEventHandler
 from events.handlers.metrics_handler import MetricsEventHandler
 from events.handlers.notification_handler import NotificationEventHandler
 from events.handlers.sla_handler import SLAEventHandler
@@ -29,16 +29,12 @@ def register_platform_event_handlers() -> None:
 
     handlers = (
         (RequestCreatedEvent, NotificationEventHandler.handle, "notification"),
-        (RequestCreatedEvent, AuditEventHandler.handle, "audit"),
         (RequestCreatedEvent, MetricsEventHandler.handle, "metrics"),
         (RequestCreatedEvent, SLAEventHandler.handle, "sla"),
-        (RequestAssignedEvent, AuditEventHandler.handle, "audit_assigned"),
         (RequestAssignedEvent, MetricsEventHandler.handle, "metrics_assigned"),
         (RequestAssignedEvent, SLAEventHandler.handle, "sla_assigned"),
-        (RequestCompletedEvent, AuditEventHandler.handle, "audit_completed"),
         (RequestCompletedEvent, MetricsEventHandler.handle, "metrics_completed"),
         (RequestCompletedEvent, SLAEventHandler.handle, "sla_completed"),
-        (ManagerReassignedEvent, AuditEventHandler.handle, "audit_reassigned"),
         (ManagerReassignedEvent, MetricsEventHandler.handle, "metrics_reassigned"),
         (RequestOverdueEvent, SLAEventHandler.handle, "sla_overdue"),
         (RequestOverdueEvent, NotificationEventHandler.handle, "notification_overdue"),
@@ -47,13 +43,16 @@ def register_platform_event_handlers() -> None:
     for event_type, handler, handler_id in handlers:
         subscribe(event_type, handler, handler_id=handler_id)
 
+    audit_service.subscribe_to_event_bus()
+
     _registered = True
     logger.info(
         "platform_internal_event_handlers_registered",
-        extra={"handler_count": len(handlers)},
+        extra={"handler_count": len(handlers) + 5},
     )
 
 
 def reset_handler_registration() -> None:
     global _registered
     _registered = False
+    audit_service.reset_subscription()
