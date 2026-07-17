@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from config import OWNER_ID
-from database import get_user_roles
+from services.user_service import user_service
 from repositories.user_role_repository import UserRoleRepository
 from database.session import get_session
 
@@ -26,7 +26,7 @@ AUTOMOTIVE_MENU_ROLES = frozenset(
 async def can_access_automotive_ui(user_id: int) -> bool:
     if user_id == OWNER_ID:
         return True
-    legacy_roles = set(get_user_roles(user_id))
+    legacy_roles = set(await user_service.list_roles(telegram_id=user_id))
     if legacy_roles & {"OWNER", "ADMIN", "SUPER_MANAGER", "AUTO_MANAGER", "AUTO_DEALER", "MANAGER"}:
         return True
     async with get_session() as session:
@@ -37,7 +37,7 @@ async def can_access_automotive_ui(user_id: int) -> bool:
 async def can_see_automotive_menu_button(user_id: int) -> bool:
     if user_id == OWNER_ID:
         return True
-    legacy_roles = set(get_user_roles(user_id))
+    legacy_roles = set(await user_service.list_roles(telegram_id=user_id))
     if legacy_roles & AUTOMOTIVE_MENU_ROLES:
         return True
     async with get_session() as session:
@@ -48,4 +48,4 @@ async def can_see_automotive_menu_button(user_id: int) -> bool:
 async def is_billing_owner(user_id: int) -> bool:
     if user_id == OWNER_ID:
         return True
-    return "OWNER" in set(get_user_roles(user_id))
+    return "OWNER" in set(await user_service.list_roles(telegram_id=user_id))

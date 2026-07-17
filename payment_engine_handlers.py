@@ -10,7 +10,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_ID
-from database import has_permission, log_audit
+from services.handler_auth import has_permission_sync as has_permission, log_audit
 from payment_engine_state import pending_payment_upload
 from services.pg_cart_engine_v1 import CartEngineV1
 from services.pg_financial_settlement_engine_v1 import FinancialSettlementEngineV1

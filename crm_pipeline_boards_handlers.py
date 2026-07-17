@@ -9,7 +9,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_ID
-from database import has_permission, log_audit
+from services.handler_auth import has_permission_sync as has_permission, log_audit
 from services.pg_crm_pipeline_boards_engine import (
     CrmPipelineBoardsEngineV1,
     CrmPipelineBoardsError,

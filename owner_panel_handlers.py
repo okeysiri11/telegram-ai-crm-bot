@@ -9,7 +9,7 @@ from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_ID
-from database import log_audit
+from services.handler_auth import log_audit
 from keyboards import owner_main_menu, owner_panel_menu
 from services.pg_tenant_entry_registry_engine import TenantRoutingEngineV1
 

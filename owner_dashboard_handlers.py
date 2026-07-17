@@ -8,7 +8,7 @@ from aiogram import F, Router
 from aiogram.types import Message
 
 from config import OWNER_ID
-from database import log_audit
+from services.handler_auth import log_audit
 from keyboards import owner_main_menu, owner_dashboard_menu
 from services.pg_owner_dashboard_engine import OwnerDashboardEngineV1
 

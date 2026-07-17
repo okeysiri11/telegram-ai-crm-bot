@@ -9,7 +9,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_ID
-from database import has_permission, log_audit
+from services.handler_auth import has_permission_sync as has_permission, log_audit
 from keyboards import admin_module_menu
 from services.automotive_localization import normalize_language
 from services.cart_service_catalog import service_by_code

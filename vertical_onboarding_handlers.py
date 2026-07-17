@@ -7,7 +7,7 @@ import logging
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 
-from database import log_audit
+from services.handler_auth import log_audit
 from services.automotive_localization import (
     all_role_labels,
     btn,

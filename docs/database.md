@@ -63,9 +63,23 @@ alembic upgrade head
 
 Run audit: `PYTHONPATH=. python3 scripts/audit_sqlite_usage.py`
 
-## FSM storage (not entity DB)
+## FSM storage (Redis required in production)
 
 | Backend | Purpose |
 |---------|---------|
-| Redis | Persistent FSM (recommended) |
-| MemoryStorage | Dev fallback — **not** for users/requests |
+| **RedisStorage** | Persistent FSM — mandatory when `POSTGRES_ONLY=true` |
+| MemoryStorage | Dev-only fallback when `REDIS_REQUIRED=false` |
+
+```env
+ENVIRONMENT=production
+REDIS_URL=redis://localhost:6379/0
+```
+
+Bot exits on startup if Redis is required but unavailable.
+
+## Tests
+
+```bash
+./venv/bin/python -m pytest tests/test_buy_car_flow.py tests/test_sell_car_flow.py \
+  tests/test_manager_assignment.py tests/test_fsm_recovery.py
+```

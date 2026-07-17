@@ -10,7 +10,7 @@ from aiogram import Bot, F, Router
 from aiogram.types import CallbackQuery, Message
 
 from config import BOT_TOKEN, OWNER_ID
-from database import log_audit
+from services.handler_auth import log_audit
 from keyboards import (
     AUTO_VERTICAL_MAIN_BUTTON,
     auto_billing_owner_actions_inline,

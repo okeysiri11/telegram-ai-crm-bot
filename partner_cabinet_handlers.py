@@ -9,7 +9,7 @@ from aiogram import F, Router
 from aiogram.types import Message
 
 from config import OWNER_ID
-from database import has_permission, log_audit
+from services.handler_auth import has_permission_sync as has_permission, log_audit
 from keyboards import owner_main_menu, partner_cabinet_menu
 from services.pg_partner_cabinet_v1 import PartnerCabinetV1, PartnerCabinetV1Error
 

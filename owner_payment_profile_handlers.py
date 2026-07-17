@@ -8,7 +8,7 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message
 
 from config import OWNER_ID
-from database import log_audit
+from services.handler_auth import log_audit
 from keyboards import owner_panel_menu
 from owner_panel_handlers import owner_panel_active
 from services.pg_owner_payment_profile_v1 import (

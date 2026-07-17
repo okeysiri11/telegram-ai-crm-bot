@@ -104,11 +104,13 @@ async def run_startup() -> StartupContext:
     except Exception:
         logger.warning("Observability init failed", exc_info=True)
 
-    from config import POSTGRES_ONLY
+    from config import POSTGRES_ONLY, REDIS_REQUIRED, REDIS_URL
 
     logger.info(
-        "Storage policy: POSTGRES_ONLY=%s (production entities → PostgreSQL)",
+        "Storage policy: POSTGRES_ONLY=%s REDIS_REQUIRED=%s REDIS_URL=%s",
         POSTGRES_ONLY,
+        REDIS_REQUIRED,
+        "set" if REDIS_URL else "missing",
     )
 
     try:

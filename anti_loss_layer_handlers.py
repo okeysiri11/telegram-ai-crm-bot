@@ -9,7 +9,7 @@ from aiogram import F, Router
 from aiogram.types import Message
 
 from config import OWNER_ID
-from database import has_permission, log_audit
+from services.handler_auth import has_permission_sync as has_permission, log_audit
 from services.pg_anti_loss_layer_v1 import AntiLossLayerV1, AntiLossLayerV1Error
 
 logger = logging.getLogger(__name__)

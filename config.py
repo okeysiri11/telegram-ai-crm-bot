@@ -37,14 +37,21 @@ DATABASE_URL = os.getenv(
     "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem",
 )
 
-# When true (default), SQLite memory.db is blocked — PostgreSQL is the only data store.
+# When true (default), SQLite memory.db is not bootstrapped — PostgreSQL only.
 POSTGRES_ONLY = os.getenv("POSTGRES_ONLY", "true").lower() in {"1", "true", "yes"}
+
+# Environment: production enables stricter defaults (Redis required, no SQLite).
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").strip().lower()
+IS_PRODUCTION = ENVIRONMENT in {"production", "prod"}
+
+# Redis — FSM storage (required in production / when POSTGRES_ONLY).
+REDIS_URL = os.getenv("REDIS_URL", "")
+_redis_required_env = os.getenv("REDIS_REQUIRED", "").lower() in {"1", "true", "yes"}
+REDIS_REQUIRED = _redis_required_env or IS_PRODUCTION or POSTGRES_ONLY
+
+# HTTP API (health checks)
 API_HOST = os.getenv("API_HOST", "0.0.0.0")
 API_PORT = int(os.getenv("API_PORT", "8080"))
-
-# Optional Redis (cache / queue / FSM)
-REDIS_URL = os.getenv("REDIS_URL", "")
-REDIS_REQUIRED = os.getenv("REDIS_REQUIRED", "").lower() in {"1", "true", "yes"}
 
 # Platform Telegram user ids (optional — warn if missing, do not abort startup)
 OWNER_ID = _optional_telegram_id("OWNER_ID")

@@ -10,7 +10,7 @@ from aiogram import F, Router
 from aiogram.types import Message
 
 from config import OWNER_ID
-from database import has_permission, log_audit
+from services.handler_auth import has_permission_sync as has_permission, log_audit
 from keyboards import admin_module_menu
 from services.pg_deal_engine_v1 import DealEngineV1, DealEngineV1Error
 

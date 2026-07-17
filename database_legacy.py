@@ -2,363 +2,372 @@ import sqlite3
 
 from config import POSTGRES_ONLY
 
-conn = sqlite3.connect("memory.db")
-cursor = conn.cursor()
-# ----------------------------
-# Память пользователя
-# ----------------------------
+def _bootstrap_sqlite() -> None:
+    global conn, cursor
+    conn = sqlite3.connect("memory.db")
+    cursor = conn.cursor()
+    # ----------------------------
+    # Память пользователя
+    # ----------------------------
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS user_memory (
-    user_id INTEGER,
-    key TEXT,
-    value TEXT,
-    PRIMARY KEY (user_id, key)
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_memory (
+        user_id INTEGER,
+        key TEXT,
+        value TEXT,
+        PRIMARY KEY (user_id, key)
+    )
+    """)
 
-# ----------------------------
-# Пользователи
-# ----------------------------
+    # ----------------------------
+    # Пользователи
+    # ----------------------------
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    telegram_id INTEGER UNIQUE,
-    username TEXT,
-    full_name TEXT,
-    is_active INTEGER DEFAULT 1,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        telegram_id INTEGER UNIQUE,
+        username TEXT,
+        full_name TEXT,
+        is_active INTEGER DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-# ----------------------------
-# Роли
-# ----------------------------
+    # ----------------------------
+    # Роли
+    # ----------------------------
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS roles (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    role_name TEXT UNIQUE,
-    description TEXT
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS roles (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        role_name TEXT UNIQUE,
+        description TEXT
+    )
+    """)
 
-# ----------------------------
-# Назначение ролей
-# ----------------------------
+    # ----------------------------
+    # Назначение ролей
+    # ----------------------------
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS user_roles (
-    user_id INTEGER,
-    role_id INTEGER,
-    assigned_by INTEGER,
-    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (user_id, role_id)
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS user_roles (
+        user_id INTEGER,
+        role_id INTEGER,
+        assigned_by INTEGER,
+        assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, role_id)
+    )
+    """)
 
-# ----------------------------
-# Журнал действий
-# ----------------------------
+    # ----------------------------
+    # Журнал действий
+    # ----------------------------
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS audit_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER,
-    action TEXT,
-    module TEXT,
-    details TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS audit_log (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        action TEXT,
+        module TEXT,
+        details TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-# ----------------------------
-# Заявки CRM
-# ----------------------------
+    # ----------------------------
+    # Заявки CRM
+    # ----------------------------
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS requests (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    request_number INTEGER UNIQUE,
-    client_id INTEGER,
-    client_name TEXT,
-    product TEXT,
-    request_text TEXT,
-    status TEXT DEFAULT 'NEW',
-    manager_id INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_number INTEGER UNIQUE,
+        client_id INTEGER,
+        client_name TEXT,
+        product TEXT,
+        request_text TEXT,
+        status TEXT DEFAULT 'NEW',
+        manager_id INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS ai_dialog_messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    role TEXT NOT NULL,
-    content TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ai_dialog_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        role TEXT NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS ai_settings (
-    user_id INTEGER PRIMARY KEY,
-    model TEXT DEFAULT 'openai/gpt-5-mini',
-    tone TEXT DEFAULT 'neutral',
-    language TEXT DEFAULT 'ru',
-    context_depth INTEGER DEFAULT 20,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ai_settings (
+        user_id INTEGER PRIMARY KEY,
+        model TEXT DEFAULT 'openai/gpt-5-mini',
+        tone TEXT DEFAULT 'neutral',
+        language TEXT DEFAULT 'ru',
+        context_depth INTEGER DEFAULT 20,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS ai_projects (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    title TEXT NOT NULL,
-    description TEXT,
-    category TEXT DEFAULT 'general',
-    status TEXT DEFAULT 'active',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ai_projects (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        category TEXT DEFAULT 'general',
+        status TEXT DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS ai_project_messages (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    project_id INTEGER NOT NULL,
-    role TEXT NOT NULL,
-    message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (project_id) REFERENCES ai_projects(id) ON DELETE CASCADE
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ai_project_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        project_id INTEGER NOT NULL,
+        role TEXT NOT NULL,
+        message TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (project_id) REFERENCES ai_projects(id) ON DELETE CASCADE
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT,
-    module TEXT DEFAULT 'system',
-    project_id INTEGER,
-    creator_id INTEGER NOT NULL,
-    assignee_id INTEGER,
-    priority TEXT DEFAULT 'NORMAL',
-    status TEXT DEFAULT 'NEW',
-    deadline TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP,
-    calendar_event_id INTEGER
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        module TEXT DEFAULT 'system',
+        project_id INTEGER,
+        creator_id INTEGER NOT NULL,
+        assignee_id INTEGER,
+        priority TEXT DEFAULT 'NORMAL',
+        status TEXT DEFAULT 'NEW',
+        deadline TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP,
+        calendar_event_id INTEGER
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS ai_tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    project_id INTEGER,
-    title TEXT NOT NULL,
-    status TEXT DEFAULT 'todo',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (project_id) REFERENCES ai_projects(id)
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ai_tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        project_id INTEGER,
+        title TEXT NOT NULL,
+        status TEXT DEFAULT 'todo',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (project_id) REFERENCES ai_projects(id)
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS calendar_events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT,
-    module TEXT DEFAULT 'system',
-    event_type TEXT DEFAULT 'general',
-    creator_id INTEGER NOT NULL,
-    owner_id INTEGER NOT NULL,
-    start_time TEXT NOT NULL,
-    end_time TEXT,
-    remind_before INTEGER DEFAULT 0,
-    status TEXT DEFAULT 'PLANNED',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    start_datetime TEXT,
-    end_datetime TEXT,
-    responsible_user INTEGER,
-    priority TEXT DEFAULT 'normal',
-    reminder_minutes INTEGER DEFAULT 0,
-    repeat_rule TEXT,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS calendar_events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        module TEXT DEFAULT 'system',
+        event_type TEXT DEFAULT 'general',
+        creator_id INTEGER NOT NULL,
+        owner_id INTEGER NOT NULL,
+        start_time TEXT NOT NULL,
+        end_time TEXT,
+        remind_before INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'PLANNED',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        start_datetime TEXT,
+        end_datetime TEXT,
+        responsible_user INTEGER,
+        priority TEXT DEFAULT 'normal',
+        reminder_minutes INTEGER DEFAULT 0,
+        repeat_rule TEXT,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS notifications (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    category TEXT NOT NULL,
-    title TEXT NOT NULL,
-    message TEXT,
-    priority TEXT DEFAULT 'INFO',
-    status TEXT DEFAULT 'NEW',
-    is_important INTEGER DEFAULT 0,
-    is_reminder INTEGER DEFAULT 0,
-    source_module TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    read_at TIMESTAMP,
-    archived_at TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        category TEXT NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT,
+        priority TEXT DEFAULT 'INFO',
+        status TEXT DEFAULT 'NEW',
+        is_important INTEGER DEFAULT 0,
+        is_reminder INTEGER DEFAULT 0,
+        source_module TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        read_at TIMESTAMP,
+        archived_at TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS system_tasks (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    title TEXT NOT NULL,
-    description TEXT,
-    creator_id INTEGER NOT NULL,
-    assigned_user_id INTEGER,
-    module TEXT,
-    priority TEXT DEFAULT 'NORMAL',
-    status TEXT DEFAULT 'NEW',
-    due_date TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS system_tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title TEXT NOT NULL,
+        description TEXT,
+        creator_id INTEGER NOT NULL,
+        assigned_user_id INTEGER,
+        module TEXT,
+        priority TEXT DEFAULT 'NORMAL',
+        status TEXT DEFAULT 'NEW',
+        due_date TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS files (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    filename TEXT NOT NULL,
-    original_filename TEXT NOT NULL,
-    uploaded_by INTEGER NOT NULL,
-    module TEXT,
-    project_id INTEGER,
-    task_id INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    file_size INTEGER,
-    mime_type TEXT,
-    tags TEXT,
-    description TEXT,
-    version INTEGER DEFAULT 1
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS files (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        filename TEXT NOT NULL,
+        original_filename TEXT NOT NULL,
+        uploaded_by INTEGER NOT NULL,
+        module TEXT,
+        project_id INTEGER,
+        task_id INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        file_size INTEGER,
+        mime_type TEXT,
+        tags TEXT,
+        description TEXT,
+        version INTEGER DEFAULT 1
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS agro_counterparties (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    counterparty_type TEXT NOT NULL,
-    country TEXT,
-    contact_info TEXT,
-    notes TEXT,
-    created_by INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS agro_counterparties (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        counterparty_type TEXT NOT NULL,
+        country TEXT,
+        contact_info TEXT,
+        notes TEXT,
+        created_by INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS agro_contracts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    contract_number TEXT NOT NULL,
-    contract_type TEXT NOT NULL,
-    execution_status TEXT DEFAULT 'DRAFT',
-    request_number INTEGER,
-    counterparty_id INTEGER,
-    notes TEXT,
-    created_by INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS agro_contracts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        contract_number TEXT NOT NULL,
+        contract_type TEXT NOT NULL,
+        execution_status TEXT DEFAULT 'DRAFT',
+        request_number INTEGER,
+        counterparty_id INTEGER,
+        notes TEXT,
+        created_by INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS agro_logistics (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    request_number INTEGER,
-    transport TEXT,
-    route TEXT,
-    loading_date TEXT,
-    eta TEXT,
-    delivery_status TEXT DEFAULT 'PLANNED',
-    notes TEXT,
-    created_by INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS agro_logistics (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_number INTEGER,
+        transport TEXT,
+        route TEXT,
+        loading_date TEXT,
+        eta TEXT,
+        delivery_status TEXT DEFAULT 'PLANNED',
+        notes TEXT,
+        created_by INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS agro_documents (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    request_number INTEGER,
-    doc_type TEXT NOT NULL,
-    title TEXT NOT NULL,
-    file_id INTEGER,
-    notes TEXT,
-    created_by INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS agro_documents (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_number INTEGER,
+        doc_type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        file_id INTEGER,
+        notes TEXT,
+        created_by INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS agro_finance (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    request_number INTEGER,
-    deal_amount REAL,
-    currency TEXT DEFAULT 'USD',
-    paid_amount REAL DEFAULT 0,
-    debt_amount REAL DEFAULT 0,
-    payment_schedule TEXT,
-    notes TEXT,
-    created_by INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS agro_finance (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_number INTEGER,
+        deal_amount REAL,
+        currency TEXT DEFAULT 'USD',
+        paid_amount REAL DEFAULT 0,
+        debt_amount REAL DEFAULT 0,
+        payment_schedule TEXT,
+        notes TEXT,
+        created_by INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS workflow_processes (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    module TEXT,
-    trigger TEXT,
-    status TEXT DEFAULT 'ACTIVE',
-    created_by INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    completed_at TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS workflow_processes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        module TEXT,
+        trigger TEXT,
+        status TEXT DEFAULT 'ACTIVE',
+        created_by INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        completed_at TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS workflow_templates (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    module TEXT,
-    trigger TEXT,
-    actions_json TEXT,
-    created_by INTEGER NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS workflow_templates (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        module TEXT,
+        trigger TEXT,
+        actions_json TEXT,
+        created_by INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS agro_deals (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    request_number INTEGER UNIQUE NOT NULL,
-    client_id INTEGER NOT NULL,
-    product TEXT,
-    status TEXT DEFAULT 'NEW',
-    manager_id INTEGER,
-    workflow_process_id INTEGER,
-    manager_task_id INTEGER,
-    document_folder_id INTEGER,
-    calendar_event_id INTEGER,
-    contract_id INTEGER,
-    logistics_id INTEGER,
-    finance_id INTEGER,
-    report_file_id INTEGER,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    closed_at TIMESTAMP
-)
-""")
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS agro_deals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        request_number INTEGER UNIQUE NOT NULL,
+        client_id INTEGER NOT NULL,
+        product TEXT,
+        status TEXT DEFAULT 'NEW',
+        manager_id INTEGER,
+        workflow_process_id INTEGER,
+        manager_task_id INTEGER,
+        document_folder_id INTEGER,
+        calendar_event_id INTEGER,
+        contract_id INTEGER,
+        logistics_id INTEGER,
+        finance_id INTEGER,
+        report_file_id INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        closed_at TIMESTAMP
+    )
+    """)
 
-conn.commit()
+    conn.commit()
+
+
+if not POSTGRES_ONLY:
+    _bootstrap_sqlite()
+else:
+    conn = None  # type: ignore[assignment]
+    cursor = None  # type: ignore[assignment]
 
 
 def _column_exists(table: str, column: str) -> bool:
