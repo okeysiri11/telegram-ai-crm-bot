@@ -45,10 +45,14 @@ def register_platform_event_handlers() -> None:
 
     audit_service.subscribe_to_event_bus()
 
+    from services.kpi_service import kpi_service
+
+    kpi_service.subscribe_to_event_bus()
+
     _registered = True
     logger.info(
         "platform_internal_event_handlers_registered",
-        extra={"handler_count": len(handlers) + 5},
+        extra={"handler_count": len(handlers) + 10},
     )
 
 
@@ -56,3 +60,6 @@ def reset_handler_registration() -> None:
     global _registered
     _registered = False
     audit_service.reset_subscription()
+    from services.kpi_service import kpi_service
+
+    kpi_service.reset_subscription()

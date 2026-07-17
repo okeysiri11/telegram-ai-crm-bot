@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from database.models.client_request import ClientRequestStatus, CrmFunnelStage
@@ -130,6 +131,45 @@ class RequestService:
                 status=str(result.get("status") or "ASSIGNED"),
             )
         )
+
+    @staticmethod
+    async def _publish_manager_first_response(
+        result: dict[str, Any],
+        manager_id: uuid.UUID | str,
+        *,
+        response_time_seconds: int = 0,
+        sla_compliant: bool = True,
+    ) -> None:
+        from events.event_bus import publish
+        from events.request_events import ManagerFirstResponseEvent
+
+        await publish(
+            ManagerFirstResponseEvent(
+                request_id=str(result.get("id")),
+                request_number=str(result.get("request_number")),
+                vertical=str(result.get("vertical") or "unknown"),
+                request_type=str(result.get("request_type") or ""),
+                manager_id=str(manager_id),
+                manager_telegram_id=result.get("manager_telegram_id"),
+                client_telegram_id=result.get("client_telegram_id"),
+                response_time_seconds=response_time_seconds,
+                sla_compliant=sla_compliant,
+            )
+        )
+
+    @staticmethod
+    def _response_seconds_from_snapshot(result: dict[str, Any]) -> int:
+        created_raw = result.get("created_at")
+        if not created_raw:
+            return 0
+        try:
+            if isinstance(created_raw, datetime):
+                created = created_raw if created_raw.tzinfo else created_raw.replace(tzinfo=timezone.utc)
+            else:
+                created = datetime.fromisoformat(str(created_raw).replace("Z", "+00:00"))
+            return max(0, int((datetime.now(timezone.utc) - created).total_seconds()))
+        except (TypeError, ValueError):
+            return 0
 
     @staticmethod
     async def _publish_request_completed(result: dict[str, Any], *, converted_to_deal: bool = False) -> None:
@@ -426,6 +466,12 @@ class RequestService:
         result = await RequestService._assign_request_to_manager(request_id, manager_id)
         if result is not None:
             await RequestService._publish_request_assigned(result, manager_id)
+            response_secs = RequestService._response_seconds_from_snapshot(result)
+            await RequestService._publish_manager_first_response(
+                result,
+                manager_id,
+                response_time_seconds=response_secs,
+            )
         return result
 
     @staticmethod

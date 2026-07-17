@@ -34,6 +34,19 @@ class RequestAssignedEvent(BaseEvent):
 
 
 @dataclass(kw_only=True)
+class ManagerFirstResponseEvent(BaseEvent):
+    request_id: str
+    request_number: str
+    vertical: str
+    request_type: str
+    manager_id: str
+    manager_telegram_id: int | None = None
+    client_telegram_id: int | None = None
+    response_time_seconds: int = 0
+    sla_compliant: bool = True
+
+
+@dataclass(kw_only=True)
 class RequestCompletedEvent(BaseEvent):
     request_id: str
     request_number: str
