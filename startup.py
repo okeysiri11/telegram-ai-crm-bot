@@ -77,9 +77,10 @@ async def run_startup() -> StartupContext:
     logger.info("BidEx parser initialized")
 
     WebhookEngineV1.register_event_handlers()
-    from services.platform_metrics_bridge import register_platform_metrics_handlers
+    from events.handlers import register_platform_event_handlers
 
-    register_platform_metrics_handlers()
+    register_platform_event_handlers()
+    logger.info("Platform internal event handlers registered")
 
     from services import crm_event_bus as event_bus
 

@@ -80,7 +80,7 @@ class RequestService:
             )
 
         result = RequestService._crm_snapshot(row)
-        await RequestService._post_create_hooks(key, result, manager)
+        await RequestService._publish_request_created(key, result, manager)
         return result
 
     @staticmethod
@@ -90,32 +90,116 @@ class RequestService:
         return await AutoClientRequestEngineV1.submit(**kwargs)
 
     @staticmethod
-    async def _post_create_hooks(
+    async def _publish_request_created(
         vertical: str,
         request: dict[str, Any],
         manager: dict[str, Any] | None,
     ) -> None:
-        from services.notification_service import notification_service
-        from services.platform_metrics_service import platform_metrics_service
+        from events.event_bus import publish
+        from events.request_events import RequestCreatedEvent
 
-        await notification_service.notify_managers_new_request(
-            vertical=vertical,
-            request_number=str(request.get("request_number")),
-            client_name=request.get("client_name") or "",
-            product=request.get("description") or request.get("request_type") or "",
-            manager_telegram_id=manager.get("telegram_id") if manager else None,
-        )
-
-        if vertical != "auto":
-            await platform_metrics_service.track_request_created(
+        await publish(
+            RequestCreatedEvent(
+                request_id=str(request.get("id")),
                 request_number=str(request.get("request_number")),
+                vertical=vertical,
                 request_type=str(request.get("request_type") or f"{vertical.upper()}_REQUEST"),
                 status=str(request.get("status") or "NEW"),
-                vertical=vertical,
-                request_id=request.get("id"),
-                manager_id=request.get("manager_id"),
                 client_telegram_id=request.get("client_telegram_id"),
+                client_name=str(request.get("client_name") or ""),
+                description=str(request.get("description") or ""),
+                manager_id=request.get("manager_id"),
+                manager_telegram_id=int(manager["telegram_id"]) if manager and manager.get("telegram_id") else None,
             )
+        )
+
+    @staticmethod
+    async def _publish_request_assigned(result: dict[str, Any], manager_id: uuid.UUID | str) -> None:
+        from events.event_bus import publish
+        from events.request_events import RequestAssignedEvent
+
+        await publish(
+            RequestAssignedEvent(
+                request_id=str(result.get("id")),
+                request_number=str(result.get("request_number")),
+                vertical=str(result.get("vertical") or "unknown"),
+                request_type=str(result.get("request_type") or ""),
+                manager_id=str(manager_id),
+                manager_telegram_id=result.get("manager_telegram_id"),
+                client_telegram_id=result.get("client_telegram_id"),
+                status=str(result.get("status") or "ASSIGNED"),
+            )
+        )
+
+    @staticmethod
+    async def _publish_request_completed(result: dict[str, Any], *, converted_to_deal: bool = False) -> None:
+        from events.event_bus import publish
+        from events.request_events import RequestCompletedEvent
+
+        await publish(
+            RequestCompletedEvent(
+                request_id=str(result.get("id")),
+                request_number=str(result.get("request_number")),
+                vertical=str(result.get("vertical") or "unknown"),
+                request_type=str(result.get("request_type") or ""),
+                status=str(result.get("status") or "COMPLETED"),
+                manager_id=result.get("manager_id"),
+                client_telegram_id=result.get("client_telegram_id"),
+                converted_to_deal=converted_to_deal,
+            )
+        )
+
+    @staticmethod
+    async def _publish_manager_reassigned(
+        result: dict[str, Any],
+        *,
+        manager_id: uuid.UUID | str,
+        previous_manager_id: str | None,
+        manager_telegram_id: int | None = None,
+    ) -> None:
+        from events.event_bus import publish
+        from events.request_events import ManagerReassignedEvent
+
+        await publish(
+            ManagerReassignedEvent(
+                request_id=str(result.get("id")),
+                request_number=str(result.get("request_number")),
+                vertical=str(result.get("vertical") or "unknown"),
+                request_type=str(result.get("request_type") or ""),
+                previous_manager_id=previous_manager_id,
+                manager_id=str(manager_id),
+                manager_telegram_id=manager_telegram_id,
+                client_telegram_id=result.get("client_telegram_id"),
+            )
+        )
+
+    @staticmethod
+    async def publish_request_overdue(
+        *,
+        request_id: str,
+        request_number: str,
+        vertical: str,
+        request_type: str,
+        manager_id: str | None = None,
+        manager_telegram_id: int | None = None,
+        overdue_seconds: int = 0,
+        reason: str = "sla_first_response",
+    ) -> None:
+        from events.event_bus import publish
+        from events.request_events import RequestOverdueEvent
+
+        await publish(
+            RequestOverdueEvent(
+                request_id=request_id,
+                request_number=request_number,
+                vertical=vertical,
+                request_type=request_type,
+                manager_id=manager_id,
+                manager_telegram_id=manager_telegram_id,
+                overdue_seconds=overdue_seconds,
+                reason=reason,
+            )
+        )
 
     @staticmethod
     async def get_request(request_number: str) -> dict[str, Any] | None:
@@ -297,7 +381,7 @@ class RequestService:
         return RequestService._merge_request_snapshots(crm_rows, auto_rows, limit=limit)
 
     @staticmethod
-    async def take_request(
+    async def _assign_request_to_manager(
         request_id: str,
         manager_id: uuid.UUID | str,
     ) -> dict[str, Any] | None:
@@ -335,6 +419,16 @@ class RequestService:
             return RequestService._auto_snapshot(row)
 
     @staticmethod
+    async def take_request(
+        request_id: str,
+        manager_id: uuid.UUID | str,
+    ) -> dict[str, Any] | None:
+        result = await RequestService._assign_request_to_manager(request_id, manager_id)
+        if result is not None:
+            await RequestService._publish_request_assigned(result, manager_id)
+        return result
+
+    @staticmethod
     async def complete_request(request_id: str) -> dict[str, Any] | None:
         from services.pg_client_request_crm_engine import ClientRequestCrmEngineV1
 
@@ -351,17 +445,8 @@ class RequestService:
             result = None
 
         if result is not None:
-            return {
-                "id": result.get("id"),
-                "request_number": result.get("request_number"),
-                "request_type": result.get("request_type"),
-                "status": result.get("status"),
-                "vertical": (result.get("request_type") or "").split("_")[0].lower(),
-                "client_telegram_id": result.get("client_telegram_id"),
-                "client_name": result.get("client_username"),
-                "description": result.get("description"),
-                "manager_id": None,
-            }
+            await RequestService._publish_request_completed(result)
+            return result
 
         async with get_session() as session:
             repo = RequestRepository(session)
@@ -369,14 +454,32 @@ class RequestService:
             if auto is None:
                 return None
             row = await repo._auto().update(auto, status="DONE")
-            return RequestService._auto_snapshot(row)
+            snapshot = RequestService._auto_snapshot(row)
+            await RequestService._publish_request_completed(snapshot)
+            return snapshot
 
     @staticmethod
     async def reassign_request(
         request_id: str,
         manager_id: uuid.UUID | str,
     ) -> dict[str, Any] | None:
-        return await RequestService.take_request(request_id, manager_id)
+        existing = await RequestService.get_request(str(request_id))
+        if existing is None:
+            resolved = await RequestService._resolve_request_number(str(request_id))
+            if resolved:
+                existing = await RequestService.get_request(resolved)
+        previous_manager_id = existing.get("manager_id") if existing else None
+
+        result = await RequestService._assign_request_to_manager(request_id, manager_id)
+        if result is None:
+            return None
+
+        await RequestService._publish_manager_reassigned(
+            result,
+            manager_id=manager_id,
+            previous_manager_id=previous_manager_id,
+        )
+        return result
 
 
 request_service = RequestService()

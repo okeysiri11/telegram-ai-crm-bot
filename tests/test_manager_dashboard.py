@@ -142,12 +142,18 @@ async def test_complete_request_via_request_service():
 async def test_reassign_request_delegates_to_take():
     manager_id = uuid.uuid4()
     with patch(
-        "services.request_service.RequestService.take_request",
-        new=AsyncMock(return_value={"request_number": "AUTO-0001", "status": "ASSIGNED"}),
-    ) as take_mock:
+        "services.request_service.RequestService.get_request",
+        new=AsyncMock(return_value={"manager_id": "old-id"}),
+    ), patch(
+        "services.request_service.RequestService._assign_request_to_manager",
+        new=AsyncMock(return_value={"id": "1", "request_number": "AUTO-0001", "status": "ASSIGNED", "vertical": "auto", "request_type": "AUTO_SEARCH"}),
+    ), patch(
+        "services.request_service.RequestService._publish_manager_reassigned",
+        new=AsyncMock(),
+    ) as publish_mock:
         result = await dashboard_service.reassign_request("AUTO-0001", manager_id)
 
-    take_mock.assert_awaited_once_with("AUTO-0001", manager_id)
+    publish_mock.assert_awaited_once()
     assert result["request_number"] == "AUTO-0001"
 
 

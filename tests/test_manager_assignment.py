@@ -115,9 +115,12 @@ async def test_request_service_uses_manager_for_agro(client_user_id):
         "repositories.request_repository.RequestRepository.create_crm",
         new=AsyncMock(),
     ) as create, patch(
+        "services.request_service.RequestService._publish_request_created",
+        new=AsyncMock(),
+    ), patch(
         "services.notification_service.notification_service.notify_managers_new_request",
         new=AsyncMock(),
-    ):
+    ) as notify_mock:
         row = AsyncMock()
         row.id = "00000000-0000-0000-0000-000000000099"
         row.request_number = "AGRO-00099"
@@ -138,3 +141,4 @@ async def test_request_service_uses_manager_for_agro(client_user_id):
         )
         assert result["request_number"] == "AGRO-00099"
         create.assert_awaited_once()
+        notify_mock.assert_not_called()
