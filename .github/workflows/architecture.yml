@@ -1,0 +1,41 @@
+name: Architecture CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  architecture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run regression tests
+        env:
+          POSTGRES_ONLY: "true"
+          REDIS_URL: redis://localhost:6379/15
+          REDIS_REQUIRED: "false"
+        run: python -m pytest tests/ -q --tb=no -m "not slow"
+
+      - name: Validate architecture
+        run: python scripts/validate_architecture.py
+
+      - name: Validate legacy migration
+        run: python scripts/validate_legacy_migration.py
+
+      - name: Platform certification
+        run: python scripts/run_platform_certification.py
