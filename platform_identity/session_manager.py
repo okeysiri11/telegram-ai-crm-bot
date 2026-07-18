@@ -3,15 +3,16 @@
 from __future__ import annotations
 
 import logging
-import os
 from datetime import datetime, timezone
+
+from config import IAM_SESSION_TTL_SECONDS
 
 from platform_identity.exceptions import SessionError
 from platform_identity.models import Principal, SessionRecord
 
 logger = logging.getLogger(__name__)
 
-SESSION_TTL_SECONDS = int(os.getenv("IAM_SESSION_TTL_SECONDS", str(7 * 24 * 3600)))
+SESSION_TTL_SECONDS = IAM_SESSION_TTL_SECONDS
 
 
 class SessionManager:

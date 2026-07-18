@@ -5,9 +5,10 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import os
 import time
 from typing import Any, Awaitable, Callable
+
+from config import OPS_DASHBOARD_TTL_SECONDS, REDIS_URL
 
 from platform_operations.activity_service import (
     build_configuration_changes,
@@ -88,7 +89,7 @@ WIDGET_BUILDERS: dict[str, WidgetBuilder] = {
 }
 
 _DASHBOARD_CACHE_KEY = "full_dashboard"
-_DASHBOARD_TTL = int(os.getenv("OPS_DASHBOARD_TTL_SECONDS", "15"))
+_DASHBOARD_TTL = OPS_DASHBOARD_TTL_SECONDS
 
 
 # ---- widget cache (Redis + memory) ----
@@ -103,7 +104,7 @@ class OperationsWidgetCache:
         if self._redis_checked:
             return self._redis
         self._redis_checked = True
-        redis_url = os.getenv("REDIS_URL", "").strip()
+        redis_url = REDIS_URL.strip()
         if not redis_url:
             return None
         try:

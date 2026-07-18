@@ -4,26 +4,33 @@ from __future__ import annotations
 
 import hashlib
 import logging
-import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 import jwt
 
+from platform_configuration.configuration_center import configuration_center
 from platform_identity.exceptions import TokenError
 from platform_identity.models import TokenPair
 
 logger = logging.getLogger(__name__)
 
 _DEFAULT_INSECURE_SECRET = "change-me-in-production"
-IAM_JWT_ALGORITHM = os.getenv("IAM_JWT_ALGORITHM", "HS256")
-ACCESS_TOKEN_MINUTES = int(os.getenv("IAM_ACCESS_TOKEN_MINUTES", "15"))
-REFRESH_TOKEN_DAYS = int(os.getenv("IAM_REFRESH_TOKEN_DAYS", "7"))
+
+
+def _jwt_settings():
+    return configuration_center.settings.jwt
+
+
+IAM_JWT_ALGORITHM = _jwt_settings().iam_algorithm
+ACCESS_TOKEN_MINUTES = _jwt_settings().access_token_minutes
+REFRESH_TOKEN_DAYS = _jwt_settings().refresh_token_days
 
 
 def get_jwt_secret() -> str:
-    return os.getenv("IAM_JWT_SECRET", os.getenv("JWT_SECRET", _DEFAULT_INSECURE_SECRET)).strip()
+    secret = _jwt_settings().iam_secret or _jwt_settings().secret
+    return secret.strip()
 
 
 def validate_iam_jwt_secret() -> None:
@@ -34,7 +41,6 @@ def validate_iam_jwt_secret() -> None:
         )
 
 
-# Backward-compatible module constant (prefer get_jwt_secret() at runtime).
 IAM_JWT_SECRET = get_jwt_secret()
 
 

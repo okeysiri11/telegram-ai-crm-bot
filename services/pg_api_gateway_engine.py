@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import hmac
-import os
 import secrets
 import uuid
 from dataclasses import dataclass, field
@@ -26,10 +25,19 @@ from repositories.api_gateway_repository import (
 from repositories.audit_repository import AuditRepository
 from repositories.user_role_repository import UserRoleRepository
 
+from platform_configuration.configuration_center import configuration_center
+
 GATEWAY_ROLES = frozenset({"OWNER", "ADMIN"})
-API_JWT_SECRET = os.getenv("API_JWT_SECRET", "change-me-in-production-api-jwt-secret")
+
+
+def _gateway_jwt():
+    jwt_cfg = configuration_center.settings.jwt
+    return jwt_cfg.api_jwt_secret, jwt_cfg.api_jwt_ttl_hours
+
+
+API_JWT_SECRET = configuration_center.settings.jwt.api_jwt_secret
 API_JWT_ALGORITHM = "HS256"
-API_JWT_TTL_HOURS = int(os.getenv("API_JWT_TTL_HOURS", "24"))
+API_JWT_TTL_HOURS = configuration_center.settings.jwt.api_jwt_ttl_hours
 API_KEY_PREFIX = "gw_live_"
 
 DEFAULT_CLIENT_PERMISSIONS: frozenset[str] = frozenset({

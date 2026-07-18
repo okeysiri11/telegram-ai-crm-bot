@@ -100,6 +100,10 @@ PLATFORM_CONFIG_SCHEMA: dict[str, ConfigKeySpec] = {
         _spec(ConfigSection.FEATURE_FLAGS, "assignment.priority", "bool", True),
         _spec(ConfigSection.FEATURE_FLAGS, "assignment.weighted", "bool", True),
         _spec(ConfigSection.FEATURE_FLAGS, "experimental.workflow_v2", "bool", False),
+        _spec(ConfigSection.FEATURE_FLAGS, "plugins.hot_reload", "bool", False),
+        _spec(ConfigSection.FEATURE_FLAGS, "ai.memory_cache", "bool", True),
+        _spec(ConfigSection.FEATURE_FLAGS, "experimental.ai", "bool", False),
+        _spec(ConfigSection.FEATURE_FLAGS, "ai.multi_provider", "bool", False),
     )
 }
 

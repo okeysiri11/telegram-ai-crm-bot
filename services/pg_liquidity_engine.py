@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import os
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
 from typing import Any
 
-from config import OWNER_ID
+from config import LIQUIDITY_LOW_THRESHOLD, LIQUIDITY_POOL_LIMIT_RATIO, OWNER_ID
 from database.models.liquidity import (
     LiquidityAlert,
     LiquidityAlertType,
@@ -26,8 +25,8 @@ from repositories.liquidity_repository import (
 from repositories.user_role_repository import UserRoleRepository
 
 LIQUIDITY_ROLES = frozenset({"OWNER", "ADMIN", "MANAGER"})
-LOW_LIQUIDITY_THRESHOLD = Decimal(os.getenv("LIQUIDITY_LOW_THRESHOLD", "1000"))
-POOL_LIMIT_RATIO = Decimal(os.getenv("LIQUIDITY_POOL_LIMIT_RATIO", "0.9"))
+LOW_LIQUIDITY_THRESHOLD = Decimal(LIQUIDITY_LOW_THRESHOLD)
+POOL_LIMIT_RATIO = Decimal(LIQUIDITY_POOL_LIMIT_RATIO)
 
 
 class LiquidityEngineError(Exception):

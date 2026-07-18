@@ -437,6 +437,18 @@ async def dashboard_audit_timeline_handler(request: web.Request, ctx: Management
     )
 
 
+# ---- CONFIG DIAGNOSTICS (frozen settings) ----
+
+@require_role(ManagementRole.READ_ONLY)
+async def config_diagnostics_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.config_diagnostics(), ctx)
+
+
+@require_role(ManagementRole.ADMINISTRATOR)
+async def config_reload_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.config_reload(), ctx)
+
+
 # ---- OPENAPI ----
 
 async def openapi_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
@@ -492,6 +504,9 @@ def register_management_routes(app: web.Application) -> None:
     _route(app, "GET", "audit/history", audit_history_handler, role=ManagementRole.READ_ONLY, summary="Audit history")
 
     _route(app, "GET", "kpi", kpi_handler, role=ManagementRole.READ_ONLY, summary="KPI dashboard")
+
+    _route(app, "GET", "config", config_diagnostics_handler, role=ManagementRole.READ_ONLY, summary="Configuration diagnostics (redacted)")
+    _route(app, "POST", "config/reload", config_reload_handler, role=ManagementRole.ADMINISTRATOR, summary="Reload configuration from environment")
 
     from platform_plugins.plugins_router import register_plugins_routes
 

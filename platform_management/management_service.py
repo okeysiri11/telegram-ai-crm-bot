@@ -366,6 +366,22 @@ class ManagementService:
     async def kpi_current(*, period: str = "month") -> dict[str, Any]:
         return await get_kpi_dashboard(period=period)  # type: ignore[arg-type]
 
+    @staticmethod
+    async def config_diagnostics() -> dict[str, Any]:
+        from platform_configuration.configuration_center import configuration_center
+
+        return {
+            "settings": configuration_center.redacted_export(),
+            "diagnostics": configuration_center.diagnostics(),
+        }
+
+    @staticmethod
+    async def config_reload() -> dict[str, Any]:
+        from platform_configuration.configuration_center import configuration_center
+
+        configuration_center.reload()
+        return configuration_center.diagnostics()
+
     # ---- plugins ----
 
     @staticmethod

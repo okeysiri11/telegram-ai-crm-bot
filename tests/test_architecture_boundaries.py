@@ -11,6 +11,7 @@ from src.platform.layers.architecture_policy import (
     scan_layer,
     scan_file,
 )
+from platform_configuration.env_access_policy import scan_env_access_violations
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -82,6 +83,20 @@ def test_architecture_policy_detects_plugin_repository_import(tmp_path: Path):
     bad.write_text("from repositories.user_repository import UserRepository\n", encoding="utf-8")
     violations = scan_file(bad, root=tmp_path)
     assert any(v.rule == "plugin_no_repository" for v in violations)
+
+
+def test_no_direct_env_access_outside_configuration_center():
+    violations = scan_env_access_violations(ROOT)
+    assert violations == [], _format_env_violations(violations)
+
+
+def _format_env_violations(violations) -> str:
+    if not violations:
+        return ""
+    lines = ["Direct environment access outside ConfigurationCenter:"]
+    for v in violations:
+        lines.append(f"  {v.path}:{v.line} — {v.detail}")
+    return "\n".join(lines)
 
 
 def _format_violations(layer: str, violations: list[BoundaryViolation]) -> str:

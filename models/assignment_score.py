@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import enum
-import os
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
+
+from config import SMART_ASSIGNMENT_EXTRA_SEGMENTS
 
 
 class AssignmentSegment(str, enum.Enum):
@@ -47,7 +48,7 @@ _SEGMENT_PREFIX_MAP: dict[str, AssignmentSegment] = {
 
 
 def _load_extra_segments() -> dict[str, AssignmentSegment]:
-    raw = os.getenv("SMART_ASSIGNMENT_EXTRA_SEGMENTS", "").strip()
+    raw = SMART_ASSIGNMENT_EXTRA_SEGMENTS.strip()
     if not raw:
         return {}
     out: dict[str, AssignmentSegment] = {}

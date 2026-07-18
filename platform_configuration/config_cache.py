@@ -4,13 +4,14 @@ from __future__ import annotations
 
 import json
 import logging
-import os
 import time
 from typing import Any
 
+from platform_configuration.configuration_center import configuration_center
+
 logger = logging.getLogger(__name__)
 
-_DEFAULT_TTL = int(os.getenv("CONFIG_CACHE_TTL_SECONDS", "300"))
+_DEFAULT_TTL = 300
 _KEY_PREFIX = "platform:config:"
 
 
@@ -25,7 +26,7 @@ class ConfigCache:
         if self._redis_checked:
             return self._redis
         self._redis_checked = True
-        redis_url = os.getenv("REDIS_URL", "").strip()
+        redis_url = configuration_center.settings.redis.url.strip()
         if not redis_url:
             return None
         try:

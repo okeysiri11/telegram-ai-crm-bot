@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import abc
 import logging
-import os
 from typing import Any
+
+from config import BOT_TOKEN, SMS_PROVIDER_URL, SMTP_HOST
 
 logger = logging.getLogger(__name__)
 
@@ -36,7 +37,6 @@ class TelegramProvider(NotificationProvider):
         body: str,
         metadata: dict[str, Any] | None = None,
     ) -> bool:
-        from config import BOT_TOKEN
         from aiogram import Bot
 
         if not BOT_TOKEN:
@@ -66,7 +66,7 @@ class EmailProvider(NotificationProvider):
         metadata: dict[str, Any] | None = None,
     ) -> bool:
         # Stub — wire SMTP / SendGrid in production via SMTP_* env vars.
-        smtp_host = os.getenv("SMTP_HOST")
+        smtp_host = SMTP_HOST
         if not smtp_host:
             logger.info("EmailProvider stub: to=%s subject=%s", to, subject)
             return True
@@ -86,7 +86,7 @@ class SMSProvider(NotificationProvider):
         metadata: dict[str, Any] | None = None,
     ) -> bool:
         # Stub — Twilio / MessageBird via SMS_PROVIDER_URL.
-        if not os.getenv("SMS_PROVIDER_URL"):
+        if not SMS_PROVIDER_URL:
             logger.info("SMSProvider stub: to=%s body=%s", to, body[:80])
             return True
         logger.warning("SMSProvider not yet implemented — message logged only")

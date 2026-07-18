@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any
+
+from platform_configuration.env_source import getenv, getenv_bool, getenv_float, getenv_int
 
 from database.session import get_session
 from platform_configuration.config_repository import ConfigRepository
@@ -22,13 +23,13 @@ def env_overrides_for_seed() -> dict[str, Any]:
     mapping: dict[str, Any] = {}
 
     def _bool(name: str) -> bool | None:
-        raw = os.getenv(name, "").strip().lower()
+        raw = getenv(name, "").lower()
         if not raw:
             return None
         return raw in {"1", "true", "yes", "on"}
 
     def _int(name: str) -> int | None:
-        raw = os.getenv(name, "").strip()
+        raw = getenv(name, "")
         if not raw:
             return None
         try:
@@ -37,7 +38,7 @@ def env_overrides_for_seed() -> dict[str, Any]:
             return None
 
     def _float(name: str) -> float | None:
-        raw = os.getenv(name, "").strip()
+        raw = getenv(name, "")
         if not raw:
             return None
         try:
@@ -46,7 +47,7 @@ def env_overrides_for_seed() -> dict[str, Any]:
             return None
 
     def _str(name: str) -> str | None:
-        raw = os.getenv(name, "").strip()
+        raw = getenv(name, "")
         return raw or None
 
     env_map: dict[str, tuple[str, str]] = {

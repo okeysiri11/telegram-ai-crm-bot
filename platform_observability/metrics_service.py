@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import time
 from collections import defaultdict
 from typing import Any
+
+from config import REDIS_URL
 
 from platform_observability.models import MetricPoint
 
@@ -102,7 +103,7 @@ class MetricsService:
 
     async def _collect_redis(self) -> list[MetricPoint]:
         points: list[MetricPoint] = []
-        redis_url = os.getenv("REDIS_URL", "").strip()
+        redis_url = REDIS_URL.strip()
         if not redis_url:
             points.append(MetricPoint("redis.connected", 0, tags={"status": "not_configured"}))
             return points

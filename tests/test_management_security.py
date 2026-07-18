@@ -174,6 +174,8 @@ async def test_login_rejects_arbitrary_id_without_proof(management_app):
 
 @pytest.mark.asyncio
 async def test_jwt_secret_validation_fails_on_default():
+    from platform_configuration.configuration_center import configuration_center
+    from platform_configuration.env_source import load_environment
     from platform_identity.jwt_service import validate_iam_jwt_secret
 
     import os
@@ -181,6 +183,8 @@ async def test_jwt_secret_validation_fails_on_default():
     old = os.environ.get("IAM_JWT_SECRET")
     try:
         os.environ["IAM_JWT_SECRET"] = "change-me-in-production"
+        load_environment.cache_clear()
+        configuration_center.reload()
         with pytest.raises(RuntimeError):
             validate_iam_jwt_secret()
     finally:
@@ -188,6 +192,8 @@ async def test_jwt_secret_validation_fails_on_default():
             os.environ.pop("IAM_JWT_SECRET", None)
         else:
             os.environ["IAM_JWT_SECRET"] = old
+        load_environment.cache_clear()
+        configuration_center.reload()
 
 
 @pytest.mark.asyncio
@@ -209,3 +215,20 @@ async def test_authenticate_request_rejects_telegram_header():
 
     with pytest.raises(AuthenticationError):
         await authentication_service.authenticate_request(request)
+
+
+@pytest.mark.asyncio
+async def test_config_diagnostics_endpoint(management_app, auth_headers):
+    with patch(
+        "platform_management.management_service.management_service.log_request",
+        new_callable=AsyncMock,
+    ):
+        async with TestClient(TestServer(management_app)) as client:
+            resp = await client.get("/management/v1/config", headers=auth_headers)
+            assert resp.status == 200
+            body = await resp.json()
+            assert body["success"] is True
+            assert "settings" in body["data"]
+            assert "diagnostics" in body["data"]
+            assert "feature_flags" in body["data"]["settings"]
+            assert body["data"]["settings"]["redis"]["url"] == "***"

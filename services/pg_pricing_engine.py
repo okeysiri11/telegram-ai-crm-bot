@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
 import uuid
 from decimal import Decimal
 from typing import Any
 
-from config import OWNER_ID
+from config import OWNER_ID, PRICING_COMPANY_MARGIN
 from database.models.audit_log import AuditAction
 from database.models.pricing_v1 import (
     ManagerPricing,
@@ -29,7 +28,7 @@ from repositories.pricing_v1_repository import (
 from repositories.user_role_repository import UserRoleRepository
 
 PRICING_ROLES = frozenset({"OWNER", "ADMIN", "MANAGER"})
-DEFAULT_COMPANY_MARGIN = Decimal(os.getenv("PRICING_COMPANY_MARGIN", "0.005"))
+DEFAULT_COMPANY_MARGIN = Decimal(PRICING_COMPANY_MARGIN)
 
 
 class PricingEngineV1Error(Exception):

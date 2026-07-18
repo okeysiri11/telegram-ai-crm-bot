@@ -49,14 +49,14 @@ class HealthMonitor:
             return {"status": "unhealthy", "error": str(exc)}
 
     async def _check_redis(self) -> dict[str, Any]:
-        import os
+        from config import REDIS_URL
 
-        if not os.getenv("REDIS_URL", "").strip():
+        if not REDIS_URL.strip():
             return {"status": "not_configured"}
         try:
             from redis.asyncio import Redis
 
-            client = Redis.from_url(os.getenv("REDIS_URL", ""), decode_responses=True)
+            client = Redis.from_url(REDIS_URL, decode_responses=True)
             await client.ping()
             await client.aclose()
             return {"status": "healthy"}

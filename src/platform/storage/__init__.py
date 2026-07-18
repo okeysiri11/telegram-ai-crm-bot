@@ -7,11 +7,12 @@ from __future__ import annotations
 import abc
 import hashlib
 import logging
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
+
+from config import LOCAL_STORAGE_DIR, MEDIA_CDN_BASE_URL, MEDIA_STORAGE_PROVIDER, S3_BUCKET
 
 logger = logging.getLogger(__name__)
 
@@ -73,9 +74,9 @@ class TelegramStorage(StorageProvider):
 
 class LocalStorage(StorageProvider):
     def __init__(self, base_dir: str | None = None) -> None:
-        self.base_dir = Path(base_dir or os.getenv("LOCAL_STORAGE_DIR", "data/media_cache"))
+        self.base_dir = Path(base_dir or LOCAL_STORAGE_DIR)
         self.base_dir.mkdir(parents=True, exist_ok=True)
-        self.cdn_base = os.getenv("MEDIA_CDN_BASE_URL", "").rstrip("/")
+        self.cdn_base = MEDIA_CDN_BASE_URL.rstrip("/")
 
     async def store(
         self,
@@ -115,7 +116,7 @@ class S3Storage(StorageProvider):
     """Prepared stub — requires boto3 + S3_* env for production use."""
 
     def __init__(self) -> None:
-        self.bucket = os.getenv("S3_BUCKET", "")
+        self.bucket = S3_BUCKET
 
     async def store(
         self,
@@ -155,7 +156,7 @@ class S3Storage(StorageProvider):
 
 
 def get_storage_provider() -> StorageProvider:
-    provider = os.getenv("MEDIA_STORAGE_PROVIDER", "telegram").strip().lower()
+    provider = MEDIA_STORAGE_PROVIDER.strip().lower()
     if provider == "local":
         return LocalStorage()
     if provider == "s3":

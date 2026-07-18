@@ -66,6 +66,12 @@ class StartupContext:
 
 
 async def run_startup() -> StartupContext:
+    from platform_configuration.configuration_center import configuration_center
+
+    configuration_center.load()
+    configuration_center.validate(fail_fast=False)
+    logger.info("ConfigurationCenter loaded: %s", configuration_center.diagnostics()["validation"])
+
     from platform_identity.jwt_service import validate_iam_jwt_secret
 
     validate_iam_jwt_secret()

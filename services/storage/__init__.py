@@ -5,11 +5,22 @@ from __future__ import annotations
 import abc
 import hashlib
 import logging
-import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
+
+from config import (
+    LOCAL_STORAGE_DIR,
+    MEDIA_CDN_BASE_URL,
+    MEDIA_LOCAL_CACHE,
+    MEDIA_STORAGE_PROVIDER,
+    S3_ACCESS_KEY,
+    S3_BUCKET,
+    S3_ENDPOINT_URL,
+    S3_REGION,
+    S3_SECRET_KEY,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -93,9 +104,9 @@ class LocalStorage(StorageProvider):
     """Caches binary blobs on local filesystem."""
 
     def __init__(self, base_dir: str | None = None) -> None:
-        self.base_dir = Path(base_dir or os.getenv("LOCAL_STORAGE_DIR", "data/media_cache"))
+        self.base_dir = Path(base_dir or LOCAL_STORAGE_DIR)
         self.base_dir.mkdir(parents=True, exist_ok=True)
-        self.cdn_base = os.getenv("MEDIA_CDN_BASE_URL", "").rstrip("/")
+        self.cdn_base = MEDIA_CDN_BASE_URL.rstrip("/")
 
     async def store(
         self,
@@ -143,12 +154,12 @@ class S3Storage(StorageProvider):
     """S3-compatible object storage (boto3 optional)."""
 
     def __init__(self) -> None:
-        self.bucket = os.getenv("S3_BUCKET", "")
-        self.region = os.getenv("S3_REGION", "eu-central-1")
-        self.endpoint = os.getenv("S3_ENDPOINT_URL", "")
-        self.cdn_base = os.getenv("MEDIA_CDN_BASE_URL", "").rstrip("/")
-        self.access_key = os.getenv("S3_ACCESS_KEY", "")
-        self.secret_key = os.getenv("S3_SECRET_KEY", "")
+        self.bucket = S3_BUCKET
+        self.region = S3_REGION
+        self.endpoint = S3_ENDPOINT_URL
+        self.cdn_base = MEDIA_CDN_BASE_URL.rstrip("/")
+        self.access_key = S3_ACCESS_KEY
+        self.secret_key = S3_SECRET_KEY
 
     def _client(self):
         try:
@@ -261,9 +272,9 @@ class CompositeStorage(StorageProvider):
 
 
 def get_storage_provider() -> StorageProvider:
-    """Factory switched by MEDIA_STORAGE_PROVIDER env (telegram|local|s3)."""
-    provider = os.getenv("MEDIA_STORAGE_PROVIDER", "telegram").strip().lower()
-    cache_enabled = os.getenv("MEDIA_LOCAL_CACHE", "true").lower() in {"1", "true", "yes"}
+    """Factory switched by MEDIA_STORAGE_PROVIDER (telegram|local|s3)."""
+    provider = MEDIA_STORAGE_PROVIDER.strip().lower()
+    cache_enabled = MEDIA_LOCAL_CACHE
     cache = LocalStorage() if cache_enabled and provider != "local" else None
 
     if provider == "local":

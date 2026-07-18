@@ -6,20 +6,23 @@ import hashlib
 import hmac
 import json
 import logging
-import os
 from typing import Any
 from urllib.parse import parse_qsl
+
+from platform_configuration.configuration_center import configuration_center
 
 from platform_identity.exceptions import AuthenticationError
 
 logger = logging.getLogger(__name__)
 
-IAM_LOGIN_SECRET = os.getenv("IAM_LOGIN_SECRET", "")
+
+def _login_secret() -> str:
+    return configuration_center.settings.jwt.login_secret
 
 
 def verify_login_proof(provided: str) -> bool:
     """Validate shared login proof (Operations Center / bootstrap)."""
-    expected = IAM_LOGIN_SECRET
+    expected = _login_secret()
     if not expected:
         return False
     return hmac.compare_digest(provided, expected)

@@ -87,11 +87,16 @@ def sample_submit_result():
 
 @pytest.fixture(autouse=True)
 def _configure_management_iam(monkeypatch):
+    from platform_configuration.configuration_center import configuration_center
+    from platform_configuration.env_source import load_environment
+
     monkeypatch.setenv("IAM_JWT_SECRET", "pytest-management-secret-key-32bytes-min")
     monkeypatch.setenv("IAM_LOGIN_SECRET", "pytest-login-secret")
+    load_environment.cache_clear()
+    configuration_center.reload()
     monkeypatch.setattr(
         "platform_identity.jwt_service.IAM_JWT_SECRET",
-        "pytest-management-secret-key-32bytes-min",
+        configuration_center.settings.jwt.iam_secret,
         raising=False,
     )
 
