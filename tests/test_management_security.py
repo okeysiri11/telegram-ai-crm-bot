@@ -95,9 +95,9 @@ async def test_docs_unauthorized(management_app):
         new_callable=AsyncMock,
     ):
         async with TestClient(TestServer(management_app)) as client:
-            docs = await client.get("/management/docs")
+            docs = await client.get("/management/v1/docs")
             assert docs.status == 401
-            openapi = await client.get("/management/openapi.json")
+            openapi = await client.get("/management/v1/openapi.json")
             assert openapi.status == 401
 
 
@@ -108,7 +108,7 @@ async def test_docs_authorized(management_app, auth_headers):
         new_callable=AsyncMock,
     ):
         async with TestClient(TestServer(management_app)) as client:
-            resp = await client.get("/management/openapi.json", headers=auth_headers)
+            resp = await client.get("/management/v1/openapi.json", headers=auth_headers)
             assert resp.status == 200
             spec = await resp.json()
             assert spec["components"]["securitySchemes"]["BearerAuth"]

@@ -220,26 +220,27 @@ async def test_statistics_requests(management_app, actor_header):
 @pytest.mark.asyncio
 async def test_openapi_spec(management_app, auth_headers):
     async with TestClient(TestServer(management_app)) as client:
-        unauth = await client.get("/management/openapi.json")
+        unauth = await client.get("/management/v1/openapi.json")
         assert unauth.status == 401
-        resp = await client.get("/management/openapi.json", headers=auth_headers)
+        resp = await client.get("/management/v1/openapi.json", headers=auth_headers)
         assert resp.status == 200
         spec = await resp.json()
         assert spec["openapi"] == "3.0.3"
-        assert "/management/system" in spec["paths"]
-        assert "ManagementResponse" in spec["components"]["schemas"]
+        assert "/management/v1/system" in spec["paths"]
+        assert "ApiEnvelope" in spec["components"]["schemas"]
         assert "BearerAuth" in spec["components"]["securitySchemes"]
 
 
 @pytest.mark.asyncio
 async def test_openapi_docs(management_app, auth_headers):
     async with TestClient(TestServer(management_app)) as client:
-        unauth = await client.get("/management/docs")
+        unauth = await client.get("/management/v1/docs")
         assert unauth.status == 401
-        resp = await client.get("/management/docs", headers=auth_headers)
+        resp = await client.get("/management/v1/docs", headers=auth_headers)
         assert resp.status == 200
         text = await resp.text()
         assert "swagger-ui" in text
+        assert "/management/v1/openapi.json" in text
 
 
 @pytest.mark.asyncio

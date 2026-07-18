@@ -120,17 +120,24 @@ async def skills_enable_handler(request: web.Request, ctx: ManagementContext) ->
 
 
 def register_skills_routes(app: web.Application) -> None:
-    prefix = "/management/ai/skills"
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
 
-    app.router.add_get(prefix, skills_status_handler)
-    app.router.add_get(f"{prefix}/list", skills_list_handler)
-    app.router.add_get(f"{prefix}/metrics", skills_metrics_handler)
-    app.router.add_get(f"{prefix}/metrics/{{skill_id}}", skills_metrics_handler)
-    app.router.add_get(f"{prefix}/health", skills_health_handler)
-    app.router.add_get(f"{prefix}/health/{{skill_id}}", skills_health_handler)
-    app.router.add_post(f"{prefix}/execute", skills_execute_handler)
-    app.router.add_post(f"{prefix}/execute/{{skill_id}}", skills_execute_handler)
-    app.router.add_post(f"{prefix}/{{skill_id}}/disable", skills_disable_handler)
-    app.router.add_post(f"{prefix}/{{skill_id}}/enable", skills_enable_handler)
-
-    logger.info("skills_api_routes_registered prefix=%s", prefix)
+    route_specs = [
+        ("GET", "", skills_status_handler),
+        ("GET", "list", skills_list_handler),
+        ("GET", "metrics", skills_metrics_handler),
+        ("GET", "metrics/{skill_id}", skills_metrics_handler),
+        ("GET", "health", skills_health_handler),
+        ("GET", "health/{skill_id}", skills_health_handler),
+        ("POST", "execute", skills_execute_handler),
+        ("POST", "execute/{skill_id}", skills_execute_handler),
+        ("POST", "{skill_id}/disable", skills_disable_handler),
+        ("POST", "{skill_id}/enable", skills_enable_handler),
+    ]
+    register_dual_prefix_routes(
+        app,
+        route_specs=route_specs,
+        v1_prefix=f"{MANAGEMENT_V1_PREFIX}/ai/skills",
+        legacy_prefix="/management/ai/skills",
+    )
+    logger.info("skills_api_routes_registered v1=%s/ai/skills", MANAGEMENT_V1_PREFIX)

@@ -170,17 +170,24 @@ async def observability_retention_handler(request: web.Request, ctx: ManagementC
 
 
 def register_observability_routes(app: web.Application) -> None:
-    prefix = "/management/observability"
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
 
-    app.router.add_get(prefix, observability_status_handler)
-    app.router.add_get(f"{prefix}/metrics", observability_metrics_handler)
-    app.router.add_get(f"{prefix}/logs", observability_logs_handler)
-    app.router.add_get(f"{prefix}/traces", observability_traces_handler)
-    app.router.add_get(f"{prefix}/alerts", observability_alerts_handler)
-    app.router.add_post(f"{prefix}/alerts/{{alert_id}}/resolve", observability_alerts_resolve_handler)
-    app.router.add_get(f"{prefix}/health", observability_health_handler)
-    app.router.add_get(f"{prefix}/dashboard", observability_dashboard_handler)
-    app.router.add_get(f"{prefix}/retention", observability_retention_handler)
-    app.router.add_put(f"{prefix}/retention", observability_retention_handler)
-
-    logger.info("observability_api_routes_registered prefix=%s", prefix)
+    route_specs = [
+        ("GET", "", observability_status_handler),
+        ("GET", "metrics", observability_metrics_handler),
+        ("GET", "logs", observability_logs_handler),
+        ("GET", "traces", observability_traces_handler),
+        ("GET", "alerts", observability_alerts_handler),
+        ("POST", "alerts/{alert_id}/resolve", observability_alerts_resolve_handler),
+        ("GET", "health", observability_health_handler),
+        ("GET", "dashboard", observability_dashboard_handler),
+        ("GET", "retention", observability_retention_handler),
+        ("PUT", "retention", observability_retention_handler),
+    ]
+    register_dual_prefix_routes(
+        app,
+        route_specs=route_specs,
+        v1_prefix=f"{MANAGEMENT_V1_PREFIX}/observability",
+        legacy_prefix="/management/observability",
+    )
+    logger.info("observability_api_routes_registered v1=%s/observability", MANAGEMENT_V1_PREFIX)

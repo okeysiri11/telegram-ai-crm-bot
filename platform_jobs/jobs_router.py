@@ -148,15 +148,22 @@ async def jobs_dashboard_handler(_request: web.Request, ctx: ManagementContext) 
 
 
 def register_jobs_routes(app: web.Application) -> None:
-    prefix = "/management/jobs"
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
 
-    app.router.add_get(prefix, jobs_status_handler)
-    app.router.add_get(f"{prefix}/scheduler", jobs_scheduler_handler)
-    app.router.add_get(f"{prefix}/workers", jobs_workers_handler)
-    app.router.add_get(f"{prefix}/history", jobs_history_handler)
-    app.router.add_get(f"{prefix}/statistics", jobs_statistics_handler)
-    app.router.add_get(f"{prefix}/dashboard", jobs_dashboard_handler)
-    app.router.add_post(prefix, jobs_enqueue_handler)
-    app.router.add_post(f"{prefix}/{{job_id}}/cancel", jobs_cancel_handler)
-
-    logger.info("jobs_api_routes_registered prefix=%s", prefix)
+    route_specs = [
+        ("GET", "", jobs_status_handler),
+        ("GET", "scheduler", jobs_scheduler_handler),
+        ("GET", "workers", jobs_workers_handler),
+        ("GET", "history", jobs_history_handler),
+        ("GET", "statistics", jobs_statistics_handler),
+        ("GET", "dashboard", jobs_dashboard_handler),
+        ("POST", "", jobs_enqueue_handler),
+        ("POST", "{job_id}/cancel", jobs_cancel_handler),
+    ]
+    register_dual_prefix_routes(
+        app,
+        route_specs=route_specs,
+        v1_prefix=f"{MANAGEMENT_V1_PREFIX}/jobs",
+        legacy_prefix="/management/jobs",
+    )
+    logger.info("jobs_api_routes_registered v1=%s/jobs", MANAGEMENT_V1_PREFIX)

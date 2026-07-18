@@ -138,17 +138,24 @@ async def workflows_resume_handler(request: web.Request, ctx: ManagementContext)
 
 
 def register_workflows_routes(app: web.Application) -> None:
-    prefix = "/management/ai/workflows"
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
 
-    app.router.add_get(prefix, workflows_status_handler)
-    app.router.add_get(f"{prefix}/list", workflows_list_handler)
-    app.router.add_get(f"{prefix}/templates", workflows_templates_handler)
-    app.router.add_get(f"{prefix}/history", workflows_history_handler)
-    app.router.add_get(f"{prefix}/metrics", workflows_metrics_handler)
-    app.router.add_get(f"{prefix}/metrics/{{workflow_id}}", workflows_metrics_handler)
-    app.router.add_post(f"{prefix}/execute", workflows_execute_handler)
-    app.router.add_post(f"{prefix}/execute/{{workflow_id}}", workflows_execute_handler)
-    app.router.add_post(f"{prefix}/{{execution_id}}/cancel", workflows_cancel_handler)
-    app.router.add_post(f"{prefix}/{{execution_id}}/resume", workflows_resume_handler)
-
-    logger.info("workflows_api_routes_registered prefix=%s", prefix)
+    route_specs = [
+        ("GET", "", workflows_status_handler),
+        ("GET", "list", workflows_list_handler),
+        ("GET", "templates", workflows_templates_handler),
+        ("GET", "history", workflows_history_handler),
+        ("GET", "metrics", workflows_metrics_handler),
+        ("GET", "metrics/{workflow_id}", workflows_metrics_handler),
+        ("POST", "execute", workflows_execute_handler),
+        ("POST", "execute/{workflow_id}", workflows_execute_handler),
+        ("POST", "{execution_id}/cancel", workflows_cancel_handler),
+        ("POST", "{execution_id}/resume", workflows_resume_handler),
+    ]
+    register_dual_prefix_routes(
+        app,
+        route_specs=route_specs,
+        v1_prefix=f"{MANAGEMENT_V1_PREFIX}/ai/workflows",
+        legacy_prefix="/management/ai/workflows",
+    )
+    logger.info("workflows_api_routes_registered v1=%s/ai/workflows", MANAGEMENT_V1_PREFIX)

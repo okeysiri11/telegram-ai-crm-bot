@@ -121,19 +121,27 @@ async def integrations_statistics_handler(_request: web.Request, ctx: Management
 
 
 def register_integration_routes(app: web.Application) -> None:
-    prefix = "/management/integrations"
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
 
-    app.router.add_get(prefix, integrations_status_handler)
-    app.router.add_get(f"{prefix}/connectors", integrations_connectors_handler)
-    app.router.add_post(f"{prefix}/connectors/{{connector_id}}/enable", integrations_connector_enable_handler)
-    app.router.add_post(f"{prefix}/connectors/{{connector_id}}/disable", integrations_connector_disable_handler)
-    app.router.add_get(f"{prefix}/webhooks", integrations_webhooks_handler)
-    app.router.add_post(f"{prefix}/webhooks", integrations_webhooks_create_handler)
-    app.router.add_get(f"{prefix}/health", integrations_health_handler)
-    app.router.add_get(f"{prefix}/statistics", integrations_statistics_handler)
+    route_specs = [
+        ("GET", "", integrations_status_handler),
+        ("GET", "connectors", integrations_connectors_handler),
+        ("POST", "connectors/{connector_id}/enable", integrations_connector_enable_handler),
+        ("POST", "connectors/{connector_id}/disable", integrations_connector_disable_handler),
+        ("GET", "webhooks", integrations_webhooks_handler),
+        ("POST", "webhooks", integrations_webhooks_create_handler),
+        ("GET", "health", integrations_health_handler),
+        ("GET", "statistics", integrations_statistics_handler),
+    ]
+    register_dual_prefix_routes(
+        app,
+        route_specs=route_specs,
+        v1_prefix=f"{MANAGEMENT_V1_PREFIX}/integrations",
+        legacy_prefix="/management/integrations",
+    )
 
     from platform_integrations.webhook_router import register_webhook_routes
 
     register_webhook_routes(app)
 
-    logger.info("integration_api_routes_registered prefix=%s", prefix)
+    logger.info("integration_api_routes_registered v1=%s/integrations", MANAGEMENT_V1_PREFIX)

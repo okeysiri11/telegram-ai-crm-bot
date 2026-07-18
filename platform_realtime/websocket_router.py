@@ -175,8 +175,14 @@ async def _on_cleanup(app: web.Application) -> None:
 
 
 def register_realtime_routes(app: web.Application) -> None:
-    prefix = "/management"
-    app.router.add_get(f"{prefix}/realtime/ws", websocket_handler)
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
+
+    register_dual_prefix_routes(
+        app,
+        route_specs=[("GET", "realtime/ws", websocket_handler)],
+        v1_prefix=MANAGEMENT_V1_PREFIX,
+        legacy_prefix="/management",
+    )
     app.on_startup.append(_on_startup)
     app.on_cleanup.append(_on_cleanup)
-    logger.info("realtime_websocket_route_registered path=%s/realtime/ws", prefix)
+    logger.info("realtime_websocket_route_registered v1=%s/realtime/ws", MANAGEMENT_V1_PREFIX)

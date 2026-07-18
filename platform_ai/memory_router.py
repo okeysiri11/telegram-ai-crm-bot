@@ -162,23 +162,28 @@ async def knowledge_delete_handler(request: web.Request, ctx: ManagementContext)
 
 
 def register_memory_routes(app: web.Application) -> None:
-    prefix = "/management/ai/memory"
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
 
-    app.router.add_get(prefix, memory_status_handler)
-    app.router.add_get(f"{prefix}/statistics", memory_status_handler)
-    app.router.add_get(f"{prefix}/recall", memory_recall_handler)
-    app.router.add_get(f"{prefix}/recall/{{memory_id}}", memory_recall_handler)
-    app.router.add_post(f"{prefix}/remember", memory_remember_handler)
-    app.router.add_delete(f"{prefix}/{{memory_id}}", memory_forget_handler)
-    app.router.add_get(f"{prefix}/search", memory_search_handler)
-    app.router.add_post(f"{prefix}/search", memory_search_handler)
-
-    kb = f"{prefix}/knowledge"
-    app.router.add_get(kb, knowledge_list_handler)
-    app.router.add_post(f"{kb}/index", knowledge_index_handler)
-    app.router.add_post(f"{kb}/rebuild", knowledge_rebuild_handler)
-    app.router.add_delete(f"{kb}/{{document_id}}", knowledge_delete_handler)
-    app.router.add_get(f"{kb}/search", memory_search_handler)
-    app.router.add_post(f"{kb}/search", memory_search_handler)
-
-    logger.info("memory_api_routes_registered prefix=%s", prefix)
+    route_specs = [
+        ("GET", "", memory_status_handler),
+        ("GET", "statistics", memory_status_handler),
+        ("GET", "recall", memory_recall_handler),
+        ("GET", "recall/{memory_id}", memory_recall_handler),
+        ("POST", "remember", memory_remember_handler),
+        ("DELETE", "{memory_id}", memory_forget_handler),
+        ("GET", "search", memory_search_handler),
+        ("POST", "search", memory_search_handler),
+        ("GET", "knowledge", knowledge_list_handler),
+        ("POST", "knowledge/index", knowledge_index_handler),
+        ("POST", "knowledge/rebuild", knowledge_rebuild_handler),
+        ("DELETE", "knowledge/{document_id}", knowledge_delete_handler),
+        ("GET", "knowledge/search", memory_search_handler),
+        ("POST", "knowledge/search", memory_search_handler),
+    ]
+    register_dual_prefix_routes(
+        app,
+        route_specs=route_specs,
+        v1_prefix=f"{MANAGEMENT_V1_PREFIX}/ai/memory",
+        legacy_prefix="/management/ai/memory",
+    )
+    logger.info("memory_api_routes_registered v1=%s/ai/memory", MANAGEMENT_V1_PREFIX)

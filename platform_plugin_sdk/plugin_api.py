@@ -114,9 +114,10 @@ class ObservabilityApi:
 
 
 class ManagementApi:
-    """Management API path metadata (no direct HTTP from plugins)."""
+    """Path metadata for frozen management API v1 — plugins must not call HTTP directly."""
 
-    PREFIX = "/management"
+    VERSION = "v1"
+    PREFIX = "/management/v1"
 
     @classmethod
     def path(cls, resource: str) -> str:

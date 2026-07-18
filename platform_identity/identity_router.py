@@ -175,22 +175,29 @@ def _client_ip(request: web.Request) -> str:
 
 
 def register_identity_routes(app: web.Application) -> None:
-    prefix = "/management/identity"
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
 
-    app.router.add_get(prefix, identity_status_handler)
-    app.router.add_get(f"{prefix}/users", identity_users_handler)
-    app.router.add_get(f"{prefix}/roles", identity_roles_handler)
-    app.router.add_get(f"{prefix}/permissions", identity_permissions_handler)
-    app.router.add_get(f"{prefix}/sessions", identity_sessions_handler)
-    app.router.add_post(f"{prefix}/sessions/{{session_id}}/revoke", identity_session_revoke_handler)
-    app.router.add_get(f"{prefix}/api-keys", identity_api_keys_handler)
-    app.router.add_post(f"{prefix}/api-keys", identity_api_keys_create_handler)
-    app.router.add_post(f"{prefix}/api-keys/{{key_id}}/rotate", identity_api_keys_rotate_handler)
-    app.router.add_post(f"{prefix}/api-keys/{{key_id}}/disable", identity_api_keys_disable_handler)
-    app.router.add_get(f"{prefix}/policies", identity_policies_handler)
-    app.router.add_post(f"{prefix}/policies", identity_policies_create_handler)
-    app.router.add_delete(f"{prefix}/policies/{{policy_id}}", identity_policies_delete_handler)
-    app.router.add_post(f"{prefix}/login", identity_login_public_handler)
-    app.router.add_post(f"{prefix}/refresh", identity_refresh_public_handler)
-
-    logger.info("identity_api_routes_registered prefix=%s", prefix)
+    route_specs = [
+        ("GET", "", identity_status_handler),
+        ("GET", "users", identity_users_handler),
+        ("GET", "roles", identity_roles_handler),
+        ("GET", "permissions", identity_permissions_handler),
+        ("GET", "sessions", identity_sessions_handler),
+        ("POST", "sessions/{session_id}/revoke", identity_session_revoke_handler),
+        ("GET", "api-keys", identity_api_keys_handler),
+        ("POST", "api-keys", identity_api_keys_create_handler),
+        ("POST", "api-keys/{key_id}/rotate", identity_api_keys_rotate_handler),
+        ("POST", "api-keys/{key_id}/disable", identity_api_keys_disable_handler),
+        ("GET", "policies", identity_policies_handler),
+        ("POST", "policies", identity_policies_create_handler),
+        ("DELETE", "policies/{policy_id}", identity_policies_delete_handler),
+        ("POST", "login", identity_login_public_handler),
+        ("POST", "refresh", identity_refresh_public_handler),
+    ]
+    register_dual_prefix_routes(
+        app,
+        route_specs=route_specs,
+        v1_prefix=f"{MANAGEMENT_V1_PREFIX}/identity",
+        legacy_prefix="/management/identity",
+    )
+    logger.info("identity_api_routes_registered v1=%s/identity", MANAGEMENT_V1_PREFIX)

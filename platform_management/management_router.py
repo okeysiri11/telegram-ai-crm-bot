@@ -13,42 +13,35 @@ from platform_management.management_service import management_service
 from platform_management.permissions import ManagementRole, require_role
 from platform_management.response_models import error_response, success_response
 
+from platform_api.versioning import (
+    MANAGEMENT_V1_PREFIX,
+    build_management_openapi_spec,
+    legacy_management_path,
+    record_openapi_v1_path,
+    wrap_legacy_handler,
+)
+
 logger = logging.getLogger(__name__)
-
-_OPENAPI_PATHS: dict[str, dict[str, Any]] = {}
-
-
-def _record_openapi(path: str, method: str, *, role: ManagementRole, summary: str) -> None:
-    methods = _OPENAPI_PATHS.setdefault(path, {})
-    methods[method.lower()] = {
-        "summary": summary,
-        "security": [{"BearerAuth": []}, {"ApiKeyAuth": []}],
-        "parameters": [],
-        "responses": {
-            "200": {
-                "description": "Standard management envelope",
-                "content": {
-                    "application/json": {
-                        "schema": {"$ref": "#/components/schemas/ManagementResponse"}
-                    }
-                },
-            }
-        },
-        "x-required-role": role.value,
-    }
 
 
 def _route(
     app: web.Application,
     method: str,
-    path: str,
+    suffix: str,
     handler,
     *,
     role: ManagementRole,
     summary: str,
 ) -> None:
-    _record_openapi(path, method, role=role, summary=summary)
-    getattr(app.router, f"add_{method.lower()}")(path, handler)
+    v1_path = f"{MANAGEMENT_V1_PREFIX}/{suffix.lstrip('/')}"
+    legacy_path = legacy_management_path(suffix)
+    record_openapi_v1_path(v1_path, method, summary=summary, required_role=role.value)
+    getattr(app.router, f"add_{method.lower()}")(v1_path, handler)
+    if legacy_path != v1_path:
+        getattr(app.router, f"add_{method.lower()}")(
+            legacy_path,
+            wrap_legacy_handler(handler, successor=v1_path),
+        )
 
 
 async def _json_body(request: web.Request) -> dict[str, Any]:
@@ -288,13 +281,28 @@ async def event_bus_handler(_request: web.Request, ctx: ManagementContext) -> we
 
 @require_role(ManagementRole.READ_ONLY)
 async def audit_search_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+    from platform_api.contracts import AuditSearchData
+    from platform_api.pagination import PaginatedResponse, PaginationMeta, PaginationParams
+
+    params = PaginationParams.from_query(dict(request.query))
     rows = await management_service.audit_search(
         event_type=request.query.get("event_type"),
         entity_type=request.query.get("entity_type"),
         entity_id=request.query.get("entity_id"),
-        limit=int(request.query.get("limit", "100")),
+        limit=params.page_size,
     )
-    return _ok({"entries": rows, "count": len(rows)}, ctx)
+    total = len(rows)
+    page_rows = rows[params.offset : params.offset + params.page_size]
+    payload = PaginatedResponse(
+        items=page_rows,
+        pagination=PaginationMeta.build(page=params.page, page_size=params.page_size, total=total),
+    )
+    data = AuditSearchData(
+        entries=page_rows,
+        count=len(page_rows),
+        pagination=payload.pagination.model_dump(),
+    )
+    return _ok(data.model_dump(), ctx)
 
 
 @require_role(ManagementRole.READ_ONLY)
@@ -432,97 +440,58 @@ async def dashboard_audit_timeline_handler(request: web.Request, ctx: Management
 # ---- OPENAPI ----
 
 async def openapi_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
-    spec = {
-        "openapi": "3.0.3",
-        "info": {
-            "title": "Platform Management API",
-            "version": "1.0.0",
-            "description": "Single management interface for the TelegramBotCourse platform.",
-        },
-        "servers": [{"url": "/"}],
-        "components": {
-            "securitySchemes": {
-                "BearerAuth": {
-                    "type": "http",
-                    "scheme": "bearer",
-                    "bearerFormat": "JWT",
-                },
-                "ApiKeyAuth": {
-                    "type": "apiKey",
-                    "in": "header",
-                    "name": "X-API-Key",
-                },
-            },
-            "schemas": {
-                "ManagementResponse": {
-                    "type": "object",
-                    "properties": {
-                        "success": {"type": "boolean"},
-                        "timestamp": {"type": "string", "format": "date-time"},
-                        "request_id": {"type": "string", "format": "uuid"},
-                        "data": {},
-                        "errors": {"type": "array", "items": {"type": "string"}},
-                    },
-                    "required": ["success", "timestamp", "request_id", "data", "errors"],
-                }
-            },
-        },
-        "paths": _OPENAPI_PATHS,
-    }
-    return web.json_response(spec)
+    return web.json_response(build_management_openapi_spec())
 
 
 async def swagger_ui_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
-    html = """<!DOCTYPE html>
-<html><head><title>Platform Management API</title>
+    html = f"""<!DOCTYPE html>
+<html><head><title>Platform Management API v1</title>
 <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
 </head><body>
 <div id="swagger-ui"></div>
 <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
 <script>
-SwaggerUIBundle({url: '/management/openapi.json', dom_id: '#swagger-ui'});
+SwaggerUIBundle({{url: '{MANAGEMENT_V1_PREFIX}/openapi.json', dom_id: '#swagger-ui'}});
 </script></body></html>"""
     return web.Response(text=html, content_type="text/html")
 
 
 def register_management_routes(app: web.Application) -> None:
-    prefix = "/management"
+    _route(app, "GET", "system", system_handler, role=ManagementRole.READ_ONLY, summary="Platform system info")
+    _route(app, "GET", "health", health_handler, role=ManagementRole.READ_ONLY, summary="Subsystem health")
 
-    _route(app, "GET", f"{prefix}/system", system_handler, role=ManagementRole.READ_ONLY, summary="Platform system info")
-    _route(app, "GET", f"{prefix}/health", health_handler, role=ManagementRole.READ_ONLY, summary="Subsystem health")
+    _route(app, "GET", "configuration", config_list_handler, role=ManagementRole.READ_ONLY, summary="List configuration")
+    _route(app, "GET", "configuration/export", config_export_handler, role=ManagementRole.READ_ONLY, summary="Export configuration")
+    _route(app, "POST", "configuration/validate", config_validate_handler, role=ManagementRole.READ_ONLY, summary="Validate configuration")
+    _route(app, "POST", "configuration/import", config_import_handler, role=ManagementRole.ADMINISTRATOR, summary="Import configuration")
+    _route(app, "GET", "configuration/{key:.+}/history", config_history_handler, role=ManagementRole.READ_ONLY, summary="Configuration history")
+    _route(app, "POST", "configuration/{key:.+}/rollback", config_rollback_handler, role=ManagementRole.ADMINISTRATOR, summary="Rollback configuration")
+    _route(app, "GET", "configuration/{key:.+}", config_get_handler, role=ManagementRole.READ_ONLY, summary="Get configuration key")
+    _route(app, "PUT", "configuration/{key:.+}", config_set_handler, role=ManagementRole.ADMINISTRATOR, summary="Set configuration key")
+    _route(app, "POST", "configuration/{key:.+}", config_set_handler, role=ManagementRole.ADMINISTRATOR, summary="Set configuration key (POST)")
+    _route(app, "DELETE", "configuration/{key:.+}", config_delete_handler, role=ManagementRole.ADMINISTRATOR, summary="Delete configuration key")
 
-    _route(app, "GET", f"{prefix}/configuration", config_list_handler, role=ManagementRole.READ_ONLY, summary="List configuration")
-    _route(app, "GET", f"{prefix}/configuration/export", config_export_handler, role=ManagementRole.READ_ONLY, summary="Export configuration")
-    _route(app, "POST", f"{prefix}/configuration/validate", config_validate_handler, role=ManagementRole.READ_ONLY, summary="Validate configuration")
-    _route(app, "POST", f"{prefix}/configuration/import", config_import_handler, role=ManagementRole.ADMINISTRATOR, summary="Import configuration")
-    _route(app, "GET", f"{prefix}/configuration/{{key:.+}}/history", config_history_handler, role=ManagementRole.READ_ONLY, summary="Configuration history")
-    _route(app, "POST", f"{prefix}/configuration/{{key:.+}}/rollback", config_rollback_handler, role=ManagementRole.ADMINISTRATOR, summary="Rollback configuration")
-    _route(app, "GET", f"{prefix}/configuration/{{key:.+}}", config_get_handler, role=ManagementRole.READ_ONLY, summary="Get configuration key")
-    _route(app, "PUT", f"{prefix}/configuration/{{key:.+}}", config_set_handler, role=ManagementRole.ADMINISTRATOR, summary="Set configuration key")
-    _route(app, "POST", f"{prefix}/configuration/{{key:.+}}", config_set_handler, role=ManagementRole.ADMINISTRATOR, summary="Set configuration key (POST)")
-    _route(app, "DELETE", f"{prefix}/configuration/{{key:.+}}", config_delete_handler, role=ManagementRole.ADMINISTRATOR, summary="Delete configuration key")
+    _route(app, "GET", "verticals", verticals_list_handler, role=ManagementRole.READ_ONLY, summary="List verticals")
+    _route(app, "GET", "verticals/{code}", vertical_get_handler, role=ManagementRole.READ_ONLY, summary="Get vertical")
+    _route(app, "POST", "verticals/{code}/enable", vertical_enable_handler, role=ManagementRole.ADMINISTRATOR, summary="Enable vertical")
+    _route(app, "POST", "verticals/{code}/disable", vertical_disable_handler, role=ManagementRole.ADMINISTRATOR, summary="Disable vertical")
+    _route(app, "POST", "verticals/{code}/reload", vertical_reload_handler, role=ManagementRole.ADMINISTRATOR, summary="Reload vertical")
 
-    _route(app, "GET", f"{prefix}/verticals", verticals_list_handler, role=ManagementRole.READ_ONLY, summary="List verticals")
-    _route(app, "GET", f"{prefix}/verticals/{{code}}", vertical_get_handler, role=ManagementRole.READ_ONLY, summary="Get vertical")
-    _route(app, "POST", f"{prefix}/verticals/{{code}}/enable", vertical_enable_handler, role=ManagementRole.ADMINISTRATOR, summary="Enable vertical")
-    _route(app, "POST", f"{prefix}/verticals/{{code}}/disable", vertical_disable_handler, role=ManagementRole.ADMINISTRATOR, summary="Disable vertical")
-    _route(app, "POST", f"{prefix}/verticals/{{code}}/reload", vertical_reload_handler, role=ManagementRole.ADMINISTRATOR, summary="Reload vertical")
+    _route(app, "GET", "workflows", workflows_list_handler, role=ManagementRole.READ_ONLY, summary="List workflows")
+    _route(app, "POST", "workflows/reload", workflows_reload_handler, role=ManagementRole.ADMINISTRATOR, summary="Reload workflows")
+    _route(app, "GET", "workflows/validate", workflows_validate_handler, role=ManagementRole.READ_ONLY, summary="Validate workflows")
+    _route(app, "GET", "workflows/statistics", workflows_statistics_handler, role=ManagementRole.READ_ONLY, summary="Workflow statistics")
+    _route(app, "GET", "workflows/executions", workflows_executions_handler, role=ManagementRole.READ_ONLY, summary="Active workflow executions")
 
-    _route(app, "GET", f"{prefix}/workflows", workflows_list_handler, role=ManagementRole.READ_ONLY, summary="List workflows")
-    _route(app, "POST", f"{prefix}/workflows/reload", workflows_reload_handler, role=ManagementRole.ADMINISTRATOR, summary="Reload workflows")
-    _route(app, "GET", f"{prefix}/workflows/validate", workflows_validate_handler, role=ManagementRole.READ_ONLY, summary="Validate workflows")
-    _route(app, "GET", f"{prefix}/workflows/statistics", workflows_statistics_handler, role=ManagementRole.READ_ONLY, summary="Workflow statistics")
-    _route(app, "GET", f"{prefix}/workflows/executions", workflows_executions_handler, role=ManagementRole.READ_ONLY, summary="Active workflow executions")
+    _route(app, "GET", "managers", managers_overview_handler, role=ManagementRole.READ_ONLY, summary="Managers overview")
+    _route(app, "GET", "requests", requests_overview_handler, role=ManagementRole.READ_ONLY, summary="Requests overview")
+    _route(app, "GET", "events", event_bus_handler, role=ManagementRole.READ_ONLY, summary="Event bus status")
 
-    _route(app, "GET", f"{prefix}/managers", managers_overview_handler, role=ManagementRole.READ_ONLY, summary="Managers overview")
-    _route(app, "GET", f"{prefix}/requests", requests_overview_handler, role=ManagementRole.READ_ONLY, summary="Requests overview")
-    _route(app, "GET", f"{prefix}/events", event_bus_handler, role=ManagementRole.READ_ONLY, summary="Event bus status")
+    _route(app, "GET", "audit", audit_search_handler, role=ManagementRole.READ_ONLY, summary="Search audit")
+    _route(app, "GET", "audit/export", audit_export_handler, role=ManagementRole.READ_ONLY, summary="Export audit")
+    _route(app, "GET", "audit/history", audit_history_handler, role=ManagementRole.READ_ONLY, summary="Audit history")
 
-    _route(app, "GET", f"{prefix}/audit", audit_search_handler, role=ManagementRole.READ_ONLY, summary="Search audit")
-    _route(app, "GET", f"{prefix}/audit/export", audit_export_handler, role=ManagementRole.READ_ONLY, summary="Export audit")
-    _route(app, "GET", f"{prefix}/audit/history", audit_history_handler, role=ManagementRole.READ_ONLY, summary="Audit history")
-
-    _route(app, "GET", f"{prefix}/kpi", kpi_handler, role=ManagementRole.READ_ONLY, summary="KPI dashboard")
+    _route(app, "GET", "kpi", kpi_handler, role=ManagementRole.READ_ONLY, summary="KPI dashboard")
 
     from platform_plugins.plugins_router import register_plugins_routes
 
@@ -540,18 +509,18 @@ def register_management_routes(app: web.Application) -> None:
 
     register_memory_routes(app)
 
-    _route(app, "GET", f"{prefix}/feature-flags", feature_flags_list_handler, role=ManagementRole.READ_ONLY, summary="List feature flags")
-    _route(app, "POST", f"{prefix}/feature-flags/{{key:.+}}/enable", feature_flags_enable_handler, role=ManagementRole.ADMINISTRATOR, summary="Enable feature flag")
-    _route(app, "POST", f"{prefix}/feature-flags/{{key:.+}}/disable", feature_flags_disable_handler, role=ManagementRole.ADMINISTRATOR, summary="Disable feature flag")
-    _route(app, "GET", f"{prefix}/feature-flags/validate", feature_flags_validate_handler, role=ManagementRole.READ_ONLY, summary="Validate feature flags")
+    _route(app, "GET", "feature-flags", feature_flags_list_handler, role=ManagementRole.READ_ONLY, summary="List feature flags")
+    _route(app, "POST", "feature-flags/{key:.+}/enable", feature_flags_enable_handler, role=ManagementRole.ADMINISTRATOR, summary="Enable feature flag")
+    _route(app, "POST", "feature-flags/{key:.+}/disable", feature_flags_disable_handler, role=ManagementRole.ADMINISTRATOR, summary="Disable feature flag")
+    _route(app, "GET", "feature-flags/validate", feature_flags_validate_handler, role=ManagementRole.READ_ONLY, summary="Validate feature flags")
 
-    _route(app, "GET", f"{prefix}/dashboard", dashboard_handler, role=ManagementRole.READ_ONLY, summary="Operations dashboard (all widgets)")
-    _route(app, "GET", f"{prefix}/dashboard/widgets/{{widget_id}}", dashboard_widget_handler, role=ManagementRole.READ_ONLY, summary="Single dashboard widget")
-    _route(app, "GET", f"{prefix}/dashboard/metrics", dashboard_metrics_handler, role=ManagementRole.READ_ONLY, summary="KPI metrics")
-    _route(app, "GET", f"{prefix}/dashboard/timeline/events", dashboard_event_timeline_handler, role=ManagementRole.READ_ONLY, summary="Event timeline")
-    _route(app, "GET", f"{prefix}/dashboard/timeline/audit", dashboard_audit_timeline_handler, role=ManagementRole.READ_ONLY, summary="Audit timeline")
+    _route(app, "GET", "dashboard", dashboard_handler, role=ManagementRole.READ_ONLY, summary="Operations dashboard (all widgets)")
+    _route(app, "GET", "dashboard/widgets/{widget_id}", dashboard_widget_handler, role=ManagementRole.READ_ONLY, summary="Single dashboard widget")
+    _route(app, "GET", "dashboard/metrics", dashboard_metrics_handler, role=ManagementRole.READ_ONLY, summary="KPI metrics")
+    _route(app, "GET", "dashboard/timeline/events", dashboard_event_timeline_handler, role=ManagementRole.READ_ONLY, summary="Event timeline")
+    _route(app, "GET", "dashboard/timeline/audit", dashboard_audit_timeline_handler, role=ManagementRole.READ_ONLY, summary="Audit timeline")
 
-    _route(app, "GET", f"{prefix}/realtime", realtime_status_handler, role=ManagementRole.READ_ONLY, summary="Realtime connections and statistics")
+    _route(app, "GET", "realtime", realtime_status_handler, role=ManagementRole.READ_ONLY, summary="Realtime connections and statistics")
 
     from platform_realtime.websocket_router import register_realtime_routes
 
@@ -573,7 +542,23 @@ def register_management_routes(app: web.Application) -> None:
 
     register_observability_routes(app)
 
-    app.router.add_get(f"{prefix}/openapi.json", require_role(ManagementRole.READ_ONLY)(openapi_handler))
-    app.router.add_get(f"{prefix}/docs", require_role(ManagementRole.READ_ONLY)(swagger_ui_handler))
+    v1_openapi = f"{MANAGEMENT_V1_PREFIX}/openapi.json"
+    v1_docs = f"{MANAGEMENT_V1_PREFIX}/docs"
+    legacy_openapi = legacy_management_path("openapi.json")
+    legacy_docs = legacy_management_path("docs")
 
-    logger.info("management_api_routes_registered count=%s", len(_OPENAPI_PATHS) + 2)
+    app.router.add_get(v1_openapi, require_role(ManagementRole.READ_ONLY)(openapi_handler))
+    app.router.add_get(v1_docs, require_role(ManagementRole.READ_ONLY)(swagger_ui_handler))
+    app.router.add_get(
+        legacy_openapi,
+        require_role(ManagementRole.READ_ONLY)(wrap_legacy_handler(openapi_handler, successor=v1_openapi)),
+    )
+    app.router.add_get(
+        legacy_docs,
+        require_role(ManagementRole.READ_ONLY)(wrap_legacy_handler(swagger_ui_handler, successor=v1_docs)),
+    )
+
+    logger.info(
+        "management_api_routes_registered v1_prefix=%s legacy_compat=true",
+        MANAGEMENT_V1_PREFIX,
+    )

@@ -140,16 +140,23 @@ async def ai_complete_handler(request: web.Request, ctx: ManagementContext) -> w
 
 
 def register_ai_routes(app: web.Application) -> None:
-    prefix = "/management/ai"
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
 
-    app.router.add_get(prefix, ai_status_handler)
-    app.router.add_get(f"{prefix}/providers", ai_providers_handler)
-    app.router.add_get(f"{prefix}/models", ai_models_handler)
-    app.router.add_get(f"{prefix}/prompts", ai_prompts_handler)
-    app.router.add_get(f"{prefix}/statistics", ai_statistics_handler)
-    app.router.add_get(f"{prefix}/costs", ai_costs_handler)
-    app.router.add_get(f"{prefix}/cache", ai_statistics_handler)
-    app.router.add_post(f"{prefix}/cache/invalidate", ai_cache_invalidate_handler)
-    app.router.add_post(f"{prefix}/complete", ai_complete_handler)
-
-    logger.info("ai_api_routes_registered prefix=%s", prefix)
+    route_specs = [
+        ("GET", "", ai_status_handler),
+        ("GET", "providers", ai_providers_handler),
+        ("GET", "models", ai_models_handler),
+        ("GET", "prompts", ai_prompts_handler),
+        ("GET", "statistics", ai_statistics_handler),
+        ("GET", "costs", ai_costs_handler),
+        ("GET", "cache", ai_statistics_handler),
+        ("POST", "cache/invalidate", ai_cache_invalidate_handler),
+        ("POST", "complete", ai_complete_handler),
+    ]
+    register_dual_prefix_routes(
+        app,
+        route_specs=route_specs,
+        v1_prefix=f"{MANAGEMENT_V1_PREFIX}/ai",
+        legacy_prefix="/management/ai",
+    )
+    logger.info("ai_api_routes_registered v1=%s/ai", MANAGEMENT_V1_PREFIX)

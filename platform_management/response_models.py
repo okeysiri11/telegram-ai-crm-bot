@@ -1,20 +1,26 @@
-# Standard Management API response envelope.
+# Standard Management API response envelope — delegates to frozen platform_api contracts.
 
 from __future__ import annotations
 
-import uuid
-from datetime import datetime, timezone
 from typing import Any
 
 from aiohttp import web
 
+from platform_api.responses import (
+    ApiEnvelope,
+    error_response as _error_response,
+    new_request_id,
+    success_response as _success_response,
+    utc_now_iso,
+)
 
-def utc_now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def new_request_id() -> str:
-    return str(uuid.uuid4())
+__all__ = [
+    "ApiEnvelope",
+    "error_response",
+    "new_request_id",
+    "success_response",
+    "utc_now_iso",
+]
 
 
 def success_response(
@@ -23,14 +29,7 @@ def success_response(
     request_id: str | None = None,
     status: int = 200,
 ) -> web.Response:
-    payload = {
-        "success": True,
-        "timestamp": utc_now_iso(),
-        "request_id": request_id or new_request_id(),
-        "data": data,
-        "errors": [],
-    }
-    return web.json_response(payload, status=status)
+    return _success_response(data, request_id=request_id, status=status)
 
 
 def error_response(
@@ -40,12 +39,4 @@ def error_response(
     status: int = 400,
     data: Any = None,
 ) -> web.Response:
-    err_list = [errors] if isinstance(errors, str) else list(errors)
-    payload = {
-        "success": False,
-        "timestamp": utc_now_iso(),
-        "request_id": request_id or new_request_id(),
-        "data": data,
-        "errors": err_list,
-    }
-    return web.json_response(payload, status=status)
+    return _error_response(errors, request_id=request_id, status=status, data=data)

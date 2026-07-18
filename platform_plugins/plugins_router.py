@@ -162,21 +162,28 @@ async def plugins_schema_handler(_request: web.Request, ctx: ManagementContext) 
 
 
 def register_plugins_routes(app: web.Application) -> None:
-    prefix = "/management/plugins"
+    from platform_api.versioning import MANAGEMENT_V1_PREFIX, register_dual_prefix_routes
 
-    app.router.add_get(prefix, plugins_list_handler)
-    app.router.add_get(f"{prefix}/schema", plugins_schema_handler)
-    app.router.add_get(f"{prefix}/dependencies", plugins_dependencies_handler)
-    app.router.add_get(f"{prefix}/health", plugins_health_handler)
-    app.router.add_post(f"{prefix}/install", plugins_install_handler)
-    app.router.add_post(f"{prefix}/reload", plugins_reload_handler)
-    app.router.add_get(f"{prefix}/{{plugin_id}}", plugins_get_handler)
-    app.router.add_post(f"{prefix}/{{plugin_id}}/install", plugins_install_handler)
-    app.router.add_post(f"{prefix}/{{plugin_id}}/enable", plugins_enable_handler)
-    app.router.add_post(f"{prefix}/{{plugin_id}}/disable", plugins_disable_handler)
-    app.router.add_post(f"{prefix}/{{plugin_id}}/reload", plugins_reload_handler)
-    app.router.add_post(f"{prefix}/{{plugin_id}}/upgrade", plugins_upgrade_handler)
-    app.router.add_post(f"{prefix}/{{plugin_id}}/uninstall", plugins_uninstall_handler)
-    app.router.add_get(f"{prefix}/{{plugin_id}}/health", plugins_health_handler)
-
-    logger.info("plugins_api_routes_registered prefix=%s", prefix)
+    route_specs = [
+        ("GET", "", plugins_list_handler),
+        ("GET", "schema", plugins_schema_handler),
+        ("GET", "dependencies", plugins_dependencies_handler),
+        ("GET", "health", plugins_health_handler),
+        ("POST", "install", plugins_install_handler),
+        ("POST", "reload", plugins_reload_handler),
+        ("GET", "{plugin_id}", plugins_get_handler),
+        ("POST", "{plugin_id}/install", plugins_install_handler),
+        ("POST", "{plugin_id}/enable", plugins_enable_handler),
+        ("POST", "{plugin_id}/disable", plugins_disable_handler),
+        ("POST", "{plugin_id}/reload", plugins_reload_handler),
+        ("POST", "{plugin_id}/upgrade", plugins_upgrade_handler),
+        ("POST", "{plugin_id}/uninstall", plugins_uninstall_handler),
+        ("GET", "{plugin_id}/health", plugins_health_handler),
+    ]
+    register_dual_prefix_routes(
+        app,
+        route_specs=route_specs,
+        v1_prefix=f"{MANAGEMENT_V1_PREFIX}/plugins",
+        legacy_prefix="/management/plugins",
+    )
+    logger.info("plugins_api_routes_registered v1=%s/plugins", MANAGEMENT_V1_PREFIX)
