@@ -8,6 +8,7 @@ from typing import Any, TYPE_CHECKING
 
 from platform_plugin_sdk.models import PluginConfigSchema, PluginMetadata
 from platform_plugin_sdk.plugin_api import (
+    AiApi,
     ConfigurationApi,
     EventsApi,
     IamApi,
@@ -65,6 +66,7 @@ class PluginContext:
     _metrics: PluginMetrics | None = field(default=None, repr=False)
     _permissions: PluginPermissions | None = field(default=None, repr=False)
     _hooks: PluginHookRegistry | None = field(default=None, repr=False)
+    _ai: AiApi | None = field(default=None, repr=False)
 
     def bind_app(self, app: web.Application) -> None:
         self._app = app
@@ -179,6 +181,12 @@ class PluginContext:
         if self._hooks is None:
             self._hooks = PluginHookRegistry(self.plugin_id)
         return self._hooks
+
+    @property
+    def ai(self) -> AiApi:
+        if self._ai is None:
+            self._ai = AiApi(self.plugin_id)
+        return self._ai
 
     def get_config(self, key: str, default: Any = None) -> Any:
         return self.configuration.get(key, default)

@@ -11,6 +11,7 @@ const LABELS: Record<string, string> = {
   '/integrations': 'Integrations',
   '/plugins': 'Plugins',
   '/ai': 'AI Platform',
+  '/ai/skills': 'AI Skills',
   '/observability': 'Observability',
   '/system': 'System',
   '/settings': 'Settings',

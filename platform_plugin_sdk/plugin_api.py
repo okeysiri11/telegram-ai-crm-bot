@@ -135,6 +135,54 @@ class SdkApi:
         return vertical_builder.create_context(plugin_id=self._plugin_id, **metadata)
 
 
+class AiSkillsApi:
+    """Invoke AI Skills — plugins must not call LLM providers directly."""
+
+    def __init__(self, plugin_id: str) -> None:
+        self._plugin_id = plugin_id
+
+    async def execute(
+        self,
+        skill_id: str,
+        input: dict[str, Any] | None = None,
+        *,
+        user_id: str | None = None,
+        use_cache: bool = True,
+        context: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        from platform_ai.skills.models import SkillExecutionRequest
+        from platform_ai.skills.skill_manager import skill_manager
+
+        request = SkillExecutionRequest(
+            skill_id=skill_id,
+            input=dict(input or {}),
+            plugin_id=self._plugin_id,
+            user_id=user_id,
+            use_cache=use_cache,
+        )
+        result = await skill_manager.execute(request, extra_context=context)
+        return result.to_dict()
+
+    def list_skills(self) -> list[dict[str, Any]]:
+        from platform_ai.skills.skill_manager import skill_manager
+
+        return skill_manager.list_skills()
+
+
+class AiApi:
+    """AI Platform access for plugins — skills only, no direct provider calls."""
+
+    def __init__(self, plugin_id: str) -> None:
+        self._plugin_id = plugin_id
+        self._skills: AiSkillsApi | None = None
+
+    @property
+    def skills(self) -> AiSkillsApi:
+        if self._skills is None:
+            self._skills = AiSkillsApi(self._plugin_id)
+        return self._skills
+
+
 class RealtimeApiProtocol(Protocol):
     async def publish_widget_update(self, widget_id: str, data: dict[str, Any]) -> None: ...
     async def publish_channel_event(self, channel: str, event: str, data: dict[str, Any]) -> None: ...

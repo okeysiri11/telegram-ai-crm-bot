@@ -532,6 +532,9 @@ def register_management_routes(app: web.Application) -> None:
     from platform_ai.ai_router import register_ai_routes
 
     register_ai_routes(app)
+    from platform_ai.skills_router import register_skills_routes
+
+    register_skills_routes(app)
 
     _route(app, "GET", f"{prefix}/feature-flags", feature_flags_list_handler, role=ManagementRole.READ_ONLY, summary="List feature flags")
     _route(app, "POST", f"{prefix}/feature-flags/{{key:.+}}/enable", feature_flags_enable_handler, role=ManagementRole.ADMINISTRATOR, summary="Enable feature flag")

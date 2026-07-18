@@ -43,4 +43,10 @@ export const managementApi = {
   aiStatistics: () => apiGet<{ request_count: number; cache: Record<string, unknown>; providers: unknown[] }>('/management/ai/statistics'),
   aiCosts: () => apiGet<{ summary: AICostSummary; recent: unknown[] }>('/management/ai/costs'),
   aiComplete: (body: Record<string, unknown>) => apiPost<Record<string, unknown>>('/management/ai/complete', body),
+
+  aiSkillsList: () => apiGet<{ skills: unknown[] }>('/management/ai/skills/list'),
+  aiSkillsHealth: () => apiGet<{ skills: unknown[]; total: number }>('/management/ai/skills/health'),
+  aiSkillsMetrics: () => apiGet<{ total_executions: number; skills: Record<string, unknown> }>('/management/ai/skills/metrics'),
+  aiSkillsExecute: (body: Record<string, unknown>) =>
+    apiPost<Record<string, unknown>>('/management/ai/skills/execute', body),
 };
