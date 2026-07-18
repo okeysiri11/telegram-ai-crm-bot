@@ -565,6 +565,10 @@ def register_management_routes(app: web.Application) -> None:
 
     register_realtime_routes(app)
 
+    from platform_identity.identity_router import register_identity_routes
+
+    register_identity_routes(app)
+
     app.router.add_get(f"{prefix}/openapi.json", openapi_handler)
     app.router.add_get(f"{prefix}/docs", swagger_ui_handler)
 

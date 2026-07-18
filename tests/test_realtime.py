@@ -14,6 +14,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from events.event_bus import publish, reset_subscribers
 from events.request_events import RequestCreatedEvent
 from platform_management.management_router import register_management_routes
+from platform_identity.models import AuthMethod, PlatformRole, Principal
 from platform_management.permissions import ManagementRole
 from platform_realtime.channel_manager import ChannelManager
 from platform_realtime.connection_manager import connection_manager
@@ -83,21 +84,43 @@ async def readonly_connection(mock_ws):
     return conn
 
 
+@pytest.fixture
+def owner_principal():
+    return Principal(
+        principal_id="telegram:42",
+        auth_method=AuthMethod.TELEGRAM_OWNER,
+        roles=[PlatformRole.OWNER.value],
+        permissions=[],
+        telegram_id=42,
+    )
+
+
+@pytest.fixture
+def readonly_principal():
+    return Principal(
+        principal_id="telegram:99",
+        auth_method=AuthMethod.TELEGRAM_USER,
+        roles=[PlatformRole.READ_ONLY.value],
+        permissions=[],
+        telegram_id=99,
+    )
+
+
 @pytest.mark.asyncio
 async def test_channel_permissions_matrix():
     matrix = ChannelManager.permission_matrix()
-    assert matrix["dashboard"][ManagementRole.READ_ONLY.value] is True
-    assert matrix["configuration"][ManagementRole.READ_ONLY.value] is False
-    assert matrix["configuration"][ManagementRole.ADMINISTRATOR.value] is True
-    assert matrix["ai"][ManagementRole.OWNER.value] is True
+    assert matrix["dashboard"]["readonly"] is True
+    assert matrix["configuration"]["readonly"] is False
+    assert matrix["configuration"]["administrator"] is True
+    assert matrix["ai"]["owner"] is True
 
 
 @pytest.mark.asyncio
-async def test_subscribe_and_unsubscribe(owner_connection):
+async def test_subscribe_and_unsubscribe(owner_connection, owner_principal):
     subscribed = await realtime_hub.subscribe(
         owner_connection.connection_id,
         ["dashboard", "requests", "system"],
-        actor_role=ManagementRole.OWNER,
+        principal=owner_principal,
     )
     assert subscribed == ["dashboard", "requests", "system"]
     assert "dashboard" in owner_connection.subscribed_channels
@@ -108,23 +131,23 @@ async def test_subscribe_and_unsubscribe(owner_connection):
 
 
 @pytest.mark.asyncio
-async def test_subscribe_denied_for_readonly_on_configuration(readonly_connection):
+async def test_subscribe_denied_for_readonly_on_configuration(readonly_connection, readonly_principal):
     from platform_realtime.exceptions import RealtimePermissionError
 
     with pytest.raises(RealtimePermissionError):
         await realtime_hub.subscribe(
             readonly_connection.connection_id,
             ["configuration"],
-            actor_role=ManagementRole.READ_ONLY,
+            principal=readonly_principal,
         )
 
 
 @pytest.mark.asyncio
-async def test_broadcast_channel_delivers_to_subscribers(owner_connection, mock_ws):
+async def test_broadcast_channel_delivers_to_subscribers(owner_connection, mock_ws, owner_principal):
     await realtime_hub.subscribe(
         owner_connection.connection_id,
         ["dashboard"],
-        actor_role=ManagementRole.OWNER,
+        principal=owner_principal,
     )
 
     other_ws = MockWebSocket()
@@ -163,11 +186,11 @@ async def test_broadcast_all_connections(owner_connection, mock_ws):
 
 
 @pytest.mark.asyncio
-async def test_disconnect_cleans_subscriptions(owner_connection):
+async def test_disconnect_cleans_subscriptions(owner_connection, owner_principal):
     await realtime_hub.subscribe(
         owner_connection.connection_id,
         ["dashboard"],
-        actor_role=ManagementRole.OWNER,
+        principal=owner_principal,
     )
     await realtime_hub.disconnect(owner_connection.connection_id)
     subs = await subscription_manager.subscriptions_snapshot()
@@ -183,14 +206,14 @@ async def test_heartbeat_stale_disconnect(owner_connection, mock_ws):
 
 
 @pytest.mark.asyncio
-async def test_event_dispatcher_routes_request_created():
+async def test_event_dispatcher_routes_request_created(owner_principal):
     reset_subscribers()
     reset_realtime_event_handlers()
     register_realtime_event_handlers()
     await realtime_hub.subscribe(
         (await _add_conn()).connection_id,
         ["requests", "dashboard"],
-        actor_role=ManagementRole.OWNER,
+        principal=owner_principal,
     )
 
     widget_payload = {"meta": {"widget_id": "active_requests"}, "data": {"total": 1}}
@@ -220,7 +243,7 @@ async def _add_conn() -> ClientConnection:
 
 
 @pytest.mark.asyncio
-async def test_event_bus_to_realtime_integration():
+async def test_event_bus_to_realtime_integration(owner_principal):
     reset_subscribers()
     reset_realtime_event_handlers()
     register_realtime_event_handlers()
@@ -228,7 +251,7 @@ async def test_event_bus_to_realtime_integration():
     ws = MockWebSocket()
     conn = ClientConnection.new(ws, user_telegram_id=7, role="owner", ip="127.0.0.1")
     await connection_manager.add(conn)
-    await realtime_hub.subscribe(conn.connection_id, ["requests"], actor_role=ManagementRole.OWNER)
+    await realtime_hub.subscribe(conn.connection_id, ["requests"], principal=owner_principal)
 
     with patch(
         "platform_operations.dashboard_service.operations_dashboard_service.fetch_widget",
@@ -249,7 +272,7 @@ async def test_event_bus_to_realtime_integration():
 
 
 @pytest.mark.asyncio
-async def test_management_realtime_endpoint():
+async def test_management_realtime_endpoint(owner_principal):
     app = web.Application()
     register_management_routes(app)
 
@@ -263,7 +286,7 @@ async def test_management_realtime_endpoint():
         ws = MockWebSocket()
         conn = ClientConnection.new(ws, user_telegram_id=42, role="owner", ip="127.0.0.1")
         await connection_manager.add(conn)
-        await realtime_hub.subscribe(conn.connection_id, ["dashboard"], actor_role=ManagementRole.OWNER)
+        await realtime_hub.subscribe(conn.connection_id, ["dashboard"], principal=owner_principal)
 
         async with TestClient(TestServer(app)) as client:
             resp = await client.get("/management/realtime", headers={"X-Actor-Telegram-Id": "42"})
@@ -279,14 +302,14 @@ async def test_management_realtime_endpoint():
 
 
 @pytest.mark.asyncio
-async def test_performance_1000_broadcasts():
+async def test_performance_1000_broadcasts(owner_principal):
     """Hub should fan-out to 1000 subscribers with single payload serialization."""
     connections: list[ClientConnection] = []
     for i in range(1000):
         ws = MockWebSocket()
         conn = ClientConnection.new(ws, user_telegram_id=1000 + i, role="owner", ip="127.0.0.1")
         await connection_manager.add(conn)
-        await realtime_hub.subscribe(conn.connection_id, ["dashboard"], actor_role=ManagementRole.OWNER)
+        await realtime_hub.subscribe(conn.connection_id, ["dashboard"], principal=owner_principal)
         connections.append(conn)
 
     message = RealtimeMessage(type="event", event="LoadTest", data={"n": 1000})

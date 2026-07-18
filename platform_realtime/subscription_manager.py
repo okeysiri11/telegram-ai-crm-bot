@@ -1,4 +1,4 @@
-# Per-connection channel subscriptions.
+# Per-connection channel subscriptions — IAM-validated.
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import asyncio
 import logging
 from collections import defaultdict
 
-from platform_management.permissions import ManagementRole
+from platform_identity.models import Principal
 from platform_realtime.channel_manager import ChannelManager
 from platform_realtime.connection_manager import connection_manager
 from platform_realtime.exceptions import ConnectionNotFoundError, SubscriptionError
@@ -24,7 +24,7 @@ class SubscriptionManager:
         connection_id: str,
         channels: list[str],
         *,
-        actor_role: ManagementRole,
+        principal: Principal,
     ) -> list[str]:
         if not channels:
             raise SubscriptionError("channels list is required")
@@ -35,10 +35,13 @@ class SubscriptionManager:
             raise SubscriptionError(str(exc)) from exc
 
         subscribed: list[str] = []
+        for channel in channels:
+            normalized = ChannelManager.validate_channel(channel)
+            await ChannelManager.assert_can_subscribe(principal, normalized)
+
         async with self._lock:
             for channel in channels:
                 normalized = ChannelManager.validate_channel(channel)
-                ChannelManager.assert_can_subscribe(actor_role, normalized)
                 connection.subscribed_channels.add(normalized)
                 self._channel_subscribers[normalized].add(connection_id)
                 subscribed.append(normalized)

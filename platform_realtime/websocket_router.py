@@ -1,4 +1,4 @@
-# WebSocket router — client protocol and route registration.
+# WebSocket router — IAM-authenticated realtime connections.
 
 from __future__ import annotations
 
@@ -7,11 +7,12 @@ import logging
 
 from aiohttp import web
 
-from platform_management.permissions import ManagementRole, resolve_role
+from platform_identity.identity_service import identity_service
+from platform_identity.models import Principal
 from platform_realtime.connection_manager import connection_manager
 from platform_realtime.event_dispatcher import register_realtime_event_handlers
 from platform_realtime.heartbeat import heartbeat_manager
-from platform_realtime.models import ClientConnection, RealtimeMessage
+from platform_realtime.models import ALL_CHANNELS, ClientConnection, RealtimeMessage
 from platform_realtime.realtime_hub import realtime_hub
 
 logger = logging.getLogger(__name__)
@@ -27,33 +28,20 @@ def _client_ip(request: web.Request) -> str:
     return peer[0] if peer else "unknown"
 
 
-def _parse_actor_id(request: web.Request) -> int | None:
-    raw = request.headers.get("X-Actor-Telegram-Id") or request.query.get("actor_telegram_id")
-    if raw is None or str(raw).strip() == "":
-        return None
-    try:
-        return int(raw)
-    except ValueError:
-        return None
-
-
 async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
-    actor_id = _parse_actor_id(request)
-    if actor_id is None:
-        raise web.HTTPUnauthorized(text="X-Actor-Telegram-Id required")
-
     try:
-        role = await resolve_role(actor_id)
+        principal = await identity_service.authenticate_request(request)
     except Exception as exc:
-        raise web.HTTPForbidden(text=str(exc)) from exc
+        raise web.HTTPUnauthorized(text=str(exc)) from exc
 
     ws = web.WebSocketResponse(autoping=True, heartbeat=30)
     await ws.prepare(request)
 
+    primary_role = principal.roles[0] if principal.roles else "readonly"
     connection = ClientConnection.new(
         ws,
-        user_telegram_id=actor_id,
-        role=role.value,
+        user_telegram_id=principal.telegram_id or 0,
+        role=primary_role,
         ip=_client_ip(request),
     )
     await connection_manager.add(connection)
@@ -63,8 +51,9 @@ async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
         event="Connected",
         data={
             "connection_id": connection.connection_id,
-            "role": role.value,
-            "channels_available": _channels_for_role(role),
+            "principal_id": principal.principal_id,
+            "roles": principal.roles,
+            "channels_available": await _channels_for_principal(principal),
             "heartbeat_interval_seconds": 30,
             "reconnect": True,
         },
@@ -74,7 +63,7 @@ async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
     try:
         async for msg in ws:
             if msg.type == web.WSMsgType.TEXT:
-                await _handle_client_message(connection, role, msg.data)
+                await _handle_client_message(connection, principal, msg.data)
             elif msg.type in (web.WSMsgType.CLOSE, web.WSMsgType.CLOSED, web.WSMsgType.ERROR):
                 break
     finally:
@@ -85,7 +74,7 @@ async def websocket_handler(request: web.Request) -> web.WebSocketResponse:
 
 async def _handle_client_message(
     connection: ClientConnection,
-    role: ManagementRole,
+    principal: Principal,
     raw: str,
 ) -> None:
     try:
@@ -113,7 +102,7 @@ async def _handle_client_message(
             subscribed = await realtime_hub.subscribe(
                 connection.connection_id,
                 channels,
-                actor_role=role,
+                principal=principal,
             )
         except Exception as exc:
             await _send_error(connection, str(exc))
@@ -160,14 +149,12 @@ async def _send_error(connection: ClientConnection, error: str) -> None:
     )
 
 
-def _channels_for_role(role: ManagementRole) -> list[str]:
-    from platform_realtime.channel_manager import ChannelManager
-
-    return [
-        channel
-        for channel in ChannelManager.list_channels()
-        if ChannelManager.can_subscribe(role, channel)
-    ]
+async def _channels_for_principal(principal: Principal) -> list[str]:
+    available: list[str] = []
+    for channel in ALL_CHANNELS:
+        if await identity_service.authorize_realtime_channel(principal, channel):
+            available.append(channel)
+    return available
 
 
 async def _on_startup(app: web.Application) -> None:

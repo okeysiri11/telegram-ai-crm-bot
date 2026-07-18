@@ -1,24 +1,11 @@
-# Channel registry and role-based authorization.
+# Channel registry — authorization delegated to IAM.
 
 from __future__ import annotations
 
-from platform_management.permissions import ManagementRole, role_allows
+from platform_identity.models import Principal
+from platform_identity.policy_engine import policy_engine
 from platform_realtime.exceptions import ChannelNotFoundError, RealtimePermissionError
-from platform_realtime.models import ALL_CHANNELS, RealtimeChannel
-
-_CHANNEL_MIN_ROLE: dict[str, ManagementRole] = {
-    RealtimeChannel.SYSTEM.value: ManagementRole.READ_ONLY,
-    RealtimeChannel.DASHBOARD.value: ManagementRole.READ_ONLY,
-    RealtimeChannel.REQUESTS.value: ManagementRole.READ_ONLY,
-    RealtimeChannel.WORKFLOWS.value: ManagementRole.READ_ONLY,
-    RealtimeChannel.MANAGERS.value: ManagementRole.READ_ONLY,
-    RealtimeChannel.AUDIT.value: ManagementRole.READ_ONLY,
-    RealtimeChannel.NOTIFICATIONS.value: ManagementRole.READ_ONLY,
-    RealtimeChannel.HEALTH.value: ManagementRole.READ_ONLY,
-    RealtimeChannel.CONFIGURATION.value: ManagementRole.ADMINISTRATOR,
-    RealtimeChannel.PLUGINS.value: ManagementRole.ADMINISTRATOR,
-    RealtimeChannel.AI.value: ManagementRole.ADMINISTRATOR,
-}
+from platform_realtime.models import ALL_CHANNELS
 
 
 class ChannelManager:
@@ -28,40 +15,28 @@ class ChannelManager:
 
     @staticmethod
     def validate_channel(channel: str) -> str:
-        if channel not in _CHANNEL_MIN_ROLE:
+        from platform_identity.permission_service import REALTIME_CHANNEL_PERMISSIONS
+
+        if channel not in REALTIME_CHANNEL_PERMISSIONS:
             raise ChannelNotFoundError(f"Unknown channel: {channel}")
         return channel
 
     @staticmethod
-    def required_role(channel: str) -> ManagementRole:
+    async def can_subscribe(principal: Principal, channel: str) -> bool:
         ChannelManager.validate_channel(channel)
-        return _CHANNEL_MIN_ROLE[channel]
+        return await policy_engine.authorize_realtime_channel(principal, channel)
 
     @staticmethod
-    def can_subscribe(actor_role: ManagementRole, channel: str) -> bool:
-        ChannelManager.validate_channel(channel)
-        return role_allows(actor_role, _CHANNEL_MIN_ROLE[channel])
+    async def assert_can_subscribe(principal: Principal, channel: str) -> None:
+        if not await ChannelManager.can_subscribe(principal, channel):
+            from platform_identity.permission_service import permission_service
 
-    @staticmethod
-    def assert_can_subscribe(actor_role: ManagementRole, channel: str) -> None:
-        if not ChannelManager.can_subscribe(actor_role, channel):
-            required = _CHANNEL_MIN_ROLE[channel]
+            perm = permission_service.channel_permission(channel)
             raise RealtimePermissionError(
-                f"Role {actor_role.value} cannot subscribe to channel {channel} "
-                f"(requires {required.value})"
+                f"Principal {principal.principal_id} cannot subscribe to channel {channel} "
+                f"(requires {perm})"
             )
 
     @staticmethod
     def permission_matrix() -> dict[str, dict[str, bool]]:
-        roles = (
-            ManagementRole.READ_ONLY,
-            ManagementRole.ADMINISTRATOR,
-            ManagementRole.OWNER,
-        )
-        return {
-            channel: {
-                role.value: ChannelManager.can_subscribe(role, channel)
-                for role in roles
-            }
-            for channel in ALL_CHANNELS
-        }
+        return policy_engine.permission_matrix()

@@ -28,12 +28,20 @@ class RealtimeHub:
         connection_id: str,
         channels: list[str],
         *,
-        actor_role,
+        principal,
     ) -> list[str]:
-        from platform_management.permissions import ManagementRole
+        from platform_identity.models import Principal
 
-        role = actor_role if isinstance(actor_role, ManagementRole) else ManagementRole(actor_role)
-        return await subscription_manager.subscribe(connection_id, channels, actor_role=role)
+        if not isinstance(principal, Principal):
+            from platform_identity.identity_service import identity_service
+
+            if isinstance(principal, int):
+                principal = await identity_service.authenticate_telegram(principal)
+            elif hasattr(principal, "value"):
+                principal = await identity_service.authenticate_telegram(
+                    (await connection_manager.get(connection_id)).user_telegram_id
+                )
+        return await subscription_manager.subscribe(connection_id, channels, principal=principal)
 
     async def unsubscribe(self, connection_id: str, channels: list[str]) -> list[str]:
         return await subscription_manager.unsubscribe(connection_id, channels)

@@ -1,4 +1,4 @@
-# Management API permissions — Owner / Administrator / ReadOnly roles.
+# Management API permissions — delegates to centralized IAM.
 
 from __future__ import annotations
 
@@ -33,24 +33,9 @@ _ROLE_RANK = {
 
 
 async def resolve_role(telegram_id: int | None) -> ManagementRole:
-    if telegram_id is None:
-        raise ManagementPermissionError("actor_telegram_id is required")
+    from platform_identity.identity_service import identity_service
 
-    from config import OWNER_ID
-
-    if OWNER_ID is not None and telegram_id == OWNER_ID:
-        return ManagementRole.OWNER
-
-    from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
-
-    if await PlatformPermissionsEngineV1.user_has_permission(telegram_id, "admin.access"):
-        return ManagementRole.ADMINISTRATOR
-
-    for perm in ("platform.config.read", "analytics.view", "api.access"):
-        if await PlatformPermissionsEngineV1.user_has_permission(telegram_id, perm):
-            return ManagementRole.READ_ONLY
-
-    raise ManagementPermissionError(f"Actor {telegram_id} lacks management API access")
+    return await identity_service.resolve_management_role(telegram_id)
 
 
 def role_allows(actor_role: ManagementRole, required: ManagementRole) -> bool:
