@@ -19,11 +19,15 @@ from events.request_events import RequestCreatedEvent
 
 @pytest.fixture(autouse=True)
 def _clean_bus():
+    from platform_sdk.vertical_registry import VerticalRegistry
+
+    VerticalRegistry.reset_singleton()
     reset_subscribers()
     reset_handler_registration()
     yield
     reset_subscribers()
     reset_handler_registration()
+    VerticalRegistry.reset_singleton()
 
 
 @pytest.mark.asyncio

@@ -165,11 +165,13 @@ def create_app() -> web.Application:
     from routers.admin.managers_pool_router import register_managers_pool_routes
     from routers.admin.assignment_router import register_assignment_admin_routes
     from routers.admin.workflow_router import register_workflow_admin_routes
+    from routers.admin.platform_sdk_router import register_platform_sdk_routes
 
     register_sla_admin_routes(app)
     register_managers_pool_routes(app)
     register_assignment_admin_routes(app)
     register_workflow_admin_routes(app)
+    register_platform_sdk_routes(app)
 
     return app
 

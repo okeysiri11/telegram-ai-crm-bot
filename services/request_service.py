@@ -46,6 +46,28 @@ class RequestService:
         **extra: Any,
     ) -> dict[str, Any]:
         key = normalize_vertical(vertical) or vertical.strip().lower()
+
+        try:
+            from platform_sdk.vertical_builder import vertical_builder
+            from platform_sdk.vertical_registry import vertical_registry
+
+            if key in vertical_registry.list_codes():
+                try:
+                    vertical_impl = vertical_registry.get_built(key)
+                except Exception:
+                    vertical_impl = vertical_builder.build_by_code(key)
+                return await vertical_impl.create_request(
+                    client_telegram_id=client_telegram_id,
+                    client_name=client_name,
+                    client_username=client_username,
+                    product=product,
+                    description=description,
+                    request_type=request_type,
+                    **extra,
+                )
+        except Exception:
+            logger.warning("sdk_vertical_create_failed vertical=%s", key, exc_info=True)
+
         if key not in SUPPORTED_VERTICALS:
             raise ValueError(f"Unsupported vertical: {vertical}")
 

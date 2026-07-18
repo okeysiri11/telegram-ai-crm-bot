@@ -24,6 +24,15 @@ from services.system_roles import Vertical
 from states.realty_flow_states import REALTY_PENDING_RESTORE, RealtyFlow
 
 
+@pytest.fixture(autouse=True)
+def _reset_sdk_registry():
+    from platform_sdk.vertical_registry import VerticalRegistry
+
+    VerticalRegistry.reset_singleton()
+    yield
+    VerticalRegistry.reset_singleton()
+
+
 @pytest.mark.asyncio
 async def test_rent_flow_step_sequence():
     assert first_step(SCENARIO_RENT) == "city"

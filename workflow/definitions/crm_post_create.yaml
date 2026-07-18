@@ -1,0 +1,13 @@
+workflow:
+  id: crm_post_create
+  vertical: CRM
+  description: Generic CRM post-creation workflow
+  steps:
+    - id: audit
+      type: service
+      service: AuditService
+      method: audit
+      params:
+        step_id: crm_post_create
+    - id: finish
+      type: complete

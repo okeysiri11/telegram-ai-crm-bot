@@ -154,12 +154,12 @@ async def run_startup() -> StartupContext:
         logger.warning("Manager pool bootstrap failed", exc_info=True)
 
     try:
-        from workflow import workflow_engine
+        from platform_sdk.bootstrap import bootstrap_platform_sdk
 
-        loaded = workflow_engine.load_definitions()
-        logger.info("Workflow definitions loaded: %s", loaded)
+        sdk_boot = await bootstrap_platform_sdk()
+        logger.info("Platform SDK bootstrap: %s", sdk_boot)
     except Exception:
-        logger.warning("Workflow definition load failed", exc_info=True)
+        logger.warning("Platform SDK bootstrap failed", exc_info=True)
 
     from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 

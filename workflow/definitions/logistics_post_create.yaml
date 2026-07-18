@@ -1,0 +1,15 @@
+workflow:
+  id: logistics_post_create
+  vertical: LOGISTICS
+  description: Logistics post-creation workflow
+  steps:
+    - id: notify
+      type: service
+      service: NotificationService
+      method: notify
+      params:
+        vertical: logistics
+        request_number: $request.request_number
+        client_name: $telegram_user.name
+    - id: finish
+      type: complete
