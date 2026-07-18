@@ -11,17 +11,32 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
+from platform_management.management_router import register_management_routes
+from platform_management.permissions import ManagementRole
 from repositories.sla_repository import SLARepository
-from routers.admin.sla_router import register_sla_admin_routes
 from services.sla_dashboard_service import SlaDashboardService, sla_dashboard_service
 
 
 @pytest.fixture
-async def sla_api_client():
+def sla_management_app(monkeypatch):
+    async def _owner(_tid):
+        return ManagementRole.OWNER
+
+    monkeypatch.setattr("platform_management.permissions.resolve_role", _owner)
     app = web.Application()
-    register_sla_admin_routes(app)
-    async with TestClient(TestServer(app)) as client:
-        yield client
+    register_management_routes(app)
+    return app
+
+
+@pytest.fixture
+async def sla_api_client(sla_management_app, auth_headers):
+    with patch(
+        "platform_management.management_service.management_service.log_request",
+        new_callable=AsyncMock,
+    ):
+        async with TestClient(TestServer(sla_management_app)) as client:
+            client.auth_headers = auth_headers
+            yield client
 
 
 def _overdue_item(**kwargs) -> dict:
@@ -52,9 +67,9 @@ def _risk_item(**kwargs) -> dict:
 async def test_api_overdue(sla_api_client):
     items = [_overdue_item()]
     with patch.object(SlaDashboardService, "get_overdue", new=AsyncMock(return_value=items)):
-        resp = await sla_api_client.get("/api/v1/sla/overdue")
+        resp = await sla_api_client.get("/management/v1/sla/overdue", headers=sla_api_client.auth_headers)
         assert resp.status == 200
-        data = await resp.json()
+        data = (await resp.json())["data"]
         assert len(data) == 1
         assert data[0]["request_number"] == "REALTY-00123"
         assert data[0]["manager"] == "Lucifer"
@@ -65,9 +80,9 @@ async def test_api_overdue(sla_api_client):
 async def test_api_risk(sla_api_client):
     items = [_risk_item()]
     with patch.object(SlaDashboardService, "get_at_risk", new=AsyncMock(return_value=items)):
-        resp = await sla_api_client.get("/api/v1/sla/risk")
+        resp = await sla_api_client.get("/management/v1/sla/risk", headers=sla_api_client.auth_headers)
         assert resp.status == 200
-        data = await resp.json()
+        data = (await resp.json())["data"]
         assert data[0]["vertical"] == "AUTO"
         assert data[0]["minutes_remaining"] == 20
 
@@ -82,9 +97,9 @@ async def test_api_statistics(sla_api_client):
         "avg_response_minutes": 18.0,
     }
     with patch.object(SlaDashboardService, "get_statistics", new=AsyncMock(return_value=stats)):
-        resp = await sla_api_client.get("/api/v1/sla/statistics")
+        resp = await sla_api_client.get("/management/v1/sla/statistics", headers=sla_api_client.auth_headers)
         assert resp.status == 200
-        data = await resp.json()
+        data = (await resp.json())["data"]
         assert data["active"] == 183
         assert data["overdue"] == 7
         assert data["risk"] == 12
@@ -104,9 +119,9 @@ async def test_api_empty_database(sla_api_client):
     with patch.object(SlaDashboardService, "get_overdue", new=AsyncMock(return_value=[])), patch.object(
         SlaDashboardService, "get_at_risk", new=AsyncMock(return_value=[])
     ), patch.object(SlaDashboardService, "get_statistics", new=AsyncMock(return_value=empty_stats)):
-        overdue = await (await sla_api_client.get("/api/v1/sla/overdue")).json()
-        risk = await (await sla_api_client.get("/api/v1/sla/risk")).json()
-        stats = await (await sla_api_client.get("/api/v1/sla/statistics")).json()
+        overdue = (await (await sla_api_client.get("/management/v1/sla/overdue", headers=sla_api_client.auth_headers)).json())["data"]
+        risk = (await (await sla_api_client.get("/management/v1/sla/risk", headers=sla_api_client.auth_headers)).json())["data"]
+        stats = (await (await sla_api_client.get("/management/v1/sla/statistics", headers=sla_api_client.auth_headers)).json())["data"]
 
     assert overdue == []
     assert risk == []
@@ -134,6 +149,18 @@ async def test_service_delegates_to_repository():
     with patch("services.sla_dashboard_service.get_session", return_value=mock_cm), patch(
         "services.sla_dashboard_service.SLARepository",
         return_value=mock_repo,
+    ), patch(
+        "services.sla_dashboard_service.OwnerRepository",
+        return_value=AsyncMock(
+            get_owner_escalation_kpi=AsyncMock(
+                return_value={
+                    "owner_escalations_total": 0,
+                    "owner_escalations_today": 0,
+                    "owner_escalations_this_week": 0,
+                    "owner_escalations_this_month": 0,
+                }
+            )
+        ),
     ):
         overdue = await sla_dashboard_service.get_overdue()
         risk = await sla_dashboard_service.get_at_risk()
@@ -148,17 +175,19 @@ async def test_service_delegates_to_repository():
 
 
 @pytest.mark.asyncio
-async def test_multiple_verticals_in_overdue():
+async def test_multiple_verticals_in_overdue(sla_management_app, auth_headers):
     items = [
         _overdue_item(vertical="REALTY", request_number="REALTY-00001"),
         _overdue_item(vertical="AUTO", request_number="AUTO-00002", manager="Boroda"),
         _overdue_item(vertical="AGRO", request_number="AGRO-00003", manager="Chris"),
     ]
     with patch.object(SlaDashboardService, "get_overdue", new=AsyncMock(return_value=items)):
-        app = web.Application()
-        register_sla_admin_routes(app)
-        async with TestClient(TestServer(app)) as client:
-            data = await (await client.get("/api/v1/sla/overdue")).json()
+        async with TestClient(TestServer(sla_management_app)) as client:
+            with patch(
+                "platform_management.management_service.management_service.log_request",
+                new_callable=AsyncMock,
+            ):
+                data = (await (await client.get("/management/v1/sla/overdue", headers=auth_headers)).json())["data"]
 
     verticals = {item["vertical"] for item in data}
     assert verticals == {"REALTY", "AUTO", "AGRO"}

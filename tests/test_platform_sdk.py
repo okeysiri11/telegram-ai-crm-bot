@@ -193,20 +193,31 @@ async def test_agro_vertical_create_request(clean_registry):
 
 
 @pytest.mark.asyncio
-async def test_verticals_api_endpoint():
+async def test_verticals_api_endpoint(monkeypatch, auth_headers):
     VerticalRegistry.reset_singleton()
     register_platform_verticals()
     from aiohttp import web
-    from routers.admin.platform_sdk_router import register_platform_sdk_routes
+    from platform_management.management_router import register_management_routes
+    from platform_management.permissions import ManagementRole
+
+    async def _owner(_tid):
+        return ManagementRole.OWNER
+
+    monkeypatch.setattr("platform_management.permissions.resolve_role", _owner)
 
     app = web.Application()
-    register_platform_sdk_routes(app)
-    async with TestClient(TestServer(app)) as client:
-        resp = await client.get("/api/v1/verticals")
-        assert resp.status == 200
-        body = await resp.json()
-        assert body["count"] >= 6
-        assert any(v["code"] == "agro" for v in body["verticals"])
+    register_management_routes(app)
+    with patch(
+        "platform_management.management_service.management_service.log_request",
+        new_callable=AsyncMock,
+    ):
+        async with TestClient(TestServer(app)) as client:
+            resp = await client.get("/management/v1/verticals", headers=auth_headers)
+            assert resp.status == 200
+            body = await resp.json()
+            verticals = body["data"]["verticals"]
+            assert len(verticals) >= 6
+            assert any(v["code"] == "agro" for v in verticals)
     VerticalRegistry.reset_singleton()
 
 

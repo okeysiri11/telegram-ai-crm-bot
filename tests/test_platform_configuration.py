@@ -23,7 +23,8 @@ from platform_configuration.config_service import (
     configuration_service,
 )
 from platform_configuration.config_validator import ConfigValidationError, ConfigValidator
-from routers.admin.configuration_router import register_configuration_admin_routes
+from platform_management.management_router import register_management_routes
+from platform_management.permissions import ManagementRole
 
 
 @pytest.fixture(autouse=True)
@@ -373,26 +374,37 @@ async def test_configuration_history_endpoint_shape(mock_session_cm):
 
 
 @pytest.mark.asyncio
-async def test_configuration_admin_routes():
+async def test_configuration_admin_routes(monkeypatch, auth_headers):
     config_provider.apply_snapshot({"sla.assignment_sec": 900})
 
+    async def _owner(_tid):
+        return ManagementRole.OWNER
+
+    monkeypatch.setattr("platform_management.permissions.resolve_role", _owner)
+
     app = web.Application()
-    register_configuration_admin_routes(app)
+    register_management_routes(app)
 
     with patch(
         "platform_configuration.config_service.configuration_service.get",
         new_callable=AsyncMock,
         return_value=900,
+    ), patch(
+        "platform_management.management_service.management_service.log_request",
+        new_callable=AsyncMock,
     ):
         async with TestClient(TestServer(app)) as client:
-            list_resp = await client.get("/api/v1/configuration")
+            list_resp = await client.get("/management/v1/configuration", headers=auth_headers)
             assert list_resp.status == 200
-            body = await list_resp.json()
+            body = (await list_resp.json())["data"]
             assert "configuration" in body
 
-            get_resp = await client.get("/api/v1/configuration/sla.assignment_sec")
+            get_resp = await client.get(
+                "/management/v1/configuration/sla.assignment_sec",
+                headers=auth_headers,
+            )
             assert get_resp.status == 200
-            assert (await get_resp.json())["value"] == 900
+            assert (await get_resp.json())["data"]["value"] == 900
 
 
 def test_env_overrides_for_seed_mapping(monkeypatch):
@@ -501,7 +513,7 @@ async def test_workflow_reload_on_config_change():
 
 
 @pytest.mark.asyncio
-async def test_configuration_admin_delete_and_history_routes(mock_session_cm):
+async def test_configuration_admin_delete_and_history_routes(mock_session_cm, monkeypatch, auth_headers):
     key = "notifications.enabled"
     history = _history(key, 2, True, None, action="delete")
     repo = MagicMock()
@@ -509,8 +521,13 @@ async def test_configuration_admin_delete_and_history_routes(mock_session_cm):
     repo.delete_key = AsyncMock(return_value=history)
     repo.get_history = AsyncMock(return_value=[history])
 
+    async def _owner(_tid):
+        return ManagementRole.OWNER
+
+    monkeypatch.setattr("platform_management.permissions.resolve_role", _owner)
+
     app = web.Application()
-    register_configuration_admin_routes(app)
+    register_management_routes(app)
 
     with patch(
         "platform_configuration.config_service.get_session",
@@ -527,19 +544,26 @@ async def test_configuration_admin_delete_and_history_routes(mock_session_cm):
     ), patch(
         "platform_configuration.config_service.publish",
         new_callable=AsyncMock,
+    ), patch(
+        "platform_management.management_service.management_service.log_request",
+        new_callable=AsyncMock,
     ):
         repo_cls.return_value = repo
         async with TestClient(TestServer(app)) as client:
             delete_resp = await client.request(
                 "DELETE",
-                f"/api/v1/configuration/{key}",
+                f"/management/v1/configuration/{key}",
                 json={"changed_by": "system"},
+                headers=auth_headers,
             )
             assert delete_resp.status == 200
 
-            history_resp = await client.get(f"/api/v1/configuration/{key}/history")
+            history_resp = await client.get(
+                f"/management/v1/configuration/{key}/history",
+                headers=auth_headers,
+            )
             assert history_resp.status == 200
-            body = await history_resp.json()
+            body = (await history_resp.json())["data"]
             assert body["key"] == key
             assert len(body["history"]) == 1
 

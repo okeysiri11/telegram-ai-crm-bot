@@ -19,7 +19,6 @@ from events.manager_pool_events import (
 )
 from events.request_events import ManagerReassignedEvent, RequestCompletedEvent
 from models.manager_pool import AssignmentMode, ManagerPoolSnapshot
-from routers.admin.managers_pool_router import register_managers_pool_routes
 from services.manager_pool_service import ManagerPoolService, manager_pool_service
 
 
@@ -277,7 +276,7 @@ async def test_handle_reassigned_releases_previous_manager():
 
 
 @pytest.mark.asyncio
-async def test_pool_dashboard_endpoint():
+async def test_pool_dashboard_endpoint(monkeypatch, auth_headers):
     dashboard = {
         "assignment_mode": "ROUND_ROBIN",
         "managers": [],
@@ -293,19 +292,33 @@ async def test_pool_dashboard_endpoint():
         },
     }
 
+    async def _owner(_tid):
+        from platform_management.permissions import ManagementRole
+
+        return ManagementRole.OWNER
+
+    monkeypatch.setattr("platform_management.permissions.resolve_role", _owner)
+
     with patch.object(
         manager_pool_service,
         "get_pool_dashboard",
         new=AsyncMock(return_value=dashboard),
+    ), patch(
+        "services.smart_assignment_service.smart_assignment_service.get_statistics",
+        new=AsyncMock(return_value={"strategy": "ROUND_ROBIN", "kpi": {}}),
+    ), patch(
+        "platform_management.management_service.management_service.log_request",
+        new_callable=AsyncMock,
     ):
         from aiohttp import web
+        from platform_management.management_router import register_management_routes
 
         app = web.Application()
-        register_managers_pool_routes(app)
+        register_management_routes(app)
         async with TestClient(TestServer(app)) as client:
-            resp = await client.get("/api/v1/managers/pool")
+            resp = await client.get("/management/v1/managers", headers=auth_headers)
             assert resp.status == 200
-            body = await resp.json()
+            body = (await resp.json())["data"]["pool"]
             assert body["assignment_mode"] == "ROUND_ROBIN"
             assert "kpi" in body
             assert "busy_managers" in body["kpi"]

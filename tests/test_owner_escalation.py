@@ -16,7 +16,6 @@ from events.event_bus import reset_subscribers
 from events.handlers import register_platform_event_handlers, reset_handler_registration
 from events.owner_events import OwnerEscalationEvent
 from repositories.owner_repository import OwnerRepository
-from routers.admin.sla_router import register_sla_admin_routes
 from services.owner_escalation_service import OwnerEscalationService, owner_escalation_service
 
 
@@ -269,7 +268,7 @@ async def test_check_overdue_requests_batch():
 
 
 @pytest.mark.asyncio
-async def test_dashboard_owner_escalated_endpoint():
+async def test_dashboard_owner_escalated_endpoint(monkeypatch, auth_headers):
     items = [
         {
             "request_number": "AUTO-00153",
@@ -280,17 +279,27 @@ async def test_dashboard_owner_escalated_endpoint():
         }
     ]
 
+    from platform_management.management_router import register_management_routes
+    from platform_management.permissions import ManagementRole
+
+    async def _owner(_tid):
+        return ManagementRole.OWNER
+
+    monkeypatch.setattr("platform_management.permissions.resolve_role", _owner)
     app = web.Application()
-    register_sla_admin_routes(app)
+    register_management_routes(app)
 
     with patch(
         "services.sla_dashboard_service.sla_dashboard_service.get_owner_escalated",
         new=AsyncMock(return_value=items),
+    ), patch(
+        "platform_management.management_service.management_service.log_request",
+        new_callable=AsyncMock,
     ):
         async with TestClient(TestServer(app)) as client:
-            resp = await client.get("/api/v1/sla/owner-escalated")
+            resp = await client.get("/management/v1/sla/owner-escalated", headers=auth_headers)
             assert resp.status == 200
-            data = await resp.json()
+            data = (await resp.json())["data"]
             assert data[0]["request_number"] == "AUTO-00153"
 
 

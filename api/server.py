@@ -32,20 +32,8 @@ def create_app() -> web.Application:
     # Frozen public API v1 (/api/v1/*) with legacy /v1/* compatibility adapters
     register_api_v1_routes(app)
 
-    from routers.admin.sla_router import register_sla_admin_routes
-    from routers.admin.managers_pool_router import register_managers_pool_routes
-    from routers.admin.assignment_router import register_assignment_admin_routes
-    from routers.admin.workflow_router import register_workflow_admin_routes
-    from routers.admin.platform_sdk_router import register_platform_sdk_routes
-    from routers.admin.configuration_router import register_configuration_admin_routes
     from platform_management.management_router import register_management_routes
 
-    register_sla_admin_routes(app)
-    register_managers_pool_routes(app)
-    register_assignment_admin_routes(app)
-    register_workflow_admin_routes(app)
-    register_platform_sdk_routes(app)
-    register_configuration_admin_routes(app)
     register_management_routes(app)
 
     async def _init_plugins(_app: web.Application) -> None:

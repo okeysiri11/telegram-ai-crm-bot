@@ -298,7 +298,7 @@ async def test_advance_resumes_workflow():
 
 
 @pytest.mark.asyncio
-async def test_dashboard_endpoint():
+async def test_dashboard_endpoint(monkeypatch, auth_headers):
     payload = {
         "registered_workflows": [],
         "active_executions": 0,
@@ -314,19 +314,29 @@ async def test_dashboard_endpoint():
         },
     }
 
+    async def _owner(_tid):
+        from platform_management.permissions import ManagementRole
+
+        return ManagementRole.OWNER
+
+    monkeypatch.setattr("platform_management.permissions.resolve_role", _owner)
+
     with patch(
         "workflow.workflow_engine.workflow_engine.get_statistics",
         new=AsyncMock(return_value=payload),
+    ), patch(
+        "platform_management.management_service.management_service.log_request",
+        new_callable=AsyncMock,
     ):
         from aiohttp import web
-        from routers.admin.workflow_router import register_workflow_admin_routes
+        from platform_management.management_router import register_management_routes
 
         app = web.Application()
-        register_workflow_admin_routes(app)
+        register_management_routes(app)
         async with TestClient(TestServer(app)) as client:
-            resp = await client.get("/api/v1/workflows")
+            resp = await client.get("/management/v1/workflows", headers=auth_headers)
             assert resp.status == 200
-            body = await resp.json()
+            body = (await resp.json())["data"]
             assert "kpi" in body
             assert "registered_workflows" in body
 

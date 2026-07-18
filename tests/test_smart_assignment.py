@@ -24,7 +24,6 @@ from models.assignment_score import (
     segment_from_vertical,
 )
 from models.manager_pool import ManagerPoolSnapshot
-from routers.admin.assignment_router import register_assignment_admin_routes
 from services.smart_assignment_service import SmartAssignmentService, smart_assignment_service
 
 
@@ -269,7 +268,7 @@ async def test_unavailable_managers(mock_session_cm):
 
 
 @pytest.mark.asyncio
-async def test_statistics_endpoint():
+async def test_statistics_endpoint(monkeypatch, auth_headers):
     stats_payload = {
         "assignment_strategy": "SMART",
         "average_score": 0.75,
@@ -286,19 +285,33 @@ async def test_statistics_endpoint():
         },
     }
 
+    async def _owner(_tid):
+        from platform_management.permissions import ManagementRole
+
+        return ManagementRole.OWNER
+
+    monkeypatch.setattr("platform_management.permissions.resolve_role", _owner)
+
     with patch.object(
         smart_assignment_service,
         "get_statistics",
         new=AsyncMock(return_value=stats_payload),
+    ), patch(
+        "services.manager_pool_service.manager_pool_service.get_pool_dashboard",
+        new=AsyncMock(return_value={"kpi": {}, "active_requests": 0}),
+    ), patch(
+        "platform_management.management_service.management_service.log_request",
+        new_callable=AsyncMock,
     ):
         from aiohttp import web
+        from platform_management.management_router import register_management_routes
 
         app = web.Application()
-        register_assignment_admin_routes(app)
+        register_management_routes(app)
         async with TestClient(TestServer(app)) as client:
-            resp = await client.get("/api/v1/assignment/statistics")
+            resp = await client.get("/management/v1/managers", headers=auth_headers)
             assert resp.status == 200
-            body = await resp.json()
+            body = (await resp.json())["data"]["statistics"]
             assert body["assignment_strategy"] == "SMART"
             assert "kpi" in body
 
