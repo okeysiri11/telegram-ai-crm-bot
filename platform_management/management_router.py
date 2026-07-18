@@ -255,6 +255,36 @@ async def workflows_executions_handler(_request: web.Request, ctx: ManagementCon
     return _ok(await management_service.workflow_executions(), ctx)
 
 
+# ---- SLA ----
+
+def _sla_limit(request: web.Request) -> int:
+    try:
+        limit = int(request.query.get("limit", "100"))
+    except ValueError:
+        limit = 100
+    return max(1, min(limit, 500))
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def sla_overdue_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.sla_overdue(limit=_sla_limit(request)), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def sla_risk_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.sla_at_risk(limit=_sla_limit(request)), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def sla_statistics_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.sla_statistics(), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def sla_owner_escalated_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.sla_owner_escalated(limit=_sla_limit(request)), ctx)
+
+
 # ---- MANAGERS ----
 
 @require_role(ManagementRole.READ_ONLY)
@@ -529,6 +559,11 @@ def register_management_routes(app: web.Application) -> None:
     _route(app, "GET", "workflows/validate", workflows_validate_handler, role=ManagementRole.READ_ONLY, summary="Validate workflows")
     _route(app, "GET", "workflows/statistics", workflows_statistics_handler, role=ManagementRole.READ_ONLY, summary="Workflow statistics")
     _route(app, "GET", "workflows/executions", workflows_executions_handler, role=ManagementRole.READ_ONLY, summary="Active workflow executions")
+
+    _route(app, "GET", "sla/overdue", sla_overdue_handler, role=ManagementRole.READ_ONLY, summary="SLA overdue requests")
+    _route(app, "GET", "sla/risk", sla_risk_handler, role=ManagementRole.READ_ONLY, summary="SLA at-risk requests")
+    _route(app, "GET", "sla/statistics", sla_statistics_handler, role=ManagementRole.READ_ONLY, summary="SLA statistics")
+    _route(app, "GET", "sla/owner-escalated", sla_owner_escalated_handler, role=ManagementRole.READ_ONLY, summary="Owner-escalated requests")
 
     _route(app, "GET", "managers", managers_overview_handler, role=ManagementRole.READ_ONLY, summary="Managers overview")
     _route(app, "GET", "requests", requests_overview_handler, role=ManagementRole.READ_ONLY, summary="Requests overview")

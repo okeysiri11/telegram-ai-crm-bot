@@ -292,6 +292,32 @@ class ManagementService:
             "statistics": stats,
         }
 
+    # ---- SLA dashboard ----
+
+    @staticmethod
+    async def sla_overdue(*, limit: int = 100) -> list:
+        from services.sla_dashboard_service import sla_dashboard_service
+
+        return await sla_dashboard_service.get_overdue(limit=limit)
+
+    @staticmethod
+    async def sla_at_risk(*, limit: int = 100) -> list:
+        from services.sla_dashboard_service import sla_dashboard_service
+
+        return await sla_dashboard_service.get_at_risk(limit=limit)
+
+    @staticmethod
+    async def sla_statistics() -> dict[str, Any]:
+        from services.sla_dashboard_service import sla_dashboard_service
+
+        return await sla_dashboard_service.get_statistics()
+
+    @staticmethod
+    async def sla_owner_escalated(*, limit: int = 100) -> list:
+        from services.sla_dashboard_service import sla_dashboard_service
+
+        return await sla_dashboard_service.get_owner_escalated(limit=limit)
+
     # ---- managers ----
 
     @staticmethod
