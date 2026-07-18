@@ -154,6 +154,14 @@ async def run_startup() -> StartupContext:
         logger.warning("Manager pool bootstrap failed", exc_info=True)
 
     try:
+        from platform_configuration.config_service import configuration_service
+
+        config_boot = await configuration_service.bootstrap(include_env=True)
+        logger.info("Platform configuration bootstrap: %s", config_boot)
+    except Exception:
+        logger.warning("Platform configuration bootstrap failed", exc_info=True)
+
+    try:
         from platform_sdk.bootstrap import bootstrap_platform_sdk
 
         sdk_boot = await bootstrap_platform_sdk()

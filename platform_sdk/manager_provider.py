@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any, Protocol
+
+from platform_configuration.config_provider import config_provider
 
 logger = logging.getLogger(__name__)
 
@@ -25,8 +26,8 @@ class ManagerResolver(Protocol):
 class ManagerProvider:
     """Resolve managers for a vertical without hardcoded IDs."""
 
-    def __init__(self, *, default_strategy: str = ManagerStrategy.SMART) -> None:
-        self.default_strategy = default_strategy or os.getenv("ASSIGNMENT_MODE", "SMART")
+    def __init__(self, *, default_strategy: str | None = None) -> None:
+        self.default_strategy = default_strategy or config_provider.assignment_mode()
 
     async def resolve_manager(
         self,

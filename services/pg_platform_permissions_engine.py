@@ -34,6 +34,8 @@ PLATFORM_PERMISSIONS: dict[str, str] = {
     "admin.access": "Admin panel access",
     "ai.use": "Use AI manager",
     "api.access": "REST API access",
+    "platform.config.read": "Read platform configuration",
+    "platform.config.write": "Modify platform configuration",
 }
 
 ROLE_PERMISSION_MAP: dict[str, tuple[str, ...]] = {

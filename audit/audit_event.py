@@ -17,6 +17,7 @@ from events.request_events import (
     RequestOverdueEvent,
 )
 from events.owner_events import OwnerEscalationEvent
+from events.configuration_events import ConfigurationChangedEvent
 
 
 class AuditEventType(str, enum.Enum):
@@ -27,9 +28,11 @@ class AuditEventType(str, enum.Enum):
     REQUEST_OVERDUE = "REQUEST_OVERDUE"
     MANAGER_ESCALATION = "MANAGER_ESCALATION"
     OWNER_ESCALATED = "OWNER_ESCALATED"
+    CONFIGURATION_CHANGED = "CONFIGURATION_CHANGED"
 
 
 ENTITY_TYPE_REQUEST = "client_request"
+ENTITY_TYPE_CONFIGURATION = "platform_configuration"
 
 
 @dataclass(frozen=True)
@@ -245,6 +248,25 @@ def audit_record_from_event(event: BaseEvent) -> AuditRecord | None:
                 "deadline": event.completion_deadline,
                 "escalation_level": event.escalation_level,
                 "trigger": event.trigger,
+                "reason": event.reason,
+                "platform_event_id": event.event_id,
+                "platform_event_type": event.event_type,
+            },
+        )
+
+    if isinstance(event, ConfigurationChangedEvent):
+        return AuditRecord(
+            event_type=AuditEventType.CONFIGURATION_CHANGED.value,
+            entity_type=ENTITY_TYPE_CONFIGURATION,
+            entity_id=event.config_key,
+            actor_id=event.changed_by,
+            old_value={"value": event.old_value},
+            new_value={"value": event.new_value},
+            metadata_json={
+                "config_key": event.config_key,
+                "section": event.section,
+                "action": event.action,
+                "version": event.version,
                 "reason": event.reason,
                 "platform_event_id": event.event_id,
                 "platform_event_type": event.event_type,

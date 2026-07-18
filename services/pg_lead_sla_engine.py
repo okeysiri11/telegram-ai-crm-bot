@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any
@@ -12,13 +11,13 @@ from sqlalchemy import select
 
 from database.models.lead_sla import LeadSlaRecord
 from database.session import get_session
+from platform_configuration.config_provider import config_provider
 
 logger = logging.getLogger(__name__)
 
-# SLA thresholds (seconds) — configurable via env
-SLA_ASSIGNMENT_SEC = int(os.getenv("SLA_ASSIGNMENT_SEC", str(15 * 60)))
-SLA_FIRST_RESPONSE_SEC = int(os.getenv("SLA_FIRST_RESPONSE_SEC", str(30 * 60)))
-SLA_CLOSE_SEC = int(os.getenv("SLA_CLOSE_SEC", str(72 * 3600)))
+
+def _sla_thresholds() -> dict[str, int]:
+    return config_provider.sla_settings()
 
 
 class LeadSlaEngineV1:
@@ -138,14 +137,15 @@ class LeadSlaEngineV1:
     async def _check_and_alert(snap: dict[str, Any]) -> None:
         breached = False
         reasons: list[str] = []
+        thresholds = _sla_thresholds()
         tta = snap.get("time_to_assignment_sec")
         ttr = snap.get("time_to_first_response_sec")
-        if tta is not None and tta > SLA_ASSIGNMENT_SEC:
+        if tta is not None and tta > thresholds["assignment_sec"]:
             breached = True
-            reasons.append(f"assignment {tta}s > {SLA_ASSIGNMENT_SEC}s")
-        if ttr is not None and ttr > SLA_FIRST_RESPONSE_SEC:
+            reasons.append(f"assignment {tta}s > {thresholds['assignment_sec']}s")
+        if ttr is not None and ttr > thresholds["first_response_sec"]:
             breached = True
-            reasons.append(f"first_response {ttr}s > {SLA_FIRST_RESPONSE_SEC}s")
+            reasons.append(f"first_response {ttr}s > {thresholds['first_response_sec']}s")
 
         if not breached:
             return

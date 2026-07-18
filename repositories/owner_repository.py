@@ -8,12 +8,8 @@ from typing import Any
 
 from sqlalchemy import func, select
 
-from config import (
-    OWNER_ESCALATION_DELAY_MINUTES,
-    OWNER_ESCALATION_ENABLED,
-    PLATFORM_OWNER_NAME,
-    PLATFORM_OWNER_TELEGRAM_ID,
-)
+from config import PLATFORM_OWNER_NAME, PLATFORM_OWNER_TELEGRAM_ID
+from platform_configuration.config_provider import config_provider
 from database.models.request_sla import RequestSla
 from repositories.escalation_repository import EscalationRepository
 from repositories.sla_repository import SLARepository
@@ -44,16 +40,18 @@ def _start_of_month_utc() -> datetime:
 class OwnerRepository(BaseRepository):
     @staticmethod
     def owner_config() -> dict[str, Any]:
+        escalation = config_provider.owner_escalation_settings()
         return {
-            "enabled": OWNER_ESCALATION_ENABLED,
+            "enabled": escalation["enabled"],
             "telegram_id": PLATFORM_OWNER_TELEGRAM_ID,
             "name": PLATFORM_OWNER_NAME,
-            "delay_minutes": OWNER_ESCALATION_DELAY_MINUTES,
+            "delay_minutes": escalation["delay_minutes"],
         }
 
     @staticmethod
     def is_enabled() -> bool:
-        return OWNER_ESCALATION_ENABLED and PLATFORM_OWNER_TELEGRAM_ID is not None
+        escalation = config_provider.owner_escalation_settings()
+        return escalation["enabled"] and PLATFORM_OWNER_TELEGRAM_ID is not None
 
     async def lock_owner_escalation_candidates(
         self,
@@ -62,7 +60,8 @@ class OwnerRepository(BaseRepository):
         limit: int = 50,
     ) -> list[RequestSla]:
         now = now or _utcnow()
-        delay_threshold = now - timedelta(minutes=OWNER_ESCALATION_DELAY_MINUTES)
+        delay_minutes = config_provider.owner_escalation_settings()["delay_minutes"]
+        delay_threshold = now - timedelta(minutes=delay_minutes)
 
         result = await self.session.execute(
             select(RequestSla)

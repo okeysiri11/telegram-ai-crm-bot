@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import random
 import time
 import uuid
@@ -25,6 +24,7 @@ from events.manager_pool_events import (
     ManagerUnavailableEvent,
 )
 from models.manager_pool import AssignmentMode, ManagerPoolSnapshot
+from platform_configuration.config_provider import config_provider
 from repositories.manager_pool_repository import ManagerPoolRepository
 from repositories.manager_repository import ManagerRepository
 from repositories.user_repository import UserRepository
@@ -34,16 +34,16 @@ logger = logging.getLogger(__name__)
 
 NON_ASSIGNABLE_ROLES = frozenset({SystemRole.SUPER_ADMIN.value, "OWNER", "ADMIN"})
 
-_ASSIGNMENT_MODE = os.getenv("MANAGER_ASSIGNMENT_MODE", AssignmentMode.ROUND_ROBIN.value).upper()
 _assignment_latencies_ms: list[float] = []
 _MAX_LATENCY_SAMPLES = 200
 
 
 def _assignment_mode() -> AssignmentMode:
+    mode = config_provider.manager_assignment_mode()
     try:
-        return AssignmentMode(_ASSIGNMENT_MODE)
+        return AssignmentMode(mode)
     except ValueError:
-        logger.warning("Invalid MANAGER_ASSIGNMENT_MODE=%s — using ROUND_ROBIN", _ASSIGNMENT_MODE)
+        logger.warning("Invalid manager assignment mode=%s — using ROUND_ROBIN", mode)
         return AssignmentMode.ROUND_ROBIN
 
 

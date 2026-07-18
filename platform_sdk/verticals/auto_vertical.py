@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, ClassVar
 
-from config import SLA_ASSIGNMENT_SEC, SLA_CLOSE_SEC, SLA_FIRST_RESPONSE_SEC
+from platform_configuration.config_provider import config_provider
 from platform_sdk.base_vertical import (
     NotificationPolicy,
     PlatformVertical,
@@ -18,11 +18,16 @@ class AutoVertical(PlatformVertical):
     workflow_name: ClassVar[str] = "auto_buy"
     manager_strategy: ClassVar[str] = "SMART"
 
-    sla_policy: ClassVar[SlaPolicy] = SlaPolicy(
-        assignment_sec=SLA_ASSIGNMENT_SEC,
-        first_response_sec=SLA_FIRST_RESPONSE_SEC,
-        close_sec=SLA_CLOSE_SEC,
-    )
+    @classmethod
+    def _current_sla(cls) -> SlaPolicy:
+        sla = config_provider.sla_settings()
+        return SlaPolicy(
+            assignment_sec=sla["assignment_sec"],
+            first_response_sec=sla["first_response_sec"],
+            close_sec=sla["close_sec"],
+        )
+
+    sla_policy: ClassVar[SlaPolicy] = SlaPolicy()
     notification_policy: ClassVar[NotificationPolicy] = NotificationPolicy(
         notify_on_create=True,
         notify_on_assign=True,

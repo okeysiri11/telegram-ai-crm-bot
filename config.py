@@ -1,5 +1,6 @@
 import logging
 import os
+from typing import Any
 
 from dotenv import load_dotenv
 
@@ -57,12 +58,6 @@ API_PORT = int(os.getenv("API_PORT", "8080"))
 OWNER_ID = _optional_telegram_id("OWNER_ID")
 PLATFORM_OWNER_TELEGRAM_ID = _optional_telegram_id("PLATFORM_OWNER_TELEGRAM_ID") or OWNER_ID
 PLATFORM_OWNER_NAME = os.getenv("PLATFORM_OWNER_NAME", "Platform Owner")
-OWNER_ESCALATION_ENABLED = os.getenv("OWNER_ESCALATION_ENABLED", "true").lower() in {
-    "1",
-    "true",
-    "yes",
-}
-OWNER_ESCALATION_DELAY_MINUTES = int(os.getenv("OWNER_ESCALATION_DELAY_MINUTES", "240"))
 DEFAULT_AUTO_MANAGER_ID = _optional_telegram_id("DEFAULT_AUTO_MANAGER_ID")
 DEFAULT_DEALER_MANAGER_ID = _optional_telegram_id("DEFAULT_DEALER_MANAGER_ID")
 DEFAULT_AGRO_MANAGER_ID = _optional_telegram_id("DEFAULT_AGRO_MANAGER_ID")
@@ -127,20 +122,61 @@ SENTRY_DSN = os.getenv("SENTRY_DSN", "")
 PROMETHEUS_ENABLED = os.getenv("PROMETHEUS_ENABLED", "true").lower() in {"1", "true", "yes"}
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
-# SLA / Escalation (seconds)
-SLA_ASSIGNMENT_SEC = int(os.getenv("SLA_ASSIGNMENT_SEC", str(15 * 60)))
-SLA_FIRST_RESPONSE_SEC = int(os.getenv("SLA_FIRST_RESPONSE_SEC", str(30 * 60)))
-SLA_CLOSE_SEC = int(os.getenv("SLA_CLOSE_SEC", str(72 * 3600)))
+# SLA / Escalation / assignment — sourced from Platform Configuration Center at runtime.
+# Legacy env vars are migrated once at bootstrap (see platform_configuration.config_loader).
 
-# Dynamic manager pool assignment strategy
-MANAGER_ASSIGNMENT_MODE = os.getenv("MANAGER_ASSIGNMENT_MODE", "ROUND_ROBIN").upper()
 
-# Smart assignment engine (primary)
-ASSIGNMENT_MODE = os.getenv("ASSIGNMENT_MODE", "SMART").upper()
-SMART_ASSIGNMENT_LOAD_WEIGHT = float(os.getenv("SMART_ASSIGNMENT_LOAD_WEIGHT", "0.40"))
-SMART_ASSIGNMENT_RESPONSE_WEIGHT = float(os.getenv("SMART_ASSIGNMENT_RESPONSE_WEIGHT", "0.25"))
-SMART_ASSIGNMENT_COMPLETED_WEIGHT = float(os.getenv("SMART_ASSIGNMENT_COMPLETED_WEIGHT", "0.15"))
-SMART_ASSIGNMENT_PRIORITY_WEIGHT = float(os.getenv("SMART_ASSIGNMENT_PRIORITY_WEIGHT", "0.10"))
-SMART_ASSIGNMENT_SPECIALIZATION_WEIGHT = float(
-    os.getenv("SMART_ASSIGNMENT_SPECIALIZATION_WEIGHT", "0.10")
+def _platform_config(key: str, default: Any) -> Any:
+    try:
+        from platform_configuration.config_provider import config_provider
+
+        return config_provider.get(key, default)
+    except Exception:
+        return default
+
+
+def _platform_int(key: str, default: int) -> int:
+    try:
+        return int(_platform_config(key, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _platform_float(key: str, default: float) -> float:
+    try:
+        return float(_platform_config(key, default))
+    except (TypeError, ValueError):
+        return default
+
+
+def _platform_str(key: str, default: str) -> str:
+    return str(_platform_config(key, default))
+
+
+def _platform_bool(key: str, default: bool) -> bool:
+    value = _platform_config(key, default)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
+SLA_ASSIGNMENT_SEC = _platform_int("sla.assignment_sec", 15 * 60)
+SLA_FIRST_RESPONSE_SEC = _platform_int("sla.first_response_sec", 30 * 60)
+SLA_CLOSE_SEC = _platform_int("sla.close_sec", 72 * 3600)
+
+MANAGER_ASSIGNMENT_MODE = _platform_str("managers.assignment_mode", "ROUND_ROBIN").upper()
+ASSIGNMENT_MODE = _platform_str("smart_assignment.mode", "SMART").upper()
+
+SMART_ASSIGNMENT_LOAD_WEIGHT = _platform_float("smart_assignment.load_weight", 0.40)
+SMART_ASSIGNMENT_RESPONSE_WEIGHT = _platform_float("smart_assignment.response_weight", 0.25)
+SMART_ASSIGNMENT_COMPLETED_WEIGHT = _platform_float("smart_assignment.completed_weight", 0.15)
+SMART_ASSIGNMENT_PRIORITY_WEIGHT = _platform_float("smart_assignment.priority_weight", 0.10)
+SMART_ASSIGNMENT_SPECIALIZATION_WEIGHT = _platform_float(
+    "smart_assignment.specialization_weight",
+    0.10,
 )
+
+OWNER_ESCALATION_ENABLED = _platform_bool("escalation.owner_enabled", True)
+OWNER_ESCALATION_DELAY_MINUTES = _platform_int("escalation.owner_delay_minutes", 240)

@@ -86,20 +86,22 @@ class ScoreWeights:
     specialization: float = 0.10
 
     @classmethod
-    def from_env(cls) -> ScoreWeights:
-        def _f(name: str, default: float) -> float:
-            try:
-                return float(os.getenv(name, str(default)))
-            except ValueError:
-                return default
+    def from_config(cls) -> ScoreWeights:
+        from platform_configuration.config_provider import config_provider
 
+        weights = config_provider.smart_assignment_weights()
         return cls(
-            load=_f("SMART_ASSIGNMENT_LOAD_WEIGHT", 0.40),
-            response=_f("SMART_ASSIGNMENT_RESPONSE_WEIGHT", 0.25),
-            completed=_f("SMART_ASSIGNMENT_COMPLETED_WEIGHT", 0.15),
-            priority=_f("SMART_ASSIGNMENT_PRIORITY_WEIGHT", 0.10),
-            specialization=_f("SMART_ASSIGNMENT_SPECIALIZATION_WEIGHT", 0.10),
+            load=weights["load"],
+            response=weights["response"],
+            completed=weights["completed"],
+            priority=weights["priority"],
+            specialization=weights["specialization"],
         )
+
+    @classmethod
+    def from_env(cls) -> ScoreWeights:
+        """Deprecated — use from_config()."""
+        return cls.from_config()
 
     def normalized(self) -> ScoreWeights:
         total = self.load + self.response + self.completed + self.priority + self.specialization

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import time
 import uuid
 from typing import Any
@@ -29,22 +28,23 @@ from repositories.assignment_score_repository import AssignmentScoreRepository
 from repositories.manager_pool_repository import ManagerPoolRepository
 from repositories.manager_repository import ManagerRepository
 from repositories.user_repository import UserRepository
+from platform_configuration.config_provider import config_provider
 from services.manager_pool_service import ManagerPoolService
 from services.system_roles import normalize_vertical
 
 logger = logging.getLogger(__name__)
 
-_ASSIGNMENT_MODE = os.getenv("ASSIGNMENT_MODE", os.getenv("MANAGER_ASSIGNMENT_MODE", "SMART")).upper()
 _assignment_latencies_ms: list[float] = []
 _assignment_failures = 0
 _MAX_LATENCY_SAMPLES = 200
 
 
 def _strategy() -> AssignmentStrategy:
+    mode = config_provider.assignment_mode()
     try:
-        return AssignmentStrategy(_ASSIGNMENT_MODE)
+        return AssignmentStrategy(mode)
     except ValueError:
-        logger.warning("Invalid ASSIGNMENT_MODE=%s — using SMART", _ASSIGNMENT_MODE)
+        logger.warning("Invalid assignment mode=%s — using SMART", mode)
         return AssignmentStrategy.SMART
 
 
@@ -89,7 +89,7 @@ class SmartAssignmentService:
         max_completed: int = 100,
         max_priority: int = 200,
     ) -> ManagerCandidateScore:
-        w = (weights or ScoreWeights.from_env()).normalized()
+        w = (weights or ScoreWeights.from_config()).normalized()
 
         load_norm = 1.0 - min(candidate.current_load / max(max_load, 1), 1.0)
         if candidate.average_response_seconds is None:
