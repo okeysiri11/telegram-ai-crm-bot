@@ -141,9 +141,9 @@ class IdentityService:
                     return True
 
         try:
-            from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
+            from platform_legacy import legacy
 
-            return await PlatformPermissionsEngineV1.user_has_permission(telegram_id, legacy_code)
+            return await legacy.permissions.user_has_permission(telegram_id, legacy_code)
         except Exception:
             return False
 

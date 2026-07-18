@@ -50,9 +50,9 @@ class ValidationProvider:
         permission: str,
         vertical: str | None = None,
     ) -> bool:
-        from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
+        from platform_legacy import legacy
 
-        allowed = await PlatformPermissionsEngineV1.user_has_permission(
+        allowed = await legacy.permissions.user_has_permission(
             actor_telegram_id,
             permission,
         )

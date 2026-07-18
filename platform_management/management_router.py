@@ -449,6 +449,11 @@ async def config_reload_handler(_request: web.Request, ctx: ManagementContext) -
     return _ok(await management_service.config_reload(), ctx)
 
 
+@require_role(ManagementRole.READ_ONLY)
+async def legacy_metrics_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.legacy_metrics(), ctx)
+
+
 # ---- OPENAPI ----
 
 async def openapi_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
@@ -507,6 +512,7 @@ def register_management_routes(app: web.Application) -> None:
 
     _route(app, "GET", "config", config_diagnostics_handler, role=ManagementRole.READ_ONLY, summary="Configuration diagnostics (redacted)")
     _route(app, "POST", "config/reload", config_reload_handler, role=ManagementRole.ADMINISTRATOR, summary="Reload configuration from environment")
+    _route(app, "GET", "legacy/metrics", legacy_metrics_handler, role=ManagementRole.READ_ONLY, summary="Legacy adapter metrics and migration progress")
 
     from platform_plugins.plugins_router import register_plugins_routes
 

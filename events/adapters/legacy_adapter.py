@@ -9,7 +9,9 @@ from typing import Any, Callable
 
 from events.event_bus import PlatformEventBus
 from events.generic_events import GenericPlatformEvent
-from platform_events_legacy import PlatformEvent
+from platform_legacy import legacy
+
+PlatformEvent = legacy.events.legacy_platform_event_class()
 
 logger = logging.getLogger(__name__)
 

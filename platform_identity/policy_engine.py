@@ -130,9 +130,9 @@ class PolicyEngine:
         if legacy is None or principal.telegram_id is None:
             return False
         try:
-            from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
+            from platform_legacy import legacy
 
-            return await PlatformPermissionsEngineV1.user_has_permission(
+            return await legacy.permissions.user_has_permission(
                 principal.telegram_id,
                 legacy,
             )

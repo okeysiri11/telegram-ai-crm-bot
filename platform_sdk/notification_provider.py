@@ -104,9 +104,9 @@ class NotificationProvider:
             notification_type="SLA_OVERDUE",
         )
         if manager_telegram_id:
-            from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
+            from platform_legacy import legacy
 
-            await ManagerDeliveryEngineV1.send_to_manager(
+            await legacy.notifications.send_to_manager(
                 manager_telegram_id=int(manager_telegram_id),
                 text=f"⚠️ {title}\n{message}",
                 request_number=request_number,
@@ -143,9 +143,9 @@ class NotificationProvider:
             user_id=PLATFORM_OWNER_TELEGRAM_ID,
             notification_type="OWNER_ESCALATION",
         )
-        from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
+        from platform_legacy import legacy
 
-        await ManagerDeliveryEngineV1.send_to_manager(
+        await legacy.notifications.send_to_manager(
             manager_telegram_id=int(PLATFORM_OWNER_TELEGRAM_ID),
             text=f"🚨 {title}\n{message}",
             request_number=request_number,

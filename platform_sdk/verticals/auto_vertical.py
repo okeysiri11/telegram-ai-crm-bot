@@ -48,9 +48,9 @@ class AutoVertical(PlatformVertical):
         if kwargs.get("vin"):
             ctx.validation.validate_vin(str(kwargs["vin"]))
 
-        from services.pg_auto_client_request_engine import AutoClientRequestEngineV1
+        from platform_legacy import legacy
 
-        return await AutoClientRequestEngineV1.submit(
+        return await legacy.crm.submit_auto_request(
             client_telegram_id=int(kwargs["client_telegram_id"]),
             client_username=kwargs.get("client_username"),
             client_full_name=kwargs.get("client_name") or kwargs.get("client_full_name") or "",

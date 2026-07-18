@@ -32,27 +32,9 @@ BOT_ROUTER_PATHS: tuple[str, ...] = (
 
 
 def register_routers(dp: Dispatcher) -> None:
-    from auto_vertical_handlers import auto_vertical_router as auto_router
-    from handlers import router
-    from routers.auto_client_router import router as auto_client_entry_router
-    from routers.auto_dealer_router import router as auto_dealer_entry_router
-    from routers.auto_hub_router import router as auto_hub_router
-    from routers.client_history_router import router as client_history_router
-    from routers.manager_crm_router import router as manager_crm_router
-    from routers.manager_dashboard_router import router as manager_dashboard_router
-    from routers.manager_debug_router import router as manager_debug_router
-    from routers.realty_router import router as realty_router
+    from platform_legacy import legacy
 
-    dp.include_router(auto_client_entry_router)
-    dp.include_router(auto_dealer_entry_router)
-    dp.include_router(client_history_router)
-    dp.include_router(manager_crm_router)
-    dp.include_router(manager_dashboard_router)
-    dp.include_router(manager_debug_router)
-    dp.include_router(auto_hub_router)
-    dp.include_router(realty_router)
-    dp.include_router(auto_router)
-    dp.include_router(router)
+    legacy.telegram.register_bot_routers(dp)
     logger.info("Registered routers: %s", ", ".join(BOT_ROUTER_PATHS))
 
 
@@ -77,16 +59,13 @@ async def run_startup() -> StartupContext:
     validate_iam_jwt_secret()
 
     from api.server import start_api_server
-    from services.bidex_telegram_quote_parser import configure_bidex_parser
-    from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1
-    from services.pg_scheduler_engine import get_default_worker
-    from services.pg_webhook_engine import WebhookEngineV1
+    from platform_legacy import legacy
 
-    configure_bidex_parser(DealerQuoteAuthorityEngineV1)
+    legacy.bootstrap.configure_bidex_parser()
     logger.info("Dealer quote engine initialized")
     logger.info("BidEx parser initialized")
 
-    WebhookEngineV1.register_event_handlers()
+    legacy.bootstrap.register_webhook_handlers()
     from events.handlers import register_platform_event_handlers
 
     register_platform_event_handlers()
@@ -97,7 +76,7 @@ async def run_startup() -> StartupContext:
     await event_bus.get_default_worker().start()
     logger.info("CRM event bus workers started for platform metrics and webhooks")
 
-    scheduler = get_default_worker()
+    scheduler = legacy.scheduler.get_default_worker()
     await scheduler.start()
     runner = await start_api_server(host=API_HOST, port=API_PORT)
     if runner is not None:
@@ -140,17 +119,13 @@ async def run_startup() -> StartupContext:
     )
 
     try:
-        from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
-
-        seed = await PlatformPermissionsEngineV1.ensure_seeded()
+        seed = await legacy.permissions.ensure_permissions_seeded()
         logger.info("Platform permissions seed: %s", seed)
     except Exception:
         logger.warning("Platform permissions seed failed", exc_info=True)
 
     try:
-        from services.pg_vertical_routing_engine import VerticalRoutingEngineV1
-
-        routing_seed = await VerticalRoutingEngineV1.ensure_platform_actors()
+        routing_seed = await legacy.bootstrap.ensure_vertical_routing()
         logger.info("Vertical routing seed: %s", routing_seed)
     except Exception:
         logger.warning("Vertical routing seed failed", exc_info=True)
@@ -179,9 +154,7 @@ async def run_startup() -> StartupContext:
     except Exception:
         logger.warning("Platform SDK bootstrap failed", exc_info=True)
 
-    from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
-
-    diagnostics = await ManagerDeliveryEngineV1.startup_diagnostics()
+    diagnostics = await legacy.notifications.startup_diagnostics()
     logger.info("Manager startup diagnostics: %s", diagnostics)
 
     manager_id = diagnostics.get("internal_user_id")

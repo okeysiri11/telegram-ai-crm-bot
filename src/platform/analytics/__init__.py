@@ -66,9 +66,9 @@ class KpiCalculator:
     async def from_owner_analytics() -> LeadMetrics:
         """Optional adapter to existing OwnerAnalyticsEngineV1 — not called by bot."""
         try:
-            from services.pg_owner_analytics_engine import OwnerAnalyticsEngineV1
+            from platform_legacy import legacy
 
-            data = await OwnerAnalyticsEngineV1.get_dashboard_metrics()
+            data = await legacy.analytics.owner_dashboard_metrics()
             return KpiCalculator.build_lead_metrics(data)
         except Exception:
             return LeadMetrics()

@@ -170,10 +170,10 @@ class PermissionService:
 
         if telegram_id is not None:
             try:
-                from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
+                from platform_legacy import legacy
 
                 for iam_code, legacy_code in LEGACY_PERMISSION_MAP.items():
-                    if await PlatformPermissionsEngineV1.user_has_permission(telegram_id, legacy_code):
+                    if await legacy.permissions.user_has_permission(telegram_id, legacy_code):
                         perms.add(iam_code)
             except Exception:
                 pass

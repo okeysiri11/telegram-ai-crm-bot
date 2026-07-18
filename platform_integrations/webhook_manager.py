@@ -108,12 +108,13 @@ class WebhookManager:
         payload: dict[str, Any] | None = None,
     ) -> None:
         try:
-            from services.pg_platform_audit_engine import PlatformAuditEngineV1
+            from platform_legacy import legacy
 
-            await PlatformAuditEngineV1.log(
+            await legacy.audit.log(
                 event_type=event_type,
                 entity_type="webhook",
                 entity_id=webhook_id,
+                user_id=None,
                 payload={"provider": provider, **(payload or {})},
             )
         except Exception:

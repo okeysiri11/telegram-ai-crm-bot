@@ -38,9 +38,9 @@ class ManagementService:
             extra=payload,
         )
         try:
-            from services.pg_platform_audit_engine import PlatformAuditEngineV1
+            from platform_legacy import legacy
 
-            audit_id = await PlatformAuditEngineV1.log(
+            audit_id = await legacy.audit.log(
                 event_type=_MANAGEMENT_ACCESS,
                 entity_type="management_api",
                 entity_id=ctx.request_id,
@@ -381,6 +381,16 @@ class ManagementService:
 
         configuration_center.reload()
         return configuration_center.diagnostics()
+
+    @staticmethod
+    async def legacy_metrics() -> dict[str, Any]:
+        from platform_legacy import legacy
+        from platform_legacy.migrations import migration_report
+
+        return {
+            "snapshot": legacy.metrics(),
+            "migration": migration_report(),
+        }
 
     # ---- plugins ----
 

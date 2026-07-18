@@ -12,6 +12,7 @@ from src.platform.layers.architecture_policy import (
     scan_file,
 )
 from platform_configuration.env_access_policy import scan_env_access_violations
+from platform_legacy.legacy_import_policy import scan_legacy_import_violations
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -88,6 +89,33 @@ def test_architecture_policy_detects_plugin_repository_import(tmp_path: Path):
 def test_no_direct_env_access_outside_configuration_center():
     violations = scan_env_access_violations(ROOT)
     assert violations == [], _format_env_violations(violations)
+
+
+def test_no_direct_legacy_imports_outside_platform_legacy():
+    violations = scan_legacy_import_violations(ROOT)
+    platform_violations = [
+        v
+        for v in violations
+        if not v.path.startswith("platform_legacy/")
+        and not v.path.startswith("tests/")
+        and not v.path.startswith("migrations/")
+        and not v.path.startswith("scripts/")
+        and not v.path.endswith("_handlers.py")
+        and v.path not in {"handlers.py", "database_legacy.py", "openrouter.py", "api/handlers.py"}
+        and not v.path.startswith("services/")
+        and not v.path.startswith("routers/")
+        and not v.path.startswith("api/")
+    ]
+    assert platform_violations == [], _format_legacy_violations(platform_violations)
+
+
+def _format_legacy_violations(violations) -> str:
+    if not violations:
+        return ""
+    lines = ["Direct legacy imports outside platform_legacy:"]
+    for v in violations:
+        lines.append(f"  {v.path}:{v.line} — {v.module}")
+    return "\n".join(lines)
 
 
 def _format_env_violations(violations) -> str:

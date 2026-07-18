@@ -170,12 +170,12 @@ class RoleService:
 
         roles: list[str] = []
         try:
-            from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
+            from platform_legacy import legacy
 
-            if await PlatformPermissionsEngineV1.user_has_permission(telegram_id, "admin.access"):
+            if await legacy.permissions.user_has_permission(telegram_id, "admin.access"):
                 roles.append(PlatformRole.ADMINISTRATOR.value)
             elif any(
-                await PlatformPermissionsEngineV1.user_has_permission(telegram_id, p)
+                await legacy.permissions.user_has_permission(telegram_id, p)
                 for p in ("platform.config.read", "analytics.view", "api.access")
             ):
                 roles.append(PlatformRole.READ_ONLY.value)

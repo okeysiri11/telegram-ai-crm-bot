@@ -35,9 +35,9 @@ class ConfigurationService:
             "security.config_read_permission",
             "platform.config.read",
         )
-        from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
+        from platform_legacy import legacy
 
-        allowed = await PlatformPermissionsEngineV1.user_has_permission(
+        allowed = await legacy.permissions.user_has_permission(
             actor_telegram_id,
             str(permission),
         )
@@ -59,9 +59,9 @@ class ConfigurationService:
             "platform.config.write",
         )
         if actor_telegram_id is not None:
-            from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
+            from platform_legacy import legacy
 
-            allowed = await PlatformPermissionsEngineV1.user_has_permission(
+            allowed = await legacy.permissions.user_has_permission(
                 actor_telegram_id,
                 str(permission),
             )

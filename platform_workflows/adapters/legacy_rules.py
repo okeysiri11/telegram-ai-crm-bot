@@ -25,9 +25,11 @@ class LegacyRuleEngineAdapter:
         module: str = "system",
         action_payload: str | None = None,
     ) -> int:
-        from database import register_workflow_rule
+        from platform_legacy import legacy
 
-        return register_workflow_rule(trigger_code, action_type, module, action_payload)
+        return legacy.workflow_rules.register_trigger(
+            trigger_code, action_type, module, action_payload
+        )
 
     @staticmethod
     def execute_workflow(
@@ -38,11 +40,11 @@ class LegacyRuleEngineAdapter:
         entity_id: int | None = None,
         payload: dict | None = None,
     ) -> list[int]:
-        from database import get_workflow_rules, log_workflow_execution
+        from platform_legacy import legacy
 
         payload = payload or {}
         log_ids: list[int] = []
-        rules = get_workflow_rules(trigger_code=trigger_code)
+        rules = legacy.workflow_rules.fetch_rules(trigger_code)
 
         for _rule_id, _trigger, rule_module, action_type, action_payload, _active in rules:
             try:
@@ -58,7 +60,7 @@ class LegacyRuleEngineAdapter:
                     entity_id=entity_id,
                     payload=merged,
                 )
-                log_id = log_workflow_execution(
+                log_id = legacy.workflow_rules.log_execution(
                     trigger_code,
                     user_id,
                     rule_module or module,
@@ -69,7 +71,7 @@ class LegacyRuleEngineAdapter:
                 )
                 log_ids.append(log_id)
             except Exception as exc:
-                log_id = log_workflow_execution(
+                log_id = legacy.workflow_rules.log_execution(
                     trigger_code,
                     user_id,
                     rule_module or module,

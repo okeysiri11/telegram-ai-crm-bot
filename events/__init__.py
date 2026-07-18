@@ -26,12 +26,15 @@ from events.request_events import (
     RequestOverdueEvent,
 )
 
-# Legacy platform EventBus (SQLite/platform_events table) — backward compatible imports.
-from platform_events_legacy import (  # noqa: E402
-    EventBus,
-    PlatformEvent,
-    reset_event_bus_for_tests,
-)
+# Legacy platform EventBus (SQLite/platform_events table) — via platform_legacy adapter.
+from platform_legacy import legacy  # noqa: E402
+
+PlatformEvent = legacy.events.legacy_platform_event_class()
+EventBus = legacy.events.legacy_event_bus_class()
+
+
+def reset_event_bus_for_tests() -> None:
+    legacy.events.reset_event_bus_for_tests()
 
 __all__ = [
     "BaseEvent",

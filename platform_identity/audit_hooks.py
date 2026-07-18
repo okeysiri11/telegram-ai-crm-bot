@@ -133,9 +133,9 @@ class IamAuditHooks:
         payload: dict[str, Any],
     ) -> str | None:
         try:
-            from services.pg_platform_audit_engine import PlatformAuditEngineV1
+            from platform_legacy import legacy
 
-            return await PlatformAuditEngineV1.log(
+            return await legacy.audit.log(
                 event_type=event_type,
                 entity_type=entity_type,
                 entity_id=entity_id,
