@@ -9,6 +9,7 @@ from typing import Any
 
 from events.base_event import BaseEvent
 from events.request_events import (
+    ManagerEscalationEvent,
     ManagerReassignedEvent,
     RequestAssignedEvent,
     RequestCompletedEvent,
@@ -23,6 +24,7 @@ class AuditEventType(str, enum.Enum):
     REQUEST_COMPLETED = "REQUEST_COMPLETED"
     MANAGER_REASSIGNED = "MANAGER_REASSIGNED"
     REQUEST_OVERDUE = "REQUEST_OVERDUE"
+    MANAGER_ESCALATION = "MANAGER_ESCALATION"
 
 
 ENTITY_TYPE_REQUEST = "client_request"
@@ -167,6 +169,7 @@ def audit_record_from_event(event: BaseEvent) -> AuditRecord | None:
                 "sla_status": "overdue",
                 "overdue_seconds": event.overdue_seconds,
                 "reason": event.reason,
+                "escalation_level": event.escalation_level,
             },
             metadata_json={
                 "request_id": event.request_id,
@@ -175,6 +178,35 @@ def audit_record_from_event(event: BaseEvent) -> AuditRecord | None:
                 "request_type": event.request_type,
                 "manager_id": event.manager_id,
                 "manager_telegram_id": event.manager_telegram_id,
+                "overdue_seconds": event.overdue_seconds,
+                "reason": event.reason,
+                "escalation_level": event.escalation_level,
+                "platform_event_id": event.event_id,
+                "platform_event_type": event.event_type,
+            },
+        )
+
+    if isinstance(event, ManagerEscalationEvent):
+        return AuditRecord(
+            event_type=AuditEventType.MANAGER_ESCALATION.value,
+            entity_type=ENTITY_TYPE_REQUEST,
+            entity_id=event.request_id,
+            actor_id=str(event.manager_telegram_id) if event.manager_telegram_id is not None else event.manager_id,
+            old_value={"escalation_level": 1},
+            new_value={
+                "escalation_level": event.escalation_level,
+                "overdue_seconds": event.overdue_seconds,
+                "reason": event.reason,
+            },
+            metadata_json={
+                "request_id": event.request_id,
+                "request_number": event.request_number,
+                "vertical": event.vertical,
+                "request_type": event.request_type,
+                "manager_id": event.manager_id,
+                "manager_telegram_id": event.manager_telegram_id,
+                "client_telegram_id": event.client_telegram_id,
+                "escalation_level": event.escalation_level,
                 "overdue_seconds": event.overdue_seconds,
                 "reason": event.reason,
                 "platform_event_id": event.event_id,

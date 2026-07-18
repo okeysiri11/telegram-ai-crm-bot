@@ -68,6 +68,21 @@ class RequestOverdueEvent(BaseEvent):
     manager_telegram_id: int | None = None
     overdue_seconds: int = 0
     reason: str = "sla_first_response"
+    escalation_level: int = 1
+
+
+@dataclass(kw_only=True)
+class ManagerEscalationEvent(BaseEvent):
+    request_id: str
+    request_number: str
+    vertical: str
+    request_type: str
+    manager_id: str | None = None
+    manager_telegram_id: int | None = None
+    client_telegram_id: int | None = None
+    escalation_level: int = 2
+    overdue_seconds: int = 0
+    reason: str = "sla_manager_escalation"
 
 
 @dataclass(kw_only=True)

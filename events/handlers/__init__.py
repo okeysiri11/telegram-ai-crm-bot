@@ -10,6 +10,7 @@ from events.handlers.metrics_handler import MetricsEventHandler
 from events.handlers.notification_handler import NotificationEventHandler
 from events.handlers.sla_handler import SLAEventHandler
 from events.request_events import (
+    ManagerEscalationEvent,
     ManagerReassignedEvent,
     RequestAssignedEvent,
     RequestCompletedEvent,
@@ -38,6 +39,7 @@ def register_platform_event_handlers() -> None:
         (ManagerReassignedEvent, MetricsEventHandler.handle, "metrics_reassigned"),
         (RequestOverdueEvent, SLAEventHandler.handle, "sla_overdue"),
         (RequestOverdueEvent, NotificationEventHandler.handle, "notification_overdue"),
+        (ManagerEscalationEvent, NotificationEventHandler.handle, "notification_escalation"),
     )
 
     for event_type, handler, handler_id in handlers:
@@ -49,10 +51,14 @@ def register_platform_event_handlers() -> None:
 
     kpi_service.subscribe_to_event_bus()
 
+    from services.sla_timer_service import sla_timer_service
+
+    sla_timer_service.subscribe_to_event_bus()
+
     _registered = True
     logger.info(
         "platform_internal_event_handlers_registered",
-        extra={"handler_count": len(handlers) + 10},
+        extra={"handler_count": len(handlers) + 13},
     )
 
 
@@ -61,5 +67,7 @@ def reset_handler_registration() -> None:
     _registered = False
     audit_service.reset_subscription()
     from services.kpi_service import kpi_service
+    from services.sla_timer_service import sla_timer_service
 
     kpi_service.reset_subscription()
+    sla_timer_service.reset_subscription()

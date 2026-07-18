@@ -124,5 +124,27 @@ class ManagerService:
                 for sub, user in rows
             ]
 
+    @staticmethod
+    async def resolve_alternate_manager_for_vertical(
+        vertical: str,
+        *,
+        exclude_manager_id: uuid.UUID | str | None = None,
+    ) -> dict[str, Any] | None:
+        """Pick another manager for the vertical, excluding the current assignee."""
+        exclude = str(exclude_manager_id) if exclude_manager_id else None
+        managers = await ManagerService.list_vertical_managers(vertical)
+        for mgr in managers:
+            if exclude and str(mgr.get("user_id")) == exclude:
+                continue
+            if mgr.get("telegram_id") is not None:
+                return mgr
+
+        fallback = await ManagerService.resolve_manager_for_vertical(vertical)
+        if fallback is None:
+            return None
+        if exclude and str(fallback.get("user_id")) == exclude:
+            return None
+        return fallback
+
 
 manager_service = ManagerService()

@@ -167,29 +167,18 @@ async def run_startup() -> StartupContext:
             startup.get("degraded"),
         )
 
-    # Background escalation poller (every 60s)
-    import asyncio
+    # Background escalation worker (every 30s, EventBus-only side effects)
+    from workers.escalation_worker import get_escalation_worker
 
-    async def _escalation_loop() -> None:
-        from services.pg_escalation_engine import EscalationEngineV1
-
-        while True:
-            try:
-                result = await EscalationEngineV1.process_pending()
-                if result.get("acted"):
-                    logger.info("Escalation acted=%s", result)
-            except Exception:
-                logger.warning("Escalation loop error", exc_info=True)
-            await asyncio.sleep(60)
-
-    escalation_task = asyncio.create_task(_escalation_loop(), name="escalation_loop")
+    escalation_worker = get_escalation_worker()
+    await escalation_worker.start()
 
     return StartupContext(
         scheduler=scheduler,
         runner=runner,
         startup=startup,
         diagnostics=diagnostics,
-        escalation_task=escalation_task,
+        escalation_task=escalation_worker,
     )
 
 
@@ -204,7 +193,9 @@ async def shutdown_startup(context: StartupContext) -> None:
         logger.warning("Event bus shutdown failed", exc_info=True)
 
     task = getattr(context, "escalation_task", None)
-    if task is not None:
+    if task is not None and hasattr(task, "stop"):
+        await task.stop()
+    elif task is not None:
         task.cancel()
     await context.scheduler.shutdown()
     if context.runner is not None:

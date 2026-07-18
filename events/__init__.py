@@ -3,6 +3,7 @@
 from events.base_event import BaseEvent
 from events.event_bus import PlatformEventBus, publish, reset_subscribers, subscribe
 from events.request_events import (
+    ManagerEscalationEvent,
     ManagerReassignedEvent,
     RequestAssignedEvent,
     RequestCompletedEvent,
@@ -27,6 +28,7 @@ __all__ = [
     "RequestAssignedEvent",
     "RequestCompletedEvent",
     "RequestOverdueEvent",
+    "ManagerEscalationEvent",
     "ManagerReassignedEvent",
     "EventBus",
     "PlatformEvent",
