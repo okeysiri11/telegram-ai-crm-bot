@@ -56,6 +56,10 @@ IAM_PERMISSIONS: dict[str, str] = {
     "management.admin": "Full management API access",
     "management.identity.read": "Read IAM resources",
     "management.identity.write": "Manage IAM resources",
+    # Integrations
+    "integrations.read": "View integration hub",
+    "integrations.write": "Manage connectors and webhooks",
+    "integrations.admin": "Full integration hub access",
 }
 
 PERMISSION_TREE: dict[str, list[str]] = {
@@ -76,6 +80,11 @@ PERMISSION_TREE: dict[str, list[str]] = {
         "management.admin",
         "management.identity.read",
         "management.identity.write",
+    ],
+    "integrations": [
+        "integrations.read",
+        "integrations.write",
+        "integrations.admin",
     ],
 }
 

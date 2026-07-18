@@ -45,6 +45,9 @@ ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {
         "management.admin",
         "management.identity.read",
         "management.identity.write",
+        "integrations.read",
+        "integrations.write",
+        "integrations.admin",
         *[k for k in IAM_PERMISSIONS if k.startswith("realtime.")],
     ),
     PlatformRole.MANAGER.value: (
@@ -94,6 +97,7 @@ ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {
         "ai.read",
         "management.read",
         "management.identity.read",
+        "integrations.read",
         "realtime.channel.system",
         "realtime.channel.dashboard",
         "realtime.channel.requests",
