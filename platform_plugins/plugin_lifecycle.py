@@ -13,7 +13,7 @@ from platform_plugins.exceptions import (
     PluginNotFoundError,
 )
 from platform_plugins.models import PluginHealth, PluginRecord, PluginState
-from platform_plugins.plugin_context import PluginContext
+from platform_plugin_sdk.plugin_context import PluginContext
 from platform_plugins.plugin_dependencies import check_dependencies, resolve_install_order
 from platform_plugins.plugin_events import (
     PluginDisabledEvent,
@@ -69,12 +69,16 @@ class PluginLifecycle:
 
     async def _do_install(self, record: PluginRecord, *, app: Any = None) -> None:
         try:
-            hook = self.loader.get_hook(record.id, "on_install")
-            if hook:
-                ctx = self._context_for(record, app)
-                result = hook(ctx)
-                if hasattr(result, "__await__"):
-                    await result
+            plugin = self.loader.get_plugin(record.id)
+            if plugin is not None:
+                await plugin.on_install(plugin.context)
+            else:
+                hook = self.loader.get_hook(record.id, "on_install")
+                if hook:
+                    ctx = self._context_for(record, app)
+                    result = hook(ctx)
+                    if hasattr(result, "__await__"):
+                        await result
 
             record.state = PluginState.INSTALLED
             record.installed_at = self._now()
@@ -111,11 +115,16 @@ class PluginLifecycle:
             ctx = self.loader.load_entry(record, app=app)
             self._contexts[plugin_id] = ctx
 
-            hook = self.loader.get_hook(plugin_id, "on_enable")
-            if hook:
-                result = hook(ctx)
-                if hasattr(result, "__await__"):
-                    await result
+            plugin = self.loader.get_plugin(plugin_id)
+            if plugin is not None:
+                await plugin.initialize()
+                await plugin.start()
+            else:
+                hook = self.loader.get_hook(plugin_id, "on_enable")
+                if hook:
+                    result = hook(ctx)
+                    if hasattr(result, "__await__"):
+                        await result
 
             record.state = PluginState.ENABLED
             record.enabled_at = self._now()
@@ -146,12 +155,16 @@ class PluginLifecycle:
             raise PluginLifecycleError(f"Cannot disable plugin in state {record.state.value}")
 
         try:
-            hook = self.loader.get_hook(plugin_id, "on_disable")
-            if hook:
-                ctx = self._contexts.get(plugin_id) or self._context_for(record)
-                result = hook(ctx)
-                if hasattr(result, "__await__"):
-                    await result
+            plugin = self.loader.get_plugin(plugin_id)
+            if plugin is not None:
+                await plugin.stop()
+            else:
+                hook = self.loader.get_hook(plugin_id, "on_disable")
+                if hook:
+                    ctx = self._contexts.get(plugin_id) or self._context_for(record)
+                    result = hook(ctx)
+                    if hasattr(result, "__await__"):
+                        await result
 
             self.loader.unload(plugin_id)
             self._contexts.pop(plugin_id, None)
@@ -221,12 +234,16 @@ class PluginLifecycle:
             await self.disable(plugin_id)
 
         try:
-            hook = self.loader.get_hook(plugin_id, "on_uninstall")
-            if hook:
-                ctx = self._context_for(record)
-                result = hook(ctx)
-                if hasattr(result, "__await__"):
-                    await result
+            plugin = self.loader.get_plugin(plugin_id)
+            if plugin is not None:
+                await plugin.shutdown()
+            else:
+                hook = self.loader.get_hook(plugin_id, "on_uninstall")
+                if hook:
+                    ctx = self._context_for(record)
+                    result = hook(ctx)
+                    if hasattr(result, "__await__"):
+                        await result
         except Exception as exc:
             logger.warning("plugin_uninstall_hook_failed id=%s error=%s", plugin_id, exc)
 
@@ -279,12 +296,7 @@ class PluginLifecycle:
         )
 
     def _context_for(self, record: PluginRecord, app: Any = None) -> PluginContext:
-        ctx = PluginContext(
-            plugin_id=record.id,
-            plugin_version=record.manifest.version,
-            config=dict(record.manifest.configuration),
-        )
-        if app is not None:
-            ctx.bind_app(app)
-        return ctx
+        from platform_plugin_sdk.plugin_builder import build_plugin_context
+
+        return build_plugin_context(record, app=app)
 

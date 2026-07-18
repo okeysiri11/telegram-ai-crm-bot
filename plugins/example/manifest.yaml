@@ -1,0 +1,21 @@
+id: example
+name: Example Domain
+version: 1.0.0
+author: Platform Team
+description: Reference plugin demonstrating the Plugin SDK
+platform_version: ">=1.0.0"
+dependencies:
+  required: []
+  optional: []
+permissions:
+  - example.read
+  - example.write
+configuration:
+  vertical_code: EXAMPLE
+  greeting: Hello from Example Plugin
+routes:
+  - path: /example
+    handler: routes.example_router:register
+workflows:
+  - example_flow
+entry_point: plugin:create_plugin
