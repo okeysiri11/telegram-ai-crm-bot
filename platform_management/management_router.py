@@ -386,6 +386,68 @@ async def feature_flags_validate_handler(_request: web.Request, ctx: ManagementC
     return _ok(await management_service.feature_flags_validate(), ctx)
 
 
+# ---- OPERATIONS DASHBOARD ----
+
+@require_role(ManagementRole.READ_ONLY)
+async def dashboard_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+    from platform_operations.operations_service import operations_service
+
+    refresh = request.query.get("refresh", "").lower() in {"1", "true", "yes"}
+    if refresh:
+        data = await operations_service.refresh_dashboard()
+    else:
+        use_cache = request.query.get("no_cache", "").lower() not in {"1", "true", "yes"}
+        data = await operations_service.get_dashboard(use_cache=use_cache)
+    return _ok(data, ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def dashboard_widget_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+    from platform_operations.operations_service import operations_service
+
+    widget_id = request.match_info["widget_id"]
+    no_cache = request.query.get("no_cache", "").lower() in {"1", "true", "yes"}
+    try:
+        data = await operations_service.get_widget(widget_id, use_cache=not no_cache)
+    except Exception as exc:
+        return _handle_api_error(exc, ctx)
+    return _ok(data, ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def dashboard_metrics_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+    from platform_operations.operations_service import operations_service
+
+    period = request.query.get("period", "month")
+    return _ok(await operations_service.get_metrics(period=period), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def dashboard_event_timeline_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+    from platform_operations.operations_service import operations_service
+
+    return _ok(
+        await operations_service.get_event_timeline(
+            event_type=request.query.get("event_type"),
+            limit=int(request.query.get("limit", "50")),
+        ),
+        ctx,
+    )
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def dashboard_audit_timeline_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+    from platform_operations.operations_service import operations_service
+
+    return _ok(
+        await operations_service.get_audit_timeline(
+            category=request.query.get("category"),
+            limit=int(request.query.get("limit", "50")),
+        ),
+        ctx,
+    )
+
+
 # ---- OPENAPI ----
 
 async def openapi_handler(_request: web.Request) -> web.Response:
@@ -483,6 +545,12 @@ def register_management_routes(app: web.Application) -> None:
     _route(app, "POST", f"{prefix}/feature-flags/{{key:.+}}/enable", feature_flags_enable_handler, role=ManagementRole.ADMINISTRATOR, summary="Enable feature flag")
     _route(app, "POST", f"{prefix}/feature-flags/{{key:.+}}/disable", feature_flags_disable_handler, role=ManagementRole.ADMINISTRATOR, summary="Disable feature flag")
     _route(app, "GET", f"{prefix}/feature-flags/validate", feature_flags_validate_handler, role=ManagementRole.READ_ONLY, summary="Validate feature flags")
+
+    _route(app, "GET", f"{prefix}/dashboard", dashboard_handler, role=ManagementRole.READ_ONLY, summary="Operations dashboard (all widgets)")
+    _route(app, "GET", f"{prefix}/dashboard/widgets/{{widget_id}}", dashboard_widget_handler, role=ManagementRole.READ_ONLY, summary="Single dashboard widget")
+    _route(app, "GET", f"{prefix}/dashboard/metrics", dashboard_metrics_handler, role=ManagementRole.READ_ONLY, summary="KPI metrics")
+    _route(app, "GET", f"{prefix}/dashboard/timeline/events", dashboard_event_timeline_handler, role=ManagementRole.READ_ONLY, summary="Event timeline")
+    _route(app, "GET", f"{prefix}/dashboard/timeline/audit", dashboard_audit_timeline_handler, role=ManagementRole.READ_ONLY, summary="Audit timeline")
 
     app.router.add_get(f"{prefix}/openapi.json", openapi_handler)
     app.router.add_get(f"{prefix}/docs", swagger_ui_handler)
