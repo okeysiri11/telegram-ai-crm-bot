@@ -77,6 +77,24 @@ class AuditRepository(BaseRepository):
         )
         return list(result.scalars().all())
 
+    async def search(
+        self,
+        *,
+        event_type: str | None = None,
+        entity_type: str | None = None,
+        entity_id: str | None = None,
+        limit: int = 100,
+    ) -> list[AuditEventRow]:
+        stmt = select(AuditEventRow).order_by(AuditEventRow.created_at.desc()).limit(limit)
+        if event_type:
+            stmt = stmt.where(AuditEventRow.event_type == event_type)
+        if entity_type:
+            stmt = stmt.where(AuditEventRow.entity_type == entity_type)
+        if entity_id:
+            stmt = stmt.where(AuditEventRow.entity_id == str(entity_id))
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     @staticmethod
     def snapshot(row: AuditEventRow) -> dict[str, Any]:
         return {

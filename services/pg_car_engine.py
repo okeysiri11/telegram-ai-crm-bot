@@ -25,6 +25,25 @@ class CarEngineError(Exception):
 
 class CarEngineV1:
     @staticmethod
+    def calculate_profit_breakdown(
+        *,
+        purchase_price: Decimal | float | int | None = None,
+        delivery_cost: Decimal | float | int | None = None,
+        customs_cost: Decimal | float | int | None = None,
+        repair_cost: Decimal | float | int | None = None,
+        advertising_cost: Decimal | float | int | None = None,
+        sale_price: Decimal | float | int | None = None,
+    ) -> dict[str, Decimal | None]:
+        return CarRepository.calculate_profit(
+            purchase_price=purchase_price,
+            delivery_cost=delivery_cost,
+            customs_cost=customs_cost,
+            repair_cost=repair_cost,
+            advertising_cost=advertising_cost,
+            sale_price=sale_price,
+        )
+
+    @staticmethod
     async def user_can_access(user_id: int) -> bool:
         if user_id == OWNER_ID:
             return True

@@ -69,6 +69,23 @@ class AuditService:
         AuditService._enqueue(AuditService._record_from_event(event))
 
     @staticmethod
+    async def search(
+        *,
+        event_type: str | None = None,
+        entity_type: str | None = None,
+        entity_id: str | None = None,
+        limit: int = 100,
+    ) -> list[dict[str, Any]]:
+        async with get_session() as session:
+            rows = await AuditRepository(session).search(
+                event_type=event_type,
+                entity_type=entity_type,
+                entity_id=entity_id,
+                limit=limit,
+            )
+        return [AuditRepository.snapshot(row) for row in rows]
+
+    @staticmethod
     async def get_request_history(
         *,
         request_id: str | None = None,

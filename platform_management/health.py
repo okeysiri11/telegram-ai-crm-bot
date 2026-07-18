@@ -8,8 +8,8 @@ from events.event_bus import PlatformEventBus
 
 
 async def get_health_snapshot() -> dict[str, Any]:
-    from database.session import check_db_health
     from platform_management.system_info import get_component_statuses
+    from services.platform_infrastructure_service import platform_infrastructure_service
     from services.sla_dashboard_service import sla_dashboard_service
     from services.smart_assignment_service import smart_assignment_service
     from workflow.workflow_engine import workflow_engine
@@ -38,7 +38,7 @@ async def get_health_snapshot() -> dict[str, Any]:
         "assignment_engine": await _safe(smart_assignment_service.get_statistics, default={}),
         "dashboard": await _safe(sla_dashboard_service.get_statistics, default={}),
         "configuration_center": components.get("configuration", {"status": "unknown"}),
-        "database_probe": await check_db_health(),
+        "database_probe": await platform_infrastructure_service.database_health(),
     }
 
 

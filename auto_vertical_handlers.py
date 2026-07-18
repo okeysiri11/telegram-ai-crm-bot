@@ -950,9 +950,9 @@ async def auto_vertical_flow_handler(message: Message) -> None:
         except InvalidOperation:
             await message.answer("Введите число (цена продажи):")
             return
-        from repositories.car_repository import CarRepository
+        from services.pg_car_engine import CarEngineV1
 
-        profit = CarRepository.calculate_profit(
+        profit = CarEngineV1.calculate_profit_breakdown(
             purchase_price=data.get("purchase", Decimal("0")),
             delivery_cost=data.get("delivery_cost", Decimal("0")),
             customs_cost=data.get("customs_cost", Decimal("0")),

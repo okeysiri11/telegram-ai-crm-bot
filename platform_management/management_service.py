@@ -327,21 +327,14 @@ class ManagementService:
         entity_id: str | None = None,
         limit: int = 100,
     ) -> list[dict[str, Any]]:
-        from audit.audit_repository import AuditRepository
-        from database.session import get_session
-        from sqlalchemy import select
-        from database.models.audit_events import AuditEventRow
+        from audit.audit_service import audit_service
 
-        async with get_session() as session:
-            stmt = select(AuditEventRow).order_by(AuditEventRow.created_at.desc()).limit(limit)
-            if event_type:
-                stmt = stmt.where(AuditEventRow.event_type == event_type)
-            if entity_type:
-                stmt = stmt.where(AuditEventRow.entity_type == entity_type)
-            if entity_id:
-                stmt = stmt.where(AuditEventRow.entity_id == str(entity_id))
-            rows = list((await session.execute(stmt)).scalars().all())
-        return [AuditRepository.snapshot(row) for row in rows]
+        return await audit_service.search(
+            event_type=event_type,
+            entity_type=entity_type,
+            entity_id=entity_id,
+            limit=limit,
+        )
 
     @staticmethod
     async def audit_export(

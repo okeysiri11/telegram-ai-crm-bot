@@ -39,62 +39,12 @@ async def get_system_info() -> dict[str, Any]:
 
 
 async def get_component_statuses() -> dict[str, Any]:
-    from database.session import check_db_health
-    from platform_configuration.config_provider import config_provider
-    from platform_sdk.vertical_registry import vertical_registry
-    from platform_sdk.workflow_loader import sdk_workflow_loader
+    from services.platform_infrastructure_service import platform_infrastructure_service
 
-    db = await check_db_health()
-    redis_status = await _redis_status()
-
-    try:
-        sdk_workflow_loader.ensure_loaded()
-        workflow_count = len(sdk_workflow_loader._registry.list_ids())  # noqa: SLF001
-        workflow_status = "healthy"
-    except Exception as exc:
-        workflow_count = 0
-        workflow_status = "degraded"
-        workflow_error = str(exc)
-    else:
-        workflow_error = None
-
-    return {
-        "database": {
-            "status": "healthy" if db.get("ok") else "unhealthy",
-            "details": db,
-        },
-        "redis": redis_status,
-        "workflow": {
-            "status": workflow_status,
-            "definitions_loaded": workflow_count,
-            "error": workflow_error,
-        },
-        "sdk": {
-            "status": "healthy",
-            "verticals_registered": len(vertical_registry.list_codes()),
-            "verticals_enabled": len(vertical_registry.list_enabled_codes()),
-        },
-        "configuration": {
-            "status": "healthy",
-            "keys_loaded": len(config_provider.snapshot()),
-        },
-        "notifications": {
-            "status": "healthy" if config_provider.is_notification_enabled() else "disabled",
-        },
-    }
+    return await platform_infrastructure_service.component_statuses()
 
 
 async def _redis_status() -> dict[str, Any]:
-    from config import REDIS_URL
+    from services.platform_infrastructure_service import platform_infrastructure_service
 
-    if not REDIS_URL:
-        return {"status": "skipped", "configured": False}
-    try:
-        from redis.asyncio import Redis
-
-        client = Redis.from_url(REDIS_URL, decode_responses=True)
-        await client.ping()
-        await client.aclose()
-        return {"status": "healthy", "configured": True}
-    except Exception as exc:
-        return {"status": "unhealthy", "configured": True, "error": str(exc)}
+    return await platform_infrastructure_service.redis_status()
