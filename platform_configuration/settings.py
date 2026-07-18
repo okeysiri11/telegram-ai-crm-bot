@@ -168,6 +168,21 @@ class PricingSettings(BaseModel):
     pool_limit_ratio: str = "0.9"
 
 
+class LegacyMigrationFlags(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    legacy_users: bool = False
+    legacy_requests: bool = False
+    legacy_notifications: bool = False
+    legacy_ai: bool = False
+    legacy_handlers: bool = False
+    legacy_scheduler: bool = False
+    legacy_database: bool = False
+    legacy_managers: bool = False
+    legacy_workflow: bool = False
+    legacy_configuration: bool = False
+
+
 class PlatformSettings(BaseModel):
     model_config = ConfigDict(frozen=True)
 
@@ -188,6 +203,7 @@ class PlatformSettings(BaseModel):
     operations: OperationsSettings = Field(default_factory=OperationsSettings)
     assignment: AssignmentSettings = Field(default_factory=AssignmentSettings)
     pricing: PricingSettings = Field(default_factory=PricingSettings)
+    legacy_migration: LegacyMigrationFlags = Field(default_factory=LegacyMigrationFlags)
 
     @property
     def is_production(self) -> bool:

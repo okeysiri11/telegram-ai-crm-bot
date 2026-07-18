@@ -80,9 +80,9 @@ def test_migration_report_structure():
     from platform_legacy.migrations import migration_report
 
     report = migration_report()
-    assert "progress" in report
-    assert "adapter_call_volume" in report
-    assert legacy_registry.migration_progress().to_dict()["migration_percent"] >= 0
+    assert "summary" in report
+    assert "subsystems" in report
+    assert report["summary"]["platform_default"] is True
 
 
 def test_legacy_metrics_snapshot():

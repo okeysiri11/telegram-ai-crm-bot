@@ -384,13 +384,9 @@ class ManagementService:
 
     @staticmethod
     async def legacy_metrics() -> dict[str, Any]:
-        from platform_legacy import legacy
-        from platform_legacy.migrations import migration_report
+        from platform_legacy.migration_report import build_migration_report
 
-        return {
-            "snapshot": legacy.metrics(),
-            "migration": migration_report(),
-        }
+        return build_migration_report()
 
     # ---- plugins ----
 

@@ -25,6 +25,7 @@ from platform_configuration.settings import (
     EventBusSettings,
     FeatureFlags,
     JWTSettings,
+    LegacyMigrationFlags,
     ManagementSettings,
     NotificationSettings,
     OperationsSettings,
@@ -213,6 +214,18 @@ class ConfigurationCenter:
                 liquidity_low_threshold=getenv("LIQUIDITY_LOW_THRESHOLD", "1000"),
                 pool_limit_ratio=getenv("LIQUIDITY_POOL_LIMIT_RATIO", "0.9"),
             ),
+            legacy_migration=LegacyMigrationFlags(
+                legacy_users=getenv_bool("LEGACY_USERS", False),
+                legacy_requests=getenv_bool("LEGACY_REQUESTS", False),
+                legacy_notifications=getenv_bool("LEGACY_NOTIFICATIONS", False),
+                legacy_ai=getenv_bool("LEGACY_AI", False),
+                legacy_handlers=getenv_bool("LEGACY_HANDLERS", False),
+                legacy_scheduler=getenv_bool("LEGACY_SCHEDULER", False),
+                legacy_database=getenv_bool("LEGACY_DATABASE", False),
+                legacy_managers=getenv_bool("LEGACY_MANAGERS", False),
+                legacy_workflow=getenv_bool("LEGACY_WORKFLOW", False),
+                legacy_configuration=getenv_bool("LEGACY_CONFIGURATION", False),
+            ),
         )
         self._sync_runtime_provider()
         return self._settings
@@ -231,6 +244,16 @@ class ConfigurationCenter:
                 "feature_flags.plugins.enabled": flags.plugins_enabled,
                 "feature_flags.ai.providers": flags.ai_providers,
                 "feature_flags.notifications.enabled": flags.notifications_enabled,
+                "feature_flags.legacy.users": self.settings.legacy_migration.legacy_users,
+                "feature_flags.legacy.requests": self.settings.legacy_migration.legacy_requests,
+                "feature_flags.legacy.notifications": self.settings.legacy_migration.legacy_notifications,
+                "feature_flags.legacy.ai": self.settings.legacy_migration.legacy_ai,
+                "feature_flags.legacy.handlers": self.settings.legacy_migration.legacy_handlers,
+                "feature_flags.legacy.scheduler": self.settings.legacy_migration.legacy_scheduler,
+                "feature_flags.legacy.database": self.settings.legacy_migration.legacy_database,
+                "feature_flags.legacy.managers": self.settings.legacy_migration.legacy_managers,
+                "feature_flags.legacy.workflow": self.settings.legacy_migration.legacy_workflow,
+                "feature_flags.legacy.configuration": self.settings.legacy_migration.legacy_configuration,
                 "workflow.definitions_auto_reload": self.settings.workflow.auto_reload,
                 "general.environment": self.settings.security.environment,
                 "general.log_level": self.settings.security.log_level,
@@ -280,6 +303,12 @@ class ConfigurationCenter:
         load_environment.cache_clear()
         settings = self.load()
         report = self.validate()
+        try:
+            from platform_legacy.feature_flags import reload_legacy_migration_flags
+
+            reload_legacy_migration_flags()
+        except Exception:
+            logger.debug("legacy_flags_reload_skipped", exc_info=True)
         self._notify_observers()
         self._publish_config_changed(report)
         return settings
