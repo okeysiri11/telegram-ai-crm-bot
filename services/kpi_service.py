@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 import time
 import uuid
 from datetime import datetime, timezone
 from typing import Any
 
 from database.session import get_session
+from platform_configuration.config_provider import config_provider
 from events.base_event import BaseEvent
 from events.owner_events import OwnerEscalationEvent
 from events.smart_assignment_events import SmartAssignmentCompletedEvent
@@ -36,7 +36,9 @@ _CACHE_TTL_SECONDS = 300
 _subscribed = False
 _cache: dict[str, tuple[float, dict[str, Any]]] = {}
 
-SLA_FIRST_RESPONSE_SEC = int(os.getenv("SLA_FIRST_RESPONSE_SEC", str(30 * 60)))
+
+def _sla_first_response_sec() -> int:
+    return config_provider.sla_settings()["first_response_sec"]
 
 
 class KpiService:
@@ -183,7 +185,7 @@ class KpiService:
             if event.sla_compliant is False:
                 sla_compliant = 0
             elif row and row.time_to_first_response_seconds is not None:
-                sla_compliant = 1 if row.time_to_first_response_seconds <= SLA_FIRST_RESPONSE_SEC else 0
+                sla_compliant = 1 if row.time_to_first_response_seconds <= _sla_first_response_sec() else 0
 
             await repo.bump_vertical(
                 vertical=event.vertical,

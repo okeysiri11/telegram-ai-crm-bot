@@ -25,6 +25,28 @@ class ConfigurationPermissionError(PermissionError):
 
 class ConfigurationService:
     @staticmethod
+    async def _check_read_permission(
+        *,
+        actor_telegram_id: int | None = None,
+    ) -> None:
+        if actor_telegram_id is None:
+            return
+        permission = config_provider.get(
+            "security.config_read_permission",
+            "platform.config.read",
+        )
+        from services.pg_platform_permissions_engine import PlatformPermissionsEngineV1
+
+        allowed = await PlatformPermissionsEngineV1.user_has_permission(
+            actor_telegram_id,
+            str(permission),
+        )
+        if not allowed:
+            raise ConfigurationPermissionError(
+                f"Missing permission {permission!r} for actor {actor_telegram_id}"
+            )
+
+    @staticmethod
     async def _check_write_permission(
         changed_by: str | None,
         *,
@@ -76,7 +98,13 @@ class ConfigurationService:
         await publish(event)
 
     @staticmethod
-    async def get(key: str, *, use_cache: bool = True) -> Any:
+    async def get(
+        key: str,
+        *,
+        use_cache: bool = True,
+        actor_telegram_id: int | None = None,
+    ) -> Any:
+        await ConfigurationService._check_read_permission(actor_telegram_id=actor_telegram_id)
         ConfigValidator.validate_key(key)
         if use_cache:
             cached = await config_cache.get(key)
@@ -296,4 +324,8 @@ class ConfigurationService:
         return seed_result
 
 
+# Spec alias — `import()` is reserved in Python.
+ConfigurationService.import_ = ConfigurationService.import_config
+
 configuration_service = ConfigurationService()
+configuration_service.import_ = configuration_service.import_config

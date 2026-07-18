@@ -40,6 +40,12 @@ class SdkWorkflowLoader:
         logger.info("sdk_workflows_loaded count=%s", count)
         return count
 
+    def reload(self) -> int:
+        """Clear and reload workflow definitions (no process restart)."""
+        self._registry.clear()
+        self._loaded = False
+        return self.ensure_loaded()
+
     def get_definition(self, workflow_name: str) -> WorkflowDefinition:
         self.ensure_loaded()
         definition = self._registry.get(workflow_name)

@@ -3,19 +3,20 @@
 from __future__ import annotations
 
 import logging
-import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from database.session import get_session
+from platform_configuration.config_provider import config_provider
 from events.event_bus import publish
 from events.request_events import ManagerEscalationEvent, RequestOverdueEvent
 from repositories.escalation_repository import EscalationRepository
 
 logger = logging.getLogger(__name__)
 
-ESCALATION_LEVEL2_AFTER_SEC = int(os.getenv("ESCALATION_LEVEL2_AFTER_SEC", str(15 * 60)))
-ESCALATION_LEVEL3_AFTER_SEC = int(os.getenv("ESCALATION_LEVEL3_AFTER_SEC", str(15 * 60)))
+
+def _escalation_level_timers() -> dict[str, int]:
+    return config_provider.escalation_timers()
 
 
 class EscalationService:
@@ -25,12 +26,14 @@ class EscalationService:
 
     @staticmethod
     def _deadline_level2(row) -> datetime:
-        return row.first_response_deadline + timedelta(seconds=ESCALATION_LEVEL2_AFTER_SEC)
+        timers = _escalation_level_timers()
+        return row.first_response_deadline + timedelta(seconds=timers["level2_after_sec"])
 
     @staticmethod
     def _deadline_level3(row) -> datetime:
+        timers = _escalation_level_timers()
         return row.first_response_deadline + timedelta(
-            seconds=ESCALATION_LEVEL2_AFTER_SEC + ESCALATION_LEVEL3_AFTER_SEC
+            seconds=timers["level2_after_sec"] + timers["level3_after_sec"]
         )
 
     @staticmethod

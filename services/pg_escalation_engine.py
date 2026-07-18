@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import os
 from datetime import datetime, timezone
 from typing import Any
 
@@ -11,15 +10,13 @@ from sqlalchemy import select
 
 from database.models.lead_sla import LeadSlaRecord
 from database.session import get_session
+from platform_configuration.config_provider import config_provider
 
 logger = logging.getLogger(__name__)
 
-ESCALATION_STEPS = (
-    (int(os.getenv("ESCALATION_REMIND_SEC", "300")), 1),      # 5 min
-    (int(os.getenv("ESCALATION_REPEAT_SEC", "900")), 2),      # 15 min
-    (int(os.getenv("ESCALATION_REASSIGN_SEC", "1800")), 3),   # 30 min
-    (int(os.getenv("ESCALATION_OWNER_SEC", "3600")), 4),      # 60 min
-)
+
+def _escalation_steps() -> tuple[tuple[int, int], ...]:
+    return config_provider.escalation_steps()
 
 
 class EscalationEngineV1:
@@ -48,7 +45,7 @@ class EscalationEngineV1:
                     continue
                 elapsed = int((now - base).total_seconds())
                 target_level = 0
-                for threshold, level in ESCALATION_STEPS:
+                for threshold, level in _escalation_steps():
                     if elapsed >= threshold:
                         target_level = level
 

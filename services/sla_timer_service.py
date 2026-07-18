@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import os
 from datetime import datetime, timedelta, timezone
 
 from database.session import get_session
+from platform_configuration.config_provider import config_provider
 from events.base_event import BaseEvent
 from events.request_events import (
     ManagerFirstResponseEvent,
@@ -20,8 +20,9 @@ logger = logging.getLogger(__name__)
 
 _subscribed = False
 
-SLA_FIRST_RESPONSE_SEC = int(os.getenv("SLA_FIRST_RESPONSE_SEC", str(30 * 60)))
-SLA_CLOSE_SEC = int(os.getenv("SLA_CLOSE_SEC", str(72 * 3600)))
+
+def _sla_timers() -> dict[str, int]:
+    return config_provider.sla_settings()
 
 
 class SlaTimerService:
@@ -60,8 +61,9 @@ class SlaTimerService:
     @staticmethod
     async def _on_assigned(event: RequestAssignedEvent) -> None:
         assigned_at = event.occurred_at or datetime.now(timezone.utc)
-        first_deadline = assigned_at + timedelta(seconds=SLA_FIRST_RESPONSE_SEC)
-        completion_deadline = assigned_at + timedelta(seconds=SLA_CLOSE_SEC)
+        sla = _sla_timers()
+        first_deadline = assigned_at + timedelta(seconds=sla["first_response_sec"])
+        completion_deadline = assigned_at + timedelta(seconds=sla["close_sec"])
 
         async with get_session() as session:
             await EscalationRepository(session).create_sla(

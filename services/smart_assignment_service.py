@@ -40,7 +40,7 @@ _MAX_LATENCY_SAMPLES = 200
 
 
 def _strategy() -> AssignmentStrategy:
-    mode = config_provider.assignment_mode()
+    mode = config_provider.resolve_assignment_mode()
     try:
         return AssignmentStrategy(mode)
     except ValueError:

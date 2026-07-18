@@ -67,6 +67,15 @@ def register_platform_event_handlers() -> None:
 
     smart_assignment_service.subscribe_to_event_bus()
 
+    from events.configuration_events import ConfigurationChangedEvent
+    from events.handlers.configuration_handler import ConfigurationEventHandler
+
+    subscribe(
+        ConfigurationChangedEvent,
+        ConfigurationEventHandler.handle,
+        handler_id="configuration_hot_reload",
+    )
+
     from workflow.workflow_kpi import workflow_kpi_service
 
     workflow_kpi_service.subscribe_to_event_bus()

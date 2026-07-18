@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -15,9 +14,12 @@ from database.models.client_request import ClientRequest
 from database.models.platform_metrics import RequestMetric
 from database.models.request_sla import RequestSla
 from database.models.users import User
+from platform_configuration.config_provider import config_provider
 from src.platform.layers.base_repository import BaseRepository
 
-RISK_WINDOW_MINUTES = int(os.getenv("SLA_RISK_MINUTES", "30"))
+
+def _risk_window_minutes() -> int:
+    return config_provider.sla_settings()["risk_window_minutes"]
 
 
 def _utcnow() -> datetime:
@@ -52,7 +54,7 @@ class SLARepository(BaseRepository):
 
     async def get_risk_requests(self, *, limit: int = 100) -> list[dict[str, Any]]:
         now = _utcnow()
-        risk_until = now + timedelta(minutes=RISK_WINDOW_MINUTES)
+        risk_until = now + timedelta(minutes=_risk_window_minutes())
         result = await self.session.execute(
             select(RequestSla)
             .where(
@@ -70,7 +72,7 @@ class SLARepository(BaseRepository):
     async def get_sla_statistics(self) -> dict[str, Any]:
         now = _utcnow()
         today_start = _start_of_today_utc()
-        risk_until = now + timedelta(minutes=RISK_WINDOW_MINUTES)
+        risk_until = now + timedelta(minutes=_risk_window_minutes())
 
         active = (
             await self.session.execute(

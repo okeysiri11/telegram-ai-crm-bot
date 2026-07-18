@@ -411,3 +411,134 @@ async def test_hot_reload_assignment_mode_without_restart():
     assert SmartAssignmentService.strategy_name() == "SMART"
     config_provider.update_key("smart_assignment.mode", "ROUND_ROBIN")
     assert SmartAssignmentService.strategy_name() == "ROUND_ROBIN"
+
+
+def test_feature_flag_helpers():
+    config_provider.apply_snapshot(
+        {
+            "feature_flags.assignment.smart": False,
+            "feature_flags.assignment.round_robin": True,
+            "smart_assignment.mode": "SMART",
+        }
+    )
+    assert config_provider.resolve_assignment_mode() == "ROUND_ROBIN"
+    assert config_provider.is_notification_enabled() is True
+    assert config_provider.is_plugin_enabled() is True
+
+
+@pytest.mark.asyncio
+async def test_assignment_strategy_fallback_when_disabled():
+    config_provider.apply_snapshot(
+        {
+            "feature_flags.assignment.smart": False,
+            "feature_flags.assignment.round_robin": True,
+            "smart_assignment.mode": "SMART",
+        }
+    )
+    from services.smart_assignment_service import SmartAssignmentService
+
+    assert SmartAssignmentService.strategy_name() == "ROUND_ROBIN"
+
+
+@pytest.mark.asyncio
+async def test_configuration_import_alias():
+    assert hasattr(configuration_service, "import_")
+    assert configuration_service.import_ is configuration_service.import_config
+
+
+@pytest.mark.asyncio
+async def test_read_permission_denied():
+    with patch(
+        "services.pg_platform_permissions_engine.PlatformPermissionsEngineV1.user_has_permission",
+        new_callable=AsyncMock,
+        return_value=False,
+    ):
+        with pytest.raises(ConfigurationPermissionError):
+            await configuration_service.get(
+                "sla.assignment_sec",
+                actor_telegram_id=99,
+            )
+
+
+@pytest.mark.asyncio
+async def test_workflow_reload_on_config_change():
+    config_provider.apply_snapshot({"workflow.definitions_auto_reload": True})
+    reloaded: list[int] = []
+
+    with patch(
+        "platform_sdk.workflow_loader.sdk_workflow_loader.reload",
+        return_value=3,
+    ) as reload_mock:
+        from events.handlers.configuration_handler import ConfigurationEventHandler
+
+        await ConfigurationEventHandler.handle(
+            ConfigurationChangedEvent(
+                config_key="workflow.definitions_auto_reload",
+                section="workflow",
+                action="set",
+                old_value=False,
+                new_value=True,
+            )
+        )
+        reload_mock.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_configuration_admin_delete_and_history_routes(mock_session_cm):
+    key = "notifications.enabled"
+    history = _history(key, 2, True, None, action="delete")
+    repo = MagicMock()
+    repo.get_entry = AsyncMock(return_value=_entry(key, True))
+    repo.delete_key = AsyncMock(return_value=history)
+    repo.get_history = AsyncMock(return_value=[history])
+
+    app = web.Application()
+    register_configuration_admin_routes(app)
+
+    with patch(
+        "platform_configuration.config_service.get_session",
+        return_value=mock_session_cm,
+    ), patch(
+        "platform_configuration.config_service.ConfigRepository",
+        wraps=ConfigRepository,
+    ) as repo_cls, patch(
+        "platform_configuration.config_service.config_cache.delete",
+        new_callable=AsyncMock,
+    ), patch(
+        "platform_configuration.config_service.config_cache.invalidate_section",
+        new_callable=AsyncMock,
+    ), patch(
+        "platform_configuration.config_service.publish",
+        new_callable=AsyncMock,
+    ):
+        repo_cls.return_value = repo
+        async with TestClient(TestServer(app)) as client:
+            delete_resp = await client.request(
+                "DELETE",
+                f"/api/v1/configuration/{key}",
+                json={"changed_by": "system"},
+            )
+            assert delete_resp.status == 200
+
+            history_resp = await client.get(f"/api/v1/configuration/{key}/history")
+            assert history_resp.status == 200
+            body = await history_resp.json()
+            assert body["key"] == key
+            assert len(body["history"]) == 1
+
+
+@pytest.mark.asyncio
+async def test_vertical_registry_enabled_filter():
+    from platform_sdk.vertical_registry import VerticalRegistry
+    from platform_sdk.verticals.auto_vertical import AutoVertical
+
+    VerticalRegistry.reset_singleton()
+    registry = VerticalRegistry()
+    registry.clear()
+    registry.register(AutoVertical)
+    config_provider.apply_snapshot({"feature_flags.verticals.auto": False})
+    assert "auto" in registry.list_codes()
+    assert "auto" not in registry.list_enabled_codes()
+    entry = registry.list()[0]
+    assert entry["enabled"] is False
+

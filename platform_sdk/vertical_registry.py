@@ -49,17 +49,25 @@ class VerticalRegistry:
         self._built[code.strip().lower()] = instance
 
     def list(self) -> list[dict[str, str]]:
+        from platform_configuration.config_provider import config_provider
+
         return [
             {
                 "code": code,
                 "workflow_name": cls.workflow_name,
                 "manager_strategy": cls.manager_strategy,
+                "enabled": config_provider.is_vertical_enabled(code),
             }
             for code, cls in sorted(self._verticals.items())
         ]
 
     def list_codes(self) -> list[str]:
         return sorted(self._verticals.keys())
+
+    def list_enabled_codes(self) -> list[str]:
+        from platform_configuration.config_provider import config_provider
+
+        return [code for code in self.list_codes() if config_provider.is_vertical_enabled(code)]
 
     def remove(self, code: str) -> None:
         key = code.strip().lower()

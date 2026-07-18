@@ -72,9 +72,61 @@ class ConfigProvider:
         )
 
     @staticmethod
+    def is_plugin_enabled() -> bool:
+        return ConfigProvider.is_feature_enabled("feature_flags.plugins.enabled", default=True)
+
+    @staticmethod
+    def is_ai_provider_enabled() -> bool:
+        return ConfigProvider.is_feature_enabled(
+            "feature_flags.ai.providers",
+            default=False,
+        ) and ConfigProvider.is_feature_enabled("ai.openrouter_enabled", default=False)
+
+    @staticmethod
+    def is_notification_enabled() -> bool:
+        return ConfigProvider.is_feature_enabled(
+            "notifications.enabled",
+            default=True,
+        ) and ConfigProvider.is_feature_enabled(
+            "feature_flags.notifications.enabled",
+            default=True,
+        )
+
+    @staticmethod
+    def is_assignment_strategy_enabled(strategy: str) -> bool:
+        key = strategy.strip().lower()
+        flag_map = {
+            "smart": "feature_flags.assignment.smart",
+            "round_robin": "feature_flags.assignment.round_robin",
+            "least_loaded": "feature_flags.assignment.least_loaded",
+            "priority": "feature_flags.assignment.priority",
+            "weighted": "feature_flags.assignment.weighted",
+        }
+        flag_key = flag_map.get(key)
+        if flag_key is None:
+            return True
+        return ConfigProvider.is_feature_enabled(flag_key, default=True)
+
+    @staticmethod
+    def is_experimental_enabled(feature: str) -> bool:
+        return ConfigProvider.is_feature_enabled(
+            f"feature_flags.experimental.{feature}",
+            default=False,
+        )
+
+    @staticmethod
+    def resolve_assignment_mode(preferred: str | None = None) -> str:
+        mode = (preferred or str(ConfigProvider.get("smart_assignment.mode", "SMART"))).upper()
+        if ConfigProvider.is_assignment_strategy_enabled(mode):
+            return mode
+        for fallback in ("ROUND_ROBIN", "LEAST_LOADED", "PRIORITY", "WEIGHTED", "SMART"):
+            if ConfigProvider.is_assignment_strategy_enabled(fallback):
+                return fallback
+        return "ROUND_ROBIN"
+
+    @staticmethod
     def assignment_mode() -> str:
-        mode = ConfigProvider.get("smart_assignment.mode", "SMART")
-        return str(mode).upper()
+        return ConfigProvider.resolve_assignment_mode()
 
     @staticmethod
     def manager_assignment_mode() -> str:
@@ -87,7 +139,29 @@ class ConfigProvider:
             "assignment_sec": int(ConfigProvider.get("sla.assignment_sec", 900)),
             "first_response_sec": int(ConfigProvider.get("sla.first_response_sec", 1800)),
             "close_sec": int(ConfigProvider.get("sla.close_sec", 259200)),
+            "risk_window_minutes": int(ConfigProvider.get("sla.risk_window_minutes", 30)),
         }
+
+    @staticmethod
+    def escalation_timers() -> dict[str, int]:
+        return {
+            "level2_after_sec": int(ConfigProvider.get("escalation.level2_after_sec", 900)),
+            "level3_after_sec": int(ConfigProvider.get("escalation.level3_after_sec", 900)),
+            "remind_sec": int(ConfigProvider.get("escalation.remind_sec", 300)),
+            "repeat_sec": int(ConfigProvider.get("escalation.repeat_sec", 900)),
+            "reassign_sec": int(ConfigProvider.get("escalation.reassign_sec", 1800)),
+            "owner_sec": int(ConfigProvider.get("escalation.owner_sec", 3600)),
+        }
+
+    @staticmethod
+    def escalation_steps() -> tuple[tuple[int, int], ...]:
+        timers = ConfigProvider.escalation_timers()
+        return (
+            (timers["remind_sec"], 1),
+            (timers["repeat_sec"], 2),
+            (timers["reassign_sec"], 3),
+            (timers["owner_sec"], 4),
+        )
 
     @staticmethod
     def smart_assignment_weights() -> dict[str, float]:

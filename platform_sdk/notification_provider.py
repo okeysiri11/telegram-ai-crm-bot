@@ -8,6 +8,12 @@ from typing import Any
 logger = logging.getLogger(__name__)
 
 
+def _notifications_allowed() -> bool:
+    from platform_configuration.config_provider import config_provider
+
+    return config_provider.is_notification_enabled()
+
+
 class NotificationProvider:
     """All outbound notifications go through service layer delivery engines."""
 
@@ -21,6 +27,9 @@ class NotificationProvider:
         manager_telegram_id: int | None = None,
         **_: Any,
     ) -> None:
+        if not _notifications_allowed():
+            logger.debug("notifications_disabled skip=notify_created")
+            return
         from services.notification_service import notification_service
 
         await notification_service.notify_managers_new_request(
@@ -40,6 +49,9 @@ class NotificationProvider:
         bot=None,
         **_: Any,
     ) -> None:
+        if not _notifications_allowed():
+            logger.debug("notifications_disabled skip=notify_assigned")
+            return
         from services.notification_service import notification_service
 
         await notification_service.notify_assignment(
@@ -57,6 +69,9 @@ class NotificationProvider:
         bot=None,
         **_: Any,
     ) -> None:
+        if not _notifications_allowed():
+            logger.debug("notifications_disabled skip=notify_completed")
+            return
         from services.notification_service import notification_service
 
         if client_telegram_id and bot:
@@ -75,6 +90,9 @@ class NotificationProvider:
         overdue_seconds: int = 0,
         **_: Any,
     ) -> None:
+        if not _notifications_allowed():
+            logger.debug("notifications_disabled skip=notify_overdue")
+            return
         from services.notification_service import notification_service
 
         title = f"SLA просрочена [{vertical.upper()}] #{request_number}"
@@ -102,6 +120,14 @@ class NotificationProvider:
         reason: str = "owner_escalation",
         **_: Any,
     ) -> None:
+        from platform_configuration.config_provider import config_provider
+
+        if not _notifications_allowed():
+            logger.debug("notifications_disabled skip=notify_owner")
+            return
+        if not config_provider.is_feature_enabled("notifications.owner_notifications", default=True):
+            logger.debug("owner_notifications_disabled")
+            return
         from config import PLATFORM_OWNER_TELEGRAM_ID, PLATFORM_OWNER_NAME
         from services.notification_service import notification_service
 
