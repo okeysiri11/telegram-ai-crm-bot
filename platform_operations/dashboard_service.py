@@ -15,6 +15,14 @@ from platform_operations.activity_service import (
     build_recent_audit,
     build_recent_events,
 )
+from platform_operations.jobs_widgets import (
+    build_failed_jobs,
+    build_job_execution_rate,
+    build_job_queue_size,
+    build_job_retry_rate,
+    build_running_jobs,
+    build_worker_health,
+)
 from platform_operations.metrics_service import build_top_kpis
 from platform_operations.models import (
     DashboardPayload,
@@ -53,6 +61,12 @@ WIDGET_BUILDERS: dict[str, WidgetBuilder] = {
     "top_kpis": build_top_kpis,
     "notifications_queue": build_notifications_queue,
     "platform_version": build_platform_version,
+    "running_jobs": build_running_jobs,
+    "failed_jobs": build_failed_jobs,
+    "job_queue_size": build_job_queue_size,
+    "worker_health": build_worker_health,
+    "job_execution_rate": build_job_execution_rate,
+    "job_retry_rate": build_job_retry_rate,
 }
 
 _DASHBOARD_CACHE_KEY = "full_dashboard"

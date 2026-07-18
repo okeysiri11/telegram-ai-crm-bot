@@ -573,6 +573,10 @@ def register_management_routes(app: web.Application) -> None:
 
     register_integration_routes(app)
 
+    from platform_jobs.jobs_router import register_jobs_routes
+
+    register_jobs_routes(app)
+
     app.router.add_get(f"{prefix}/openapi.json", openapi_handler)
     app.router.add_get(f"{prefix}/docs", swagger_ui_handler)
 

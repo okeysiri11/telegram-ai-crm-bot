@@ -18,6 +18,12 @@ WidgetId = Literal[
     "top_kpis",
     "notifications_queue",
     "platform_version",
+    "running_jobs",
+    "failed_jobs",
+    "job_queue_size",
+    "worker_health",
+    "job_execution_rate",
+    "job_retry_rate",
 ]
 
 
@@ -44,6 +50,12 @@ WIDGET_SPECS: dict[str, WidgetSpec] = {
         WidgetSpec("top_kpis", "Top KPIs", 60, 60),
         WidgetSpec("notifications_queue", "Notifications Queue", 15, 15),
         WidgetSpec("platform_version", "Platform Version", 300, 300),
+        WidgetSpec("running_jobs", "Running Jobs", 10, 10),
+        WidgetSpec("failed_jobs", "Failed Jobs", 15, 15),
+        WidgetSpec("job_queue_size", "Job Queue Size", 10, 10),
+        WidgetSpec("worker_health", "Worker Health", 15, 15),
+        WidgetSpec("job_execution_rate", "Job Execution Rate", 30, 30),
+        WidgetSpec("job_retry_rate", "Job Retry Rate", 30, 30),
     )
 }
 
