@@ -23,6 +23,16 @@ from platform_operations.jobs_widgets import (
     build_running_jobs,
     build_worker_health,
 )
+from platform_operations.observability_widgets import (
+    database_health_widget as build_observability_database_health,
+    integration_health_widget as build_observability_integration_health,
+    performance_widget as build_observability_performance,
+    platform_health_widget as build_platform_health,
+    queue_health_widget as build_observability_queue_health,
+    realtime_health_widget as build_observability_realtime_health,
+    slowest_apis_widget as build_slowest_apis,
+    worker_health_widget as build_observability_worker_health,
+)
 from platform_operations.metrics_service import build_top_kpis
 from platform_operations.models import (
     DashboardPayload,
@@ -67,6 +77,14 @@ WIDGET_BUILDERS: dict[str, WidgetBuilder] = {
     "worker_health": build_worker_health,
     "job_execution_rate": build_job_execution_rate,
     "job_retry_rate": build_job_retry_rate,
+    "platform_health": build_platform_health,
+    "observability_performance": build_observability_performance,
+    "slowest_apis": build_slowest_apis,
+    "observability_queue_health": build_observability_queue_health,
+    "observability_worker_health": build_observability_worker_health,
+    "observability_integration_health": build_observability_integration_health,
+    "observability_realtime_health": build_observability_realtime_health,
+    "observability_database_health": build_observability_database_health,
 }
 
 _DASHBOARD_CACHE_KEY = "full_dashboard"

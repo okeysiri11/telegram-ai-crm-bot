@@ -577,6 +577,10 @@ def register_management_routes(app: web.Application) -> None:
 
     register_jobs_routes(app)
 
+    from platform_observability.telemetry_router import register_observability_routes
+
+    register_observability_routes(app)
+
     app.router.add_get(f"{prefix}/openapi.json", openapi_handler)
     app.router.add_get(f"{prefix}/docs", swagger_ui_handler)
 

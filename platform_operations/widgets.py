@@ -24,6 +24,14 @@ WidgetId = Literal[
     "worker_health",
     "job_execution_rate",
     "job_retry_rate",
+    "platform_health",
+    "observability_performance",
+    "slowest_apis",
+    "observability_queue_health",
+    "observability_worker_health",
+    "observability_integration_health",
+    "observability_realtime_health",
+    "observability_database_health",
 ]
 
 
@@ -56,6 +64,14 @@ WIDGET_SPECS: dict[str, WidgetSpec] = {
         WidgetSpec("worker_health", "Worker Health", 15, 15),
         WidgetSpec("job_execution_rate", "Job Execution Rate", 30, 30),
         WidgetSpec("job_retry_rate", "Job Retry Rate", 30, 30),
+        WidgetSpec("platform_health", "Platform Health", 15, 15),
+        WidgetSpec("observability_performance", "Performance", 30, 30),
+        WidgetSpec("slowest_apis", "Slowest APIs", 60, 60),
+        WidgetSpec("observability_queue_health", "Queue Health", 15, 15),
+        WidgetSpec("observability_worker_health", "Worker Health", 15, 15),
+        WidgetSpec("observability_integration_health", "Integration Health", 30, 30),
+        WidgetSpec("observability_realtime_health", "Realtime Health", 15, 15),
+        WidgetSpec("observability_database_health", "Database Health", 30, 30),
     )
 }
 

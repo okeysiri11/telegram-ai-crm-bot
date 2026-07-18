@@ -64,6 +64,10 @@ IAM_PERMISSIONS: dict[str, str] = {
     "jobs.read": "View job engine status",
     "jobs.write": "Enqueue and manage jobs",
     "jobs.admin": "Full job engine access",
+    # Observability
+    "observability.read": "View observability data",
+    "observability.write": "Manage alerts and retention",
+    "observability.admin": "Full observability access",
 }
 
 PERMISSION_TREE: dict[str, list[str]] = {
@@ -94,6 +98,11 @@ PERMISSION_TREE: dict[str, list[str]] = {
         "jobs.read",
         "jobs.write",
         "jobs.admin",
+    ],
+    "observability": [
+        "observability.read",
+        "observability.write",
+        "observability.admin",
     ],
 }
 
