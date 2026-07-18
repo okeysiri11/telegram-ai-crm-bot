@@ -28,7 +28,12 @@ class ConfigurationService:
     async def _check_read_permission(
         *,
         actor_telegram_id: int | None = None,
+        require_actor: bool = False,
     ) -> None:
+        if require_actor and actor_telegram_id is None:
+            raise ConfigurationPermissionError(
+                "Configuration read requires authenticated actor"
+            )
         if actor_telegram_id is None:
             return
         permission = config_provider.get(
@@ -51,9 +56,14 @@ class ConfigurationService:
         changed_by: str | None,
         *,
         actor_telegram_id: int | None = None,
+        require_actor: bool = False,
     ) -> None:
         if changed_by in _SYSTEM_ACTORS:
             return
+        if require_actor and actor_telegram_id is None:
+            raise ConfigurationPermissionError(
+                "Configuration write requires authenticated actor"
+            )
         permission = config_provider.get(
             "security.config_write_permission",
             "platform.config.write",
@@ -70,7 +80,7 @@ class ConfigurationService:
                     f"Missing permission {permission!r} for actor {actor_telegram_id}"
                 )
             return
-        if changed_by:
+        if not require_actor and changed_by:
             return
         raise ConfigurationPermissionError("Configuration write requires actor or system context")
 
@@ -103,8 +113,12 @@ class ConfigurationService:
         *,
         use_cache: bool = True,
         actor_telegram_id: int | None = None,
+        require_actor: bool = False,
     ) -> Any:
-        await ConfigurationService._check_read_permission(actor_telegram_id=actor_telegram_id)
+        await ConfigurationService._check_read_permission(
+            actor_telegram_id=actor_telegram_id,
+            require_actor=require_actor,
+        )
         ConfigValidator.validate_key(key)
         if use_cache:
             cached = await config_cache.get(key)
@@ -130,10 +144,12 @@ class ConfigurationService:
         changed_by: str | None = None,
         reason: str | None = None,
         actor_telegram_id: int | None = None,
+        require_actor: bool = False,
     ) -> dict[str, Any]:
         await ConfigurationService._check_write_permission(
             changed_by,
             actor_telegram_id=actor_telegram_id,
+            require_actor=require_actor,
         )
         validated = ConfigValidator.validate_value(key, value)
 
@@ -168,10 +184,12 @@ class ConfigurationService:
         changed_by: str | None = None,
         reason: str | None = None,
         actor_telegram_id: int | None = None,
+        require_actor: bool = False,
     ) -> dict[str, Any] | None:
         await ConfigurationService._check_write_permission(
             changed_by,
             actor_telegram_id=actor_telegram_id,
+            require_actor=require_actor,
         )
         ConfigValidator.validate_key(key)
 
@@ -206,10 +224,12 @@ class ConfigurationService:
         changed_by: str | None = None,
         reason: str | None = None,
         actor_telegram_id: int | None = None,
+        require_actor: bool = False,
     ) -> dict[str, Any] | None:
         await ConfigurationService._check_write_permission(
             changed_by,
             actor_telegram_id=actor_telegram_id,
+            require_actor=require_actor,
         )
         ConfigValidator.validate_key(key)
 
@@ -264,10 +284,12 @@ class ConfigurationService:
         changed_by: str | None = None,
         reason: str | None = None,
         actor_telegram_id: int | None = None,
+        require_actor: bool = False,
     ) -> dict[str, Any]:
         await ConfigurationService._check_write_permission(
             changed_by or "import",
             actor_telegram_id=actor_telegram_id,
+            require_actor=require_actor,
         )
 
         entries = payload.get("entries") if isinstance(payload.get("entries"), dict) else payload

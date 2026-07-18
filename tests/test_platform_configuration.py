@@ -447,6 +447,23 @@ async def test_configuration_import_alias():
 
 
 @pytest.mark.asyncio
+async def test_read_requires_actor_when_enforced():
+    with pytest.raises(ConfigurationPermissionError):
+        await configuration_service.get("sla.assignment_sec", require_actor=True)
+
+
+@pytest.mark.asyncio
+async def test_write_requires_actor_when_enforced():
+    with pytest.raises(ConfigurationPermissionError):
+        await configuration_service.set(
+            "sla.assignment_sec",
+            500,
+            changed_by="anonymous",
+            require_actor=True,
+        )
+
+
+@pytest.mark.asyncio
 async def test_read_permission_denied():
     with patch(
         "services.pg_platform_permissions_engine.PlatformPermissionsEngineV1.user_has_permission",

@@ -71,7 +71,11 @@ class ManagementService:
     async def config_get(key: str, *, actor_telegram_id: int | None = None) -> Any:
         from platform_configuration.config_service import configuration_service
 
-        return await configuration_service.get(key, actor_telegram_id=actor_telegram_id)
+        return await configuration_service.get(
+            key,
+            actor_telegram_id=actor_telegram_id,
+            require_actor=True,
+        )
 
     @staticmethod
     async def config_set(
@@ -90,6 +94,7 @@ class ManagementService:
             changed_by=changed_by,
             reason=reason,
             actor_telegram_id=actor_telegram_id,
+            require_actor=True,
         )
 
     @staticmethod
@@ -107,6 +112,7 @@ class ManagementService:
             changed_by=changed_by,
             reason=reason,
             actor_telegram_id=actor_telegram_id,
+            require_actor=True,
         )
 
     @staticmethod
@@ -126,6 +132,7 @@ class ManagementService:
             changed_by=changed_by,
             reason=reason,
             actor_telegram_id=actor_telegram_id,
+            require_actor=True,
         )
 
     @staticmethod
@@ -155,6 +162,7 @@ class ManagementService:
             changed_by=changed_by,
             reason=reason,
             actor_telegram_id=actor_telegram_id,
+            require_actor=True,
         )
 
     @staticmethod
