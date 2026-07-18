@@ -1,0 +1,58 @@
+{
+  "verdict": "FAIL",
+  "score": 34.29,
+  "gates_passed": 2,
+  "gates_total": 12,
+  "failed_gates": [
+    {
+      "id": "repository_service_imports",
+      "description": "Repository \u2192 Service imports = 0",
+      "evidence": "19 Repository \u2192 Service import(s)"
+    },
+    {
+      "id": "sdk_repository_imports",
+      "description": "SDK \u2192 Repository imports = 0",
+      "evidence": "3 SDK \u2192 Repository import(s)"
+    },
+    {
+      "id": "sdk_database_imports",
+      "description": "SDK \u2192 Database imports = 0",
+      "evidence": "7 SDK \u2192 Database access point(s)"
+    },
+    {
+      "id": "unauthorized_admin_api",
+      "description": "Unauthorized Admin API = 0",
+      "evidence": "4 admin route registration call(s) in api/server.py"
+    },
+    {
+      "id": "ci_enforcement",
+      "description": "CI enforcement enabled (.github/workflows)",
+      "evidence": "0 workflow file(s) under .github/workflows"
+    },
+    {
+      "id": "documentation_sync",
+      "description": "Documentation synchronized (README reflects platform)",
+      "evidence": "README out of sync"
+    },
+    {
+      "id": "security_tests",
+      "description": "Security tests pass",
+      "evidence": "pytest security exit=0 admin_security_test=False"
+    },
+    {
+      "id": "dependency_audit",
+      "description": "Dependency audit passes (governed cycles)",
+      "evidence": "governed_cycles=76 all_cycles=84 import_critical=0"
+    },
+    {
+      "id": "canonical_event_bus",
+      "description": "PlatformEventBus is canonical publish path",
+      "evidence": "direct_crm_publishers=15 adapter_wired=True"
+    },
+    {
+      "id": "release_readiness",
+      "description": "Release readiness = PASS",
+      "evidence": "One or more critical gates failed"
+    }
+  ]
+}
