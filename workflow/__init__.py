@@ -1,13 +1,43 @@
-# Configurable workflow engine — YAML/JSON vertical flows.
+# Configurable workflow engine — facade over unified platform_workflows runtime.
 
-from workflow.workflow_engine import WorkflowEngine, workflow_engine
-from workflow.workflow_context import WorkflowContext
-from workflow.workflow_registry import WorkflowRegistry, workflow_registry
+from platform_workflows import (
+    ExecutionStatus,
+    StepDefinition,
+    StepType,
+    WorkflowContext,
+    WorkflowDefinition,
+    WorkflowEngine,
+    WorkflowExecutor,
+    WorkflowLoader,
+    WorkflowRegistry,
+    WorkflowValidationError,
+    WorkflowValidator,
+    evaluate_condition,
+    parse_workflow_document,
+    register_service,
+    workflow_engine,
+    workflow_executor,
+    workflow_registry,
+    workflow_steps,
+)
 
 __all__ = [
+    "ExecutionStatus",
+    "StepDefinition",
+    "StepType",
     "WorkflowContext",
+    "WorkflowDefinition",
     "WorkflowEngine",
+    "WorkflowExecutor",
+    "WorkflowLoader",
     "WorkflowRegistry",
+    "WorkflowValidationError",
+    "WorkflowValidator",
+    "evaluate_condition",
+    "parse_workflow_document",
+    "register_service",
     "workflow_engine",
+    "workflow_executor",
     "workflow_registry",
+    "workflow_steps",
 ]

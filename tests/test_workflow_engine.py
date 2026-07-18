@@ -63,7 +63,9 @@ def test_parse_workflow_json(sample_workflow_dict):
     assert definition.id == "test_flow"
     assert definition.vertical == "AUTO"
     assert len(definition.steps) == 4
-    assert definition.steps[0].type == StepType.INPUT
+    first = definition.first_step()
+    assert first is not None
+    assert first.type == StepType.INPUT
 
 
 def test_workflow_validation_success(sample_workflow_dict):
@@ -102,7 +104,7 @@ def test_load_yaml_definition():
     definition = WorkflowLoader.load_file(path)
     assert definition.id == "auto_buy"
     assert definition.vertical == "AUTO"
-    assert any(s.id == "assign_manager" for s in definition.steps)
+    assert any(s.id == "assign_manager" for s in definition.steps.values())
 
 
 def test_condition_evaluation():
