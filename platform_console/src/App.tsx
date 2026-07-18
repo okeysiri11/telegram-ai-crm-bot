@@ -11,6 +11,7 @@ import { AiSkillsPage } from './pages/AiSkillsPage';
 import { AiWorkflowsPage } from './pages/AiWorkflowsPage';
 import { AiMemoryPage } from './pages/AiMemoryPage';
 import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
+import { MigrationDashboardPage } from './pages/MigrationDashboardPage';
 import { managementApi } from './services/management';
 
 export default function App() {
@@ -94,6 +95,7 @@ export default function App() {
             path="system"
             element={<ManagementPage title="System" queryKey="system" fetcher={managementApi.system} />}
           />
+          <Route path="migration" element={<MigrationDashboardPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

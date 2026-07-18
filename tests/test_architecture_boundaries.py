@@ -92,29 +92,29 @@ def test_no_direct_env_access_outside_configuration_center():
 
 
 def test_no_direct_legacy_imports_outside_platform_legacy():
-    violations = scan_legacy_import_violations(ROOT)
-    platform_violations = [
-        v
-        for v in violations
-        if not v.path.startswith("platform_legacy/")
-        and not v.path.startswith("tests/")
-        and not v.path.startswith("migrations/")
-        and not v.path.startswith("scripts/")
-        and not v.path.endswith("_handlers.py")
-        and v.path not in {"handlers.py", "database_legacy.py", "openrouter.py", "api/handlers.py"}
-        and not v.path.startswith("services/")
-        and not v.path.startswith("routers/")
-        and not v.path.startswith("api/")
+    from platform_legacy.ci_validation import validate_legacy_ci
+
+    result = validate_legacy_ci(ROOT)
+    platform_issues = [
+        i
+        for i in result["issues"]
+        if i["rule"] in {"direct_legacy_import", "deprecated_without_adapter"}
     ]
-    assert platform_violations == [], _format_legacy_violations(platform_violations)
+    assert platform_issues == [], _format_ci_issues(platform_issues)
 
 
-def _format_legacy_violations(violations) -> str:
-    if not violations:
+def test_legacy_ci_validation_passes():
+    from platform_legacy.ci_validation import assert_legacy_ci_clean
+
+    assert_legacy_ci_clean(ROOT)
+
+
+def _format_ci_issues(issues) -> str:
+    if not issues:
         return ""
-    lines = ["Direct legacy imports outside platform_legacy:"]
-    for v in violations:
-        lines.append(f"  {v.path}:{v.line} — {v.module}")
+    lines = ["Legacy CI validation issues:"]
+    for item in issues:
+        lines.append(f"  [{item['rule']}] {item['path']} — {item['detail']}")
     return "\n".join(lines)
 
 

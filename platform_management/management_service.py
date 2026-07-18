@@ -388,6 +388,41 @@ class ManagementService:
 
         return build_migration_report()
 
+    @staticmethod
+    async def migration_status() -> dict[str, Any]:
+        from platform_legacy.migration_report import build_migration_status
+
+        return build_migration_status()
+
+    @staticmethod
+    async def migration_coverage() -> dict[str, Any]:
+        from platform_legacy.migration_report import build_coverage_report
+
+        return build_coverage_report()
+
+    @staticmethod
+    async def migration_deprecated() -> dict[str, Any]:
+        from platform_legacy.deprecation import list_registered_deprecations
+        from platform_legacy.deprecation_manager import deprecation_manager
+
+        return {
+            "deprecated_apis": deprecation_manager.list_deprecated(),
+            "registered_deprecations": list_registered_deprecations(),
+        }
+
+    @staticmethod
+    async def migration_feature_flags() -> dict[str, Any]:
+        from platform_legacy.feature_flags import LEGACY_FLAG_KEYS, load_legacy_migration_flags
+
+        flags = load_legacy_migration_flags()
+        return {"flags": flags.to_dict(), "subsystem_map": dict(LEGACY_FLAG_KEYS)}
+
+    @staticmethod
+    async def migration_health_report() -> dict[str, Any]:
+        from platform_legacy.health import migration_health
+
+        return migration_health()
+
     # ---- plugins ----
 
     @staticmethod

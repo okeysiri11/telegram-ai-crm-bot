@@ -18,6 +18,7 @@ const NAV_ITEMS = [
   { path: '/ai/memory', label: 'AI Memory', icon: '🧠' },
   { path: '/ai/knowledge', label: 'Knowledge Base', icon: '📚' },
   { path: '/observability', label: 'Observability', icon: '📈' },
+  { path: '/migration', label: 'Migration', icon: '🔀' },
   { path: '/system', label: 'System', icon: '🖥️' },
   { path: '/settings', label: 'Settings', icon: '⚙️' },
 ];

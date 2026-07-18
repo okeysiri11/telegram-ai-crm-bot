@@ -63,4 +63,11 @@ export const managementApi = {
   aiMemoryRemember: (body: Record<string, unknown>) => apiPost<Record<string, unknown>>('/management/ai/memory/remember', body),
   aiKnowledgeList: () => apiGet<{ documents: unknown[] }>('/management/ai/memory/knowledge'),
   aiKnowledgeIndex: (body: Record<string, unknown>) => apiPost<Record<string, unknown>>('/management/ai/memory/knowledge/index', body),
+
+  migration: () => apiGet<Record<string, unknown>>('/management/migration'),
+  migrationStatus: () => apiGet<Record<string, unknown>>('/management/migration/status'),
+  migrationCoverage: () => apiGet<Record<string, unknown>>('/management/migration/coverage'),
+  migrationDeprecated: () => apiGet<Record<string, unknown>>('/management/migration/deprecated'),
+  migrationFeatureFlags: () => apiGet<Record<string, unknown>>('/management/migration/feature-flags'),
+  migrationHealth: () => apiGet<Record<string, unknown>>('/management/migration/health'),
 };

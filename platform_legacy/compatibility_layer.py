@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import inspect
 import logging
+import time
 from typing import Any, Awaitable, Callable, TypeVar
 
 from platform_legacy.coverage import migration_coverage
 from platform_legacy.deprecation_manager import deprecation_manager
 from platform_legacy.migration_manager import migration_manager
+from platform_legacy.runtime_monitor import runtime_monitor
 
 logger = logging.getLogger(__name__)
 
@@ -29,12 +31,22 @@ class CompatibilityLayer:
         method: str = "",
         **kwargs: Any,
     ) -> T:
-        if migration_manager.should_route_to_legacy(subsystem):
-            deprecation_manager.warn_legacy_route(subsystem, method=method)
-            migration_coverage.record_legacy(subsystem, method=method or "dispatch_async")
-            return await legacy_fn(**kwargs)
-        migration_coverage.record_platform(subsystem, method=method or "dispatch_async")
-        return await platform_fn(**kwargs)
+        started = time.perf_counter()
+        try:
+            if migration_manager.should_route_to_legacy(subsystem):
+                deprecation_manager.warn_legacy_route(subsystem, method=method)
+                runtime_monitor.record_fallback(subsystem, reason=method or "legacy_route")
+                result = await legacy_fn(**kwargs)
+                latency = (time.perf_counter() - started) * 1000
+                runtime_monitor.record_legacy(subsystem, method=method or "dispatch_async", latency_ms=latency)
+                return result
+            result = await platform_fn(**kwargs)
+            latency = (time.perf_counter() - started) * 1000
+            runtime_monitor.record_platform(subsystem, method=method or "dispatch_async", latency_ms=latency)
+            return result
+        except Exception:
+            runtime_monitor.record_error(subsystem, method=method or "dispatch_async")
+            raise
 
     def dispatch_sync(
         self,
@@ -45,12 +57,22 @@ class CompatibilityLayer:
         method: str = "",
         **kwargs: Any,
     ) -> T:
-        if migration_manager.should_route_to_legacy(subsystem):
-            deprecation_manager.warn_legacy_route(subsystem, method=method)
-            migration_coverage.record_legacy(subsystem, method=method or "dispatch_sync")
-            return legacy_fn(**kwargs)
-        migration_coverage.record_platform(subsystem, method=method or "dispatch_sync")
-        return platform_fn(**kwargs)
+        started = time.perf_counter()
+        try:
+            if migration_manager.should_route_to_legacy(subsystem):
+                deprecation_manager.warn_legacy_route(subsystem, method=method)
+                runtime_monitor.record_fallback(subsystem, reason=method or "legacy_route")
+                result = legacy_fn(**kwargs)
+                latency = (time.perf_counter() - started) * 1000
+                runtime_monitor.record_legacy(subsystem, method=method or "dispatch_sync", latency_ms=latency)
+                return result
+            result = platform_fn(**kwargs)
+            latency = (time.perf_counter() - started) * 1000
+            runtime_monitor.record_platform(subsystem, method=method or "dispatch_sync", latency_ms=latency)
+            return result
+        except Exception:
+            runtime_monitor.record_error(subsystem, method=method or "dispatch_sync")
+            raise
 
     async def dispatch(
         self,

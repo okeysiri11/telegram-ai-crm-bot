@@ -454,6 +454,36 @@ async def legacy_metrics_handler(_request: web.Request, ctx: ManagementContext) 
     return _ok(await management_service.legacy_metrics(), ctx)
 
 
+@require_role(ManagementRole.READ_ONLY)
+async def migration_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.legacy_metrics(), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def migration_status_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.migration_status(), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def migration_coverage_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.migration_coverage(), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def migration_deprecated_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.migration_deprecated(), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def migration_feature_flags_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.migration_feature_flags(), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
+async def migration_health_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    return _ok(await management_service.migration_health_report(), ctx)
+
+
 # ---- OPENAPI ----
 
 async def openapi_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
@@ -513,6 +543,12 @@ def register_management_routes(app: web.Application) -> None:
     _route(app, "GET", "config", config_diagnostics_handler, role=ManagementRole.READ_ONLY, summary="Configuration diagnostics (redacted)")
     _route(app, "POST", "config/reload", config_reload_handler, role=ManagementRole.ADMINISTRATOR, summary="Reload configuration from environment")
     _route(app, "GET", "legacy/metrics", legacy_metrics_handler, role=ManagementRole.READ_ONLY, summary="Legacy adapter metrics and migration progress")
+    _route(app, "GET", "migration", migration_handler, role=ManagementRole.READ_ONLY, summary="Full migration report")
+    _route(app, "GET", "migration/status", migration_status_handler, role=ManagementRole.READ_ONLY, summary="Migration subsystem status")
+    _route(app, "GET", "migration/coverage", migration_coverage_handler, role=ManagementRole.READ_ONLY, summary="Migration coverage statistics")
+    _route(app, "GET", "migration/deprecated", migration_deprecated_handler, role=ManagementRole.READ_ONLY, summary="Deprecated API registry")
+    _route(app, "GET", "migration/feature-flags", migration_feature_flags_handler, role=ManagementRole.READ_ONLY, summary="Legacy migration feature flags")
+    _route(app, "GET", "migration/health", migration_health_handler, role=ManagementRole.READ_ONLY, summary="Migration health checks")
 
     from platform_plugins.plugins_router import register_plugins_routes
 
