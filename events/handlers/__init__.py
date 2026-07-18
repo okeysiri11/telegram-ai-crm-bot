@@ -63,6 +63,10 @@ def register_platform_event_handlers() -> None:
 
     manager_pool_service.subscribe_to_event_bus()
 
+    from services.smart_assignment_service import smart_assignment_service
+
+    smart_assignment_service.subscribe_to_event_bus()
+
     _registered = True
     logger.info(
         "platform_internal_event_handlers_registered",

@@ -30,3 +30,4 @@ class ManagerPoolEntry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     current_load: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     last_assigned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    specialization: Mapped[str] = mapped_column(String(32), default="MULTI", nullable=False)

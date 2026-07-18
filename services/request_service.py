@@ -59,7 +59,10 @@ class RequestService:
                 **extra,
             )
 
-        manager = await manager_service.resolve_manager_for_vertical(key)
+        manager = await manager_service.resolve_manager_for_vertical(
+            key,
+            request_type=request_type or extra.get("request_type"),
+        )
         manager_uuid = uuid.UUID(manager["user_id"]) if manager else None
 
         async with get_session() as session:

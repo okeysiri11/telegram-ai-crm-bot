@@ -1,4 +1,4 @@
-# ManagerService — vertical lead routing via dynamic manager pool.
+# ManagerService — vertical lead routing via smart assignment engine.
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from config import OWNER_ID
 from database.session import get_session
 from repositories.manager_repository import ManagerRepository
 from repositories.user_repository import UserRepository
-from services.manager_pool_service import manager_pool_service
+from services.smart_assignment_service import smart_assignment_service
 from services.system_roles import SystemRole, Vertical, normalize_vertical
 
 logger = logging.getLogger(__name__)
@@ -20,22 +20,38 @@ NON_ASSIGNABLE_ROLES = frozenset({SystemRole.SUPER_ADMIN.value, "OWNER", "ADMIN"
 
 class ManagerService:
     @staticmethod
-    async def resolve_manager_for_vertical(vertical: str) -> dict[str, Any] | None:
-        """Resolve primary manager for lead assignment via ManagerPoolService."""
+    async def resolve_manager_for_vertical(
+        vertical: str,
+        *,
+        request_type: str | None = None,
+        request_id: str | None = None,
+        request_number: str | None = None,
+    ) -> dict[str, Any] | None:
+        """Resolve primary manager via SmartAssignmentService pipeline."""
         key = normalize_vertical(vertical) or vertical.strip().lower()
-        mgr = await manager_pool_service.assign_manager(key)
+        mgr = await smart_assignment_service.assign_for_request(
+            vertical=key,
+            request_type=request_type,
+            request_id=request_id,
+            request_number=request_number,
+        )
         if mgr is not None:
             return mgr
 
-        logger.warning("No manager available in pool for vertical=%s", key)
+        logger.warning("No manager available for vertical=%s", key)
         return None
 
     @staticmethod
     async def resolve_manager_triple(
         vertical: str,
+        *,
+        request_type: str | None = None,
     ) -> tuple[uuid.UUID, int, str] | None:
         """Return (user_uuid, telegram_id, display_name) for engines expecting tuple."""
-        info = await ManagerService.resolve_manager_for_vertical(vertical)
+        info = await ManagerService.resolve_manager_for_vertical(
+            vertical,
+            request_type=request_type,
+        )
         if info is None:
             return None
         return (
@@ -73,6 +89,7 @@ class ManagerService:
         vertical: str,
         *,
         exclude_manager_id: uuid.UUID | str | None = None,
+        request_type: str | None = None,
     ) -> dict[str, Any] | None:
         """Pick another manager for the vertical, excluding the current assignee."""
         key = normalize_vertical(vertical) or vertical.strip().lower()
@@ -85,8 +102,9 @@ class ManagerService:
                 if user and user.telegram_id is not None:
                     exclude_tid.add(int(user.telegram_id))
 
-        return await manager_pool_service.assign_manager(
-            key,
+        return await smart_assignment_service.assign_for_request(
+            vertical=key,
+            request_type=request_type,
             exclude_telegram_ids=exclude_tid or None,
         )
 

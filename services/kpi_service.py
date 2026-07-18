@@ -13,6 +13,7 @@ from typing import Any
 from database.session import get_session
 from events.base_event import BaseEvent
 from events.owner_events import OwnerEscalationEvent
+from events.smart_assignment_events import SmartAssignmentCompletedEvent
 from events.request_events import (
     ManagerFirstResponseEvent,
     RequestAssignedEvent,
@@ -89,6 +90,8 @@ class KpiService:
                 await KpiService._on_request_overdue(event)
             elif isinstance(event, OwnerEscalationEvent):
                 await KpiService._on_owner_escalation(event)
+            elif isinstance(event, SmartAssignmentCompletedEvent):
+                KpiService.invalidate_cache()
         except Exception:
             logger.warning(
                 "kpi_event_processing_failed",
@@ -378,6 +381,8 @@ class KpiService:
 
         from events.event_bus import subscribe
 
+        from events.smart_assignment_events import SmartAssignmentCompletedEvent
+
         event_types = (
             RequestCreatedEvent,
             RequestAssignedEvent,
@@ -385,6 +390,7 @@ class KpiService:
             RequestCompletedEvent,
             RequestOverdueEvent,
             OwnerEscalationEvent,
+            SmartAssignmentCompletedEvent,
         )
         for event_type in event_types:
             subscribe(

@@ -174,7 +174,7 @@ async def test_realty_photos_collection(mock_message, mock_fsm_context):
 
 @pytest.mark.asyncio
 async def test_realty_manager_from_pool():
-    from services.manager_pool_service import manager_pool_service
+    from services.smart_assignment_service import smart_assignment_service
 
     pool_mgr = {
         "user_id": str(uuid.uuid4()),
@@ -184,8 +184,8 @@ async def test_realty_manager_from_pool():
         "vertical": Vertical.REALTY.value,
     }
     with patch.object(
-        manager_pool_service,
-        "assign_manager",
+        smart_assignment_service,
+        "assign_for_request",
         new=AsyncMock(return_value=pool_mgr),
     ):
         mgr = await manager_service.resolve_manager_for_vertical(Vertical.REALTY.value)

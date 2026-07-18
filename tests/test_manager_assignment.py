@@ -1,4 +1,4 @@
-"""Integration tests — manager assignment via dynamic pool."""
+"""Integration tests — manager assignment via smart assignment engine."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import pytest
 
 from config import OWNER_ID
 from services.manager_service import manager_service
-from services.manager_pool_service import manager_pool_service
+from services.smart_assignment_service import smart_assignment_service
 from services.system_roles import Vertical
 
 
@@ -21,16 +21,17 @@ async def test_auto_manager_from_pool():
         "display_name": "Boroda_0003",
         "pool_id": str(uuid.uuid4()),
         "vertical": Vertical.AUTO.value,
+        "assignment_score": 0.85,
     }
     with patch.object(
-        manager_pool_service,
-        "assign_manager",
+        smart_assignment_service,
+        "assign_for_request",
         new=AsyncMock(return_value=pool_mgr),
     ) as assign:
         mgr = await manager_service.resolve_manager_for_vertical(Vertical.AUTO.value)
         assert mgr is not None
         assert mgr["telegram_id"] == pool_mgr["telegram_id"]
-        assign.assert_awaited_once_with(Vertical.AUTO.value)
+        assign.assert_awaited_once()
 
 
 @pytest.mark.asyncio
@@ -41,23 +42,24 @@ async def test_agro_manager_from_pool():
         "display_name": "Christopher Moltisanti",
         "pool_id": str(uuid.uuid4()),
         "vertical": Vertical.AGRO.value,
+        "assignment_score": 0.8,
     }
     with patch.object(
-        manager_pool_service,
-        "assign_manager",
+        smart_assignment_service,
+        "assign_for_request",
         new=AsyncMock(return_value=pool_mgr),
     ) as assign:
         mgr = await manager_service.resolve_manager_for_vertical(Vertical.AGRO.value)
         assert mgr is not None
         assert mgr["telegram_id"] == pool_mgr["telegram_id"]
-        assign.assert_awaited_once_with(Vertical.AGRO.value)
+        assign.assert_awaited_once()
 
 
 @pytest.mark.asyncio
 async def test_super_admin_not_returned_from_pool():
     with patch.object(
-        manager_pool_service,
-        "assign_manager",
+        smart_assignment_service,
+        "assign_for_request",
         new=AsyncMock(return_value=None),
     ):
         mgr = await manager_service.resolve_manager_for_vertical(Vertical.AUTO.value)
@@ -77,8 +79,8 @@ async def test_resolve_alternate_excludes_current():
         "repositories.user_repository.UserRepository.get_by_id",
         new=AsyncMock(return_value=AsyncMock(telegram_id=111)),
     ), patch.object(
-        manager_pool_service,
-        "assign_manager",
+        smart_assignment_service,
+        "assign_for_request",
         new=AsyncMock(return_value=alternate),
     ) as assign:
         mgr = await manager_service.resolve_alternate_manager_for_vertical(

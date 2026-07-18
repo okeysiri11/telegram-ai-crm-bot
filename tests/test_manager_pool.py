@@ -34,6 +34,7 @@ def _entry(
     is_active: bool = True,
     current_load: int = 0,
     last_assigned_at: datetime | None = None,
+    specialization: str = "AUTO",
 ) -> ManagerPoolSnapshot:
     return ManagerPoolSnapshot(
         id=entry_id or str(uuid.uuid4()),
@@ -45,6 +46,7 @@ def _entry(
         is_active=is_active,
         current_load=current_load,
         last_assigned_at=last_assigned_at,
+        specialization=specialization,
     )
 
 
@@ -332,6 +334,7 @@ async def test_repository_snapshot_from_row():
 @pytest.mark.asyncio
 async def test_manager_service_delegates_to_pool():
     from services.manager_service import manager_service
+    from services.smart_assignment_service import smart_assignment_service
 
     expected = {
         "user_id": str(uuid.uuid4()),
@@ -340,13 +343,13 @@ async def test_manager_service_delegates_to_pool():
         "pool_id": str(uuid.uuid4()),
     }
     with patch.object(
-        manager_pool_service,
-        "assign_manager",
+        smart_assignment_service,
+        "assign_for_request",
         new=AsyncMock(return_value=expected),
     ) as assign:
         mgr = await manager_service.resolve_manager_for_vertical("auto")
         assert mgr == expected
-        assign.assert_awaited_once_with("auto")
+        assign.assert_awaited_once()
 
 
 @pytest.mark.asyncio

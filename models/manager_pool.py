@@ -9,6 +9,7 @@ from typing import Any
 
 
 class AssignmentMode(str, enum.Enum):
+    SMART = "SMART"
     ROUND_ROBIN = "ROUND_ROBIN"
     LEAST_LOADED = "LEAST_LOADED"
     WEIGHTED = "WEIGHTED"
@@ -26,6 +27,7 @@ class ManagerPoolSnapshot:
     is_active: bool
     current_load: int
     last_assigned_at: datetime | None
+    specialization: str = "MULTI"
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -38,4 +40,5 @@ class ManagerPoolSnapshot:
             "is_active": self.is_active,
             "current_load": self.current_load,
             "last_assigned_at": self.last_assigned_at.isoformat() if self.last_assigned_at else None,
+            "specialization": self.specialization,
         }

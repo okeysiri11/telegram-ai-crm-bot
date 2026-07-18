@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Sequence
 
-from sqlalchemy import func, select, update
+from sqlalchemy import func, or_, select, update
 
 from database.models.auto_client_request import AutoClientRequest
 from database.models.client_request import ClientRequest
@@ -31,6 +31,7 @@ def _snapshot(row: ManagerPoolEntry) -> ManagerPoolSnapshot:
         is_active=bool(row.is_active),
         current_load=int(row.current_load),
         last_assigned_at=row.last_assigned_at,
+        specialization=str(getattr(row, "specialization", "MULTI") or "MULTI"),
     )
 
 
@@ -55,6 +56,36 @@ class ManagerPoolRepository(BaseRepository):
             .where(
                 ManagerPoolEntry.vertical == vertical,
                 ManagerPoolEntry.is_active.is_(True),
+            )
+            .order_by(
+                ManagerPoolEntry.current_load.asc(),
+                ManagerPoolEntry.priority.desc(),
+                ManagerPoolEntry.last_assigned_at.asc().nullsfirst(),
+            )
+        )
+        if for_update:
+            stmt = stmt.with_for_update(skip_locked=skip_locked)
+        result = await self.session.execute(stmt)
+        return [_snapshot(row) for row in result.scalars().all()]
+
+    async def get_available_for_segment(
+        self,
+        segment: str,
+        *,
+        for_update: bool = False,
+        skip_locked: bool = False,
+    ) -> list[ManagerPoolSnapshot]:
+        segment_key = segment.strip().lower()
+        segment_upper = segment.strip().upper()
+        stmt = (
+            select(ManagerPoolEntry)
+            .where(
+                ManagerPoolEntry.is_active.is_(True),
+                or_(
+                    ManagerPoolEntry.vertical == segment_key,
+                    ManagerPoolEntry.specialization == segment_upper,
+                    ManagerPoolEntry.specialization == "MULTI",
+                ),
             )
             .order_by(
                 ManagerPoolEntry.current_load.asc(),
@@ -98,6 +129,7 @@ class ManagerPoolRepository(BaseRepository):
         priority: int = 100,
         weight: int = 100,
         is_active: bool = True,
+        specialization: str | None = None,
     ) -> ManagerPoolSnapshot:
         result = await self.session.execute(
             select(ManagerPoolEntry).where(
@@ -115,6 +147,7 @@ class ManagerPoolRepository(BaseRepository):
                 weight=weight,
                 is_active=is_active,
                 current_load=0,
+                specialization=(specialization or vertical.upper()),
             )
             self.session.add(row)
         else:
@@ -122,6 +155,8 @@ class ManagerPoolRepository(BaseRepository):
             row.priority = priority
             row.weight = weight
             row.is_active = is_active
+            if specialization:
+                row.specialization = specialization
         await self.session.flush()
         return _snapshot(row)
 

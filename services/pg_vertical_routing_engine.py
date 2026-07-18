@@ -136,13 +136,13 @@ class VerticalRoutingEngineV1:
         Return (user_uuid, telegram_id, display_name) for the primary manager
         from the dynamic manager pool.
         """
-        from services.manager_pool_service import manager_pool_service
+        from services.smart_assignment_service import smart_assignment_service
 
         key = normalize_vertical(vertical) or (vertical or "").strip().lower()
         if not key:
             return None
 
-        snap = await manager_pool_service.assign_manager(key)
+        snap = await smart_assignment_service.assign_for_request(vertical=key)
         if snap is None:
             return None
 

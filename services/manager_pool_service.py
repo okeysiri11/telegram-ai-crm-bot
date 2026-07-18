@@ -93,6 +93,7 @@ class ManagerPoolService:
                         priority=200 if sub.is_primary else 100,
                         weight=200 if sub.is_primary else 100,
                         is_active=True,
+                        specialization=vertical.upper(),
                     )
                     seeded += 1
 
@@ -108,6 +109,7 @@ class ManagerPoolService:
                             priority=150,
                             weight=150,
                             is_active=True,
+                            specialization=vertical.upper(),
                         )
                         seeded += 1
 
