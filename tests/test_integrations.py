@@ -43,11 +43,6 @@ def _reset_integrations():
     integration_service.reset()
 
 
-@pytest.fixture
-def actor_header():
-    return {"X-Actor-Telegram-Id": "42"}
-
-
 @pytest.fixture(autouse=True)
 def _grant_owner(monkeypatch):
     async def _owner(_tid):

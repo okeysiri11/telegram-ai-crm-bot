@@ -128,27 +128,50 @@ async def identity_policies_delete_handler(request: web.Request, ctx: Management
     return _ok({"removed": removed}, ctx)
 
 
-@require_role(ManagementRole.READ_ONLY)
-async def identity_login_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+async def identity_login_public_handler(request: web.Request) -> web.Response:
+    import uuid
+
+    from platform_identity.exceptions import AuthenticationError
+
+    request_id = str(uuid.uuid4())
     body = await _json_body(request)
-    telegram_id = body.get("telegram_id") or ctx.actor_telegram_id
-    if telegram_id is None:
-        return error_response("telegram_id required", request_id=ctx.request_id, status=400)
-    data = await identity_service.login(
-        int(telegram_id),
-        ip=ctx.remote_ip,
-        device=request.headers.get("User-Agent", "unknown"),
-    )
-    return _ok(data, ctx)
+    try:
+        telegram_id = await identity_service.authenticate_for_login(request, body)
+        data = await identity_service.login(
+            telegram_id,
+            ip=_client_ip(request),
+            device=request.headers.get("User-Agent", "unknown"),
+        )
+        return success_response(data, request_id=request_id)
+    except AuthenticationError as exc:
+        return error_response(str(exc), request_id=request_id, status=401)
+    except Exception as exc:
+        logger.exception("identity_login_failed")
+        return error_response(str(exc), request_id=request_id, status=400)
 
 
-@require_role(ManagementRole.READ_ONLY)
-async def identity_refresh_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
+async def identity_refresh_public_handler(request: web.Request) -> web.Response:
+    import uuid
+
+    from platform_identity.exceptions import TokenError
+
+    request_id = str(uuid.uuid4())
     body = await _json_body(request)
     refresh_token = body.get("refresh_token")
     if not refresh_token:
-        return error_response("refresh_token required", request_id=ctx.request_id, status=400)
-    return _ok(await identity_service.refresh_tokens(refresh_token), ctx)
+        return error_response("refresh_token required", request_id=request_id, status=400)
+    try:
+        return success_response(await identity_service.refresh_tokens(refresh_token), request_id=request_id)
+    except TokenError as exc:
+        return error_response(str(exc), request_id=request_id, status=401)
+
+
+def _client_ip(request: web.Request) -> str:
+    forwarded = request.headers.get("X-Forwarded-For", "")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    peer = request.transport.get_extra_info("peername") if request.transport else None
+    return peer[0] if peer else "unknown"
 
 
 def register_identity_routes(app: web.Application) -> None:
@@ -167,7 +190,7 @@ def register_identity_routes(app: web.Application) -> None:
     app.router.add_get(f"{prefix}/policies", identity_policies_handler)
     app.router.add_post(f"{prefix}/policies", identity_policies_create_handler)
     app.router.add_delete(f"{prefix}/policies/{{policy_id}}", identity_policies_delete_handler)
-    app.router.add_post(f"{prefix}/login", identity_login_handler)
-    app.router.add_post(f"{prefix}/refresh", identity_refresh_handler)
+    app.router.add_post(f"{prefix}/login", identity_login_public_handler)
+    app.router.add_post(f"{prefix}/refresh", identity_refresh_public_handler)
 
     logger.info("identity_api_routes_registered prefix=%s", prefix)

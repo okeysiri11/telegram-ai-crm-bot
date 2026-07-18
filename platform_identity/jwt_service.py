@@ -16,10 +16,26 @@ from platform_identity.models import TokenPair
 
 logger = logging.getLogger(__name__)
 
-IAM_JWT_SECRET = os.getenv("IAM_JWT_SECRET", os.getenv("JWT_SECRET", "change-me-in-production"))
+_DEFAULT_INSECURE_SECRET = "change-me-in-production"
 IAM_JWT_ALGORITHM = os.getenv("IAM_JWT_ALGORITHM", "HS256")
 ACCESS_TOKEN_MINUTES = int(os.getenv("IAM_ACCESS_TOKEN_MINUTES", "15"))
 REFRESH_TOKEN_DAYS = int(os.getenv("IAM_REFRESH_TOKEN_DAYS", "7"))
+
+
+def get_jwt_secret() -> str:
+    return os.getenv("IAM_JWT_SECRET", os.getenv("JWT_SECRET", _DEFAULT_INSECURE_SECRET)).strip()
+
+
+def validate_iam_jwt_secret() -> None:
+    secret = get_jwt_secret()
+    if not secret or secret == _DEFAULT_INSECURE_SECRET:
+        raise RuntimeError(
+            "IAM_JWT_SECRET must be set to a secure value (not empty and not 'change-me-in-production')"
+        )
+
+
+# Backward-compatible module constant (prefer get_jwt_secret() at runtime).
+IAM_JWT_SECRET = get_jwt_secret()
 
 
 class JwtService:
@@ -71,9 +87,10 @@ class JwtService:
             extra={"access_jti": token_id},
         )
 
+        secret = get_jwt_secret()
         return TokenPair(
-            access_token=jwt.encode(access_payload, IAM_JWT_SECRET, algorithm=IAM_JWT_ALGORITHM),
-            refresh_token=jwt.encode(refresh_payload, IAM_JWT_SECRET, algorithm=IAM_JWT_ALGORITHM),
+            access_token=jwt.encode(access_payload, secret, algorithm=IAM_JWT_ALGORITHM),
+            refresh_token=jwt.encode(refresh_payload, secret, algorithm=IAM_JWT_ALGORITHM),
             access_expires_at=access_exp,
             refresh_expires_at=refresh_exp,
             session_id=session_id or "",
@@ -108,12 +125,7 @@ class JwtService:
 
     def revoke_token(self, token: str) -> None:
         try:
-            claims = jwt.decode(
-                token,
-                IAM_JWT_SECRET,
-                algorithms=[IAM_JWT_ALGORITHM],
-                options={"verify_exp": False},
-            )
+            claims = jwt.decode(token, get_jwt_secret(), algorithms=[IAM_JWT_ALGORITHM], options={"verify_exp": False})
             self.revoke(claims.get("jti"))
         except jwt.PyJWTError as exc:
             raise TokenError(str(exc)) from exc
@@ -123,7 +135,7 @@ class JwtService:
 
     def _verify(self, token: str, *, expected_type: str) -> dict[str, Any]:
         try:
-            claims = jwt.decode(token, IAM_JWT_SECRET, algorithms=[IAM_JWT_ALGORITHM])
+            claims = jwt.decode(token, get_jwt_secret(), algorithms=[IAM_JWT_ALGORITHM])
         except jwt.PyJWTError as exc:
             raise TokenError(str(exc)) from exc
 

@@ -66,6 +66,10 @@ class StartupContext:
 
 
 async def run_startup() -> StartupContext:
+    from platform_identity.jwt_service import validate_iam_jwt_secret
+
+    validate_iam_jwt_secret()
+
     from api.server import start_api_server
     from services.bidex_telegram_quote_parser import configure_bidex_parser
     from services.pg_dealer_quote_authority_engine import DealerQuoteAuthorityEngineV1

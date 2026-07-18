@@ -272,7 +272,7 @@ async def test_event_bus_to_realtime_integration(owner_principal):
 
 
 @pytest.mark.asyncio
-async def test_management_realtime_endpoint(owner_principal):
+async def test_management_realtime_endpoint(owner_principal, auth_headers):
     app = web.Application()
     register_management_routes(app)
 
@@ -289,7 +289,7 @@ async def test_management_realtime_endpoint(owner_principal):
         await realtime_hub.subscribe(conn.connection_id, ["dashboard"], principal=owner_principal)
 
         async with TestClient(TestServer(app)) as client:
-            resp = await client.get("/management/realtime", headers={"X-Actor-Telegram-Id": "42"})
+            resp = await client.get("/management/realtime", headers=auth_headers)
             assert resp.status == 200
             body = await resp.json()
             assert body["success"] is True

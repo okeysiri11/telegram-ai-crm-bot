@@ -21,8 +21,12 @@ export interface RefreshResponse {
   session_id: string;
 }
 
-export async function login(telegramId: number): Promise<LoginResponse> {
-  return apiPost<LoginResponse>('/management/identity/login', { telegram_id: telegramId });
+export async function login(telegramId: number, loginProof?: string): Promise<LoginResponse> {
+  const proof = loginProof || import.meta.env.VITE_IAM_LOGIN_SECRET || '';
+  return apiPost<LoginResponse>('/management/identity/login', {
+    telegram_id: telegramId,
+    login_proof: proof,
+  });
 }
 
 export async function refresh(refreshToken: string): Promise<RefreshResponse> {

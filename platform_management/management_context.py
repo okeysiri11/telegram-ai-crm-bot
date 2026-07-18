@@ -18,6 +18,8 @@ class ManagementContext:
     method: str
     path: str
     remote_ip: str
+    principal_id: str | None = None
+    auth_method: str | None = None
     started_at: float = field(default_factory=time.perf_counter)
     audit_id: str | None = None
 
@@ -29,10 +31,19 @@ class ManagementContext:
         role: str,
         request_id: str | None = None,
     ) -> ManagementContext:
-        actor = _extract_actor(request)
+        principal = request.get("principal")
+        actor = None
+        principal_id = None
+        auth_method = None
+        if principal is not None:
+            actor = getattr(principal, "telegram_id", None)
+            principal_id = getattr(principal, "principal_id", None)
+            auth_method = getattr(principal.auth_method, "value", None) if getattr(principal, "auth_method", None) else None
         return cls(
             request_id=request_id or str(uuid.uuid4()),
             actor_telegram_id=actor,
+            principal_id=principal_id,
+            auth_method=auth_method,
             role=role,
             method=request.method,
             path=request.path,
@@ -47,6 +58,8 @@ class ManagementContext:
         return {
             "request_id": self.request_id,
             "actor_telegram_id": self.actor_telegram_id,
+            "principal_id": self.principal_id,
+            "auth_method": self.auth_method,
             "role": self.role,
             "method": self.method,
             "path": self.path,
@@ -65,29 +78,3 @@ def _client_ip(request: web.Request) -> str:
         return str(peer[0])
     return "unknown"
 
-
-def _extract_actor(request: web.Request) -> int | None:
-    header = request.headers.get("X-Actor-Telegram-Id", "").strip()
-    if header:
-        try:
-            return int(header)
-        except ValueError:
-            pass
-
-    query = request.query.get("actor_telegram_id")
-    if query:
-        try:
-            return int(query)
-        except ValueError:
-            pass
-
-    jwt = request.get("jwt")
-    if isinstance(jwt, dict):
-        for key in ("telegram_id", "sub", "user_id"):
-            raw = jwt.get(key)
-            if raw is not None:
-                try:
-                    return int(raw)
-                except (TypeError, ValueError):
-                    continue
-    return None

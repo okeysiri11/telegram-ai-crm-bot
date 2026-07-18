@@ -3,7 +3,13 @@
 from platform_identity.authentication import authentication_service
 from platform_identity.authorization import authorization_service
 from platform_identity.identity_service import IdentityService, identity_service
-from platform_identity.identity_router import register_identity_routes
+
+
+def register_identity_routes(app) -> None:
+    from platform_identity.identity_router import register_identity_routes as _register
+
+    _register(app)
+
 
 __all__ = [
     "IdentityService",

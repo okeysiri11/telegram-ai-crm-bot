@@ -20,10 +20,6 @@ def management_app():
     return app
 
 
-@pytest.fixture
-def actor_header():
-    return {"X-Actor-Telegram-Id": "42"}
-
 
 @pytest.fixture(autouse=True)
 def _grant_owner(monkeypatch):
@@ -86,7 +82,7 @@ async def test_permissions_denied_without_actor(management_app, monkeypatch):
     ):
         async with TestClient(TestServer(management_app)) as client:
             resp = await client.get("/management/system")
-            assert resp.status == 403
+            assert resp.status == 401
             body = await resp.json()
             assert body["success"] is False
 
@@ -222,20 +218,25 @@ async def test_statistics_requests(management_app, actor_header):
 
 
 @pytest.mark.asyncio
-async def test_openapi_spec(management_app):
+async def test_openapi_spec(management_app, auth_headers):
     async with TestClient(TestServer(management_app)) as client:
-        resp = await client.get("/management/openapi.json")
+        unauth = await client.get("/management/openapi.json")
+        assert unauth.status == 401
+        resp = await client.get("/management/openapi.json", headers=auth_headers)
         assert resp.status == 200
         spec = await resp.json()
         assert spec["openapi"] == "3.0.3"
         assert "/management/system" in spec["paths"]
         assert "ManagementResponse" in spec["components"]["schemas"]
+        assert "BearerAuth" in spec["components"]["securitySchemes"]
 
 
 @pytest.mark.asyncio
-async def test_openapi_docs(management_app):
+async def test_openapi_docs(management_app, auth_headers):
     async with TestClient(TestServer(management_app)) as client:
-        resp = await client.get("/management/docs")
+        unauth = await client.get("/management/docs")
+        assert unauth.status == 401
+        resp = await client.get("/management/docs", headers=auth_headers)
         assert resp.status == 200
         text = await resp.text()
         assert "swagger-ui" in text

@@ -11,7 +11,7 @@ from platform_identity.api_keys import api_key_service
 from platform_identity.authentication import authentication_service
 from platform_identity.authorization import authorization_service
 from platform_identity.jwt_service import jwt_service
-from platform_identity.models import PlatformRole, Principal, ResourceRef
+from platform_identity.models import AuthMethod, PlatformRole, Principal, ResourceRef
 from platform_identity.permission_service import permission_service
 from platform_identity.policy_engine import policy_engine
 from platform_identity.role_service import role_service
@@ -51,6 +51,38 @@ class IdentityService:
             "refresh_expires_at": tokens.refresh_expires_at.isoformat(),
             "session_id": tokens.session_id,
         }
+
+    async def authenticate_for_login(self, request: web.Request, body: dict[str, Any]) -> int:
+        """Verify login credentials before issuing JWT — no arbitrary telegram_id."""
+        from platform_identity.exceptions import AuthenticationError
+        from platform_identity.telegram_login import verify_login_proof, verify_telegram_init_data
+
+        init_data = body.get("telegram_init_data")
+        if init_data:
+            return verify_telegram_init_data(str(init_data))
+
+        login_proof = body.get("login_proof")
+        if login_proof and verify_login_proof(str(login_proof)):
+            telegram_id = body.get("telegram_id")
+            if telegram_id is None:
+                raise AuthenticationError("telegram_id required with login_proof")
+            return int(telegram_id)
+
+        try:
+            principal = await self.authenticate_request(request)
+            if "identity.login" not in (principal.permissions or []) and PlatformRole.OWNER.value not in (
+                principal.roles or []
+            ):
+                raise AuthenticationError("API key lacks identity.login scope")
+            telegram_id = body.get("telegram_id")
+            if telegram_id is None:
+                raise AuthenticationError("telegram_id required for API-key-assisted login")
+            return int(telegram_id)
+        except AuthenticationError as exc:
+            raise AuthenticationError(
+                "Login requires telegram_init_data, valid login_proof + telegram_id, "
+                "or API key with identity.login scope"
+            ) from exc
 
     async def refresh_tokens(self, refresh_token: str) -> dict[str, Any]:
         tokens = jwt_service.rotate_refresh_token(refresh_token)
@@ -123,9 +155,33 @@ class IdentityService:
 
     # ---- Management role bridge (backward compat) ----
 
-    async def resolve_management_role(self, telegram_id: int | None):
+    async def resolve_management_role(
+        self,
+        telegram_id: int | None = None,
+        *,
+        principal: Principal | None = None,
+    ):
         from platform_management.exceptions import ManagementPermissionError
         from platform_management.permissions import ManagementRole
+
+        if principal is not None:
+            if PlatformRole.OWNER.value in principal.roles:
+                return ManagementRole.OWNER
+            if PlatformRole.ADMINISTRATOR.value in principal.roles:
+                return ManagementRole.ADMINISTRATOR
+            if principal.auth_method == AuthMethod.API_KEY:
+                scopes = set(principal.permissions or [])
+                if "management.admin" in scopes or "management.write" in scopes:
+                    return ManagementRole.ADMINISTRATOR
+                if scopes or principal.roles:
+                    return ManagementRole.READ_ONLY
+            if PlatformRole.READ_ONLY.value in principal.roles or principal.roles:
+                return ManagementRole.READ_ONLY
+            if principal.permissions:
+                return ManagementRole.READ_ONLY
+            raise ManagementPermissionError(
+                f"Principal {principal.principal_id} lacks management API access"
+            )
 
         if telegram_id is None:
             raise ManagementPermissionError("actor_telegram_id is required")

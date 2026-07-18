@@ -76,11 +76,6 @@ def manager(plugins_root: Path, tmp_path: Path) -> PluginManager:
     return mgr
 
 
-@pytest.fixture
-def actor_header():
-    return {"X-Actor-Telegram-Id": "42"}
-
-
 @pytest.fixture(autouse=True)
 def _grant_plugins_permissions(monkeypatch):
     async def _owner(_tid):

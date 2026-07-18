@@ -18,9 +18,7 @@ function getAuthHeaders(): HeadersInit {
     'Content-Type': 'application/json',
   };
   const token = localStorage.getItem('access_token');
-  const actorId = localStorage.getItem('actor_telegram_id');
   if (token) headers.Authorization = `Bearer ${token}`;
-  if (actorId) headers['X-Actor-Telegram-Id'] = actorId;
   return headers;
 }
 

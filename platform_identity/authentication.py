@@ -9,7 +9,7 @@ from aiohttp import web
 
 from platform_identity.api_keys import KEY_PREFIX, api_key_service
 from platform_identity.audit_hooks import iam_audit
-from platform_identity.exceptions import AuthenticationError
+from platform_identity.exceptions import ApiKeyError, AuthenticationError
 from platform_identity.jwt_service import jwt_service
 from platform_identity.models import AuthMethod, PlatformRole, Principal
 from platform_identity.permission_service import permission_service
@@ -131,12 +131,12 @@ class AuthenticationService:
         if auth_header.startswith("Bearer "):
             token = auth_header[7:].strip()
             if token.startswith(KEY_PREFIX):
-                return await api_key_service.authenticate(token)
-            return await self._authenticate_jwt(token)
+                return await _authenticate_api_key(token)
+            return await _authenticate_jwt(token)
 
         api_key = request.headers.get("X-API-Key", "").strip()
         if api_key:
-            return await api_key_service.authenticate(api_key)
+            return await _authenticate_api_key(api_key)
 
         oauth_provider = request.query.get("oauth_provider")
         if oauth_provider:
@@ -145,15 +145,25 @@ class AuthenticationService:
                 raise AuthenticationError(f"Unknown OAuth provider: {oauth_provider}")
             return await provider.authenticate(request)
 
-        actor = _extract_telegram_id(request)
-        if actor is not None:
-            return await self.authenticate_telegram(actor)
+        raise AuthenticationError(
+            "Authentication required: provide Authorization Bearer JWT or X-API-Key header"
+        )
 
-        raise AuthenticationError("No valid authentication credentials provided")
+
+async def _authenticate_api_key(raw_key: str) -> Principal:
+    try:
+        return await api_key_service.authenticate(raw_key)
+    except ApiKeyError as exc:
+        raise AuthenticationError(str(exc)) from exc
 
 
 async def _authenticate_jwt(token: str) -> Principal:
-    claims = jwt_service.verify_access_token(token)
+    from platform_identity.exceptions import TokenError
+
+    try:
+        claims = jwt_service.verify_access_token(token)
+    except TokenError as exc:
+        raise AuthenticationError(str(exc)) from exc
     roles = list(claims.get("roles", []))
     permissions = list(claims.get("permissions", []))
     session_id = claims.get("session_id")
@@ -175,22 +185,6 @@ async def _authenticate_jwt(token: str) -> Principal:
         telegram_id=telegram_id,
         session_id=session_id,
     )
-
-
-def _extract_telegram_id(request: web.Request) -> int | None:
-    header = request.headers.get("X-Actor-Telegram-Id", "").strip()
-    if header:
-        try:
-            return int(header)
-        except ValueError:
-            pass
-    query = request.query.get("actor_telegram_id")
-    if query:
-        try:
-            return int(query)
-        except ValueError:
-            pass
-    return None
 
 
 def _client_ip(request: web.Request) -> str:

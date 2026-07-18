@@ -25,11 +25,6 @@ def management_app():
     return app
 
 
-@pytest.fixture
-def actor_header():
-    return {"X-Actor-Telegram-Id": "42"}
-
-
 @pytest.fixture(autouse=True)
 def _grant_owner(monkeypatch):
     async def _owner(_tid):
@@ -111,7 +106,7 @@ async def test_dashboard_widget_endpoint(management_app, actor_header):
 
 
 @pytest.mark.asyncio
-async def test_dashboard_permissions_denied(management_app, monkeypatch):
+async def test_dashboard_permissions_denied(management_app, auth_headers, monkeypatch):
     async def _deny(_tid):
         from platform_management.exceptions import ManagementPermissionError
 
@@ -123,7 +118,7 @@ async def test_dashboard_permissions_denied(management_app, monkeypatch):
         new_callable=AsyncMock,
     ):
         async with TestClient(TestServer(management_app)) as client:
-            resp = await client.get("/management/dashboard", headers={"X-Actor-Telegram-Id": "1"})
+            resp = await client.get("/management/dashboard", headers=auth_headers)
             assert resp.status == 403
 
 
@@ -255,7 +250,7 @@ async def test_refresh_dashboard(management_app, actor_header):
 
 
 def test_widget_registry_complete():
-    assert len(ALL_WIDGET_IDS) == 12
+    assert len(ALL_WIDGET_IDS) == 26
     for wid in ALL_WIDGET_IDS:
         spec = get_widget_spec(wid)
         assert spec.refresh_interval > 0

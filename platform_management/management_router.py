@@ -22,15 +22,8 @@ def _record_openapi(path: str, method: str, *, role: ManagementRole, summary: st
     methods = _OPENAPI_PATHS.setdefault(path, {})
     methods[method.lower()] = {
         "summary": summary,
-        "security": [{"ManagementActor": []}],
-        "parameters": [
-            {
-                "name": "X-Actor-Telegram-Id",
-                "in": "header",
-                "required": True,
-                "schema": {"type": "integer"},
-            }
-        ],
+        "security": [{"BearerAuth": []}, {"ApiKeyAuth": []}],
+        "parameters": [],
         "responses": {
             "200": {
                 "description": "Standard management envelope",
@@ -438,7 +431,7 @@ async def dashboard_audit_timeline_handler(request: web.Request, ctx: Management
 
 # ---- OPENAPI ----
 
-async def openapi_handler(_request: web.Request) -> web.Response:
+async def openapi_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
     spec = {
         "openapi": "3.0.3",
         "info": {
@@ -449,11 +442,16 @@ async def openapi_handler(_request: web.Request) -> web.Response:
         "servers": [{"url": "/"}],
         "components": {
             "securitySchemes": {
-                "ManagementActor": {
+                "BearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                    "bearerFormat": "JWT",
+                },
+                "ApiKeyAuth": {
                     "type": "apiKey",
                     "in": "header",
-                    "name": "X-Actor-Telegram-Id",
-                }
+                    "name": "X-API-Key",
+                },
             },
             "schemas": {
                 "ManagementResponse": {
@@ -474,7 +472,7 @@ async def openapi_handler(_request: web.Request) -> web.Response:
     return web.json_response(spec)
 
 
-async def swagger_ui_handler(_request: web.Request) -> web.Response:
+async def swagger_ui_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
     html = """<!DOCTYPE html>
 <html><head><title>Platform Management API</title>
 <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5/swagger-ui.css">
@@ -575,7 +573,7 @@ def register_management_routes(app: web.Application) -> None:
 
     register_observability_routes(app)
 
-    app.router.add_get(f"{prefix}/openapi.json", openapi_handler)
-    app.router.add_get(f"{prefix}/docs", swagger_ui_handler)
+    app.router.add_get(f"{prefix}/openapi.json", require_role(ManagementRole.READ_ONLY)(openapi_handler))
+    app.router.add_get(f"{prefix}/docs", require_role(ManagementRole.READ_ONLY)(swagger_ui_handler))
 
     logger.info("management_api_routes_registered count=%s", len(_OPENAPI_PATHS) + 2)

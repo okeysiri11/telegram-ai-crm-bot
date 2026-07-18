@@ -1,4 +1,4 @@
-# Management API permissions — delegates to centralized IAM.
+# Management API permissions — JWT/API-key authentication + role enforcement.
 
 from __future__ import annotations
 
@@ -10,9 +10,11 @@ from typing import Any
 
 from aiohttp import web
 
+from platform_identity.exceptions import AuthenticationError
+from platform_management.auth import attach_principal_to_context, authenticate_management_request
 from platform_management.exceptions import ManagementPermissionError
 from platform_management.management_context import ManagementContext
-from platform_management.response_models import error_response, success_response
+from platform_management.response_models import error_response
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ _ROLE_RANK = {
 async def resolve_role(telegram_id: int | None) -> ManagementRole:
     from platform_identity.identity_service import identity_service
 
-    return await identity_service.resolve_management_role(telegram_id)
+    return await identity_service.resolve_management_role(telegram_id=telegram_id)
 
 
 def role_allows(actor_role: ManagementRole, required: ManagementRole) -> bool:
@@ -43,7 +45,7 @@ def role_allows(actor_role: ManagementRole, required: ManagementRole) -> bool:
 
 
 def require_role(required: ManagementRole) -> Callable[[Handler], Handler]:
-    """Decorator — no business logic; enforces role and standard envelope."""
+    """Decorator — authenticates via JWT or API key, then enforces role."""
 
     def decorator(handler: Handler) -> Handler:
         @functools.wraps(handler)
@@ -52,6 +54,10 @@ def require_role(required: ManagementRole) -> Callable[[Handler], Handler]:
 
             ctx = ManagementContext.from_request(request, role=required.value)
             try:
+                principal = await authenticate_management_request(request)
+                request["principal"] = principal
+                attach_principal_to_context(ctx, principal)
+
                 actor_role = await resolve_role(ctx.actor_telegram_id)
                 ctx.role = actor_role.value
                 if not role_allows(actor_role, required):
@@ -61,6 +67,9 @@ def require_role(required: ManagementRole) -> Callable[[Handler], Handler]:
                 response = await handler(request, ctx)
                 await management_service.log_request(ctx, status=response.status)
                 return response
+            except AuthenticationError as exc:
+                await management_service.log_request(ctx, status=401, error=str(exc))
+                return error_response(str(exc), request_id=ctx.request_id, status=401)
             except ManagementPermissionError as exc:
                 await management_service.log_request(ctx, status=403, error=str(exc))
                 return error_response(str(exc), request_id=ctx.request_id, status=403)

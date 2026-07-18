@@ -51,10 +51,6 @@ def readonly_principal():
     )
 
 
-@pytest.fixture
-def actor_header():
-    return {"X-Actor-Telegram-Id": "42"}
-
 
 @pytest.fixture(autouse=True)
 def _grant_owner(monkeypatch):
@@ -73,31 +69,40 @@ async def test_authenticate_telegram_owner(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_authenticate_request_via_header():
+async def test_authenticate_request_via_bearer_jwt(monkeypatch):
+    monkeypatch.setattr("config.OWNER_ID", 42)
+    jwt_service.reset()
+    tokens = jwt_service.issue_tokens(
+        subject="telegram:42",
+        roles=[PlatformRole.OWNER.value],
+        permissions=["management.read"],
+        telegram_id=42,
+    )
     request = MagicMock()
     request.headers.get = lambda key, default="": {
-        "Authorization": "",
+        "Authorization": f"Bearer {tokens.access_token}",
         "X-API-Key": "",
         "User-Agent": "test",
         "X-Forwarded-For": "",
     }.get(key, default)
     request.query.get = lambda key, default=None: default
     request.transport = None
-    with patch("platform_identity.authentication._extract_telegram_id", return_value=42), patch(
-        "config.OWNER_ID", 42
-    ), patch(
+    with patch(
         "platform_identity.audit_hooks.iam_audit.log_authentication",
         new_callable=AsyncMock,
     ):
         principal = await authentication_service.authenticate_request(request)
     assert principal.telegram_id == 42
+    assert principal.auth_method == AuthMethod.JWT
 
 
 @pytest.mark.asyncio
 async def test_authenticate_request_missing_credentials():
     request = MagicMock()
     request.headers.get = MagicMock(return_value="")
-    with patch("platform_identity.authentication._extract_telegram_id", return_value=None), patch(
+    request.query.get = lambda key, default=None: default
+    request.transport = None
+    with patch(
         "platform_identity.audit_hooks.iam_audit.log_authentication",
         new_callable=AsyncMock,
     ):
