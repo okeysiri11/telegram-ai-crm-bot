@@ -80,19 +80,19 @@ def register_platform_metrics_handlers() -> None:
     if _handlers_registered:
         return
 
-    from services import crm_event_bus as event_bus
+    from events.crm_publisher import subscribe_crm_event
 
-    event_bus.subscribe(
+    subscribe_crm_event(
         "client_request.created",
         _on_request_created,
         handler_id="platform_metrics_created",
     )
-    event_bus.subscribe(
+    subscribe_crm_event(
         "client_request.assigned",
         _on_request_assigned,
         handler_id="platform_metrics_assigned",
     )
-    event_bus.subscribe(
+    subscribe_crm_event(
         "client_request.status_changed",
         _on_status_changed,
         handler_id="platform_metrics_status",

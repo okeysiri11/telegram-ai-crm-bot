@@ -51,9 +51,9 @@ class AutomotiveCostEngineV1:
         payload: dict[str, Any],
     ) -> None:
         try:
-            from services import crm_event_bus as bus
+            from events.crm_publisher import publish_crm_event
 
-            await bus.publish_event(
+            await publish_crm_event(
                 event_type,
                 "vehicle",
                 vehicle_id,

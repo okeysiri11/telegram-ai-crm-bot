@@ -438,9 +438,9 @@ class ClientRequestCrmEngineV1:
     @staticmethod
     async def _publish_event(event_type: str, aggregate_id: uuid.UUID, payload: dict) -> None:
         try:
-            from services import crm_event_bus as bus
+            from events.crm_publisher import publish_crm_event
 
-            await bus.publish_event(
+            await publish_crm_event(
                 event_type=event_type,
                 aggregate_type="client_request",
                 aggregate_id=aggregate_id,

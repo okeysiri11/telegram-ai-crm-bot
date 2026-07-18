@@ -35,3 +35,21 @@ async def publish_notification(event: BaseEvent, *, wait: bool = False) -> dict[
 
 async def publish_sla(event: BaseEvent, *, wait: bool = False) -> dict[str, Any]:
     return await publish(event, wait=wait)
+
+
+async def publish_crm(
+    event_type: str,
+    aggregate_type: str,
+    aggregate_id,
+    payload: dict[str, Any] | None = None,
+    **kwargs: Any,
+):
+    from events.crm_publisher import publish_crm_event
+
+    return await publish_crm_event(
+        event_type,
+        aggregate_type,
+        aggregate_id,
+        payload,
+        **kwargs,
+    )

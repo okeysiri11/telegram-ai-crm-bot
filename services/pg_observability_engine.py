@@ -185,13 +185,13 @@ class ObservabilityEngineV1:
     @staticmethod
     async def collect_platform_snapshot() -> dict[str, Any]:
         """Collect queue depth, throughput, and system health from platform engines."""
-        from services import crm_event_bus as event_bus
+        from events.crm_publisher import get_crm_queue_size
         from services import event_bus_metrics
 
         now = datetime.now(timezone.utc)
         window_start = now - timedelta(hours=1)
 
-        queue_size = await event_bus.get_queue_size()
+        queue_size = await get_crm_queue_size()
         bus_metrics = await event_bus_metrics.get_metrics()
 
         async with get_session() as session:

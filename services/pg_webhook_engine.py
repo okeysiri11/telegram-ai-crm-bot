@@ -29,7 +29,7 @@ from repositories.webhook_engine_repository import (
     WebhookRetryRepository,
     WebhookSubscriptionRepository,
 )
-from services import crm_event_bus as event_bus
+from events.crm_publisher import subscribe_crm_event
 
 logger = logging.getLogger(__name__)
 
@@ -482,7 +482,7 @@ class WebhookEngineV1:
         if _handlers_registered:
             return
         for event_type in SUBSCRIBE_SOURCE_EVENTS:
-            event_bus.subscribe(
+            subscribe_crm_event(
                 event_type,
                 WebhookEngineV1._on_crm_event,
                 handler_id="webhook_engine_v1",

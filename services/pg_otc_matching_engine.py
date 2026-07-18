@@ -71,9 +71,9 @@ class OtcMatchingEngineV1:
         payload: dict[str, Any],
     ) -> None:
         try:
-            from services import crm_event_bus as bus
+            from events.crm_publisher import publish_crm_event
 
-            await bus.publish_event(event_type, "otc", aggregate_id, payload)
+            await publish_crm_event(event_type, "otc", aggregate_id, payload)
         except Exception:
             pass
 
