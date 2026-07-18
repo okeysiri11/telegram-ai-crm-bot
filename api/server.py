@@ -161,6 +161,10 @@ def create_app() -> web.Application:
         analytics_feature_handler,
     )
 
+    from routers.admin.sla_router import register_sla_admin_routes
+
+    register_sla_admin_routes(app)
+
     return app
 
 
