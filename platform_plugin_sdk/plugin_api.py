@@ -169,18 +169,74 @@ class AiSkillsApi:
         return skill_manager.list_skills()
 
 
+class AiWorkflowsApi:
+    """Execute AI Workflows — composes skills into cognitive pipelines."""
+
+    def __init__(self, plugin_id: str) -> None:
+        self._plugin_id = plugin_id
+
+    async def execute(
+        self,
+        workflow_id: str,
+        input: dict[str, Any] | None = None,
+        *,
+        user_id: str | None = None,
+        use_cache: bool = True,
+    ) -> dict[str, Any]:
+        from platform_ai.workflows.models import WorkflowExecutionRequest
+        from platform_ai.workflows.workflow_engine import ai_workflow_engine
+
+        request = WorkflowExecutionRequest(
+            workflow_id=workflow_id,
+            input=dict(input or {}),
+            plugin_id=self._plugin_id,
+            user_id=user_id,
+            use_cache=use_cache,
+        )
+        result = await ai_workflow_engine.execute(request)
+        return result.to_dict()
+
+    def list_workflows(self) -> list[dict[str, Any]]:
+        from platform_ai.workflows.workflow_engine import ai_workflow_engine
+
+        return ai_workflow_engine.list_workflows()
+
+    def list_templates(self) -> list[dict[str, Any]]:
+        from platform_ai.workflows.workflow_engine import ai_workflow_engine
+
+        return ai_workflow_engine.list_templates()
+
+    async def cancel(self, execution_id: str) -> bool:
+        from platform_ai.workflows.workflow_engine import ai_workflow_engine
+
+        return ai_workflow_engine.cancel(execution_id)
+
+    async def resume(self, execution_id: str) -> dict[str, Any]:
+        from platform_ai.workflows.workflow_engine import ai_workflow_engine
+
+        result = await ai_workflow_engine.resume(execution_id)
+        return result.to_dict()
+
+
 class AiApi:
-    """AI Platform access for plugins — skills only, no direct provider calls."""
+    """AI Platform access for plugins — skills and workflows only, no direct provider calls."""
 
     def __init__(self, plugin_id: str) -> None:
         self._plugin_id = plugin_id
         self._skills: AiSkillsApi | None = None
+        self._workflows: AiWorkflowsApi | None = None
 
     @property
     def skills(self) -> AiSkillsApi:
         if self._skills is None:
             self._skills = AiSkillsApi(self._plugin_id)
         return self._skills
+
+    @property
+    def workflows(self) -> AiWorkflowsApi:
+        if self._workflows is None:
+            self._workflows = AiWorkflowsApi(self._plugin_id)
+        return self._workflows
 
 
 class RealtimeApiProtocol(Protocol):

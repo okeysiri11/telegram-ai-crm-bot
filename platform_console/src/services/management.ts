@@ -49,4 +49,12 @@ export const managementApi = {
   aiSkillsMetrics: () => apiGet<{ total_executions: number; skills: Record<string, unknown> }>('/management/ai/skills/metrics'),
   aiSkillsExecute: (body: Record<string, unknown>) =>
     apiPost<Record<string, unknown>>('/management/ai/skills/execute', body),
+
+  aiWorkflowsStatus: () => apiGet<{ summary: unknown; active: unknown[]; metrics: unknown }>('/management/ai/workflows'),
+  aiWorkflowsList: () => apiGet<{ workflows: unknown[] }>('/management/ai/workflows/list'),
+  aiWorkflowsTemplates: () => apiGet<{ templates: unknown[] }>('/management/ai/workflows/templates'),
+  aiWorkflowsHistory: (limit = 50) => apiGet<{ history: unknown[] }>(`/management/ai/workflows/history?limit=${limit}`),
+  aiWorkflowsMetrics: () => apiGet<{ total_executions: number; workflows: Record<string, unknown> }>('/management/ai/workflows/metrics'),
+  aiWorkflowsExecute: (body: Record<string, unknown>) =>
+    apiPost<Record<string, unknown>>('/management/ai/workflows/execute', body),
 };

@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { path: '/plugins', label: 'Plugins', icon: '🧩', minRole: 'administrator' as const },
   { path: '/ai', label: 'AI', icon: '🤖' },
   { path: '/ai/skills', label: 'AI Skills', icon: '🎯' },
+  { path: '/ai/workflows', label: 'AI Workflows', icon: '🔀' },
   { path: '/observability', label: 'Observability', icon: '📈' },
   { path: '/system', label: 'System', icon: '🖥️' },
   { path: '/settings', label: 'Settings', icon: '⚙️' },
