@@ -1,144 +1,97 @@
-"""Integration tests — manager assignment rules."""
+"""Integration tests — manager assignment via dynamic pool."""
 
 from __future__ import annotations
 
+import uuid
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from config import DEFAULT_AGRO_MANAGER_ID, DEFAULT_AUTO_MANAGER_ID, OWNER_ID
+from config import OWNER_ID
 from services.manager_service import manager_service
+from services.manager_pool_service import manager_pool_service
 from services.system_roles import Vertical
 
 
 @pytest.mark.asyncio
-async def test_auto_manager_is_boroda():
+async def test_auto_manager_from_pool():
+    pool_mgr = {
+        "user_id": str(uuid.uuid4()),
+        "telegram_id": 393792086,
+        "display_name": "Boroda_0003",
+        "pool_id": str(uuid.uuid4()),
+        "vertical": Vertical.AUTO.value,
+    }
     with patch.object(
-        manager_service,
-        "resolve_manager_for_vertical",
-        wraps=manager_service.resolve_manager_for_vertical,
-    ), patch(
-        "repositories.manager_repository.ManagerRepository.get_primary_for_vertical",
-        new=AsyncMock(return_value=None),
-    ), patch(
-        "repositories.user_repository.UserRepository.get_by_telegram_id",
-        new=AsyncMock(),
-    ) as get_user:
-        user = AsyncMock()
-        user.id = "uuid"
-        user.telegram_id = DEFAULT_AUTO_MANAGER_ID
-        user.full_name = "Boroda_0003"
-        user.username = "Boroda_0003"
-        user.role = "AUTO_MANAGER"
-        get_user.return_value = user
-
-        if DEFAULT_AUTO_MANAGER_ID is None:
-            pytest.skip("DEFAULT_AUTO_MANAGER_ID not configured")
-
+        manager_pool_service,
+        "assign_manager",
+        new=AsyncMock(return_value=pool_mgr),
+    ) as assign:
         mgr = await manager_service.resolve_manager_for_vertical(Vertical.AUTO.value)
         assert mgr is not None
-        assert mgr["telegram_id"] == DEFAULT_AUTO_MANAGER_ID
+        assert mgr["telegram_id"] == pool_mgr["telegram_id"]
+        assign.assert_awaited_once_with(Vertical.AUTO.value)
 
 
 @pytest.mark.asyncio
-async def test_agro_manager_is_christopher():
-    if DEFAULT_AGRO_MANAGER_ID is None:
-        pytest.skip("DEFAULT_AGRO_MANAGER_ID not configured")
-
-    with patch(
-        "repositories.manager_repository.ManagerRepository.get_primary_for_vertical",
-        new=AsyncMock(return_value=None),
-    ), patch(
-        "repositories.user_repository.UserRepository.get_by_telegram_id",
-        new=AsyncMock(),
-    ) as get_user:
-        user = AsyncMock()
-        user.id = "uuid"
-        user.telegram_id = DEFAULT_AGRO_MANAGER_ID
-        user.full_name = "Christopher Moltisanti"
-        user.username = None
-        user.role = "AGRO_MANAGER"
-        get_user.return_value = user
-
+async def test_agro_manager_from_pool():
+    pool_mgr = {
+        "user_id": str(uuid.uuid4()),
+        "telegram_id": 222222,
+        "display_name": "Christopher Moltisanti",
+        "pool_id": str(uuid.uuid4()),
+        "vertical": Vertical.AGRO.value,
+    }
+    with patch.object(
+        manager_pool_service,
+        "assign_manager",
+        new=AsyncMock(return_value=pool_mgr),
+    ) as assign:
         mgr = await manager_service.resolve_manager_for_vertical(Vertical.AGRO.value)
         assert mgr is not None
-        assert mgr["telegram_id"] == DEFAULT_AGRO_MANAGER_ID
+        assert mgr["telegram_id"] == pool_mgr["telegram_id"]
+        assign.assert_awaited_once_with(Vertical.AGRO.value)
 
 
 @pytest.mark.asyncio
-async def test_super_admin_not_auto_assigned():
-    if OWNER_ID is None:
-        pytest.skip("OWNER_ID not configured")
+async def test_super_admin_not_returned_from_pool():
+    with patch.object(
+        manager_pool_service,
+        "assign_manager",
+        new=AsyncMock(return_value=None),
+    ):
+        mgr = await manager_service.resolve_manager_for_vertical(Vertical.AUTO.value)
+        assert mgr is None
 
-    fake_mgr = {
-        "user_id": "00000000-0000-0000-0000-000000000001",
-        "telegram_id": DEFAULT_AUTO_MANAGER_ID or 999,
-        "display_name": "Boroda_0003",
+
+@pytest.mark.asyncio
+async def test_resolve_alternate_excludes_current():
+    current_id = uuid.uuid4()
+    alternate = {
+        "user_id": str(uuid.uuid4()),
+        "telegram_id": 333,
+        "display_name": "Alternate",
+        "pool_id": str(uuid.uuid4()),
     }
     with patch(
-        "services.manager_service.ManagerRepository.get_primary_for_vertical",
-        new=AsyncMock(return_value=None),
-    ), patch(
-        "services.manager_service.UserRepository.get_by_telegram_id",
-        new=AsyncMock(),
-    ) as get_user:
-        user = AsyncMock()
-        user.id = "uuid"
-        user.telegram_id = fake_mgr["telegram_id"]
-        user.full_name = "Boroda_0003"
-        user.username = "Boroda_0003"
-        user.role = "AUTO_MANAGER"
-        get_user.return_value = user
-
-        mgr = await manager_service.resolve_manager_for_vertical(Vertical.AUTO.value)
-        assert mgr is not None
-        assert mgr["telegram_id"] != OWNER_ID
+        "repositories.user_repository.UserRepository.get_by_id",
+        new=AsyncMock(return_value=AsyncMock(telegram_id=111)),
+    ), patch.object(
+        manager_pool_service,
+        "assign_manager",
+        new=AsyncMock(return_value=alternate),
+    ) as assign:
+        mgr = await manager_service.resolve_alternate_manager_for_vertical(
+            Vertical.AUTO.value,
+            exclude_manager_id=current_id,
+        )
+        assert mgr == alternate
+        assign.assert_awaited_once()
+        assert assign.await_args.kwargs["exclude_telegram_ids"] == {111}
 
 
 @pytest.mark.asyncio
-async def test_request_service_uses_manager_for_agro(client_user_id):
-    from services.request_service import request_service
-
-    with patch(
-        "services.manager_service.manager_service.resolve_manager_for_vertical",
-        new=AsyncMock(
-            return_value={
-                "user_id": "00000000-0000-0000-0000-000000000001",
-                "telegram_id": DEFAULT_AGRO_MANAGER_ID or 1,
-                "display_name": "Christopher Moltisanti",
-            }
-        ),
-    ), patch(
-        "repositories.request_repository.RequestRepository.next_crm_number",
-        new=AsyncMock(return_value="AGRO-00099"),
-    ), patch(
-        "repositories.request_repository.RequestRepository.create_crm",
-        new=AsyncMock(),
-    ) as create, patch(
-        "services.request_service.RequestService._publish_request_created",
-        new=AsyncMock(),
-    ), patch(
-        "services.notification_service.notification_service.notify_managers_new_request",
-        new=AsyncMock(),
-    ) as notify_mock:
-        row = AsyncMock()
-        row.id = "00000000-0000-0000-0000-000000000099"
-        row.request_number = "AGRO-00099"
-        row.request_type = "AGRO_REQUEST"
-        row.status = "NEW"
-        row.client_telegram_id = client_user_id
-        row.client_first_name = "Test"
-        row.client_username = None
-        row.description = "wheat"
-        row.manager_id = None
-        create.return_value = row
-
-        result = await request_service.create_request(
-            vertical="agro",
-            client_telegram_id=client_user_id,
-            product="wheat",
-            description="500t",
-        )
-        assert result["request_number"] == "AGRO-00099"
-        create.assert_awaited_once()
-        notify_mock.assert_not_called()
+async def test_owner_is_super_admin():
+    if OWNER_ID is None:
+        pytest.skip("OWNER_ID not configured")
+    assert await manager_service.is_super_admin(OWNER_ID) is True

@@ -131,3 +131,6 @@ LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 SLA_ASSIGNMENT_SEC = int(os.getenv("SLA_ASSIGNMENT_SEC", str(15 * 60)))
 SLA_FIRST_RESPONSE_SEC = int(os.getenv("SLA_FIRST_RESPONSE_SEC", str(30 * 60)))
 SLA_CLOSE_SEC = int(os.getenv("SLA_CLOSE_SEC", str(72 * 3600)))
+
+# Dynamic manager pool assignment strategy
+MANAGER_ASSIGNMENT_MODE = os.getenv("MANAGER_ASSIGNMENT_MODE", "ROUND_ROBIN").upper()

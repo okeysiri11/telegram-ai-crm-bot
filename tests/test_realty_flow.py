@@ -173,28 +173,24 @@ async def test_realty_photos_collection(mock_message, mock_fsm_context):
 
 
 @pytest.mark.asyncio
-async def test_realty_manager_is_luc():
-    if DEFAULT_REALTY_MANAGER_ID is None:
-        pytest.skip("DEFAULT_REALTY_MANAGER_ID not configured")
+async def test_realty_manager_from_pool():
+    from services.manager_pool_service import manager_pool_service
 
-    with patch(
-        "repositories.manager_repository.ManagerRepository.get_primary_for_vertical",
-        new=AsyncMock(return_value=None),
-    ), patch(
-        "repositories.user_repository.UserRepository.get_by_telegram_id",
-        new=AsyncMock(),
-    ) as get_user:
-        user = AsyncMock()
-        user.id = uuid.uuid4()
-        user.telegram_id = DEFAULT_REALTY_MANAGER_ID
-        user.full_name = "Luc"
-        user.username = "luc_realty"
-        user.role = "REALTY_MANAGER"
-        get_user.return_value = user
-
+    pool_mgr = {
+        "user_id": str(uuid.uuid4()),
+        "telegram_id": DEFAULT_REALTY_MANAGER_ID or 777777,
+        "display_name": "Luc",
+        "pool_id": str(uuid.uuid4()),
+        "vertical": Vertical.REALTY.value,
+    }
+    with patch.object(
+        manager_pool_service,
+        "assign_manager",
+        new=AsyncMock(return_value=pool_mgr),
+    ):
         mgr = await manager_service.resolve_manager_for_vertical(Vertical.REALTY.value)
         assert mgr is not None
-        assert mgr["telegram_id"] == DEFAULT_REALTY_MANAGER_ID
+        assert mgr["telegram_id"] == pool_mgr["telegram_id"]
 
 
 @pytest.mark.asyncio

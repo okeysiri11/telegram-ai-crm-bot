@@ -145,6 +145,14 @@ async def run_startup() -> StartupContext:
     except Exception:
         logger.warning("Vertical routing seed failed", exc_info=True)
 
+    try:
+        from services.manager_pool_service import manager_pool_service
+
+        pool_seed = await manager_pool_service.bootstrap_from_config()
+        logger.info("Manager pool bootstrap: %s", pool_seed)
+    except Exception:
+        logger.warning("Manager pool bootstrap failed", exc_info=True)
+
     from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
     diagnostics = await ManagerDeliveryEngineV1.startup_diagnostics()

@@ -134,47 +134,29 @@ class VerticalRoutingEngineV1:
     ) -> tuple[uuid.UUID, int, str] | None:
         """
         Return (user_uuid, telegram_id, display_name) for the primary manager
-        subscribed to the vertical.
+        from the dynamic manager pool.
         """
+        from services.manager_pool_service import manager_pool_service
+
         key = normalize_vertical(vertical) or (vertical or "").strip().lower()
         if not key:
             return None
 
-        async with get_session() as session:
-            result = await session.execute(
-                select(ManagerVerticalSubscription, User)
-                .join(User, User.id == ManagerVerticalSubscription.user_id)
-                .where(
-                    ManagerVerticalSubscription.vertical == key,
-                    ManagerVerticalSubscription.is_active.is_(True),
-                    User.is_active.is_(True),
-                )
-                .order_by(
-                    ManagerVerticalSubscription.is_primary.desc(),
-                    ManagerVerticalSubscription.created_at.asc(),
-                )
-                .limit(1)
-            )
-            row = result.first()
-            if row is not None:
-                sub, user = row
-                name = user.full_name or user.username or f"manager:{user.telegram_id}"
-                if user.telegram_id is None:
-                    return None
-                logger.info(
-                    "VERTICAL_ROUTE vertical=%s manager_telegram_id=%s role=%s",
-                    key,
-                    user.telegram_id,
-                    sub.role_code,
-                )
-                return user.id, user.telegram_id, name
+        snap = await manager_pool_service.assign_manager(key)
+        if snap is None:
+            return None
 
-        # Config fallbacks — keep AUTO scenarios working before subscriptions exist
-        if key == Vertical.AUTO.value and DEFAULT_AUTO_MANAGER_ID is not None:
-            return await VerticalRoutingEngineV1._fallback_user(DEFAULT_AUTO_MANAGER_ID)
-        if key == Vertical.AGRO.value and DEFAULT_AGRO_MANAGER_ID is not None:
-            return await VerticalRoutingEngineV1._fallback_user(DEFAULT_AGRO_MANAGER_ID)
-        return None
+        logger.info(
+            "VERTICAL_ROUTE vertical=%s manager_telegram_id=%s pool_id=%s",
+            key,
+            snap.get("telegram_id"),
+            snap.get("pool_id"),
+        )
+        return (
+            uuid.UUID(snap["user_id"]),
+            int(snap["telegram_id"]),
+            str(snap.get("display_name") or snap.get("name") or ""),
+        )
 
     @staticmethod
     async def _fallback_user(telegram_id: int) -> tuple[uuid.UUID, int, str] | None:

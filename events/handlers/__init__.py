@@ -59,6 +59,10 @@ def register_platform_event_handlers() -> None:
 
     sla_timer_service.subscribe_to_event_bus()
 
+    from services.manager_pool_service import manager_pool_service
+
+    manager_pool_service.subscribe_to_event_bus()
+
     _registered = True
     logger.info(
         "platform_internal_event_handlers_registered",

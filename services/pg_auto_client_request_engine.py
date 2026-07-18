@@ -98,10 +98,6 @@ class AutoClientRequestEngineV1:
             manager = await UserRoleRepository(session).find_user_by_role_code(
                 AUTO_MANAGER_ROLE_CODE
             )
-            if manager is None:
-                manager = await UsersRepository(session).get_by_telegram_id(
-                    DEFAULT_AUTO_MANAGER_ID
-                )
             if manager is None or manager.telegram_id is None:
                 logger.error("AUTO_MANAGER NOT FOUND")
                 return None

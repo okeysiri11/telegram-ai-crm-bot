@@ -96,18 +96,7 @@ class ManagerDeliveryEngineV1:
         if routed is not None:
             return routed
 
-        if key == Vertical.AUTO.value:
-            if DEFAULT_AUTO_MANAGER_ID is None:
-                logger.error("DEFAULT_AUTO_MANAGER_ID is not configured")
-                return None
-            user = await ManagerDeliveryEngineV1.get_manager_user(
-                telegram_id=DEFAULT_AUTO_MANAGER_ID
-            )
-            if user is None or user.telegram_id is None:
-                logger.error("MANAGER_NOT_FOUND lead_id=%s", "—")
-                return None
-            name = user.full_name or BORIS_FULL_NAME
-            return user.id, user.telegram_id, name
+        logger.error("No manager available in pool vertical=%s", key)
         return None
 
     @staticmethod

@@ -1,4 +1,4 @@
-# ManagerService — vertical lead routing (AUTO / AGRO / SUPER_ADMIN rules).
+# ManagerService — vertical lead routing via dynamic manager pool.
 
 from __future__ import annotations
 
@@ -6,85 +6,29 @@ import logging
 import uuid
 from typing import Any
 
-from config import (
-    DEFAULT_AGRO_MANAGER_ID,
-    DEFAULT_AUTO_MANAGER_ID,
-    DEFAULT_DEALER_MANAGER_ID,
-    DEFAULT_REALTY_MANAGER_ID,
-    OWNER_ID,
-)
+from config import OWNER_ID
 from database.session import get_session
 from repositories.manager_repository import ManagerRepository
 from repositories.user_repository import UserRepository
+from services.manager_pool_service import manager_pool_service
 from services.system_roles import SystemRole, Vertical, normalize_vertical
 
 logger = logging.getLogger(__name__)
 
-# Verticals where SUPER_ADMIN must NOT receive automatic lead assignment.
 NON_ASSIGNABLE_ROLES = frozenset({SystemRole.SUPER_ADMIN.value, "OWNER", "ADMIN"})
-
-# Default assignees (Telegram IDs from config / .env).
-DEFAULT_ASSIGNEES: dict[str, int | None] = {
-    Vertical.AUTO.value: DEFAULT_AUTO_MANAGER_ID,
-    Vertical.AGRO.value: DEFAULT_AGRO_MANAGER_ID,
-    Vertical.REALTY.value: DEFAULT_REALTY_MANAGER_ID,
-    Vertical.LEGAL.value: None,
-    Vertical.LOGISTICS.value: None,
-}
-
-# Display names for diagnostics.
-ASSIGNEE_LABELS: dict[str, str] = {
-    Vertical.AUTO.value: "Boroda_0003 (AUTO_MANAGER)",
-    Vertical.AGRO.value: "Christopher Moltisanti (AGRO_MANAGER)",
-    Vertical.REALTY.value: "Luc (REALTY_MANAGER)",
-}
 
 
 class ManagerService:
     @staticmethod
     async def resolve_manager_for_vertical(vertical: str) -> dict[str, Any] | None:
-        """
-        Resolve primary manager for lead assignment.
-
-        Rules:
-        - AUTO → Boroda_0003 (DEFAULT_AUTO_MANAGER_ID)
-        - AGRO → Christopher Moltisanti (grain, rapeseed, soy, apples, freight, etc.)
-        - SUPER_ADMIN (Tony Soprano / OWNER_ID) — full access but NOT auto-assigned
-        """
+        """Resolve primary manager for lead assignment via ManagerPoolService."""
         key = normalize_vertical(vertical) or vertical.strip().lower()
+        mgr = await manager_pool_service.assign_manager(key)
+        if mgr is not None:
+            return mgr
 
-        async with get_session() as session:
-            mgr_repo = ManagerRepository(session)
-            subscribed = await mgr_repo.get_primary_for_vertical(key)
-            if subscribed is not None:
-                sub, user = subscribed
-                if user.role in NON_ASSIGNABLE_ROLES or sub.role_code in NON_ASSIGNABLE_ROLES:
-                    logger.info(
-                        "Skipping SUPER_ADMIN for auto-assign vertical=%s user=%s",
-                        key,
-                        user.telegram_id,
-                    )
-                elif user.telegram_id is not None:
-                    return ManagerRepository.manager_snapshot(user, sub)
-
-        # Fallback to configured defaults.
-        default_tid = DEFAULT_ASSIGNEES.get(key)
-        if default_tid is None and key == Vertical.AUTO.value:
-            default_tid = DEFAULT_DEALER_MANAGER_ID
-
-        if default_tid is None:
-            logger.warning("No manager configured for vertical=%s", key)
-            return None
-
-        if OWNER_ID is not None and default_tid == OWNER_ID:
-            logger.info("SUPER_ADMIN excluded from auto-assign vertical=%s", key)
-            return None
-
-        async with get_session() as session:
-            user = await UserRepository(session).get_by_telegram_id(default_tid)
-            if user is None or user.telegram_id is None:
-                return None
-            return ManagerRepository.manager_snapshot(user)
+        logger.warning("No manager available in pool for vertical=%s", key)
+        return None
 
     @staticmethod
     async def resolve_manager_triple(
@@ -131,20 +75,20 @@ class ManagerService:
         exclude_manager_id: uuid.UUID | str | None = None,
     ) -> dict[str, Any] | None:
         """Pick another manager for the vertical, excluding the current assignee."""
-        exclude = str(exclude_manager_id) if exclude_manager_id else None
-        managers = await ManagerService.list_vertical_managers(vertical)
-        for mgr in managers:
-            if exclude and str(mgr.get("user_id")) == exclude:
-                continue
-            if mgr.get("telegram_id") is not None:
-                return mgr
+        key = normalize_vertical(vertical) or vertical.strip().lower()
+        exclude_tid: set[int] = set()
+        if exclude_manager_id:
+            async with get_session() as session:
+                user = await UserRepository(session).get_by_id(
+                    uuid.UUID(str(exclude_manager_id))
+                )
+                if user and user.telegram_id is not None:
+                    exclude_tid.add(int(user.telegram_id))
 
-        fallback = await ManagerService.resolve_manager_for_vertical(vertical)
-        if fallback is None:
-            return None
-        if exclude and str(fallback.get("user_id")) == exclude:
-            return None
-        return fallback
+        return await manager_pool_service.assign_manager(
+            key,
+            exclude_telegram_ids=exclude_tid or None,
+        )
 
 
 manager_service = ManagerService()
