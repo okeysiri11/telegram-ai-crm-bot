@@ -1,7 +1,22 @@
 """Platform internal event package."""
 
+from events.adapters.legacy_adapter import (
+    publish_legacy_to_platform_bus,
+    register_legacy_handlers_on_platform_bus,
+    reset_legacy_bridge_registration,
+)
+from events.adapters.crm_adapter import publish_crm_to_platform_bus
 from events.base_event import BaseEvent
 from events.event_bus import PlatformEventBus, publish, reset_subscribers, subscribe
+from events.generic_events import GenericPlatformEvent
+from events.publisher import (
+    publish as publish_domain,
+    publish_ai,
+    publish_plugin,
+    publish_skill,
+    publish_sla,
+    publish_workflow,
+)
 from events.request_events import (
     ManagerEscalationEvent,
     ManagerReassignedEvent,
@@ -20,8 +35,19 @@ from platform_events_legacy import (  # noqa: E402
 
 __all__ = [
     "BaseEvent",
+    "GenericPlatformEvent",
     "PlatformEventBus",
     "publish",
+    "publish_domain",
+    "publish_ai",
+    "publish_skill",
+    "publish_workflow",
+    "publish_plugin",
+    "publish_sla",
+    "publish_legacy_to_platform_bus",
+    "publish_crm_to_platform_bus",
+    "register_legacy_handlers_on_platform_bus",
+    "reset_legacy_bridge_registration",
     "subscribe",
     "reset_subscribers",
     "RequestCreatedEvent",

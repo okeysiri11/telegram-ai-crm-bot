@@ -3,10 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from events.base_event import BaseEvent
-from events.event_bus import PlatformEventBus
 
 
 @dataclass(kw_only=True)
@@ -46,4 +44,6 @@ class SkillCostUpdatedEvent(BaseEvent):
 
 
 async def publish_skill_event(event: BaseEvent) -> None:
-    await PlatformEventBus.publish(event, wait=True)
+    from events.publisher import publish_skill
+
+    await publish_skill(event, wait=True)

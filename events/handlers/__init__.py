@@ -84,6 +84,10 @@ def register_platform_event_handlers() -> None:
 
     register_realtime_event_handlers()
 
+    from events.adapters.legacy_adapter import register_legacy_handlers_on_platform_bus
+
+    register_legacy_handlers_on_platform_bus()
+
     _registered = True
     logger.info(
         "platform_internal_event_handlers_registered",
@@ -106,3 +110,6 @@ def reset_handler_registration() -> None:
     from platform_realtime.event_dispatcher import reset_realtime_event_handlers
 
     reset_realtime_event_handlers()
+    from events.adapters.legacy_adapter import reset_legacy_bridge_registration
+
+    reset_legacy_bridge_registration()

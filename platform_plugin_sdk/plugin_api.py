@@ -9,9 +9,9 @@ class EventsApi:
     """Publish and subscribe to platform events."""
 
     async def publish(self, event: Any) -> None:
-        from events.event_bus import PlatformEventBus
+        from events.publisher import publish
 
-        await PlatformEventBus.publish(event, wait=False)
+        await publish(event, wait=False)
 
     def subscribe(self, event_type: type | str, handler: Any, *, handler_id: str | None = None) -> str:
         from events.event_bus import PlatformEventBus

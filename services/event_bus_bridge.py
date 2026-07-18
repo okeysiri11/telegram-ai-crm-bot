@@ -5,39 +5,10 @@ from events import EventBus, PlatformEvent
 
 
 def register_default_subscribers() -> None:
-    """Register all default event handlers (idempotent)."""
-    handlers = [
-        ("AGRO_REQUEST_CREATED", _on_agro_request_created, "agro_lifecycle"),
-        ("AGRO_REQUEST_CREATED", _on_agro_request_workflow, "agro_workflow_engine"),
-        ("AGRO_REQUEST_CREATED", _on_agro_request_notify, "agro_notify"),
-        ("AGRO_REQUEST_CREATED", _on_agro_erp_request_created, "agro_erp_workflow"),
-        ("AGRO_REQUEST_ASSIGNED", _on_agro_request_assigned, "agro_assigned"),
-        ("AGRO_REQUEST_ASSIGNED", _on_agro_erp_taken, "agro_erp_taken"),
-        ("AGRO_REQUEST_STATUS_CHANGED", _on_agro_status_changed, "agro_status"),
-        ("FINANCE_PAYMENT_CONFIRMED", _on_finance_payment_confirmed, "finance_audit"),
-        ("FINANCE_COMMISSION_PAID", _on_finance_commission_paid, "finance_commission"),
-        ("TASK_CREATED", _on_task_created, "task_workflow"),
-        ("CALENDAR_EVENT_CREATED", _on_calendar_event_created, "calendar_workflow"),
-        ("USER_CREATED", _on_user_created, "user_workflow"),
-        ("AUTO_LEAD_CREATED", _on_auto_lead_created, "auto_stub"),
-        ("AUTO_PAYMENT_RECEIVED", _on_auto_payment_received, "auto_payment_stub"),
-        ("AUTO_TRADEIN_STARTED", _on_auto_tradein_started, "auto_tradein_stub"),
-        ("LEGAL_CASE_CREATED", _on_legal_case_created, "legal_stub"),
-        ("DRONE_PROJECT_CREATED", _on_drone_project_created, "drone_stub"),
-        ("DEAL_CREATED", _on_deal_created, "deal_workflow"),
-        ("DEAL_STATUS_CHANGED", _on_deal_status_changed, "deal_workflow"),
-        ("DEAL_COMPLETED", _on_deal_completed, "deal_workflow"),
-        ("DEAL_COMPLETED", _on_deal_completed_commissions, "commission_accrual"),
-        ("DEAL_COMPLETED", _on_deal_completed_partner_kpi, "partner_kpi"),
-        ("PARTNER_ASSIGNED", _on_partner_assigned, "partner_workflow"),
-        ("PARTNER_CREATED", _on_partner_created, "partner_workflow"),
-        ("DEAL_COMPLETED", _on_deal_completed_ledger, "ledger_income"),
-        ("LEDGER_ENTRY_CREATED", _on_ledger_entry_created, "ledger_workflow"),
-        ("FINANCE_PAYMENT_CONFIRMED", _on_finance_payment_ledger_sync, "ledger_sync"),
-        ("FINANCE_COMMISSION_PAID", _on_finance_commission_ledger_sync, "ledger_sync"),
-    ]
-    for event_type, handler, sid in handlers:
-        EventBus.subscribe(event_type, handler, subscriber_id=sid)
+    """Register all default event handlers on PlatformEventBus (idempotent)."""
+    from events.adapters.legacy_adapter import register_legacy_handlers_on_platform_bus
+
+    register_legacy_handlers_on_platform_bus()
 
 
 # ---------------------------------------------------------------------------

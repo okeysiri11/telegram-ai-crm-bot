@@ -47,9 +47,9 @@ class PluginRemovedEvent(PluginLifecycleEvent):
 
 
 async def publish_plugin_event(event: PluginLifecycleEvent) -> None:
-    from events.event_bus import PlatformEventBus
+    from events.publisher import publish_plugin
 
-    await PlatformEventBus.publish(event, wait=True)
+    await publish_plugin(event, wait=True)
 
     try:
         from platform_realtime.event_dispatcher import RealtimeEventDispatcher

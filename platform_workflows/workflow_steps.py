@@ -275,7 +275,7 @@ class WorkflowSteps:
     ) -> tuple[dict[str, Any], str | None, bool]:
         event_type = str(step.config.get("event_type") or "workflow.step.event")
         payload = context.resolve_mapping(dict(step.config.get("payload") or {}))
-        from events.event_bus import publish
+        from events.publisher import publish
         from events.request_events import RequestCreatedEvent
         from events.workflow_events import WorkflowStepCompletedEvent
 

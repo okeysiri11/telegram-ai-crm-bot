@@ -52,7 +52,7 @@ class CostThresholdExceededEvent(BaseEvent):
     details: dict[str, Any] = field(default_factory=dict)
 
 
-async def publish_ai_event(event: BaseEvent) -> None:
-    from events.event_bus import PlatformEventBus
+async def publish_ai_event(event: BaseEvent, *, wait: bool = True) -> None:
+    from events.publisher import publish_ai
 
-    await PlatformEventBus.publish(event, wait=False)
+    await publish_ai(event, wait=wait)

@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from events.base_event import BaseEvent
-from events.event_bus import PlatformEventBus
 
 from platform_ai.memory.document_store import document_store
 from platform_ai.memory.knowledge_base import knowledge_base
@@ -60,7 +59,9 @@ class KnowledgeSearchEvent(BaseEvent):
 
 
 async def _publish(event: BaseEvent) -> None:
-    await PlatformEventBus.publish(event, wait=True)
+    from events.publisher import publish
+
+    await publish(event, wait=True)
 
 
 class MemoryService:

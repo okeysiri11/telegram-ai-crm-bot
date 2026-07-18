@@ -8,6 +8,8 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from typing import Any, Callable
 
+from events.event_bus import PlatformEventBus
+
 EVENT_STATUSES = (
     "PUBLISHED",
     "DELIVERING",
@@ -256,18 +258,16 @@ class EventBus:
         event.event_id = insert_platform_event(event, replay_of=source_event_id)
         update_platform_event_status(event.event_id, "DELIVERING")
 
+        from events.adapters.legacy_adapter import publish_legacy_to_platform_bus_sync
+
+        publish_legacy_to_platform_bus_sync(event, wait=True)
+
         handlers = _subscribers.get(event_type, [])
-        delivered = 0
+        delivered = len(PlatformEventBus.list_subscribers().get(event_type, []))
         errors: list[str] = []
 
-        for sid, handler in handlers:
-            try:
-                handler(event)
-                delivered += 1
-            except Exception as exc:
-                errors.append(f"{sid}: {exc}")
-
-        if not handlers:
+        # Legacy inline handler loop removed — handlers run via PlatformEventBus.
+        if not handlers and delivered == 0:
             final_status = "DELIVERED"
         elif errors and delivered == 0:
             final_status = "FAILED"
@@ -332,13 +332,9 @@ class EventBus:
         global _registered
         if _registered:
             return
-        import importlib.util
-        from pathlib import Path
-        bridge_path = Path(__file__).resolve().parent / "services" / "event_bus_bridge.py"
-        spec = importlib.util.spec_from_file_location("event_bus_bridge", bridge_path)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        mod.register_default_subscribers()
+        from events.adapters.legacy_adapter import register_legacy_handlers_on_platform_bus
+
+        register_legacy_handlers_on_platform_bus()
         _registered = True
 
 

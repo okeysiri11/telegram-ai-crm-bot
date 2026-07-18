@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from events.base_event import BaseEvent
-from events.event_bus import PlatformEventBus
 
 
 @dataclass(kw_only=True)
@@ -63,4 +62,6 @@ class StepFailedEvent(BaseEvent):
 
 
 async def publish_workflow_event(event: BaseEvent) -> None:
-    await PlatformEventBus.publish(event, wait=True)
+    from events.publisher import publish_workflow
+
+    await publish_workflow(event, wait=True)

@@ -7,7 +7,7 @@ import time
 from datetime import datetime, timezone
 from typing import Any
 
-from events.event_bus import publish
+from events.publisher import publish
 from events.workflow_events import (
     WorkflowCancelledEvent,
     WorkflowCompletedEvent,

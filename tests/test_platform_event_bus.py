@@ -116,7 +116,10 @@ async def test_request_created_triggers_all_handlers():
 
 @pytest.mark.asyncio
 async def test_request_service_create_only_publishes_event(client_user_id):
+    from platform_sdk.vertical_registry import VerticalRegistry
     from services.request_service import request_service
+
+    VerticalRegistry.reset_singleton()
 
     row = AsyncMock()
     row.id = "00000000-0000-0000-0000-000000000099"
@@ -130,6 +133,10 @@ async def test_request_service_create_only_publishes_event(client_user_id):
     row.manager_id = None
     row.created_at = None
 
+    session = AsyncMock()
+    session.__aenter__ = AsyncMock(return_value=session)
+    session.__aexit__ = AsyncMock(return_value=False)
+
     with patch(
         "services.manager_service.manager_service.resolve_manager_for_vertical",
         new=AsyncMock(return_value={"user_id": "00000000-0000-0000-0000-000000000001", "telegram_id": 1}),
@@ -140,9 +147,15 @@ async def test_request_service_create_only_publishes_event(client_user_id):
         "repositories.request_repository.RequestRepository.create_crm",
         new=AsyncMock(return_value=row),
     ), patch(
+        "services.request_service.get_session",
+        return_value=session,
+    ), patch(
         "services.request_service.RequestService._publish_request_created",
         new=AsyncMock(),
     ) as publish_mock, patch(
+        "services.request_service.RequestService._run_post_create_workflow",
+        new=AsyncMock(),
+    ), patch(
         "services.notification_service.notification_service.notify_managers_new_request",
         new=AsyncMock(),
     ) as notify_mock:

@@ -70,6 +70,8 @@ async def publish_event(
 ) -> uuid.UUID:
     validate_event_type(event_type)
 
+    from events.adapters.crm_adapter import publish_crm_to_platform_bus
+
     if session is not None:
         repo = EventBusRepository(session)
         event = await repo.publish_event(
@@ -81,6 +83,15 @@ async def publish_event(
             causation_id=causation_id,
         )
         metrics.record_published()
+        await publish_crm_to_platform_bus(
+            event_type,
+            aggregate_type,
+            aggregate_id,
+            payload,
+            correlation_id=correlation_id,
+            causation_id=causation_id,
+            crm_event_id=event.id,
+        )
         return event.id
 
     async with get_session() as owned_session:
@@ -94,6 +105,15 @@ async def publish_event(
             causation_id=causation_id,
         )
         metrics.record_published()
+        await publish_crm_to_platform_bus(
+            event_type,
+            aggregate_type,
+            aggregate_id,
+            payload,
+            correlation_id=correlation_id,
+            causation_id=causation_id,
+            crm_event_id=event.id,
+        )
         return event.id
 
 
