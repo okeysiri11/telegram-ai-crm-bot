@@ -86,6 +86,17 @@ class WorkflowExecutor:
             history=request.input.get("history", []),
         )
 
+        from platform_ai.memory.memory_service import memory_service
+
+        ai_context = await memory_service.build_ai_context(
+            query=str(request.input)[:500],
+            plugin_id=request.plugin_id,
+            user_id=request.user_id,
+            workflow_id=definition.workflow_id,
+            configuration=ctx.configuration,
+        )
+        ctx.configuration["memory"] = ai_context.to_dict()
+
         state = resume_state or WorkflowExecutionState(
             execution_id=execution_id,
             workflow_id=definition.workflow_id,

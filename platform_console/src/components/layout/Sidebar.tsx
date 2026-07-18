@@ -15,6 +15,8 @@ const NAV_ITEMS = [
   { path: '/ai', label: 'AI', icon: '🤖' },
   { path: '/ai/skills', label: 'AI Skills', icon: '🎯' },
   { path: '/ai/workflows', label: 'AI Workflows', icon: '🔀' },
+  { path: '/ai/memory', label: 'AI Memory', icon: '🧠' },
+  { path: '/ai/knowledge', label: 'Knowledge Base', icon: '📚' },
   { path: '/observability', label: 'Observability', icon: '📈' },
   { path: '/system', label: 'System', icon: '🖥️' },
   { path: '/settings', label: 'Settings', icon: '⚙️' },

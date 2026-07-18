@@ -57,4 +57,10 @@ export const managementApi = {
   aiWorkflowsMetrics: () => apiGet<{ total_executions: number; workflows: Record<string, unknown> }>('/management/ai/workflows/metrics'),
   aiWorkflowsExecute: (body: Record<string, unknown>) =>
     apiPost<Record<string, unknown>>('/management/ai/workflows/execute', body),
+
+  aiMemoryStatistics: () => apiGet<{ statistics: Record<string, unknown> }>('/management/ai/memory/statistics'),
+  aiMemorySearch: (q: string) => apiGet<{ results: unknown[]; latency_ms: number }>(`/management/ai/memory/search?q=${encodeURIComponent(q)}`),
+  aiMemoryRemember: (body: Record<string, unknown>) => apiPost<Record<string, unknown>>('/management/ai/memory/remember', body),
+  aiKnowledgeList: () => apiGet<{ documents: unknown[] }>('/management/ai/memory/knowledge'),
+  aiKnowledgeIndex: (body: Record<string, unknown>) => apiPost<Record<string, unknown>>('/management/ai/memory/knowledge/index', body),
 };

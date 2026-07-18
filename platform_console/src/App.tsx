@@ -9,6 +9,8 @@ import { PluginsPage } from './pages/PluginsPage';
 import { AiPage } from './pages/AiPage';
 import { AiSkillsPage } from './pages/AiSkillsPage';
 import { AiWorkflowsPage } from './pages/AiWorkflowsPage';
+import { AiMemoryPage } from './pages/AiMemoryPage';
+import { KnowledgeBasePage } from './pages/KnowledgeBasePage';
 import { managementApi } from './services/management';
 
 export default function App() {
@@ -76,6 +78,8 @@ export default function App() {
           <Route path="ai" element={<AiPage />} />
           <Route path="ai/skills" element={<AiSkillsPage />} />
           <Route path="ai/workflows" element={<AiWorkflowsPage />} />
+          <Route path="ai/memory" element={<AiMemoryPage />} />
+          <Route path="ai/knowledge" element={<KnowledgeBasePage />} />
           <Route
             path="observability"
             element={

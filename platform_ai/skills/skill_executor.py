@@ -101,12 +101,22 @@ class SkillExecutor:
             return await skill.execute(ctx)
 
         prompt = skill.build_prompt(ctx)
+        from platform_ai.memory.memory_service import memory_service
+
+        base_context = ctx.to_prompt_context()
+        enriched_context = await memory_service.inject_context(
+            base_context,
+            query=prompt[:500],
+            plugin_id=request.plugin_id,
+            user_id=request.user_id,
+            configuration=ctx.configuration,
+        )
         ai_request = AIRequest(
             prompt=prompt,
             task_type=skill.task_type,
             plugin_id=request.plugin_id,
             template_id=skill.template_id,
-            context=ctx.to_prompt_context(),
+            context=enriched_context,
             use_cache=False,
         )
         if skill.preferred_models:

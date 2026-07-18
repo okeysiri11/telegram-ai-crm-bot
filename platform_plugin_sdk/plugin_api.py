@@ -218,13 +218,75 @@ class AiWorkflowsApi:
         return result.to_dict()
 
 
+class AiMemoryApi:
+    """Centralized memory & knowledge — plugins must not implement their own memory."""
+
+    def __init__(self, plugin_id: str) -> None:
+        self._plugin_id = plugin_id
+
+    async def remember(self, content: str, *, key: str = "", memory_type: str = "conversation", **scope: Any) -> dict[str, Any]:
+        from platform_ai.memory.memory_service import memory_service
+        from platform_ai.memory.models import RememberRequest
+
+        return await memory_service.remember(
+            RememberRequest(
+                content=content,
+                key=key,
+                memory_type=memory_type,
+                plugin_id=self._plugin_id,
+                user_id=scope.get("user_id"),
+                workflow_id=scope.get("workflow_id"),
+                session_id=scope.get("session_id"),
+                metadata=scope.get("metadata", {}),
+            )
+        )
+
+    def recall(self, *, key: str | None = None, memory_id: str | None = None, **scope: Any) -> Any:
+        from platform_ai.memory.memory_service import memory_service
+
+        return memory_service.recall(memory_id, key=key, plugin_id=self._plugin_id, **scope)
+
+    async def forget(self, memory_id: str) -> dict[str, Any]:
+        from platform_ai.memory.memory_service import memory_service
+
+        return await memory_service.forget(memory_id)
+
+    async def search(self, query: str, **options: Any) -> dict[str, Any]:
+        from platform_ai.memory.memory_service import memory_service
+
+        return await memory_service.search(query, plugin_id=self._plugin_id, **options)
+
+    async def index_knowledge(self, title: str, content: str, **options: Any) -> dict[str, Any]:
+        from platform_ai.memory.memory_service import memory_service
+        from platform_ai.memory.models import IndexRequest
+
+        return await memory_service.index(
+            IndexRequest(
+                title=title,
+                content=content,
+                plugin_id=self._plugin_id,
+                doc_type=options.get("doc_type", "txt"),
+                tags=options.get("tags", []),
+                metadata=options.get("metadata", {}),
+                chunk_strategy=options.get("chunk_strategy", "paragraph"),
+            ),
+            provider_id=options.get("provider_id"),
+        )
+
+    async def search_knowledge(self, query: str, **options: Any) -> dict[str, Any]:
+        from platform_ai.memory.memory_service import memory_service
+
+        return await memory_service.search_knowledge(query, plugin_id=self._plugin_id, **options)
+
+
 class AiApi:
-    """AI Platform access for plugins — skills and workflows only, no direct provider calls."""
+    """AI Platform access for plugins — skills, workflows, and memory only."""
 
     def __init__(self, plugin_id: str) -> None:
         self._plugin_id = plugin_id
         self._skills: AiSkillsApi | None = None
         self._workflows: AiWorkflowsApi | None = None
+        self._memory: AiMemoryApi | None = None
 
     @property
     def skills(self) -> AiSkillsApi:
@@ -237,6 +299,12 @@ class AiApi:
         if self._workflows is None:
             self._workflows = AiWorkflowsApi(self._plugin_id)
         return self._workflows
+
+    @property
+    def memory(self) -> AiMemoryApi:
+        if self._memory is None:
+            self._memory = AiMemoryApi(self._plugin_id)
+        return self._memory
 
 
 class RealtimeApiProtocol(Protocol):

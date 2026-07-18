@@ -13,6 +13,8 @@ const LABELS: Record<string, string> = {
   '/ai': 'AI Platform',
   '/ai/skills': 'AI Skills',
   '/ai/workflows': 'AI Workflows',
+  '/ai/memory': 'AI Memory',
+  '/ai/knowledge': 'Knowledge Base',
   '/observability': 'Observability',
   '/system': 'System',
   '/settings': 'Settings',
