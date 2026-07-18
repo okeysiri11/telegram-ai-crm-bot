@@ -1,6 +1,6 @@
 # Architecture Report
 
-> Generated automatically on 2026-07-18 12:56:41 UTC
+> Generated automatically on 2026-07-18 13:02:27 UTC
 
 ## Executive Summary
 
@@ -136,8 +136,8 @@ flowchart TD
 - **[reverse_layer_dependency]** `platform_operations/timeline_service.py` — services imports shared via platform_management.management_service
 - **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.system_info
 - **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.health
-- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
 - **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.statistics
+- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
 - **[reverse_layer_dependency]** `platform_integrations/webhook_manager.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/policy_engine.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/permission_service.py` — services imports shared via platform_legacy
@@ -152,8 +152,8 @@ flowchart TD
 - **[reverse_layer_dependency]** `repositories/base_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/request_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/manager_pool_repository.py` — repositories imports services via src.platform.layers.base_repository
-- **[reverse_layer_dependency]** `repositories/owner_repository.py` — repositories imports services via platform_configuration.config_provider
 - **[reverse_layer_dependency]** `repositories/owner_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **[reverse_layer_dependency]** `repositories/owner_repository.py` — repositories imports services via platform_configuration.config_provider
 - **[reverse_layer_dependency]** `repositories/workflow_execution_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/platform_metrics_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/manager_repository.py` — repositories imports services via src.platform.layers.base_repository
@@ -161,7 +161,7 @@ flowchart TD
 - **[reverse_layer_dependency]** `repositories/event_repository.py` — repositories imports shared via events
 - **[reverse_layer_dependency]** `repositories/escalation_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/user_repository.py` — repositories imports services via src.platform.layers.base_repository
-- **[reverse_layer_dependency]** `repositories/sla_repository.py` — repositories imports services via platform_configuration.config_provider
+- **[reverse_layer_dependency]** `repositories/sla_repository.py` — repositories imports services via src.platform.layers.base_repository
 
 ## Certification Categories
 
