@@ -196,21 +196,23 @@ def _compute_strict_architecture_score(report, critical: list) -> float:
 def check_dependency_audit() -> CheckResult:
     from platform_architecture.dependency_graph import build_dependency_graph
     from platform_architecture.import_scanner import scan_all_imports, critical_import_violations
-    from platform_architecture.rules import GOVERNED_LAYERS, ViolationSeverity
 
     graph = build_dependency_graph(ROOT)
     all_cycles = _all_cycles(graph)
-    governed_cycles = [c for c in all_cycles if _cycle_touches_governed(c, graph)]
+    strict_cycles = graph.cycles
     imports = critical_import_violations(scan_all_imports(ROOT))
-    passed = not governed_cycles and not imports
+    passed = not strict_cycles and not imports
     return CheckResult(
         check_id="dependency_audit",
         passed=passed,
-        message=f"governed_cycles={len(governed_cycles)} all_cycles={len(all_cycles)} import_critical={len(imports)}",
-        evidence=[f"cycle: {' -> '.join(c[:8])}" for c in governed_cycles[:15]],
+        message=(
+            f"strict_cycles={len(strict_cycles)} all_cycles={len(all_cycles)} "
+            f"import_critical={len(imports)}"
+        ),
+        evidence=[f"cycle: {' -> '.join(c[:8])}" for c in strict_cycles[:15]],
         metadata={
             "all_cycles": len(all_cycles),
-            "governed_cycles": len(governed_cycles),
+            "governed_cycles": len(strict_cycles),
             "strict_governance_cycles": len(graph.cycles),
             "nodes": graph.node_count,
             "edges": graph.edge_count,
@@ -306,6 +308,7 @@ def check_security_tests() -> CheckResult:
         "pytest",
         "tests/test_management_security.py",
         "tests/test_api_v1_freeze.py",
+        "tests/test_admin_security.py",
         "-q",
         "--tb=no",
     ]
