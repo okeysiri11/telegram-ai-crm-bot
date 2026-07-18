@@ -22,7 +22,7 @@ from database.models.crm_events import (
 )
 from database.models.event_dead_letter import EventDeadLetter
 from database.seeds.event_registry import validate_event_type
-from services.event_bus_config import MAX_RETRIES, compute_backoff_seconds
+from platform_configuration.event_bus_policy import MAX_RETRIES, compute_backoff_seconds
 
 logger = logging.getLogger(__name__)
 

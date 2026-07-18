@@ -9,7 +9,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.vin_report import VinReport
-from services.vin_decoder import decode_vin, validate_vin
+from lib.vin_decoder import decode_vin
 
 
 class VinRepository:
