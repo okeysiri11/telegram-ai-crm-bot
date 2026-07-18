@@ -153,6 +153,14 @@ async def run_startup() -> StartupContext:
     except Exception:
         logger.warning("Manager pool bootstrap failed", exc_info=True)
 
+    try:
+        from workflow import workflow_engine
+
+        loaded = workflow_engine.load_definitions()
+        logger.info("Workflow definitions loaded: %s", loaded)
+    except Exception:
+        logger.warning("Workflow definition load failed", exc_info=True)
+
     from services.pg_manager_delivery_engine import ManagerDeliveryEngineV1
 
     diagnostics = await ManagerDeliveryEngineV1.startup_diagnostics()

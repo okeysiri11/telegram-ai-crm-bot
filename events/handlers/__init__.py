@@ -67,6 +67,10 @@ def register_platform_event_handlers() -> None:
 
     smart_assignment_service.subscribe_to_event_bus()
 
+    from workflow.workflow_kpi import workflow_kpi_service
+
+    workflow_kpi_service.subscribe_to_event_bus()
+
     _registered = True
     logger.info(
         "platform_internal_event_handlers_registered",
@@ -83,3 +87,6 @@ def reset_handler_registration() -> None:
 
     kpi_service.reset_subscription()
     sla_timer_service.reset_subscription()
+    from workflow.workflow_kpi import workflow_kpi_service
+
+    workflow_kpi_service.reset_subscription()

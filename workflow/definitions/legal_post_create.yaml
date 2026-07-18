@@ -1,0 +1,14 @@
+workflow:
+  id: legal_post_create
+  vertical: LEGAL
+  description: Legal request post-creation workflow
+  steps:
+    - id: assign_manager
+      type: service
+      service: ManagerService
+      method: assign_manager
+      params:
+        vertical: legal
+
+    - id: finish
+      type: complete

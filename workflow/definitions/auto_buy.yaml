@@ -1,0 +1,49 @@
+workflow:
+  id: auto_buy
+  vertical: AUTO
+  description: Auto buy car client flow
+  steps:
+    - id: choose_request
+      type: callback
+      variable: flow_type
+
+    - id: phone
+      type: input
+      variable: phone
+      prompt: "Enter phone number"
+
+    - id: photos
+      type: media
+      variable: photos
+
+    - id: vin_choice
+      type: choice
+      variable: vin
+      options:
+        yes: vin
+        no: assign_manager
+
+    - id: vin
+      type: question
+      variable: vin_code
+      prompt: "Enter VIN"
+
+    - id: assign_manager
+      type: service
+      service: SmartAssignmentService
+      method: smart_assign
+      params:
+        vertical: auto
+        request_type: AUTO_SEARCH
+
+    - id: notify
+      type: service
+      service: NotificationService
+      method: notify
+      params:
+        vertical: auto
+        request_number: $request.request_number
+        client_name: $telegram_user.name
+
+    - id: finish
+      type: complete

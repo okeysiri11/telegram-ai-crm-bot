@@ -1,0 +1,24 @@
+workflow:
+  id: agro_post_create
+  vertical: AGRO
+  description: Agro request post-creation backend workflow
+  steps:
+    - id: notify
+      type: service
+      service: NotificationService
+      method: notify
+      params:
+        vertical: agro
+        request_number: $request.request_number
+        client_name: $telegram_user.name
+        product: $variables.description
+
+    - id: audit
+      type: service
+      service: AuditService
+      method: audit
+      params:
+        step_id: agro_post_create
+
+    - id: finish
+      type: complete

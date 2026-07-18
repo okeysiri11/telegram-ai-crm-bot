@@ -85,7 +85,44 @@ class RequestService:
 
         result = RequestService._crm_snapshot(row)
         await RequestService._publish_request_created(key, result, manager)
+        await RequestService._run_post_create_workflow(
+            vertical=key,
+            request=result,
+            client_telegram_id=client_telegram_id,
+            client_name=client_name,
+            client_username=client_username,
+            description=description or product,
+            manager=manager,
+        )
         return result
+
+    @staticmethod
+    async def _run_post_create_workflow(
+        *,
+        vertical: str,
+        request: dict[str, Any],
+        client_telegram_id: int,
+        client_name: str = "",
+        client_username: str | None = None,
+        description: str = "",
+        manager: dict[str, Any] | None = None,
+    ) -> None:
+        try:
+            from workflow import workflow_engine
+
+            ctx = await workflow_engine.run_backend_workflow(
+                vertical.upper(),
+                telegram_user={
+                    "id": client_telegram_id,
+                    "name": client_name,
+                    "username": client_username,
+                },
+                request=request,
+                manager=manager,
+                variables={"description": description},
+            )
+        except Exception:
+            logger.warning("post_create_workflow_failed vertical=%s", vertical, exc_info=True)
 
     @staticmethod
     async def _create_auto_request(**kwargs: Any) -> dict[str, Any]:

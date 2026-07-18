@@ -1,0 +1,16 @@
+workflow:
+  id: realty_post_create
+  vertical: REALTY
+  description: Realty request post-creation backend workflow
+  steps:
+    - id: notify
+      type: service
+      service: NotificationService
+      method: notify
+      params:
+        vertical: realty
+        request_number: $request.request_number
+        client_name: $telegram_user.name
+
+    - id: finish
+      type: complete
