@@ -6,9 +6,11 @@ import logging
 
 from audit.audit_service import audit_service
 from events.event_bus import subscribe
+from events.handlers.owner_notification_handler import OwnerNotificationHandler
 from events.handlers.metrics_handler import MetricsEventHandler
 from events.handlers.notification_handler import NotificationEventHandler
 from events.handlers.sla_handler import SLAEventHandler
+from events.owner_events import OwnerEscalationEvent
 from events.request_events import (
     ManagerEscalationEvent,
     ManagerReassignedEvent,
@@ -40,6 +42,8 @@ def register_platform_event_handlers() -> None:
         (RequestOverdueEvent, SLAEventHandler.handle, "sla_overdue"),
         (RequestOverdueEvent, NotificationEventHandler.handle, "notification_overdue"),
         (ManagerEscalationEvent, NotificationEventHandler.handle, "notification_escalation"),
+        (OwnerEscalationEvent, OwnerNotificationHandler.handle, "owner_notification"),
+        (OwnerEscalationEvent, MetricsEventHandler.handle, "metrics_owner_escalation"),
     )
 
     for event_type, handler, handler_id in handlers:
@@ -58,7 +62,7 @@ def register_platform_event_handlers() -> None:
     _registered = True
     logger.info(
         "platform_internal_event_handlers_registered",
-        extra={"handler_count": len(handlers) + 13},
+        extra={"handler_count": len(handlers) + 14},
     )
 
 

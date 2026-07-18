@@ -10,6 +10,7 @@ from audit.audit_event import AuditRecord, audit_record_from_event
 from audit.audit_repository import AuditRepository
 from database.session import get_session
 from events.base_event import BaseEvent
+from events.owner_events import OwnerEscalationEvent
 from events.request_events import (
     ManagerEscalationEvent,
     ManagerReassignedEvent,
@@ -108,6 +109,7 @@ class AuditService:
             ManagerReassignedEvent,
             RequestOverdueEvent,
             ManagerEscalationEvent,
+            OwnerEscalationEvent,
         )
         for event_type in event_types:
             subscribe(

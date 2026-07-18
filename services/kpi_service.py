@@ -12,6 +12,7 @@ from typing import Any
 
 from database.session import get_session
 from events.base_event import BaseEvent
+from events.owner_events import OwnerEscalationEvent
 from events.request_events import (
     ManagerFirstResponseEvent,
     RequestAssignedEvent,
@@ -86,6 +87,8 @@ class KpiService:
                 await KpiService._on_request_completed(event)
             elif isinstance(event, RequestOverdueEvent):
                 await KpiService._on_request_overdue(event)
+            elif isinstance(event, OwnerEscalationEvent):
+                await KpiService._on_owner_escalation(event)
         except Exception:
             logger.warning(
                 "kpi_event_processing_failed",
@@ -261,6 +264,24 @@ class KpiService:
         KpiService.invalidate_cache()
 
     @staticmethod
+    async def _on_owner_escalation(event: OwnerEscalationEvent) -> None:
+        now = event.occurred_at or datetime.now(timezone.utc)
+        async with get_session() as session:
+            repo = KpiRepository(session)
+            await repo.bump_vertical(
+                vertical="__owner_escalations__",
+                metric_date=now.date(),
+                overdue=1,
+            )
+            await repo.bump_vertical(
+                vertical=event.vertical,
+                metric_date=now.date(),
+                overdue=1,
+                sla_total=1,
+            )
+        KpiService.invalidate_cache()
+
+    @staticmethod
     async def get_manager_kpi(
         manager_id: uuid.UUID | str,
         *,
@@ -343,6 +364,9 @@ class KpiService:
             manager_rankings=rankings,
         )
         payload = snapshot.to_dict()
+        from services.owner_escalation_service import owner_escalation_service
+
+        payload["owner_escalations"] = await owner_escalation_service.get_owner_escalation_kpi()
         KpiService._cache_set(cache_key, payload)
         return payload
 
@@ -360,6 +384,7 @@ class KpiService:
             ManagerFirstResponseEvent,
             RequestCompletedEvent,
             RequestOverdueEvent,
+            OwnerEscalationEvent,
         )
         for event_type in event_types:
             subscribe(

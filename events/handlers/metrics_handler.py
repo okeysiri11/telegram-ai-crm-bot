@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from events.base_event import BaseEvent
+from events.owner_events import OwnerEscalationEvent
 from events.request_events import (
     ManagerReassignedEvent,
     RequestAssignedEvent,
@@ -42,3 +43,7 @@ class MetricsEventHandler:
                 request_number=event.request_number,
                 manager_id=event.manager_id,
             )
+        elif isinstance(event, OwnerEscalationEvent):
+            from services.kpi_service import KpiService
+
+            KpiService.invalidate_cache()

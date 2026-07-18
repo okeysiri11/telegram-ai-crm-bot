@@ -148,6 +148,11 @@ class SLARepository(BaseRepository):
             "avg_response_minutes": avg_minutes,
         }
 
+    async def get_owner_escalated_requests(self, *, limit: int = 100) -> list[dict[str, Any]]:
+        from repositories.owner_repository import OwnerRepository
+
+        return await OwnerRepository(self.session).get_owner_escalated_requests(limit=limit)
+
     async def _serialize_open_sla_rows(
         self,
         rows: list[RequestSla],

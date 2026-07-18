@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from database.session import get_session
+from repositories.owner_repository import OwnerRepository
 from repositories.sla_repository import SLARepository
 
 
@@ -22,7 +23,15 @@ class SlaDashboardService:
     @staticmethod
     async def get_statistics() -> dict[str, Any]:
         async with get_session() as session:
-            return await SLARepository(session).get_sla_statistics()
+            stats = await SLARepository(session).get_sla_statistics()
+            owner_kpi = await OwnerRepository(session).get_owner_escalation_kpi()
+        stats.update(owner_kpi)
+        return stats
+
+    @staticmethod
+    async def get_owner_escalated(*, limit: int = 100) -> list[dict[str, Any]]:
+        async with get_session() as session:
+            return await SLARepository(session).get_owner_escalated_requests(limit=limit)
 
 
 sla_dashboard_service = SlaDashboardService()

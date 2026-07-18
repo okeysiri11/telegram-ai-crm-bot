@@ -16,6 +16,7 @@ from events.request_events import (
     RequestCreatedEvent,
     RequestOverdueEvent,
 )
+from events.owner_events import OwnerEscalationEvent
 
 
 class AuditEventType(str, enum.Enum):
@@ -25,6 +26,7 @@ class AuditEventType(str, enum.Enum):
     MANAGER_REASSIGNED = "MANAGER_REASSIGNED"
     REQUEST_OVERDUE = "REQUEST_OVERDUE"
     MANAGER_ESCALATION = "MANAGER_ESCALATION"
+    OWNER_ESCALATED = "OWNER_ESCALATED"
 
 
 ENTITY_TYPE_REQUEST = "client_request"
@@ -208,6 +210,41 @@ def audit_record_from_event(event: BaseEvent) -> AuditRecord | None:
                 "client_telegram_id": event.client_telegram_id,
                 "escalation_level": event.escalation_level,
                 "overdue_seconds": event.overdue_seconds,
+                "reason": event.reason,
+                "platform_event_id": event.event_id,
+                "platform_event_type": event.event_type,
+            },
+        )
+
+    if isinstance(event, OwnerEscalationEvent):
+        return AuditRecord(
+            event_type=AuditEventType.OWNER_ESCALATED.value,
+            entity_type=ENTITY_TYPE_REQUEST,
+            entity_id=event.request_id,
+            actor_id=event.owner_id,
+            old_value={
+                "escalation_level": 3,
+                "manager_id": event.manager_id,
+            },
+            new_value={
+                "escalation_level": event.escalation_level,
+                "owner_id": event.owner_id,
+                "minutes_overdue": event.minutes_overdue,
+                "reason": event.reason,
+            },
+            metadata_json={
+                "request_id": event.request_id,
+                "request_number": event.request_number,
+                "vertical": event.vertical,
+                "request_type": event.request_type,
+                "manager_before": event.manager_id,
+                "manager_name": event.manager_name,
+                "owner": event.owner_id,
+                "owner_name": event.owner_name,
+                "minutes_overdue": event.minutes_overdue,
+                "deadline": event.completion_deadline,
+                "escalation_level": event.escalation_level,
+                "trigger": event.trigger,
                 "reason": event.reason,
                 "platform_event_id": event.event_id,
                 "platform_event_type": event.event_type,

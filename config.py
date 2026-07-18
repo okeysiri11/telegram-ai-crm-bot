@@ -55,6 +55,14 @@ API_PORT = int(os.getenv("API_PORT", "8080"))
 
 # Platform Telegram user ids (optional — warn if missing, do not abort startup)
 OWNER_ID = _optional_telegram_id("OWNER_ID")
+PLATFORM_OWNER_TELEGRAM_ID = _optional_telegram_id("PLATFORM_OWNER_TELEGRAM_ID") or OWNER_ID
+PLATFORM_OWNER_NAME = os.getenv("PLATFORM_OWNER_NAME", "Platform Owner")
+OWNER_ESCALATION_ENABLED = os.getenv("OWNER_ESCALATION_ENABLED", "true").lower() in {
+    "1",
+    "true",
+    "yes",
+}
+OWNER_ESCALATION_DELAY_MINUTES = int(os.getenv("OWNER_ESCALATION_DELAY_MINUTES", "240"))
 DEFAULT_AUTO_MANAGER_ID = _optional_telegram_id("DEFAULT_AUTO_MANAGER_ID")
 DEFAULT_DEALER_MANAGER_ID = _optional_telegram_id("DEFAULT_DEALER_MANAGER_ID")
 DEFAULT_AGRO_MANAGER_ID = _optional_telegram_id("DEFAULT_AGRO_MANAGER_ID")

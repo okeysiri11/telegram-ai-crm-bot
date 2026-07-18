@@ -44,8 +44,14 @@ class EscalationWorker:
         """Single processing pass — concurrent ticks serialize on the lock."""
         async with self._tick_lock:
             from services.escalation_service import escalation_service
+            from services.owner_escalation_service import owner_escalation_service
 
-            return await escalation_service.process_due_escalations()
+            manager_result = await escalation_service.process_due_escalations()
+            owner_result = await owner_escalation_service.check_overdue_requests()
+            return {
+                **manager_result,
+                "owner_escalation": owner_result,
+            }
 
     async def _loop(self) -> None:
         while self._running:
