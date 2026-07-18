@@ -43,15 +43,9 @@ class ManagerProvider:
             manual_tid = (request or {}).get("manager_telegram_id")
             if manual_tid is None:
                 return None
-            from repositories.user_repository import UserRepository
-            from database.session import get_session
-            from repositories.manager_repository import ManagerRepository
+            from services.manager_service import manager_service
 
-            async with get_session() as session:
-                user = await UserRepository(session).get_by_telegram_id(int(manual_tid))
-                if user is None:
-                    return None
-                return ManagerRepository.manager_snapshot(user)
+            return await manager_service.resolve_manual_manager(int(manual_tid))
 
         resolver = self._get_resolver(chosen)
         return await resolver.assign_for_request(

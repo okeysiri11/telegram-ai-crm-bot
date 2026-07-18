@@ -88,31 +88,23 @@ class PlatformVertical(ABC):
         manager = await self.assign_manager(request=kwargs)
         manager_uuid = uuid.UUID(manager["user_id"]) if manager and manager.get("user_id") else None
 
-        from database.models.client_request import ClientRequestStatus, CrmFunnelStage
-        from database.session import get_session
-        from repositories.request_repository import RequestRepository
+        from services.request_service import RequestService
         from services.system_roles import normalize_vertical
 
         key = normalize_vertical(self.vertical_code) or self.vertical_code
-        prefix = key.upper()
-        request_type = kwargs.get("request_type") or f"{prefix}_REQUEST"
+        request_type = kwargs.get("request_type") or f"{key.upper()}_REQUEST"
 
-        async with get_session() as session:
-            repo = RequestRepository(session)
-            request_number = await repo.next_crm_number(prefix=prefix)
-            row = await repo.create_crm(
-                request_number=request_number,
-                request_type=request_type,
-                status=ClientRequestStatus.NEW.value,
-                funnel_stage=CrmFunnelStage.NEW_LEAD.value,
-                client_telegram_id=int(kwargs["client_telegram_id"]),
-                client_username=kwargs.get("client_username"),
-                client_first_name=kwargs.get("client_name") or kwargs.get("client_first_name"),
-                description=kwargs.get("description") or kwargs.get("product"),
-                manager_id=manager_uuid,
-            )
-
-        result = self._snapshot(row)
+        result = await RequestService.persist_crm_request(
+            vertical_code=self.vertical_code,
+            client_telegram_id=int(kwargs["client_telegram_id"]),
+            client_username=kwargs.get("client_username"),
+            client_name=kwargs.get("client_name"),
+            client_first_name=kwargs.get("client_first_name"),
+            description=kwargs.get("description"),
+            product=kwargs.get("product"),
+            request_type=request_type,
+            manager_uuid=manager_uuid,
+        )
         await ctx.events.publish_request_created(
             request_id=str(result["id"]),
             request_number=result["request_number"],

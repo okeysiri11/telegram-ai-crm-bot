@@ -20,6 +20,14 @@ NON_ASSIGNABLE_ROLES = frozenset({SystemRole.SUPER_ADMIN.value, "OWNER", "ADMIN"
 
 class ManagerService:
     @staticmethod
+    async def resolve_manual_manager(telegram_id: int) -> dict[str, Any] | None:
+        async with get_session() as session:
+            user = await UserRepository(session).get_by_telegram_id(int(telegram_id))
+            if user is None:
+                return None
+            return ManagerRepository.manager_snapshot(user)
+
+    @staticmethod
     async def resolve_manager_for_vertical(
         vertical: str,
         *,

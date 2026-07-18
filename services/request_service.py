@@ -119,6 +119,41 @@ class RequestService:
         return result
 
     @staticmethod
+    async def persist_crm_request(
+        *,
+        vertical_code: str,
+        client_telegram_id: int,
+        client_username: str | None = None,
+        client_name: str | None = None,
+        client_first_name: str | None = None,
+        description: str | None = None,
+        product: str | None = None,
+        request_type: str | None = None,
+        manager_uuid: uuid.UUID | None = None,
+    ) -> dict[str, Any]:
+        """Persist a CRM request row — used by SDK verticals without circular delegation."""
+        key = normalize_vertical(vertical_code) or vertical_code.strip().lower()
+        prefix = VERTICAL_PREFIX.get(key, key.upper())
+        db_type = request_type or f"{prefix}_REQUEST"
+
+        async with get_session() as session:
+            repo = RequestRepository(session)
+            request_number = await repo.next_crm_number(prefix=prefix)
+            row = await repo.create_crm(
+                request_number=request_number,
+                request_type=db_type,
+                status=ClientRequestStatus.NEW.value,
+                funnel_stage=CrmFunnelStage.NEW_LEAD.value,
+                client_telegram_id=int(client_telegram_id),
+                client_username=client_username,
+                client_first_name=client_first_name or client_name,
+                description=description or product,
+                manager_id=manager_uuid,
+            )
+
+        return RequestService._crm_snapshot(row)
+
+    @staticmethod
     async def _run_post_create_workflow(
         *,
         vertical: str,
