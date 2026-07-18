@@ -80,6 +80,10 @@ def register_platform_event_handlers() -> None:
 
     workflow_kpi_service.subscribe_to_event_bus()
 
+    from platform_realtime.event_dispatcher import register_realtime_event_handlers
+
+    register_realtime_event_handlers()
+
     _registered = True
     logger.info(
         "platform_internal_event_handlers_registered",
@@ -99,3 +103,6 @@ def reset_handler_registration() -> None:
     from workflow.workflow_kpi import workflow_kpi_service
 
     workflow_kpi_service.reset_subscription()
+    from platform_realtime.event_dispatcher import reset_realtime_event_handlers
+
+    reset_realtime_event_handlers()

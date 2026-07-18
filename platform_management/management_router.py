@@ -436,6 +436,13 @@ async def dashboard_event_timeline_handler(request: web.Request, ctx: Management
 
 
 @require_role(ManagementRole.READ_ONLY)
+async def realtime_status_handler(_request: web.Request, ctx: ManagementContext) -> web.Response:
+    from platform_realtime.realtime_hub import realtime_hub
+
+    return _ok(await realtime_hub.status(), ctx)
+
+
+@require_role(ManagementRole.READ_ONLY)
 async def dashboard_audit_timeline_handler(request: web.Request, ctx: ManagementContext) -> web.Response:
     from platform_operations.operations_service import operations_service
 
@@ -551,6 +558,12 @@ def register_management_routes(app: web.Application) -> None:
     _route(app, "GET", f"{prefix}/dashboard/metrics", dashboard_metrics_handler, role=ManagementRole.READ_ONLY, summary="KPI metrics")
     _route(app, "GET", f"{prefix}/dashboard/timeline/events", dashboard_event_timeline_handler, role=ManagementRole.READ_ONLY, summary="Event timeline")
     _route(app, "GET", f"{prefix}/dashboard/timeline/audit", dashboard_audit_timeline_handler, role=ManagementRole.READ_ONLY, summary="Audit timeline")
+
+    _route(app, "GET", f"{prefix}/realtime", realtime_status_handler, role=ManagementRole.READ_ONLY, summary="Realtime connections and statistics")
+
+    from platform_realtime.websocket_router import register_realtime_routes
+
+    register_realtime_routes(app)
 
     app.router.add_get(f"{prefix}/openapi.json", openapi_handler)
     app.router.add_get(f"{prefix}/docs", swagger_ui_handler)
