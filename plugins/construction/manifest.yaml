@@ -1,0 +1,22 @@
+id: construction
+name: Construction
+version: 1.0.0
+author: Platform Team
+description: Construction projects and contractor services vertical
+platform_version: ">=1.0.0"
+dependencies:
+  required: 
+    - id: legal
+      version: ">=1.0.0"
+  optional: []
+permissions: 
+  - "construction.read"
+  - "construction.write"
+configuration: 
+  vertical_code: 'CONSTRUCTION'
+routes:
+  - path: /construction
+    handler: routes.construction_router:register
+workflows: 
+  - "construction_project"
+entry_point: plugin:register

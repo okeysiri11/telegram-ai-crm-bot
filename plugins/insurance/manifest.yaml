@@ -1,0 +1,22 @@
+id: insurance
+name: Insurance
+version: 1.0.0
+author: Platform Team
+description: Insurance products and policy management vertical
+platform_version: ">=1.0.0"
+dependencies:
+  required: []
+  optional: 
+    - id: auto
+      version: ">=1.0.0"
+permissions: 
+  - "insurance.read"
+  - "insurance.write"
+configuration: 
+  vertical_code: 'INSURANCE'
+routes:
+  - path: /insurance
+    handler: routes.insurance_router:register
+workflows: 
+  - "insurance_quote"
+entry_point: plugin:register

@@ -1,0 +1,23 @@
+id: realty
+name: Real Estate
+version: 1.0.0
+author: Platform Team
+description: Real estate listings and property management vertical
+platform_version: ">=1.0.0"
+dependencies:
+  required: []
+  optional: []
+permissions: 
+  - "realty.read"
+  - "realty.write"
+  - "requests.read"
+configuration: 
+  vertical_code: 'REALTY'
+  manager_strategy: 'SMART'
+routes:
+  - path: /realty
+    handler: routes.realty_router:register
+workflows: 
+  - "realty_post_create"
+  - "realty_listing"
+entry_point: plugin:register

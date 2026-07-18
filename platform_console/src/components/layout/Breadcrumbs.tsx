@@ -9,6 +9,7 @@ const LABELS: Record<string, string> = {
   '/audit': 'Audit',
   '/jobs': 'Jobs',
   '/integrations': 'Integrations',
+  '/plugins': 'Plugins',
   '/observability': 'Observability',
   '/system': 'System',
   '/settings': 'Settings',

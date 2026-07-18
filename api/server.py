@@ -177,6 +177,13 @@ def create_app() -> web.Application:
     register_configuration_admin_routes(app)
     register_management_routes(app)
 
+    async def _init_plugins(_app: web.Application) -> None:
+        from platform_plugins.plugin_manager import plugin_manager
+
+        await plugin_manager.initialize(app=_app, auto_enable=False)
+
+    app.on_startup.append(_init_plugins)
+
     return app
 
 

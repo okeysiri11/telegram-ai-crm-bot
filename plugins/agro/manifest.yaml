@@ -1,0 +1,22 @@
+id: agro
+name: Agro
+version: 1.0.0
+author: Platform Team
+description: Agricultural products and farm services vertical
+platform_version: ">=1.0.0"
+dependencies:
+  required: []
+  optional: []
+permissions: 
+  - "agro.read"
+  - "agro.write"
+  - "requests.read"
+configuration: 
+  vertical_code: 'AGRO'
+  manager_strategy: 'SMART'
+routes:
+  - path: /agro
+    handler: routes.agro_router:register
+workflows: 
+  - "agro_request"
+entry_point: plugin:register

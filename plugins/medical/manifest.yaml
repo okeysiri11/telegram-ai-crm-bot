@@ -1,0 +1,20 @@
+id: medical
+name: Medical
+version: 1.0.0
+author: Platform Team
+description: Medical appointments and healthcare services vertical
+platform_version: ">=1.0.0"
+dependencies:
+  required: []
+  optional: []
+permissions: 
+  - "medical.read"
+  - "medical.write"
+configuration: 
+  vertical_code: 'MEDICAL'
+routes:
+  - path: /medical
+    handler: routes.medical_router:register
+workflows: 
+  - "medical_appointment"
+entry_point: plugin:register

@@ -373,22 +373,19 @@ class ManagementService:
     async def kpi_current(*, period: str = "month") -> dict[str, Any]:
         return await get_kpi_dashboard(period=period)  # type: ignore[arg-type]
 
-    # ---- plugins (stub) ----
+    # ---- plugins ----
 
     @staticmethod
     async def plugins_status() -> dict[str, Any]:
-        from platform_configuration.config_provider import config_provider
+        from platform_plugins.plugin_manager import plugin_manager
 
-        return {
-            "installed": [],
-            "enabled": config_provider.is_plugin_enabled(),
-            "disabled": not config_provider.is_plugin_enabled(),
-            "metadata": {"note": "Plugin manager stub — future integration point"},
-        }
+        return await plugin_manager.list_plugins()
 
     @staticmethod
     async def plugins_reload() -> dict[str, Any]:
-        return {"reloaded": 0, "note": "Plugin reload stub"}
+        from platform_plugins.plugin_manager import plugin_manager
+
+        return await plugin_manager.reload()
 
     # ---- ai (stub) ----
 

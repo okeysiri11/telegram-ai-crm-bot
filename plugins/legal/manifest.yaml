@@ -1,0 +1,22 @@
+id: legal
+name: Legal Services
+version: 1.0.0
+author: Platform Team
+description: Legal consultation and document services vertical
+platform_version: ">=1.0.0"
+dependencies:
+  required: []
+  optional: []
+permissions: 
+  - "legal.read"
+  - "legal.write"
+  - "requests.read"
+configuration: 
+  vertical_code: 'LEGAL'
+  manager_strategy: 'SMART'
+routes:
+  - path: /legal
+    handler: routes.legal_router:register
+workflows: 
+  - "legal_consultation"
+entry_point: plugin:register

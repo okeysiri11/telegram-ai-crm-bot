@@ -1,5 +1,6 @@
-import { apiGet } from './api';
+import { apiGet, apiPost } from './api';
 import type { DashboardPayload, WidgetPayload } from '../types/api';
+import type { DependencyGraph, PluginRecord, PluginsPayload } from '../types/plugins';
 
 export const managementApi = {
   dashboard: (refresh = false) =>
@@ -22,4 +23,15 @@ export const managementApi = {
   observability: () => apiGet<Record<string, unknown>>('/management/observability'),
   kpi: () => apiGet<Record<string, unknown>>('/management/kpi'),
   realtime: () => apiGet<Record<string, unknown>>('/management/realtime'),
+
+  plugins: () => apiGet<PluginsPayload>('/management/plugins'),
+  plugin: (id: string) => apiGet<PluginRecord>(`/management/plugins/${id}`),
+  pluginInstall: (id: string) => apiPost<PluginRecord>(`/management/plugins/${id}/install`),
+  pluginEnable: (id: string) => apiPost<PluginRecord>(`/management/plugins/${id}/enable`),
+  pluginDisable: (id: string) => apiPost<PluginRecord>(`/management/plugins/${id}/disable`),
+  pluginReload: (id: string) => apiPost<Record<string, unknown>>(`/management/plugins/${id}/reload`),
+  pluginUninstall: (id: string) => apiPost<PluginRecord>(`/management/plugins/${id}/uninstall`),
+  pluginHealth: (id?: string) =>
+    apiGet<Record<string, unknown>>(id ? `/management/plugins/${id}/health` : '/management/plugins/health'),
+  pluginDependencies: () => apiGet<DependencyGraph>('/management/plugins/dependencies'),
 };

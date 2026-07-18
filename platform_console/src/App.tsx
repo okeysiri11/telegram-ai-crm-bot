@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { ManagementPage } from './pages/ManagementPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { PluginsPage } from './pages/PluginsPage';
 import { managementApi } from './services/management';
 
 export default function App() {
@@ -68,6 +69,7 @@ export default function App() {
               />
             }
           />
+          <Route path="plugins" element={<PluginsPage />} />
           <Route
             path="observability"
             element={
