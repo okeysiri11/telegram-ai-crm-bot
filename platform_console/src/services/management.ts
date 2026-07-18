@@ -1,6 +1,7 @@
 import { apiGet, apiPost } from './api';
 import type { DashboardPayload, WidgetPayload } from '../types/api';
 import type { DependencyGraph, PluginRecord, PluginsPayload } from '../types/plugins';
+import type { AICostSummary, AIModelInfo, AIProviderInfo } from '../types/ai';
 
 export const managementApi = {
   dashboard: (refresh = false) =>
@@ -34,4 +35,12 @@ export const managementApi = {
   pluginHealth: (id?: string) =>
     apiGet<Record<string, unknown>>(id ? `/management/plugins/${id}/health` : '/management/plugins/health'),
   pluginDependencies: () => apiGet<DependencyGraph>('/management/plugins/dependencies'),
+
+  aiStatus: () => apiGet<Record<string, unknown>>('/management/ai'),
+  aiProviders: () => apiGet<{ providers: AIProviderInfo[] }>('/management/ai/providers'),
+  aiModels: () => apiGet<{ models: AIModelInfo[] }>('/management/ai/models'),
+  aiPrompts: () => apiGet<Record<string, unknown>>('/management/ai/prompts'),
+  aiStatistics: () => apiGet<{ request_count: number; cache: Record<string, unknown>; providers: unknown[] }>('/management/ai/statistics'),
+  aiCosts: () => apiGet<{ summary: AICostSummary; recent: unknown[] }>('/management/ai/costs'),
+  aiComplete: (body: Record<string, unknown>) => apiPost<Record<string, unknown>>('/management/ai/complete', body),
 };

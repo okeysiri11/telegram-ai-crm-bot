@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { path: '/jobs', label: 'Jobs', icon: '⏱️' },
   { path: '/integrations', label: 'Integrations', icon: '🔌' },
   { path: '/plugins', label: 'Plugins', icon: '🧩', minRole: 'administrator' as const },
+  { path: '/ai', label: 'AI', icon: '🤖' },
   { path: '/observability', label: 'Observability', icon: '📈' },
   { path: '/system', label: 'System', icon: '🖥️' },
   { path: '/settings', label: 'Settings', icon: '⚙️' },

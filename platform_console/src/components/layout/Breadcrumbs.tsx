@@ -10,6 +10,7 @@ const LABELS: Record<string, string> = {
   '/jobs': 'Jobs',
   '/integrations': 'Integrations',
   '/plugins': 'Plugins',
+  '/ai': 'AI Platform',
   '/observability': 'Observability',
   '/system': 'System',
   '/settings': 'Settings',

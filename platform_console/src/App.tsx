@@ -6,6 +6,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ManagementPage } from './pages/ManagementPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { PluginsPage } from './pages/PluginsPage';
+import { AiPage } from './pages/AiPage';
 import { managementApi } from './services/management';
 
 export default function App() {
@@ -70,6 +71,7 @@ export default function App() {
             }
           />
           <Route path="plugins" element={<PluginsPage />} />
+          <Route path="ai" element={<AiPage />} />
           <Route
             path="observability"
             element={

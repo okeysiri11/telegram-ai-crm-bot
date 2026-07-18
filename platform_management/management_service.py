@@ -391,12 +391,10 @@ class ManagementService:
 
     @staticmethod
     async def ai_providers() -> dict[str, Any]:
-        from platform_configuration.config_provider import config_provider
+        from platform_ai.ai_service import ai_service
 
-        providers = []
-        if config_provider.is_ai_provider_enabled():
-            providers.append({"id": "openrouter", "enabled": True})
-        return {"providers": providers, "configured": providers}
+        status = await ai_service.status()
+        return {"providers": status.get("providers", []), "configured": status.get("providers", [])}
 
     # ---- feature flags ----
 
