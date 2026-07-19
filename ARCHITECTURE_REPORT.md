@@ -1,17 +1,17 @@
 # Architecture Report
 
-> Generated automatically on 2026-07-18 14:18:26 UTC
+> Generated automatically on 2026-07-18 21:03:50 UTC
 
 ## Executive Summary
 
 - **Grade:** PASS
 - **Architecture Score:** 99.5/100
 - **Quality Gates:** PASSED
-- **Modules in graph:** 802
-- **Dependency edges:** 2621
+- **Modules in graph:** 804
+- **Dependency edges:** 2620
 - **Cycles:** 0
 
-Architecture score 99.5/100 — PASS. Modules=802, edges=2621, cycles=0.
+Architecture score 99.5/100 — PASS. Modules=804, edges=2620, cycles=0.
 
 ## Validation Summary
 
@@ -22,7 +22,7 @@ Architecture score 99.5/100 — PASS. Modules=802, edges=2621, cycles=0.
 | workflows | PASS | 100.0% | 0 critical / 1 total |
 | api | PASS | 100.0% | 0 critical / 0 total |
 | sdk | PASS | 100.0% | 0 critical / 0 total |
-| dependencies | PASS | 97.52% | 0 critical / 85 total |
+| dependencies | PASS | 97.33% | 0 critical / 90 total |
 | legacy | PASS | 100.0% | 0 critical / 0 total |
 
 ## Dependency Graph
@@ -89,11 +89,11 @@ flowchart TD
     events_adapters_legacy_adapter_py[events/adapters/legacy_adapter.py]
     events_base_event_py[events/base_event.py]
     events_configuration_events_py[events/configuration_events.py]
+    events_crm_publisher_py[events/crm_publisher.py]
     events_event_bus_py[events/event_bus.py]
     events_generic_events_py[events/generic_events.py]
     events_handlers_audit_handler_py[events/handlers/audit_handler.py]
-    events_handlers_configuration_handler_py[events/handlers/configuration_handler.py]
-    services_more[...+247 modules]
+    services_more[...+249 modules]
   end
   subgraph shared[shared]
     database___init___py[database/__init__.py]
@@ -134,15 +134,15 @@ flowchart TD
 
 - **[reverse_layer_dependency]** `database/engine.py` — database imports services via platform_configuration.configuration_center
 - **[reverse_layer_dependency]** `platform_operations/timeline_service.py` — services imports shared via platform_management.management_service
-- **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.system_info
 - **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.health
-- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
+- **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.system_info
 - **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.statistics
+- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
 - **[reverse_layer_dependency]** `platform_integrations/webhook_manager.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/policy_engine.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/permission_service.py` — services imports shared via platform_legacy
-- **[reverse_layer_dependency]** `platform_identity/identity_service.py` — services imports shared via platform_management.permissions
 - **[reverse_layer_dependency]** `platform_identity/identity_service.py` — services imports shared via platform_management.exceptions
+- **[reverse_layer_dependency]** `platform_identity/identity_service.py` — services imports shared via platform_management.permissions
 - **[reverse_layer_dependency]** `platform_identity/role_service.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/audit_hooks.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_sdk/bootstrap.py` — services imports shared via platform_sdk.verticals
@@ -152,16 +152,16 @@ flowchart TD
 - **[reverse_layer_dependency]** `repositories/base_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/request_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/manager_pool_repository.py` — repositories imports services via src.platform.layers.base_repository
-- **[reverse_layer_dependency]** `repositories/owner_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/owner_repository.py` — repositories imports services via platform_configuration.config_provider
+- **[reverse_layer_dependency]** `repositories/owner_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/workflow_execution_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/platform_metrics_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/manager_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/kpi_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **[reverse_layer_dependency]** `repositories/partner_repository.py` — repositories imports shared via database
 - **[reverse_layer_dependency]** `repositories/event_repository.py` — repositories imports shared via events
 - **[reverse_layer_dependency]** `repositories/escalation_repository.py` — repositories imports services via src.platform.layers.base_repository
-- **[reverse_layer_dependency]** `repositories/user_repository.py` — repositories imports services via src.platform.layers.base_repository
-- **[reverse_layer_dependency]** `repositories/sla_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **[reverse_layer_dependency]** `repositories/event_bus_repository.py` — repositories imports services via platform_configuration.event_bus_policy
 
 ## Certification Categories
 
