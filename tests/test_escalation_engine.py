@@ -256,6 +256,9 @@ async def test_double_worker_tick_serializes():
     with patch(
         "services.escalation_service.escalation_service.process_due_escalations",
         side_effect=counting_process,
+    ), patch(
+        "services.owner_escalation_service.owner_escalation_service.check_overdue_requests",
+        new=AsyncMock(return_value={"acted": 0}),
     ):
         await asyncio.gather(worker.tick(), worker.tick())
 

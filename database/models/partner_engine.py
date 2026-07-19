@@ -79,7 +79,7 @@ class PartnerCommissionType(str, enum.Enum):
     PERCENTAGE = "PERCENTAGE"
 
 
-class Partner(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerEnginePartner(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     __tablename__ = "partner_engine_partners"
     __table_args__ = (
         Index("ix_partner_engine_partners_partner_type", "partner_type"),
@@ -119,7 +119,7 @@ class Partner(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 
     def __repr__(self) -> str:
         return (
-            f"<Partner id={self.id} type={self.partner_type} "
+            f"<PartnerEnginePartner id={self.id} type={self.partner_type} "
             f"company={self.company_name} status={self.status}>"
         )
 

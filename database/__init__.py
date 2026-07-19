@@ -5,11 +5,19 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from config import POSTGRES_ONLY
-
 logger = logging.getLogger(__name__)
 
 _legacy_module: Any | None = None
+
+
+def _postgres_only() -> bool:
+    try:
+        from config import POSTGRES_ONLY
+
+        return bool(POSTGRES_ONLY)
+    except ImportError:
+        # Partial bootstrap (config still loading); tests set POSTGRES_ONLY before import.
+        return True
 
 # Critical paths — always PostgreSQL.
 _PG_SHIMS = frozenset({
@@ -24,7 +32,7 @@ _PG_SHIMS = frozenset({
 
 def _get_legacy_module():
     global _legacy_module
-    if POSTGRES_ONLY:
+    if _postgres_only():
         raise RuntimeError(
             "SQLite legacy (database_legacy) is disabled when POSTGRES_ONLY=true. "
             "Use services/* and repositories/*."
@@ -129,7 +137,7 @@ def __getattr__(name: str) -> Any:
 
     if hasattr(legacy, name):
         attr = getattr(legacy, name)
-        if POSTGRES_ONLY and name not in _PG_SHIMS:
+        if _postgres_only() and name not in _PG_SHIMS:
             logger.debug("Legacy database.%s accessed under POSTGRES_ONLY", name)
         return attr
     raise AttributeError(
@@ -139,6 +147,6 @@ def __getattr__(name: str) -> Any:
 
 
 def __dir__() -> list[str]:
-    if POSTGRES_ONLY:
+    if _postgres_only():
         return sorted(_PG_SHIMS)
     return dir(_get_legacy_module())

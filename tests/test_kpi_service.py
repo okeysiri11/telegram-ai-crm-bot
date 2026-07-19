@@ -148,6 +148,9 @@ async def test_platform_kpi_includes_manager_rankings():
     with patch("services.kpi_service.get_session", return_value=mock_cm), patch(
         "services.kpi_service.KpiRepository",
         return_value=mock_repo,
+    ), patch(
+        "services.owner_escalation_service.owner_escalation_service.get_owner_escalation_kpi",
+        new=AsyncMock(return_value={"total": 0}),
     ):
         payload = await kpi_service.get_platform_kpi(period="week")
 

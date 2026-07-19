@@ -136,6 +136,9 @@ class WorkflowExecutor:
         if not step_id:
             raise WorkflowExecutionError("Workflow has no entry step")
 
+        step_user_input = user_input
+        step_callback_data = callback_data
+
         try:
             visited: set[str] = set()
             while step_id and step_id != "end":
@@ -154,8 +157,8 @@ class WorkflowExecutor:
                     step,
                     context,
                     definition,
-                    user_input=user_input if not resume else None,
-                    callback_data=callback_data if not resume else None,
+                    user_input=step_user_input,
+                    callback_data=step_callback_data,
                     request=request,
                 )
                 step_results.append(result)
@@ -174,6 +177,8 @@ class WorkflowExecutor:
                             )
                 total_cost += result.cost_usd
                 resume = False
+                step_user_input = None
+                step_callback_data = None
 
                 if pause or context.status in {ExecutionStatus.WAITING, ExecutionStatus.PAUSED}:
                     break

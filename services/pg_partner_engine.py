@@ -1,4 +1,4 @@
-# Partner Engine v1 — PostgreSQL partner and counterparty management.
+# PartnerEnginePartner Engine v1 — PostgreSQL partner and counterparty management.
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from typing import Any
 from config import OWNER_ID
 from database.models.audit_log import AuditAction
 from database.models.partner_engine import (
-    Partner,
+    PartnerEnginePartner,
     PartnerCommission,
     PartnerContact,
     PartnerLimit,
@@ -39,9 +39,9 @@ class PermissionDeniedError(PartnerEngineError):
     pass
 
 
-def format_partner(partner: Partner) -> str:
+def format_partner(partner: PartnerEnginePartner) -> str:
     return (
-        f"Partner `{partner.id}`\n"
+        f"PartnerEnginePartner `{partner.id}`\n"
         f"Type: {partner.partner_type}\n"
         f"Company: {partner.company_name}\n"
         f"Display: {partner.display_name or '—'}\n"
@@ -107,7 +107,7 @@ class PartnerEngine:
             pass
 
     @staticmethod
-    def _partner_snapshot(partner: Partner) -> dict[str, Any]:
+    def _partner_snapshot(partner: PartnerEnginePartner) -> dict[str, Any]:
         return {
             "id": str(partner.id),
             "partner_type": partner.partner_type,
@@ -180,7 +180,7 @@ class PartnerEngine:
         return partner
 
     @staticmethod
-    async def get_partner(partner_id: uuid.UUID, actor_id: int) -> Partner | None:
+    async def get_partner(partner_id: uuid.UUID, actor_id: int) -> PartnerEnginePartner | None:
         if not await PartnerEngine.user_can_read(actor_id):
             raise PermissionDeniedError("Access denied")
         async with get_session() as session:
@@ -193,7 +193,7 @@ class PartnerEngine:
         partner_type: str | None = None,
         status: str | None = None,
         limit: int = 100,
-    ) -> list[Partner]:
+    ) -> list[PartnerEnginePartner]:
         if not await PartnerEngine.user_can_read(actor_id):
             raise PermissionDeniedError("Access denied")
         async with get_session() as session:
@@ -421,7 +421,7 @@ class PartnerEngine:
             if partner is None:
                 raise PartnerEngineError(f"Partner not found: {partner_id}")
             if partner.status == PartnerStatus.BLOCKED.value:
-                raise PartnerEngineError("Partner is blocked")
+                raise PartnerEngineError("PartnerEnginePartner is blocked")
 
             limit, daily_exceeded, monthly_exceeded = await PartnerLimitRepository(
                 session

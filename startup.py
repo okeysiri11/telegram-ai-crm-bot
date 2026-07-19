@@ -71,9 +71,9 @@ async def run_startup() -> StartupContext:
     register_platform_event_handlers()
     logger.info("Platform internal event handlers registered")
 
-    from services import crm_event_bus as event_bus
+    from events.crm_publisher import get_crm_worker
 
-    await event_bus.get_default_worker().start()
+    await get_crm_worker().start()
     logger.info("CRM event bus workers started for platform metrics and webhooks")
 
     scheduler = legacy.scheduler.get_default_worker()
@@ -193,9 +193,9 @@ async def shutdown_startup(context: StartupContext) -> None:
     from database.session import shutdown_db
 
     try:
-        from services import crm_event_bus as event_bus
+        from events.crm_publisher import get_crm_worker
 
-        await event_bus.get_default_worker().shutdown()
+        await get_crm_worker().shutdown()
     except Exception:
         logger.warning("Event bus shutdown failed", exc_info=True)
 

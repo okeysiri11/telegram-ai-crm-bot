@@ -165,7 +165,7 @@ async def test_branching_condition_routes_to_else():
 
     with patch.object(engine, "_persist", new=AsyncMock()), patch.object(
         engine, "_log_step", new=AsyncMock()
-    ), patch("workflow.workflow_engine.publish", side_effect=_capture):
+    ), patch("platform_workflows.workflow_engine.publish", side_effect=_capture):
         result = await engine._continue_from(ctx, definition, "check")
 
     assert result.status == ExecutionStatus.COMPLETED
@@ -210,6 +210,7 @@ async def test_backend_workflow_publishes_events():
     )
     registry.register(definition)
     engine = WorkflowEngine(registry)
+    engine._initialized = True
 
     published: list = []
 
@@ -220,9 +221,9 @@ async def test_backend_workflow_publishes_events():
     with patch.object(engine, "_persist", new=AsyncMock()), patch.object(
         engine, "_log_step", new=AsyncMock()
     ), patch(
-        "workflow.workflow_executor.WorkflowExecutor._run_service",
-        new=AsyncMock(return_value=None),
-    ), patch("workflow.workflow_engine.publish", side_effect=_capture):
+        "platform_workflows.workflow_steps.invoke_from_step_config",
+        new=AsyncMock(return_value={"ok": True}),
+    ), patch("platform_workflows.workflow_engine.publish", side_effect=_capture):
         result = await engine.run_backend_workflow(
             "CRM",
             telegram_user={"id": 1},
@@ -252,9 +253,10 @@ async def test_interactive_step_pauses_execution():
     )
     registry.register(definition)
     engine = WorkflowEngine(registry)
+    engine._initialized = True
 
     with patch.object(engine, "_persist", new=AsyncMock()), patch(
-        "workflow.workflow_engine.publish", new=AsyncMock()
+        "platform_workflows.workflow_engine.publish", new=AsyncMock()
     ):
         ctx = await engine.start("interactive", telegram_user={"id": 99})
 
@@ -279,6 +281,7 @@ async def test_advance_resumes_workflow():
     )
     registry.register(definition)
     engine = WorkflowEngine(registry)
+    engine._initialized = True
 
     ctx = WorkflowContext.create(
         workflow_id="resume",
@@ -290,7 +293,7 @@ async def test_advance_resumes_workflow():
 
     with patch.object(engine, "_persist", new=AsyncMock()), patch.object(
         engine, "_log_step", new=AsyncMock()
-    ), patch("workflow.workflow_engine.publish", new=AsyncMock()):
+    ), patch("platform_workflows.workflow_engine.publish", new=AsyncMock()):
         result = await engine.advance(ctx.execution_id, user_input="+380991234567")
 
     assert result.status == ExecutionStatus.COMPLETED

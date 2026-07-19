@@ -1,4 +1,4 @@
-name: Architecture CI
+name: Platform Core CI
 
 on:
   push:
@@ -6,36 +6,95 @@ on:
   pull_request:
     branches: [main, master]
 
-jobs:
-  architecture:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+env:
+  POSTGRES_ONLY: "true"
+  REDIS_URL: redis://localhost:6379/15
+  REDIS_REQUIRED: "false"
 
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Run regression tests
-        env:
-          POSTGRES_ONLY: "true"
-          REDIS_URL: redis://localhost:6379/15
-          REDIS_REQUIRED: "false"
+      - run: pip install -r requirements.txt
+      - name: Regression tests
         run: python -m pytest tests/ -q --tb=no -m "not slow"
 
-      - name: Validate architecture
+  architecture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Architecture validation
         run: python scripts/validate_architecture.py
-
-      - name: Validate legacy migration
+      - name: Legacy migration validation
         run: python scripts/validate_legacy_migration.py
+      - name: Generate architecture baseline
+        run: python scripts/generate_architecture_baseline.py
 
-      - name: Platform certification
+  security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Security test suite
+        run: |
+          python -m pytest tests/test_management_security.py \
+            tests/test_api_v1_freeze.py \
+            tests/test_admin_security.py -q --tb=no
+
+  certification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: [pytest, architecture, security]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Platform certification (full)
         run: python scripts/run_platform_certification.py
+      - name: Upload certification artifacts
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: certification-reports
+          path: |
+            docs/PLATFORM_CERTIFICATION.md
+            docs/certification_summary.json
+            platform_manifest.json
+            docs/architecture_baseline/
+
+  rc-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [certification]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify RC readiness
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path("docs/certification_summary.json").read_text())
+          assert summary["verdict"] == "PASS", summary
+          assert summary["score"] >= 95, summary
+          print("RC build gate: PASS score=", summary["score"])
+          PY

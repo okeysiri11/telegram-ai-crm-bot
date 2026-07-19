@@ -1,6 +1,6 @@
 # Architecture Report
 
-> Generated automatically on 2026-07-18 21:03:50 UTC
+> Generated automatically on 2026-07-19 12:57:38 UTC
 
 ## Executive Summary
 
@@ -136,8 +136,8 @@ flowchart TD
 - **[reverse_layer_dependency]** `platform_operations/timeline_service.py` — services imports shared via platform_management.management_service
 - **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.health
 - **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.system_info
-- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.statistics
 - **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
+- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.statistics
 - **[reverse_layer_dependency]** `platform_integrations/webhook_manager.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/policy_engine.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/permission_service.py` — services imports shared via platform_legacy

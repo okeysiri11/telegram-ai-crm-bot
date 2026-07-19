@@ -130,6 +130,7 @@ class WorkflowSteps:
         *,
         user_input: Any | None = None,
         callback_data: str | None = None,
+        **_: Any,
     ) -> tuple[dict[str, Any], str | None, bool]:
         if step.type in {StepType.INPUT, StepType.QUESTION, StepType.MEDIA}:
             var_name = step.config.get("variable") or step.id

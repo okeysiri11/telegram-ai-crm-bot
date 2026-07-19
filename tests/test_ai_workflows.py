@@ -9,13 +9,17 @@ from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
 from events.event_bus import reset_subscribers, subscribe
+from events.workflow_events import (
+    WorkflowCompletedEvent,
+    WorkflowStartedEvent,
+    WorkflowStepCompletedEvent,
+)
 from platform_ai.ai_service import ai_service
 from platform_ai.skills.skill_manager import skill_manager
 from platform_ai.workflows.models import StepType, WorkflowDefinition, WorkflowExecutionRequest, WorkflowStep
 from platform_ai.workflows.workflow_builder import workflow_builder
 from platform_ai.workflows.workflow_cache import workflow_cache
 from platform_ai.workflows.workflow_engine import ai_workflow_engine
-from platform_ai.workflows.workflow_events import AIWorkflowCompletedEvent, AIWorkflowStartedEvent, StepCompletedEvent
 from platform_ai.workflows.workflow_executor import workflow_executor
 from platform_management.management_router import register_management_routes
 from platform_management.permissions import ManagementRole
@@ -169,13 +173,13 @@ async def test_workflow_metrics():
 async def test_workflow_events():
     ai_service.initialize()
     ai_workflow_engine.initialize()
-    started: list[AIWorkflowStartedEvent] = []
-    completed: list[AIWorkflowCompletedEvent] = []
-    steps: list[StepCompletedEvent] = []
+    started: list[WorkflowStartedEvent] = []
+    completed: list[WorkflowCompletedEvent] = []
+    steps: list[WorkflowStepCompletedEvent] = []
 
-    subscribe(AIWorkflowStartedEvent, lambda e: started.append(e))
-    subscribe(AIWorkflowCompletedEvent, lambda e: completed.append(e))
-    subscribe(StepCompletedEvent, lambda e: steps.append(e))
+    subscribe(WorkflowStartedEvent, lambda e: started.append(e))
+    subscribe(WorkflowCompletedEvent, lambda e: completed.append(e))
+    subscribe(WorkflowStepCompletedEvent, lambda e: steps.append(e))
 
     await ai_workflow_engine.execute(
         WorkflowExecutionRequest(workflow_id="insurance_quote", input={"profile": {"age": 25}})

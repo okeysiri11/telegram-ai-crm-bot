@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.partner_engine import (
-    Partner,
+    PartnerEnginePartner,
     PartnerAmlStatus,
     PartnerCommission,
     PartnerCommissionType,
@@ -42,7 +42,7 @@ class PartnerRepository:
         kyc_status: str = PartnerKycStatus.NOT_STARTED.value,
         aml_status: str = PartnerAmlStatus.CLEAR.value,
         **extra: Any,
-    ) -> Partner:
+    ) -> PartnerEnginePartner:
         if extra:
             raise TypeError(f"Unsupported fields: {', '.join(sorted(extra))}")
         if partner_type not in {t.value for t in PartnerType}:
@@ -50,7 +50,7 @@ class PartnerRepository:
         if status not in {s.value for s in PartnerStatus}:
             raise ValueError(f"Invalid status: {status}")
 
-        partner = Partner(
+        partner = PartnerEnginePartner(
             partner_type=partner_type,
             company_name=company_name,
             display_name=display_name or company_name,
@@ -65,9 +65,9 @@ class PartnerRepository:
         await self._session.flush()
         return partner
 
-    async def get_by_id(self, partner_id: uuid.UUID) -> Partner | None:
+    async def get_by_id(self, partner_id: uuid.UUID) -> PartnerEnginePartner | None:
         result = await self._session.execute(
-            select(Partner).where(Partner.id == partner_id)
+            select(PartnerEnginePartner).where(PartnerEnginePartner.id == partner_id)
         )
         return result.scalar_one_or_none()
 
@@ -75,7 +75,7 @@ class PartnerRepository:
         self,
         partner_id: uuid.UUID,
         **fields: Any,
-    ) -> Partner | None:
+    ) -> PartnerEnginePartner | None:
         partner = await self.get_by_id(partner_id)
         if partner is None:
             return None
@@ -104,29 +104,29 @@ class PartnerRepository:
         partner_type: str | None = None,
         status: str | None = None,
         limit: int = 100,
-    ) -> list[Partner]:
-        stmt = select(Partner).order_by(Partner.created_at.desc()).limit(limit)
+    ) -> list[PartnerEnginePartner]:
+        stmt = select(PartnerEnginePartner).order_by(PartnerEnginePartner.created_at.desc()).limit(limit)
         if partner_type is not None:
-            stmt = stmt.where(Partner.partner_type == partner_type)
+            stmt = stmt.where(PartnerEnginePartner.partner_type == partner_type)
         if status is not None:
-            stmt = stmt.where(Partner.status == status)
+            stmt = stmt.where(PartnerEnginePartner.status == status)
         result = await self._session.execute(stmt)
         return list(result.scalars().all())
 
-    async def block(self, partner_id: uuid.UUID) -> Partner | None:
+    async def block(self, partner_id: uuid.UUID) -> PartnerEnginePartner | None:
         return await self.update(
             partner_id,
             status=PartnerStatus.BLOCKED.value,
             aml_status=PartnerAmlStatus.BLOCKED.value,
         )
 
-    async def approve_kyc(self, partner_id: uuid.UUID) -> Partner | None:
+    async def approve_kyc(self, partner_id: uuid.UUID) -> PartnerEnginePartner | None:
         return await self.update(
             partner_id,
             kyc_status=PartnerKycStatus.APPROVED.value,
         )
 
-    async def reject_kyc(self, partner_id: uuid.UUID) -> Partner | None:
+    async def reject_kyc(self, partner_id: uuid.UUID) -> PartnerEnginePartner | None:
         return await self.update(
             partner_id,
             kyc_status=PartnerKycStatus.REJECTED.value,

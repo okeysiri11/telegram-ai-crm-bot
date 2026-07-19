@@ -160,10 +160,16 @@ async def test_agro_vertical_create_request(clean_registry):
         "resolve_manager",
         new=AsyncMock(return_value={"user_id": "00000000-0000-0000-0000-000000000001", "telegram_id": 999}),
     ), patch(
-        "database.session.get_session",
-    ) as mock_cm, patch(
-        "repositories.request_repository.RequestRepository",
-    ) as mock_repo_cls, patch.object(
+        "services.request_service.RequestService.persist_crm_request",
+        new=AsyncMock(
+            return_value={
+                "id": mock_row.id,
+                "request_number": mock_row.request_number,
+                "client_telegram_id": mock_row.client_telegram_id,
+                "manager_id": mock_row.manager_id,
+            }
+        ),
+    ), patch.object(
         vertical.context.events,
         "publish_request_created",
         new=AsyncMock(),
@@ -176,13 +182,6 @@ async def test_agro_vertical_create_request(clean_registry):
         "run_post_create",
         new=AsyncMock(),
     ):
-        mock_cm.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
-        mock_cm.return_value.__aexit__ = AsyncMock(return_value=None)
-        mock_repo = AsyncMock()
-        mock_repo.next_crm_number = AsyncMock(return_value="AGRO-00100")
-        mock_repo.create_crm = AsyncMock(return_value=mock_row)
-        mock_repo_cls.return_value = mock_repo
-
         result = await vertical.create_request(
             client_telegram_id=123,
             client_name="Client",

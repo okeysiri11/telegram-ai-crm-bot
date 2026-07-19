@@ -31,7 +31,7 @@ class LedgerAccountType(str, enum.Enum):
     COMPANY = "COMPANY"
 
 
-class LedgerEntry(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class LedgerEngineEntry(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     __tablename__ = "ledger_engine_entries"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_ledger_engine_entries_amount_positive"),
@@ -61,6 +61,6 @@ class LedgerEntry(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
 
     def __repr__(self) -> str:
         return (
-            f"<LedgerEntry id={self.id} {self.direction} "
+            f"<LedgerEngineEntry id={self.id} {self.direction} "
             f"{self.amount} {self.asset} account={self.account_type}:{self.account_id}>"
         )

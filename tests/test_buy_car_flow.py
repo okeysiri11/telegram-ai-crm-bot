@@ -85,6 +85,15 @@ async def test_buy_car_photos_done_advances(mock_message, mock_fsm_context, samp
     ), patch(
         "services.pg_manager_delivery_engine.ManagerDeliveryEngineV1.notify_auto_client_request",
         new=AsyncMock(),
+    ), patch(
+        "routers.auto_client_router.VerticalOnboardingEngineV1.save_auto_client_pending",
+        new=AsyncMock(),
+    ), patch(
+        "services.pg_ai_manager_engine.AiManagerEngineV1.qualify_message",
+        new=AsyncMock(return_value=None),
+    ), patch(
+        "routers.auto_client_router.auto_client_menu",
+        return_value=None,
     ):
         await _advance_after_step(mock_message, mock_fsm_context)
         # After photos → phone step

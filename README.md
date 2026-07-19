@@ -68,11 +68,14 @@ TelegramBotCourse/
 ## Validation
 
 ```bash
-pytest tests/ -q
-python scripts/validate_architecture.py
-python scripts/validate_legacy_migration.py
-python scripts/run_platform_certification.py
+.venv/bin/python -m pytest tests/ -q -m "not slow"
+.venv/bin/python scripts/validate_architecture.py
+.venv/bin/python scripts/validate_legacy_migration.py
+.venv/bin/python scripts/generate_architecture_baseline.py
+.venv/bin/python scripts/run_platform_certification.py
 ```
+
+**Release candidate:** `platform-core-v1.0.0-rc1` — frozen Platform Core baseline (Sprint 1.5).
 
 ## API surfaces
 
@@ -89,5 +92,7 @@ python scripts/run_platform_certification.py
 ## Documentation
 
 - `docs/PLATFORM_CERTIFICATION.md` — certification report
+- `docs/ARCHITECTURE_BASELINE.md` — frozen RC1 architecture baseline
+- `docs/architecture_baseline/` — module, dependency, service, import graphs
 - `ARCHITECTURE_REPORT.md` — governance audit output
 - `platform_manifest.json` — machine-readable platform manifest

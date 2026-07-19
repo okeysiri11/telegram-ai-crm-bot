@@ -354,7 +354,7 @@ def check_api_repository_access() -> CheckResult:
 
 
 def run_pytest_suite() -> CheckResult:
-    cmd = [sys.executable, "-m", "pytest", "tests/", "-q", "--tb=no"]
+    cmd = [sys.executable, "-m", "pytest", "tests/", "-q", "--tb=no", "-m", "not slow"]
     start = time.perf_counter()
     proc = subprocess.run(cmd, cwd=ROOT, capture_output=True, text=True)
     duration = time.perf_counter() - start

@@ -12,15 +12,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models.ledger_entry import (
     LedgerAccountType,
     LedgerDirection,
-    LedgerEntry,
+    LedgerEngineEntry,
 )
 
 
 def _signed_amount_column():
     return func.sum(
         case(
-            (LedgerEntry.direction == LedgerDirection.CREDIT.value, LedgerEntry.amount),
-            else_=-LedgerEntry.amount,
+            (LedgerEngineEntry.direction == LedgerDirection.CREDIT.value, LedgerEngineEntry.amount),
+            else_=-LedgerEngineEntry.amount,
         )
     )
 
@@ -40,7 +40,7 @@ class LedgerRepository:
         account_id: int | None = None,
         description: str | None = None,
         **extra: Any,
-    ) -> LedgerEntry:
+    ) -> LedgerEngineEntry:
         if extra:
             raise TypeError(f"Unsupported fields: {', '.join(sorted(extra))}")
 
@@ -51,7 +51,7 @@ class LedgerRepository:
         if amount <= 0:
             raise ValueError("amount must be positive")
 
-        entry = LedgerEntry(
+        entry = LedgerEngineEntry(
             deal_id=deal_id,
             account_type=account_type,
             account_id=account_id,
@@ -66,7 +66,7 @@ class LedgerRepository:
 
     async def get_balance(self, asset: str) -> Decimal:
         result = await self._session.execute(
-            select(_signed_amount_column()).where(LedgerEntry.asset == asset)
+            select(_signed_amount_column()).where(LedgerEngineEntry.asset == asset)
         )
         balance = result.scalar_one_or_none()
         return Decimal(balance or 0)
@@ -78,22 +78,22 @@ class LedgerRepository:
         asset: str,
     ) -> Decimal:
         stmt = select(_signed_amount_column()).where(
-            LedgerEntry.account_type == account_type,
-            LedgerEntry.asset == asset,
+            LedgerEngineEntry.account_type == account_type,
+            LedgerEngineEntry.asset == asset,
         )
         if account_id is None:
-            stmt = stmt.where(LedgerEntry.account_id.is_(None))
+            stmt = stmt.where(LedgerEngineEntry.account_id.is_(None))
         else:
-            stmt = stmt.where(LedgerEntry.account_id == account_id)
+            stmt = stmt.where(LedgerEngineEntry.account_id == account_id)
 
         result = await self._session.execute(stmt)
         balance = result.scalar_one_or_none()
         return Decimal(balance or 0)
 
-    async def list_by_deal(self, deal_id: uuid.UUID) -> list[LedgerEntry]:
+    async def list_by_deal(self, deal_id: uuid.UUID) -> list[LedgerEngineEntry]:
         result = await self._session.execute(
-            select(LedgerEntry)
-            .where(LedgerEntry.deal_id == deal_id)
-            .order_by(LedgerEntry.created_at.asc())
+            select(LedgerEngineEntry)
+            .where(LedgerEngineEntry.deal_id == deal_id)
+            .order_by(LedgerEngineEntry.created_at.asc())
         )
         return list(result.scalars().all())

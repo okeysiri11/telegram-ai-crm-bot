@@ -104,7 +104,10 @@ def _lead_qualification_workflow() -> WorkflowDefinition:
                 type=StepType.SKILL,
                 config={
                     "skill_id": "lead_scoring",
-                    "input_mapping": {"lead_data": "$memory.intent"},
+                    "input_mapping": {
+                        "lead_profile": "$input.lead_profile",
+                        "lead_data": "$memory.intent",
+                    },
                     "output_key": "score",
                 },
                 next_step="assess_risk",
@@ -114,7 +117,10 @@ def _lead_qualification_workflow() -> WorkflowDefinition:
                 type=StepType.SKILL,
                 config={
                     "skill_id": "risk_assessment",
-                    "input_mapping": {"profile": "$memory.score"},
+                    "input_mapping": {
+                        "scenario": "$input.message",
+                        "profile": "$memory.score",
+                    },
                     "output_key": "risk",
                 },
                 next_step="finalize",

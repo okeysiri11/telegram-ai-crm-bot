@@ -1,4 +1,4 @@
-# CRM outbox publisher — canonical import path for domain engines.
+# CRM outbox publisher — canonical import path for domain engines and startup.
 
 from __future__ import annotations
 
@@ -49,3 +49,10 @@ async def get_crm_queue_size() -> dict[str, int]:
     from services.crm_event_bus import get_queue_size
 
     return await get_queue_size()
+
+
+def get_crm_worker():
+    """Return the shared CRM outbox worker (lazy import — no direct crm_event_bus at call sites)."""
+    from services.crm_event_bus import get_default_worker
+
+    return get_default_worker()

@@ -430,7 +430,7 @@ def _write_platform_certification(checks, metrics, cert) -> Path:
         "",
         "## Release Candidate",
         "",
-        "RC1 tag **not created** — certification gates did not pass." if cert.get("verdict") != "PASS" else "RC1 tag **platform-core-v1.0-rc1** created.",
+        "RC1 tag **not created** — certification gates did not pass." if cert.get("verdict") != "PASS" else "RC1 tag **platform-core-v1.0.0-rc1** ready.",
         "",
     ])
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")

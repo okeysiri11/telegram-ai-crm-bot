@@ -1,12 +1,12 @@
 manifest_version: 1.0.0
-generated_at: '2026-07-18T13:53:32.980077+00:00'
+generated_at: '2026-07-19T12:58:24.384016+00:00'
 platform_core:
   version: 1.0.0-rc0
   architecture_version: 1.0.0
   api_contract_version: 1.0.0
   api_version: v1
-  certification_status: FAIL
-  certification_score: 34.29
+  certification_status: PASS
+  certification_score: 100.0
 modules:
 - events
 - platform_ai
@@ -39,66 +39,27 @@ apis:
   legacy_management: /management
 certification:
   sprint: '1.5'
-  verdict: FAIL
-  release_readiness: NOT READY
-  gates_passed: 2
+  verdict: PASS
+  release_readiness: PASS
+  gates_passed: 12
   gates_total: 12
   checks:
   - check_id: repository_service_imports
-    passed: false
-    message: 19 Repository → Service import(s)
-    evidence:
-    - 'repositories/partner_repository.py:7: from services.partner_engine import PartnerEngine'
-    - 'repositories/partner_repository.py:12: from services.partner_engine import
-      PartnerEngine'
-    - 'repositories/partner_repository.py:17: from services.partner_engine import
-      PartnerEngine'
-    - 'repositories/partner_repository.py:22: from services.partner_engine import
-      PartnerEngine'
-    - 'repositories/partner_repository.py:27: from services.partner_engine import
-      PartnerEngine'
-    - 'repositories/event_bus_repository.py:25: from services.event_bus_config import
-      MAX_RETRIES, compute_backoff_seconds'
-    - 'repositories/calendar_repository.py:7: from services.calendar_service import
-      CalendarService'
-    - 'repositories/calendar_repository.py:12: from services.calendar_service import
-      CalendarService'
-    - 'repositories/calendar_repository.py:17: from services.calendar_service import
-      CalendarService'
-    - 'repositories/calendar_repository.py:22: from services.calendar_service import
-      CalendarService'
-    - 'repositories/vin_repository.py:12: from services.vin_decoder import decode_vin,
-      validate_vin'
-    - 'repositories/finance_repository.py:7: from services.finance_core import FinanceCoreService'
-    - 'repositories/finance_repository.py:12: from services.finance_core import FinanceCoreService'
-    - 'repositories/finance_repository.py:17: from services.finance_core import FinanceCoreService'
-    - 'repositories/finance_repository.py:24: from services.finance_core import FinanceCoreService'
-    - 'repositories/task_repository.py:7: from services.tasks import TaskService'
-    - 'repositories/task_repository.py:12: from services.tasks import TaskService'
-    - 'repositories/task_repository.py:22: from services.tasks import TaskService'
-    - 'repositories/task_repository.py:27: from services.tasks import TaskService'
+    passed: true
+    message: 0 Repository → Service import(s)
+    evidence: []
     metadata:
-      violation_count: 19
-      files_affected: 6
+      violation_count: 0
+      files_affected: 0
   - check_id: sdk_repository_imports
-    passed: false
-    message: 3 SDK → Repository import(s)
-    evidence:
-    - 'platform_sdk/base_vertical.py:93: imports repositories.request_repository'
-    - 'platform_sdk/manager_provider.py:46: imports repositories.user_repository'
-    - 'platform_sdk/manager_provider.py:48: imports repositories.manager_repository'
+    passed: true
+    message: 0 SDK → Repository import(s)
+    evidence: []
     metadata: {}
   - check_id: sdk_database_imports
-    passed: false
-    message: 7 SDK → Database access point(s)
-    evidence:
-    - 'platform_sdk/base_vertical.py:100: uses get_session'
-    - 'platform_sdk/base_vertical.py:91: imports database.models.client_request'
-    - 'platform_sdk/base_vertical.py:92: imports database.session'
-    - 'platform_sdk/base_vertical.py:92: uses get_session'
-    - 'platform_sdk/manager_provider.py:47: imports database.session'
-    - 'platform_sdk/manager_provider.py:47: uses get_session'
-    - 'platform_sdk/manager_provider.py:50: uses get_session'
+    passed: true
+    message: 0 SDK → Database access point(s)
+    evidence: []
     metadata: {}
   - check_id: api_repository_access
     passed: true
@@ -106,32 +67,11 @@ certification:
     evidence: []
     metadata: {}
   - check_id: unauthorized_admin_api
-    passed: false
-    message: 4 admin route registration call(s) in api/server.py
-    evidence:
-    - GET /api/v1/managers/pool (managers_pool_router.py)
-    - GET /api/v1/sla/overdue (sla_router.py)
-    - GET /api/v1/sla/risk (sla_router.py)
-    - GET /api/v1/sla/statistics (sla_router.py)
-    - GET /api/v1/sla/owner-escalated (sla_router.py)
-    - GET /api/v1/workflows (workflow_router.py)
-    - GET /api/v1/assignment/statistics (assignment_router.py)
-    - GET /api/v1/verticals (platform_sdk_router.py)
-    - GET /api/v1/configuration (configuration_router.py)
-    - GET /api/v1/configuration/export (configuration_router.py)
-    - POST /api/v1/configuration/validate (configuration_router.py)
-    - POST /api/v1/configuration/import (configuration_router.py)
-    - GET /api/v1/configuration/{key:.+}/history (configuration_router.py)
-    - POST /api/v1/configuration/{key:.+}/rollback (configuration_router.py)
-    - GET /api/v1/configuration/{key:.+} (configuration_router.py)
-    - PUT /api/v1/configuration/{key:.+} (configuration_router.py)
-    - DELETE /api/v1/configuration/{key:.+} (configuration_router.py)
+    passed: true
+    message: 0 admin route registration call(s) in api/server.py
+    evidence: []
     metadata:
-      registration_calls:
-      - register_sla_admin_routes(app)
-      - register_assignment_admin_routes(app)
-      - register_workflow_admin_routes(app)
-      - register_configuration_admin_routes(app)
+      registration_calls: []
   - check_id: architecture_audit
     passed: true
     message: governance=PASS score=99.5 strict=99.5
@@ -142,141 +82,84 @@ certification:
       critical_count: 0
       gate_failures: []
   - check_id: dependency_audit
-    passed: false
-    message: governed_cycles=76 all_cycles=84 import_critical=0
-    evidence:
-    - 'cycle: platform_legacy.feature_flags -> platform_configuration.configuration_center
-      -> platform_legacy.feature_flags'
-    - 'cycle: services.role_service -> platform_identity.role_service -> platform_legacy
-      -> platform_legacy.migration_report -> platform_legacy.registry -> platform_legacy.adapter
-      -> services.pg_manager_delivery_engine -> services.pg_entry_point_engine'
-    - 'cycle: database.models.users -> database.models.user_role -> database.models.users'
-    - 'cycle: database.models.user_role -> database.models.role -> database.models.user_role'
-    - 'cycle: database.models.permissions -> database.models.roles -> database.models.permissions'
-    - 'cycle: database -> services.role_service -> platform_identity.role_service
-      -> platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine'
-    - 'cycle: database -> services.role_service -> platform_identity.role_service
-      -> platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine'
-    - 'cycle: database -> services.role_service -> platform_identity.role_service
-      -> platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine'
-    - 'cycle: database -> services.role_service -> platform_identity.role_service
-      -> platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine'
-    - 'cycle: platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine -> services.pg_auto_client_request_engine
-      -> services.pg_client_request_crm_engine -> services'
-    - 'cycle: database -> services.role_service -> platform_identity.role_service
-      -> platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine'
-    - 'cycle: database -> services.role_service -> platform_identity.role_service
-      -> platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine'
-    - 'cycle: database -> services.role_service -> platform_identity.role_service
-      -> platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine'
-    - 'cycle: database -> services.role_service -> platform_identity.role_service
-      -> platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine'
-    - 'cycle: database -> services.role_service -> platform_identity.role_service
-      -> platform_legacy -> platform_legacy.migration_report -> platform_legacy.registry
-      -> platform_legacy.adapter -> services.pg_manager_delivery_engine'
+    passed: true
+    message: strict_cycles=0 all_cycles=76 import_critical=0
+    evidence: []
     metadata:
-      all_cycles: 84
-      governed_cycles: 76
+      all_cycles: 76
+      governed_cycles: 0
       strict_governance_cycles: 0
-      nodes: 802
-      edges: 2621
+      nodes: 804
+      edges: 2620
       cycle_categories:
-        config_legacy: 18
-        legacy_pg_engines: 44
+        config_legacy: 6
+        legacy_pg_engines: 45
         orm_models: 9
-        other: 6
-        platform_core: 7
+        other: 8
+        platform_core: 8
   - check_id: canonical_event_bus
-    passed: false
-    message: direct_crm_publishers=15 adapter_wired=True
-    evidence:
-    - services/pg_deal_workflow.py
-    - services/pg_pricing_engine.py
-    - services/pg_partner_engine.py
-    - services/pg_market_data_engine.py
-    - services/pg_automotive_cost_engine.py
-    - services/pg_automotive_operations_engine.py
-    - services/pg_kyc_aml_engine.py
-    - services/pg_client_request_crm_engine.py
-    - services/pg_otc_matching_engine.py
-    - services/pg_observability_engine.py
-    - services/pg_settlement_engine.py
-    - services/pg_liquidity_engine.py
-    - services/pg_risk_engine.py
-    - services/pg_automotive_marketplace_engine.py
-    - services/pg_webhook_engine.py
+    passed: true
+    message: direct_crm_publishers=0 adapter_wired=True
+    evidence: []
     metadata:
       legacy_eventbus_reexport: true
-      direct_publisher_count: 15
+      direct_publisher_count: 0
   - check_id: ci_enforcement
-    passed: false
-    message: 0 workflow file(s) under .github/workflows
-    evidence: []
+    passed: true
+    message: 1 workflow file(s) under .github/workflows
+    evidence:
+    - .github/workflows/architecture.yml
     metadata: {}
   - check_id: documentation_sync
-    passed: false
-    message: README out of sync
-    evidence:
-    - 'missing marker: platform_management'
-    - 'missing marker: platform_architecture'
-    - 'missing marker: PlatformEventBus'
-    - 'missing marker: platform_plugin_sdk'
-    - 'missing marker: /management/v1'
-    - README still describes bot.py-only layout (stale)
+    passed: true
+    message: README reflects current platform
+    evidence: []
     metadata: {}
   - check_id: security_tests
-    passed: false
-    message: pytest security exit=0 admin_security_test=False
+    passed: true
+    message: pytest security exit=0 admin_security_test=True
     evidence:
     - ''
     - '-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html'
-    - 22 passed, 10 warnings in 2.54s
+    - 37 passed, 8 warnings in 3.20s
     metadata:
-      duration_sec: 3.65
-      has_admin_security_suite: false
+      duration_sec: 4.35
+      has_admin_security_suite: true
   - check_id: pytest_suite
-    passed: false
-    message: 'RuntimeWarning: Enable tracemalloc to get the object allocation traceback'
+    passed: true
+    message: 497 passed, 5 skipped, 1 deselected, 23 warnings in 270.69s (0:04:30)
     evidence:
-    - ERROR tests/e2e/test_scaffold_marker.py::test_e2e_scaffold_marker
-    - 11 failed, 462 passed, 5 skipped, 48 warnings, 1 error in 193.81s (0:03:13)
-    - '/Users/macbook/Desktop/TelegramBotCourse/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33:
-      RuntimeWarning: coroutine ''AsyncMockMixin._execute_mock_call'' was never awaited'
-    - '  gc.collect()'
-    - 'RuntimeWarning: Enable tracemalloc to get the object allocation traceback'
+    - '  /Users/macbook/Desktop/TelegramBotCourse/platform_events_legacy.py:242: DeprecationWarning:
+      datetime.datetime.utcnow() is deprecated and scheduled for removal in a future
+      version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).'
+    - '    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")'
+    - ''
+    - '-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html'
+    - 497 passed, 5 skipped, 1 deselected, 23 warnings in 270.69s (0:04:30)
     metadata:
-      duration_sec: 195.57
-      passed_count: 0
+      duration_sec: 272.7
+      passed_count: 497
 metrics:
-  module_count_graph: 802
-  dependency_edges: 2621
-  all_cycles: 84
+  module_count_graph: 804
+  dependency_edges: 2620
+  all_cycles: 76
   strict_governance_cycles: 0
   governance_score: 99.5
   governance_grade: PASS
-  startup_probe_sec: 0.01
-  test_count: 479
+  startup_probe_sec: 0.013
+  test_count: 503
   python_files: 6420
   cycle_categories:
-    config_legacy: 18
-    legacy_pg_engines: 44
+    config_legacy: 6
+    legacy_pg_engines: 45
     orm_models: 9
-    other: 6
-    platform_core: 7
+    other: 8
+    platform_core: 8
 integrity_hashes:
   platform_api_contracts: 9b13a996e09170b4e6d2899a7b5b17caf991697c0ca08db4d7404eb1916dd364
   platform_plugin_sdk_init: 79a5972718aab72868ecd68bb1b993d6c256d6e859c1304bf3ff2843559bff66
   platform_architecture_governance: a32ea2964387af1e5da77afbdfae274a643a073c0590921465d0120ca7c48f2d
-  platform_manifest_self: 0ca85fb7a0cb2926b14a64203920213e77a836488c7d1ad8dfafb410c528d6c5
+  platform_manifest_self: 3525b88d461d2615e808adc0357ae3384ac475e3c543e273914fa4a0ff26bc1b
 agents:
   description: Authoritative platform metadata for AI agents, CI/CD, and vertical
     modules

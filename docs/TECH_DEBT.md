@@ -1,18 +1,13 @@
 # Platform Technical Debt Register
 
-> Generated: 2026-07-18 13:53:32 UTC
+> Generated: 2026-07-19 12:58:24 UTC
 
 ## P0 — Blocks Certification
 
-- Repository → Service imports (6 files)
-- SDK → Repository/Database access in platform_sdk/
-- 17 unauthenticated admin HTTP routes
-- No GitHub Actions workflow
-- README stale vs implementation
 
 ## P1 — Sprint 2
 
-- Legacy pg engine dependency cycles (44)
+- Legacy pg engine dependency cycles (45)
 - Handler DB direct access (4 allowlisted files)
 - WorkflowEngine name collision (legacy adapter alias)
 - Event bus direct crm_event_bus imports in pg engines

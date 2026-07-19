@@ -14,6 +14,24 @@ os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 os.environ.setdefault("REDIS_REQUIRED", "false")
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _register_rbac_models():
+    import importlib
+
+    for module in (
+        "database.models.user_role",
+        "database.models.role",
+        "database.models.role_permission",
+        "database.models.users",
+    ):
+        importlib.import_module(module)
+
+
+@pytest.fixture
+def scaffold_marker() -> str:
+    return "architecture_scaffold"
+
+
 @pytest.fixture
 def client_user_id() -> int:
     return 900_001

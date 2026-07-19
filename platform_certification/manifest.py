@@ -11,7 +11,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 
 MANIFEST_VERSION = "1.0.0"
-CORE_VERSION = "1.0.0-rc0"
+CORE_VERSION = "1.0.0-rc1"
 ARCHITECTURE_VERSION = "1.0.0"
 
 

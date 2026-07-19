@@ -1,0 +1,76 @@
+# Import Graph — Architecture Baseline
+
+> Generated: 2026-07-19 12:25:41 UTC
+
+## Cross-layer imports (governed)
+
+- **warning** `database/engine.py` — database imports services via platform_configuration.configuration_center
+- **warning** `platform_operations/timeline_service.py` — services imports shared via platform_management.management_service
+- **warning** `platform_operations/status_service.py` — services imports shared via platform_management.system_info
+- **warning** `platform_operations/status_service.py` — services imports shared via platform_management.health
+- **warning** `platform_operations/activity_service.py` — services imports shared via platform_management.statistics
+- **warning** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
+- **warning** `platform_integrations/webhook_manager.py` — services imports shared via platform_legacy
+- **warning** `platform_identity/policy_engine.py` — services imports shared via platform_legacy
+- **warning** `platform_identity/permission_service.py` — services imports shared via platform_legacy
+- **warning** `platform_identity/identity_service.py` — services imports shared via platform_management.permissions
+- **warning** `platform_identity/identity_service.py` — services imports shared via platform_management.exceptions
+- **warning** `platform_identity/role_service.py` — services imports shared via platform_legacy
+- **warning** `platform_identity/audit_hooks.py` — services imports shared via platform_legacy
+- **warning** `platform_sdk/bootstrap.py` — services imports shared via platform_sdk.verticals
+- **warning** `platform_sdk/notification_provider.py` — services imports shared via platform_legacy
+- **warning** `platform_sdk/validation_provider.py` — services imports shared via platform_legacy
+- **warning** `repositories/assignment_score_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/base_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/request_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/manager_pool_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/owner_repository.py` — repositories imports services via platform_configuration.config_provider
+- **warning** `repositories/owner_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/workflow_execution_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/platform_metrics_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/manager_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/kpi_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/partner_repository.py` — repositories imports shared via database
+- **warning** `repositories/event_repository.py` — repositories imports shared via events
+- **warning** `repositories/escalation_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/event_bus_repository.py` — repositories imports services via platform_configuration.event_bus_policy
+- **warning** `repositories/user_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/calendar_repository.py` — repositories imports shared via database
+- **warning** `repositories/sla_repository.py` — repositories imports services via platform_configuration.config_provider
+- **warning** `repositories/sla_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **warning** `repositories/finance_repository.py` — repositories imports shared via database
+- **warning** `repositories/task_repository.py` — repositories imports shared via database
+- **warning** `platform_ai/workflows_router.py` — services imports shared via platform_management.response_models
+- **warning** `platform_ai/workflows_router.py` — services imports shared via platform_management.permissions
+- **warning** `platform_ai/workflows_router.py` — services imports shared via platform_management.management_context
+- **warning** `platform_ai/workflows_router.py` — services imports shared via platform_api.versioning
+- **warning** `platform_ai/context_builder.py` — services imports shared via platform_management.statistics
+- **warning** `platform_ai/ai_router.py` — services imports shared via platform_management.response_models
+- **warning** `platform_ai/ai_router.py` — services imports shared via platform_management.permissions
+- **warning** `platform_ai/ai_router.py` — services imports shared via platform_management.management_context
+- **warning** `platform_ai/ai_router.py` — services imports shared via platform_api.versioning
+- **warning** `platform_ai/skills_router.py` — services imports shared via platform_management.response_models
+- **warning** `platform_ai/skills_router.py` — services imports shared via platform_management.permissions
+- **warning** `platform_ai/skills_router.py` — services imports shared via platform_management.management_context
+- **warning** `platform_ai/skills_router.py` — services imports shared via platform_api.versioning
+- **warning** `platform_ai/memory_router.py` — services imports shared via platform_management.response_models
+- **warning** `platform_ai/memory_router.py` — services imports shared via platform_management.permissions
+- **warning** `platform_ai/memory_router.py` — services imports shared via platform_management.management_context
+- **warning** `platform_ai/memory_router.py` — services imports shared via platform_api.versioning
+- **warning** `platform_configuration/config_service.py` — services imports shared via platform_legacy
+- **warning** `platform_observability/metrics_service.py` — services imports shared via platform_management.management_service
+- **warning** `platform_legacy/adapter.py` — services imports shared via database
+- **warning** `src/verticals/realty/service.py` — services imports shared via src.verticals
+- **warning** `src/verticals/realty/service.py` — services imports shared via platform_legacy
+- **warning** `src/verticals/auto/service.py` — services imports shared via src.verticals
+- **warning** `src/verticals/auto/service.py` — services imports shared via platform_legacy
+- **warning** `src/verticals/legal/service.py` — services imports shared via src.verticals
+- **warning** `src/verticals/legal/service.py` — services imports shared via platform_legacy
+- **warning** `src/verticals/logistics/service.py` — services imports shared via src.verticals
+- **warning** `src/verticals/logistics/service.py` — services imports shared via platform_legacy
+- **warning** `src/verticals/agro/service.py` — services imports shared via src.verticals
+- **warning** `src/verticals/agro/service.py` — services imports shared via platform_legacy
+- **warning** `events/adapters/legacy_adapter.py` — services imports shared via platform_legacy
+- **warning** `events/handlers/sla_handler.py` — services imports shared via platform_legacy
+- **warning** `platform_sdk/verticals/auto_vertical.py` — services imports shared via platform_legacy
+- **warning** `platform_workflows/adapters/legacy_rules.py` — workflow imports shared via platform_legacy

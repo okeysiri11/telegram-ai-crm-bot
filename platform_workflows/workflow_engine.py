@@ -409,7 +409,7 @@ class WorkflowEngine:
                 )
             )
 
-        if result.status == ExecutionStatus.COMPLETED.value:
+        if str(result.status).lower() == ExecutionStatus.COMPLETED.value.lower():
             _success_count += 1
             context.status = ExecutionStatus.COMPLETED
             context.completed_at = _utcnow()
@@ -422,7 +422,7 @@ class WorkflowEngine:
                     request_number=context.request.get("request_number"),
                 )
             )
-        elif result.status == ExecutionStatus.FAILED.value:
+        elif str(result.status).lower() == ExecutionStatus.FAILED.value.lower():
             _failure_count += 1
             context.status = ExecutionStatus.FAILED
             context.error = result.error
