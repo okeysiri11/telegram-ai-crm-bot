@@ -73,3 +73,36 @@ flowchart TB
 Set `POSTGRES_ONLY=false` in `.env` to re-enable SQLite fallbacks for unmigrated legacy functions.
 
 See also: [services.md](services.md), [database.md](database.md), [verticals.md](verticals.md).
+
+## Platform Memory Engine (Sprint 2.1–2.2)
+
+```mermaid
+flowchart TB
+    MS[MemoryService]
+    MSS[MemorySearchService]
+    CA[ContextAssembler]
+    MR[(MemoryRepository)]
+    EP[EmbeddingProvider]
+
+    MS --> MSS
+    MS --> CA
+    MSS --> MR
+    MSS --> EP
+    CA --> MSS
+    CA --> MR
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| MemoryEntity | `platform_memory/entities.py` | Universal searchable memory object |
+| MemoryRepository | `platform_memory/repositories/memory_repository.py` | Abstract persistence (no SQL in services) |
+| InMemoryMemoryRepository | `platform_memory/repositories/in_memory_semantic_repository.py` | Default in-memory backend |
+| DummyEmbeddingProvider | `platform_memory/providers/embedding_provider.py` | Deterministic embeddings (no OpenAI) |
+| MemorySearchService | `platform_memory/search/memory_search_service.py` | Semantic + keyword search with ranking |
+| ContextAssembler | `platform_memory/context_assembler.py` | LLM prompt context builder |
+
+**Context priority:** current conversation → semantic memories → important memories → recent memories → summarized history.
+
+**Future backends:** pgvector, Qdrant, Milvus, Weaviate — implement `MemoryRepository` + `EmbeddingProvider` without changing services.
+
+Full details: [PLATFORM_MEMORY.md](architecture/PLATFORM_MEMORY.md), [SEMANTIC_MEMORY_REPORT.md](architecture/SEMANTIC_MEMORY_REPORT.md).

@@ -2,12 +2,13 @@
   "manifest_version": "1.0.0",
   "generated_at": "2026-07-19T13:07:17.219550+00:00",
   "platform_core": {
-    "version": "1.0.0-rc0",
+    "version": "1.0.0-rc1",
     "architecture_version": "1.0.0",
     "api_contract_version": "1.0.0",
     "api_version": "v1",
     "certification_status": "PASS",
-    "certification_score": 100.0
+    "certification_score": 100.0,
+    "memory_engine_version": "2.2.0"
   },
   "modules": [
     "events",

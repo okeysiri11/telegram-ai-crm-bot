@@ -6,8 +6,9 @@ import logging
 from typing import Any
 
 from events.base_event import BaseEvent
-from platform_memory.config import DEFAULT_TOKEN_LIMITS, TokenLimits
+from platform_memory.config import DEFAULT_SEMANTIC_CONFIG, DEFAULT_TOKEN_LIMITS, SemanticMemoryConfig, TokenLimits
 from platform_memory.context_assembler import ContextAssembler
+from platform_memory.entities import MemoryEntity, MemoryFilters
 from platform_memory.memory_events import (
     ContextAssembledEvent,
     ConversationAppendedEvent,
@@ -21,8 +22,12 @@ from platform_memory.models import (
     ConversationRole,
     MemoryCategory,
 )
+from platform_memory.providers.embedding_provider import DummyEmbeddingProvider, EmbeddingProvider
+from platform_memory.repositories.in_memory_semantic_repository import InMemoryMemoryRepository
+from platform_memory.repositories.memory_repository import MemoryRepository
 from platform_memory.providers.base import MemoryProviderBundle
 from platform_memory.providers.in_memory import build_in_memory_providers
+from platform_memory.search.memory_search_service import MemorySearchService
 from platform_memory.repositories.agent_memory_repository import AgentMemoryRepository
 from platform_memory.repositories.business_memory_repository import BusinessMemoryRepository
 from platform_memory.repositories.conversation_history_repository import ConversationHistoryRepository
@@ -48,11 +53,22 @@ class MemoryService:
         *,
         providers: MemoryProviderBundle | None = None,
         limits: TokenLimits | None = None,
+        semantic_config: SemanticMemoryConfig | None = None,
         summarizer: MemorySummarizer | None = None,
+        memory_repository: MemoryRepository | None = None,
+        embedding_provider: EmbeddingProvider | None = None,
     ) -> None:
         bundle = providers or build_in_memory_providers()
         self._providers = bundle
         self._limits = limits or DEFAULT_TOKEN_LIMITS
+        self._semantic_config = semantic_config or DEFAULT_SEMANTIC_CONFIG
+        self._memory_repository = memory_repository or InMemoryMemoryRepository()
+        self._embedding = embedding_provider or DummyEmbeddingProvider()
+        self._memory_search = MemorySearchService(
+            repository=self._memory_repository,
+            embedding=self._embedding,
+            config=self._semantic_config,
+        )
         self._conversation = ConversationHistoryRepository(bundle.conversation)
         self._user_profile = UserProfileRepository(bundle.user_profile)
         self._agent_memory = AgentMemoryRepository(bundle.agent_memory)
@@ -68,6 +84,8 @@ class MemoryService:
             project_memory=self._project_memory,
             summarizer=summarizer,
             limits=self._limits,
+            memory_search=self._memory_search,
+            semantic_config=self._semantic_config,
         )
         self._initialized = False
 
@@ -76,12 +94,21 @@ class MemoryService:
         return self._limits
 
     @property
+    def semantic_config(self) -> SemanticMemoryConfig:
+        return self._semantic_config
+
+    @property
+    def memory_search(self) -> MemorySearchService:
+        return self._memory_search
+
+    @property
     def context_assembler(self) -> ContextAssembler:
         return self._assembler
 
     def reset(self) -> None:
         limits = self._limits
-        self.__init__(limits=limits)
+        semantic = self._semantic_config
+        self.__init__(limits=limits, semantic_config=semantic)
         self._initialized = False
 
     async def async_reset(self) -> None:
@@ -221,6 +248,55 @@ class MemoryService:
         )
         return record.to_dict()
 
+    async def remember_semantic(
+        self,
+        *,
+        text: str,
+        owner_id: str | None = None,
+        agent_id: str | None = None,
+        session_id: str | None = None,
+        summary: str | None = None,
+        importance_score: float = 0.5,
+        expires_at: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        self.initialize()
+        embedding = await self._embedding.embed(text)
+        entity = MemoryEntity.create(
+            text=text,
+            embedding=embedding,
+            owner_id=owner_id,
+            agent_id=agent_id,
+            session_id=session_id,
+            summary=summary,
+            importance_score=importance_score,
+            expires_at=expires_at,
+            metadata=metadata,
+        )
+        saved = await self._memory_repository.save(entity)
+        await _publish(
+            MemoryStoredEvent(
+                memory_id=saved.id,
+                category=MemoryCategory.LONG_TERM.value,
+                agent_id=agent_id or "",
+            )
+        )
+        return saved.to_dict()
+
+    async def search_semantic(
+        self,
+        query: str,
+        *,
+        owner_id: str | None = None,
+        agent_id: str | None = None,
+        session_id: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
+        self.initialize()
+        filters = MemoryFilters(owner_id=owner_id, agent_id=agent_id, session_id=session_id)
+        hits = await self._memory_search.search(query, filters=filters, limit=limit)
+        return [hit.to_dict() for hit in hits]
+
     async def assemble_context(self, request: ContextAssemblyRequest) -> ContextAssemblyResult:
         self.initialize()
         result = await self._assembler.assemble(request)
@@ -287,7 +363,15 @@ class MemoryService:
                 "max_history_tokens": self._limits.max_history_tokens,
                 "summarize_threshold_ratio": self._limits.summarize_threshold_ratio,
             },
+            "semantic_config": {
+                "max_context_tokens": self._semantic_config.max_context_tokens,
+                "max_memories": self._semantic_config.max_memories,
+                "similarity_threshold": self._semantic_config.similarity_threshold,
+                "importance_weight": self._semantic_config.importance_weight,
+                "recency_weight": self._semantic_config.recency_weight,
+            },
             "providers": "in_memory",
+            "embedding_provider": "dummy",
         }
 
 

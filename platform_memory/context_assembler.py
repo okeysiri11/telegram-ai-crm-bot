@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from platform_memory.config import DEFAULT_TOKEN_LIMITS, TokenLimits
+from platform_memory.config import DEFAULT_SEMANTIC_CONFIG, DEFAULT_TOKEN_LIMITS, SemanticMemoryConfig, TokenLimits
+from platform_memory.entities import MemoryFilters
 from platform_memory.models import (
     AIContextBundle,
     ContextAssemblyRequest,
@@ -15,11 +16,12 @@ from platform_memory.repositories.conversation_history_repository import Convers
 from platform_memory.repositories.project_memory_repository import ProjectMemoryRepository
 from platform_memory.repositories.session_memory_repository import SessionMemoryRepository
 from platform_memory.repositories.user_profile_repository import UserProfileRepository
+from platform_memory.search.memory_search_service import MemorySearchService
 from platform_memory.summarizer import MemorySummarizer, estimate_tokens, truncate_to_tokens
 
 
 class ContextAssembler:
-    """Builds prompt context from dialog, profile, history, agent, and project memory."""
+    """Builds LLM prompt context with semantic memory priority."""
 
     __slots__ = (
         "_conversation",
@@ -30,6 +32,8 @@ class ContextAssembler:
         "_project_memory",
         "_summarizer",
         "_limits",
+        "_memory_search",
+        "_semantic_config",
     )
 
     def __init__(
@@ -43,6 +47,8 @@ class ContextAssembler:
         project_memory: ProjectMemoryRepository,
         summarizer: MemorySummarizer | None = None,
         limits: TokenLimits | None = None,
+        memory_search: MemorySearchService | None = None,
+        semantic_config: SemanticMemoryConfig | None = None,
     ) -> None:
         self._conversation = conversation
         self._user_profile = user_profile
@@ -52,7 +58,10 @@ class ContextAssembler:
         self._project_memory = project_memory
         self._summarizer = summarizer or MemorySummarizer()
         self._limits = limits or DEFAULT_TOKEN_LIMITS
+        self._memory_search = memory_search
+        self._semantic_config = semantic_config or DEFAULT_SEMANTIC_CONFIG
         self._limits.validate()
+        self._semantic_config.validate()
 
     async def assemble(self, request: ContextAssemblyRequest) -> ContextAssemblyResult:
         history = await self._conversation.list_history(
@@ -76,55 +85,112 @@ class ContextAssembler:
                 )
             ]
 
-        summarized = False
-        history_text = "\n".join(f"{t.role}: {t.content}" for t in history)
-        if estimate_tokens(history_text) > self._limits.history_summarize_at():
-            history_text, history = self._summarizer.summarize_conversation(
-                history,
-                max_tokens=self._limits.max_history_tokens,
-            )
-            summarized = True
+        current_turns = history[-4:] if len(history) > 4 else list(history)
+        older_turns = history[:-4] if len(history) > 4 else []
 
-        history_text = truncate_to_tokens(history_text, self._limits.max_history_tokens)
+        current_text = "\n".join(f"{t.role}: {t.content}" for t in current_turns)
+        current_text = truncate_to_tokens(current_text, self._limits.max_history_tokens // 2)
+
+        summarized = False
+        summarized_history = ""
+        if older_turns:
+            older_text = "\n".join(f"{t.role}: {t.content}" for t in older_turns)
+            if estimate_tokens(older_text) > self._limits.history_summarize_at() // 2:
+                summarized_history, _ = self._summarizer.summarize_conversation(
+                    older_turns,
+                    max_tokens=self._limits.max_history_tokens // 2,
+                )
+                summarized = True
+            else:
+                summarized_history = older_text
+            summarized_history = truncate_to_tokens(
+                summarized_history,
+                self._limits.max_history_tokens // 2,
+            )
+
+        semantic_text = ""
+        important_text = ""
+        recent_text = ""
+        if self._memory_search is not None:
+            filters = MemoryFilters(
+                owner_id=request.user_id,
+                agent_id=request.agent_id,
+                session_id=request.session_id,
+            )
+            query = request.query or request.current_message or ""
+            semantic_hits = await self._memory_search.search(query, filters=filters)
+            important_hits = await self._memory_search.important(filters=filters, limit=5)
+            recent_hits = await self._memory_search.recent(filters=filters, limit=5)
+
+            seen: set[str] = set()
+
+            def _lines(hits: list, label: str) -> str:
+                nonlocal seen
+                rows: list[str] = []
+                for hit in hits:
+                    if hit.entity.id in seen:
+                        continue
+                    seen.add(hit.entity.id)
+                    body = hit.entity.summary or hit.entity.text
+                    rows.append(f"- [{label} score={hit.score:.2f}] {body}")
+                return "\n".join(rows)
+
+            semantic_text = _lines(semantic_hits, "semantic")
+            important_text = _lines(important_hits, "important")
+            recent_text = _lines(recent_hits, "recent")
+
+        else:
+            agent_records = await self._agent_memory.list_memory(
+                agent_id=request.agent_id,
+                user_id=request.user_id,
+                limit=50,
+            )
+            semantic_text = truncate_to_tokens(
+                "\n".join(r.content for r in agent_records),
+                self._limits.max_memory_tokens,
+            )
 
         user_facts = []
         if request.user_id:
             user_facts = await self._user_profile.list_facts(request.user_id, limit=50)
-        profile_text = "\n".join(f"{f.key}: {f.value}" for f in user_facts)
-        profile_text = truncate_to_tokens(profile_text, self._limits.max_profile_tokens)
-
-        agent_records = await self._agent_memory.list_memory(
-            agent_id=request.agent_id,
-            user_id=request.user_id,
-            limit=50,
+        profile_text = truncate_to_tokens(
+            "\n".join(f"{f.key}: {f.value}" for f in user_facts),
+            self._limits.max_profile_tokens,
         )
-        agent_text = "\n".join(r.content for r in agent_records)
-        agent_text = truncate_to_tokens(agent_text, self._limits.max_memory_tokens)
 
-        business_facts = []
+        business_text = ""
         if request.organization_id:
             business_facts = await self._business_memory.list_facts(request.organization_id, limit=50)
-        business_text = "\n".join(f"{f.key}: {f.value}" for f in business_facts)
-        business_text = truncate_to_tokens(business_text, self._limits.max_business_tokens)
+            business_text = truncate_to_tokens(
+                "\n".join(f"{f.key}: {f.value}" for f in business_facts),
+                self._limits.max_business_tokens,
+            )
 
-        project_records = []
+        project_text = ""
         if request.project_id:
             project_records = await self._project_memory.list_memory(request.project_id, limit=50)
-        project_text = "\n".join(r.content for r in project_records)
-        project_text = truncate_to_tokens(project_text, self._limits.max_project_tokens)
+            project_text = truncate_to_tokens(
+                "\n".join(r.content for r in project_records),
+                self._limits.max_project_tokens,
+            )
 
         session_records = await self._session_memory.list_memory(
             session_id=request.session_id,
             user_id=request.user_id,
             limit=50,
         )
-        session_text = "\n".join(r.content for r in session_records)
-        session_text = truncate_to_tokens(session_text, self._limits.max_session_tokens)
+        session_text = truncate_to_tokens(
+            "\n".join(r.content for r in session_records),
+            self._limits.max_session_tokens,
+        )
 
         sections = {
-            "conversation_history": history_text,
+            "current_conversation": current_text,
+            "semantic_memories": semantic_text,
+            "important_memories": important_text,
+            "recent_memories": recent_text,
+            "summarized_history": summarized_history,
             "user_profile": profile_text,
-            "agent_memory": agent_text,
             "business_facts": business_text,
             "project_memory": project_text,
             "session_memory": session_text,
@@ -132,16 +198,20 @@ class ContextAssembler:
         }
 
         prompt_parts = [
-            ("Conversation", history_text),
+            ("Current conversation", current_text),
+            ("Semantic memories", semantic_text),
+            ("Important memories", important_text),
+            ("Recent memories", recent_text),
+            ("Summarized history", summarized_history),
             ("User profile", profile_text),
-            ("Agent memory", agent_text),
             ("Business facts", business_text),
             ("Project memory", project_text),
             ("Session memory", session_text),
         ]
+        max_tokens = min(self._limits.max_context_tokens, self._semantic_config.max_context_tokens)
         prompt_context = self._build_prompt(prompt_parts)
-        if estimate_tokens(prompt_context) > self._limits.max_context_tokens:
-            prompt_context = truncate_to_tokens(prompt_context, self._limits.max_context_tokens)
+        if estimate_tokens(prompt_context) > max_tokens:
+            prompt_context = truncate_to_tokens(prompt_context, max_tokens)
             summarized = True
 
         return ContextAssemblyResult(
@@ -179,14 +249,26 @@ class ContextAssembler:
             user_id=request.user_id,
             limit=50,
         )
-        agent_records = await self._agent_memory.list_memory(
-            agent_id=request.agent_id,
-            user_id=request.user_id,
-            limit=20,
-        )
+
+        semantic_memory: list[dict] = []
+        if self._memory_search is not None:
+            filters = MemoryFilters(
+                owner_id=request.user_id,
+                agent_id=request.agent_id,
+                session_id=request.session_id,
+            )
+            query = request.query or request.current_message or ""
+            semantic_memory = [hit.to_dict() for hit in await self._memory_search.search(query, filters=filters)]
+        else:
+            agent_records = await self._agent_memory.list_memory(
+                agent_id=request.agent_id,
+                user_id=request.user_id,
+                limit=20,
+            )
+            semantic_memory = [r.to_dict() for r in agent_records]
 
         return AIContextBundle(
-            relevant_memory=[r.to_dict() for r in agent_records],
+            relevant_memory=semantic_memory,
             conversation_history=[
                 {"role": t.role, "content": t.content, "timestamp": t.created_at} for t in history
             ],

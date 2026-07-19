@@ -15,6 +15,7 @@ Enterprise CRM platform with Telegram bot integration, PostgreSQL persistence, a
 | Services | `services/` | Business logic (no direct HTTP exposure) |
 | Repositories | `repositories/` | PostgreSQL data access |
 | Certification | `platform_certification/` | Sprint 1.5 release gates |
+| Platform Memory | `platform_memory/` | AI Memory & Context Engine (Sprint 2.1–2.2) |
 
 ## Project structure
 
@@ -23,6 +24,7 @@ TelegramBotCourse/
 ├── startup.py                 # Production entry (bot + API server)
 ├── api/server.py              # HTTP app factory
 ├── platform_management/       # /management/v1 authenticated API
+├── platform_memory/           # Semantic AI memory & context engine
 ├── platform_architecture/     # Governance validators
 ├── platform_plugin_sdk/       # Plugin extension SDK
 ├── events/                    # PlatformEventBus + CRM publisher
@@ -95,4 +97,5 @@ TelegramBotCourse/
 - `docs/ARCHITECTURE_BASELINE.md` — frozen RC1 architecture baseline
 - `docs/architecture_baseline/` — module, dependency, service, import graphs
 - `ARCHITECTURE_REPORT.md` — governance audit output
-- `platform_manifest.json` — machine-readable platform manifest
+- `docs/architecture/PLATFORM_MEMORY.md` — memory engine architecture (Sprint 2.1)
+- `docs/architecture/SEMANTIC_MEMORY_REPORT.md` — semantic memory report (Sprint 2.2)

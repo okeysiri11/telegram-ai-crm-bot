@@ -145,7 +145,7 @@ async def test_context_assembler_builds_all_sections(providers):
             current_message="What options do we have?",
         )
     )
-    assert "Conversation" in result.prompt_context
+    assert "Current conversation" in result.prompt_context
     assert "company" in result.prompt_context
     assert "electric" in result.prompt_context
     assert "region" in result.prompt_context

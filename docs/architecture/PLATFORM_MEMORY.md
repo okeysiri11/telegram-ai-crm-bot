@@ -117,12 +117,25 @@ Published via `PlatformEventBus`:
 - `platform_ai/memory/memory_context.py` delegates to `platform_memory.ContextAssembler`.
 - `platform_ai/memory/memory_service.build_ai_context()` enriches with knowledge retrieval.
 
-## Future Work (Sprint 2.2+)
+## Sprint 2.2 — Semantic Memory (completed)
 
-- `PostgreSQLMemoryProvider` implementing all provider interfaces
-- Vector embedding store behind `AgentMemoryProvider`
+See [SEMANTIC_MEMORY_REPORT.md](SEMANTIC_MEMORY_REPORT.md).
+
+| Component | Path |
+|-----------|------|
+| MemoryEntity | `entities.py` |
+| MemoryRepository | `repositories/memory_repository.py` |
+| InMemoryMemoryRepository | `repositories/in_memory_semantic_repository.py` |
+| DummyEmbeddingProvider | `providers/embedding_provider.py` |
+| MemorySearchService | `search/memory_search_service.py` |
+| SemanticMemoryConfig | `config.py` |
+
+## Future Work (Sprint 2.3+)
+
+- pgvector / Qdrant / Milvus / Weaviate `MemoryRepository` adapters
 - Migration from `database/models/ai_agents.py` `AiAgentMemory` to unified schema
 - LLM-backed summarization provider (replace extractive default)
+- Background TTL eviction for expired memories
 
 ## Certification Impact
 

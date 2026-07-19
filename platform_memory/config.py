@@ -29,3 +29,30 @@ class TokenLimits:
 
 
 DEFAULT_TOKEN_LIMITS = TokenLimits()
+
+
+@dataclass(frozen=True)
+class SemanticMemoryConfig:
+    """Semantic search and context assembly tuning."""
+
+    max_context_tokens: int = 4096
+    max_memories: int = 20
+    similarity_threshold: float = 0.35
+    importance_weight: float = 0.3
+    recency_weight: float = 0.2
+    keyword_fallback_min_score: float = 0.1
+
+    def validate(self) -> None:
+        if self.max_context_tokens <= 0:
+            raise ValueError("max_context_tokens must be positive")
+        if self.max_memories <= 0:
+            raise ValueError("max_memories must be positive")
+        if not 0 <= self.similarity_threshold <= 1:
+            raise ValueError("similarity_threshold must be in [0, 1]")
+        if not 0 <= self.importance_weight <= 1:
+            raise ValueError("importance_weight must be in [0, 1]")
+        if not 0 <= self.recency_weight <= 1:
+            raise ValueError("recency_weight must be in [0, 1]")
+
+
+DEFAULT_SEMANTIC_CONFIG = SemanticMemoryConfig()
