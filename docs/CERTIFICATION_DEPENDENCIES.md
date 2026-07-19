@@ -1,6 +1,6 @@
 # Dependency Certification
 
-> Generated: 2026-07-19 12:58:24 UTC
+> Generated: 2026-07-19 13:07:17 UTC
 
 ## Verdict: **PASS**
 
@@ -10,16 +10,16 @@
 |--------|------:|
 | Modules | 804 |
 | Edges | 2620 |
-| All cycles | 76 |
+| All cycles | 88 |
 | Strict governance cycles | 0 |
 
 ## Cycle Categories
 
-- **config_legacy**: 6
-- **legacy_pg_engines**: 45
+- **other**: 7
+- **config_legacy**: 18
 - **orm_models**: 9
-- **other**: 8
-- **platform_core**: 8
+- **legacy_pg_engines**: 47
+- **platform_core**: 7
 
 ## Governed-Layer Cycles
 

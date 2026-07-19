@@ -1,6 +1,6 @@
 # Platform v1.0 — Sprint 1.5 Certification Report
 
-> Generated: 2026-07-19 12:58:24 UTC
+> Generated: 2026-07-19 13:07:17 UTC
 
 ## Final Verdict
 
@@ -54,5 +54,5 @@
 
 ## Release Candidate
 
-RC1 tag **platform-core-v1.0.0-rc1** ready.
+RC1 tag **platform-core-v1.0-rc1** created.
 

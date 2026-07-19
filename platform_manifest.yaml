@@ -1,5 +1,5 @@
 manifest_version: 1.0.0
-generated_at: '2026-07-19T12:58:24.384016+00:00'
+generated_at: '2026-07-19T13:07:17.219550+00:00'
 platform_core:
   version: 1.0.0-rc0
   architecture_version: 1.0.0
@@ -83,20 +83,20 @@ certification:
       gate_failures: []
   - check_id: dependency_audit
     passed: true
-    message: strict_cycles=0 all_cycles=76 import_critical=0
+    message: strict_cycles=0 all_cycles=88 import_critical=0
     evidence: []
     metadata:
-      all_cycles: 76
+      all_cycles: 88
       governed_cycles: 0
       strict_governance_cycles: 0
       nodes: 804
       edges: 2620
       cycle_categories:
-        config_legacy: 6
-        legacy_pg_engines: 45
+        other: 7
+        config_legacy: 18
         orm_models: 9
-        other: 8
-        platform_core: 8
+        legacy_pg_engines: 47
+        platform_core: 7
   - check_id: canonical_event_bus
     passed: true
     message: direct_crm_publishers=0 adapter_wired=True
@@ -119,15 +119,16 @@ certification:
     passed: true
     message: pytest security exit=0 admin_security_test=True
     evidence:
-    - ''
-    - '-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html'
-    - 37 passed, 8 warnings in 3.20s
+    - '/Users/macbook/Desktop/TelegramBotCourse/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33:
+      RuntimeWarning: coroutine ''Connection._cancel'' was never awaited'
+    - '  gc.collect()'
+    - 'RuntimeWarning: Enable tracemalloc to get the object allocation traceback'
     metadata:
-      duration_sec: 4.35
+      duration_sec: 3.88
       has_admin_security_suite: true
   - check_id: pytest_suite
     passed: true
-    message: 497 passed, 5 skipped, 1 deselected, 23 warnings in 270.69s (0:04:30)
+    message: 498 passed, 5 skipped, 30 warnings in 2136.79s (0:35:36)
     evidence:
     - '  /Users/macbook/Desktop/TelegramBotCourse/platform_events_legacy.py:242: DeprecationWarning:
       datetime.datetime.utcnow() is deprecated and scheduled for removal in a future
@@ -135,31 +136,31 @@ certification:
     - '    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")'
     - ''
     - '-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html'
-    - 497 passed, 5 skipped, 1 deselected, 23 warnings in 270.69s (0:04:30)
+    - 498 passed, 5 skipped, 30 warnings in 2136.79s (0:35:36)
     metadata:
-      duration_sec: 272.7
-      passed_count: 497
+      duration_sec: 2138.4
+      passed_count: 498
 metrics:
   module_count_graph: 804
   dependency_edges: 2620
-  all_cycles: 76
+  all_cycles: 88
   strict_governance_cycles: 0
   governance_score: 99.5
   governance_grade: PASS
-  startup_probe_sec: 0.013
+  startup_probe_sec: 0.01
   test_count: 503
   python_files: 6420
   cycle_categories:
-    config_legacy: 6
-    legacy_pg_engines: 45
+    other: 7
+    config_legacy: 18
     orm_models: 9
-    other: 8
-    platform_core: 8
+    legacy_pg_engines: 47
+    platform_core: 7
 integrity_hashes:
   platform_api_contracts: 9b13a996e09170b4e6d2899a7b5b17caf991697c0ca08db4d7404eb1916dd364
   platform_plugin_sdk_init: 79a5972718aab72868ecd68bb1b993d6c256d6e859c1304bf3ff2843559bff66
   platform_architecture_governance: a32ea2964387af1e5da77afbdfae274a643a073c0590921465d0120ca7c48f2d
-  platform_manifest_self: 3525b88d461d2615e808adc0357ae3384ac475e3c543e273914fa4a0ff26bc1b
+  platform_manifest_self: 04e266116feca11353a0f779dbde2d75cc2e8aecefe03e3df2fd6796527cae96
 agents:
   description: Authoritative platform metadata for AI agents, CI/CD, and vertical
     modules

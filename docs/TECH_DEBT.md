@@ -1,13 +1,13 @@
 # Platform Technical Debt Register
 
-> Generated: 2026-07-19 12:58:24 UTC
+> Generated: 2026-07-19 13:07:17 UTC
 
 ## P0 — Blocks Certification
 
 
 ## P1 — Sprint 2
 
-- Legacy pg engine dependency cycles (45)
+- Legacy pg engine dependency cycles (47)
 - Handler DB direct access (4 allowlisted files)
 - WorkflowEngine name collision (legacy adapter alias)
 - Event bus direct crm_event_bus imports in pg engines

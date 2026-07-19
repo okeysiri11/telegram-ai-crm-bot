@@ -1,6 +1,6 @@
 # Security Certification
 
-> Generated: 2026-07-19 12:58:24 UTC
+> Generated: 2026-07-19 13:07:17 UTC
 
 ## Verdict: **PASS**
 
@@ -23,6 +23,6 @@
 
 ## Security Test Evidence
 
-- ``
-- `-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html`
-- `37 passed, 8 warnings in 3.20s`
+- `/Users/macbook/Desktop/TelegramBotCourse/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: RuntimeWarning: coroutine 'Connection._cancel' was never awaited`
+- `  gc.collect()`
+- `RuntimeWarning: Enable tracemalloc to get the object allocation traceback`
