@@ -22,6 +22,7 @@
     "platform_jobs",
     "platform_legacy",
     "platform_management",
+    "platform_memory",
     "platform_observability",
     "platform_operations",
     "platform_plugin_sdk",

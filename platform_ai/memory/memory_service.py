@@ -77,6 +77,9 @@ class MemoryService:
         memory_retriever.reset()
         embedding_registry.reset()
         memory_registry.reset()
+        from platform_memory.memory_service import memory_service as platform_memory_service
+
+        platform_memory_service.reset()
         self._initialized = False
 
     def initialize(self) -> None:
@@ -179,7 +182,16 @@ class MemoryService:
 
     async def build_ai_context(self, **kwargs: Any) -> AIContextBundle:
         self.initialize()
-        return await memory_context_builder.build(**kwargs)
+        from platform_memory.memory_service import memory_service as platform_memory_service
+
+        bundle = await platform_memory_service.build_ai_context(**kwargs)
+        return AIContextBundle(
+            relevant_memory=bundle.relevant_memory,
+            relevant_knowledge=bundle.relevant_knowledge,
+            conversation_history=bundle.conversation_history,
+            plugin_context=bundle.plugin_context,
+            configuration=bundle.configuration,
+        )
 
     async def inject_context(self, context: dict[str, Any], **kwargs: Any) -> dict[str, Any]:
         """Merge memory/knowledge bundle into an existing AI execution context."""

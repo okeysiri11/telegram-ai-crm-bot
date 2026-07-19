@@ -1,12 +1,11 @@
-# AI context builder — injects memory & knowledge into Skills and Workflows.
+# AI context builder — delegates to platform_memory ContextAssembler.
 
 from __future__ import annotations
 
 from typing import Any
 
-from platform_ai.memory.memory_store import memory_store
-from platform_ai.memory.models import AIContextBundle, MemoryType
-from platform_ai.memory.memory_retriever import memory_retriever
+from platform_memory.memory_service import memory_service as platform_memory_service
+from platform_ai.memory.models import AIContextBundle
 
 
 class MemoryContextBuilder:
@@ -18,45 +17,32 @@ class MemoryContextBuilder:
         user_id: str | None = None,
         workflow_id: str | None = None,
         session_id: str | None = None,
+        agent_id: str | None = None,
+        organization_id: str | None = None,
+        project_id: str | None = None,
         configuration: dict[str, Any] | None = None,
         limit: int = 5,
     ) -> AIContextBundle:
-        search_query = query or f"plugin:{plugin_id} user:{user_id}"
-
-        results = await memory_retriever.search(
-            search_query,
-            plugin_id=plugin_id,
-            user_id=user_id,
-            limit=limit,
-            use_cache=True,
-        )
-
-        relevant_memory = [r.to_dict() for r in results if r.source_type == "memory"]
-        relevant_knowledge = [r.to_dict() for r in results if r.source_type == "knowledge"]
-
-        conversation = memory_store.list_all(
-            memory_type=MemoryType.CONVERSATION.value,
+        bundle = await platform_memory_service.build_ai_context(
+            query=query,
             plugin_id=plugin_id,
             user_id=user_id,
             session_id=session_id,
+            agent_id=agent_id or workflow_id,
+            organization_id=organization_id,
+            project_id=project_id,
+            configuration=configuration,
+            limit=limit,
         )
-        conversation_history = [
-            {"role": m.metadata.get("role", "user"), "content": m.content, "timestamp": m.created_at}
-            for m in conversation[:20]
-        ]
-
-        workflow_memory = []
-        if workflow_id:
-            wf_records = memory_store.list_all(memory_type=MemoryType.WORKFLOW.value, workflow_id=workflow_id)
-            workflow_memory = [m.to_dict() for m in wf_records[:10]]
-            relevant_memory = workflow_memory + relevant_memory
-
         return AIContextBundle(
-            relevant_memory=relevant_memory[:limit],
-            relevant_knowledge=relevant_knowledge[:limit],
-            conversation_history=conversation_history,
-            plugin_context={"plugin_id": plugin_id, "user_id": user_id, "workflow_id": workflow_id},
-            configuration=dict(configuration or {}),
+            relevant_memory=bundle.relevant_memory[:limit],
+            relevant_knowledge=bundle.relevant_knowledge[:limit],
+            conversation_history=bundle.conversation_history,
+            plugin_context={
+                **bundle.plugin_context,
+                "workflow_id": workflow_id,
+            },
+            configuration=bundle.configuration,
         )
 
 
