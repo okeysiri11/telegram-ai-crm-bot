@@ -106,3 +106,33 @@ flowchart TB
 **Future backends:** pgvector, Qdrant, Milvus, Weaviate — implement `MemoryRepository` + `EmbeddingProvider` without changing services.
 
 Full details: [PLATFORM_MEMORY.md](architecture/PLATFORM_MEMORY.md), [SEMANTIC_MEMORY_REPORT.md](architecture/SEMANTIC_MEMORY_REPORT.md).
+
+## Platform Multi-Agent Orchestrator (Sprint 2.3)
+
+```mermaid
+flowchart TB
+    PO[PlatformOrchestrator]
+    CR[CapabilityRouter]
+    AR[AgentRegistry]
+    MB[AgentMessageBus]
+    AG[BaseAgent implementations]
+
+    PO --> CR
+    PO --> AR
+    PO --> MB
+    CR --> AR
+    AR --> AG
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| BaseAgent | `platform_orchestrator/base_agent.py` | Abstract agent contract |
+| AgentRegistry | `platform_orchestrator/agent_registry.py` | Agent discovery and lifecycle |
+| CapabilityRouter | `platform_orchestrator/capability_routing.py` | Route by capability (not name) |
+| PlatformOrchestrator | `platform_orchestrator/orchestrator.py` | Central execution engine |
+| AgentMessageBus | `platform_orchestrator/message_bus.py` | Inter-agent messaging |
+| Built-in agents | `platform_orchestrator/agents/builtin.py` | 8 vertical agent stubs |
+
+**Routing:** capability-based (e.g. `buy_car` → Auto Agent, `legal_contract` → Legal Agent).
+
+Full details: [ORCHESTRATOR.md](architecture/ORCHESTRATOR.md), [ORCHESTRATOR_REPORT.md](architecture/ORCHESTRATOR_REPORT.md).
