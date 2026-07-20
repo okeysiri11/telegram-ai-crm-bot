@@ -230,3 +230,25 @@ flowchart LR
 | ConfidenceEstimator | `platform_reasoning/confidence.py` | Multi-dimensional confidence |
 
 Full details: [REASONING.md](../REASONING.md).
+
+## Platform Planning Engine (Sprint 4.2)
+
+```mermaid
+flowchart LR
+    PE[PlanningEngine]
+    PP[Pipeline]
+    PV[PlanValidator]
+    RE[ReplanningEngine]
+
+    PE --> PP --> PV
+    PE --> RE
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| PlanningEngine | `platform_planning/planning_engine.py` | Goal → execution plan |
+| PlanValidator | `platform_planning/validator.py` | Dependency & resource checks |
+| ReplanningEngine | `platform_planning/replanning.py` | Adaptive recovery |
+| Strategies | `platform_planning/strategies/` | 6 planning strategies |
+
+Full details: [PLANNING.md](../PLANNING.md).

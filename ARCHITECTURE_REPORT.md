@@ -1,17 +1,17 @@
 # Architecture Report
 
-> Generated automatically on 2026-07-20 06:50:50 UTC
+> Generated automatically on 2026-07-20 06:57:58 UTC
 
 ## Executive Summary
 
 - **Grade:** PASS
 - **Architecture Score:** 99.5/100
 - **Quality Gates:** PASSED
-- **Modules in graph:** 892
-- **Dependency edges:** 2864
+- **Modules in graph:** 905
+- **Dependency edges:** 2902
 - **Cycles:** 0
 
-Architecture score 99.5/100 — PASS. Modules=892, edges=2864, cycles=0.
+Architecture score 99.5/100 — PASS. Modules=905, edges=2902, cycles=0.
 
 ## Validation Summary
 
@@ -22,7 +22,7 @@ Architecture score 99.5/100 — PASS. Modules=892, edges=2864, cycles=0.
 | workflows | PASS | 100.0% | 0 critical / 1 total |
 | api | PASS | 100.0% | 0 critical / 0 total |
 | sdk | PASS | 100.0% | 0 critical / 0 total |
-| dependencies | PASS | 97.56% | 0 critical / 90 total |
+| dependencies | PASS | 97.52% | 0 critical / 92 total |
 | legacy | PASS | 100.0% | 0 critical / 0 total |
 
 ## Dependency Graph
@@ -93,7 +93,7 @@ flowchart TD
     events_event_bus_py[events/event_bus.py]
     events_generic_events_py[events/generic_events.py]
     events_handlers_audit_handler_py[events/handlers/audit_handler.py]
-    services_more[...+323 modules]
+    services_more[...+334 modules]
   end
   subgraph shared[shared]
     database___init___py[database/__init__.py]
@@ -104,7 +104,7 @@ flowchart TD
     events_handlers___init___py[events/handlers/__init__.py]
     platform_agents___init___py[platform_agents/__init__.py]
     platform_agents_agents___init___py[platform_agents/agents/__init__.py]
-    shared_more[...+58 modules]
+    shared_more[...+60 modules]
   end
   subgraph unknown[unknown]
     services_agro_deal_lifecycle_py[services/agro_deal_lifecycle.py]
@@ -148,6 +148,8 @@ flowchart TD
 - **[reverse_layer_dependency]** `platform_sdk/bootstrap.py` — services imports shared via platform_sdk.verticals
 - **[reverse_layer_dependency]** `platform_sdk/notification_provider.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_sdk/validation_provider.py` — services imports shared via platform_legacy
+- **[reverse_layer_dependency]** `platform_planning/integrations.py` — services imports shared via platform_workflow
+- **[reverse_layer_dependency]** `platform_planning/integrations.py` — services imports shared via platform_reasoning
 - **[reverse_layer_dependency]** `repositories/assignment_score_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/base_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/request_repository.py` — repositories imports services via src.platform.layers.base_repository
@@ -160,8 +162,6 @@ flowchart TD
 - **[reverse_layer_dependency]** `repositories/kpi_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/partner_repository.py` — repositories imports shared via database
 - **[reverse_layer_dependency]** `repositories/event_repository.py` — repositories imports shared via events
-- **[reverse_layer_dependency]** `repositories/escalation_repository.py` — repositories imports services via src.platform.layers.base_repository
-- **[reverse_layer_dependency]** `repositories/event_bus_repository.py` — repositories imports services via platform_configuration.event_bus_policy
 
 ## Certification Categories
 
