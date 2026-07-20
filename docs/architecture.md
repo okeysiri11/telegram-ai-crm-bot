@@ -388,3 +388,34 @@ flowchart LR
 | TelemetryCollector | `platform_observability/telemetry_collector.py` | Telemetry + alert thresholds |
 
 Full details: [OBSERVABILITY.md](../OBSERVABILITY.md).
+
+---
+
+## Reliability Layer (Sprint 5.3)
+
+```mermaid
+flowchart LR
+    RM[ReliabilityManager]
+    RY[RetryManager]
+    CB[CircuitBreaker]
+    RC[RecoveryManager]
+    CP[CheckpointManager]
+    HS[HealthSupervisor]
+
+    RM --> RY
+    RM --> CB
+    RM --> RC --> CP
+    RM --> HS
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| ReliabilityManager | `platform_reliability/reliability_manager.py` | Unified reliability entry |
+| RetryManager | `platform_reliability/retry_manager.py` | Exponential/linear retry |
+| CircuitBreaker | `platform_reliability/circuit_breaker.py` | Fault isolation |
+| RecoveryManager | `platform_reliability/recovery_manager.py` | Recovery orchestration |
+| CheckpointManager | `platform_reliability/checkpoint_manager.py` | Snapshots & restore |
+| FailoverManager | `platform_reliability/failover_manager.py` | Agent/tool/workflow failover |
+| HealthSupervisor | `platform_reliability/health_supervisor.py` | Continuous health monitoring |
+
+Full details: [RELIABILITY.md](../RELIABILITY.md).

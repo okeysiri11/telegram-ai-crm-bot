@@ -2,8 +2,8 @@
   "manifest_version": "1.0.0",
   "generated_at": "2026-07-19T13:07:17.219550+00:00",
   "platform_core": {
-    "version": "2.6.0-alpha",
-    "platform_version": "2.6.0-alpha",
+    "version": "2.7.0-alpha",
+    "platform_version": "2.7.0-alpha",
     "architecture_version": "1.0.0",
     "api_contract_version": "1.0.0",
     "api_version": "v1",
@@ -26,7 +26,9 @@
     "security_layer": "1.0",
     "observability_layer": "1.0",
     "monitoring_engine": "1.0",
-    "telemetry_engine": "1.0"
+    "telemetry_engine": "1.0",
+    "reliability_layer": "1.0",
+    "recovery_engine": "1.0"
   },
   "modules": [
     "events",
@@ -53,6 +55,7 @@
     "platform_plugin_sdk",
     "platform_plugins",
     "platform_realtime",
+    "platform_reliability",
     "platform_reasoning",
     "platform_security",
     "platform_sdk",
