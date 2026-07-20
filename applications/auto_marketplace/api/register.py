@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.auto_marketplace.api import ai_sales_handlers, bi_handlers, catalog_handlers, crm_handlers, finance_handlers, internal_handlers, portal_handlers, rest_handlers, webhooks
+from applications.auto_marketplace.api import ai_sales_handlers, bi_handlers, catalog_handlers, crm_handlers, finance_handlers, internal_handlers, ops_handlers, portal_handlers, rest_handlers, webhooks
 from applications.auto_marketplace.api.middleware import auth_middleware
 from applications.auto_marketplace.config import DEFAULT_CONFIG
 
@@ -196,6 +196,28 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{partner}/inspection/schedule", portal_handlers.partner_inspection_handler)
     app.router.add_post(f"{partner}/logistics/schedule", portal_handlers.partner_logistics_handler)
     app.router.add_post(f"{partner}/webhooks", portal_handlers.partner_webhook_handler)
+
+    # Sprint 6.8 — Production Release & Operations
+    ops = f"{prefix}/ops"
+    app.router.add_get(f"{ops}/health", ops_handlers.ops_health_handler)
+    app.router.add_get(f"{ops}/ready", ops_handlers.ops_readiness_handler)
+    app.router.add_get(f"{ops}/live", ops_handlers.ops_liveness_handler)
+    app.router.add_get(f"{ops}/metrics", ops_handlers.ops_metrics_handler)
+    app.router.add_get(f"{ops}/release/report", ops_handlers.release_report_handler)
+    app.router.add_get(f"{ops}/release/manifest", ops_handlers.release_manifest_handler)
+    app.router.add_get(f"{ops}/deployment/checklist", ops_handlers.deployment_checklist_handler)
+    app.router.add_get(f"{ops}/deployment/preflight", ops_handlers.deployment_preflight_handler)
+    app.router.add_get(f"{ops}/deployment/rollback", ops_handlers.rollback_procedure_handler)
+    app.router.add_post(f"{ops}/backups", ops_handlers.backup_create_handler)
+    app.router.add_get(f"{ops}/backups/procedures", ops_handlers.backup_procedures_handler)
+    app.router.add_get(f"{ops}/maintenance", ops_handlers.maintenance_status_handler)
+    app.router.add_post(f"{ops}/maintenance/enable", ops_handlers.maintenance_enable_handler)
+    app.router.add_post(f"{ops}/maintenance/disable", ops_handlers.maintenance_disable_handler)
+    app.router.add_get(f"{ops}/support", ops_handlers.support_guide_handler)
+    app.router.add_get(f"{ops}/guides/admin", ops_handlers.admin_guide_handler)
+    app.router.add_get(f"{ops}/guides/user", ops_handlers.user_guide_handler)
+    app.router.add_get(f"{ops}/incidents", ops_handlers.incident_guide_handler)
+    app.router.add_get(f"{ops}/observability", ops_handlers.observability_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/health", internal_handlers.internal_health_handler)

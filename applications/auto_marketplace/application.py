@@ -30,6 +30,7 @@ from applications.auto_marketplace.pricing.service import (
     pricing_service,
     recommendation_service,
 )
+from applications.auto_marketplace.release.engine import ProductionEngine, production_engine
 from applications.auto_marketplace.search.service import SearchService, search_service
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 from applications.auto_marketplace.vehicle_catalog.service import VehicleCatalogService, vehicle_catalog_service
@@ -66,6 +67,7 @@ class AutoMarketplaceApplication:
         finance_engine_svc: FinanceEngine | None = None,
         bi_engine_svc: BIEngine | None = None,
         portal_engine_svc: PortalEngine | None = None,
+        production_engine_svc: ProductionEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -92,15 +94,20 @@ class AutoMarketplaceApplication:
         self.finance_engine = finance_engine_svc or finance_engine
         self.bi_engine = bi_engine_svc or bi_engine
         self.portal_engine = portal_engine_svc or portal_engine
+        self.production_engine = production_engine_svc or production_engine
 
     def reset(self) -> None:
         self.store.reset()
         self.notifications.reset()
+        self.production_engine.maintenance.disable()
 
     def health(self) -> dict[str, Any]:
         return {
             "application": "auto_marketplace",
             "application_version": self.config.application_version,
+            "release_status": self.config.release_status,
+            "platform_dependency": self.config.platform_dependency,
+            "maintenance_mode": self.production_engine.maintenance.enabled,
             "api_version": self.config.api_version,
             "metrics": self.analytics.dashboard_metrics(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),

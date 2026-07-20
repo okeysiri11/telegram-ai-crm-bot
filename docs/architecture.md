@@ -649,3 +649,27 @@ flowchart LR
 | PartnerAPI | `applications/auto_marketplace/partner_api/` | External integrations |
 
 Full details: [CUSTOMER_PORTAL.md](../CUSTOMER_PORTAL.md).
+
+---
+
+## Production Release (Sprint 6.8)
+
+```mermaid
+flowchart LR
+    PROD[ProductionEngine]
+    QA[QualityAssurance]
+    OPS[Operations]
+
+    PROD --> QA
+    PROD --> OPS
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| ProductionEngine | `applications/auto_marketplace/release/engine.py` | Validation & go-live |
+| QualityAssurance | `applications/auto_marketplace/quality_assurance/` | Validation, performance, security |
+| Operations | `applications/auto_marketplace/monitoring/` | Health probes, incident guide |
+
+**Version 2.0.0 — Production Ready**
+
+Full details: [PRODUCTION_RELEASE.md](../PRODUCTION_RELEASE.md).

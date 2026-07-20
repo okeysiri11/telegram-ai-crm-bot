@@ -14,7 +14,9 @@ class AutoMarketplaceConfig:
     default_currency: str = "USD"
     enable_ai_recommendations: bool = True
     enable_auctions: bool = True
-    application_version: str = "1.6.0-alpha"
+    application_version: str = "2.0.0"
+    release_status: str = "Production Ready"
+    platform_dependency: str = "AI Platform Core v3.0"
     mobile_api_prefix: str = "/api/auto/mobile/v1"
     partner_api_prefix: str = "/api/auto/partner/v1"
     portal_prefix: str = "/api/auto/v1/portal"
