@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.auto_marketplace.ai_sales.engine import AISalesEngine, ai_sales_engine
 from applications.auto_marketplace.analytics.service import AnalyticsService, analytics_service
 from applications.auto_marketplace.catalog.service import CatalogService, catalog_service
 from applications.auto_marketplace.config import DEFAULT_CONFIG, AutoMarketplaceConfig
@@ -58,6 +59,7 @@ class AutoMarketplaceApplication:
         media: MediaService | None = None,
         search_engine_svc: SearchEngine | None = None,
         crm_engine_svc: CRMEngine | None = None,
+        ai_sales_engine_svc: AISalesEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -80,6 +82,7 @@ class AutoMarketplaceApplication:
         self.media = media or media_service
         self.search_engine = search_engine_svc or search_engine
         self.crm_engine = crm_engine_svc or crm_engine
+        self.ai_sales_engine = ai_sales_engine_svc or ai_sales_engine
 
     def reset(self) -> None:
         self.store.reset()
@@ -94,6 +97,8 @@ class AutoMarketplaceApplication:
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),
             "crm_deals": self.store.crm_deals.count(),
+            "ai_conversations": self.store.conversation_sessions.count(),
+            "ai_offers": self.store.ai_offers.count(),
         }
 
 

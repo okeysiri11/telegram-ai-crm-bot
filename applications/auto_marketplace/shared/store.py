@@ -68,6 +68,11 @@ class MarketplaceStore:
         self.reminders: EntityStore = EntityStore()
         self.sales_agents: EntityStore = EntityStore()
         self.sales_teams: EntityStore = EntityStore()
+        # Sprint 6.4 — AI Sales & Customer Intelligence
+        self.conversation_sessions: EntityStore = EntityStore()
+        self.intelligence_profiles: EntityStore = EntityStore()
+        self.ai_offers: EntityStore = EntityStore()
+        self.knowledge_articles: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for store in (
@@ -103,6 +108,10 @@ class MarketplaceStore:
             self.reminders,
             self.sales_agents,
             self.sales_teams,
+            self.conversation_sessions,
+            self.intelligence_profiles,
+            self.ai_offers,
+            self.knowledge_articles,
         ):
             store.reset()
 

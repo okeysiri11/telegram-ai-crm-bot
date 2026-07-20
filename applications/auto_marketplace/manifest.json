@@ -1,6 +1,6 @@
 {
   "application": "auto_marketplace",
-  "application_version": "1.2.0-alpha",
+  "application_version": "1.3.0-alpha",
   "platform_version": "3.0.0",
   "modules": {
     "vehicle_catalog": "1.0",
@@ -15,6 +15,13 @@
     "activities": "1.0",
     "communications": "1.0",
     "tasks": "1.0",
-    "calendar": "1.0"
+    "calendar": "1.0",
+    "ai_sales": "1.0",
+    "customer_intelligence": "1.0",
+    "recommendations": "1.0",
+    "conversation": "1.0",
+    "lead_intelligence": "1.0",
+    "negotiation": "1.0",
+    "knowledge": "1.0"
   }
 }

@@ -21,7 +21,10 @@ _PERMISSIONS: dict[CRMRole, set[str]] = {
     },
     CRMRole.DEALER: {"crm.read", "leads.read", "deals.read", "customers.read"},
     CRMRole.CUSTOMER: {"crm.read.self", "deals.read.self"},
-    CRMRole.AI_AGENT: {"crm.read", "leads.read", "leads.score", "deals.predict", "tasks.suggest"},
+    CRMRole.AI_AGENT: {
+        "crm.read", "leads.read", "leads.write", "leads.score", "leads.manage",
+        "deals.read", "deals.predict", "deals.write", "tasks.suggest",
+    },
 }
 
 

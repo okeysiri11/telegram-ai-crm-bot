@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.auto_marketplace.api import catalog_handlers, crm_handlers, internal_handlers, rest_handlers, webhooks
+from applications.auto_marketplace.api import ai_sales_handlers, catalog_handlers, crm_handlers, internal_handlers, rest_handlers, webhooks
 from applications.auto_marketplace.api.middleware import auth_middleware
 from applications.auto_marketplace.config import DEFAULT_CONFIG
 
@@ -84,6 +84,32 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{crm}/activities/calls", crm_handlers.log_call_handler)
     app.router.add_post(f"{crm}/activities/emails", crm_handlers.log_email_handler)
     app.router.add_post(f"{crm}/calendar/meetings", crm_handlers.schedule_meeting_handler)
+
+    # Sprint 6.4 — AI Sales Agents & Customer Intelligence
+    ai = f"{prefix}/ai"
+    app.router.add_get(f"{ai}/metrics", ai_sales_handlers.ai_sales_metrics_handler)
+    app.router.add_post(f"{ai}/agents/dispatch", ai_sales_handlers.dispatch_agent_handler)
+    app.router.add_get(f"{ai}/customers/{{customer_id}}/intelligence", ai_sales_handlers.customer_intelligence_handler)
+    app.router.add_get(f"{ai}/customers/{{customer_id}}/intent", ai_sales_handlers.customer_intent_handler)
+    app.router.add_get(f"{ai}/customers/{{customer_id}}/communications", ai_sales_handlers.customer_communication_history_handler)
+    app.router.add_get(f"{ai}/customers/{{customer_id}}/recommendations", ai_sales_handlers.recommendations_personalized_handler)
+    app.router.add_get(f"{ai}/customers/{{customer_id}}/recommendations/cross-sell", ai_sales_handlers.recommendations_cross_sell_handler)
+    app.router.add_get(f"{ai}/customers/{{customer_id}}/recommendations/trade-in", ai_sales_handlers.recommendations_trade_in_handler)
+    app.router.add_get(f"{ai}/vehicles/{{vehicle_id}}/recommendations/alternatives", ai_sales_handlers.recommendations_alternatives_handler)
+    app.router.add_get(f"{ai}/vehicles/{{vehicle_id}}/recommendations/accessories", ai_sales_handlers.recommendations_accessories_handler)
+    app.router.add_post(f"{ai}/recommendations/upsell", ai_sales_handlers.recommendations_upsell_handler)
+    app.router.add_get(f"{ai}/leads/{{lead_id}}/intelligence", ai_sales_handlers.lead_intelligence_handler)
+    app.router.add_post(f"{ai}/leads/{{lead_id}}/qualify", ai_sales_handlers.qualify_lead_ai_handler)
+    app.router.add_post(f"{ai}/leads/setup", ai_sales_handlers.create_lead_for_ai_test_handler)
+    app.router.add_post(f"{ai}/conversations", ai_sales_handlers.start_conversation_handler)
+    app.router.add_post(f"{ai}/conversations/{{session_id}}/turns", ai_sales_handlers.append_conversation_turn_handler)
+    app.router.add_post(f"{ai}/conversations/{{session_id}}/summarize", ai_sales_handlers.summarize_conversation_handler)
+    app.router.add_get(f"{ai}/customers/{{customer_id}}/conversations/context", ai_sales_handlers.conversation_context_handler)
+    app.router.add_post(f"{ai}/offers", ai_sales_handlers.generate_offer_handler)
+    app.router.add_post(f"{ai}/offers/{{offer_id}}/negotiate", ai_sales_handlers.negotiate_offer_handler)
+    app.router.add_get(f"{ai}/knowledge/search", ai_sales_handlers.knowledge_search_handler)
+    app.router.add_post(f"{ai}/workflows/onboard", ai_sales_handlers.onboard_customer_handler)
+    app.router.add_post(f"{ai}/workflows/follow-up", ai_sales_handlers.schedule_follow_up_ai_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/health", internal_handlers.internal_health_handler)

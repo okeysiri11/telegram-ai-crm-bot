@@ -557,3 +557,26 @@ flowchart LR
 | AISalesAssistant | `applications/auto_marketplace/crm/ai_assistant.py` | AI sales integration |
 
 Full details: [CRM_ENGINE.md](../CRM_ENGINE.md).
+
+---
+
+## AI Sales & Customer Intelligence (Sprint 6.4)
+
+```mermaid
+flowchart LR
+    AE[AISalesEngine]
+    CI[CustomerIntelligence]
+    REC[AIRecommendationEngine]
+
+    AE --> CI
+    AE --> REC
+    AE --> CRMEngine
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| AISalesEngine | `applications/auto_marketplace/ai_sales/engine.py` | Unified AI sales entry |
+| CustomerIntelligence | `applications/auto_marketplace/customer_intelligence/` | Profile & intent analysis |
+| AIRecommendationEngine | `applications/auto_marketplace/recommendations/` | Vehicle recommendations |
+
+Full details: [AI_SALES.md](../AI_SALES.md).
