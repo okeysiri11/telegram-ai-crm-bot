@@ -302,3 +302,29 @@ flowchart LR
 | RecommendationEngine | `platform_learning/recommendation_engine.py` | Improvement recommendations |
 
 Full details: [LEARNING_ENGINE.md](../LEARNING_ENGINE.md).
+
+---
+
+## Collaboration Engine (Sprint 4.5)
+
+```mermaid
+flowchart LR
+    CE[CollaborationEngine]
+    CP[CollaborationPipeline]
+    NE[NegotiationEngine]
+    CS[ConsensusEngine]
+    CR[ConflictResolver]
+
+    CE --> CP --> NE
+    CP --> CS --> CR
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| CollaborationEngine | `platform_collaboration/collaboration_engine.py` | Multi-agent session orchestration |
+| NegotiationEngine | `platform_collaboration/negotiation_engine.py` | Task ownership & resource negotiation |
+| ConsensusEngine | `platform_collaboration/consensus_engine.py` | Voting & consensus models |
+| ConflictResolver | `platform_collaboration/conflict_resolver.py` | Conflict detection & recovery |
+| Coordination | `platform_collaboration/coordination.py` | 6 coordination strategies |
+
+Full details: [COLLABORATION.md](../COLLABORATION.md).
