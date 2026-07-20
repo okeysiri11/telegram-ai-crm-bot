@@ -453,3 +453,34 @@ flowchart LR
 | MigrationManager | `platform_configuration/migration_manager.py` | Schema migrations |
 
 Full details: [CONFIGURATION.md](../CONFIGURATION.md).
+
+---
+
+## Validation Layer (Sprint 5.5)
+
+```mermaid
+flowchart LR
+    VM[ValidationManager]
+    IT[IntegrationTestManager]
+    PT[PerformanceTestManager]
+    ST[StressTestManager]
+    PR[ProductionReadinessManager]
+    CERT[CertificationManager]
+
+    VM --> IT
+    VM --> PT
+    VM --> ST
+    VM --> PR
+    VM --> CERT
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| ValidationManager | `platform_validation/validation_manager.py` | Unified validation entry |
+| IntegrationTestManager | `platform_validation/integration_test_manager.py` | Module integration checks |
+| PerformanceTestManager | `platform_validation/performance_test_manager.py` | Throughput benchmarks |
+| StressTestManager | `platform_validation/stress_test_manager.py` | Load and concurrency tests |
+| ProductionReadinessManager | `platform_validation/production_readiness_manager.py` | Production checklist |
+| CertificationManager | `platform_validation/certification_manager.py` | Production Ready certification |
+
+Full details: [VALIDATION.md](../VALIDATION.md).

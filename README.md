@@ -29,6 +29,7 @@ Enterprise CRM platform with Telegram bot integration, PostgreSQL persistence, a
 | Observability Layer | `platform_observability/` | Logging, tracing, metrics & diagnostics (Sprint 5.2) |
 | Reliability Layer | `platform_reliability/` | Fault tolerance, recovery & failover (Sprint 5.3) |
 | Configuration Layer | `platform_configuration/` | Centralized config, deployment & feature flags (Sprint 5.4) |
+| Validation Layer | `platform_validation/` | Production readiness & QA certification (Sprint 5.5) |
 
 ## Project structure
 
@@ -51,6 +52,7 @@ TelegramBotCourse/
 ├── platform_observability/      # Logging, tracing, metrics & diagnostics
 ├── platform_reliability/        # Fault tolerance, recovery & failover
 ├── platform_configuration/    # Configuration center + deployment layer (Sprint 5.4)
+├── platform_validation/       # Validation & production readiness (Sprint 5.5)
 ├── platform_architecture/     # Governance validators
 ├── platform_plugin_sdk/       # Plugin extension SDK
 ├── events/                    # PlatformEventBus + CRM publisher
