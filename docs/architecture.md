@@ -419,3 +419,37 @@ flowchart LR
 | HealthSupervisor | `platform_reliability/health_supervisor.py` | Continuous health monitoring |
 
 Full details: [RELIABILITY.md](../RELIABILITY.md).
+
+---
+
+## Configuration Layer (Sprint 5.4)
+
+```mermaid
+flowchart LR
+    CM[ConfigurationManager]
+    CL[ConfigurationLoader]
+    EM[EnvironmentManager]
+    FF[FeatureFlagManager]
+    DM[DeploymentManager]
+    VM[VersionManager]
+    MM[MigrationManager]
+
+    CM --> CL
+    CM --> EM
+    CM --> FF
+    CM --> DM
+    CM --> VM
+    CM --> MM
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| ConfigurationManager | `platform_configuration/configuration_manager.py` | Unified config & deployment entry |
+| ConfigurationLoader | `platform_configuration/configuration_loader.py` | Hierarchical config loading |
+| EnvironmentManager | `platform_configuration/environment_manager.py` | Environment profiles |
+| FeatureFlagManager | `platform_configuration/feature_flag_manager.py` | Feature toggles & rollout |
+| DeploymentManager | `platform_configuration/deployment_manager.py` | Local/Docker deployment |
+| VersionManager | `platform_configuration/version_manager.py` | Version & compatibility |
+| MigrationManager | `platform_configuration/migration_manager.py` | Schema migrations |
+
+Full details: [CONFIGURATION.md](../CONFIGURATION.md).
