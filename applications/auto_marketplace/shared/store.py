@@ -73,6 +73,21 @@ class MarketplaceStore:
         self.intelligence_profiles: EntityStore = EntityStore()
         self.ai_offers: EntityStore = EntityStore()
         self.knowledge_articles: EntityStore = EntityStore()
+        # Sprint 6.5 — Documents, Contracts & Finance
+        self.document_templates: EntityStore = EntityStore()
+        self.finance_documents: EntityStore = EntityStore()
+        self.contracts: EntityStore = EntityStore()
+        self.finance_payments: EntityStore = EntityStore()
+        self.payment_methods: EntityStore = EntityStore()
+        self.finance_invoices: EntityStore = EntityStore()
+        self.receipts: EntityStore = EntityStore()
+        self.transactions: EntityStore = EntityStore()
+        self.refunds: EntityStore = EntityStore()
+        self.tax_records: EntityStore = EntityStore()
+        self.commissions: EntityStore = EntityStore()
+        self.dealer_settlements: EntityStore = EntityStore()
+        self.financial_reports: EntityStore = EntityStore()
+        self.audit_records: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for store in (
@@ -112,6 +127,20 @@ class MarketplaceStore:
             self.intelligence_profiles,
             self.ai_offers,
             self.knowledge_articles,
+            self.document_templates,
+            self.finance_documents,
+            self.contracts,
+            self.finance_payments,
+            self.payment_methods,
+            self.finance_invoices,
+            self.receipts,
+            self.transactions,
+            self.refunds,
+            self.tax_records,
+            self.commissions,
+            self.dealer_settlements,
+            self.financial_reports,
+            self.audit_records,
         ):
             store.reset()
 

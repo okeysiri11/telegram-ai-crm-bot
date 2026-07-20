@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.auto_marketplace.api import ai_sales_handlers, catalog_handlers, crm_handlers, internal_handlers, rest_handlers, webhooks
+from applications.auto_marketplace.api import ai_sales_handlers, catalog_handlers, crm_handlers, finance_handlers, internal_handlers, rest_handlers, webhooks
 from applications.auto_marketplace.api.middleware import auth_middleware
 from applications.auto_marketplace.config import DEFAULT_CONFIG
 
@@ -110,6 +110,28 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_get(f"{ai}/knowledge/search", ai_sales_handlers.knowledge_search_handler)
     app.router.add_post(f"{ai}/workflows/onboard", ai_sales_handlers.onboard_customer_handler)
     app.router.add_post(f"{ai}/workflows/follow-up", ai_sales_handlers.schedule_follow_up_ai_handler)
+
+    # Sprint 6.5 — Documents, Contracts & Financial Operations
+    fin = f"{prefix}/finance"
+    app.router.add_get(f"{fin}/metrics", finance_handlers.finance_metrics_handler)
+    app.router.add_get(f"{fin}/documents/templates", finance_handlers.list_document_templates_handler)
+    app.router.add_post(f"{fin}/documents/generate", finance_handlers.generate_document_handler)
+    app.router.add_get(f"{fin}/documents/{{document_id}}", finance_handlers.get_document_handler)
+    app.router.add_post(f"{fin}/documents/{{document_id}}/approve", finance_handlers.approve_document_handler)
+    app.router.add_get(f"{fin}/documents/{{document_id}}/export", finance_handlers.export_document_handler)
+    app.router.add_post(f"{fin}/contracts", finance_handlers.create_contract_handler)
+    app.router.add_get(f"{fin}/contracts/{{contract_id}}", finance_handlers.get_contract_handler)
+    app.router.add_post(f"{fin}/contracts/{{contract_id}}/sign", finance_handlers.sign_contract_handler)
+    app.router.add_get(f"{fin}/contracts/{{contract_id}}/analyze", finance_handlers.analyze_contract_handler)
+    app.router.add_post(f"{fin}/payments", finance_handlers.create_payment_handler)
+    app.router.add_post(f"{fin}/payments/{{payment_id}}/capture", finance_handlers.capture_payment_handler)
+    app.router.add_post(f"{fin}/invoices", finance_handlers.generate_invoice_handler)
+    app.router.add_post(f"{fin}/refunds", finance_handlers.request_refund_handler)
+    app.router.add_post(f"{fin}/refunds/{{refund_id}}/process", finance_handlers.process_refund_handler)
+    app.router.add_post(f"{fin}/settlements", finance_handlers.create_settlement_handler)
+    app.router.add_post(f"{fin}/settlements/{{settlement_id}}/complete", finance_handlers.complete_settlement_handler)
+    app.router.add_get(f"{fin}/reports/summary", finance_handlers.financial_report_handler)
+    app.router.add_get(f"{fin}/audit", finance_handlers.audit_log_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/health", internal_handlers.internal_health_handler)

@@ -14,6 +14,7 @@ from applications.auto_marketplace.customers.service import CustomerService, cus
 from applications.auto_marketplace.dealers.service import DealerService, dealer_service
 from applications.auto_marketplace.delivery.service import DeliveryService, delivery_service
 from applications.auto_marketplace.documents.service import DocumentService, document_service
+from applications.auto_marketplace.finance.engine import FinanceEngine, finance_engine
 from applications.auto_marketplace.filters.search_engine import SearchEngine, search_engine
 from applications.auto_marketplace.integrations.platform_bridge import PlatformBridge, platform_bridge
 from applications.auto_marketplace.inventory.service import InventoryService, inventory_service
@@ -60,6 +61,7 @@ class AutoMarketplaceApplication:
         search_engine_svc: SearchEngine | None = None,
         crm_engine_svc: CRMEngine | None = None,
         ai_sales_engine_svc: AISalesEngine | None = None,
+        finance_engine_svc: FinanceEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -83,6 +85,7 @@ class AutoMarketplaceApplication:
         self.search_engine = search_engine_svc or search_engine
         self.crm_engine = crm_engine_svc or crm_engine
         self.ai_sales_engine = ai_sales_engine_svc or ai_sales_engine
+        self.finance_engine = finance_engine_svc or finance_engine
 
     def reset(self) -> None:
         self.store.reset()
@@ -99,6 +102,9 @@ class AutoMarketplaceApplication:
             "crm_deals": self.store.crm_deals.count(),
             "ai_conversations": self.store.conversation_sessions.count(),
             "ai_offers": self.store.ai_offers.count(),
+            "finance_documents": self.store.finance_documents.count(),
+            "contracts": self.store.contracts.count(),
+            "finance_payments": self.store.finance_payments.count(),
         }
 
 

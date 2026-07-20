@@ -580,3 +580,25 @@ flowchart LR
 | AIRecommendationEngine | `applications/auto_marketplace/recommendations/` | Vehicle recommendations |
 
 Full details: [AI_SALES.md](../AI_SALES.md).
+
+---
+
+## Documents, Contracts & Finance (Sprint 6.5)
+
+```mermaid
+flowchart LR
+    FE[FinanceEngine]
+    DE[DocumentEngine]
+    CS[ContractService]
+
+    FE --> DE
+    FE --> CS
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| FinanceEngine | `applications/auto_marketplace/finance/engine.py` | Unified finance entry |
+| DocumentEngine | `applications/auto_marketplace/documents/engine.py` | Document management |
+| ContractService | `applications/auto_marketplace/contracts/` | Contract lifecycle |
+
+Full details: [FINANCE_ENGINE.md](../FINANCE_ENGINE.md).
