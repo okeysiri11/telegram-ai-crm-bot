@@ -25,6 +25,7 @@ Enterprise CRM platform with Telegram bot integration, PostgreSQL persistence, a
 | Decision Engine | `platform_decision/` | Adaptive execution strategy selection (Sprint 4.3) |
 | Learning Engine | `platform_learning/` | Continuous improvement from feedback (Sprint 4.4) |
 | Collaboration Engine | `platform_collaboration/` | Multi-agent coordination & consensus (Sprint 4.5) |
+| Security Layer | `platform_security/` | Enterprise auth, RBAC, secrets & audit (Sprint 5.1) |
 
 ## Project structure
 
@@ -43,6 +44,7 @@ TelegramBotCourse/
 ├── platform_decision/           # AI decision engine
 ├── platform_learning/           # AI learning & feedback engine
 ├── platform_collaboration/      # Multi-agent collaboration engine
+├── platform_security/           # Enterprise security layer
 ├── platform_architecture/     # Governance validators
 ├── platform_plugin_sdk/       # Plugin extension SDK
 ├── events/                    # PlatformEventBus + CRM publisher

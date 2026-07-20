@@ -1,28 +1,32 @@
 # Architecture Report
 
-> Generated automatically on 2026-07-20 06:57:58 UTC
+> Generated automatically on 2026-07-20 07:41:46 UTC
 
 ## Executive Summary
 
-- **Grade:** PASS
-- **Architecture Score:** 99.5/100
-- **Quality Gates:** PASSED
-- **Modules in graph:** 905
-- **Dependency edges:** 2902
+- **Grade:** FAIL
+- **Architecture Score:** 95.45/100
+- **Quality Gates:** FAILED
+- **Modules in graph:** 956
+- **Dependency edges:** 3084
 - **Cycles:** 0
 
-Architecture score 99.5/100 — PASS. Modules=905, edges=2902, cycles=0.
+Architecture score 95.45/100 — FAIL. Modules=956, edges=3084, cycles=0.
+
+## Quality Gate Failures
+
+- 4 critical boundary/import violations
 
 ## Validation Summary
 
 | Domain | Status | Coverage | Violations |
 |--------|--------|----------|------------|
-| boundaries | PASS | 100.0% | 0 critical / 4 total |
+| boundaries | FAIL | 66.67% | 4 critical / 8 total |
 | plugins | PASS | 100.0% | 0 critical / 0 total |
 | workflows | PASS | 100.0% | 0 critical / 1 total |
 | api | PASS | 100.0% | 0 critical / 0 total |
 | sdk | PASS | 100.0% | 0 critical / 0 total |
-| dependencies | PASS | 97.52% | 0 critical / 92 total |
+| dependencies | PASS | 97.37% | 0 critical / 101 total |
 | legacy | PASS | 100.0% | 0 critical / 0 total |
 
 ## Dependency Graph
@@ -93,7 +97,7 @@ flowchart TD
     events_event_bus_py[events/event_bus.py]
     events_generic_events_py[events/generic_events.py]
     events_handlers_audit_handler_py[events/handlers/audit_handler.py]
-    services_more[...+334 modules]
+    services_more[...+380 modules]
   end
   subgraph shared[shared]
     database___init___py[database/__init__.py]
@@ -104,7 +108,7 @@ flowchart TD
     events_handlers___init___py[events/handlers/__init__.py]
     platform_agents___init___py[platform_agents/__init__.py]
     platform_agents_agents___init___py[platform_agents/agents/__init__.py]
-    shared_more[...+60 modules]
+    shared_more[...+65 modules]
   end
   subgraph unknown[unknown]
     services_agro_deal_lifecycle_py[services/agro_deal_lifecycle.py]
@@ -134,8 +138,8 @@ flowchart TD
 
 - **[reverse_layer_dependency]** `database/engine.py` — database imports services via platform_configuration.configuration_center
 - **[reverse_layer_dependency]** `platform_operations/timeline_service.py` — services imports shared via platform_management.management_service
-- **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.system_info
 - **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.health
+- **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.system_info
 - **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
 - **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.statistics
 - **[reverse_layer_dependency]** `platform_integrations/webhook_manager.py` — services imports shared via platform_legacy
@@ -145,6 +149,8 @@ flowchart TD
 - **[reverse_layer_dependency]** `platform_identity/identity_service.py` — services imports shared via platform_management.permissions
 - **[reverse_layer_dependency]** `platform_identity/role_service.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/audit_hooks.py` — services imports shared via platform_legacy
+- **[reverse_layer_dependency]** `platform_learning/integrations.py` — services imports shared via platform_decision
+- **[reverse_layer_dependency]** `platform_learning/integrations.py` — services imports shared via platform_planning
 - **[reverse_layer_dependency]** `platform_sdk/bootstrap.py` — services imports shared via platform_sdk.verticals
 - **[reverse_layer_dependency]** `platform_sdk/notification_provider.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_sdk/validation_provider.py` — services imports shared via platform_legacy
@@ -154,14 +160,19 @@ flowchart TD
 - **[reverse_layer_dependency]** `repositories/base_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/request_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/manager_pool_repository.py` — repositories imports services via src.platform.layers.base_repository
-- **[reverse_layer_dependency]** `repositories/owner_repository.py` — repositories imports services via platform_configuration.config_provider
 - **[reverse_layer_dependency]** `repositories/owner_repository.py` — repositories imports services via src.platform.layers.base_repository
+- **[reverse_layer_dependency]** `repositories/owner_repository.py` — repositories imports services via platform_configuration.config_provider
 - **[reverse_layer_dependency]** `repositories/workflow_execution_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/platform_metrics_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/manager_repository.py` — repositories imports services via src.platform.layers.base_repository
 - **[reverse_layer_dependency]** `repositories/kpi_repository.py` — repositories imports services via src.platform.layers.base_repository
-- **[reverse_layer_dependency]** `repositories/partner_repository.py` — repositories imports shared via database
-- **[reverse_layer_dependency]** `repositories/event_repository.py` — repositories imports shared via events
+
+## Boundaries Violations
+
+- **[env_access_outside_center]** `platform_security/config.py:23` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_security/config.py:24` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_security/secrets.py:30` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_security/secrets.py:80` — \bos\.environ\s*\[
 
 ## Certification Categories
 
@@ -169,12 +180,12 @@ flowchart TD
 |----------|-------|--------|--------|
 | Security | 100.0 | 0.12 | PASS |
 | Architecture | 100.0 | 0.15 | PASS |
-| Boundaries | 100.0 | 0.15 | PASS |
+| Boundaries | 80 | 0.15 | WARN |
 | Dependencies | 100 | 0.1 | PASS |
 | API | 100.0 | 0.1 | PASS |
 | Workflow | 100.0 | 0.08 | PASS |
 | Plugin SDK | 100.0 | 0.08 | PASS |
-| Configuration | 100.0 | 0.07 | PASS |
+| Configuration | 85.0 | 0.07 | WARN |
 | Legacy | 100.0 | 0.08 | PASS |
 | Observability | 95.0 | 0.04 | PASS |
 | Testing | 90.0 | 0.03 | PASS |

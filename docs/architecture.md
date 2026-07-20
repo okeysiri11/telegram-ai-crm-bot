@@ -328,3 +328,31 @@ flowchart LR
 | Coordination | `platform_collaboration/coordination.py` | 6 coordination strategies |
 
 Full details: [COLLABORATION.md](../COLLABORATION.md).
+
+---
+
+## Security Layer (Sprint 5.1)
+
+```mermaid
+flowchart LR
+    SM[SecurityManager]
+    AP[AuthenticationProvider]
+    AM[AuthorizationManager]
+    SEC[SecretManager]
+    AUD[AuditManager]
+
+    SM --> AP
+    SM --> AM
+    SM --> SEC
+    SM --> AUD
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| SecurityManager | `platform_security/security_manager.py` | Unified security entry |
+| AuthenticationProvider | `platform_security/authentication.py` | API key, JWT, OAuth, service accounts |
+| AuthorizationManager | `platform_security/authorization.py` | RBAC + access policies |
+| SecretManager | `platform_security/secrets.py` | Encrypted secrets & rotation |
+| AuditManager | `platform_security/audit.py` | Security audit logging |
+
+Full details: [SECURITY.md](../SECURITY.md).
