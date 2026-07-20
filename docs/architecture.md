@@ -185,3 +185,26 @@ flowchart LR
 | TelegramTaskInterface | `platform_workflow/telegram_interface.py` | Bot integration contract |
 
 Full details: [WORKFLOW_ENGINE.md](../WORKFLOW_ENGINE.md).
+
+## Platform Tool Framework (Sprint 3.3)
+
+```mermaid
+flowchart LR
+    TR[ToolRegistry]
+    TE[ToolExecutor]
+    AB[AgentToolBridge]
+    AR[AgentRegistry]
+
+    AB --> TR
+    AB --> TE
+    AR --> AB
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| ToolRegistry | `platform_tools/registry.py` | Register, discover, validate tools |
+| ToolExecutor | `platform_tools/executor.py` | Sandboxed async execution |
+| AgentToolBridge | `platform_tools/agent_bridge.py` | Agent Registry integration |
+| ToolPermissionService | `platform_tools/permissions.py` | Per-agent/user permissions |
+
+Full details: [TOOLS.md](../TOOLS.md).
