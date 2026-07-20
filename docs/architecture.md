@@ -356,3 +356,35 @@ flowchart LR
 | AuditManager | `platform_security/audit.py` | Security audit logging |
 
 Full details: [SECURITY.md](../SECURITY.md).
+
+---
+
+## Observability Layer (Sprint 5.2)
+
+```mermaid
+flowchart LR
+    OM[ObservabilityManager]
+    LM[LogManager]
+    TM[TraceManager]
+    MM[MetricsManager]
+    HM[HealthManager]
+    TC[TelemetryCollector]
+
+    OM --> LM
+    OM --> TM
+    OM --> MM
+    OM --> HM
+    OM --> TC
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| ObservabilityManager | `platform_observability/observability_manager.py` | Unified observability entry |
+| LogManager | `platform_observability/log_manager.py` | Structured JSON logging |
+| TraceManager | `platform_observability/trace_manager.py` | Distributed tracing |
+| MetricsManager | `platform_observability/metrics_manager.py` | Metrics collection |
+| HealthManager | `platform_observability/health_manager.py` | Health monitoring |
+| DiagnosticManager | `platform_observability/diagnostic_manager.py` | Diagnostics & reports |
+| TelemetryCollector | `platform_observability/telemetry_collector.py` | Telemetry + alert thresholds |
+
+Full details: [OBSERVABILITY.md](../OBSERVABILITY.md).

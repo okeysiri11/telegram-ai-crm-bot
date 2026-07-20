@@ -26,6 +26,7 @@ Enterprise CRM platform with Telegram bot integration, PostgreSQL persistence, a
 | Learning Engine | `platform_learning/` | Continuous improvement from feedback (Sprint 4.4) |
 | Collaboration Engine | `platform_collaboration/` | Multi-agent coordination & consensus (Sprint 4.5) |
 | Security Layer | `platform_security/` | Enterprise auth, RBAC, secrets & audit (Sprint 5.1) |
+| Observability Layer | `platform_observability/` | Logging, tracing, metrics & diagnostics (Sprint 5.2) |
 
 ## Project structure
 

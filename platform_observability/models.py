@@ -56,6 +56,8 @@ class StructuredLogEntry:
     user_id: int | None = None
     job_id: str | None = None
     workflow_id: str | None = None
+    agent_id: str | None = None
+    task_id: str | None = None
     component: str = "platform"
     extra: dict[str, Any] = field(default_factory=dict)
     timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
@@ -69,6 +71,8 @@ class StructuredLogEntry:
             "user_id": self.user_id,
             "job_id": self.job_id,
             "workflow_id": self.workflow_id,
+            "agent_id": self.agent_id,
+            "task_id": self.task_id,
             "component": self.component,
             "extra": self.extra,
             "timestamp": self.timestamp.isoformat(),
@@ -169,4 +173,70 @@ class RetentionPolicy:
             "logs_days": self.logs_days,
             "traces_days": self.traces_days,
             "alerts_days": self.alerts_days,
+        }
+
+
+@dataclass
+class MonitoringContext:
+    """Correlation context for end-to-end observability."""
+
+    correlation_id: str = ""
+    request_id: str | None = None
+    workflow_id: str | None = None
+    task_id: str | None = None
+    agent_id: str | None = None
+    trace_id: str | None = None
+    user_id: int | None = None
+    component: str = "platform"
+    metadata: dict[str, Any] = field(default_factory=dict)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "correlation_id": self.correlation_id,
+            "request_id": self.request_id,
+            "workflow_id": self.workflow_id,
+            "task_id": self.task_id,
+            "agent_id": self.agent_id,
+            "trace_id": self.trace_id,
+            "component": self.component,
+        }
+
+
+@dataclass
+class AlertThreshold:
+    name: str
+    metric: str
+    operator: str  # gt | lt
+    value: float
+    severity: str = AlertSeverity.WARNING.value
+    enabled: bool = True
+
+    def evaluate(self, current: float) -> bool:
+        if not self.enabled:
+            return False
+        if self.operator == "gt":
+            return current > self.value
+        return current < self.value
+
+
+@dataclass
+class DiagnosticReport:
+    report_id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    title: str = ""
+    timeline: list[dict[str, Any]] = field(default_factory=list)
+    performance: dict[str, Any] = field(default_factory=dict)
+    failures: list[dict[str, Any]] = field(default_factory=list)
+    dependencies: dict[str, Any] = field(default_factory=dict)
+    historical: dict[str, Any] = field(default_factory=dict)
+    generated_at: float = field(default_factory=time.time)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "report_id": self.report_id,
+            "title": self.title,
+            "timeline": list(self.timeline),
+            "performance": dict(self.performance),
+            "failures": list(self.failures),
+            "dependencies": dict(self.dependencies),
+            "historical": dict(self.historical),
         }

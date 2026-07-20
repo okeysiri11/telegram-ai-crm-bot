@@ -18,6 +18,8 @@ _request_id: ContextVar[str] = ContextVar("request_id", default="")
 _user_id: ContextVar[int | None] = ContextVar("user_id", default=None)
 _job_id: ContextVar[str | None] = ContextVar("job_id", default=None)
 _workflow_id: ContextVar[str | None] = ContextVar("workflow_id", default=None)
+_agent_id: ContextVar[str | None] = ContextVar("agent_id", default=None)
+_task_id: ContextVar[str | None] = ContextVar("task_id", default=None)
 
 _log_buffer: asyncio.Queue | None = None
 
@@ -42,6 +44,8 @@ class LoggingService:
         user_id: int | None = None,
         job_id: str | None = None,
         workflow_id: str | None = None,
+        agent_id: str | None = None,
+        task_id: str | None = None,
     ) -> None:
         if correlation_id:
             _correlation_id.set(correlation_id)
@@ -53,6 +57,10 @@ class LoggingService:
             _job_id.set(job_id)
         if workflow_id:
             _workflow_id.set(workflow_id)
+        if agent_id:
+            _agent_id.set(agent_id)
+        if task_id:
+            _task_id.set(task_id)
 
     @staticmethod
     def get_context() -> dict[str, Any]:
@@ -62,6 +70,8 @@ class LoggingService:
             "user_id": _user_id.get(),
             "job_id": _job_id.get(),
             "workflow_id": _workflow_id.get(),
+            "agent_id": _agent_id.get(),
+            "task_id": _task_id.get(),
         }
 
     def log(
@@ -81,6 +91,8 @@ class LoggingService:
             user_id=ctx.get("user_id"),
             job_id=ctx.get("job_id"),
             workflow_id=ctx.get("workflow_id"),
+            agent_id=ctx.get("agent_id"),
+            task_id=ctx.get("task_id"),
             component=component,
             extra=extra or {},
         )
@@ -113,6 +125,8 @@ class LoggingService:
         level: str | None = None,
         correlation_id: str | None = None,
         component: str | None = None,
+        agent_id: str | None = None,
+        workflow_id: str | None = None,
         limit: int = 200,
     ) -> list[dict[str, Any]]:
         entries = self._entries
@@ -122,6 +136,10 @@ class LoggingService:
             entries = [e for e in entries if e.correlation_id == correlation_id]
         if component:
             entries = [e for e in entries if e.component == component]
+        if agent_id:
+            entries = [e for e in entries if e.agent_id == agent_id]
+        if workflow_id:
+            entries = [e for e in entries if e.workflow_id == workflow_id]
         return [e.to_dict() for e in entries[-limit:]]
 
 
