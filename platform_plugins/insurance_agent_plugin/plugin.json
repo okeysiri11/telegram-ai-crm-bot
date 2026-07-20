@@ -1,0 +1,11 @@
+{
+  "id": "insurance_agent",
+  "name": "Insurance Agent Plugin",
+  "description": "Insurance vertical — policies, claims, underwriting",
+  "version": "1.0.0",
+  "author": "Plugin Author",
+  "capabilities": ["policy_quote", "claim_status", "underwriting_review"],
+  "priority": 70,
+  "enabled": true,
+  "entry_point": "agent:InsuranceAgent"
+}

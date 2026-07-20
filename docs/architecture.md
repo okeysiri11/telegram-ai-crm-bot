@@ -136,3 +136,28 @@ flowchart TB
 **Routing:** capability-based (e.g. `buy_car` → Auto Agent, `legal_contract` → Legal Agent).
 
 Full details: [ORCHESTRATOR.md](architecture/ORCHESTRATOR.md), [ORCHESTRATOR_REPORT.md](architecture/ORCHESTRATOR_REPORT.md).
+
+## Platform Agent Registry (Sprint 3.1)
+
+```mermaid
+flowchart LR
+    AR[AgentRegistry]
+    PL[AgentPluginLoader]
+    BA[BaseAgent]
+    PP[platform_plugins/]
+
+    AR --> BA
+    PL --> AR
+    PP --> PL
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| BaseAgent | `platform_agents/base_agent.py` | Agent contract |
+| AgentRegistry | `platform_agents/registry.py` | Register, enable, discover |
+| AgentPluginLoader | `platform_agents/plugin_loader.py` | Auto-discovery from `platform_plugins/` |
+| Built-in agents | `platform_agents/agents/builtin.py` | 6 demonstration agents |
+
+**Plugin drop-in:** add `platform_plugins/<name>/plugin.json` + `agent.py` — no core changes.
+
+Full details: [AGENT_REGISTRY.md](../AGENT_REGISTRY.md).
