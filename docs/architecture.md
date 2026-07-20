@@ -252,3 +252,27 @@ flowchart LR
 | Strategies | `platform_planning/strategies/` | 6 planning strategies |
 
 Full details: [PLANNING.md](../PLANNING.md).
+
+---
+
+## Decision Engine (Sprint 4.3)
+
+```mermaid
+flowchart LR
+    DE[DecisionEngine]
+    DP[DecisionPipeline]
+    ST[8 Strategies]
+    PO[PolicyRegistry]
+
+    DE --> DP --> ST
+    DP --> PO
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| DecisionEngine | `platform_decision/decision_engine.py` | Candidate evaluation & selection |
+| DecisionPipeline | `platform_decision/pipeline.py` | Validate → score → rank → select |
+| Policies | `platform_decision/policies.py` | Configurable scoring weights |
+| Strategies | `platform_decision/strategies/` | 8 decision strategies |
+
+Full details: [DECISION_ENGINE.md](../DECISION_ENGINE.md).

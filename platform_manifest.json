@@ -2,8 +2,8 @@
   "manifest_version": "1.0.0",
   "generated_at": "2026-07-19T13:07:17.219550+00:00",
   "platform_core": {
-    "version": "2.1.0-alpha",
-    "platform_version": "2.1.0-alpha",
+    "version": "2.2.0-alpha",
+    "platform_version": "2.2.0-alpha",
     "architecture_version": "1.0.0",
     "api_contract_version": "1.0.0",
     "api_version": "v1",
@@ -17,7 +17,8 @@
     "tool_framework": "1.0",
     "plugin_system": "1.0",
     "reasoning_engine": "1.0",
-    "planning_engine": "1.0"
+    "planning_engine": "1.0",
+    "decision_engine": "1.0"
   },
   "modules": [
     "events",
@@ -28,6 +29,7 @@
     "platform_certification",
     "platform_configuration",
     "platform_console",
+    "platform_decision",
     "platform_identity",
     "platform_integrations",
     "platform_jobs",

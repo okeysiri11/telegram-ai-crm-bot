@@ -22,6 +22,7 @@ Enterprise CRM platform with Telegram bot integration, PostgreSQL persistence, a
 | Tool Framework | `platform_tools/` | Universal tool & integration framework (Sprint 3.3) |
 | Reasoning Engine | `platform_reasoning/` | AI reasoning & intelligence layer (Sprint 4.1) |
 | Planning Engine | `platform_planning/` | Goal-oriented execution planning (Sprint 4.2) |
+| Decision Engine | `platform_decision/` | Adaptive execution strategy selection (Sprint 4.3) |
 
 ## Project structure
 
@@ -37,6 +38,7 @@ TelegramBotCourse/
 ├── platform_tools/              # Tool & integration framework
 ├── platform_reasoning/          # AI reasoning engine
 ├── platform_planning/           # AI planning engine
+├── platform_decision/           # AI decision engine
 ├── platform_architecture/     # Governance validators
 ├── platform_plugin_sdk/       # Plugin extension SDK
 ├── events/                    # PlatformEventBus + CRM publisher
