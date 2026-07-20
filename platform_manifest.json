@@ -2,8 +2,8 @@
   "manifest_version": "1.0.0",
   "generated_at": "2026-07-19T13:07:17.219550+00:00",
   "platform_core": {
-    "version": "1.4.0-alpha",
-    "platform_version": "1.4.0-alpha",
+    "version": "1.5.0-alpha",
+    "platform_version": "1.5.0-alpha",
     "architecture_version": "1.0.0",
     "api_contract_version": "1.0.0",
     "api_version": "v1",
@@ -11,7 +11,9 @@
     "certification_score": 100.0,
     "memory_engine_version": "2.2.0",
     "orchestrator_version": "2.3.0",
-    "registry_version": "1.0"
+    "registry_version": "1.0",
+    "workflow_engine": "1.0",
+    "task_engine": "1.0"
   },
   "modules": [
     "events",
@@ -35,6 +37,7 @@
     "platform_plugins",
     "platform_realtime",
     "platform_sdk",
+    "platform_workflow",
     "platform_workflows",
     "plugins",
     "repositories"

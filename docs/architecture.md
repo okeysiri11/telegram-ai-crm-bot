@@ -161,3 +161,27 @@ flowchart LR
 **Plugin drop-in:** add `platform_plugins/<name>/plugin.json` + `agent.py` — no core changes.
 
 Full details: [AGENT_REGISTRY.md](../AGENT_REGISTRY.md).
+
+## Platform Workflow & Task Engine (Sprint 3.2)
+
+```mermaid
+flowchart LR
+    WE[WorkflowEngine]
+    TQ[TaskQueue]
+    AR[AgentRegistry]
+    HA[HumanAssignment]
+
+    WE --> TQ
+    WE --> AR
+    WE --> HA
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| WorkflowEngine | `platform_workflow/workflow_engine.py` | Create, execute, pause, cancel workflows |
+| TaskQueue | `platform_workflow/task_queue.py` | Priority FIFO queue with retry/schedule |
+| AgentAssignmentService | `platform_workflow/agent_assignment.py` | Route to agents by capability |
+| HumanAssignmentService | `platform_workflow/human_assignment.py` | Assign to Manager/Admin/Operator/Owner |
+| TelegramTaskInterface | `platform_workflow/telegram_interface.py` | Bot integration contract |
+
+Full details: [WORKFLOW_ENGINE.md](../WORKFLOW_ENGINE.md).

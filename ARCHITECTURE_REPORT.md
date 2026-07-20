@@ -1,17 +1,17 @@
 # Architecture Report
 
-> Generated automatically on 2026-07-19 14:56:29 UTC
+> Generated automatically on 2026-07-20 06:03:38 UTC
 
 ## Executive Summary
 
 - **Grade:** PASS
 - **Architecture Score:** 99.5/100
 - **Quality Gates:** PASSED
-- **Modules in graph:** 850
-- **Dependency edges:** 2757
+- **Modules in graph:** 865
+- **Dependency edges:** 2793
 - **Cycles:** 0
 
-Architecture score 99.5/100 — PASS. Modules=850, edges=2757, cycles=0.
+Architecture score 99.5/100 — PASS. Modules=865, edges=2793, cycles=0.
 
 ## Validation Summary
 
@@ -22,7 +22,7 @@ Architecture score 99.5/100 — PASS. Modules=850, edges=2757, cycles=0.
 | workflows | PASS | 100.0% | 0 critical / 1 total |
 | api | PASS | 100.0% | 0 critical / 0 total |
 | sdk | PASS | 100.0% | 0 critical / 0 total |
-| dependencies | PASS | 97.46% | 0 critical / 90 total |
+| dependencies | PASS | 97.49% | 0 critical / 90 total |
 | legacy | PASS | 100.0% | 0 critical / 0 total |
 
 ## Dependency Graph
@@ -93,7 +93,7 @@ flowchart TD
     events_event_bus_py[events/event_bus.py]
     events_generic_events_py[events/generic_events.py]
     events_handlers_audit_handler_py[events/handlers/audit_handler.py]
-    services_more[...+287 modules]
+    services_more[...+300 modules]
   end
   subgraph shared[shared]
     database___init___py[database/__init__.py]
@@ -104,7 +104,7 @@ flowchart TD
     events_handlers___init___py[events/handlers/__init__.py]
     platform_agents___init___py[platform_agents/__init__.py]
     platform_agents_agents___init___py[platform_agents/agents/__init__.py]
-    shared_more[...+52 modules]
+    shared_more[...+54 modules]
   end
   subgraph unknown[unknown]
     services_agro_deal_lifecycle_py[services/agro_deal_lifecycle.py]
@@ -134,15 +134,15 @@ flowchart TD
 
 - **[reverse_layer_dependency]** `database/engine.py` — database imports services via platform_configuration.configuration_center
 - **[reverse_layer_dependency]** `platform_operations/timeline_service.py` — services imports shared via platform_management.management_service
-- **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.health
 - **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.system_info
-- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.statistics
+- **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.health
 - **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
+- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.statistics
 - **[reverse_layer_dependency]** `platform_integrations/webhook_manager.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/policy_engine.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/permission_service.py` — services imports shared via platform_legacy
-- **[reverse_layer_dependency]** `platform_identity/identity_service.py` — services imports shared via platform_management.exceptions
 - **[reverse_layer_dependency]** `platform_identity/identity_service.py` — services imports shared via platform_management.permissions
+- **[reverse_layer_dependency]** `platform_identity/identity_service.py` — services imports shared via platform_management.exceptions
 - **[reverse_layer_dependency]** `platform_identity/role_service.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_identity/audit_hooks.py` — services imports shared via platform_legacy
 - **[reverse_layer_dependency]** `platform_sdk/bootstrap.py` — services imports shared via platform_sdk.verticals
