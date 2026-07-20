@@ -14,7 +14,7 @@ class AutoMarketplaceConfig:
     default_currency: str = "USD"
     enable_ai_recommendations: bool = True
     enable_auctions: bool = True
-    application_version: str = "1.1.0-alpha"
+    application_version: str = "1.2.0-alpha"
 
 
 DEFAULT_CONFIG = AutoMarketplaceConfig()

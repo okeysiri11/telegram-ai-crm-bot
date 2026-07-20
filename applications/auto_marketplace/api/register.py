@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.auto_marketplace.api import catalog_handlers, internal_handlers, rest_handlers, webhooks
+from applications.auto_marketplace.api import catalog_handlers, crm_handlers, internal_handlers, rest_handlers, webhooks
 from applications.auto_marketplace.api.middleware import auth_middleware
 from applications.auto_marketplace.config import DEFAULT_CONFIG
 
@@ -59,6 +59,31 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/vehicles/{{vehicle_id}}/media", catalog_handlers.media_upload_handler)
     app.router.add_post(f"{prefix}/vehicles/{{vehicle_id}}/media/reorder", catalog_handlers.media_reorder_handler)
     app.router.add_post(f"{prefix}/media/{{media_id}}/optimize", catalog_handlers.media_optimize_handler)
+
+    # Sprint 6.3 — CRM & Sales Pipeline Engine
+    crm = f"{prefix}/crm"
+    app.router.add_get(f"{crm}/metrics", crm_handlers.crm_metrics_handler)
+    app.router.add_get(f"{crm}/customers", crm_handlers.list_customers_handler)
+    app.router.add_post(f"{crm}/customers", crm_handlers.create_customer_handler)
+    app.router.add_get(f"{crm}/customers/{{customer_id}}", crm_handlers.get_customer_handler)
+    app.router.add_get(f"{crm}/customers/{{customer_id}}/timeline", crm_handlers.customer_timeline_handler)
+    app.router.add_get(f"{crm}/leads", crm_handlers.list_leads_handler)
+    app.router.add_post(f"{crm}/leads", crm_handlers.create_lead_handler)
+    app.router.add_post(f"{crm}/leads/{{lead_id}}/qualify", crm_handlers.qualify_lead_handler)
+    app.router.add_get(f"{crm}/leads/{{lead_id}}/next-action", crm_handlers.ai_next_action_handler)
+    app.router.add_get(f"{crm}/deals", crm_handlers.list_deals_handler)
+    app.router.add_post(f"{crm}/deals", crm_handlers.create_deal_handler)
+    app.router.add_post(f"{crm}/deals/{{deal_id}}/advance", crm_handlers.advance_deal_handler)
+    app.router.add_post(f"{crm}/deals/{{deal_id}}/win", crm_handlers.win_deal_handler)
+    app.router.add_post(f"{crm}/deals/{{deal_id}}/lose", crm_handlers.lose_deal_handler)
+    app.router.add_get(f"{crm}/pipeline", crm_handlers.pipeline_view_handler)
+    app.router.add_get(f"{crm}/pipeline/forecast", crm_handlers.pipeline_forecast_handler)
+    app.router.add_get(f"{crm}/pipeline/conversion", crm_handlers.pipeline_conversion_handler)
+    app.router.add_get(f"{crm}/tasks", crm_handlers.list_tasks_handler)
+    app.router.add_post(f"{crm}/tasks", crm_handlers.create_task_handler)
+    app.router.add_post(f"{crm}/activities/calls", crm_handlers.log_call_handler)
+    app.router.add_post(f"{crm}/activities/emails", crm_handlers.log_email_handler)
+    app.router.add_post(f"{crm}/calendar/meetings", crm_handlers.schedule_meeting_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/health", internal_handlers.internal_health_handler)

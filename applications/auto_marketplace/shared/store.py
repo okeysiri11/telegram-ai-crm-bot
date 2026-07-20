@@ -54,6 +54,20 @@ class MarketplaceStore:
         self.media: EntityStore = EntityStore()
         self.warehouses: EntityStore = EntityStore()
         self.brands: EntityStore = EntityStore()
+        # Sprint 6.3 — CRM & Sales Pipeline
+        self.customer_profiles: EntityStore = EntityStore()
+        self.crm_leads: EntityStore = EntityStore()
+        self.crm_deals: EntityStore = EntityStore()
+        self.opportunities: EntityStore = EntityStore()
+        self.interactions: EntityStore = EntityStore()
+        self.contacts: EntityStore = EntityStore()
+        self.phone_calls: EntityStore = EntityStore()
+        self.email_messages: EntityStore = EntityStore()
+        self.meetings: EntityStore = EntityStore()
+        self.crm_tasks: EntityStore = EntityStore()
+        self.reminders: EntityStore = EntityStore()
+        self.sales_agents: EntityStore = EntityStore()
+        self.sales_teams: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for store in (
@@ -76,6 +90,19 @@ class MarketplaceStore:
             self.media,
             self.warehouses,
             self.brands,
+            self.customer_profiles,
+            self.crm_leads,
+            self.crm_deals,
+            self.opportunities,
+            self.interactions,
+            self.contacts,
+            self.phone_calls,
+            self.email_messages,
+            self.meetings,
+            self.crm_tasks,
+            self.reminders,
+            self.sales_agents,
+            self.sales_teams,
         ):
             store.reset()
 

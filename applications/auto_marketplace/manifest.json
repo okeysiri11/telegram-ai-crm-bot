@@ -1,12 +1,20 @@
 {
   "application": "auto_marketplace",
-  "application_version": "1.1.0-alpha",
+  "application_version": "1.2.0-alpha",
   "platform_version": "3.0.0",
   "modules": {
     "vehicle_catalog": "1.0",
     "inventory_engine": "1.0",
     "media": "1.0",
     "specifications": "1.0",
-    "filters": "1.0"
+    "filters": "1.0",
+    "crm_engine": "1.0",
+    "sales_pipeline": "1.0",
+    "leads": "1.0",
+    "deals": "1.0",
+    "activities": "1.0",
+    "communications": "1.0",
+    "tasks": "1.0",
+    "calendar": "1.0"
   }
 }

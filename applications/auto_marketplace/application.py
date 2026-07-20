@@ -7,6 +7,7 @@ from typing import Any
 from applications.auto_marketplace.analytics.service import AnalyticsService, analytics_service
 from applications.auto_marketplace.catalog.service import CatalogService, catalog_service
 from applications.auto_marketplace.config import DEFAULT_CONFIG, AutoMarketplaceConfig
+from applications.auto_marketplace.crm.engine import CRMEngine, crm_engine
 from applications.auto_marketplace.crm.service import CRMService, crm_service
 from applications.auto_marketplace.customers.service import CustomerService, customer_service
 from applications.auto_marketplace.dealers.service import DealerService, dealer_service
@@ -56,6 +57,7 @@ class AutoMarketplaceApplication:
         inventory_engine_svc: InventoryEngine | None = None,
         media: MediaService | None = None,
         search_engine_svc: SearchEngine | None = None,
+        crm_engine_svc: CRMEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -77,6 +79,7 @@ class AutoMarketplaceApplication:
         self.inventory_engine = inventory_engine_svc or inventory_engine
         self.media = media or media_service
         self.search_engine = search_engine_svc or search_engine
+        self.crm_engine = crm_engine_svc or crm_engine
 
     def reset(self) -> None:
         self.store.reset()
@@ -89,6 +92,8 @@ class AutoMarketplaceApplication:
             "api_version": self.config.api_version,
             "metrics": self.analytics.dashboard_metrics(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
+            "crm_leads": self.store.crm_leads.count(),
+            "crm_deals": self.store.crm_deals.count(),
         }
 
 

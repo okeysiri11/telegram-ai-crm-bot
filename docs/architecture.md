@@ -535,3 +535,25 @@ flowchart LR
 | SearchEngine | `applications/auto_marketplace/filters/` | Structured + semantic search |
 
 Full details: [VEHICLE_CATALOG.md](../VEHICLE_CATALOG.md).
+
+---
+
+## CRM & Sales Pipeline (Sprint 6.3)
+
+```mermaid
+flowchart LR
+    CE[CRMEngine]
+    SP[SalesPipelineEngine]
+    AI[AISalesAssistant]
+
+    CE --> SP
+    CE --> AI
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| CRMEngine | `applications/auto_marketplace/crm/engine.py` | Unified CRM entry |
+| SalesPipelineEngine | `applications/auto_marketplace/sales_pipeline/` | Pipeline & forecasting |
+| AISalesAssistant | `applications/auto_marketplace/crm/ai_assistant.py` | AI sales integration |
+
+Full details: [CRM_ENGINE.md](../CRM_ENGINE.md).
