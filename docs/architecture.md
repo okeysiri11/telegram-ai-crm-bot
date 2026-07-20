@@ -484,3 +484,29 @@ flowchart LR
 | CertificationManager | `platform_validation/certification_manager.py` | Production Ready certification |
 
 Full details: [VALIDATION.md](../VALIDATION.md).
+
+---
+
+## Auto Marketplace Application (Sprint 6.1)
+
+First production application on Platform Core v3.0 — consumes platform via bridges only.
+
+```mermaid
+flowchart LR
+    AM[AutoMarketplaceApplication]
+    API[REST / Internal / Webhooks]
+    PB[PlatformBridge]
+    PC[Platform Core v3.0]
+
+    API --> AM --> PB -.-> PC
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| Application | `applications/auto_marketplace/application.py` | Application facade |
+| Catalog | `applications/auto_marketplace/catalog/` | Vehicle catalog |
+| CRM | `applications/auto_marketplace/crm/` | Leads and deals |
+| Platform Bridge | `applications/auto_marketplace/integrations/platform_bridge.py` | AI platform integration |
+| REST API | `applications/auto_marketplace/api/` | `/api/auto/v1` |
+
+Full details: [AUTO_MARKETPLACE.md](../AUTO_MARKETPLACE.md).

@@ -36,6 +36,10 @@ def create_app() -> web.Application:
 
     register_management_routes(app)
 
+    from applications.auto_marketplace.api.register import register_auto_marketplace_routes
+
+    register_auto_marketplace_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 
