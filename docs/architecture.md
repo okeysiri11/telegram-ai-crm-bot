@@ -602,3 +602,25 @@ flowchart LR
 | ContractService | `applications/auto_marketplace/contracts/` | Contract lifecycle |
 
 Full details: [FINANCE_ENGINE.md](../FINANCE_ENGINE.md).
+
+---
+
+## Business Intelligence & Executive Dashboard (Sprint 6.6)
+
+```mermaid
+flowchart LR
+    BE[BIEngine]
+    ED[ExecutiveDashboard]
+    AE[AnalyticsEngine]
+
+    BE --> ED
+    BE --> AE
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| BIEngine | `applications/auto_marketplace/business_intelligence/engine.py` | Unified BI entry |
+| ExecutiveDashboard | `applications/auto_marketplace/executive_dashboard/` | Role-based dashboards |
+| AnalyticsEngine | `applications/auto_marketplace/analytics/engine.py` | Multi-domain analytics |
+
+Full details: [BUSINESS_INTELLIGENCE.md](../BUSINESS_INTELLIGENCE.md).

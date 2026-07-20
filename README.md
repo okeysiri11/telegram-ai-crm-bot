@@ -30,7 +30,7 @@ Enterprise CRM platform with Telegram bot integration, PostgreSQL persistence, a
 | Reliability Layer | `platform_reliability/` | Fault tolerance, recovery & failover (Sprint 5.3) |
 | Configuration Layer | `platform_configuration/` | Centralized config, deployment & feature flags (Sprint 5.4) |
 | Validation Layer | `platform_validation/` | Production readiness & QA certification (Sprint 5.5) |
-| Auto Marketplace | `applications/auto_marketplace/` | Production app — catalog, CRM, AI sales, finance (Sprint 6.1–6.5) |
+| Auto Marketplace | `applications/auto_marketplace/` | Production app — catalog, CRM, AI sales, finance, BI (Sprint 6.1–6.6) |
 
 ## Project structure
 

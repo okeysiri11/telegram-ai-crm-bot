@@ -88,6 +88,11 @@ class MarketplaceStore:
         self.dealer_settlements: EntityStore = EntityStore()
         self.financial_reports: EntityStore = EntityStore()
         self.audit_records: EntityStore = EntityStore()
+        # Sprint 6.6 — Business Intelligence & Executive Dashboard
+        self.bi_dashboards: EntityStore = EntityStore()
+        self.bi_reports: EntityStore = EntityStore()
+        self.bi_forecasts: EntityStore = EntityStore()
+        self.bi_insights: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for store in (
@@ -141,6 +146,10 @@ class MarketplaceStore:
             self.dealer_settlements,
             self.financial_reports,
             self.audit_records,
+            self.bi_dashboards,
+            self.bi_reports,
+            self.bi_forecasts,
+            self.bi_insights,
         ):
             store.reset()
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.auto_marketplace.api import ai_sales_handlers, catalog_handlers, crm_handlers, finance_handlers, internal_handlers, rest_handlers, webhooks
+from applications.auto_marketplace.api import ai_sales_handlers, bi_handlers, catalog_handlers, crm_handlers, finance_handlers, internal_handlers, rest_handlers, webhooks
 from applications.auto_marketplace.api.middleware import auth_middleware
 from applications.auto_marketplace.config import DEFAULT_CONFIG
 
@@ -132,6 +132,23 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{fin}/settlements/{{settlement_id}}/complete", finance_handlers.complete_settlement_handler)
     app.router.add_get(f"{fin}/reports/summary", finance_handlers.financial_report_handler)
     app.router.add_get(f"{fin}/audit", finance_handlers.audit_log_handler)
+
+    # Sprint 6.6 — Business Intelligence & Executive Dashboard
+    bi = f"{prefix}/bi"
+    app.router.add_get(f"{bi}/metrics", bi_handlers.bi_metrics_handler)
+    app.router.add_get(f"{bi}/dashboard/{{role}}", bi_handlers.dashboard_handler)
+    app.router.add_get(f"{bi}/dashboard", bi_handlers.dashboard_handler)
+    app.router.add_get(f"{bi}/kpis", bi_handlers.kpi_handler)
+    app.router.add_get(f"{bi}/kpis/{{name}}", bi_handlers.kpi_single_handler)
+    app.router.add_get(f"{bi}/analytics", bi_handlers.analytics_handler)
+    app.router.add_get(f"{bi}/analytics/{{domain}}", bi_handlers.analytics_handler)
+    app.router.add_get(f"{bi}/forecast/{{type}}", bi_handlers.forecast_handler)
+    app.router.add_get(f"{bi}/forecast", bi_handlers.forecast_handler)
+    app.router.add_post(f"{bi}/reports", bi_handlers.generate_report_handler)
+    app.router.add_get(f"{bi}/reports/{{report_id}}/export", bi_handlers.export_report_handler)
+    app.router.add_get(f"{bi}/insights", bi_handlers.insights_handler)
+    app.router.add_get(f"{bi}/statistics", bi_handlers.statistics_handler)
+    app.router.add_get(f"{bi}/charts/{{type}}", bi_handlers.visualizations_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/health", internal_handlers.internal_health_handler)
