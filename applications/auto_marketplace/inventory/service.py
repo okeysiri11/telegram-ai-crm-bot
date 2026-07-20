@@ -44,6 +44,10 @@ class InventoryService:
         return self._store.warranties.save(warranty.warranty_id, warranty)
 
     def stock_summary(self) -> dict:
+        if self._store.catalog_vehicles.count():
+            from applications.auto_marketplace.inventory_engine.service import inventory_engine
+
+            return inventory_engine.stock_summary()
         vehicles = self._store.vehicles.list_all()
         by_status: dict[str, int] = {}
         for v in vehicles:

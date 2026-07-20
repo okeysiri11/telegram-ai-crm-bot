@@ -1,0 +1,33 @@
+from applications.auto_marketplace.specifications.models import (
+    DriveType,
+    FuelType,
+    InventoryVehicleStatus,
+    Transmission,
+    VehicleBrand,
+    VehicleColor,
+    VehicleCondition,
+    VehicleEngine,
+    VehicleFeature,
+    VehicleGeneration,
+    VehicleLocation,
+    VehicleModel,
+    VehicleOption,
+    VehicleTrim,
+)
+
+__all__ = [
+    "DriveType",
+    "FuelType",
+    "InventoryVehicleStatus",
+    "Transmission",
+    "VehicleBrand",
+    "VehicleColor",
+    "VehicleCondition",
+    "VehicleEngine",
+    "VehicleFeature",
+    "VehicleGeneration",
+    "VehicleLocation",
+    "VehicleModel",
+    "VehicleOption",
+    "VehicleTrim",
+]

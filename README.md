@@ -37,7 +37,7 @@ Enterprise CRM platform with Telegram bot integration, PostgreSQL persistence, a
 ```
 TelegramBotCourse/
 ├── applications/              # Production apps on Platform Core v3.0
-│   └── auto_marketplace/      # AI Auto Marketplace (Sprint 6.1)
+│   └── auto_marketplace/      # AI Auto Marketplace (Sprint 6.1–6.2)
 ├── startup.py                 # Production entry (bot + API server)
 ├── api/server.py              # HTTP app factory
 ├── platform_management/       # /management/v1 authenticated API

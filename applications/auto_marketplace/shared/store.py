@@ -50,6 +50,10 @@ class MarketplaceStore:
         self.service_history: EntityStore = EntityStore()
         self.warranties: EntityStore = EntityStore()
         self.documents: EntityStore = EntityStore()
+        self.catalog_vehicles: EntityStore = EntityStore()
+        self.media: EntityStore = EntityStore()
+        self.warehouses: EntityStore = EntityStore()
+        self.brands: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for store in (
@@ -68,6 +72,10 @@ class MarketplaceStore:
             self.service_history,
             self.warranties,
             self.documents,
+            self.catalog_vehicles,
+            self.media,
+            self.warehouses,
+            self.brands,
         ):
             store.reset()
 

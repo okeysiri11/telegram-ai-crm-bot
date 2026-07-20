@@ -510,3 +510,28 @@ flowchart LR
 | REST API | `applications/auto_marketplace/api/` | `/api/auto/v1` |
 
 Full details: [AUTO_MARKETPLACE.md](../AUTO_MARKETPLACE.md).
+
+---
+
+## Vehicle Catalog & Inventory (Sprint 6.2)
+
+```mermaid
+flowchart LR
+    VC[vehicle_catalog]
+    IE[inventory_engine]
+    MED[media]
+    SE[SearchEngine]
+
+    VC --> IE
+    VC --> MED
+    SE --> VC
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| VehicleCatalogService | `applications/auto_marketplace/vehicle_catalog/` | CRUD, bulk, VIN, duplicates |
+| InventoryEngine | `applications/auto_marketplace/inventory_engine/` | Stock lifecycle, warehouses |
+| MediaService | `applications/auto_marketplace/media/` | Photos, videos, 360, documents |
+| SearchEngine | `applications/auto_marketplace/filters/` | Structured + semantic search |
+
+Full details: [VEHICLE_CATALOG.md](../VEHICLE_CATALOG.md).
