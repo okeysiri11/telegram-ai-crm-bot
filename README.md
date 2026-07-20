@@ -20,6 +20,7 @@ Enterprise CRM platform with Telegram bot integration, PostgreSQL persistence, a
 | Agent Registry | `platform_agents/` | Plugin-based AI agent registry (Sprint 3.1) |
 | Workflow & Task Engine | `platform_workflow/` | Enterprise workflow execution (Sprint 3.2) |
 | Tool Framework | `platform_tools/` | Universal tool & integration framework (Sprint 3.3) |
+| Reasoning Engine | `platform_reasoning/` | AI reasoning & intelligence layer (Sprint 4.1) |
 
 ## Project structure
 
@@ -33,6 +34,7 @@ TelegramBotCourse/
 ├── platform_agents/           # Plugin-based agent registry
 ├── platform_workflow/           # Workflow & task engine
 ├── platform_tools/              # Tool & integration framework
+├── platform_reasoning/          # AI reasoning engine
 ├── platform_architecture/     # Governance validators
 ├── platform_plugin_sdk/       # Plugin extension SDK
 ├── events/                    # PlatformEventBus + CRM publisher
@@ -112,3 +114,4 @@ TelegramBotCourse/
 - `docs/AGENT_REGISTRY.md` — agent registry & plugin SDK guide (Sprint 3.1)
 - `docs/WORKFLOW_ENGINE.md` — workflow & task engine (Sprint 3.2)
 - `docs/TOOLS.md` — tool & integration framework (Sprint 3.3)
+- `docs/REASONING.md` — reasoning engine (Sprint 4.1)

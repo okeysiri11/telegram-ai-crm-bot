@@ -208,3 +208,25 @@ flowchart LR
 | ToolPermissionService | `platform_tools/permissions.py` | Per-agent/user permissions |
 
 Full details: [TOOLS.md](../TOOLS.md).
+
+## Platform Reasoning Engine (Sprint 4.1)
+
+```mermaid
+flowchart LR
+    RE[ReasoningEngine]
+    RP[Pipeline]
+    ST[Strategies]
+    CE[ConfidenceEstimator]
+
+    RE --> RP --> ST
+    RP --> CE
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| ReasoningEngine | `platform_reasoning/reasoning_engine.py` | Central reasoning entry |
+| ReasoningPipeline | `platform_reasoning/pipeline.py` | 7-phase analysis pipeline |
+| Strategies | `platform_reasoning/strategies/` | 6 reasoning strategies |
+| ConfidenceEstimator | `platform_reasoning/confidence.py` | Multi-dimensional confidence |
+
+Full details: [REASONING.md](../REASONING.md).
