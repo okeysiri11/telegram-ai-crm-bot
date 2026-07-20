@@ -624,3 +624,28 @@ flowchart LR
 | AnalyticsEngine | `applications/auto_marketplace/analytics/engine.py` | Multi-domain analytics |
 
 Full details: [BUSINESS_INTELLIGENCE.md](../BUSINESS_INTELLIGENCE.md).
+
+---
+
+## Customer Portal, Dealer Portal & Mobile API (Sprint 6.7)
+
+```mermaid
+flowchart LR
+    PE[PortalEngine]
+    CP[CustomerPortal]
+    DP[DealerPortal]
+    MOB[MobileAPI]
+
+    PE --> CP
+    PE --> DP
+    PE --> MOB
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| PortalEngine | `applications/auto_marketplace/mobile_api/engine.py` | Unified portal entry |
+| CustomerPortal | `applications/auto_marketplace/customer_portal/` | Customer-facing features |
+| DealerPortal | `applications/auto_marketplace/dealer_portal/` | Dealer management |
+| PartnerAPI | `applications/auto_marketplace/partner_api/` | External integrations |
+
+Full details: [CUSTOMER_PORTAL.md](../CUSTOMER_PORTAL.md).

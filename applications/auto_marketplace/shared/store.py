@@ -93,6 +93,18 @@ class MarketplaceStore:
         self.bi_reports: EntityStore = EntityStore()
         self.bi_forecasts: EntityStore = EntityStore()
         self.bi_insights: EntityStore = EntityStore()
+        # Sprint 6.7 — Customer Portal, Dealer Portal & Mobile API
+        self.portal_users: EntityStore = EntityStore()
+        self.portal_sessions: EntityStore = EntityStore()
+        self.favorites: EntityStore = EntityStore()
+        self.saved_searches: EntityStore = EntityStore()
+        self.garage_vehicles: EntityStore = EntityStore()
+        self.test_drive_bookings: EntityStore = EntityStore()
+        self.trade_in_requests: EntityStore = EntityStore()
+        self.offer_requests: EntityStore = EntityStore()
+        self.partner_connections: EntityStore = EntityStore()
+        self.portal_notifications: EntityStore = EntityStore()
+        self.vehicle_views: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for store in (
@@ -150,6 +162,17 @@ class MarketplaceStore:
             self.bi_reports,
             self.bi_forecasts,
             self.bi_insights,
+            self.portal_users,
+            self.portal_sessions,
+            self.favorites,
+            self.saved_searches,
+            self.garage_vehicles,
+            self.test_drive_bookings,
+            self.trade_in_requests,
+            self.offer_requests,
+            self.partner_connections,
+            self.portal_notifications,
+            self.vehicle_views,
         ):
             store.reset()
 

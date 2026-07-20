@@ -21,6 +21,7 @@ from applications.auto_marketplace.integrations.platform_bridge import PlatformB
 from applications.auto_marketplace.inventory.service import InventoryService, inventory_service
 from applications.auto_marketplace.inventory_engine.service import InventoryEngine, inventory_engine
 from applications.auto_marketplace.media.service import MediaService, media_service
+from applications.auto_marketplace.mobile_api.engine import PortalEngine, portal_engine
 from applications.auto_marketplace.notifications.service import NotificationService, notification_service
 from applications.auto_marketplace.payments.service import PaymentService, payment_service
 from applications.auto_marketplace.pricing.service import (
@@ -64,6 +65,7 @@ class AutoMarketplaceApplication:
         ai_sales_engine_svc: AISalesEngine | None = None,
         finance_engine_svc: FinanceEngine | None = None,
         bi_engine_svc: BIEngine | None = None,
+        portal_engine_svc: PortalEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -89,6 +91,7 @@ class AutoMarketplaceApplication:
         self.ai_sales_engine = ai_sales_engine_svc or ai_sales_engine
         self.finance_engine = finance_engine_svc or finance_engine
         self.bi_engine = bi_engine_svc or bi_engine
+        self.portal_engine = portal_engine_svc or portal_engine
 
     def reset(self) -> None:
         self.store.reset()
@@ -110,6 +113,7 @@ class AutoMarketplaceApplication:
             "finance_payments": self.store.finance_payments.count(),
             "bi_dashboards": self.store.bi_dashboards.count(),
             "bi_reports": self.store.bi_reports.count(),
+            "portal_users": self.store.portal_users.count(),
         }
 
 

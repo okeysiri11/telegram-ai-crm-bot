@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.auto_marketplace.api import ai_sales_handlers, bi_handlers, catalog_handlers, crm_handlers, finance_handlers, internal_handlers, rest_handlers, webhooks
+from applications.auto_marketplace.api import ai_sales_handlers, bi_handlers, catalog_handlers, crm_handlers, finance_handlers, internal_handlers, portal_handlers, rest_handlers, webhooks
 from applications.auto_marketplace.api.middleware import auth_middleware
 from applications.auto_marketplace.config import DEFAULT_CONFIG
 
@@ -149,6 +149,53 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_get(f"{bi}/insights", bi_handlers.insights_handler)
     app.router.add_get(f"{bi}/statistics", bi_handlers.statistics_handler)
     app.router.add_get(f"{bi}/charts/{{type}}", bi_handlers.visualizations_handler)
+
+    # Sprint 6.7 — Customer Portal, Dealer Portal & Mobile API
+    portal = f"{prefix}/portal"
+    app.router.add_get(f"{portal}/metrics", portal_handlers.portal_metrics_handler)
+    app.router.add_post(f"{portal}/auth/register", portal_handlers.register_customer_handler)
+    app.router.add_post(f"{portal}/auth/login", portal_handlers.login_handler)
+    app.router.add_post(f"{portal}/auth/oauth", portal_handlers.oauth_login_handler)
+    app.router.add_route("*", f"{portal}/customer/profile", portal_handlers.customer_profile_handler)
+    app.router.add_route("*", f"{portal}/customer/search", portal_handlers.customer_search_handler)
+    app.router.add_post(f"{portal}/customer/search/smart", portal_handlers.smart_search_handler)
+    app.router.add_route("*", f"{portal}/customer/favorites", portal_handlers.favorites_list_handler)
+    app.router.add_route("*", f"{portal}/customer/saved-searches", portal_handlers.saved_searches_handler)
+    app.router.add_route("*", f"{portal}/customer/garage", portal_handlers.garage_handler)
+    app.router.add_get(f"{portal}/customer/history", portal_handlers.purchase_history_handler)
+    app.router.add_post(f"{portal}/customer/test-drive", portal_handlers.test_drive_handler)
+    app.router.add_post(f"{portal}/customer/trade-in", portal_handlers.trade_in_handler)
+    app.router.add_post(f"{portal}/customer/offers", portal_handlers.offer_request_handler)
+    app.router.add_post(f"{portal}/customer/assistant", portal_handlers.customer_ai_handler)
+    app.router.add_get(f"{portal}/customer/recommendations", portal_handlers.customer_recommendations_handler)
+    app.router.add_get(f"{portal}/customer/notifications", portal_handlers.portal_notifications_handler)
+    app.router.add_post(f"{portal}/customer/vehicles/{{vehicle_id}}/view", portal_handlers.view_vehicle_handler)
+    app.router.add_get(f"{portal}/dealer/dashboard", portal_handlers.dealer_dashboard_handler)
+    app.router.add_route("*", f"{portal}/dealer/inventory", portal_handlers.dealer_inventory_handler)
+    app.router.add_get(f"{portal}/dealer/leads", portal_handlers.dealer_leads_handler)
+    app.router.add_get(f"{portal}/dealer/sales", portal_handlers.dealer_sales_handler)
+    app.router.add_get(f"{portal}/dealer/analytics", portal_handlers.dealer_analytics_handler)
+    app.router.add_get(f"{portal}/dealer/finance", portal_handlers.dealer_finance_handler)
+    app.router.add_get(f"{portal}/dealer/documents", portal_handlers.dealer_documents_handler)
+
+    mobile = config.mobile_api_prefix
+    app.router.add_get(f"{mobile}/info", portal_handlers.mobile_info_handler)
+    app.router.add_get(f"{mobile}/feed", portal_handlers.mobile_feed_handler)
+    app.router.add_get(f"{mobile}/sync", portal_handlers.mobile_sync_handler)
+    app.router.add_post(f"{mobile}/push/register", portal_handlers.mobile_push_register_handler)
+
+    pub = f"{prefix}/public"
+    app.router.add_get(f"{pub}/search", portal_handlers.public_search_handler)
+    app.router.add_get(f"{pub}/vehicles/{{vehicle_id}}", portal_handlers.public_vehicle_handler)
+    app.router.add_get(f"{pub}/stats", portal_handlers.public_stats_handler)
+
+    partner = config.partner_api_prefix
+    app.router.add_post(f"{partner}/connect", portal_handlers.partner_connect_handler)
+    app.router.add_post(f"{partner}/insurance/quote", portal_handlers.partner_insurance_handler)
+    app.router.add_post(f"{partner}/financing/quote", portal_handlers.partner_financing_handler)
+    app.router.add_post(f"{partner}/inspection/schedule", portal_handlers.partner_inspection_handler)
+    app.router.add_post(f"{partner}/logistics/schedule", portal_handlers.partner_logistics_handler)
+    app.router.add_post(f"{partner}/webhooks", portal_handlers.partner_webhook_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/health", internal_handlers.internal_health_handler)
