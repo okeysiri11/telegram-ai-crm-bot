@@ -276,3 +276,29 @@ flowchart LR
 | Strategies | `platform_decision/strategies/` | 8 decision strategies |
 
 Full details: [DECISION_ENGINE.md](../DECISION_ENGINE.md).
+
+---
+
+## Learning Engine (Sprint 4.4)
+
+```mermaid
+flowchart LR
+    LE[LearningEngine]
+    LP[LearningPipeline]
+    FC[FeedbackCollector]
+    ES[ExperienceStore]
+    RE[RecommendationEngine]
+
+    LE --> LP --> FC --> ES
+    LP --> RE
+```
+
+| Component | Path | Role |
+|-----------|------|------|
+| LearningEngine | `platform_learning/learning_engine.py` | Learning cycle orchestration |
+| FeedbackCollector | `platform_learning/feedback_collector.py` | Multi-source feedback ingestion |
+| ExperienceStore | `platform_learning/experience_store.py` | Cross-layer execution history |
+| PatternAnalyzer | `platform_learning/pattern_analyzer.py` | Success/failure pattern detection |
+| RecommendationEngine | `platform_learning/recommendation_engine.py` | Improvement recommendations |
+
+Full details: [LEARNING_ENGINE.md](../LEARNING_ENGINE.md).
