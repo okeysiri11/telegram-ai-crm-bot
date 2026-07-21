@@ -1,4 +1,4 @@
-# Agro Marketplace configuration — Sprint 8.4.
+# Agro Marketplace configuration — Sprint 8.5.
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 @dataclass
 class AgroMarketplaceConfig:
     application_name: str = "Agro Marketplace"
-    application_version: str = "1.3.0-alpha"
+    application_version: str = "1.4.0-alpha"
     platform_dependency: str = "AI Platform Core v3.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
@@ -27,6 +27,7 @@ class AgroMarketplaceConfig:
     trading_layer: str = "1.0"
     negotiation_layer: str = "1.0"
     agro_ai: str = "1.0"
+    export_engine: str = "1.0"
 
 
 DEFAULT_CONFIG = AgroMarketplaceConfig()

@@ -8,6 +8,7 @@ from applications.agro_marketplace.api import (
     ai_handlers,
     catalog_handlers,
     crm_handlers,
+    export_handlers,
     internal_handlers,
     rest_handlers,
     webhooks,
@@ -64,7 +65,6 @@ def register_agro_marketplace_routes(app: web.Application) -> None:
         rest_handlers.complete_delivery_handler,
     )
 
-    app.router.add_post(f"{prefix}/export/shipments", rest_handlers.create_export_handler)
     app.router.add_post(
         f"{prefix}/export/shipments/{{shipment_id}}/start",
         rest_handlers.start_export_handler,
@@ -265,6 +265,51 @@ def register_agro_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{wf}/opportunities", ai_handlers.workflow_opportunities_handler)
     app.router.add_post(f"{wf}/executive-report", ai_handlers.workflow_executive_report_handler)
     app.router.add_get(f"{wf}/tasks", ai_handlers.workflow_tasks_handler)
+
+    # Sprint 8.5 — Export / Logistics / Shipping / Tracking / Documents
+    ex = f"{prefix}/export"
+    app.router.add_get(f"{ex}/health", export_handlers.export_health_handler)
+    app.router.add_get(f"{ex}/shipments", export_handlers.export_list_shipments_handler)
+    app.router.add_post(f"{ex}/shipments", export_handlers.export_create_shipment_handler)
+    app.router.add_get(f"{ex}/shipments/{{shipment_id}}", export_handlers.export_get_shipment_handler)
+    app.router.add_post(f"{ex}/shipments/{{shipment_id}}/items", export_handlers.export_add_item_handler)
+    app.router.add_post(f"{ex}/shipments/{{shipment_id}}/documents", export_handlers.export_prepare_docs_handler)
+    app.router.add_post(f"{ex}/shipments/{{shipment_id}}/documents/verify", export_handlers.export_verify_docs_handler)
+    app.router.add_post(f"{ex}/shipments/{{shipment_id}}/risk", export_handlers.export_risk_handler)
+    app.router.add_post(f"{ex}/shipments/{{shipment_id}}/dispatch", export_handlers.export_dispatch_handler)
+    app.router.add_post(f"{ex}/shipments/{{shipment_id}}/arrive", export_handlers.export_arrive_handler)
+    app.router.add_post(f"{ex}/shipments/{{shipment_id}}/customs", export_handlers.export_customs_handler)
+    app.router.add_post(f"{ex}/shipments/{{shipment_id}}/deliver", export_handlers.export_deliver_handler)
+    app.router.add_post(f"{ex}/shipments/{{shipment_id}}/complete", export_handlers.export_complete_handler)
+    app.router.add_get(f"{ex}/incoterms", export_handlers.incoterms_list_handler)
+    app.router.add_get(f"{ex}/requirements/{{country}}", export_handlers.country_requirements_handler)
+    app.router.add_get(f"{ex}/opportunities", export_handlers.trade_opportunities_handler)
+
+    lg = f"{prefix}/logistics"
+    app.router.add_post(f"{lg}/plan", export_handlers.logistics_plan_handler)
+    app.router.add_post(f"{lg}/dispatch", export_handlers.logistics_dispatch_handler)
+    app.router.add_post(f"{lg}/deliveries", export_handlers.logistics_schedule_delivery_handler)
+    app.router.add_get(f"{lg}/ports", export_handlers.ports_list_handler)
+    app.router.add_post(f"{lg}/ports", export_handlers.ports_create_handler)
+    app.router.add_post(f"{lg}/terminals", export_handlers.terminals_create_handler)
+    app.router.add_get(f"{lg}/carriers", export_handlers.carriers_list_handler)
+    app.router.add_post(f"{lg}/carriers", export_handlers.carriers_create_handler)
+    app.router.add_get(f"{lg}/carriers/recommend", export_handlers.carriers_recommend_handler)
+    app.router.add_post(f"{lg}/containers", export_handlers.containers_create_handler)
+    app.router.add_post(f"{lg}/containers/load", export_handlers.containers_load_handler)
+    app.router.add_post(f"{lg}/insurance", export_handlers.insurance_create_handler)
+    app.router.add_post(f"{lg}/finance/estimate", export_handlers.finance_estimate_handler)
+
+    sh = f"{prefix}/shipments"
+    app.router.add_get(f"{sh}/{{shipment_id}}/tracking", export_handlers.tracking_timeline_handler)
+    app.router.add_get(f"{sh}/{{shipment_id}}/documents", export_handlers.documents_list_handler)
+
+    track = f"{prefix}/tracking"
+    app.router.add_get(f"{track}/{{shipment_id}}", export_handlers.tracking_timeline_handler)
+
+    docs = f"{prefix}/trade-documents"
+    app.router.add_get(f"{docs}", export_handlers.documents_list_handler)
+    app.router.add_post(f"{docs}/{{document_id}}/verify", export_handlers.documents_verify_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/pipeline", internal_handlers.pipeline_handler)

@@ -1,0 +1,1 @@
+from applications.agro_marketplace.insurance.service import InsuranceService, insurance_service

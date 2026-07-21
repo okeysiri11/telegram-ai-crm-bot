@@ -1,0 +1,1 @@
+from applications.agro_marketplace.shipping.service import ShippingService, shipping_service

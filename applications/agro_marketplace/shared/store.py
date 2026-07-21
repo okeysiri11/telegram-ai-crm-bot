@@ -98,6 +98,22 @@ class AgroStore:
         self.knowledge_articles: EntityStore = EntityStore()
         self.executive_reports: EntityStore = EntityStore()
         self.ai_workflow_tasks: EntityStore = EntityStore()
+        # Sprint 8.5 — Export / logistics / international trade
+        self.intl_shipments: EntityStore = EntityStore()
+        self.shipment_items: EntityStore = EntityStore()
+        self.containers: EntityStore = EntityStore()
+        self.container_loads: EntityStore = EntityStore()
+        self.ports: EntityStore = EntityStore()
+        self.terminals: EntityStore = EntityStore()
+        self.carriers: EntityStore = EntityStore()
+        self.route_plans: EntityStore = EntityStore()
+        self.freight_orders: EntityStore = EntityStore()
+        self.customs_declarations: EntityStore = EntityStore()
+        self.trade_documents: EntityStore = EntityStore()
+        self.insurance_policies: EntityStore = EntityStore()
+        self.tracking_events: EntityStore = EntityStore()
+        self.country_requirements: EntityStore = EntityStore()
+        self.freight_finance: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

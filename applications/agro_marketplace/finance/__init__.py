@@ -1,0 +1,1 @@
+from applications.agro_marketplace.finance.service import FreightFinanceService, freight_finance_service

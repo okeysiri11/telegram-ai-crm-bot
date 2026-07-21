@@ -913,3 +913,20 @@ Full details: [AGRO_CRM.md](AGRO_CRM.md).
 **Application Version 1.3.0-alpha** — agro_ai 1.0
 
 Full details: [AGRO_AI.md](AGRO_AI.md).
+
+## Agro Export, Logistics & International Trade (Sprint 8.5)
+
+| Component | Location | Role |
+|-----------|----------|------|
+| ExportEngine | `export/engine.py` | Export workflow, docs, customs, completion |
+| LogisticsEngine | `logistics/engine.py` | Planning, warehouse dispatch, freight |
+| ShippingService | `shipping/service.py` | Carriers, routes, freight orders |
+| PortsService | `ports/service.py` | Ports and terminals |
+| ContainersService | `containers/service.py` | Container planning and loads |
+| TradeDocumentsService | `documents/trade_service.py` | BoL, packing list, invoice, verification |
+| TrackingService | `tracking/service.py` | Shipment timeline |
+| ExportAIIntegration | `export/ai_integration.py` | Route/carrier/risk/customs AI hooks |
+
+**Application Version 1.4.0-alpha** — export_engine 1.0
+
+Full details: [AGRO_EXPORT.md](AGRO_EXPORT.md).
