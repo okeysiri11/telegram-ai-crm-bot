@@ -85,5 +85,10 @@ class VesselRegistry:
         )
         return saved
 
+    def set_status(self, vessel_id: str, status: VesselStatus | str) -> Vessel:
+        vessel = self.get(vessel_id)
+        vessel.status = VesselStatus(status) if isinstance(status, str) else status
+        return self._store.vessels.save(vessel_id, vessel)
+
 
 vessel_registry = VesselRegistry()

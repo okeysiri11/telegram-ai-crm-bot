@@ -1,11 +1,12 @@
-# Port ERP — Sprint 9.1 Foundation
+# Port ERP — Sprint 9.1 Foundation + Sprint 9.2 Tracking
 
-Port operations ERP for **Port ERP 1.0.0-alpha**.
+Port operations ERP for **Port ERP 1.1.0-alpha**.
 
 | Field | Value |
 |-------|-------|
 | Application name | Port ERP |
-| Application version | `1.0.0-alpha` |
+| Application version | `1.1.0-alpha` |
+| Tracking engine | `1.0` |
 | Platform | AI Platform Core v3 (bridge only) |
 | Ecosystem | AI Ecosystem v1.5 (bridge only) |
 | API | `/api/port/v1` |
@@ -19,12 +20,15 @@ flowchart TB
     API["/api/port/v1"]
     App[PortERPApplication]
     Core[PortCoreEngine]
+    Track[LiveTrackingEngine]
     Bridges[Platform + Ecosystem Bridges]
     Store[PortStore]
 
     API --> App
     App --> Core
+    App --> Track
     Core --> Store
+    Track --> Store
     App --> Bridges
 ```
 
@@ -32,9 +36,13 @@ flowchart TB
 
 `port_core/` · `port_management/` · `terminals/` · `berths/` · `vessels/` · `containers/` · `cargo/` · `customers/` · `companies/` · `operations/` · `documents/` · `billing/` · `shared/`
 
+**Sprint 9.2 tracking:** `tracking/` · `ais/` · `gps/` · `fleet/` · `geofence/` · `maps/` · `timeline/`
+
 ## Domain models
 
 Port · Terminal · Berth · Vessel · Voyage · Container · Cargo · Warehouse · Gate · Carrier · ShippingLine · Customer · Forwarder · CustomsBroker · PortOperator
+
+**Tracking:** LivePosition · RouteHistory · Geofence · TimelineEvent · ETAPrediction · TruckTrack · ContainerLifecycleRecord
 
 ## Registries / services
 
@@ -48,6 +56,7 @@ Port · Terminal · Berth · Vessel · Voyage · Container · Cargo · Warehouse
 | Cargo Registry | Load / unload |
 | Company Registry | Lines, forwarders, brokers, carriers, operators |
 | Customer Registry | Customers |
+| Live Tracking Engine | AIS, GPS, fleet, ETA, geofence, timeline |
 
 ## RBAC roles
 
@@ -67,10 +76,16 @@ Port Director · Terminal Manager · Dispatcher · Warehouse Manager · Containe
 | Customers | `/customers` |
 | Companies | `/companies/*` |
 | Operations | `/operations/*` |
+| Tracking | `/tracking` |
+| GPS | `/gps` |
+| Maps | `/maps` |
+| Timeline | `/timeline` |
 
 ## Events
 
-`VesselArrived` · `VesselDeparted` · `ContainerReceived` · `ContainerReleased` · `CargoLoaded` · `CargoUnloaded` · `BerthAssigned` · `GateOpened` · `GateClosed`
+Foundation: `VesselArrived` · `VesselDeparted` · `ContainerReceived` · `ContainerReleased` · `CargoLoaded` · `CargoUnloaded` · `BerthAssigned` · `GateOpened` · `GateClosed`
+
+Tracking: `VesselPositionUpdated` · `ContainerPositionUpdated` · `TruckPositionUpdated` · `EnteredGeofence` · `ExitedGeofence` · `ETAChanged` · `ETDChanged` · `ArrivalPredicted` · `DelayDetected`
 
 ## Developer guide
 
@@ -80,8 +95,13 @@ from applications.port_erp.shared.models import Port, Terminal, Vessel
 
 port = port_erp.core.ports.register(Port(name="Mombasa", code="KEMBA", country="KE"))
 terminal = port_erp.core.terminals.register(
-    Terminal(port_id=port.port_id, name="CT1", capacity_teu=50000)
+    Terminal(port_id=port.port_id, name="CT1", capacity_teu=40000)
 )
 vessel = port_erp.core.vessels.register(Vessel(name="Pacific Star", imo="1234567"))
 health = port_erp.health()
+assert health["tracking_engine"] == "1.0"
 ```
+
+## Tracking docs
+
+Full live tracking details: [PORT_TRACKING.md](PORT_TRACKING.md).

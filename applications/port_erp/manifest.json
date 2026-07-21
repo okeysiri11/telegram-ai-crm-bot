@@ -1,11 +1,12 @@
 {
   "application_name": "Port ERP",
   "application": "port_erp",
-  "application_version": "1.0.0-alpha",
+  "application_version": "1.1.0-alpha",
   "platform_dependency": "AI Platform Core v3",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "api_prefix": "/api/port/v1",
   "port_core": "1.0",
+  "tracking_engine": "1.0",
   "modules": {
     "port_core": "1.0",
     "port_management": "1.0",
@@ -19,7 +20,14 @@
     "operations": "1.0",
     "documents": "1.0",
     "billing": "1.0",
-    "shared": "1.0"
+    "shared": "1.0",
+    "tracking": "1.0",
+    "ais": "1.0",
+    "gps": "1.0",
+    "fleet": "1.0",
+    "geofence": "1.0",
+    "maps": "1.0",
+    "timeline": "1.0"
   },
   "roles": [
     "port_director",

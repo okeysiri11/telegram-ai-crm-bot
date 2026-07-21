@@ -33,7 +33,7 @@ class ContainerRegistry:
 
     async def receive(self, container_id: str, *, terminal_id: str = "") -> Container:
         container = self.get(container_id)
-        container.status = ContainerStatus.RECEIVED
+        container.status = ContainerStatus.AT_PORT
         if terminal_id:
             container.terminal_id = terminal_id
         saved = self._store.containers.save(container_id, container)
@@ -48,7 +48,7 @@ class ContainerRegistry:
 
     async def release(self, container_id: str) -> Container:
         container = self.get(container_id)
-        container.status = ContainerStatus.RELEASED
+        container.status = ContainerStatus.OUT_FOR_DELIVERY
         saved = self._store.containers.save(container_id, container)
         await publish(
             ContainerReleasedEvent(
@@ -58,6 +58,19 @@ class ContainerRegistry:
             )
         )
         return saved
+
+    def transition(
+        self,
+        container_id: str,
+        to_status: ContainerStatus | str,
+        *,
+        location: str = "",
+        notes: str = "",
+    ) -> Container:
+        container = self.get(container_id)
+        previous = container.status.value
+        container.status = ContainerStatus(to_status) if isinstance(to_status, str) else to_status
+        return self._store.containers.save(container_id, container)
 
 
 container_registry = ContainerRegistry()

@@ -53,6 +53,15 @@ class PortStore:
         self.documents: EntityStore = EntityStore()
         self.invoices: EntityStore = EntityStore()
         self.operations: EntityStore = EntityStore()
+        # Sprint 9.2 — tracking
+        self.live_positions: EntityStore = EntityStore()
+        self.route_histories: EntityStore = EntityStore()
+        self.geofences: EntityStore = EntityStore()
+        self.timeline_events: EntityStore = EntityStore()
+        self.eta_predictions: EntityStore = EntityStore()
+        self.truck_tracks: EntityStore = EntityStore()
+        self.container_lifecycle: EntityStore = EntityStore()
+        self.geofence_occupancy: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

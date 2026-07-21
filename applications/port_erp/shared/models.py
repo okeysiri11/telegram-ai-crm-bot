@@ -33,24 +33,63 @@ class PortRole(str, enum.Enum):
 
 
 class VesselStatus(str, enum.Enum):
-    EXPECTED = "expected"
-    ARRIVED = "arrived"
-    BERTHED = "berthed"
-    WORKING = "working"
+    SCHEDULED = "scheduled"
+    APPROACHING = "approaching"
+    ANCHORED = "anchored"
+    DOCKED = "docked"
+    LOADING = "loading"
+    UNLOADING = "unloading"
+    WAITING = "waiting"
     DEPARTED = "departed"
+    COMPLETED = "completed"
+    # Sprint 9.1 aliases retained for compatibility
+    EXPECTED = "scheduled"
+    ARRIVED = "docked"
+    BERTHED = "docked"
+    WORKING = "loading"
 
 
 class ContainerStatus(str, enum.Enum):
-    EXPECTED = "expected"
-    RECEIVED = "received"
-    IN_YARD = "in_yard"
+    CREATED = "created"
+    BOOKED = "booked"
     LOADED = "loaded"
-    RELEASED = "released"
+    AT_PORT = "at_port"
+    ON_VESSEL = "on_vessel"
+    IN_TRANSIT = "in_transit"
+    TRANSSHIPMENT = "transshipment"
+    CUSTOMS = "customs"
+    ARRIVED = "arrived"
+    WAREHOUSE = "warehouse"
+    OUT_FOR_DELIVERY = "out_for_delivery"
+    DELIVERED = "delivered"
+    COMPLETED = "completed"
+    # Sprint 9.1 aliases
+    EXPECTED = "created"
+    RECEIVED = "at_port"
+    IN_YARD = "warehouse"
+    RELEASED = "out_for_delivery"
 
 
 class GateStatus(str, enum.Enum):
     OPEN = "open"
     CLOSED = "closed"
+
+
+class GeofenceType(str, enum.Enum):
+    PORT = "port"
+    TERMINAL = "terminal"
+    BERTH = "berth"
+    WAREHOUSE = "warehouse"
+    CONTAINER_YARD = "container_yard"
+    GATE = "gate"
+    RAIL_TERMINAL = "rail_terminal"
+
+
+class TrackAssetType(str, enum.Enum):
+    VESSEL = "vessel"
+    CONTAINER = "container"
+    TRUCK = "truck"
+    RAIL = "rail"
 
 
 @dataclass
@@ -136,7 +175,7 @@ class Vessel:
     loa_m: float = 0.0
     draft_m: float = 0.0
     shipping_line_id: str = ""
-    status: VesselStatus = VesselStatus.EXPECTED
+    status: VesselStatus = VesselStatus.SCHEDULED
     created_at: float = field(default_factory=_ts)
 
     def to_dict(self) -> dict[str, Any]:
@@ -197,7 +236,7 @@ class Container:
     voyage_id: str = ""
     vessel_id: str = ""
     terminal_id: str = ""
-    status: ContainerStatus = ContainerStatus.EXPECTED
+    status: ContainerStatus = ContainerStatus.CREATED
     weight_kg: float = 0.0
     created_at: float = field(default_factory=_ts)
 
