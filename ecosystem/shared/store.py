@@ -79,6 +79,16 @@ class EcosystemStore:
         self.skills: EntityStore = EntityStore()
         self.task_plans: EntityStore = EntityStore()
         self.routing_decisions: EntityStore = EntityStore()
+        # Sprint 7.4 — Autonomous AI Workforce
+        self.executives: EntityStore = EntityStore()
+        self.workforce_departments: EntityStore = EntityStore()
+        self.specialists: EntityStore = EntityStore()
+        self.workforce_tasks: EntityStore = EntityStore()
+        self.executive_decisions: EntityStore = EntityStore()
+        self.objectives: EntityStore = EntityStore()
+        self.work_plans: EntityStore = EntityStore()
+        self.escalations: EntityStore = EntityStore()
+        self.collaboration_sessions: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

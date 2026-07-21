@@ -765,3 +765,29 @@ flowchart LR
 **Ecosystem Version 1.2.0-alpha** — assistant_layer 1.0, global_knowledge 1.0
 
 Full details: [UNIFIED_ASSISTANT.md](../UNIFIED_ASSISTANT.md).
+
+---
+
+## Autonomous AI Workforce (Sprint 7.4)
+
+```mermaid
+flowchart TB
+    Exec[Executive AIs]
+    Dept[Departments]
+    Spec[Specialists]
+
+    Exec --> Dept --> Spec
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| WorkforceEngine | `ecosystem/workforce/engine.py` | Workforce facade |
+| Executive | `ecosystem/workforce/executive/` | C-suite AI agents |
+| Departments | `ecosystem/workforce/departments/` | 8 business departments |
+| Specialists | `ecosystem/workforce/specialists/` | Domain specialists |
+| Coordination | `ecosystem/workforce/coordination/` | Delegation & escalation |
+| Planning | `ecosystem/workforce/planning/` | Strategic planning |
+
+**Ecosystem Version 1.3.0-alpha** — workforce_layer 1.0, executive_ai 1.0
+
+Full details: [AI_WORKFORCE.md](../AI_WORKFORCE.md).

@@ -35,6 +35,8 @@ class EcosystemApplication:
             "event_bus": self.config.event_bus,
             "assistant_layer": self.config.assistant_layer,
             "global_knowledge": self.config.global_knowledge,
+            "workforce_layer": self.config.workforce_layer,
+            "executive_ai": self.config.executive_ai,
             "metrics": self.engine.metrics(),
         }
 

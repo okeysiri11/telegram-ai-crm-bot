@@ -35,7 +35,7 @@ def reset_store():
 
 
 def test_assistant_version():
-    assert DEFAULT_CONFIG.ecosystem_version == "1.2.0-alpha"
+    assert DEFAULT_CONFIG.ecosystem_version == "1.3.0-alpha"
     assert DEFAULT_CONFIG.assistant_layer == "1.0"
     assert DEFAULT_CONFIG.global_knowledge == "1.0"
 
@@ -156,7 +156,7 @@ async def test_assistant_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/health")
     assert resp.status == 200
     health = await resp.json()
-    assert health["ecosystem_version"] == "1.2.0-alpha"
+    assert health["ecosystem_version"] == "1.3.0-alpha"
     assert health["assistant_layer"] == "1.0"
     assert health["global_knowledge"] == "1.0"
 
@@ -194,6 +194,6 @@ async def test_assistant_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/manifest")
     assert resp.status == 200
     manifest = await resp.json()
-    assert manifest["ecosystem_version"] == "1.2.0-alpha"
+    assert manifest["ecosystem_version"] == "1.3.0-alpha"
     assert manifest["assistant_layer"] == "1.0"
     assert manifest["global_knowledge"] == "1.0"

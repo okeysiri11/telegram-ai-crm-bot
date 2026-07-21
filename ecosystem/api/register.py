@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from ecosystem.api import assistant_handlers, communication_handlers, handlers
+from ecosystem.api import assistant_handlers, communication_handlers, handlers, workforce_handlers
 from ecosystem.api.middleware import ecosystem_auth_middleware
 from ecosystem.config import DEFAULT_CONFIG
 
@@ -114,3 +114,34 @@ def register_ecosystem_routes(app: web.Application) -> None:
     ctx = f"{prefix}/context"
     app.router.add_get(ctx, assistant_handlers.context_get_handler)
     app.router.add_post(ctx, assistant_handlers.context_update_handler)
+
+    # Sprint 7.4 — Autonomous AI Workforce
+    wf = f"{prefix}/workforce"
+    app.router.add_get(f"{wf}/metrics", workforce_handlers.workforce_metrics_handler)
+    app.router.add_get(f"{wf}/org-chart", workforce_handlers.org_chart_handler)
+    app.router.add_get(f"{wf}/specialists", workforce_handlers.list_specialists_handler)
+    app.router.add_get(f"{wf}/tasks", workforce_handlers.list_tasks_handler)
+    app.router.add_post(f"{wf}/delegate", workforce_handlers.delegate_task_handler)
+    app.router.add_post(f"{wf}/tasks/{{task_id}}/execute", workforce_handlers.execute_task_handler)
+    app.router.add_post(f"{wf}/run", workforce_handlers.run_workflow_handler)
+    app.router.add_post(f"{wf}/escalate", workforce_handlers.escalate_handler)
+    app.router.add_get(f"{wf}/balance", workforce_handlers.balance_handler)
+    app.router.add_post(f"{wf}/collaborate", workforce_handlers.collaborate_handler)
+
+    executive = f"{prefix}/executive"
+    app.router.add_get(executive, workforce_handlers.list_executives_handler)
+    app.router.add_post(f"{executive}/decide", workforce_handlers.executive_decide_handler)
+    app.router.add_post(f"{executive}/support", workforce_handlers.executive_support_handler)
+
+    departments = f"{prefix}/departments"
+    app.router.add_get(departments, workforce_handlers.list_departments_handler)
+    app.router.add_get(f"{departments}/{{department_type}}", workforce_handlers.department_roster_handler)
+
+    planning = f"{prefix}/planning"
+    app.router.add_post(f"{planning}/objectives", workforce_handlers.create_objective_handler)
+    app.router.add_post(f"{planning}/objectives/{{objective_id}}/progress", workforce_handlers.update_objective_handler)
+    app.router.add_post(f"{planning}/plans", workforce_handlers.create_plan_handler)
+    app.router.add_get(f"{planning}/performance", workforce_handlers.performance_handler)
+
+    governance = f"{prefix}/governance"
+    app.router.add_get(governance, workforce_handlers.governance_audit_handler)

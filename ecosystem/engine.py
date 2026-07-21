@@ -1,4 +1,4 @@
-# Ecosystem engine — unified facade for identity, workspace, communication, AI.
+# Ecosystem engine — unified facade including AI workforce.
 
 from __future__ import annotations
 
@@ -14,11 +14,12 @@ from ecosystem.permissions.service import PermissionService, permission_service
 from ecosystem.profiles.service import ProfileService, profile_service
 from ecosystem.services.shared_services import CrossApplicationServices, cross_app_services
 from ecosystem.tenants.service import TenantService, tenant_service
+from ecosystem.workforce.engine import WorkforceEngine, workforce_engine
 from ecosystem.workspace.service import WorkspaceService, workspace_service
 
 
 class EcosystemEngine:
-    """Unified ecosystem entry point — identity, workspace, communication, assistant."""
+    """Unified ecosystem entry point — identity, workspace, communication, assistant, workforce."""
 
     def __init__(
         self,
@@ -32,6 +33,7 @@ class EcosystemEngine:
         shared: CrossApplicationServices | None = None,
         assistant: AssistantEngine | None = None,
         communication: CommunicationEngine | None = None,
+        workforce: WorkforceEngine | None = None,
     ) -> None:
         self.identity = identity or identity_service
         self.organizations = organizations or organization_service
@@ -43,6 +45,7 @@ class EcosystemEngine:
         self.shared = shared or cross_app_services
         self.assistant = assistant or assistant_engine
         self.communication = communication or communication_engine
+        self.workforce = workforce or workforce_engine
 
     def metrics(self) -> dict[str, Any]:
         from ecosystem.shared.store import ecosystem_store
@@ -54,6 +57,8 @@ class EcosystemEngine:
             "event_bus": DEFAULT_CONFIG.event_bus,
             "assistant_layer": DEFAULT_CONFIG.assistant_layer,
             "global_knowledge": DEFAULT_CONFIG.global_knowledge,
+            "workforce_layer": DEFAULT_CONFIG.workforce_layer,
+            "executive_ai": DEFAULT_CONFIG.executive_ai,
             "users": ecosystem_store.users.count(),
             "organizations": ecosystem_store.organizations.count(),
             "workspaces": ecosystem_store.workspaces.count(),
@@ -61,6 +66,7 @@ class EcosystemEngine:
             "registered_applications": DEFAULT_CONFIG.registered_applications,
             "communication": self.communication.metrics(),
             "assistant": self.assistant.metrics(),
+            "workforce": self.workforce.metrics(),
         }
 
 
