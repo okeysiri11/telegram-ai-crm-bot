@@ -89,6 +89,17 @@ class EcosystemStore:
         self.work_plans: EntityStore = EntityStore()
         self.escalations: EntityStore = EntityStore()
         self.collaboration_sessions: EntityStore = EntityStore()
+        # Sprint 7.5 — Continuous Learning & Optimization
+        self.execution_records: EntityStore = EntityStore()
+        self.decision_outcomes: EntityStore = EntityStore()
+        self.feedback_items: EntityStore = EntityStore()
+        self.learning_cycles: EntityStore = EntityStore()
+        self.performance_snapshots: EntityStore = EntityStore()
+        self.benchmark_results: EntityStore = EntityStore()
+        self.recommendations: EntityStore = EntityStore()
+        self.simulation_runs: EntityStore = EntityStore()
+        self.strategy_updates: EntityStore = EntityStore()
+        self.optimization_runs: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

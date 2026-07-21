@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from ecosystem.api import assistant_handlers, communication_handlers, handlers, workforce_handlers
+from ecosystem.api import assistant_handlers, communication_handlers, handlers, optimization_handlers, workforce_handlers
 from ecosystem.api.middleware import ecosystem_auth_middleware
 from ecosystem.config import DEFAULT_CONFIG
 
@@ -145,3 +145,33 @@ def register_ecosystem_routes(app: web.Application) -> None:
 
     governance = f"{prefix}/governance"
     app.router.add_get(governance, workforce_handlers.governance_audit_handler)
+
+    # Sprint 7.5 — Continuous Learning & Optimization
+    opt = f"{prefix}/optimization"
+    app.router.add_get(f"{opt}/metrics", optimization_handlers.optimization_metrics_handler)
+    app.router.add_post(opt, optimization_handlers.optimize_handler)
+    app.router.add_get(f"{opt}/benchmarks", optimization_handlers.benchmark_handler)
+
+    learning = f"{prefix}/learning"
+    app.router.add_post(f"{learning}/cycles", optimization_handlers.learning_cycle_handler)
+    app.router.add_get(f"{learning}/history", optimization_handlers.learning_history_handler)
+    app.router.add_post(f"{learning}/executions", optimization_handlers.record_execution_handler)
+    app.router.add_post(f"{learning}/decisions", optimization_handlers.track_decision_handler)
+    app.router.add_post(f"{learning}/feedback", optimization_handlers.feedback_handler)
+
+    sim = f"{prefix}/simulation"
+    app.router.add_post(sim, optimization_handlers.simulation_handler)
+    app.router.add_get(sim, optimization_handlers.list_simulations_handler)
+
+    recs = f"{prefix}/recommendations"
+    app.router.add_post(recs, optimization_handlers.recommendations_generate_handler)
+    app.router.add_get(recs, optimization_handlers.recommendations_list_handler)
+
+    perf = f"{prefix}/performance"
+    app.router.add_post(f"{perf}/collect", optimization_handlers.performance_collect_handler)
+    app.router.add_get(perf, optimization_handlers.performance_dashboard_handler)
+    app.router.add_post(perf, optimization_handlers.performance_record_handler)
+
+    strategy = f"{prefix}/strategy"
+    app.router.add_post(strategy, optimization_handlers.strategy_update_handler)
+    app.router.add_get(strategy, optimization_handlers.strategy_list_handler)

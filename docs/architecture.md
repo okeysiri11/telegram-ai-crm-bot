@@ -791,3 +791,31 @@ flowchart TB
 **Ecosystem Version 1.3.0-alpha** — workforce_layer 1.0, executive_ai 1.0
 
 Full details: [AI_WORKFORCE.md](../AI_WORKFORCE.md).
+
+---
+
+## Continuous Learning & Optimization (Sprint 7.5)
+
+```mermaid
+flowchart LR
+    Learn[Learning]
+    Perf[Performance]
+    Sim[Simulation]
+    Rec[Recommendations]
+
+    Learn --> Rec
+    Perf --> Rec
+    Sim --> Rec
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| OptimizationEngine | `ecosystem/optimization/engine.py` | Optimization facade |
+| ContinuousLearning | `ecosystem/optimization/continuous_learning/` | History & experience replay |
+| Performance | `ecosystem/optimization/performance/` | KPI & latency monitoring |
+| Simulation | `ecosystem/optimization/simulation/` | What-if & capacity sims |
+| Recommendations | `ecosystem/optimization/recommendations/` | Strategic recommendations |
+
+**Ecosystem Version 1.4.0-alpha** — optimization_layer 1.0, continuous_learning 1.0
+
+Full details: [ECOSYSTEM_OPTIMIZATION.md](../ECOSYSTEM_OPTIMIZATION.md).

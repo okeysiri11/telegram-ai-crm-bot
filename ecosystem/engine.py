@@ -1,4 +1,4 @@
-# Ecosystem engine — unified facade including AI workforce.
+# Ecosystem engine — includes continuous learning & optimization.
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from ecosystem.communication.engine import CommunicationEngine, communication_en
 from ecosystem.config import DEFAULT_CONFIG
 from ecosystem.identity.service import IdentityService, identity_service
 from ecosystem.navigation.service import NavigationService, navigation_service
+from ecosystem.optimization.engine import OptimizationEngine, optimization_engine
 from ecosystem.organizations.service import OrganizationService, organization_service
 from ecosystem.permissions.service import PermissionService, permission_service
 from ecosystem.profiles.service import ProfileService, profile_service
@@ -19,7 +20,7 @@ from ecosystem.workspace.service import WorkspaceService, workspace_service
 
 
 class EcosystemEngine:
-    """Unified ecosystem entry point — identity, workspace, communication, assistant, workforce."""
+    """Unified ecosystem entry point including optimization & continuous learning."""
 
     def __init__(
         self,
@@ -34,6 +35,7 @@ class EcosystemEngine:
         assistant: AssistantEngine | None = None,
         communication: CommunicationEngine | None = None,
         workforce: WorkforceEngine | None = None,
+        optimization: OptimizationEngine | None = None,
     ) -> None:
         self.identity = identity or identity_service
         self.organizations = organizations or organization_service
@@ -46,6 +48,7 @@ class EcosystemEngine:
         self.assistant = assistant or assistant_engine
         self.communication = communication or communication_engine
         self.workforce = workforce or workforce_engine
+        self.optimization = optimization or optimization_engine
 
     def metrics(self) -> dict[str, Any]:
         from ecosystem.shared.store import ecosystem_store
@@ -59,6 +62,8 @@ class EcosystemEngine:
             "global_knowledge": DEFAULT_CONFIG.global_knowledge,
             "workforce_layer": DEFAULT_CONFIG.workforce_layer,
             "executive_ai": DEFAULT_CONFIG.executive_ai,
+            "optimization_layer": DEFAULT_CONFIG.optimization_layer,
+            "continuous_learning": DEFAULT_CONFIG.continuous_learning,
             "users": ecosystem_store.users.count(),
             "organizations": ecosystem_store.organizations.count(),
             "workspaces": ecosystem_store.workspaces.count(),
@@ -67,6 +72,7 @@ class EcosystemEngine:
             "communication": self.communication.metrics(),
             "assistant": self.assistant.metrics(),
             "workforce": self.workforce.metrics(),
+            "optimization": self.optimization.metrics(),
         }
 
 

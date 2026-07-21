@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Ecosystem Version | **1.3.0-alpha** |
+| Ecosystem Version | **1.4.0-alpha** |
 | Communication Layer | **1.0** |
 | Event Bus | **1.0** |
 | Platform Dependency | **AI Platform Core v3.0** |

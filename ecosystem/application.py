@@ -37,6 +37,8 @@ class EcosystemApplication:
             "global_knowledge": self.config.global_knowledge,
             "workforce_layer": self.config.workforce_layer,
             "executive_ai": self.config.executive_ai,
+            "optimization_layer": self.config.optimization_layer,
+            "continuous_learning": self.config.continuous_learning,
             "metrics": self.engine.metrics(),
         }
 

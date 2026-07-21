@@ -35,7 +35,7 @@ def reset_store():
 
 
 def test_version_and_communication_manifest():
-    assert DEFAULT_CONFIG.ecosystem_version == "1.3.0-alpha"
+    assert DEFAULT_CONFIG.ecosystem_version == "1.4.0-alpha"
     assert DEFAULT_CONFIG.communication_layer == "1.0"
     assert DEFAULT_CONFIG.event_bus == "1.0"
 
@@ -195,7 +195,7 @@ async def test_communication_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/health")
     assert resp.status == 200
     health = await resp.json()
-    assert health["ecosystem_version"] == "1.3.0-alpha"
+    assert health["ecosystem_version"] == "1.4.0-alpha"
     assert health["communication_layer"] == "1.0"
 
     resp = await client.post(
@@ -240,6 +240,6 @@ async def test_communication_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/manifest")
     assert resp.status == 200
     manifest = await resp.json()
-    assert manifest["ecosystem_version"] == "1.3.0-alpha"
+    assert manifest["ecosystem_version"] == "1.4.0-alpha"
     assert manifest["communication_layer"] == "1.0"
     assert manifest["event_bus"] == "1.0"
