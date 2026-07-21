@@ -100,6 +100,17 @@ class EcosystemStore:
         self.simulation_runs: EntityStore = EntityStore()
         self.strategy_updates: EntityStore = EntityStore()
         self.optimization_runs: EntityStore = EntityStore()
+        # Sprint 7.6 — Platform Governance, Compliance & Lifecycle
+        self.policies: EntityStore = EntityStore()
+        self.compliance_checks: EntityStore = EntityStore()
+        self.audit_entries: EntityStore = EntityStore()
+        self.lifecycle_records: EntityStore = EntityStore()
+        self.risk_items: EntityStore = EntityStore()
+        self.feature_flags: EntityStore = EntityStore()
+        self.licenses: EntityStore = EntityStore()
+        self.catalog_entries: EntityStore = EntityStore()
+        self.governance_actions: EntityStore = EntityStore()
+        self.access_reviews: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

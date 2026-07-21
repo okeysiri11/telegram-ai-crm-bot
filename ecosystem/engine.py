@@ -1,4 +1,4 @@
-# Ecosystem engine — includes continuous learning & optimization.
+# Ecosystem engine — includes platform governance.
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ from typing import Any
 from ecosystem.assistant.engine import AssistantEngine, assistant_engine
 from ecosystem.communication.engine import CommunicationEngine, communication_engine
 from ecosystem.config import DEFAULT_CONFIG
+from ecosystem.governance.engine import PlatformGovernanceEngine, platform_governance
 from ecosystem.identity.service import IdentityService, identity_service
 from ecosystem.navigation.service import NavigationService, navigation_service
 from ecosystem.optimization.engine import OptimizationEngine, optimization_engine
@@ -20,7 +21,7 @@ from ecosystem.workspace.service import WorkspaceService, workspace_service
 
 
 class EcosystemEngine:
-    """Unified ecosystem entry point including optimization & continuous learning."""
+    """Unified ecosystem entry point including platform governance."""
 
     def __init__(
         self,
@@ -36,6 +37,7 @@ class EcosystemEngine:
         communication: CommunicationEngine | None = None,
         workforce: WorkforceEngine | None = None,
         optimization: OptimizationEngine | None = None,
+        governance: PlatformGovernanceEngine | None = None,
     ) -> None:
         self.identity = identity or identity_service
         self.organizations = organizations or organization_service
@@ -49,6 +51,7 @@ class EcosystemEngine:
         self.communication = communication or communication_engine
         self.workforce = workforce or workforce_engine
         self.optimization = optimization or optimization_engine
+        self.governance = governance or platform_governance
 
     def metrics(self) -> dict[str, Any]:
         from ecosystem.shared.store import ecosystem_store
@@ -64,6 +67,8 @@ class EcosystemEngine:
             "executive_ai": DEFAULT_CONFIG.executive_ai,
             "optimization_layer": DEFAULT_CONFIG.optimization_layer,
             "continuous_learning": DEFAULT_CONFIG.continuous_learning,
+            "governance_layer": DEFAULT_CONFIG.governance_layer,
+            "compliance_layer": DEFAULT_CONFIG.compliance_layer,
             "users": ecosystem_store.users.count(),
             "organizations": ecosystem_store.organizations.count(),
             "workspaces": ecosystem_store.workspaces.count(),
@@ -73,6 +78,7 @@ class EcosystemEngine:
             "assistant": self.assistant.metrics(),
             "workforce": self.workforce.metrics(),
             "optimization": self.optimization.metrics(),
+            "governance": self.governance.metrics(),
         }
 
 

@@ -819,3 +819,32 @@ flowchart LR
 **Ecosystem Version 1.4.0-alpha** — optimization_layer 1.0, continuous_learning 1.0
 
 Full details: [ECOSYSTEM_OPTIMIZATION.md](../ECOSYSTEM_OPTIMIZATION.md).
+
+---
+
+## Platform Governance (Sprint 7.6)
+
+```mermaid
+flowchart TB
+    Gov[Platform Governance]
+    Comp[Compliance]
+    Life[Lifecycle]
+    Admin[Administration]
+
+    Gov --> Comp
+    Gov --> Life
+    Gov --> Admin
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| PlatformGovernanceEngine | `ecosystem/governance/engine.py` | Governance facade |
+| Policies | `ecosystem/governance/policies/` | Multi-domain policy engine |
+| Compliance | `ecosystem/governance/compliance/` | Audits & access reviews |
+| Lifecycle | `ecosystem/governance/lifecycle/` | App/agent/plugin lifecycle |
+| Risk | `ecosystem/governance/risk/` | Risk & continuity |
+| Administration | `ecosystem/governance/administration/` | Licenses & feature flags |
+
+**Ecosystem Version 1.5.0-alpha** — governance_layer 1.0, compliance_layer 1.0
+
+Full details: [GOVERNANCE.md](../GOVERNANCE.md).

@@ -39,6 +39,8 @@ class EcosystemApplication:
             "executive_ai": self.config.executive_ai,
             "optimization_layer": self.config.optimization_layer,
             "continuous_learning": self.config.continuous_learning,
+            "governance_layer": self.config.governance_layer,
+            "compliance_layer": self.config.compliance_layer,
             "metrics": self.engine.metrics(),
         }
 

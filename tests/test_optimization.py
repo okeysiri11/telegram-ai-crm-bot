@@ -35,7 +35,7 @@ def reset_store():
 
 
 def test_optimization_version():
-    assert DEFAULT_CONFIG.ecosystem_version == "1.4.0-alpha"
+    assert DEFAULT_CONFIG.ecosystem_version == "1.5.0-alpha"
     assert DEFAULT_CONFIG.optimization_layer == "1.0"
     assert DEFAULT_CONFIG.continuous_learning == "1.0"
 
@@ -124,7 +124,7 @@ async def test_optimization_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/health")
     assert resp.status == 200
     health = await resp.json()
-    assert health["ecosystem_version"] == "1.4.0-alpha"
+    assert health["ecosystem_version"] == "1.5.0-alpha"
     assert health["optimization_layer"] == "1.0"
     assert health["continuous_learning"] == "1.0"
 
@@ -156,6 +156,6 @@ async def test_optimization_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/manifest")
     assert resp.status == 200
     manifest = await resp.json()
-    assert manifest["ecosystem_version"] == "1.4.0-alpha"
+    assert manifest["ecosystem_version"] == "1.5.0-alpha"
     assert manifest["optimization_layer"] == "1.0"
     assert manifest["continuous_learning"] == "1.0"

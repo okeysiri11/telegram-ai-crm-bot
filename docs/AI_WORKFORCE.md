@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Ecosystem Version | **1.4.0-alpha** |
+| Ecosystem Version | **1.5.0-alpha** |
 | Workforce Layer | **1.0** |
 | Executive AI | **1.0** |
 | Platform Dependency | **AI Platform Core v3.0** |

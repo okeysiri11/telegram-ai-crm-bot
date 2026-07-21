@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from ecosystem.api import assistant_handlers, communication_handlers, handlers, optimization_handlers, workforce_handlers
+from ecosystem.api import (
+    assistant_handlers,
+    communication_handlers,
+    governance_handlers,
+    handlers,
+    optimization_handlers,
+    workforce_handlers,
+)
 from ecosystem.api.middleware import ecosystem_auth_middleware
 from ecosystem.config import DEFAULT_CONFIG
 
@@ -145,6 +152,37 @@ def register_ecosystem_routes(app: web.Application) -> None:
 
     governance = f"{prefix}/governance"
     app.router.add_get(governance, workforce_handlers.governance_audit_handler)
+
+    # Sprint 7.6 — Platform Governance, Compliance & Lifecycle
+    # Note: exact GET /governance remains workforce audit; platform routes use subpaths.
+    app.router.add_get(f"{governance}/metrics", governance_handlers.governance_metrics_handler)
+    app.router.add_post(f"{governance}/cycle", governance_handlers.governance_cycle_handler)
+    app.router.add_get(f"{governance}/policies", governance_handlers.list_policies_handler)
+    app.router.add_post(f"{governance}/policies", governance_handlers.create_policy_handler)
+    app.router.add_patch(f"{governance}/policies/{{policy_id}}", governance_handlers.update_policy_handler)
+    app.router.add_get(f"{governance}/audit", governance_handlers.audit_trail_handler)
+    app.router.add_get(f"{governance}/catalog", governance_handlers.catalog_list_handler)
+    app.router.add_post(f"{governance}/catalog", governance_handlers.catalog_register_handler)
+
+    compliance = f"{prefix}/compliance"
+    app.router.add_post(f"{compliance}/evaluate", governance_handlers.compliance_evaluate_handler)
+    app.router.add_post(f"{compliance}/audit", governance_handlers.compliance_audit_handler)
+    app.router.add_get(compliance, governance_handlers.compliance_list_handler)
+    app.router.add_post(f"{compliance}/access-reviews", governance_handlers.access_review_handler)
+
+    lifecycle = f"{prefix}/lifecycle"
+    app.router.add_post(lifecycle, governance_handlers.lifecycle_register_handler)
+    app.router.add_get(lifecycle, governance_handlers.lifecycle_list_handler)
+    app.router.add_post(f"{lifecycle}/{{record_id}}/transition", governance_handlers.lifecycle_transition_handler)
+
+    administration = f"{prefix}/administration"
+    app.router.add_get(administration, governance_handlers.admin_overview_handler)
+    app.router.add_post(f"{administration}/licenses", governance_handlers.admin_license_handler)
+    app.router.add_route("*", f"{administration}/flags", governance_handlers.admin_flags_handler)
+
+    risk = f"{prefix}/risk"
+    app.router.add_post(risk, governance_handlers.risk_assess_handler)
+    app.router.add_get(risk, governance_handlers.risk_list_handler)
 
     # Sprint 7.5 — Continuous Learning & Optimization
     opt = f"{prefix}/optimization"

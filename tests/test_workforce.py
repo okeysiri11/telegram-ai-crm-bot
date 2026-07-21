@@ -42,7 +42,7 @@ def reset_store():
 
 
 def test_workforce_version():
-    assert DEFAULT_CONFIG.ecosystem_version == "1.4.0-alpha"
+    assert DEFAULT_CONFIG.ecosystem_version == "1.5.0-alpha"
     assert DEFAULT_CONFIG.workforce_layer == "1.0"
     assert DEFAULT_CONFIG.executive_ai == "1.0"
 
@@ -168,7 +168,7 @@ async def test_workforce_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/health")
     assert resp.status == 200
     health = await resp.json()
-    assert health["ecosystem_version"] == "1.4.0-alpha"
+    assert health["ecosystem_version"] == "1.5.0-alpha"
     assert health["workforce_layer"] == "1.0"
     assert health["executive_ai"] == "1.0"
 
@@ -200,6 +200,6 @@ async def test_workforce_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/manifest")
     assert resp.status == 200
     manifest = await resp.json()
-    assert manifest["ecosystem_version"] == "1.4.0-alpha"
+    assert manifest["ecosystem_version"] == "1.5.0-alpha"
     assert manifest["workforce_layer"] == "1.0"
     assert manifest["executive_ai"] == "1.0"
