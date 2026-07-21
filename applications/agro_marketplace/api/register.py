@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.agro_marketplace.api import (
     ai_handlers,
+    bi_handlers,
     catalog_handlers,
     crm_handlers,
     export_handlers,
@@ -310,6 +311,56 @@ def register_agro_marketplace_routes(app: web.Application) -> None:
     docs = f"{prefix}/trade-documents"
     app.router.add_get(f"{docs}", export_handlers.documents_list_handler)
     app.router.add_post(f"{docs}/{{document_id}}/verify", export_handlers.documents_verify_handler)
+
+    # Sprint 8.6 — Analytics / Dashboards / Forecast / KPI / Reports / Insights
+    an = f"{prefix}/analytics"
+    app.router.add_get(f"{an}/health", bi_handlers.analytics_health_handler)
+    app.router.add_get(f"{an}/domains", bi_handlers.analytics_domains_handler)
+    app.router.add_get(f"{an}/domains/{{domain}}", bi_handlers.analytics_domain_handler)
+    app.router.add_post(f"{an}/metrics", bi_handlers.metrics_record_handler)
+
+    dash = f"{prefix}/dashboards"
+    app.router.add_get(f"{dash}", bi_handlers.dashboard_list_kinds_handler)
+    app.router.add_get(f"{dash}/executive", bi_handlers.dashboard_executive_handler)
+    app.router.add_post(f"{dash}/executive", bi_handlers.dashboard_executive_handler)
+    app.router.add_get(f"{dash}/{{kind}}", bi_handlers.dashboard_build_handler)
+    app.router.add_post(f"{dash}/{{kind}}", bi_handlers.dashboard_build_handler)
+
+    bi_fc = f"{prefix}/bi/forecast"
+    app.router.add_get(f"{bi_fc}/suite", bi_handlers.forecast_suite_handler)
+    app.router.add_post(f"{bi_fc}/suite", bi_handlers.forecast_suite_handler)
+    app.router.add_get(f"{bi_fc}/{{kind}}", bi_handlers.forecast_bi_handler)
+    app.router.add_post(f"{bi_fc}/{{kind}}", bi_handlers.forecast_bi_handler)
+
+    # Extend classic forecast routes with BI kinds
+    app.router.add_get(f"{fc}/storage", bi_handlers.forecast_bi_handler)
+    app.router.add_post(f"{fc}/storage", bi_handlers.forecast_bi_handler)
+    app.router.add_get(f"{fc}/export", bi_handlers.forecast_bi_handler)
+    app.router.add_post(f"{fc}/export", bi_handlers.forecast_bi_handler)
+    app.router.add_get(f"{fc}/revenue", bi_handlers.forecast_bi_handler)
+    app.router.add_post(f"{fc}/revenue", bi_handlers.forecast_bi_handler)
+    app.router.add_get(f"{fc}/market_trend", bi_handlers.forecast_bi_handler)
+    app.router.add_post(f"{fc}/market_trend", bi_handlers.forecast_bi_handler)
+
+    kpi = f"{prefix}/kpi"
+    app.router.add_get(f"{kpi}", bi_handlers.kpi_list_handler)
+    app.router.add_post(f"{kpi}/calculate", bi_handlers.kpi_calculate_handler)
+    app.router.add_get(f"{kpi}/{{name}}", bi_handlers.kpi_get_handler)
+    app.router.add_post(f"{kpi}/{{name}}", bi_handlers.kpi_get_handler)
+
+    reports = f"{prefix}/reports"
+    app.router.add_get(f"{reports}", bi_handlers.reports_list_handler)
+    app.router.add_post(f"{reports}/executive", bi_handlers.reports_executive_handler)
+
+    insights = f"{prefix}/insights"
+    app.router.add_get(f"{insights}", bi_handlers.insights_list_handler)
+    app.router.add_post(f"{insights}/generate", bi_handlers.insights_generate_handler)
+    app.router.add_post(f"{insights}/anomalies", bi_handlers.anomalies_detect_handler)
+
+    sim = f"{prefix}/simulation"
+    app.router.add_post(f"{sim}", bi_handlers.simulation_create_handler)
+    app.router.add_post(f"{sim}/quick", bi_handlers.simulation_quick_handler)
+    app.router.add_post(f"{sim}/{{scenario_id}}/run", bi_handlers.simulation_run_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/pipeline", internal_handlers.pipeline_handler)

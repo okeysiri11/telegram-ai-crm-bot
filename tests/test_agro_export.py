@@ -40,7 +40,7 @@ def reset_store():
 
 def test_version_and_incoterms():
     health = agro_marketplace.health()
-    assert health["application_version"] == "1.4.0-alpha"
+    assert health["application_version"] == "1.5.0-alpha"
     assert health["export_engine"] == "1.0"
     codes = {i.code.value for i in agro_marketplace.incoterms.list_incoterms()}
     assert codes == {"FOB", "CIF", "CFR", "DAP", "EXW", "DDP"}
@@ -155,7 +155,7 @@ async def test_api_export_health_and_flow(client: TestClient):
     assert resp.status == 200
     body = await resp.json()
     assert body["export_engine"] == "1.0"
-    assert body["application_version"] == "1.4.0-alpha"
+    assert body["application_version"] == "1.5.0-alpha"
 
     incoterms = await client.get("/api/agro/v1/export/incoterms")
     assert incoterms.status == 200

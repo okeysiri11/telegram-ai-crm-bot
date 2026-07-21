@@ -147,7 +147,7 @@ async def test_ai_workflows():
 
 def test_health_sprint_84():
     health = agro_marketplace.health()
-    assert health["application_version"] == "1.4.0-alpha"
+    assert health["application_version"] == "1.5.0-alpha"
     assert health["agro_ai"] == "1.0"
     assert health["ai"]["agro_ai"] == "1.0"
     assert health["ai"]["agents"]["agents"] == 10

@@ -1,0 +1,1 @@
+from applications.agro_marketplace.reporting.service import ReportingService, reporting_service

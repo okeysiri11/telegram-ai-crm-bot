@@ -1,18 +1,27 @@
 {
   "application_name": "Agro Marketplace",
   "application": "agro_marketplace",
-  "application_version": "1.4.0-alpha",
+  "application_version": "1.5.0-alpha",
   "platform_dependency": "AI Platform Core v3.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "api_prefix": "/api/agro/v1",
   "agro_ai": "1.0",
   "export_engine": "1.0",
+  "analytics_engine": "1.0",
   "modules": {
     "ai": "1.0",
     "agents": "1.0",
     "recommendations": "1.0",
-    "forecasting": "1.0",
-    "analytics": "1.1",
+    "forecasting": "1.1",
+    "analytics": "1.2",
+    "dashboards": "1.0",
+    "business_intelligence": "1.0",
+    "reporting": "1.0",
+    "executive": "1.0",
+    "metrics": "1.0",
+    "kpi": "1.0",
+    "insights": "1.0",
+    "simulation": "1.0",
     "pricing_ai": "1.0",
     "crop_ai": "1.0",
     "market_ai": "1.0",
@@ -51,7 +60,7 @@
     "payments": "1.0",
     "notifications": "1.0",
     "export": "1.1",
-    "dashboard": "1.0",
+    "dashboard": "1.1",
     "shared": "1.0"
   },
   "layers": {
@@ -64,7 +73,8 @@
     "trading_layer": "1.0",
     "negotiation_layer": "1.0",
     "agro_ai": "1.0",
-    "export_engine": "1.0"
+    "export_engine": "1.0",
+    "analytics_engine": "1.0"
   },
   "roles": [
     "farmer",

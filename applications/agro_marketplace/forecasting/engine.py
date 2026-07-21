@@ -9,6 +9,7 @@ from events.publisher import publish
 
 from applications.agro_marketplace.ai.events import DemandPredictedEvent, ForecastCompletedEvent, PriceEstimatedEvent
 from applications.agro_marketplace.ai.models import ForecastKind, ForecastResult
+from applications.agro_marketplace.analytics.events import ForecastGeneratedEvent
 from applications.agro_marketplace.integrations.platform_bridge import PlatformBridge, platform_bridge
 from applications.agro_marketplace.shared.store import AgroStore, agro_store
 
@@ -26,6 +27,14 @@ class ForecastingEngine:
         saved = self._store.forecasts.save(result.forecast_id, result)
         await publish(
             ForecastCompletedEvent(
+                forecast_id=saved.forecast_id,
+                kind=saved.kind.value,
+                subject=saved.subject,
+                confidence=saved.confidence,
+            )
+        )
+        await publish(
+            ForecastGeneratedEvent(
                 forecast_id=saved.forecast_id,
                 kind=saved.kind.value,
                 subject=saved.subject,
@@ -213,6 +222,87 @@ class ForecastingEngine:
             values=[{"risk_score": score, "moisture_risk": moisture_risk, "capacity_risk": util_risk}],
             confidence=0.6,
             metadata={"interpretation": "higher is riskier"},
+        )
+        return await self._complete(result)
+
+    async def forecast_storage(
+        self,
+        subject: str,
+        *,
+        region: str = "",
+        horizon_days: int = 60,
+    ) -> ForecastResult:
+        warehouses = self._store.agro_warehouses.list_all()
+        used = sum(getattr(w, "used_tons", 0) or 0 for w in warehouses) or 20.0
+        result = ForecastResult(
+            kind=ForecastKind.STORAGE,
+            subject=subject,
+            region=region,
+            horizon_days=horizon_days,
+            values=self._series(used, horizon_days, drift=0.008),
+            confidence=0.55 if warehouses else 0.35,
+            metadata={"warehouses": len(warehouses)},
+        )
+        return await self._complete(result)
+
+    async def forecast_export(
+        self,
+        subject: str,
+        *,
+        region: str = "",
+        horizon_days: int = 45,
+    ) -> ForecastResult:
+        intl = self._store.intl_shipments.list_all()
+        base = float(len(intl) or self._store.export_shipments.count() or 3)
+        result = ForecastResult(
+            kind=ForecastKind.EXPORT,
+            subject=subject,
+            region=region,
+            horizon_days=horizon_days,
+            values=self._series(base, horizon_days, drift=0.012),
+            confidence=0.5 if intl else 0.35,
+            metadata={"shipments": len(intl)},
+        )
+        return await self._complete(result)
+
+    async def forecast_revenue(
+        self,
+        subject: str,
+        *,
+        region: str = "",
+        horizon_days: int = 30,
+    ) -> ForecastResult:
+        orders = self._store.orders.list_all()
+        base = sum(getattr(o, "total", 0) or 0 for o in orders) or 5000.0
+        result = ForecastResult(
+            kind=ForecastKind.REVENUE,
+            subject=subject,
+            region=region,
+            horizon_days=horizon_days,
+            values=self._series(base, horizon_days, drift=0.015),
+            confidence=0.6 if orders else 0.4,
+            metadata={"orders": len(orders)},
+        )
+        return await self._complete(result)
+
+    async def forecast_market_trend(
+        self,
+        subject: str,
+        *,
+        region: str = "",
+        horizon_days: int = 90,
+    ) -> ForecastResult:
+        offers = self._store.sales_offers.count()
+        requests = self._store.purchase_requests.count()
+        index = float(offers + requests + 10)
+        result = ForecastResult(
+            kind=ForecastKind.MARKET_TREND,
+            subject=subject,
+            region=region,
+            horizon_days=horizon_days,
+            values=self._series(index, horizon_days, drift=0.01),
+            confidence=0.5,
+            metadata={"offers": offers, "requests": requests},
         )
         return await self._complete(result)
 

@@ -37,6 +37,10 @@ class ForecastKind(str, enum.Enum):
     HARVEST = "harvest"
     RISK = "risk"
     SEASON = "season"
+    STORAGE = "storage"
+    EXPORT = "export"
+    REVENUE = "revenue"
+    MARKET_TREND = "market_trend"
 
 
 class KnowledgeKind(str, enum.Enum):

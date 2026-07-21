@@ -182,7 +182,7 @@ async def test_search_engines():
 
 def test_health_sprint_82_layers():
     health = agro_marketplace.health()
-    assert health["application_version"] == "1.4.0-alpha"
+    assert health["application_version"] == "1.5.0-alpha"
     assert health["catalog_layer"] == "1.0"
     assert health["warehouse_layer"] == "1.0"
     assert health["inventory_layer"] == "1.0"

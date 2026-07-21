@@ -5,7 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from applications.agro_marketplace.ai.engine import AgroAIEngine, agro_ai_engine
+from applications.agro_marketplace.analytics.engine import AnalyticsEngine, analytics_engine
 from applications.agro_marketplace.analytics.service import AnalyticsService, analytics_service
+from applications.agro_marketplace.business_intelligence.engine import (
+    BusinessIntelligenceEngine,
+    business_intelligence_engine,
+)
 from applications.agro_marketplace.buyers.service import BuyerService, buyer_service
 from applications.agro_marketplace.catalog.service import CatalogService, catalog_service
 from applications.agro_marketplace.certification.service import CertificationService, certification_service
@@ -15,6 +20,7 @@ from applications.agro_marketplace.contracts.service import ContractService, con
 from applications.agro_marketplace.crm.engine import CRMEngine, crm_engine
 from applications.agro_marketplace.crm.service import CRMService, crm_service
 from applications.agro_marketplace.dashboard.service import DashboardService, dashboard_service
+from applications.agro_marketplace.dashboards.service import DashboardsService, dashboards_service
 from applications.agro_marketplace.documents.service import DocumentService, document_service
 from applications.agro_marketplace.documents.trade_service import TradeDocumentsService, trade_documents_service
 from applications.agro_marketplace.export.ai_integration import ExportAIIntegration, export_ai
@@ -90,6 +96,9 @@ class AgroMarketplaceApplication:
         export: ExportService | None = None,
         export_engine_svc: ExportEngine | None = None,
         analytics: AnalyticsService | None = None,
+        analytics_engine_svc: AnalyticsEngine | None = None,
+        business_intelligence: BusinessIntelligenceEngine | None = None,
+        dashboards: DashboardsService | None = None,
         notifications: NotificationService | None = None,
         crm: CRMService | None = None,
         crm_engine_svc: CRMEngine | None = None,
@@ -141,6 +150,9 @@ class AgroMarketplaceApplication:
         self.export = export or export_service
         self.export_engine = export_engine_svc or export_engine
         self.analytics = analytics or analytics_service
+        self.analytics_engine = analytics_engine_svc or analytics_engine
+        self.business_intelligence = business_intelligence or business_intelligence_engine
+        self.dashboards = dashboards or dashboards_service
         self.notifications = notifications or notification_service
         self.crm = crm or crm_service
         self.crm_engine = crm_engine_svc or crm_engine
@@ -193,12 +205,14 @@ class AgroMarketplaceApplication:
             "negotiation_layer": self.config.negotiation_layer,
             "agro_ai": self.config.agro_ai,
             "export_engine": self.config.export_engine,
+            "analytics_engine": self.config.analytics_engine,
             "metrics": self.analytics.dashboard_metrics(),
             "ai": self.agro_ai.metrics(),
             "crm": self.crm_engine.metrics(),
             "marketplace": self.marketplace.metrics(),
             "export": self.export_engine.metrics(),
             "logistics": self.logistics_engine.metrics(),
+            "bi": self.analytics_engine.metrics(),
             "catalog_products": self.store.agro_products.count(),
             "agro_warehouses": self.store.agro_warehouses.count(),
             "inventory_items": self.store.inventory_items.count(),

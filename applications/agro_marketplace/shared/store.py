@@ -114,6 +114,14 @@ class AgroStore:
         self.tracking_events: EntityStore = EntityStore()
         self.country_requirements: EntityStore = EntityStore()
         self.freight_finance: EntityStore = EntityStore()
+        # Sprint 8.6 — Analytics / BI
+        self.kpi_snapshots: EntityStore = EntityStore()
+        self.insights: EntityStore = EntityStore()
+        self.anomalies: EntityStore = EntityStore()
+        self.dashboard_snapshots: EntityStore = EntityStore()
+        self.bi_reports: EntityStore = EntityStore()
+        self.simulations: EntityStore = EntityStore()
+        self.bi_metrics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

@@ -930,3 +930,18 @@ Full details: [AGRO_AI.md](AGRO_AI.md).
 **Application Version 1.4.0-alpha** — export_engine 1.0
 
 Full details: [AGRO_EXPORT.md](AGRO_EXPORT.md).
+
+## Agro Analytics, Forecasting & Business Intelligence (Sprint 8.6)
+
+| Component | Location | Role |
+|-----------|----------|------|
+| AnalyticsEngine | `analytics/engine.py` | Domain analytics + KPI/insights facade |
+| BusinessIntelligenceEngine | `business_intelligence/engine.py` | BI orchestration |
+| DashboardsService | `dashboards/service.py` | Role-based dashboards |
+| KPIService | `kpi/service.py` | Enterprise KPI calculation |
+| ForecastingEngine | `forecasting/engine.py` | Extended forecast suite |
+| ExecutiveService | `executive/service.py` | Executive reports |
+
+**Application Version 1.5.0-alpha** — analytics_engine 1.0
+
+Full details: [AGRO_ANALYTICS.md](AGRO_ANALYTICS.md).

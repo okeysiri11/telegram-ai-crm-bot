@@ -1,0 +1,1 @@
+from applications.agro_marketplace.insights.service import InsightsService, insights_service

@@ -1,0 +1,1 @@
+from applications.agro_marketplace.metrics.service import MetricsService, metrics_service
