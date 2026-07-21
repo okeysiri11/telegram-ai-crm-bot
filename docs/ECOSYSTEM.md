@@ -6,7 +6,7 @@
 
 | Field | Value |
 |-------|-------|
-| Ecosystem Version | **1.0.0-alpha** |
+| Ecosystem Version | **1.1.0-alpha** |
 | Platform Dependency | **AI Platform Core v3.0** |
 | Sprint | **7.1** |
 

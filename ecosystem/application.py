@@ -31,6 +31,8 @@ class EcosystemApplication:
             "application": "ecosystem",
             "ecosystem_version": self.config.ecosystem_version,
             "platform_dependency": self.config.platform_dependency,
+            "communication_layer": self.config.communication_layer,
+            "event_bus": self.config.event_bus,
             "metrics": self.engine.metrics(),
         }
 

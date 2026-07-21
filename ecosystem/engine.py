@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from ecosystem.ai.assistant import UnifiedAssistant, unified_assistant
+from ecosystem.communication.engine import CommunicationEngine, communication_engine
 from ecosystem.config import DEFAULT_CONFIG
 from ecosystem.identity.service import IdentityService, identity_service
 from ecosystem.navigation.service import NavigationService, navigation_service
@@ -17,7 +18,7 @@ from ecosystem.workspace.service import WorkspaceService, workspace_service
 
 
 class EcosystemEngine:
-    """Unified ecosystem entry point — identity, workspace, organizations, AI."""
+    """Unified ecosystem entry point — identity, workspace, communication, AI."""
 
     def __init__(
         self,
@@ -30,6 +31,7 @@ class EcosystemEngine:
         navigation: NavigationService | None = None,
         shared: CrossApplicationServices | None = None,
         assistant: UnifiedAssistant | None = None,
+        communication: CommunicationEngine | None = None,
     ) -> None:
         self.identity = identity or identity_service
         self.organizations = organizations or organization_service
@@ -40,6 +42,7 @@ class EcosystemEngine:
         self.navigation = navigation or navigation_service
         self.shared = shared or cross_app_services
         self.assistant = assistant or unified_assistant
+        self.communication = communication or communication_engine
 
     def metrics(self) -> dict[str, Any]:
         from ecosystem.shared.store import ecosystem_store
@@ -47,11 +50,14 @@ class EcosystemEngine:
         return {
             "ecosystem_version": DEFAULT_CONFIG.ecosystem_version,
             "platform_dependency": DEFAULT_CONFIG.platform_dependency,
+            "communication_layer": DEFAULT_CONFIG.communication_layer,
+            "event_bus": DEFAULT_CONFIG.event_bus,
             "users": ecosystem_store.users.count(),
             "organizations": ecosystem_store.organizations.count(),
             "workspaces": ecosystem_store.workspaces.count(),
             "sessions": ecosystem_store.sessions.count(),
             "registered_applications": DEFAULT_CONFIG.registered_applications,
+            "communication": self.communication.metrics(),
         }
 
 

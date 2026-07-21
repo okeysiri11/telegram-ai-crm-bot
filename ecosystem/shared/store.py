@@ -60,6 +60,16 @@ class EcosystemStore:
         self.shared_tasks: EntityStore = EntityStore()
         self.ai_memory: EntityStore = EntityStore()
         self.assistant_sessions: EntityStore = EntityStore()
+        # Sprint 7.2 — Cross-Application Communication
+        self.bus_events: EntityStore = EntityStore()
+        self.envelopes: EntityStore = EntityStore()
+        self.subscriptions: EntityStore = EntityStore()
+        self.registrations: EntityStore = EntityStore()
+        self.sync_records: EntityStore = EntityStore()
+        self.delivery_confirmations: EntityStore = EntityStore()
+        self.shared_contexts: EntityStore = EntityStore()
+        self.dead_letters: EntityStore = EntityStore()
+        self.event_store_log: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

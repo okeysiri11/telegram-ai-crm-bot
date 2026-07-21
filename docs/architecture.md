@@ -703,3 +703,34 @@ flowchart LR
 **Ecosystem Version 1.0.0-alpha**
 
 Full details: [ECOSYSTEM.md](../ECOSYSTEM.md).
+
+---
+
+## Cross-Application Communication (Sprint 7.2)
+
+```mermaid
+flowchart LR
+    Apps[Applications]
+    Comm[CommunicationEngine]
+    Bus[Event Bus]
+    Router[Message Router]
+    Registry[Service Registry]
+
+    Apps --> Comm
+    Comm --> Bus
+    Comm --> Router
+    Comm --> Registry
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| CommunicationEngine | `ecosystem/communication/engine.py` | Messaging & event facade |
+| EventBus | `ecosystem/communication/event_bus/` | Global domain/app/system/AI/workflow events |
+| MessageRouter | `ecosystem/communication/message_router/` | Request/response, pub/sub, command/query, DLQ |
+| ServiceRegistry | `ecosystem/communication/service_registry/` | App registration & discovery |
+| ApplicationBridge | `ecosystem/communication/application_bridge/` | Context sharing & agent collaboration |
+| SyncService | `ecosystem/communication/sync/` | Cross-app synchronization |
+
+**Ecosystem Version 1.1.0-alpha** — communication_layer 1.0, event_bus 1.0
+
+Full details: [COMMUNICATION.md](../COMMUNICATION.md).

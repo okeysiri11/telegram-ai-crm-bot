@@ -33,7 +33,7 @@ def reset_store():
 
 
 def test_ecosystem_version():
-    assert DEFAULT_CONFIG.ecosystem_version == "1.0.0-alpha"
+    assert DEFAULT_CONFIG.ecosystem_version == "1.1.0-alpha"
     assert DEFAULT_CONFIG.platform_dependency == "AI Platform Core v3.0"
 
 
@@ -164,7 +164,7 @@ async def test_ecosystem_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/health")
     assert resp.status == 200
     data = await resp.json()
-    assert data["ecosystem_version"] == "1.0.0-alpha"
+    assert data["ecosystem_version"] == "1.1.0-alpha"
 
     resp = await client.post(
         "/api/ecosystem/v1/identity/auth/register",
@@ -190,4 +190,4 @@ async def test_ecosystem_api(client: TestClient):
     resp = await client.get("/api/ecosystem/v1/manifest")
     assert resp.status == 200
     manifest = await resp.json()
-    assert manifest["ecosystem_version"] == "1.0.0-alpha"
+    assert manifest["ecosystem_version"] == "1.1.0-alpha"
