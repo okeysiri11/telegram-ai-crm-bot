@@ -40,6 +40,10 @@ def create_app() -> web.Application:
 
     register_auto_marketplace_routes(app)
 
+    from ecosystem.api.register import register_ecosystem_routes
+
+    register_ecosystem_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 

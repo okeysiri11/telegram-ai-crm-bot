@@ -1,0 +1,38 @@
+# EcosystemApplication — unified identity and workspace facade.
+
+from __future__ import annotations
+
+from typing import Any
+
+from ecosystem.config import DEFAULT_CONFIG, EcosystemConfig
+from ecosystem.engine import EcosystemEngine, ecosystem_engine
+from ecosystem.shared.store import EcosystemStore, ecosystem_store
+
+
+class EcosystemApplication:
+    """Unified ecosystem layer — connects all applications on AI Platform Core v3.0."""
+
+    def __init__(
+        self,
+        *,
+        config: EcosystemConfig | None = None,
+        store: EcosystemStore | None = None,
+        engine: EcosystemEngine | None = None,
+    ) -> None:
+        self.config = config or DEFAULT_CONFIG
+        self.store = store or ecosystem_store
+        self.engine = engine or ecosystem_engine
+
+    def reset(self) -> None:
+        self.store.reset()
+
+    def health(self) -> dict[str, Any]:
+        return {
+            "application": "ecosystem",
+            "ecosystem_version": self.config.ecosystem_version,
+            "platform_dependency": self.config.platform_dependency,
+            "metrics": self.engine.metrics(),
+        }
+
+
+ecosystem = EcosystemApplication()

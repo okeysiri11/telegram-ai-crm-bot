@@ -1,0 +1,24 @@
+{
+  "application": "ecosystem",
+  "ecosystem_version": "1.0.0-alpha",
+  "platform_dependency": "AI Platform Core v3.0",
+  "platform_version": "3.0.0",
+  "release_date": "2026-07-21",
+  "sprint": "7.1",
+  "modules": [
+    "identity",
+    "workspace",
+    "navigation",
+    "organizations",
+    "tenants",
+    "profiles",
+    "permissions",
+    "services",
+    "ai"
+  ],
+  "registered_applications": ["auto_marketplace"],
+  "api_prefix": "/api/ecosystem/v1",
+  "documentation": [
+    "docs/ECOSYSTEM.md"
+  ]
+}

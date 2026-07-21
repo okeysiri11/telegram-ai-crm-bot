@@ -673,3 +673,33 @@ flowchart LR
 **Version 2.0.0 — Production Ready**
 
 Full details: [PRODUCTION_RELEASE.md](../PRODUCTION_RELEASE.md).
+
+---
+
+## Unified Ecosystem (Sprint 7.1)
+
+```mermaid
+flowchart LR
+    Apps[Applications]
+    Eco[Ecosystem Layer]
+    Bridge[Platform Bridge]
+    Core[AI Platform Core v3.0]
+
+    Apps --> Eco
+    Eco --> Bridge
+    Bridge --> Core
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| EcosystemEngine | `ecosystem/engine.py` | Identity, workspace, navigation facade |
+| Identity | `ecosystem/identity/` | SSO, sessions, MFA, devices |
+| Organizations | `ecosystem/organizations/` | Org hierarchy, membership |
+| Workspace | `ecosystem/workspace/` | Dashboard, search, activity |
+| Navigation | `ecosystem/navigation/` | Cross-application navigation |
+| Permissions | `ecosystem/permissions/` | System and custom roles |
+| UnifiedAssistant | `ecosystem/ai/assistant.py` | AI routing and delegation |
+
+**Ecosystem Version 1.0.0-alpha**
+
+Full details: [ECOSYSTEM.md](../ECOSYSTEM.md).
