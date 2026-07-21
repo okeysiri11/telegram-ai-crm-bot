@@ -1,0 +1,1 @@
+from applications.agro_marketplace.messaging.service import MessagingService, messaging_service

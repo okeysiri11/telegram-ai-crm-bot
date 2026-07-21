@@ -1,0 +1,1 @@
+from applications.agro_marketplace.partner_api.service import PartnerAPIService, partner_api_service

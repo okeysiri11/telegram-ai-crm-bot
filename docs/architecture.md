@@ -945,3 +945,17 @@ Full details: [AGRO_EXPORT.md](AGRO_EXPORT.md).
 **Application Version 1.5.0-alpha** — analytics_engine 1.0
 
 Full details: [AGRO_ANALYTICS.md](AGRO_ANALYTICS.md).
+
+## Agro Farmer Portal, Mobile API & Partner Integrations (Sprint 8.7)
+
+| Component | Location | Role |
+|-----------|----------|------|
+| PortalEngine | `portal/engine.py` | Role portals + assistant |
+| MobileEngine | `mobile/engine.py` | Auth, profile, mobile facade |
+| PartnerAPIService | `partner_api/service.py` | Partner connections + connectors |
+| NotificationCenter | `notifications/center.py` | Multi-channel notifications |
+| WebhooksService | `webhooks/service.py` | Outbound webhook registry |
+
+**Application Version 1.6.0-alpha** — portal_engine 1.0
+
+Full details: [AGRO_PORTAL.md](AGRO_PORTAL.md).

@@ -1,0 +1,1 @@
+from applications.agro_marketplace.webhooks.service import WebhooksService, webhooks_service

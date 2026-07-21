@@ -33,7 +33,7 @@ def reset_store():
 
 def test_version_and_domains():
     health = agro_marketplace.health()
-    assert health["application_version"] == "1.5.0-alpha"
+    assert health["application_version"] == "1.6.0-alpha"
     assert health["analytics_engine"] == "1.0"
     domains = agro_marketplace.analytics_engine.all_domains()
     assert set(domains) >= {
@@ -114,7 +114,7 @@ async def test_api_analytics_and_dashboards(client: TestClient):
     assert health.status == 200
     body = await health.json()
     assert body["analytics_engine"] == "1.0"
-    assert body["application_version"] == "1.5.0-alpha"
+    assert body["application_version"] == "1.6.0-alpha"
 
     sales = await client.get("/api/agro/v1/analytics/domains/sales")
     assert sales.status == 200

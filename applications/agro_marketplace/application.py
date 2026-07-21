@@ -40,7 +40,9 @@ from applications.agro_marketplace.logistics.service import LogisticsService, lo
 from applications.agro_marketplace.marketplace.ai_integration import TradingAIIntegration, trading_ai
 from applications.agro_marketplace.marketplace.engine import MarketplaceEngine, marketplace_engine
 from applications.agro_marketplace.marketplace.trading_engine import TradingEngine, trading_engine
+from applications.agro_marketplace.mobile.engine import MobileEngine, mobile_engine
 from applications.agro_marketplace.negotiations.engine import NegotiationEngine, negotiation_engine
+from applications.agro_marketplace.notifications.center import NotificationCenter, notification_center
 from applications.agro_marketplace.notifications.service import NotificationService, notification_service
 from applications.agro_marketplace.offers.service import OfferService, offer_service
 from applications.agro_marketplace.orders.marketplace_service import (
@@ -48,7 +50,9 @@ from applications.agro_marketplace.orders.marketplace_service import (
     marketplace_order_service,
 )
 from applications.agro_marketplace.orders.service import OrderService, order_service
+from applications.agro_marketplace.partner_api.service import PartnerAPIService, partner_api_service
 from applications.agro_marketplace.payments.service import PaymentService, payment_service
+from applications.agro_marketplace.portal.engine import PortalEngine, portal_engine
 from applications.agro_marketplace.ports.service import PortsService, ports_service
 from applications.agro_marketplace.pricing.service import PricingService, pricing_service
 from applications.agro_marketplace.product_catalog.service import ProductCatalogService, product_catalog_service
@@ -61,8 +65,10 @@ from applications.agro_marketplace.shipping.service import ShippingService, ship
 from applications.agro_marketplace.storage.service import StorageService, storage_service
 from applications.agro_marketplace.suppliers.service import SupplierService, supplier_service
 from applications.agro_marketplace.tracking.service import TrackingService, tracking_service
+from applications.agro_marketplace.users.service import UsersService, users_service
 from applications.agro_marketplace.warehouse.engine import WarehouseEngine, warehouse_engine
 from applications.agro_marketplace.warehouse.service import WarehouseService, warehouse_service
+from applications.agro_marketplace.webhooks.service import WebhooksService, webhooks_service
 
 
 class AgroMarketplaceApplication:
@@ -122,6 +128,12 @@ class AgroMarketplaceApplication:
         freight_finance: FreightFinanceService | None = None,
         incoterms: IncotermsService | None = None,
         export_ai_svc: ExportAIIntegration | None = None,
+        portal_engine_svc: PortalEngine | None = None,
+        mobile_engine_svc: MobileEngine | None = None,
+        partner_api: PartnerAPIService | None = None,
+        notification_center_svc: NotificationCenter | None = None,
+        users: UsersService | None = None,
+        webhooks_registry: WebhooksService | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
     ) -> None:
@@ -176,6 +188,12 @@ class AgroMarketplaceApplication:
         self.freight_finance = freight_finance or freight_finance_service
         self.incoterms = incoterms or incoterms_service
         self.export_ai = export_ai_svc or export_ai
+        self.portal_engine = portal_engine_svc or portal_engine
+        self.mobile_engine = mobile_engine_svc or mobile_engine
+        self.partner_api = partner_api or partner_api_service
+        self.notification_center = notification_center_svc or notification_center
+        self.users = users or users_service
+        self.webhooks_registry = webhooks_registry or webhooks_service
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
 
@@ -206,6 +224,7 @@ class AgroMarketplaceApplication:
             "agro_ai": self.config.agro_ai,
             "export_engine": self.config.export_engine,
             "analytics_engine": self.config.analytics_engine,
+            "portal_engine": self.config.portal_engine,
             "metrics": self.analytics.dashboard_metrics(),
             "ai": self.agro_ai.metrics(),
             "crm": self.crm_engine.metrics(),
@@ -213,6 +232,7 @@ class AgroMarketplaceApplication:
             "export": self.export_engine.metrics(),
             "logistics": self.logistics_engine.metrics(),
             "bi": self.analytics_engine.metrics(),
+            "portal": self.portal_engine.metrics(),
             "catalog_products": self.store.agro_products.count(),
             "agro_warehouses": self.store.agro_warehouses.count(),
             "inventory_items": self.store.inventory_items.count(),

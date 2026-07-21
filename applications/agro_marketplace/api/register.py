@@ -11,6 +11,7 @@ from applications.agro_marketplace.api import (
     crm_handlers,
     export_handlers,
     internal_handlers,
+    portal_handlers,
     rest_handlers,
     webhooks,
 )
@@ -362,10 +363,49 @@ def register_agro_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{sim}/quick", bi_handlers.simulation_quick_handler)
     app.router.add_post(f"{sim}/{{scenario_id}}/run", bi_handlers.simulation_run_handler)
 
+    # Sprint 8.7 — Portal / Mobile / Partner / Notifications / Webhooks
+    portal = f"{prefix}/portal"
+    app.router.add_get(f"{portal}/health", portal_handlers.portal_health_handler)
+    app.router.add_post(f"{portal}/users", portal_handlers.portal_register_handler)
+    app.router.add_get(f"{portal}/{{kind}}", portal_handlers.portal_build_handler)
+    app.router.add_post(f"{portal}/{{kind}}", portal_handlers.portal_build_handler)
+    app.router.add_post(f"{portal}/assistant", portal_handlers.portal_assistant_handler)
+    app.router.add_post(f"{portal}/documents/share", portal_handlers.documents_share_handler)
+    app.router.add_post(f"{portal}/messaging/threads", portal_handlers.messaging_thread_handler)
+    app.router.add_post(f"{portal}/messaging/threads/{{thread_id}}/messages", portal_handlers.messaging_send_handler)
+    app.router.add_post(f"{portal}/calendar", portal_handlers.calendar_create_handler)
+
+    mobile = config.mobile_prefix
+    app.router.add_post(f"{mobile}/auth", portal_handlers.mobile_auth_handler)
+    app.router.add_get(f"{mobile}/profile/{{user_id}}", portal_handlers.mobile_profile_handler)
+    app.router.add_get(f"{mobile}/home/{{user_id}}", portal_handlers.mobile_home_handler)
+    app.router.add_post(f"{mobile}/assistant", portal_handlers.mobile_assistant_handler)
+    app.router.add_get(f"{mobile}/products", portal_handlers.mobile_products_handler)
+    app.router.add_get(f"{mobile}/orders", portal_handlers.mobile_orders_handler)
+    app.router.add_get(f"{mobile}/notifications/{{user_id}}", portal_handlers.mobile_notifications_handler)
+    app.router.add_get(f"{mobile}/analytics", portal_handlers.mobile_analytics_handler)
+    app.router.add_get(f"{mobile}/documents", portal_handlers.mobile_documents_handler)
+    app.router.add_get(f"{mobile}/messaging/threads", portal_handlers.mobile_messaging_threads_handler)
+
+    partner = config.partner_prefix
+    app.router.add_get(f"{partner}/connections", portal_handlers.partner_list_handler)
+    app.router.add_post(f"{partner}/connections", portal_handlers.partner_connect_handler)
+    app.router.add_post(f"{partner}/invoke", portal_handlers.partner_invoke_handler)
+
+    notes = f"{prefix}/notifications"
+    app.router.add_post(f"{notes}", portal_handlers.notifications_send_handler)
+    app.router.add_get(f"{notes}/{{user_id}}", portal_handlers.notifications_inbox_handler)
+    app.router.add_post(f"{notes}/ai-alert", portal_handlers.notifications_ai_alert_handler)
+
+    wh_mgmt = f"{prefix}/webhooks"
+    app.router.add_post(f"{wh_mgmt}/subscriptions", portal_handlers.webhook_subscribe_handler)
+    app.router.add_post(f"{wh_mgmt}/trigger", portal_handlers.webhook_trigger_handler)
+
     # Internal API
     app.router.add_get(f"{internal}/pipeline", internal_handlers.pipeline_handler)
     app.router.add_get(f"{internal}/stats", internal_handlers.store_stats_handler)
 
-    # Webhook API
+    # Webhook API (inbound)
     app.router.add_post(f"{webhooks_prefix}/orders", webhooks.order_webhook_handler)
     app.router.add_post(f"{webhooks_prefix}/shipments", webhooks.shipment_webhook_handler)
+    app.router.add_post(f"{webhooks_prefix}/partners", webhooks.partner_webhook_handler)

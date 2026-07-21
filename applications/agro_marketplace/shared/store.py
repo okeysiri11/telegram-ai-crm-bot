@@ -122,6 +122,17 @@ class AgroStore:
         self.bi_reports: EntityStore = EntityStore()
         self.simulations: EntityStore = EntityStore()
         self.bi_metrics: EntityStore = EntityStore()
+        # Sprint 8.7 — Portal / mobile / partners
+        self.portal_users: EntityStore = EntityStore()
+        self.portal_views: EntityStore = EntityStore()
+        self.mobile_sessions: EntityStore = EntityStore()
+        self.partner_connections: EntityStore = EntityStore()
+        self.webhook_subscriptions: EntityStore = EntityStore()
+        self.webhook_deliveries: EntityStore = EntityStore()
+        self.message_threads: EntityStore = EntityStore()
+        self.messages: EntityStore = EntityStore()
+        self.calendar_events: EntityStore = EntityStore()
+        self.shared_documents: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
