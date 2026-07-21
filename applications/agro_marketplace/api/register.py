@@ -11,6 +11,7 @@ from applications.agro_marketplace.api import (
     crm_handlers,
     export_handlers,
     internal_handlers,
+    ops_handlers,
     portal_handlers,
     rest_handlers,
     webhooks,
@@ -400,6 +401,20 @@ def register_agro_marketplace_routes(app: web.Application) -> None:
     wh_mgmt = f"{prefix}/webhooks"
     app.router.add_post(f"{wh_mgmt}/subscriptions", portal_handlers.webhook_subscribe_handler)
     app.router.add_post(f"{wh_mgmt}/trigger", portal_handlers.webhook_trigger_handler)
+
+    # Sprint 8.8 — Production validation / commercial release ops
+    ops = f"{prefix}/ops"
+    app.router.add_get(f"{ops}/health", ops_handlers.ops_health_handler)
+    app.router.add_get(f"{ops}/version", ops_handlers.ops_version_handler)
+    app.router.add_get(f"{ops}/readiness", ops_handlers.ops_readiness_handler)
+    app.router.add_post(f"{ops}/readiness", ops_handlers.ops_readiness_handler)
+    app.router.add_get(f"{ops}/validation", ops_handlers.ops_validation_handler)
+    app.router.add_post(f"{ops}/validation", ops_handlers.ops_validation_handler)
+    app.router.add_get(f"{ops}/release", ops_handlers.ops_release_handler)
+    app.router.add_post(f"{ops}/release", ops_handlers.ops_release_handler)
+    app.router.add_get(f"{ops}/reports", ops_handlers.ops_reports_handler)
+    app.router.add_post(f"{ops}/certify", ops_handlers.ops_certify_handler)
+    app.router.add_post(f"{ops}/deploy/verify", ops_handlers.ops_deploy_verify_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/pipeline", internal_handlers.pipeline_handler)

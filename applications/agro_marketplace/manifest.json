@@ -1,7 +1,9 @@
 {
   "application_name": "Agro Marketplace",
   "application": "agro_marketplace",
-  "application_version": "1.6.0-alpha",
+  "application_version": "2.0.0",
+  "application_status": "Production Ready",
+  "release": "Commercial",
   "platform_dependency": "AI Platform Core v3.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "api_prefix": "/api/agro/v1",
@@ -12,6 +14,7 @@
   "analytics_engine": "1.0",
   "portal_engine": "1.0",
   "modules": {
+    "ops": "1.0",
     "portal": "1.0",
     "mobile": "1.0",
     "users": "1.0",
@@ -24,26 +27,14 @@
     "messaging": "1.0",
     "ai": "1.0",
     "agents": "1.0",
-    "recommendations": "1.0",
     "forecasting": "1.1",
     "analytics": "1.2",
     "dashboards": "1.0",
     "business_intelligence": "1.0",
-    "reporting": "1.0",
-    "executive": "1.0",
-    "metrics": "1.0",
-    "kpi": "1.0",
-    "insights": "1.0",
-    "simulation": "1.0",
     "crm": "1.1",
-    "farmers": "1.1",
-    "buyers": "1.1",
-    "suppliers": "1.1",
-    "exporters": "1.0",
     "marketplace": "1.0",
     "export": "1.1",
     "logistics": "1.1",
-    "dashboard": "1.1",
     "shared": "1.0"
   },
   "layers": {
@@ -59,6 +50,11 @@
     "export_engine": "1.0",
     "analytics_engine": "1.0",
     "portal_engine": "1.0"
+  },
+  "certification": {
+    "validated": true,
+    "production_ready": true,
+    "commercial": true
   },
   "roles": [
     "farmer",

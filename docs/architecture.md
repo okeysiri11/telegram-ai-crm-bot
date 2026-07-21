@@ -959,3 +959,15 @@ Full details: [AGRO_ANALYTICS.md](AGRO_ANALYTICS.md).
 **Application Version 1.6.0-alpha** — portal_engine 1.0
 
 Full details: [AGRO_PORTAL.md](AGRO_PORTAL.md).
+
+## Agro Marketplace Production Validation & Commercial Release (Sprint 8.8)
+
+| Component | Location | Role |
+|-----------|----------|------|
+| OpsEngine | `ops/engine.py` | Readiness, release, certification |
+| ValidationService | `ops/validation.py` | Full application validation |
+| QAService | `ops/qa.py` | Quality / security / performance reports |
+
+**Application Version 2.0.0** — Production Ready · Commercial
+
+Full details: [AGRO_RELEASE.md](AGRO_RELEASE.md), [DEPLOYMENT.md](DEPLOYMENT.md), [OPERATIONS.md](OPERATIONS.md).

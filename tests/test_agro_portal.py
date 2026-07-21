@@ -41,7 +41,7 @@ def reset_store():
 
 def test_version_portal_engine():
     health = agro_marketplace.health()
-    assert health["application_version"] == "1.6.0-alpha"
+    assert health["application_version"] == "2.0.0"
     assert health["portal_engine"] == "1.0"
 
 
@@ -121,7 +121,7 @@ async def test_api_portal_mobile_partner(client: TestClient):
     assert health.status == 200
     body = await health.json()
     assert body["portal_engine"] == "1.0"
-    assert body["application_version"] == "1.6.0-alpha"
+    assert body["application_version"] == "2.0.0"
 
     reg = await client.post(
         "/api/agro/v1/portal/users",

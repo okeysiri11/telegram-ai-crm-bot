@@ -193,7 +193,7 @@ async def test_trading_rfq_and_ai_hooks():
 
 def test_health_sprint_83_layers():
     health = agro_marketplace.health()
-    assert health["application_version"] == "1.6.0-alpha"
+    assert health["application_version"] == "2.0.0"
     assert health["crm_layer"] == "1.0"
     assert health["marketplace_layer"] == "1.0"
     assert health["trading_layer"] == "1.0"

@@ -1,115 +1,55 @@
-# Deployment
+# Agro Marketplace Deployment Guide
 
-Production deployment guide for the Telegram CRM platform.
+## Prerequisites
 
-## Requirements
+- Python 3.11+ with project virtualenv
+- AI Platform Core v3.0 available on `PYTHONPATH` (unchanged)
+- AI Ecosystem v1.5 available on `PYTHONPATH` (unchanged)
+- Application package: `applications/agro_marketplace`
 
-| Component | Version |
-|-----------|---------|
-| Python | 3.10+ (tested on 3.14) |
-| PostgreSQL | 14+ |
-| Redis | 6+ (optional, for FSM) |
-| Docker | For local infra |
+## Configuration verification
 
-## Environment variables
+Confirm `applications/agro_marketplace/config.py` / `manifest.json`:
 
-Key settings in `.env` (see `.env.example`):
+| Key | Expected |
+|-----|----------|
+| `application_version` | `2.0.0` |
+| `application_status` | `Production Ready` |
+| `release` | `Commercial` |
 
-| Variable | Purpose |
-|----------|---------|
-| `BOT_TOKEN` | Telegram bot token |
-| `DATABASE_URL` | PostgreSQL async URL |
-| `REDIS_URL` | FSM storage (optional) |
-| `DEFAULT_AUTO_MANAGER_ID` | Default auto manager Telegram ID |
-| `OWNER_ID` | Platform owner Telegram ID |
-| `API_HOST` / `API_PORT` | HTTP API bind (default `0.0.0.0:8080`) |
-| `OPENROUTER_API_KEY` | LLM integration |
+## Deploy steps
 
-## Local development
+1. Install dependencies into the project venv.
+2. Ensure Platform Core and Ecosystem imports resolve (do not patch them).
+3. Mount agro routes via `register_agro_marketplace_routes(app)` (already wired from host `api/server.py` when enabled).
+4. Verify:
+   - `GET /api/agro/v1/health`
+   - `GET /api/agro/v1/ops/health`
+   - `GET /api/agro/v1/ops/version`
+   - `POST /api/agro/v1/ops/readiness`
+5. Run commercial certification: `POST /api/agro/v1/ops/release`
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-docker compose up -d postgres redis
-alembic upgrade head
-PYTHONPATH=. python bot.py
-```
-
-## Docker Compose services
-
-`docker-compose.yml` provides:
-
-- **postgres** — primary database
-- **redis** — FSM and caching
-
-Bot process runs on host or in a separate container (not included in default compose).
-
-## Startup sequence
-
-`startup.py` runs on bot launch:
-
-1. Register Telegram routers (modular first, legacy last)
-2. Ensure permission seeds
-3. Ensure auto manager provisioning
-4. Start background scheduler (SLA, escalations)
-5. Start HTTP API server (`api/server.py`)
-6. Run startup diagnostics
-
-## HTTP API
-
-Default: `http://localhost:8080`
-
-| Endpoint | Purpose |
-|----------|---------|
-| `/health` | Liveness |
-| `/ready` | Readiness (includes DB check) |
-| `/metrics` | Prometheus metrics |
-
-## Database migrations
-
-Always run migrations before deploying new code:
+## Deployment verification
 
 ```bash
-alembic upgrade head
+.venv/bin/python -m pytest tests/test_agro_*.py -q
 ```
 
-Rollback strategy: keep backward-compatible migrations; avoid destructive changes without dual-write period.
+Or via API: `POST /api/agro/v1/ops/deploy/verify`
 
-## Observability
+## Rollback notes
 
-- Structured logging (`logging` module)
-- Prometheus metrics in `services/observability.py`
-- Sentry hook (configure via env)
-- Audit log: `PlatformAuditEngineV1`
+- Application state is in-memory (`AgroStore`). Restart clears operational data.
+- Version pin is configuration-only; revert `config.py` / `manifest.json` if needed.
+- Never roll back by editing Platform Core or Ecosystem.
 
-## CI checks
+## Disaster recovery (summary)
 
-Recommended pipeline steps:
+| Scenario | Action |
+|----------|--------|
+| Process crash | Restart host API; re-seed via portals/ops as needed |
+| Bad config | Restore `config.py` / `manifest.json` to `2.0.0` Production Ready |
+| Bridge outage | Agro remains up with fallbacks; check `/ops/health` component section |
+| Data loss | Rebuild from partner/ERP sync hooks and re-import catalog/CRM |
 
-```bash
-PYTHONPATH=. python3 scripts/check_handler_session_access.py
-PYTHONPATH=. python -m pytest tests/   # when available
-alembic check                          # migration consistency
-```
-
-## Production checklist
-
-- [ ] `DATABASE_URL` points to production PostgreSQL
-- [ ] `BOT_TOKEN` set and webhook/polling mode chosen
-- [ ] `DEFAULT_AUTO_MANAGER_ID` configured
-- [ ] Redis available for FSM (or accept memory fallback risk)
-- [ ] Alembic at head
-- [ ] Permission seeds applied (automatic on startup)
-- [ ] API auth configured (`api/middleware.py`)
-- [ ] Backups enabled for PostgreSQL
-
-## Scaling notes
-
-- Bot polling: single active poller per `BOT_TOKEN`
-- Webhook mode: configure reverse proxy + aiogram webhook
-- DB pool: `database/engine.py` — pool_size=20, max_overflow=40
-- Horizontal API: stateless; scale aiohttp workers behind load balancer
-
-See also [deployment.md](deployment.md) for legacy deployment notes.
+Full operational procedures: [OPERATIONS.md](OPERATIONS.md).

@@ -133,6 +133,10 @@ class AgroStore:
         self.messages: EntityStore = EntityStore()
         self.calendar_events: EntityStore = EntityStore()
         self.shared_documents: EntityStore = EntityStore()
+        # Sprint 8.8 — Production validation / release
+        self.validation_reports: EntityStore = EntityStore()
+        self.readiness_snapshots: EntityStore = EntityStore()
+        self.release_records: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

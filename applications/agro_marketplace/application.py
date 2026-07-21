@@ -45,6 +45,7 @@ from applications.agro_marketplace.negotiations.engine import NegotiationEngine,
 from applications.agro_marketplace.notifications.center import NotificationCenter, notification_center
 from applications.agro_marketplace.notifications.service import NotificationService, notification_service
 from applications.agro_marketplace.offers.service import OfferService, offer_service
+from applications.agro_marketplace.ops.engine import OpsEngine, ops_engine
 from applications.agro_marketplace.orders.marketplace_service import (
     MarketplaceOrderService,
     marketplace_order_service,
@@ -134,6 +135,7 @@ class AgroMarketplaceApplication:
         notification_center_svc: NotificationCenter | None = None,
         users: UsersService | None = None,
         webhooks_registry: WebhooksService | None = None,
+        ops: OpsEngine | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
     ) -> None:
@@ -194,6 +196,7 @@ class AgroMarketplaceApplication:
         self.notification_center = notification_center_svc or notification_center
         self.users = users or users_service
         self.webhooks_registry = webhooks_registry or webhooks_service
+        self.ops = ops or ops_engine
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
 
@@ -225,6 +228,8 @@ class AgroMarketplaceApplication:
             "export_engine": self.config.export_engine,
             "analytics_engine": self.config.analytics_engine,
             "portal_engine": self.config.portal_engine,
+            "application_status": self.config.application_status,
+            "release": self.config.release,
             "metrics": self.analytics.dashboard_metrics(),
             "ai": self.agro_ai.metrics(),
             "crm": self.crm_engine.metrics(),
@@ -233,6 +238,7 @@ class AgroMarketplaceApplication:
             "logistics": self.logistics_engine.metrics(),
             "bi": self.analytics_engine.metrics(),
             "portal": self.portal_engine.metrics(),
+            "ops": self.ops.metrics(),
             "catalog_products": self.store.agro_products.count(),
             "agro_warehouses": self.store.agro_warehouses.count(),
             "inventory_items": self.store.inventory_items.count(),
