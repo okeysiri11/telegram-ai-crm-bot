@@ -33,6 +33,8 @@ class EcosystemApplication:
             "platform_dependency": self.config.platform_dependency,
             "communication_layer": self.config.communication_layer,
             "event_bus": self.config.event_bus,
+            "assistant_layer": self.config.assistant_layer,
+            "global_knowledge": self.config.global_knowledge,
             "metrics": self.engine.metrics(),
         }
 

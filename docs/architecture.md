@@ -734,3 +734,34 @@ flowchart LR
 **Ecosystem Version 1.1.0-alpha** — communication_layer 1.0, event_bus 1.0
 
 Full details: [COMMUNICATION.md](../COMMUNICATION.md).
+
+---
+
+## Unified AI Assistant (Sprint 7.3)
+
+```mermaid
+flowchart LR
+    User[User]
+    Engine[AssistantEngine]
+    Knowledge[Knowledge Graph]
+    Skills[Skills]
+    Context[Context]
+
+    User --> Engine
+    Engine --> Knowledge
+    Engine --> Skills
+    Engine --> Context
+```
+
+| Module | Path | Role |
+|--------|------|------|
+| AssistantEngine | `ecosystem/assistant/engine.py` | Conversational AI facade |
+| GlobalMemory | `ecosystem/assistant/global_memory/` | Cross-app memory |
+| KnowledgeGraph | `ecosystem/assistant/knowledge_graph/` | Semantic knowledge |
+| ContextEngine | `ecosystem/assistant/context/` | Multi-layer context |
+| SkillRegistry | `ecosystem/assistant/skills/` | Dynamic skills |
+| AIRouter | `ecosystem/assistant/routing/` | Intent & routing |
+
+**Ecosystem Version 1.2.0-alpha** — assistant_layer 1.0, global_knowledge 1.0
+
+Full details: [UNIFIED_ASSISTANT.md](../UNIFIED_ASSISTANT.md).

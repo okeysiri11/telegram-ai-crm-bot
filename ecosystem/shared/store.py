@@ -70,6 +70,15 @@ class EcosystemStore:
         self.shared_contexts: EntityStore = EntityStore()
         self.dead_letters: EntityStore = EntityStore()
         self.event_store_log: EntityStore = EntityStore()
+        # Sprint 7.3 — Unified AI Assistant & Global Knowledge
+        self.conversations: EntityStore = EntityStore()
+        self.knowledge_nodes: EntityStore = EntityStore()
+        self.knowledge_edges: EntityStore = EntityStore()
+        self.global_memories: EntityStore = EntityStore()
+        self.context_bundles: EntityStore = EntityStore()
+        self.skills: EntityStore = EntityStore()
+        self.task_plans: EntityStore = EntityStore()
+        self.routing_decisions: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

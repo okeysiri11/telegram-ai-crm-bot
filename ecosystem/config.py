@@ -1,4 +1,4 @@
-# Ecosystem configuration — Sprint 7.2.
+# Ecosystem configuration — Sprint 7.3.
 
 from __future__ import annotations
 
@@ -7,10 +7,12 @@ from dataclasses import dataclass, field
 
 @dataclass
 class EcosystemConfig:
-    ecosystem_version: str = "1.1.0-alpha"
+    ecosystem_version: str = "1.2.0-alpha"
     platform_dependency: str = "AI Platform Core v3.0"
     communication_layer: str = "1.0"
     event_bus: str = "1.0"
+    assistant_layer: str = "1.0"
+    global_knowledge: str = "1.0"
     api_version: str = "v1"
     api_prefix: str = "/api/ecosystem/v1"
     session_ttl_seconds: int = 86400

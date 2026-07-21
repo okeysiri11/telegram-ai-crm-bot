@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from ecosystem.api import communication_handlers, handlers
+from ecosystem.api import assistant_handlers, communication_handlers, handlers
 from ecosystem.api.middleware import ecosystem_auth_middleware
 from ecosystem.config import DEFAULT_CONFIG
 
@@ -48,8 +48,8 @@ def register_ecosystem_routes(app: web.Application) -> None:
     app.router.add_get(nav, handlers.navigation_handler)
     app.router.add_post(f"{nav}/open", handlers.open_application_handler)
 
-    # AI Assistant
-    app.router.add_post(f"{prefix}/assistant", handlers.assistant_handler)
+    # Legacy assistant endpoint (compat)
+    app.router.add_post(f"{prefix}/assistant", assistant_handlers.assistant_invoke_handler)
 
     # Cross-application shared services
     shared = f"{prefix}/shared"
@@ -85,3 +85,32 @@ def register_ecosystem_routes(app: web.Application) -> None:
     sync = f"{prefix}/sync"
     app.router.add_post(sync, communication_handlers.sync_handler)
     app.router.add_get(f"{sync}/history", communication_handlers.sync_history_handler)
+
+    # Sprint 7.3 — Unified AI Assistant & Global Knowledge
+    assistant = f"{prefix}/assistant"
+    app.router.add_get(f"{assistant}/metrics", assistant_handlers.assistant_metrics_handler)
+    app.router.add_post(f"{assistant}/invoke", assistant_handlers.assistant_invoke_handler)
+    app.router.add_post(f"{assistant}/orchestrate", assistant_handlers.assistant_orchestrate_handler)
+    app.router.add_get(f"{assistant}/memory", assistant_handlers.memory_recall_handler)
+
+    knowledge = f"{prefix}/knowledge"
+    app.router.add_post(knowledge, assistant_handlers.knowledge_upsert_handler)
+    app.router.add_get(f"{knowledge}/search", assistant_handlers.knowledge_search_handler)
+    app.router.add_post(f"{knowledge}/link", assistant_handlers.knowledge_link_handler)
+    app.router.add_post(f"{knowledge}/sync", assistant_handlers.knowledge_sync_handler)
+
+    conversations = f"{prefix}/conversations"
+    app.router.add_post(conversations, assistant_handlers.conversation_create_handler)
+    app.router.add_get(conversations, assistant_handlers.conversation_list_handler)
+    app.router.add_get(f"{conversations}/{{conversation_id}}", assistant_handlers.conversation_get_handler)
+    app.router.add_post(f"{conversations}/{{conversation_id}}/summarize", assistant_handlers.conversation_summarize_handler)
+    app.router.add_post(f"{conversations}/{{conversation_id}}/restore", assistant_handlers.conversation_restore_handler)
+
+    skills = f"{prefix}/skills"
+    app.router.add_get(skills, assistant_handlers.skills_list_handler)
+    app.router.add_post(skills, assistant_handlers.skills_register_handler)
+    app.router.add_post(f"{skills}/execute", assistant_handlers.skills_execute_handler)
+
+    ctx = f"{prefix}/context"
+    app.router.add_get(ctx, assistant_handlers.context_get_handler)
+    app.router.add_post(ctx, assistant_handlers.context_update_handler)
