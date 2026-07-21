@@ -848,3 +848,27 @@ flowchart TB
 **Ecosystem Version 1.5.0-alpha** — governance_layer 1.0, compliance_layer 1.0
 
 Full details: [GOVERNANCE.md](../GOVERNANCE.md).
+
+## Agro Marketplace Application (Sprint 8.1)
+
+Second enterprise application on Platform Core v3.0 + Ecosystem v1.5.
+
+```mermaid
+flowchart LR
+    Agro[Agro Marketplace]
+    Eco[AI Ecosystem v1.5]
+    Core[AI Platform Core v3.0]
+    Agro -->|ecosystem_bridge| Eco
+    Agro -->|platform_bridge| Core
+```
+
+| Component | Location | Role |
+|-----------|----------|------|
+| AgroMarketplaceApplication | `applications/agro_marketplace/application.py` | Facade |
+| Domain services | `farmers/`, `products/`, `orders/`, … | Business logic |
+| Bridges | `integrations/platform_bridge.py`, `ecosystem_bridge.py` | Reuse only |
+| API | `/api/agro/v1`, `/internal/agro/v1`, `/webhooks/agro/v1` | REST / internal / webhooks |
+
+**Application Version 1.0.0-alpha** — foundation ready.
+
+Full details: [AGRO_MARKETPLACE.md](AGRO_MARKETPLACE.md).
