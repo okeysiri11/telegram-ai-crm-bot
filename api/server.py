@@ -48,6 +48,10 @@ def create_app() -> web.Application:
 
     register_agro_marketplace_routes(app)
 
+    from applications.port_erp.api.register import register_port_erp_routes
+
+    register_port_erp_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 

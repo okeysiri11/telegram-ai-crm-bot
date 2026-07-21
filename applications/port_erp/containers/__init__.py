@@ -1,0 +1,1 @@
+from applications.port_erp.containers.service import ContainerRegistry, container_registry

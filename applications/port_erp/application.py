@@ -1,0 +1,60 @@
+# PortERPApplication — application facade.
+
+from __future__ import annotations
+
+from typing import Any
+
+from applications.port_erp.billing.service import BillingService, billing_service
+from applications.port_erp.config import DEFAULT_CONFIG, PortERPConfig
+from applications.port_erp.documents.service import DocumentsService, documents_service
+from applications.port_erp.integrations.ecosystem_bridge import EcosystemBridge, ecosystem_bridge
+from applications.port_erp.integrations.platform_bridge import PlatformBridge, platform_bridge
+from applications.port_erp.port_core.engine import PortCoreEngine, port_core
+from applications.port_erp.security.permissions import PermissionService, permission_service
+from applications.port_erp.shared.store import PortStore, port_store
+
+
+class PortERPApplication:
+    """Port ERP — Platform Core v3 + Ecosystem v1.5 via bridges only."""
+
+    def __init__(
+        self,
+        *,
+        config: PortERPConfig | None = None,
+        store: PortStore | None = None,
+        core: PortCoreEngine | None = None,
+        documents: DocumentsService | None = None,
+        billing: BillingService | None = None,
+        permissions: PermissionService | None = None,
+        platform: PlatformBridge | None = None,
+        ecosystem: EcosystemBridge | None = None,
+    ) -> None:
+        self.config = config or DEFAULT_CONFIG
+        self.store = store or port_store
+        self.core = core or port_core
+        self.documents = documents or documents_service
+        self.billing = billing or billing_service
+        self.permissions = permissions or permission_service
+        self.platform = platform or platform_bridge
+        self.ecosystem = ecosystem or ecosystem_bridge
+
+    def reset(self) -> None:
+        self.store.reset()
+
+    def health(self) -> dict[str, Any]:
+        return {
+            "application": "port_erp",
+            "application_name": self.config.application_name,
+            "application_version": self.config.application_version,
+            "platform_dependency": self.config.platform_dependency,
+            "ecosystem_dependency": self.config.ecosystem_dependency,
+            "api_version": self.config.api_version,
+            "port_core": self.config.port_core,
+            "metrics": self.core.metrics(),
+            "roles": self.permissions.roles(),
+            "platform": self.platform.platform_health(),
+            "ecosystem": self.ecosystem.ecosystem_health(),
+        }
+
+
+port_erp = PortERPApplication()

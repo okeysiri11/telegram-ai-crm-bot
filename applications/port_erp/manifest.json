@@ -1,0 +1,38 @@
+{
+  "application_name": "Port ERP",
+  "application": "port_erp",
+  "application_version": "1.0.0-alpha",
+  "platform_dependency": "AI Platform Core v3",
+  "ecosystem_dependency": "AI Ecosystem v1.5",
+  "api_prefix": "/api/port/v1",
+  "port_core": "1.0",
+  "modules": {
+    "port_core": "1.0",
+    "port_management": "1.0",
+    "terminals": "1.0",
+    "berths": "1.0",
+    "vessels": "1.0",
+    "containers": "1.0",
+    "cargo": "1.0",
+    "customers": "1.0",
+    "companies": "1.0",
+    "operations": "1.0",
+    "documents": "1.0",
+    "billing": "1.0",
+    "shared": "1.0"
+  },
+  "roles": [
+    "port_director",
+    "terminal_manager",
+    "dispatcher",
+    "warehouse_manager",
+    "container_operator",
+    "crane_operator",
+    "forwarder",
+    "shipping_line",
+    "broker",
+    "customer",
+    "administrator",
+    "ai_executive"
+  ]
+}
