@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.agro_marketplace.api import catalog_handlers, internal_handlers, rest_handlers, webhooks
+from applications.agro_marketplace.api import catalog_handlers, crm_handlers, internal_handlers, rest_handlers, webhooks
 from applications.agro_marketplace.api.middleware import auth_middleware
 from applications.agro_marketplace.config import DEFAULT_CONFIG
 
@@ -97,8 +97,14 @@ def register_agro_marketplace_routes(app: web.Application) -> None:
     app.router.add_get(f"{wh}/warehouses", catalog_handlers.warehouse_list_handler)
     app.router.add_post(f"{wh}/warehouses", catalog_handlers.warehouse_create_handler)
     app.router.add_get(f"{wh}/warehouses/{{warehouse_id}}", catalog_handlers.warehouse_get_handler)
-    app.router.add_post(f"{wh}/warehouses/{{warehouse_id}}/locations", catalog_handlers.warehouse_location_create_handler)
-    app.router.add_get(f"{wh}/warehouses/{{warehouse_id}}/locations", catalog_handlers.warehouse_locations_list_handler)
+    app.router.add_post(
+        f"{wh}/warehouses/{{warehouse_id}}/locations",
+        catalog_handlers.warehouse_location_create_handler,
+    )
+    app.router.add_get(
+        f"{wh}/warehouses/{{warehouse_id}}/locations",
+        catalog_handlers.warehouse_locations_list_handler,
+    )
     app.router.add_post(f"{wh}/lots", catalog_handlers.storage_lot_create_handler)
 
     # Sprint 8.2 — Inventory API
@@ -131,6 +137,76 @@ def register_agro_marketplace_routes(app: web.Application) -> None:
     app.router.add_get(f"{search}/suppliers", catalog_handlers.search_suppliers_handler)
     app.router.add_get(f"{search}/semantic", catalog_handlers.search_semantic_handler)
     app.router.add_post(f"{search}/semantic", catalog_handlers.search_semantic_handler)
+
+    # Sprint 8.3 — CRM API
+    crm = f"{prefix}/crm"
+    app.router.add_get(f"{crm}/metrics", crm_handlers.crm_metrics_handler)
+    app.router.add_get(f"{crm}/farmers", crm_handlers.crm_list_farmers_handler)
+    app.router.add_post(f"{crm}/farmers", crm_handlers.crm_register_farmer_handler)
+    app.router.add_get(f"{crm}/buyers", crm_handlers.crm_list_buyers_handler)
+    app.router.add_post(f"{crm}/buyers", crm_handlers.crm_register_buyer_handler)
+    app.router.add_get(f"{crm}/suppliers", crm_handlers.crm_list_suppliers_handler)
+    app.router.add_post(f"{crm}/suppliers", crm_handlers.crm_register_supplier_handler)
+    app.router.add_get(f"{crm}/exporters", crm_handlers.crm_list_exporters_handler)
+    app.router.add_post(f"{crm}/exporters", crm_handlers.crm_register_exporter_handler)
+    app.router.add_get(f"{crm}/leads", crm_handlers.crm_list_leads_handler)
+    app.router.add_post(f"{crm}/leads", crm_handlers.crm_create_lead_handler)
+    app.router.add_post(f"{crm}/leads/{{lead_id}}/assign", crm_handlers.crm_assign_lead_handler)
+    app.router.add_post(f"{crm}/leads/{{lead_id}}/qualify", crm_handlers.crm_qualify_lead_handler)
+    app.router.add_post(f"{crm}/contacts", crm_handlers.crm_contact_handler)
+    app.router.add_get(f"{crm}/profiles/{{profile_id}}/timeline", crm_handlers.crm_timeline_handler)
+    app.router.add_get(f"{crm}/tasks", crm_handlers.crm_list_tasks_handler)
+    app.router.add_post(f"{crm}/tasks", crm_handlers.crm_create_task_handler)
+
+    # Sprint 8.3 — Marketplace API
+    mp = f"{prefix}/marketplace"
+    app.router.add_get(f"{mp}/metrics", crm_handlers.marketplace_metrics_handler)
+    app.router.add_get(f"{mp}/listings", crm_handlers.marketplace_listings_handler)
+    app.router.add_post(f"{mp}/listings", crm_handlers.marketplace_listing_create_handler)
+    app.router.add_get(f"{mp}/requests", crm_handlers.marketplace_requests_handler)
+    app.router.add_post(f"{mp}/requests", crm_handlers.marketplace_request_create_handler)
+    app.router.add_get(f"{mp}/offers", crm_handlers.marketplace_offers_handler)
+    app.router.add_post(f"{mp}/offers", crm_handlers.marketplace_offer_publish_handler)
+    app.router.add_post(f"{mp}/match", crm_handlers.marketplace_match_handler)
+    app.router.add_get(f"{mp}/opportunities", crm_handlers.marketplace_opportunities_handler)
+    app.router.add_post(f"{mp}/deals", crm_handlers.marketplace_deal_create_handler)
+    app.router.add_post(f"{mp}/deals/{{deal_id}}/complete", crm_handlers.marketplace_deal_complete_handler)
+    app.router.add_get(
+        f"{mp}/offers/{{offer_id}}/buyer-recommendations",
+        crm_handlers.recommend_buyers_handler,
+    )
+    app.router.add_get(
+        f"{mp}/requests/{{request_id}}/supplier-recommendations",
+        crm_handlers.recommend_suppliers_handler,
+    )
+
+    # Sprint 8.3 — Trading API
+    tr = f"{prefix}/trading"
+    app.router.add_get(f"{tr}/rfqs", crm_handlers.trading_rfq_list_handler)
+    app.router.add_post(f"{tr}/rfqs", crm_handlers.trading_rfq_create_handler)
+    app.router.add_post(f"{tr}/rfqs/{{rfq_id}}/respond", crm_handlers.trading_rfq_respond_handler)
+    app.router.add_post(f"{tr}/sessions", crm_handlers.trading_session_create_handler)
+    app.router.add_get(f"{tr}/history", crm_handlers.trading_history_handler)
+    app.router.add_get(
+        f"{tr}/offers/{{offer_id}}/price-recommendation",
+        crm_handlers.trading_price_recommend_handler,
+    )
+    app.router.add_post(f"{tr}/contracts", crm_handlers.trading_contract_prepare_handler)
+    app.router.add_post(f"{tr}/contracts/{{contract_id}}/sign", crm_handlers.trading_contract_sign_handler)
+
+    # Sprint 8.3 — Negotiation API
+    nego = f"{prefix}/negotiations"
+    app.router.add_get(f"{nego}", crm_handlers.negotiation_list_handler)
+    app.router.add_post(f"{nego}", crm_handlers.negotiation_start_handler)
+    app.router.add_post(f"{nego}/{{negotiation_id}}/counter", crm_handlers.negotiation_counter_handler)
+    app.router.add_post(f"{nego}/{{negotiation_id}}/agree", crm_handlers.negotiation_agree_handler)
+    app.router.add_post(f"{nego}/{{negotiation_id}}/assist", crm_handlers.negotiation_assist_handler)
+
+    # Sprint 8.3 — Marketplace Order API
+    morders = f"{prefix}/marketplace/orders"
+    app.router.add_get(f"{morders}", crm_handlers.order_list_handler)
+    app.router.add_post(f"{morders}", crm_handlers.order_create_handler)
+    app.router.add_post(f"{morders}/{{order_id}}/confirm", crm_handlers.order_confirm_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/pipeline", internal_handlers.pipeline_handler)

@@ -9,17 +9,29 @@ from applications.agro_marketplace.buyers.service import BuyerService, buyer_ser
 from applications.agro_marketplace.catalog.service import CatalogService, catalog_service
 from applications.agro_marketplace.certification.service import CertificationService, certification_service
 from applications.agro_marketplace.config import DEFAULT_CONFIG, AgroMarketplaceConfig
+from applications.agro_marketplace.contracts.service import ContractService, contract_service
+from applications.agro_marketplace.crm.engine import CRMEngine, crm_engine
 from applications.agro_marketplace.crm.service import CRMService, crm_service
 from applications.agro_marketplace.dashboard.service import DashboardService, dashboard_service
 from applications.agro_marketplace.documents.service import DocumentService, document_service
 from applications.agro_marketplace.export.service import ExportService, export_service
+from applications.agro_marketplace.exporters.service import ExporterService, exporter_service
 from applications.agro_marketplace.farmers.service import FarmerService, farmer_service
 from applications.agro_marketplace.harvest.service import HarvestService, harvest_service
 from applications.agro_marketplace.integrations.ecosystem_bridge import EcosystemBridge, ecosystem_bridge
 from applications.agro_marketplace.integrations.platform_bridge import PlatformBridge, platform_bridge
 from applications.agro_marketplace.inventory.engine import InventoryEngine, inventory_engine
 from applications.agro_marketplace.logistics.service import LogisticsService, logistics_service
+from applications.agro_marketplace.marketplace.ai_integration import TradingAIIntegration, trading_ai
+from applications.agro_marketplace.marketplace.engine import MarketplaceEngine, marketplace_engine
+from applications.agro_marketplace.marketplace.trading_engine import TradingEngine, trading_engine
+from applications.agro_marketplace.negotiations.engine import NegotiationEngine, negotiation_engine
 from applications.agro_marketplace.notifications.service import NotificationService, notification_service
+from applications.agro_marketplace.offers.service import OfferService, offer_service
+from applications.agro_marketplace.orders.marketplace_service import (
+    MarketplaceOrderService,
+    marketplace_order_service,
+)
 from applications.agro_marketplace.orders.service import OrderService, order_service
 from applications.agro_marketplace.payments.service import PaymentService, payment_service
 from applications.agro_marketplace.pricing.service import PricingService, pricing_service
@@ -46,10 +58,12 @@ class AgroMarketplaceApplication:
         farmers: FarmerService | None = None,
         buyers: BuyerService | None = None,
         suppliers: SupplierService | None = None,
+        exporters: ExporterService | None = None,
         products: ProductService | None = None,
         catalog: CatalogService | None = None,
         product_catalog: ProductCatalogService | None = None,
         orders: OrderService | None = None,
+        marketplace_orders: MarketplaceOrderService | None = None,
         warehouse: WarehouseService | None = None,
         warehouse_engine_svc: WarehouseEngine | None = None,
         inventory: InventoryEngine | None = None,
@@ -64,10 +78,17 @@ class AgroMarketplaceApplication:
         analytics: AnalyticsService | None = None,
         notifications: NotificationService | None = None,
         crm: CRMService | None = None,
+        crm_engine_svc: CRMEngine | None = None,
+        marketplace: MarketplaceEngine | None = None,
+        trading: TradingEngine | None = None,
+        negotiations: NegotiationEngine | None = None,
+        offers: OfferService | None = None,
+        contracts: ContractService | None = None,
         documents: DocumentService | None = None,
         payments: PaymentService | None = None,
         dashboard: DashboardService | None = None,
         permissions: PermissionService | None = None,
+        trading_ai_svc: TradingAIIntegration | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
     ) -> None:
@@ -76,10 +97,12 @@ class AgroMarketplaceApplication:
         self.farmers = farmers or farmer_service
         self.buyers = buyers or buyer_service
         self.suppliers = suppliers or supplier_service
+        self.exporters = exporters or exporter_service
         self.products = products or product_service
         self.catalog = catalog or catalog_service
         self.product_catalog = product_catalog or product_catalog_service
         self.orders = orders or order_service
+        self.marketplace_orders = marketplace_orders or marketplace_order_service
         self.warehouse = warehouse or warehouse_service
         self.warehouse_engine = warehouse_engine_svc or warehouse_engine
         self.inventory = inventory or inventory_engine
@@ -94,10 +117,17 @@ class AgroMarketplaceApplication:
         self.analytics = analytics or analytics_service
         self.notifications = notifications or notification_service
         self.crm = crm or crm_service
+        self.crm_engine = crm_engine_svc or crm_engine
+        self.marketplace = marketplace or marketplace_engine
+        self.trading = trading or trading_engine
+        self.negotiations = negotiations or negotiation_engine
+        self.offers = offers or offer_service
+        self.contracts = contracts or contract_service
         self.documents = documents or document_service
         self.payments = payments or payment_service
         self.dashboard = dashboard or dashboard_service
         self.permissions = permissions or permission_service
+        self.trading_ai = trading_ai_svc or trading_ai
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
 
@@ -117,7 +147,13 @@ class AgroMarketplaceApplication:
             "warehouse_layer": self.config.warehouse_layer,
             "inventory_layer": self.config.inventory_layer,
             "harvest_layer": self.config.harvest_layer,
+            "crm_layer": self.config.crm_layer,
+            "marketplace_layer": self.config.marketplace_layer,
+            "trading_layer": self.config.trading_layer,
+            "negotiation_layer": self.config.negotiation_layer,
             "metrics": self.analytics.dashboard_metrics(),
+            "crm": self.crm_engine.metrics(),
+            "marketplace": self.marketplace.metrics(),
             "catalog_products": self.store.agro_products.count(),
             "agro_warehouses": self.store.agro_warehouses.count(),
             "inventory_items": self.store.inventory_items.count(),

@@ -886,3 +886,16 @@ Full details: [AGRO_MARKETPLACE.md](AGRO_MARKETPLACE.md).
 **Application Version 1.1.0-alpha** — catalog_layer 1.0, warehouse_layer 1.0, inventory_layer 1.0, harvest_layer 1.0
 
 Full details: [AGRO_CATALOG.md](AGRO_CATALOG.md).
+
+## Agro CRM, Marketplace & Trading (Sprint 8.3)
+
+| Component | Location | Role |
+|-----------|----------|------|
+| CRMEngine | `crm/engine.py` | Profiles, leads, tasks, timeline |
+| MarketplaceEngine | `marketplace/engine.py` | Listings, offers, matching, deals |
+| TradingEngine | `marketplace/trading_engine.py` | RFQ, contracts, sessions, history |
+| NegotiationEngine | `negotiations/engine.py` | Counter offers, delivery terms |
+
+**Application Version 1.2.0-alpha** — crm_layer 1.0, marketplace_layer 1.0, trading_layer 1.0, negotiation_layer 1.0
+
+Full details: [AGRO_CRM.md](AGRO_CRM.md).

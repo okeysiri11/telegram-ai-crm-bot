@@ -72,6 +72,24 @@ class AgroStore:
         self.inventory_movements: EntityStore = EntityStore()
         self.quality_certificates: EntityStore = EntityStore()
         self.lab_results: EntityStore = EntityStore()
+        # Sprint 8.3 — CRM / trading / marketplace
+        self.farmer_profiles: EntityStore = EntityStore()
+        self.buyer_profiles: EntityStore = EntityStore()
+        self.supplier_profiles: EntityStore = EntityStore()
+        self.exporter_profiles: EntityStore = EntityStore()
+        self.agro_leads: EntityStore = EntityStore()
+        self.crm_contacts: EntityStore = EntityStore()
+        self.crm_tasks: EntityStore = EntityStore()
+        self.purchase_requests: EntityStore = EntityStore()
+        self.sales_offers: EntityStore = EntityStore()
+        self.price_requests: EntityStore = EntityStore()
+        self.negotiations: EntityStore = EntityStore()
+        self.delivery_agreements: EntityStore = EntityStore()
+        self.marketplace_orders: EntityStore = EntityStore()
+        self.trade_contracts: EntityStore = EntityStore()
+        self.trading_sessions: EntityStore = EntityStore()
+        self.marketplace_deals: EntityStore = EntityStore()
+        self.exporters: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
