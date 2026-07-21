@@ -1,0 +1,1 @@
+from applications.agro_marketplace.certification.service import CertificationService, certification_service

@@ -872,3 +872,17 @@ flowchart LR
 **Application Version 1.0.0-alpha** — foundation ready.
 
 Full details: [AGRO_MARKETPLACE.md](AGRO_MARKETPLACE.md).
+
+## Agro Catalog, Warehouse & Inventory (Sprint 8.2)
+
+| Component | Location | Role |
+|-----------|----------|------|
+| ProductCatalogService | `product_catalog/service.py` | CRUD, bulk, duplicates, attributes |
+| WarehouseEngine | `warehouse/engine.py` | Multi-warehouse + locations |
+| InventoryEngine | `inventory/engine.py` | Movements, transfers, shipments |
+| HarvestService | `harvest/service.py` | Seasons, batches, yield, grading |
+| AgroSearchEngine | `search/engine.py` | Product/crop/region/semantic search |
+
+**Application Version 1.1.0-alpha** — catalog_layer 1.0, warehouse_layer 1.0, inventory_layer 1.0, harvest_layer 1.0
+
+Full details: [AGRO_CATALOG.md](AGRO_CATALOG.md).

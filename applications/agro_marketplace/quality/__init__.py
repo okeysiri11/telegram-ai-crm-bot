@@ -1,0 +1,1 @@
+from applications.agro_marketplace.quality.service import QualityService, quality_service

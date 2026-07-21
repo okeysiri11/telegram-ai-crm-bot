@@ -18,6 +18,12 @@ async def auth_middleware(request: web.Request, handler):
         "/catalog/search",
         "/listings",
         "/categories",
+        "/search/products",
+        "/search/crops",
+        "/search/harvests",
+        "/search/warehouses",
+        "/search/suppliers",
+        "/search/semantic",
     )
     if request.method == "GET" and any(request.path.endswith(s) for s in public_suffixes):
         request["ecosystem_user"] = None

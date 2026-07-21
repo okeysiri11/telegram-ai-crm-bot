@@ -32,7 +32,7 @@ class EntityStore(Generic[T]):
 
 
 class AgroStore:
-    """Central in-memory persistence for Sprint 8.1 foundation."""
+    """Central in-memory persistence for Agro Marketplace."""
 
     def __init__(self) -> None:
         self.farmers: EntityStore = EntityStore()
@@ -57,6 +57,21 @@ class AgroStore:
         self.documents: EntityStore = EntityStore()
         self.payments: EntityStore = EntityStore()
         self.crm_leads: EntityStore = EntityStore()
+        # Sprint 8.2 — catalog / warehouse / inventory
+        self.agro_products: EntityStore = EntityStore()
+        self.crop_records: EntityStore = EntityStore()
+        self.crop_varieties: EntityStore = EntityStore()
+        self.seasons: EntityStore = EntityStore()
+        self.packaging: EntityStore = EntityStore()
+        self.harvest_records: EntityStore = EntityStore()
+        self.harvest_batches: EntityStore = EntityStore()
+        self.agro_warehouses: EntityStore = EntityStore()
+        self.storage_locations: EntityStore = EntityStore()
+        self.storage_lot_records: EntityStore = EntityStore()
+        self.inventory_items: EntityStore = EntityStore()
+        self.inventory_movements: EntityStore = EntityStore()
+        self.quality_certificates: EntityStore = EntityStore()
+        self.lab_results: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

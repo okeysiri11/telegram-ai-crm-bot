@@ -1,20 +1,27 @@
 {
   "application_name": "Agro Marketplace",
   "application": "agro_marketplace",
-  "application_version": "1.0.0-alpha",
+  "application_version": "1.1.0-alpha",
   "platform_dependency": "AI Platform Core v3.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "api_prefix": "/api/agro/v1",
   "modules": {
     "catalog": "1.0",
+    "product_catalog": "1.0",
+    "inventory": "1.0",
+    "warehouse": "1.1",
+    "storage": "1.0",
+    "harvest": "1.0",
+    "quality": "1.0",
+    "certification": "1.0",
+    "pricing": "1.1",
+    "search": "1.0",
     "crm": "1.0",
     "farmers": "1.0",
     "buyers": "1.0",
     "suppliers": "1.0",
     "products": "1.0",
     "orders": "1.0",
-    "pricing": "1.0",
-    "warehouse": "1.0",
     "logistics": "1.0",
     "analytics": "1.0",
     "documents": "1.0",
@@ -23,6 +30,12 @@
     "export": "1.0",
     "dashboard": "1.0",
     "shared": "1.0"
+  },
+  "layers": {
+    "catalog_layer": "1.0",
+    "warehouse_layer": "1.0",
+    "inventory_layer": "1.0",
+    "harvest_layer": "1.0"
   },
   "roles": [
     "farmer",

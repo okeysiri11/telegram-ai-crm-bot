@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.agro_marketplace.api import internal_handlers, rest_handlers, webhooks
+from applications.agro_marketplace.api import catalog_handlers, internal_handlers, rest_handlers, webhooks
 from applications.agro_marketplace.api.middleware import auth_middleware
 from applications.agro_marketplace.config import DEFAULT_CONFIG
 
@@ -70,6 +70,67 @@ def register_agro_marketplace_routes(app: web.Application) -> None:
         rest_handlers.recommendations_handler,
     )
     app.router.add_post(f"{prefix}/assistant", rest_handlers.assistant_handler)
+
+    # Sprint 8.2 — Product Catalog API
+    catalog = f"{prefix}/catalog"
+    app.router.add_get(f"{catalog}/products", catalog_handlers.catalog_list_handler)
+    app.router.add_post(f"{catalog}/products", catalog_handlers.catalog_create_handler)
+    app.router.add_get(f"{catalog}/products/{{product_id}}", catalog_handlers.catalog_get_handler)
+    app.router.add_patch(f"{catalog}/products/{{product_id}}", catalog_handlers.catalog_update_handler)
+    app.router.add_post(f"{catalog}/products/{{product_id}}/archive", catalog_handlers.catalog_archive_handler)
+    app.router.add_post(f"{catalog}/products/{{product_id}}/restore", catalog_handlers.catalog_restore_handler)
+    app.router.add_post(f"{catalog}/products/bulk/import", catalog_handlers.catalog_bulk_import_handler)
+    app.router.add_post(f"{catalog}/products/bulk/update", catalog_handlers.catalog_bulk_update_handler)
+    app.router.add_get(f"{catalog}/products/{{product_id}}/duplicates", catalog_handlers.catalog_duplicates_handler)
+    app.router.add_post(f"{catalog}/products/{{product_id}}/attributes", catalog_handlers.catalog_attributes_handler)
+    app.router.add_get(f"{catalog}/products/{{product_id}}/recommendations", catalog_handlers.catalog_recommend_handler)
+    app.router.add_get(f"{catalog}/categories", catalog_handlers.catalog_categories_list_handler)
+    app.router.add_post(f"{catalog}/categories", catalog_handlers.catalog_categories_create_handler)
+    app.router.add_get(f"{catalog}/crops", catalog_handlers.catalog_crops_list_handler)
+    app.router.add_post(f"{catalog}/crops", catalog_handlers.catalog_crops_create_handler)
+    app.router.add_post(f"{catalog}/varieties", catalog_handlers.catalog_variety_create_handler)
+    app.router.add_post(f"{catalog}/packaging", catalog_handlers.catalog_packaging_create_handler)
+    app.router.add_get(f"{catalog}/pricing/{{product_id}}/estimate", catalog_handlers.pricing_estimate_handler)
+
+    # Sprint 8.2 — Warehouse API
+    wh = f"{prefix}/warehouse"
+    app.router.add_get(f"{wh}/warehouses", catalog_handlers.warehouse_list_handler)
+    app.router.add_post(f"{wh}/warehouses", catalog_handlers.warehouse_create_handler)
+    app.router.add_get(f"{wh}/warehouses/{{warehouse_id}}", catalog_handlers.warehouse_get_handler)
+    app.router.add_post(f"{wh}/warehouses/{{warehouse_id}}/locations", catalog_handlers.warehouse_location_create_handler)
+    app.router.add_get(f"{wh}/warehouses/{{warehouse_id}}/locations", catalog_handlers.warehouse_locations_list_handler)
+    app.router.add_post(f"{wh}/lots", catalog_handlers.storage_lot_create_handler)
+
+    # Sprint 8.2 — Inventory API
+    inv = f"{prefix}/inventory"
+    app.router.add_get(f"{inv}/items", catalog_handlers.inventory_list_handler)
+    app.router.add_get(f"{inv}/availability", catalog_handlers.inventory_availability_handler)
+    app.router.add_post(f"{inv}/incoming", catalog_handlers.inventory_incoming_handler)
+    app.router.add_post(f"{inv}/outgoing", catalog_handlers.inventory_outgoing_handler)
+    app.router.add_post(f"{inv}/transfer", catalog_handlers.inventory_transfer_handler)
+    app.router.add_get(f"{inv}/movements", catalog_handlers.inventory_movements_handler)
+
+    # Sprint 8.2 — Harvest API
+    hv = f"{prefix}/harvest"
+    app.router.add_get(f"{hv}/records", catalog_handlers.harvest_list_handler)
+    app.router.add_post(f"{hv}/records", catalog_handlers.harvest_register_handler)
+    app.router.add_post(f"{hv}/batches", catalog_handlers.harvest_batch_create_handler)
+    app.router.add_post(f"{hv}/seasons", catalog_handlers.harvest_season_create_handler)
+    app.router.add_post(f"{hv}/records/{{harvest_id}}/grade", catalog_handlers.harvest_grade_handler)
+    app.router.add_post(f"{hv}/lab-results", catalog_handlers.lab_result_create_handler)
+    app.router.add_post(f"{hv}/certificates", catalog_handlers.certificate_issue_handler)
+    app.router.add_post(f"{hv}/certificates/{{certificate_id}}/verify", catalog_handlers.certificate_verify_handler)
+
+    # Sprint 8.2 — Search API
+    search = f"{prefix}/search"
+    app.router.add_get(f"{search}/products", catalog_handlers.search_products_handler)
+    app.router.add_get(f"{search}/crops", catalog_handlers.search_crops_handler)
+    app.router.add_get(f"{search}/regions/{{region}}", catalog_handlers.search_region_handler)
+    app.router.add_get(f"{search}/harvests", catalog_handlers.search_harvests_handler)
+    app.router.add_get(f"{search}/warehouses", catalog_handlers.search_warehouses_handler)
+    app.router.add_get(f"{search}/suppliers", catalog_handlers.search_suppliers_handler)
+    app.router.add_get(f"{search}/semantic", catalog_handlers.search_semantic_handler)
+    app.router.add_post(f"{search}/semantic", catalog_handlers.search_semantic_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/pipeline", internal_handlers.pipeline_handler)

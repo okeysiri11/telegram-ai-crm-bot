@@ -1,0 +1,1 @@
+from applications.agro_marketplace.product_catalog.service import ProductCatalogService, product_catalog_service
