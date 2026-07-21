@@ -1,0 +1,1 @@
+from applications.agro_marketplace.pricing_ai.service import PricingAIService, pricing_ai_service

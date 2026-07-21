@@ -79,6 +79,47 @@ class EcosystemBridge:
             return []
 
     @staticmethod
+    async def invoke_workforce(task: str, *, context: dict[str, Any] | None = None) -> dict[str, Any]:
+        try:
+            from ecosystem import ecosystem
+
+            workforce = getattr(ecosystem.engine, "workforce", None)
+            if workforce is None:
+                return {"status": "unavailable"}
+            if hasattr(workforce, "execute"):
+                result = await workforce.execute(task, context=context or {})
+                return result if isinstance(result, dict) else {"result": str(result)}
+            if hasattr(workforce, "dispatch"):
+                result = await workforce.dispatch(task, context=context or {})
+                return result if isinstance(result, dict) else {"result": str(result)}
+            return {"status": "ok", "task": task, "layer": "workforce"}
+        except Exception:
+            logger.debug("AI workforce unavailable")
+            return {"status": "fallback", "task": task}
+
+    @staticmethod
+    async def executive_brief(topic: str, *, metrics: dict[str, Any] | None = None) -> dict[str, Any]:
+        try:
+            from ecosystem import ecosystem
+
+            workforce = getattr(ecosystem.engine, "workforce", None)
+            executive = getattr(workforce, "executive", None) if workforce else None
+            if executive is None:
+                from ecosystem.workforce.executive import executive_service
+
+                executive = executive_service
+            if hasattr(executive, "brief"):
+                result = await executive.brief(topic, metrics=metrics or {})
+                return result if isinstance(result, dict) else {"brief": str(result)}
+            if hasattr(executive, "report"):
+                result = await executive.report(topic, metrics=metrics or {})
+                return result if isinstance(result, dict) else {"brief": str(result)}
+            return {"topic": topic, "metrics": metrics or {}, "status": "ok"}
+        except Exception:
+            logger.debug("executive AI unavailable")
+            return {"topic": topic, "metrics": metrics or {}, "fallback": True}
+
+    @staticmethod
     def ecosystem_health() -> dict[str, Any]:
         try:
             from ecosystem import ecosystem

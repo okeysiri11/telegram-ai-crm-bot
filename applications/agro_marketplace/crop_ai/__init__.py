@@ -1,0 +1,1 @@
+from applications.agro_marketplace.crop_ai.service import CropAIService, crop_ai_service

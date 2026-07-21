@@ -72,6 +72,37 @@ class PlatformBridge:
             return {"status": "fallback", "shipment_id": shipment_id}
 
     @staticmethod
+    async def remember_context(session_key: str, context: dict[str, Any]) -> None:
+        try:
+            from platform_memory import memory_service
+
+            await memory_service.remember_session_memory(
+                session_id=f"agro:ai:{session_key}",
+                content=json.dumps(context),
+            )
+        except Exception:
+            logger.debug("memory engine unavailable for AI context")
+
+    @staticmethod
+    async def start_ai_workflow(name: str, payload: dict[str, Any]) -> str | None:
+        try:
+            from platform_workflow import workflow_engine
+            from platform_workflow.models import WorkflowStep
+
+            workflow = await workflow_engine.create_workflow(
+                f"agro-ai-{name}",
+                [
+                    WorkflowStep(name="analyze", assignee_id="agro-ai-agent"),
+                    WorkflowStep(name="act", assignee_id="agro-ai-agent"),
+                ],
+                metadata={"application": "agro_marketplace", **payload},
+            )
+            return workflow.workflow_id
+        except Exception:
+            logger.debug("AI workflow unavailable")
+            return None
+
+    @staticmethod
     def platform_health() -> dict[str, Any]:
         return {
             "platform_dependency": "AI Platform Core v3.0",

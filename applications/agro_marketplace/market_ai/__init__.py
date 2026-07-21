@@ -1,0 +1,1 @@
+from applications.agro_marketplace.market_ai.service import MarketAIService, market_ai_service

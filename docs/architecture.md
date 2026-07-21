@@ -899,3 +899,17 @@ Full details: [AGRO_CATALOG.md](AGRO_CATALOG.md).
 **Application Version 1.2.0-alpha** — crm_layer 1.0, marketplace_layer 1.0, trading_layer 1.0, negotiation_layer 1.0
 
 Full details: [AGRO_CRM.md](AGRO_CRM.md).
+
+## Agro AI Agents & Smart Recommendations (Sprint 8.4)
+
+| Component | Location | Role |
+|-----------|----------|------|
+| AgroAIEngine | `ai/engine.py` | AI facade |
+| AgentRegistry | `agents/service.py` | 10 specialized agro agents |
+| RecommendationEngine | `recommendations/engine.py` | Product/buyer/supplier/opportunity recs |
+| ForecastingEngine | `forecasting/engine.py` | Price/demand/supply/harvest/risk |
+| AgroKnowledgeService | `ai/knowledge.py` | Taxonomy, seasonality, standards |
+
+**Application Version 1.3.0-alpha** — agro_ai 1.0
+
+Full details: [AGRO_AI.md](AGRO_AI.md).

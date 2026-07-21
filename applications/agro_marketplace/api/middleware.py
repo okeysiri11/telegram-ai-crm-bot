@@ -24,6 +24,11 @@ async def auth_middleware(request: web.Request, handler):
         "/search/warehouses",
         "/search/suppliers",
         "/search/semantic",
+        "/ai/health",
+        "/ai/agents",
+        "/knowledge/search",
+        "/knowledge/taxonomy",
+        "/recommendations/products",
     )
     if request.method == "GET" and any(request.path.endswith(s) for s in public_suffixes):
         request["ecosystem_user"] = None

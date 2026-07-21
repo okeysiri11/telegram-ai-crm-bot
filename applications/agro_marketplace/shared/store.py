@@ -90,6 +90,14 @@ class AgroStore:
         self.trading_sessions: EntityStore = EntityStore()
         self.marketplace_deals: EntityStore = EntityStore()
         self.exporters: EntityStore = EntityStore()
+        # Sprint 8.4 — Agricultural AI
+        self.agro_agents: EntityStore = EntityStore()
+        self.agent_invocations: EntityStore = EntityStore()
+        self.recommendations: EntityStore = EntityStore()
+        self.forecasts: EntityStore = EntityStore()
+        self.knowledge_articles: EntityStore = EntityStore()
+        self.executive_reports: EntityStore = EntityStore()
+        self.ai_workflow_tasks: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

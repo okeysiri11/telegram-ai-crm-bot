@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.agro_marketplace.api import catalog_handlers, crm_handlers, internal_handlers, rest_handlers, webhooks
+from applications.agro_marketplace.api import (
+    ai_handlers,
+    catalog_handlers,
+    crm_handlers,
+    internal_handlers,
+    rest_handlers,
+    webhooks,
+)
 from applications.agro_marketplace.api.middleware import auth_middleware
 from applications.agro_marketplace.config import DEFAULT_CONFIG
 
@@ -207,6 +214,57 @@ def register_agro_marketplace_routes(app: web.Application) -> None:
     app.router.add_get(f"{morders}", crm_handlers.order_list_handler)
     app.router.add_post(f"{morders}", crm_handlers.order_create_handler)
     app.router.add_post(f"{morders}/{{order_id}}/confirm", crm_handlers.order_confirm_handler)
+
+    # Sprint 8.4 — AI / Recommendations / Forecast / Knowledge / Assistant
+    ai = f"{prefix}/ai"
+    app.router.add_get(f"{ai}/health", ai_handlers.ai_health_handler)
+    app.router.add_get(f"{ai}/agents", ai_handlers.ai_agents_list_handler)
+    app.router.add_post(f"{ai}/agents/{{agent_type}}/invoke", ai_handlers.ai_agent_invoke_handler)
+    app.router.add_post(f"{ai}/agents/invoke", ai_handlers.ai_agent_invoke_handler)
+    app.router.add_post(f"{ai}/assistant", ai_handlers.assistant_ask_handler)
+    app.router.add_get(f"{ai}/pricing/{{product_id}}/estimate", ai_handlers.pricing_ai_estimate_handler)
+    app.router.add_get(f"{ai}/crops/{{crop}}/advise", ai_handlers.crop_ai_advise_handler)
+    app.router.add_get(f"{ai}/market/snapshot", ai_handlers.market_ai_snapshot_handler)
+    app.router.add_post(f"{ai}/market/snapshot", ai_handlers.market_ai_snapshot_handler)
+
+    rec = f"{prefix}/recommendations"
+    app.router.add_get(f"{rec}/products", ai_handlers.recommendations_products_handler)
+    app.router.add_get(f"{rec}/buyers/{{offer_id}}", ai_handlers.recommendations_buyers_handler)
+    app.router.add_get(f"{rec}/suppliers/{{request_id}}", ai_handlers.recommendations_suppliers_handler)
+    app.router.add_get(f"{rec}/contracts/{{order_id}}", ai_handlers.recommendations_contracts_handler)
+    app.router.add_get(f"{rec}/opportunities", ai_handlers.recommendations_opportunities_handler)
+    app.router.add_get(f"{rec}/inventory", ai_handlers.recommendations_inventory_handler)
+    app.router.add_get(f"{rec}/warehouse", ai_handlers.recommendations_warehouse_handler)
+
+    fc = f"{prefix}/forecast"
+    app.router.add_get(f"{fc}", ai_handlers.forecast_list_handler)
+    app.router.add_get(f"{fc}/price", ai_handlers.forecast_price_handler)
+    app.router.add_post(f"{fc}/price", ai_handlers.forecast_price_handler)
+    app.router.add_get(f"{fc}/demand", ai_handlers.forecast_demand_handler)
+    app.router.add_post(f"{fc}/demand", ai_handlers.forecast_demand_handler)
+    app.router.add_get(f"{fc}/supply", ai_handlers.forecast_supply_handler)
+    app.router.add_post(f"{fc}/supply", ai_handlers.forecast_supply_handler)
+    app.router.add_get(f"{fc}/harvest", ai_handlers.forecast_harvest_handler)
+    app.router.add_post(f"{fc}/harvest", ai_handlers.forecast_harvest_handler)
+    app.router.add_get(f"{fc}/season", ai_handlers.forecast_season_handler)
+    app.router.add_post(f"{fc}/season", ai_handlers.forecast_season_handler)
+    app.router.add_get(f"{fc}/risk", ai_handlers.forecast_risk_handler)
+    app.router.add_post(f"{fc}/risk", ai_handlers.forecast_risk_handler)
+
+    kn = f"{prefix}/knowledge"
+    app.router.add_get(f"{kn}/search", ai_handlers.knowledge_search_handler)
+    app.router.add_get(f"{kn}/taxonomy", ai_handlers.knowledge_taxonomy_handler)
+    app.router.add_get(f"{kn}/seasonality", ai_handlers.knowledge_seasonality_handler)
+    app.router.add_get(f"{kn}/export-regulations", ai_handlers.knowledge_export_handler)
+    app.router.add_post(f"{kn}/articles", ai_handlers.knowledge_add_handler)
+
+    wf = f"{prefix}/ai/workflow"
+    app.router.add_post(f"{wf}/leads/{{lead_id}}/qualify", ai_handlers.workflow_qualify_lead_handler)
+    app.router.add_post(f"{wf}/offers/auto-match", ai_handlers.workflow_auto_match_handler)
+    app.router.add_post(f"{wf}/negotiations/{{negotiation_id}}/assist", ai_handlers.workflow_negotiation_handler)
+    app.router.add_post(f"{wf}/opportunities", ai_handlers.workflow_opportunities_handler)
+    app.router.add_post(f"{wf}/executive-report", ai_handlers.workflow_executive_report_handler)
+    app.router.add_get(f"{wf}/tasks", ai_handlers.workflow_tasks_handler)
 
     # Internal API
     app.router.add_get(f"{internal}/pipeline", internal_handlers.pipeline_handler)

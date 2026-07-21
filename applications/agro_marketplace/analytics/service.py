@@ -37,5 +37,19 @@ class AnalyticsService:
             counts[key] = counts.get(key, 0) + 1
         return counts
 
+    def ai_insights(self) -> dict[str, Any]:
+        """Sprint 8.4 — AI layer analytics."""
+        return {
+            "recommendations": self._store.recommendations.count(),
+            "forecasts": self._store.forecasts.count(),
+            "agent_invocations": self._store.agent_invocations.count(),
+            "knowledge_articles": self._store.knowledge_articles.count(),
+            "executive_reports": self._store.executive_reports.count(),
+            "ai_workflow_tasks": self._store.ai_workflow_tasks.count(),
+            "marketplace_orders": self._store.marketplace_orders.count(),
+            "sales_offers": self._store.sales_offers.count(),
+            "purchase_requests": self._store.purchase_requests.count(),
+        }
+
 
 analytics_service = AnalyticsService()

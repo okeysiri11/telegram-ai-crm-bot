@@ -1,0 +1,1 @@
+from applications.agro_marketplace.assistant.service import AgroAssistantService, agro_assistant

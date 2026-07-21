@@ -145,7 +145,7 @@ def test_pricing_and_permissions():
 def test_health_manifest_values():
     health = agro_marketplace.health()
     assert health["application"] == "agro_marketplace"
-    assert health["application_version"] == "1.2.0-alpha"
+    assert health["application_version"] == "1.3.0-alpha"
     assert health["platform_dependency"] == "AI Platform Core v3.0"
     assert health["ecosystem_dependency"] == "AI Ecosystem v1.5"
 

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.agro_marketplace.ai.engine import AgroAIEngine, agro_ai_engine
 from applications.agro_marketplace.analytics.service import AnalyticsService, analytics_service
 from applications.agro_marketplace.buyers.service import BuyerService, buyer_service
 from applications.agro_marketplace.catalog.service import CatalogService, catalog_service
@@ -89,6 +90,7 @@ class AgroMarketplaceApplication:
         dashboard: DashboardService | None = None,
         permissions: PermissionService | None = None,
         trading_ai_svc: TradingAIIntegration | None = None,
+        agro_ai: AgroAIEngine | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
     ) -> None:
@@ -128,12 +130,15 @@ class AgroMarketplaceApplication:
         self.dashboard = dashboard or dashboard_service
         self.permissions = permissions or permission_service
         self.trading_ai = trading_ai_svc or trading_ai
+        self.agro_ai = agro_ai or agro_ai_engine
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
 
     def reset(self) -> None:
         self.store.reset()
         self.notifications.reset()
+        self.agro_ai.agents.registry._seeded = False
+        self.agro_ai.knowledge._seeded = False
 
     def health(self) -> dict[str, Any]:
         return {
@@ -151,7 +156,9 @@ class AgroMarketplaceApplication:
             "marketplace_layer": self.config.marketplace_layer,
             "trading_layer": self.config.trading_layer,
             "negotiation_layer": self.config.negotiation_layer,
+            "agro_ai": self.config.agro_ai,
             "metrics": self.analytics.dashboard_metrics(),
+            "ai": self.agro_ai.metrics(),
             "crm": self.crm_engine.metrics(),
             "marketplace": self.marketplace.metrics(),
             "catalog_products": self.store.agro_products.count(),
