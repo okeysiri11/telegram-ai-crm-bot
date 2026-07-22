@@ -63,6 +63,20 @@ class AgroEnterpriseStore:
         # Knowledge & dashboards
         self.knowledge: EntityStore = EntityStore()
         self.dashboards: EntityStore = EntityStore()
+        # Sprint 14.1 — Precision Agriculture
+        self.pa_fields: EntityStore = EntityStore()
+        self.pa_maps: EntityStore = EntityStore()
+        self.pa_gis_layers: EntityStore = EntityStore()
+        self.pa_drone_missions: EntityStore = EntityStore()
+        self.pa_flight_archive: EntityStore = EntityStore()
+        self.pa_satellite: EntityStore = EntityStore()
+        self.pa_sat_analysis: EntityStore = EntityStore()
+        self.pa_sensors: EntityStore = EntityStore()
+        self.pa_sensor_readings: EntityStore = EntityStore()
+        self.pa_irrigation: EntityStore = EntityStore()
+        self.pa_ai_monitoring: EntityStore = EntityStore()
+        self.pa_dashboards: EntityStore = EntityStore()
+        self.pa_registries: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

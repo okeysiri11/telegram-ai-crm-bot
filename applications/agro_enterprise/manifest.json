@@ -1,12 +1,13 @@
 {
   "application_name": "Agro Enterprise Platform",
   "application": "agro_enterprise",
-  "application_version": "4.3.0-enterprise",
-  "release_status": "Agro Enterprise Foundation",
+  "application_version": "4.3.1-enterprise",
+  "release_status": "Precision Agriculture",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v4.2.0-enterprise",
+  "enterprise_foundation": "Enterprise Platform v4.3.0-enterprise",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "14.0",
+  "sprint": "14.1",
+  "precision_agriculture": "1.0",
   "modules": {
     "marketplace": "1.0",
     "farm_registry": "1.0",
@@ -14,6 +15,11 @@
     "crm": "1.0",
     "knowledge": "1.0",
     "dashboard": "1.0",
+    "precision_agriculture": "1.0",
+    "gis": "1.0",
+    "drone_agro": "1.0",
+    "satellite_ai": "1.0",
+    "smart_fields": "1.0",
     "api": "4.3"
   },
   "does_not_modify": [
@@ -21,6 +27,7 @@
     "ai_os",
     "enterprise",
     "auto_marketplace",
-    "agro_marketplace"
+    "agro_marketplace",
+    "drone_platform"
   ]
 }

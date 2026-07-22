@@ -7,6 +7,7 @@ from typing import Any
 from applications.agro_enterprise.config import DEFAULT_CONFIG, AgroEnterpriseConfig
 from applications.agro_enterprise.crops_crm import AgroCRM, CropManagement
 from applications.agro_enterprise.marketplace import AgroMarketplace, FarmRegistry
+from applications.agro_enterprise.precision_agriculture.facade import PrecisionAgricultureSuite
 from applications.agro_enterprise.services import AgroDashboard, AgroKnowledge
 from applications.agro_enterprise.shared.store import AgroEnterpriseStore, agro_enterprise_store
 
@@ -17,6 +18,7 @@ class AgroEnterpriseApplication:
         *,
         config: AgroEnterpriseConfig | None = None,
         store: AgroEnterpriseStore | None = None,
+        precision: PrecisionAgricultureSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or agro_enterprise_store
@@ -26,6 +28,7 @@ class AgroEnterpriseApplication:
         self.crm = AgroCRM(self.store)
         self.knowledge = AgroKnowledge(self.store)
         self.dashboard = AgroDashboard(self.store)
+        self.precision = precision or PrecisionAgricultureSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -115,6 +118,11 @@ class AgroEnterpriseApplication:
             "farm_registry_ready": True,
             "crop_management_ready": True,
             "agro_crm_ready": True,
+            "precision_agriculture_ready": True,
+            "gis_platform_ready": True,
+            "drone_integration_ready": True,
+            "satellite_intelligence_ready": True,
+            "smart_fields_ready": True,
             "engines": {
                 "agro_marketplace": self.config.agro_marketplace,
                 "farm_registry": self.config.farm_registry,
@@ -122,6 +130,7 @@ class AgroEnterpriseApplication:
                 "agro_crm": self.config.agro_crm,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
+                "precision_agriculture": self.config.precision_agriculture,
             },
             "marketplace": self.marketplace.status(),
             "farms": self.farms.status(),
@@ -129,6 +138,7 @@ class AgroEnterpriseApplication:
             "crm": self.crm.status(),
             "knowledge": self.knowledge.status(),
             "dashboard": self.dashboard.status(),
+            "precision": self.precision.status(),
         }
 
 
