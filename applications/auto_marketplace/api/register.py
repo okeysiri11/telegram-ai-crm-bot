@@ -23,6 +23,7 @@ from applications.auto_marketplace.api import (
     rest_handlers,
     service_handlers,
     transaction_handlers,
+    vin_intelligence_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -669,3 +670,24 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{ea}/integrations", enterprise_automotive_handlers.ea_integrations_handler)
     app.router.add_get(f"{ea}/dashboard", enterprise_automotive_handlers.ea_dashboard_handler)
     app.router.add_post(f"{ea}/dashboard", enterprise_automotive_handlers.ea_dashboard_handler)
+
+    # Sprint 13.1 — VIN Intelligence (additive; Sprint 13.0 routes unchanged)
+    vi = config.vin_intelligence_api_prefix
+    app.router.add_get(f"{vi}/health", vin_intelligence_handlers.vi_health_handler)
+    app.router.add_post(f"{vi}/bootstrap", vin_intelligence_handlers.vi_bootstrap_handler)
+    app.router.add_get(f"{vi}/decode", vin_intelligence_handlers.vi_decode_handler)
+    app.router.add_post(f"{vi}/decode", vin_intelligence_handlers.vi_decode_handler)
+    app.router.add_get(f"{vi}/passport", vin_intelligence_handlers.vi_passport_handler)
+    app.router.add_post(f"{vi}/passport", vin_intelligence_handlers.vi_passport_handler)
+    app.router.add_get(f"{vi}/analysis", vin_intelligence_handlers.vi_analysis_handler)
+    app.router.add_post(f"{vi}/analysis", vin_intelligence_handlers.vi_analysis_handler)
+    app.router.add_get(f"{vi}/history", vin_intelligence_handlers.vi_history_handler)
+    app.router.add_post(f"{vi}/history", vin_intelligence_handlers.vi_history_handler)
+    app.router.add_get(f"{vi}/recommendations", vin_intelligence_handlers.vi_recommendations_handler)
+    app.router.add_post(f"{vi}/recommendations", vin_intelligence_handlers.vi_recommendations_handler)
+    app.router.add_get(f"{vi}/graph", vin_intelligence_handlers.vi_graph_handler)
+    app.router.add_post(f"{vi}/graph", vin_intelligence_handlers.vi_graph_handler)
+    app.router.add_get(f"{vi}/integrations", vin_intelligence_handlers.vi_integrations_handler)
+    app.router.add_post(f"{vi}/integrations", vin_intelligence_handlers.vi_integrations_handler)
+    app.router.add_get(f"{vi}/dashboard", vin_intelligence_handlers.vi_dashboard_handler)
+    app.router.add_post(f"{vi}/dashboard", vin_intelligence_handlers.vi_dashboard_handler)

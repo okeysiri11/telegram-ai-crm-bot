@@ -22,6 +22,7 @@ from applications.auto_marketplace.enterprise_automotive.facade import (
     EnterpriseAutomotiveSuite,
     enterprise_automotive,
 )
+from applications.auto_marketplace.vin_intelligence.facade import VINIntelligenceSuite, vin_intelligence
 from applications.auto_marketplace.favorites.service import FavoritesService, favorites_service
 from applications.auto_marketplace.finance.engine import FinanceEngine, finance_engine
 from applications.auto_marketplace.filters.search_engine import SearchEngine, search_engine
@@ -105,6 +106,7 @@ class AutoMarketplaceApplication:
         portal_engine_svc: PortalEngine | None = None,
         production_engine_svc: ProductionEngine | None = None,
         enterprise_automotive_svc: EnterpriseAutomotiveSuite | None = None,
+        vin_intelligence_svc: VINIntelligenceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -146,6 +148,7 @@ class AutoMarketplaceApplication:
         self.portal_engine = portal_engine_svc or portal_engine
         self.production_engine = production_engine_svc or production_engine
         self.enterprise_automotive = enterprise_automotive_svc or enterprise_automotive
+        self.vin_intelligence = vin_intelligence_svc or vin_intelligence
 
     def reset(self) -> None:
         self.store.reset()
@@ -162,10 +165,15 @@ class AutoMarketplaceApplication:
             "ecosystem_dependency": self.config.ecosystem_dependency,
             "enterprise_foundation": self.config.enterprise_foundation,
             "enterprise_automotive_suite": self.config.enterprise_automotive_suite,
+            "vin_intelligence": self.config.vin_intelligence,
             "auto_marketplace_ready": True,
             "auto_ai_ready": True,
             "dealer_platform_ready": True,
             "enterprise_automotive_suite_ready": True,
+            "vin_intelligence_ready": True,
+            "digital_passport_ready": True,
+            "vehicle_history_ai_ready": True,
+            "fraud_detection_ready": True,
             "maintenance_mode": self.production_engine.maintenance.enabled,
             "api_version": self.config.api_version,
             "catalog_engine": self.config.catalog_engine,
@@ -206,6 +214,7 @@ class AutoMarketplaceApplication:
             "fleet_ops": self.fleet_ops.metrics(),
             "enterprise": self.enterprise.metrics(),
             "enterprise_automotive": self.enterprise_automotive.status(),
+            "vin_intelligence": self.vin_intelligence.status(),
             "health_deep": self.enterprise.health.deep(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),

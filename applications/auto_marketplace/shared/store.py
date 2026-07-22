@@ -218,6 +218,16 @@ class MarketplaceStore:
         self.ea_reports: EntityStore = EntityStore()
         self.ea_integrations: EntityStore = EntityStore()
         self.ea_dashboards: EntityStore = EntityStore()
+        # Sprint 13.1 — VIN Intelligence & Digital Passport
+        self.vi_decodes: EntityStore = EntityStore()
+        self.vi_passports: EntityStore = EntityStore()
+        self.vi_analyses: EntityStore = EntityStore()
+        self.vi_history: EntityStore = EntityStore()
+        self.vi_recommendations: EntityStore = EntityStore()
+        self.vi_graph_nodes: EntityStore = EntityStore()
+        self.vi_graph_edges: EntityStore = EntityStore()
+        self.vi_integrations: EntityStore = EntityStore()
+        self.vi_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

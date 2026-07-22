@@ -1,10 +1,10 @@
 # Auto Marketplace — Enterprise Integration (Sprint 10.8)
 
-Enterprise connectors, cross-platform bridges, partners, and global network for **Auto Marketplace 4.1.0-enterprise**.
+Enterprise connectors, cross-platform bridges, partners, and global network for **Auto Marketplace 4.1.1-enterprise**.
 
 | Field | Value |
 |-------|-------|
-| Application version | `4.1.0-enterprise` |
+| Application version | `4.1.1-enterprise` |
 | `enterprise_engine` | `1.0` |
 | `global_network` | `1.0` |
 | `production_ready` | `true` |
