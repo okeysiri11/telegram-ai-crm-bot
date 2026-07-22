@@ -33,9 +33,10 @@ def reset_store():
 
 
 def test_version_and_release_status():
-    assert DEFAULT_CONFIG.application_version == "2.0.0"
-    assert DEFAULT_CONFIG.release_status == "Production Ready"
-    assert DEFAULT_CONFIG.platform_dependency == "AI Platform Core v3.0"
+    assert DEFAULT_CONFIG.application_version == "1.0.0-alpha"
+    assert DEFAULT_CONFIG.release_status == "Foundation Alpha"
+    assert DEFAULT_CONFIG.platform_dependency == "AI Platform Core v3"
+    assert DEFAULT_CONFIG.ecosystem_dependency == "AI Ecosystem v1.5"
 
 
 @pytest.mark.asyncio
@@ -65,8 +66,8 @@ async def test_security_audit():
 @pytest.mark.asyncio
 async def test_release_report_production_ready():
     report = await auto_marketplace.production_engine.generate_release_report(run_benchmarks=True)
-    assert report.application_version == "2.0.0"
-    assert report.release_status == "Production Ready"
+    assert report.application_version == "1.0.0-alpha"
+    assert report.release_status == "Foundation Alpha"
     assert report.production_ready, report.to_dict()
 
 
@@ -91,8 +92,8 @@ def test_deployment_checklist():
 
 def test_release_manifest():
     manifest = auto_marketplace.production_engine.release_manifest()
-    assert manifest["application_version"] == "2.0.0"
-    assert manifest["release_status"] == "Production Ready"
+    assert manifest["application_version"] == "1.0.0-alpha"
+    assert manifest["release_status"] == "Foundation Alpha"
 
 
 @pytest.mark.asyncio
@@ -100,7 +101,7 @@ async def test_ops_api(client: TestClient):
     resp = await client.get("/api/auto/v1/ops/health")
     assert resp.status == 200
     data = await resp.json()
-    assert data["application_version"] == "2.0.0"
+    assert data["application_version"] == "1.0.0-alpha"
 
     resp = await client.get("/api/auto/v1/ops/release/report")
     assert resp.status == 200

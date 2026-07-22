@@ -8,9 +8,9 @@ from typing import Any
 class DeploymentService:
     CHECKLIST = [
         {"id": "pre.1", "step": "Run production validation suite", "required": True},
-        {"id": "pre.2", "step": "Verify application_version = 2.0.0", "required": True},
+        {"id": "pre.2", "step": "Verify application_version = 1.0.0-alpha", "required": True},
         {"id": "pre.3", "step": "Create pre-deployment backup", "required": True},
-        {"id": "pre.4", "step": "Verify Platform Core v3.0 connectivity", "required": True},
+        {"id": "pre.4", "step": "Verify Platform Core v3 connectivity", "required": True},
         {"id": "deploy.1", "step": "Deploy application package", "required": True},
         {"id": "deploy.2", "step": "Run health check on /api/auto/v1/health", "required": True},
         {"id": "deploy.3", "step": "Verify CRM, Finance, Portal endpoints", "required": True},

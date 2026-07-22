@@ -7,6 +7,7 @@ from typing import Any
 from applications.auto_marketplace.ai_sales.engine import AISalesEngine, ai_sales_engine
 from applications.auto_marketplace.analytics.service import AnalyticsService, analytics_service
 from applications.auto_marketplace.business_intelligence.engine import BIEngine, bi_engine
+from applications.auto_marketplace.buyers.engine import BuyersEngine, buyers_engine
 from applications.auto_marketplace.catalog.service import CatalogService, catalog_service
 from applications.auto_marketplace.config import DEFAULT_CONFIG, AutoMarketplaceConfig
 from applications.auto_marketplace.crm.engine import CRMEngine, crm_engine
@@ -15,8 +16,12 @@ from applications.auto_marketplace.customers.service import CustomerService, cus
 from applications.auto_marketplace.dealers.service import DealerService, dealer_service
 from applications.auto_marketplace.delivery.service import DeliveryService, delivery_service
 from applications.auto_marketplace.documents.service import DocumentService, document_service
+from applications.auto_marketplace.favorites.service import FavoritesService, favorites_service
 from applications.auto_marketplace.finance.engine import FinanceEngine, finance_engine
 from applications.auto_marketplace.filters.search_engine import SearchEngine, search_engine
+from applications.auto_marketplace.garage.service import GarageService, garage_service
+from applications.auto_marketplace.inspection.engine import InspectionEngine, inspection_engine
+from applications.auto_marketplace.integrations.ecosystem_bridge import EcosystemBridge, ecosystem_bridge
 from applications.auto_marketplace.integrations.platform_bridge import PlatformBridge, platform_bridge
 from applications.auto_marketplace.inventory.service import InventoryService, inventory_service
 from applications.auto_marketplace.inventory_engine.service import InventoryEngine, inventory_engine
@@ -34,10 +39,11 @@ from applications.auto_marketplace.release.engine import ProductionEngine, produ
 from applications.auto_marketplace.search.service import SearchService, search_service
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 from applications.auto_marketplace.vehicle_catalog.service import VehicleCatalogService, vehicle_catalog_service
+from applications.auto_marketplace.vehicles.engine import VehiclesEngine, vehicles_engine
 
 
 class AutoMarketplaceApplication:
-    """Enterprise Auto Marketplace — consumes Platform Core v3.0 via bridges."""
+    """Auto Marketplace — Platform Core v3 + Ecosystem v1.5 via bridges only."""
 
     def __init__(
         self,
@@ -45,7 +51,9 @@ class AutoMarketplaceApplication:
         config: AutoMarketplaceConfig | None = None,
         store: MarketplaceStore | None = None,
         catalog: CatalogService | None = None,
+        vehicles: VehiclesEngine | None = None,
         dealers: DealerService | None = None,
+        buyers: BuyersEngine | None = None,
         customers: CustomerService | None = None,
         crm: CRMService | None = None,
         inventory: InventoryService | None = None,
@@ -53,11 +61,15 @@ class AutoMarketplaceApplication:
         recommendations: RecommendationService | None = None,
         search: SearchService | None = None,
         documents: DocumentService | None = None,
+        favorites: FavoritesService | None = None,
+        garage: GarageService | None = None,
+        inspection: InspectionEngine | None = None,
         payments: PaymentService | None = None,
         delivery: DeliveryService | None = None,
         analytics: AnalyticsService | None = None,
         notifications: NotificationService | None = None,
         platform: PlatformBridge | None = None,
+        ecosystem: EcosystemBridge | None = None,
         vehicle_catalog: VehicleCatalogService | None = None,
         inventory_engine_svc: InventoryEngine | None = None,
         media: MediaService | None = None,
@@ -72,7 +84,9 @@ class AutoMarketplaceApplication:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
         self.catalog = catalog or catalog_service
+        self.vehicles = vehicles or vehicles_engine
         self.dealers = dealers or dealer_service
+        self.buyers = buyers or buyers_engine
         self.customers = customers or customer_service
         self.crm = crm or crm_service
         self.inventory = inventory or inventory_service
@@ -80,11 +94,15 @@ class AutoMarketplaceApplication:
         self.recommendations = recommendations or recommendation_service
         self.search = search or search_service
         self.documents = documents or document_service
+        self.favorites = favorites or favorites_service
+        self.garage = garage or garage_service
+        self.inspection = inspection or inspection_engine
         self.payments = payments or payment_service
         self.delivery = delivery or delivery_service
         self.analytics = analytics or analytics_service
         self.notifications = notifications or notification_service
         self.platform = platform or platform_bridge
+        self.ecosystem = ecosystem or ecosystem_bridge
         self.vehicle_catalog = vehicle_catalog or vehicle_catalog_service
         self.inventory_engine = inventory_engine_svc or inventory_engine
         self.media = media or media_service
@@ -104,12 +122,23 @@ class AutoMarketplaceApplication:
     def health(self) -> dict[str, Any]:
         return {
             "application": "auto_marketplace",
+            "application_name": self.config.application_name,
             "application_version": self.config.application_version,
             "release_status": self.config.release_status,
             "platform_dependency": self.config.platform_dependency,
+            "ecosystem_dependency": self.config.ecosystem_dependency,
             "maintenance_mode": self.production_engine.maintenance.enabled,
             "api_version": self.config.api_version,
+            "catalog_engine": self.config.catalog_engine,
+            "crm_foundation": self.config.crm_foundation,
             "metrics": self.analytics.dashboard_metrics(),
+            "foundation": {
+                "catalog": self.catalog.overview(),
+                "vehicles": self.vehicles.metrics(),
+                "buyers": self.buyers.metrics(),
+                "crm": self.crm.metrics(),
+                "inspection": self.inspection.metrics(),
+            },
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),
             "crm_deals": self.store.crm_deals.count(),
@@ -121,6 +150,8 @@ class AutoMarketplaceApplication:
             "bi_dashboards": self.store.bi_dashboards.count(),
             "bi_reports": self.store.bi_reports.count(),
             "portal_users": self.store.portal_users.count(),
+            "platform": self.platform.platform_health(),
+            "ecosystem": self.ecosystem.ecosystem_health(),
         }
 
 

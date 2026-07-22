@@ -34,6 +34,25 @@ class PricingService:
         base = self.estimate_vehicle_price(vehicle)
         return round(base * demand_factor, 2)
 
+    def record_price(self, vehicle_id: str, price: float, *, currency: str = "USD", reason: str = "") -> dict:
+        from applications.auto_marketplace.foundation.models import PriceHistory
+
+        entry = PriceHistory(vehicle_id=vehicle_id, price=price, currency=currency, reason=reason)
+        self._store.price_history.save(entry.entry_id, entry)
+        vehicle = self._store.vehicles.get(vehicle_id)
+        if vehicle is not None:
+            vehicle.price = price
+            vehicle.currency = currency
+            self._store.vehicles.save(vehicle_id, vehicle)
+        return entry.to_dict()
+
+    def price_history(self, vehicle_id: str) -> list[dict]:
+        return [
+            e.to_dict()
+            for e in self._store.price_history.list_all()
+            if e.vehicle_id == vehicle_id
+        ]
+
 
 class RecommendationService:
     def __init__(self, store: MarketplaceStore | None = None) -> None:

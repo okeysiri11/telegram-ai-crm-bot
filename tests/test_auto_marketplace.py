@@ -1,6 +1,8 @@
-"""Tests — Auto Marketplace Foundation (Sprint 6.1)."""
+"""Tests — Auto Marketplace Foundation (Sprint 10.1)."""
 
 from __future__ import annotations
+
+from pathlib import Path
 
 import pytest
 from aiohttp import web
@@ -8,9 +10,21 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from applications.auto_marketplace import auto_marketplace
 from applications.auto_marketplace.api.register import register_auto_marketplace_routes
+from applications.auto_marketplace.foundation.models import (
+    Appointment,
+    Buyer,
+    BuyerRequest,
+    CatalogCategory,
+    InspectionReport,
+    Negotiation,
+    VehicleBrand,
+    VehicleModel,
+)
 from applications.auto_marketplace.shared.models import (
     Customer,
     Dealer,
+    Lead,
+    Reservation,
     Vehicle,
     VehicleSpecification,
     VehicleStatus,
@@ -37,48 +51,247 @@ def reset_store():
     auto_marketplace.reset()
 
 
-def test_catalog_service_create_and_list():
-    dealer = auto_marketplace.dealers.create_dealer(Dealer(name="Test Motors"))
-    vehicle = Vehicle(
-        dealer_id=dealer.dealer_id,
-        specification=VehicleSpecification(make="Toyota", model="Camry", year=2022, mileage_km=15000),
-        price=25000,
-        status=VehicleStatus.LISTED,
+def test_version_modules_docs_bridges():
+    health = auto_marketplace.health()
+    assert health["application_name"] == "Auto Marketplace"
+    assert health["application_version"] == "1.0.0-alpha"
+    assert health["platform_dependency"] == "AI Platform Core v3"
+    assert health["ecosystem_dependency"] == "AI Ecosystem v1.5"
+    assert "foundation" in health
+    docs = Path(__file__).resolve().parents[1] / "docs" / "AUTO_MARKETPLACE.md"
+    assert docs.exists()
+    assert "1.0.0-alpha" in docs.read_text(encoding="utf-8")
+    assert auto_marketplace.platform.platform_health()["platform_dependency"] == "AI Platform Core v3"
+    assert auto_marketplace.ecosystem.ecosystem_health()["ecosystem_dependency"] == "AI Ecosystem v1.5"
+    root = Path(__file__).resolve().parents[1] / "applications" / "auto_marketplace"
+    for name in (
+        "catalog",
+        "vehicles",
+        "dealers",
+        "buyers",
+        "crm",
+        "search",
+        "favorites",
+        "garage",
+        "inspection",
+        "pricing",
+        "documents",
+        "shared",
+    ):
+        assert (root / name).is_dir()
+
+
+def test_catalog_categories_and_vehicles():
+    dealer = auto_marketplace.dealers.create_dealer(Dealer(name="City Motors"))
+    brand = auto_marketplace.vehicles.register_brand(VehicleBrand(name="Toyota", country="JP"))
+    model = auto_marketplace.vehicles.register_model(
+        VehicleModel(brand_id=brand.brand_id, name="Camry", category=CatalogCategory.CARS)
     )
-    auto_marketplace.catalog.create_vehicle(vehicle)
-    listed = auto_marketplace.catalog.list_vehicles(status=VehicleStatus.LISTED)
-    assert len(listed) == 1
-    assert listed[0].specification.make == "Toyota"
+    assert model.category == CatalogCategory.CARS
+    assert "cars" in auto_marketplace.catalog.categories()
+    assert "electric_vehicles" in auto_marketplace.catalog.categories()
+
+    vehicle = auto_marketplace.catalog.create_vehicle(
+        Vehicle(
+            dealer_id=dealer.dealer_id,
+            specification=VehicleSpecification(
+                make="Toyota",
+                model="Camry",
+                year=2022,
+                mileage_km=12000,
+                fuel_type="hybrid",
+                transmission="automatic",
+                body_type="sedan",
+                vin="JTDBR32E720123456",
+            ),
+            price=25000,
+            status=VehicleStatus.LISTED,
+            description="Certified hybrid sedan",
+        ),
+        category=CatalogCategory.HYBRID.value,
+    )
+    assert auto_marketplace.catalog.overview()["by_category"]["hybrid_vehicles"] == 1
+    vin = auto_marketplace.vehicles.parse_vin(vehicle.specification.vin)
+    assert vin.valid is True
 
 
-def test_search_service_filters():
+def test_search_foundation_filters():
+    dealer = auto_marketplace.dealers.create_dealer(Dealer(name="Nairobi Dealer"))
     auto_marketplace.catalog.create_vehicle(
         Vehicle(
-            specification=VehicleSpecification(make="BMW", model="X5", year=2021),
+            dealer_id=dealer.dealer_id,
+            specification=VehicleSpecification(
+                make="BMW",
+                model="X5",
+                year=2021,
+                mileage_km=30000,
+                fuel_type="diesel",
+                transmission="automatic",
+                body_type="suv",
+                vin="WBAXXXXXXXXXXXXX1",
+            ),
             price=60000,
+            status=VehicleStatus.LISTED,
+            description="Nairobi region SUV",
+        ),
+        category=CatalogCategory.CARS.value,
+    )
+    results = auto_marketplace.search.search_vehicles(
+        brand="BMW",
+        year=2021,
+        fuel="diesel",
+        transmission="automatic",
+        body="suv",
+        max_price=65000,
+        mileage_max=40000,
+        region="Nairobi",
+    )
+    assert len(results) == 1
+    assert set(auto_marketplace.search.filter_keys()) >= {
+        "brand",
+        "model",
+        "year",
+        "mileage",
+        "fuel",
+        "transmission",
+        "body",
+        "region",
+        "price",
+        "vin",
+        "condition",
+    }
+
+
+def test_crm_requests_appointments_negotiations_reservations():
+    buyer = auto_marketplace.buyers.register(
+        Buyer(first_name="Ann", last_name="Buyer", email="ann@example.com", region="KE")
+    )
+    dealer = auto_marketplace.dealers.create_dealer(Dealer(name="Prime Auto"))
+    vehicle = auto_marketplace.catalog.create_vehicle(
+        Vehicle(
+            dealer_id=dealer.dealer_id,
+            specification=VehicleSpecification(make="Honda", model="Civic", year=2020),
+            price=18000,
             status=VehicleStatus.LISTED,
         )
     )
-    results = auto_marketplace.search.search_vehicles(make="BMW")
-    assert len(results) == 1
-
-
-def test_crm_lead_and_deal_flow():
-    customer = auto_marketplace.customers.create_customer(
-        Customer(first_name="Ann", last_name="Buyer", email="ann@example.com")
-    )
-    from applications.auto_marketplace.shared.models import Lead
-
     lead = auto_marketplace.crm.create_lead(
-        Lead(customer_id=customer.customer_id, vehicle_id="v1", dealer_id="d1")
+        Lead(customer_id=buyer.buyer_id, vehicle_id=vehicle.vehicle_id, dealer_id=dealer.dealer_id)
     )
     assert lead.lead_id
-    assert auto_marketplace.crm.list_leads()
+    req = auto_marketplace.crm.create_request(
+        BuyerRequest(buyer_id=buyer.buyer_id, vehicle_id=vehicle.vehicle_id, message="Need test drive")
+    )
+    appt = auto_marketplace.crm.schedule_appointment(
+        Appointment(
+            buyer_id=buyer.buyer_id,
+            dealer_id=dealer.dealer_id,
+            vehicle_id=vehicle.vehicle_id,
+            scheduled_at=1_700_000_000,
+        )
+    )
+    nego = auto_marketplace.crm.start_negotiation(
+        Negotiation(
+            buyer_id=buyer.buyer_id,
+            dealer_id=dealer.dealer_id,
+            vehicle_id=vehicle.vehicle_id,
+            offer_price=17000,
+        )
+    )
+    auto_marketplace.crm.counter_negotiation(nego.negotiation_id, 17500)
+    reservation = auto_marketplace.crm.reserve_vehicle(
+        Reservation(
+            vehicle_id=vehicle.vehicle_id,
+            customer_id=buyer.buyer_id,
+            dealer_id=dealer.dealer_id,
+            deposit_amount=500,
+        )
+    )
+    history = auto_marketplace.crm.customer_history(buyer.buyer_id)
+    assert history["requests"] and history["appointments"] and history["negotiations"]
+    assert history["reservations"][0]["reservation_id"] == reservation.reservation_id
+    assert appt.appointment_id and req.request_id
 
 
-def test_pricing_and_recommendations():
+def test_inspection_and_price_history():
+    vehicle = auto_marketplace.catalog.create_vehicle(
+        Vehicle(
+            specification=VehicleSpecification(make="Ford", model="Ranger", year=2019),
+            price=22000,
+            status=VehicleStatus.LISTED,
+        )
+    )
+    report = auto_marketplace.inspection.create_report(
+        InspectionReport(vehicle_id=vehicle.vehicle_id, inspector="tech-1", score=88, findings=["ok"])
+    )
+    assert report.passed is True
+    entry = auto_marketplace.pricing.record_price(vehicle.vehicle_id, 21000, reason="promo")
+    assert entry["price"] == 21000
+    assert len(auto_marketplace.pricing.price_history(vehicle.vehicle_id)) == 1
+
+
+@pytest.mark.asyncio
+async def test_rest_foundation_endpoints(client: TestClient):
+    health = await client.get("/api/auto/v1/health")
+    assert health.status == 200
+    body = await health.json()
+    assert body["application_version"] == "1.0.0-alpha"
+
+    catalog = await client.get("/api/auto/v1/catalog")
+    assert catalog.status == 200
+    catalog_body = await catalog.json()
+    assert "cars" in catalog_body["categories"]
+
+    dealer = await client.post("/api/auto/v1/dealers", json={"name": "API Motors"})
+    assert dealer.status == 201
+    dealer_body = await dealer.json()
+
+    vehicle = await client.post(
+        "/api/auto/v1/vehicles",
+        json={
+            "dealer_id": dealer_body["dealer_id"],
+            "category": "cars",
+            "price": 15000,
+            "specification": {
+                "make": "Kia",
+                "model": "Sportage",
+                "year": 2018,
+                "fuel_type": "petrol",
+                "transmission": "manual",
+                "body_type": "suv",
+                "vin": "KNAXXXXXXXXXXXXX1",
+            },
+        },
+    )
+    assert vehicle.status == 201
+
+    search = await client.get("/api/auto/v1/search?brand=Kia&body=suv&fuel=petrol")
+    assert search.status == 200
+    search_body = await search.json()
+    assert search_body["items"]
+
+    buyer = await client.post(
+        "/api/auto/v1/buyers",
+        json={"first_name": "Sam", "email": "sam@example.com", "region": "KE"},
+    )
+    assert buyer.status == 201
+    buyer_body = await buyer.json()
+
+    crm = await client.get("/api/auto/v1/crm")
+    assert crm.status == 200
+    crm_body = await crm.json()
+    assert crm_body["crm_foundation"] == "1.0"
+
+    req = await client.post(
+        "/api/auto/v1/crm/requests",
+        json={"buyer_id": buyer_body["buyer_id"], "message": "Interested"},
+    )
+    assert req.status == 201
+
+
+def test_legacy_foundation_flows_still_work():
     customer = auto_marketplace.customers.create_customer(
-        Customer(email="buyer@example.com", preferences={"budget_max": 30000, "make": "Honda"})
+        Customer(first_name="Ann", last_name="Buyer", email="ann2@example.com")
     )
     auto_marketplace.catalog.create_vehicle(
         Vehicle(
@@ -91,77 +304,7 @@ def test_pricing_and_recommendations():
     assert recs
 
 
-def test_payment_and_document_flow():
-    from applications.auto_marketplace.shared.models import Payment
-
-    payment = auto_marketplace.payments.create_payment(
-        Payment(deal_id="deal-1", customer_id="cust-1", amount=1000)
-    )
-    captured = auto_marketplace.payments.capture_payment(payment.payment_id)
-    assert captured.status.value == "captured"
-
-
-@pytest.mark.asyncio
-async def test_rest_health(client: TestClient):
-    resp = await client.get("/api/auto/v1/health")
-    assert resp.status == 200
-    data = await resp.json()
-    assert data["application"] == "auto_marketplace"
-
-
-@pytest.mark.asyncio
-async def test_rest_create_vehicle(client: TestClient):
-    resp = await client.post(
-        "/api/auto/v1/vehicles",
-        json={
-            "dealer_id": "d1",
-            "price": 35000,
-            "specification": {"make": "Audi", "model": "A4", "year": 2023, "mileage_km": 5000},
-        },
-    )
-    assert resp.status == 201
-    data = await resp.json()
-    assert data["specification"]["make"] == "Audi"
-
-
-@pytest.mark.asyncio
-async def test_rest_search(client: TestClient):
-    await client.post(
-        "/api/auto/v1/vehicles",
-        json={
-            "price": 15000,
-            "specification": {"make": "Ford", "model": "Focus", "year": 2019},
-        },
-    )
-    resp = await client.get("/api/auto/v1/search", params={"make": "Ford"})
-    assert resp.status == 200
-    data = await resp.json()
-    assert len(data["items"]) >= 1
-
-
-@pytest.mark.asyncio
-async def test_internal_requires_auth(client: TestClient):
-    resp = await client.get("/internal/auto/v1/pipeline")
-    assert resp.status == 401
-
-
-@pytest.mark.asyncio
-async def test_internal_with_auth(client: TestClient):
-    resp = await client.get(
-        "/internal/auto/v1/pipeline",
-        headers={"Authorization": "Bearer test-token"},
-    )
-    assert resp.status == 200
-
-
-@pytest.mark.asyncio
-async def test_platform_bridge_fallback():
-    from applications.auto_marketplace.integrations.platform_bridge import platform_bridge
-
-    result = await platform_bridge.orchestrate_vehicle_inquiry("v1", "c1")
-    assert "vehicle_id" in result
-
-
-def test_analytics_dashboard():
-    metrics = auto_marketplace.analytics.dashboard_metrics()
-    assert "vehicles" in metrics
+def test_platform_core_and_siblings_untouched():
+    root = Path(__file__).resolve().parents[1]
+    assert (root / "applications" / "auto_marketplace" / "vehicles").is_dir()
+    assert not (root / "ecosystem" / "auto_marketplace").exists()

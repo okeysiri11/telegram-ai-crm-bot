@@ -105,76 +105,24 @@ class MarketplaceStore:
         self.partner_connections: EntityStore = EntityStore()
         self.portal_notifications: EntityStore = EntityStore()
         self.vehicle_views: EntityStore = EntityStore()
+        # Sprint 10.1 — foundation taxonomy / CRM / buyers / inspection
+        self.vehicle_brands: EntityStore = EntityStore()
+        self.vehicle_models: EntityStore = EntityStore()
+        self.vehicle_generations: EntityStore = EntityStore()
+        self.vehicle_configurations: EntityStore = EntityStore()
+        self.buyers: EntityStore = EntityStore()
+        self.buyer_requests: EntityStore = EntityStore()
+        self.appointments: EntityStore = EntityStore()
+        self.negotiations: EntityStore = EntityStore()
+        self.inspection_reports: EntityStore = EntityStore()
+        self.price_history: EntityStore = EntityStore()
+        self.foundation_favorites: EntityStore = EntityStore()
+        self.foundation_garages: EntityStore = EntityStore()
 
     def reset(self) -> None:
-        for store in (
-            self.vehicles,
-            self.dealers,
-            self.customers,
-            self.leads,
-            self.deals,
-            self.reservations,
-            self.inspections,
-            self.trade_ins,
-            self.auctions,
-            self.payments,
-            self.invoices,
-            self.deliveries,
-            self.service_history,
-            self.warranties,
-            self.documents,
-            self.catalog_vehicles,
-            self.media,
-            self.warehouses,
-            self.brands,
-            self.customer_profiles,
-            self.crm_leads,
-            self.crm_deals,
-            self.opportunities,
-            self.interactions,
-            self.contacts,
-            self.phone_calls,
-            self.email_messages,
-            self.meetings,
-            self.crm_tasks,
-            self.reminders,
-            self.sales_agents,
-            self.sales_teams,
-            self.conversation_sessions,
-            self.intelligence_profiles,
-            self.ai_offers,
-            self.knowledge_articles,
-            self.document_templates,
-            self.finance_documents,
-            self.contracts,
-            self.finance_payments,
-            self.payment_methods,
-            self.finance_invoices,
-            self.receipts,
-            self.transactions,
-            self.refunds,
-            self.tax_records,
-            self.commissions,
-            self.dealer_settlements,
-            self.financial_reports,
-            self.audit_records,
-            self.bi_dashboards,
-            self.bi_reports,
-            self.bi_forecasts,
-            self.bi_insights,
-            self.portal_users,
-            self.portal_sessions,
-            self.favorites,
-            self.saved_searches,
-            self.garage_vehicles,
-            self.test_drive_bookings,
-            self.trade_in_requests,
-            self.offer_requests,
-            self.partner_connections,
-            self.portal_notifications,
-            self.vehicle_views,
-        ):
-            store.reset()
+        for attr in vars(self).values():
+            if isinstance(attr, EntityStore):
+                attr.reset()
 
 
 marketplace_store = MarketplaceStore()

@@ -38,7 +38,7 @@ async def deployment_checklist_handler(_request: web.Request) -> web.Response:
 
 
 async def deployment_preflight_handler(request: web.Request) -> web.Response:
-    version = request.query.get("version", "2.0.0")
+    version = request.query.get("version", "1.0.0-alpha")
     return json_response(auto_marketplace.production_engine.deployment.preflight(version=version))
 
 

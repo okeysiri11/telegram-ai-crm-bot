@@ -4,7 +4,19 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.auto_marketplace.api import ai_sales_handlers, bi_handlers, catalog_handlers, crm_handlers, finance_handlers, internal_handlers, ops_handlers, portal_handlers, rest_handlers, webhooks
+from applications.auto_marketplace.api import (
+    ai_sales_handlers,
+    bi_handlers,
+    catalog_handlers,
+    crm_handlers,
+    finance_handlers,
+    foundation_handlers,
+    internal_handlers,
+    ops_handlers,
+    portal_handlers,
+    rest_handlers,
+    webhooks,
+)
 from applications.auto_marketplace.api.middleware import auth_middleware
 from applications.auto_marketplace.config import DEFAULT_CONFIG
 
@@ -20,12 +32,41 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
 
     # Public REST API
     app.router.add_get(f"{prefix}/health", rest_handlers.health_handler)
+
+    # Sprint 10.1 — foundation catalog / vehicles / search / dealers / buyers / crm
+    app.router.add_get(f"{prefix}/catalog", foundation_handlers.catalog_root_handler)
     app.router.add_get(f"{prefix}/vehicles", rest_handlers.list_vehicles_handler)
-    app.router.add_post(f"{prefix}/vehicles", rest_handlers.create_vehicle_handler)
+    app.router.add_post(f"{prefix}/vehicles", foundation_handlers.vehicles_create_foundation_handler)
+    app.router.add_get(f"{prefix}/vehicles/brands", foundation_handlers.vehicles_taxonomy_brands_handler)
+    app.router.add_post(f"{prefix}/vehicles/brands", foundation_handlers.vehicles_taxonomy_brands_handler)
+    app.router.add_get(f"{prefix}/vehicles/models", foundation_handlers.vehicles_taxonomy_models_handler)
+    app.router.add_post(f"{prefix}/vehicles/models", foundation_handlers.vehicles_taxonomy_models_handler)
+    app.router.add_post(f"{prefix}/vehicles/vin", foundation_handlers.vehicles_vin_handler)
     app.router.add_get(f"{prefix}/vehicles/{{vehicle_id}}", rest_handlers.get_vehicle_handler)
-    app.router.add_get(f"{prefix}/search", rest_handlers.search_vehicles_handler)
-    app.router.add_get(f"{prefix}/dealers", rest_handlers.list_dealers_handler)
-    app.router.add_post(f"{prefix}/dealers", rest_handlers.create_dealer_handler)
+    app.router.add_post(f"{prefix}/inspection", foundation_handlers.inspection_create_handler)
+    app.router.add_get(f"{prefix}/search", foundation_handlers.search_advanced_handler)
+    app.router.add_get(f"{prefix}/search/filters", foundation_handlers.search_filters_handler)
+
+    app.router.add_get(f"{prefix}/dealers", foundation_handlers.dealers_list_foundation_handler)
+    app.router.add_post(f"{prefix}/dealers", foundation_handlers.dealers_create_foundation_handler)
+
+    app.router.add_get(f"{prefix}/buyers", foundation_handlers.buyers_list_handler)
+    app.router.add_post(f"{prefix}/buyers", foundation_handlers.buyers_create_handler)
+    app.router.add_get(f"{prefix}/buyers/{{buyer_id}}", foundation_handlers.buyers_get_handler)
+
+    app.router.add_get(f"{prefix}/crm", foundation_handlers.crm_root_handler)
+    app.router.add_get(f"{prefix}/crm/requests", foundation_handlers.crm_requests_handler)
+    app.router.add_post(f"{prefix}/crm/requests", foundation_handlers.crm_requests_handler)
+    app.router.add_get(f"{prefix}/crm/appointments", foundation_handlers.crm_appointments_handler)
+    app.router.add_post(f"{prefix}/crm/appointments", foundation_handlers.crm_appointments_handler)
+    app.router.add_get(f"{prefix}/crm/negotiations", foundation_handlers.crm_negotiations_handler)
+    app.router.add_post(f"{prefix}/crm/negotiations", foundation_handlers.crm_negotiations_handler)
+    app.router.add_get(f"{prefix}/crm/reservations", foundation_handlers.crm_reservations_handler)
+    app.router.add_post(f"{prefix}/crm/reservations", foundation_handlers.crm_reservations_handler)
+    app.router.add_get(
+        f"{prefix}/crm/customers/{{customer_id}}/history",
+        foundation_handlers.crm_history_handler,
+    )
     app.router.add_post(f"{prefix}/customers", rest_handlers.create_customer_handler)
     app.router.add_post(f"{prefix}/leads", rest_handlers.create_lead_handler)
     app.router.add_get(f"{prefix}/customers/{{customer_id}}/recommendations", rest_handlers.recommendations_handler)

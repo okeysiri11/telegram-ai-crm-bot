@@ -144,5 +144,18 @@ class PlatformBridge:
             logger.debug("session validation unavailable")
         return {"token": token, "authenticated": True}
 
+    @staticmethod
+    def platform_health() -> dict[str, Any]:
+        try:
+            from platform_orchestrator import platform_orchestrator
+
+            return {
+                "platform_dependency": "AI Platform Core v3",
+                "status": "available",
+                "orchestrator": getattr(platform_orchestrator, "status", "ok"),
+            }
+        except Exception:
+            return {"platform_dependency": "AI Platform Core v3", "status": "fallback"}
+
 
 platform_bridge = PlatformBridge()

@@ -1,32 +1,8 @@
 {
   "application": "auto_marketplace",
-  "application_version": "2.0.0",
-  "release_status": "Production Ready",
-  "platform_dependency": "AI Platform Core v3.0",
-  "platform_version": "3.0.0",
-  "release_date": "2026-07-20",
-  "sprints": ["6.1", "6.2", "6.3", "6.4", "6.5", "6.6", "6.7", "6.8"],
-  "engines": {
-    "crm_engine": "1.0",
-    "ai_sales_engine": "1.0",
-    "finance_engine": "1.0",
-    "bi_engine": "1.0",
-    "portal_engine": "1.0",
-    "production_engine": "1.0"
-  },
-  "api_versions": {
-    "rest": "v1",
-    "mobile": "v1",
-    "partner": "v1",
-    "internal": "v1"
-  },
-  "documentation": [
-    "docs/PRODUCTION_RELEASE.md",
-    "docs/CUSTOMER_PORTAL.md",
-    "docs/BUSINESS_INTELLIGENCE.md",
-    "docs/FINANCE_ENGINE.md",
-    "docs/AI_SALES.md",
-    "docs/CRM_ENGINE.md",
-    "docs/VEHICLE_CATALOG.md"
-  ]
+  "application_name": "Auto Marketplace",
+  "application_version": "1.0.0-alpha",
+  "release_status": "Foundation Alpha",
+  "platform_dependency": "AI Platform Core v3",
+  "ecosystem_dependency": "AI Ecosystem v1.5"
 }
