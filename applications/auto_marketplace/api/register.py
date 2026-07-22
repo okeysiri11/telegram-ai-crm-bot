@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.auto_marketplace.api import (
     ai_sales_handlers,
+    auto_ai_handlers,
     bi_handlers,
     catalog_handlers,
     crm_handlers,
@@ -45,6 +46,38 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/vehicles/vin", foundation_handlers.vehicles_vin_handler)
     app.router.add_get(f"{prefix}/vehicles/{{vehicle_id}}", rest_handlers.get_vehicle_handler)
     app.router.add_post(f"{prefix}/inspection", foundation_handlers.inspection_create_handler)
+    app.router.add_get(f"{prefix}/inspection", auto_ai_handlers.inspection_ai_health_handler)
+    app.router.add_post(f"{prefix}/inspection/analyze", auto_ai_handlers.inspection_ai_analyze_handler)
+
+    app.router.add_get(f"{prefix}/recommendations", auto_ai_handlers.recommendations_health_handler)
+    app.router.add_post(f"{prefix}/recommendations/personal", auto_ai_handlers.recommendations_personal_handler)
+    app.router.add_post(f"{prefix}/recommendations/similar", auto_ai_handlers.recommendations_similar_handler)
+    app.router.add_post(
+        f"{prefix}/recommendations/alternatives",
+        auto_ai_handlers.recommendations_alternatives_handler,
+    )
+    app.router.add_post(f"{prefix}/recommendations/budget", auto_ai_handlers.recommendations_budget_handler)
+    app.router.add_post(
+        f"{prefix}/recommendations/ownership-cost",
+        auto_ai_handlers.recommendations_ownership_handler,
+    )
+    app.router.add_post(f"{prefix}/recommendations/family", auto_ai_handlers.recommendations_family_handler)
+    app.router.add_post(
+        f"{prefix}/recommendations/commercial",
+        auto_ai_handlers.recommendations_commercial_handler,
+    )
+    app.router.add_post(f"{prefix}/recommendations/fleet", auto_ai_handlers.recommendations_fleet_handler)
+
+    app.router.add_get(f"{prefix}/pricing-ai", auto_ai_handlers.pricing_ai_health_handler)
+    app.router.add_post(f"{prefix}/pricing-ai/analyze", auto_ai_handlers.pricing_ai_analyze_handler)
+
+    app.router.add_get(f"{prefix}/forecast", auto_ai_handlers.forecast_health_handler)
+    app.router.add_post(f"{prefix}/forecast", auto_ai_handlers.forecast_vehicle_handler)
+
+    app.router.add_get(f"{prefix}/assistant", auto_ai_handlers.assistant_health_handler)
+    app.router.add_post(f"{prefix}/assistant/ask", auto_ai_handlers.assistant_ask_handler)
+    app.router.add_post(f"{prefix}/assistant/knowledge", auto_ai_handlers.knowledge_card_handler)
+
     app.router.add_get(f"{prefix}/search", foundation_handlers.search_advanced_handler)
     app.router.add_get(f"{prefix}/search/filters", foundation_handlers.search_filters_handler)
 
@@ -179,6 +212,7 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
 
     # Sprint 6.4 — AI Sales Agents & Customer Intelligence
     ai = f"{prefix}/ai"
+    app.router.add_get(f"{ai}", auto_ai_handlers.auto_ai_health_handler)
     app.router.add_get(f"{ai}/metrics", ai_sales_handlers.ai_sales_metrics_handler)
     app.router.add_post(f"{ai}/agents/dispatch", ai_sales_handlers.dispatch_agent_handler)
     app.router.add_get(f"{ai}/customers/{{customer_id}}/intelligence", ai_sales_handlers.customer_intelligence_handler)

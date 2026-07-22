@@ -487,9 +487,9 @@ Full details: [VALIDATION.md](../VALIDATION.md).
 
 ---
 
-## Auto Marketplace Application (Sprint 10.1–10.2)
+## Auto Marketplace Application (Sprint 10.1–10.3)
 
-Auto Marketplace foundation and vehicle marketplace on Platform Core v3 + Ecosystem v1.5 — bridges only. Does not modify Agro Marketplace or Port ERP.
+Auto Marketplace foundation, vehicle marketplace, and AI intelligence on Platform Core v3 + Ecosystem v1.5 — bridges only. Does not modify Agro Marketplace or Port ERP.
 
 ```mermaid
 flowchart LR
@@ -507,15 +507,14 @@ flowchart LR
 | Module | Path | Role |
 |--------|------|------|
 | Application | `applications/auto_marketplace/application.py` | Application facade |
-| Marketplace Domain | `applications/auto_marketplace/marketplace/` | Listings / auctions facade |
-| VIN / History | `applications/auto_marketplace/vin/`, `history/` | VIN decode & vehicle history |
-| Dealer Network | `applications/auto_marketplace/dealer_network/` | Profiles, ratings, analytics |
-| Verification / Valuation | `verification/`, `valuation/` | Fraud checks & market pricing |
+| Marketplace Domain | `applications/auto_marketplace/marketplace/` | Listings / auctions |
+| VIN / History | `vin/`, `history/` | VIN decode & vehicle history |
+| Auto AI Domain | `applications/auto_marketplace/ai/` | Recommendations / pricing / inspection AI |
 | Bridges | `applications/auto_marketplace/integrations/` | Platform + Ecosystem |
 
-**Application Version 1.1.0-alpha** — Marketplace Alpha · `vin_engine = 1.0` · `dealer_engine = 1.0`
+**Application Version 1.2.0-alpha** — AI Intelligence Alpha · `auto_ai_engine = 1.0` · `recommendation_engine = 1.0`
 
-Full details: [AUTO_MARKETPLACE.md](AUTO_MARKETPLACE.md), [AUTO_VIN.md](AUTO_VIN.md).
+Full details: [AUTO_MARKETPLACE.md](AUTO_MARKETPLACE.md), [AUTO_VIN.md](AUTO_VIN.md), [AUTO_AI.md](AUTO_AI.md).
 
 ---
 
@@ -676,7 +675,7 @@ flowchart LR
 | QualityAssurance | `applications/auto_marketplace/quality_assurance/` | Validation, performance, security |
 | Operations | `applications/auto_marketplace/monitoring/` | Health probes, incident guide |
 
-**Version 1.1.0-alpha — Marketplace Alpha**
+**Version 1.2.0-alpha — AI Intelligence Alpha**
 
 Full details: [PRODUCTION_RELEASE.md](../PRODUCTION_RELEASE.md).
 

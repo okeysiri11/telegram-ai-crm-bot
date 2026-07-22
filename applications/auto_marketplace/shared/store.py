@@ -128,6 +128,14 @@ class MarketplaceStore:
         self.verification_reports: EntityStore = EntityStore()
         self.ownership_transfers: EntityStore = EntityStore()
         self.market_valuations: EntityStore = EntityStore()
+        # Sprint 10.3 — AI vehicle intelligence
+        self.smart_recommendations: EntityStore = EntityStore()
+        self.ai_price_insights: EntityStore = EntityStore()
+        self.ai_inspection_results: EntityStore = EntityStore()
+        self.vehicle_forecasts: EntityStore = EntityStore()
+        self.assistant_replies: EntityStore = EntityStore()
+        self.vehicle_knowledge_cards: EntityStore = EntityStore()
+        self.ai_risk_scores: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

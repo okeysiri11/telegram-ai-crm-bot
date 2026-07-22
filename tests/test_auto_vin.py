@@ -40,13 +40,13 @@ def reset_store():
 
 def test_version_modules_docs_bridges():
     health = auto_marketplace.health()
-    assert health["application_version"] == "1.1.0-alpha"
+    assert health["application_version"] == "1.2.0-alpha"
     assert health["vin_engine"] == "1.0"
     assert health["dealer_engine"] == "1.0"
     assert "marketplace" in health
     docs_root = Path(__file__).resolve().parents[1] / "docs"
     assert (docs_root / "AUTO_VIN.md").exists()
-    assert "1.1.0-alpha" in (docs_root / "AUTO_MARKETPLACE.md").read_text(encoding="utf-8")
+    assert "1.2.0-alpha" in (docs_root / "AUTO_MARKETPLACE.md").read_text(encoding="utf-8")
     assert auto_marketplace.platform.platform_health()["platform_dependency"] == "AI Platform Core v3"
     assert auto_marketplace.ecosystem.ecosystem_health()["ecosystem_dependency"] == "AI Ecosystem v1.5"
     root = Path(__file__).resolve().parents[1] / "applications" / "auto_marketplace"
@@ -170,7 +170,7 @@ async def test_rest_marketplace_vin_history_dealers(client: TestClient):
     health = await client.get("/api/auto/v1/marketplace")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.1.0-alpha"
+    assert body["application_version"] == "1.2.0-alpha"
 
     listing = await client.post(
         "/api/auto/v1/marketplace/listings",

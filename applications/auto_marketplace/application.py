@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.auto_marketplace.ai.facade import AutoAIDomainEngine, auto_ai_domain_engine
 from applications.auto_marketplace.ai_sales.engine import AISalesEngine, ai_sales_engine
 from applications.auto_marketplace.analytics.service import AnalyticsService, analytics_service
 from applications.auto_marketplace.business_intelligence.engine import BIEngine, bi_engine
@@ -69,6 +70,7 @@ class AutoMarketplaceApplication:
         garage: GarageService | None = None,
         inspection: InspectionEngine | None = None,
         marketplace_domain: MarketplaceDomainEngine | None = None,
+        auto_ai: AutoAIDomainEngine | None = None,
         payments: PaymentService | None = None,
         delivery: DeliveryService | None = None,
         analytics: AnalyticsService | None = None,
@@ -103,6 +105,7 @@ class AutoMarketplaceApplication:
         self.garage = garage or garage_service
         self.inspection = inspection or inspection_engine
         self.marketplace = marketplace_domain or marketplace_domain_engine
+        self.auto_ai = auto_ai or auto_ai_domain_engine
         self.payments = payments or payment_service
         self.delivery = delivery or delivery_service
         self.analytics = analytics or analytics_service
@@ -139,6 +142,8 @@ class AutoMarketplaceApplication:
             "crm_foundation": self.config.crm_foundation,
             "vin_engine": self.config.vin_engine,
             "dealer_engine": self.config.dealer_engine,
+            "auto_ai_engine": self.config.auto_ai_engine,
+            "recommendation_engine": self.config.recommendation_engine,
             "metrics": self.analytics.dashboard_metrics(),
             "foundation": {
                 "catalog": self.catalog.overview(),
@@ -148,6 +153,7 @@ class AutoMarketplaceApplication:
                 "inspection": self.inspection.metrics(),
             },
             "marketplace": self.marketplace.metrics(),
+            "auto_ai": self.auto_ai.metrics(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),
             "crm_deals": self.store.crm_deals.count(),
