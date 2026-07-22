@@ -1,6 +1,6 @@
 # Predictive Maintenance
 
-**Version:** `4.1.8-enterprise`  
+**Version:** `4.2.0-enterprise`  
 **Sprint:** 13.7 (Connected Cars) · 13.6 (Automotive ERP)  
 **APIs:** `/api/connected-cars/v1/predictive` · `/api/automotive-erp/v1/maintenance`
 

@@ -1,12 +1,12 @@
 {
   "application_name": "Auto Marketplace Enterprise Platform",
   "application": "auto_marketplace",
-  "application_version": "4.1.8-enterprise",
-  "release_status": "Enterprise Automotive Marketplace",
+  "application_version": "4.2.0-enterprise",
+  "release_status": "Production Ready",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v4.1.7-enterprise",
+  "enterprise_foundation": "Enterprise Platform v4.1.8-enterprise",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "13.8",
+  "sprint": "13.9",
   "platform_version": "3.0.0",
   "enterprise_automotive_suite": "1.0",
   "vin_intelligence": "1.0",
@@ -126,7 +126,8 @@
     "ev_ecosystem": "1.0",
     "smart_transportation": "1.0",
     "maas": "1.0",
-    "smart_city": "1.0"
+    "smart_city": "1.0",
+    "enterprise_certification": "1.0"
   },
   "transport_engine": "1.0",
   "tracking_engine": "1.0",
@@ -138,5 +139,6 @@
   "global_network": "1.0",
   "production_ready": true,
   "connected_cars": "1.0",
-  "mobility_platform": "1.0"
+  "mobility_platform": "1.0",
+  "enterprise_certification": "1.0"
 }

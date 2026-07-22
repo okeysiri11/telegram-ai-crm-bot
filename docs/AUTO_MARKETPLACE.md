@@ -1,8 +1,8 @@
 # Auto Marketplace Enterprise Platform
 
-**Version:** `4.1.8-enterprise`  
+**Version:** `4.2.0-enterprise`  
 **Sprint:** 13.5  
-**Foundation:** Enterprise Platform v4.1.7-enterprise  
+**Foundation:** Enterprise Platform v4.1.8-enterprise  
 **Existing API (unchanged):** `/api/auto/v1`  
 **Enterprise Suite API:** `/api/auto-marketplace/v1`  
 **VIN Intelligence API:** `/api/vin-intelligence/v1`  

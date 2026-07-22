@@ -1,8 +1,8 @@
 # Connected Cars
 
-**Version:** `4.1.8-enterprise`  
+**Version:** `4.2.0-enterprise`  
 **Sprint:** 13.7  
-**Foundation:** Enterprise Platform v4.1.7-enterprise  
+**Foundation:** Enterprise Platform v4.1.8-enterprise  
 **API:** `/api/connected-cars/v1`
 
 Connected Cars ecosystem — telematics, IoT devices, remote diagnostics, predictive maintenance, and real-time fleet intelligence.

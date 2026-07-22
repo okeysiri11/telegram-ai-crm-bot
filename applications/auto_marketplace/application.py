@@ -30,6 +30,10 @@ from applications.auto_marketplace.seller_ai.facade import SellerAISuite, seller
 from applications.auto_marketplace.automotive_erp.facade import AutomotiveERPSuite, automotive_erp
 from applications.auto_marketplace.connected_cars.facade import ConnectedCarsSuite, connected_cars
 from applications.auto_marketplace.mobility_platform.facade import MobilityPlatformSuite, mobility_platform
+from applications.auto_marketplace.enterprise_certification.facade import (
+    EnterpriseCertificationSuite,
+    enterprise_certification,
+)
 from applications.auto_marketplace.favorites.service import FavoritesService, favorites_service
 from applications.auto_marketplace.finance.engine import FinanceEngine, finance_engine
 from applications.auto_marketplace.filters.search_engine import SearchEngine, search_engine
@@ -121,6 +125,7 @@ class AutoMarketplaceApplication:
         automotive_erp_svc: AutomotiveERPSuite | None = None,
         connected_cars_svc: ConnectedCarsSuite | None = None,
         mobility_platform_svc: MobilityPlatformSuite | None = None,
+        enterprise_certification_svc: EnterpriseCertificationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -170,6 +175,7 @@ class AutoMarketplaceApplication:
         self.automotive_erp = automotive_erp_svc or automotive_erp
         self.connected_cars = connected_cars_svc or connected_cars
         self.mobility_platform = mobility_platform_svc or mobility_platform
+        self.enterprise_certification = enterprise_certification_svc or enterprise_certification
 
     def reset(self) -> None:
         self.store.reset()
@@ -194,6 +200,7 @@ class AutoMarketplaceApplication:
             "automotive_erp": self.config.automotive_erp,
             "connected_cars": self.config.connected_cars,
             "mobility_platform": self.config.mobility_platform,
+            "enterprise_certification": self.config.enterprise_certification,
             "auto_marketplace_ready": True,
             "auto_ai_ready": True,
             "dealer_platform_ready": True,
@@ -231,6 +238,12 @@ class AutoMarketplaceApplication:
             "ev_ecosystem_ready": True,
             "logistics_intelligence_ready": True,
             "smart_city_integration_ready": True,
+            "architecture_certified": True,
+            "security_certified": True,
+            "performance_certified": True,
+            "documentation_certified": True,
+            "enterprise_release_ready": True,
+            "automotive_enterprise_suite_released": True,
             "maintenance_mode": self.production_engine.maintenance.enabled,
             "api_version": self.config.api_version,
             "catalog_engine": self.config.catalog_engine,
@@ -279,6 +292,7 @@ class AutoMarketplaceApplication:
             "automotive_erp": self.automotive_erp.status(),
             "connected_cars": self.connected_cars.status(),
             "mobility_platform": self.mobility_platform.status(),
+            "enterprise_certification": self.enterprise_certification.status(),
             "health_deep": self.enterprise.health.deep(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),

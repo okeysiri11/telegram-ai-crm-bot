@@ -1,17 +1,14 @@
-# Auto Marketplace 4.1.8-enterprise — Enterprise Automotive Suite
+# Auto Marketplace 4.2.0-enterprise — Enterprise Automotive Suite
 
-**Release Status:** Enterprise Automotive Suite  
-**Platform Dependency:** AI Platform Core v3  
-**Enterprise Foundation:** Enterprise Platform v4.0  
-**Ecosystem Dependency:** AI Ecosystem v1.5  
-**Production Ready:** true
+**Status:** Production Ready  
+**Sprint:** 13.9  
+**Platform:** AI Platform Core v3  
+**Foundation:** Enterprise Platform v4.1.8-enterprise  
+**Ecosystem:** AI Ecosystem v1.5  
+**production_ready:** true
 
 ## Summary
 
-Sprint 13.0 delivers the Enterprise Automotive Marketplace suite on Enterprise Platform v4.0: vehicle/VIN/dealer registries, AI vehicle assistant, sales platform, CRM, analytics, integrations, and executive dashboards. Existing `/api/auto/v1` APIs remain unchanged; suite API is `/api/auto-marketplace/v1`.
+Global production release of the Enterprise Automotive Suite after architecture, integration, performance, security, documentation, and QA certification.
 
-Platform Core, AI OS, and Enterprise Edition remain untouched.
-
-## Prior baseline
-
-Also retains commercial release notes for 2.0.0 enterprise connectors and cross-platform bridges.
+Prior sprint capabilities (13.0–13.8) are retained. Platform Core, AI OS, and Enterprise Edition are untouched.

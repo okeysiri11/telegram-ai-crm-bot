@@ -19,7 +19,7 @@ class CommercialReleaseManager:
             "application_version": version,
             "release_status": DEFAULT_CONFIG.release_status,
             "production_ready": DEFAULT_CONFIG.production_ready,
-            "notes_present": version in text or "4.1.0-enterprise" in text or "2.0.0" in text,
+            "notes_present": version in text or "4.2.0-enterprise" in text or "4.1.0-enterprise" in text or "2.0.0" in text,
             "certified": bool(version) and DEFAULT_CONFIG.production_ready,
         }
 

@@ -1,6 +1,6 @@
 # Inspection AI
 
-**Version:** `4.1.8-enterprise`  
+**Version:** `4.2.0-enterprise`  
 **Sprint:** 13.2  
 **Foundation:** Enterprise Platform v4.1.1-enterprise  
 **API:** `/api/inspection-ai/v1`

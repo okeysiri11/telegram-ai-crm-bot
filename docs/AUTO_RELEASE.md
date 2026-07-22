@@ -1,39 +1,31 @@
-# Auto Marketplace — Enterprise Automotive Suite (Sprint 10.8)
+# Auto Marketplace — Enterprise Automotive Suite (Sprint 13.9)
 
-Production validation and commercial certification for **Auto Marketplace 4.1.8-enterprise**.
+Production validation and commercial certification for **Auto Marketplace 4.2.0-enterprise**.
 
 | Field | Value |
 |-------|-------|
-| Application version | `4.1.8-enterprise` |
-| Release status | Enterprise Automotive Suite |
+| Application version | `4.2.0-enterprise` |
+| Release status | Production Ready |
 | `production_ready` | `true` |
-| `enterprise_engine` | `1.0` |
-| `global_network` | `1.0` |
+| Sprint | `13.9` |
+| Foundation | Enterprise Platform v4.1.8-enterprise |
 
-## Validation suite
+## Certification suite
 
-Configuration · dependencies · security · API routes · load probe · regression domains · migration engine flags
+Architecture · Integration · Performance · Security · Documentation · Quality
 
 ```python
 from applications.auto_marketplace import auto_marketplace
 
-report = auto_marketplace.enterprise.production.generate_report()
-assert report.production_ready is True
-assert report.certified is True
+result = auto_marketplace.enterprise_certification.run_all()
+assert result["enterprise_release_ready"] is True
 assert auto_marketplace.enterprise.release.certify()["certified"] is True
 ```
 
-## Operations
-
-- Release Manager — notes & certification
-- Deployment Manager — preflight / deploy plan / rollback
-- Monitoring — audit logs & performance snapshot
-- Health — `/health`, `/health/live`, `/health/ready`, `/health/deep`
-
 ## Untouched verification
 
-Platform Core, Agro Marketplace, and Port ERP packages are not modified by this release. Bridges report reachability without writing into those trees.
+Platform Core, AI OS, and Enterprise Edition packages are not modified. Prior Auto Marketplace sprint packages (13.0–13.8) retain full functionality.
 
 ## Manifest
 
-`applications/auto_marketplace/manifest.json` — `application_version = "4.1.8-enterprise"`, `production_ready = true`
+`applications/auto_marketplace/manifest.json` — `application_version = "4.2.0-enterprise"`, `production_ready = true`

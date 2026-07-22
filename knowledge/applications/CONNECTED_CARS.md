@@ -2,8 +2,8 @@
 
 Sprint 13.7 — Connected Cars, IoT & Telematics Platform.
 
-- Version: `4.1.8-enterprise`
-- Foundation: Enterprise Platform v4.1.7-enterprise
+- Version: `4.2.0-enterprise`
+- Foundation: Enterprise Platform v4.1.8-enterprise
 - API: `/api/connected-cars/v1`
 - Package: `applications/auto_marketplace/connected_cars/`
 

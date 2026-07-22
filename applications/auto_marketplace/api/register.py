@@ -31,6 +31,7 @@ from applications.auto_marketplace.api import (
     automotive_erp_handlers,
     connected_cars_handlers,
     mobility_platform_handlers,
+    enterprise_certification_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -837,3 +838,17 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{mp}/dashboard", mobility_platform_handlers.mp_dashboard_handler)
     app.router.add_get(f"{mp}/knowledge", mobility_platform_handlers.mp_knowledge_handler)
     app.router.add_post(f"{mp}/knowledge", mobility_platform_handlers.mp_knowledge_handler)
+
+    # Sprint 13.9 — Enterprise Certification (additive; prior sprint routes unchanged)
+    ec = config.enterprise_certification_api_prefix
+    app.router.add_get(f"{ec}/health", enterprise_certification_handlers.ec_health_handler)
+    app.router.add_post(f"{ec}/bootstrap", enterprise_certification_handlers.ec_bootstrap_handler)
+    app.router.add_get(f"{ec}/architecture", enterprise_certification_handlers.ec_architecture_handler)
+    app.router.add_get(f"{ec}/integration", enterprise_certification_handlers.ec_integration_handler)
+    app.router.add_get(f"{ec}/performance", enterprise_certification_handlers.ec_performance_handler)
+    app.router.add_get(f"{ec}/security", enterprise_certification_handlers.ec_security_handler)
+    app.router.add_get(f"{ec}/documentation", enterprise_certification_handlers.ec_documentation_handler)
+    app.router.add_get(f"{ec}/quality", enterprise_certification_handlers.ec_quality_handler)
+    app.router.add_post(f"{ec}/quality", enterprise_certification_handlers.ec_quality_handler)
+    app.router.add_get(f"{ec}/release", enterprise_certification_handlers.ec_release_handler)
+    app.router.add_get(f"{ec}/executive", enterprise_certification_handlers.ec_executive_handler)

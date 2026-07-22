@@ -8,7 +8,7 @@ sprint: "13.2"
 
 # AI Vehicle Inspection & Damage Assessment
 
-Sprint **13.2** — `applications/auto_marketplace/inspection_ai/` version **4.1.8-enterprise**.
+Sprint **13.2** — `applications/auto_marketplace/inspection_ai/` version **4.2.0-enterprise**.
 
 API: `/api/inspection-ai/v1`
 

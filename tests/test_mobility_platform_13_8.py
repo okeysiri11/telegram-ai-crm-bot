@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_mobility_ready():
     health = auto_marketplace.health()
-    assert health["application_version"] == "4.1.8-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.7-enterprise"
+    assert health["application_version"] == "4.2.0-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.8-enterprise"
     assert health["mobility_platform_ready"] is True
     assert health["smart_transportation_ready"] is True
     assert health["ev_ecosystem_ready"] is True
@@ -90,7 +90,7 @@ def test_transport_logistics_smart_city():
 async def test_api_mobility_platform(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.1.8-enterprise"
+    assert body["application_version"] == "4.2.0-enterprise"
     assert body["mobility_platform_ready"] is True
     assert body["ev_ecosystem_ready"] is True
     assert body["smart_city_integration_ready"] is True
@@ -135,8 +135,8 @@ def test_docs_and_regression_13_8():
     for pkg in ("connected_cars", "automotive_erp", "seller_ai", "buyer_ai", "dealer_crm"):
         assert (ROOT / "applications" / "auto_marketplace" / pkg / "facade.py").exists()
     manifest = (ROOT / "applications" / "auto_marketplace" / "manifest.json").read_text()
-    assert "4.1.8-enterprise" in manifest
-    assert "13.8" in manifest
+    assert "4.2.0-enterprise" in manifest
+    assert "13.9" in manifest
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT

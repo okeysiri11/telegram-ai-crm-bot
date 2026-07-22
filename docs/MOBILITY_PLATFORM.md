@@ -1,8 +1,8 @@
 # Mobility Platform
 
-**Version:** `4.1.8-enterprise`  
+**Version:** `4.2.0-enterprise`  
 **Sprint:** 13.8  
-**Foundation:** Enterprise Platform v4.1.7-enterprise  
+**Foundation:** Enterprise Platform v4.1.8-enterprise  
 **API:** `/api/mobility-platform/v1`
 
 Mobility Intelligence — Smart Transportation, EV ecosystem, MaaS, logistics optimization, and Smart City infrastructure.

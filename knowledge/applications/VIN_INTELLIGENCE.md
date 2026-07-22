@@ -8,7 +8,7 @@ sprint: "13.1"
 
 # VIN Intelligence & Vehicle Digital Passport
 
-Sprint **13.1** — `applications/auto_marketplace/vin_intelligence/` version **4.1.8-enterprise**.
+Sprint **13.1** — `applications/auto_marketplace/vin_intelligence/` version **4.2.0-enterprise**.
 
 Foundation: Enterprise Platform v4.1.0-enterprise. API: `/api/vin-intelligence/v1`.
 

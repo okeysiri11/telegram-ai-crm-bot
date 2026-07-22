@@ -1,10 +1,10 @@
 # Auto Marketplace — Fleet, Rental & Corporate Mobility (Sprint 10.7)
 
-Fleet operations for **Auto Marketplace 4.1.8-enterprise**.
+Fleet operations for **Auto Marketplace 4.2.0-enterprise**.
 
 | Field | Value |
 |-------|-------|
-| Application version | `4.1.8-enterprise` |
+| Application version | `4.2.0-enterprise` |
 | `fleet_engine` | `1.0` |
 | `rental_engine` | `1.0` |
 | `operations_engine` | `1.0` |
