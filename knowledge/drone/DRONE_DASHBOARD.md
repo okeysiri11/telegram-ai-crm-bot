@@ -6,25 +6,26 @@ tags:
   - drone
   - dashboard
 generated: 2026-07-22
-sprint: "11.5"
+sprint: "11.6"
 ---
 
 # Drone Dashboard
 
 ## Overview
-Readiness dashboard for Drone Platform through Sprint 11.5 (Engineering Suite).
+Readiness dashboard for Drone Platform through Sprint 11.6 (Manufacturing & Production).
 
 ## Architecture
 Part of [[Drone Platform]].
 
 ## Components
-- Computer Vision / Navigation / Autonomy Ready (11.4)
-- Drone Engineering Ready
-- Battery Engineering Ready
-- PCB Engineering Ready
-- CAD Integration Ready
-- Engineering AI Ready
-- Links: [[drone/ENGINEERING_REGISTRY]] [[drone/COMPONENTS_REGISTRY]] [[drone/BATTERY_REGISTRY]] [[drone/CAD_REGISTRY]] [[drone/PCB_REGISTRY]] [[drone/KNOWLEDGE_GRAPH]] [[drone/VISION_REGISTRY]] [[drone/MAVLINK_REGISTRY]] [[drone/FIRMWARE_DASHBOARD]]
+- Engineering Suite Ready (11.5)
+- Drone Manufacturing Ready
+- Assembly Platform Ready
+- Warehouse Ready
+- Production AI Ready
+- Quality Assurance Ready
+- Lifecycle Management Ready
+- Links: [[drone/PRODUCTION_DASHBOARD]] [[drone/MANUFACTURING_REGISTRY]] [[drone/WAREHOUSE_REGISTRY]] [[drone/BOM_REGISTRY]] [[drone/ASSEMBLY_REGISTRY]] [[drone/ENGINEERING_REGISTRY]] [[drone/KNOWLEDGE_GRAPH]]
 
 ## Relationships
 [[Drone Platform]] · [[ARCHITECTURE_DASHBOARD]] · [[INDEX]] · [[Knowledge Graph]]

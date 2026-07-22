@@ -57,3 +57,6 @@ generated_by_enterprise_infra
 
 ## Drone Engineering Suite (11.5)
 [[drone/ENGINEERING_REGISTRY]] · [[drone/COMPONENTS_REGISTRY]] · [[drone/BATTERY_REGISTRY]] · [[drone/CAD_REGISTRY]] · [[drone/PCB_REGISTRY]] · [[drone/KNOWLEDGE_GRAPH]]
+
+## Drone Manufacturing (11.6)
+[[drone/PRODUCTION_DASHBOARD]] · [[drone/MANUFACTURING_REGISTRY]] · [[drone/WAREHOUSE_REGISTRY]] · [[drone/BOM_REGISTRY]] · [[drone/ASSEMBLY_REGISTRY]]

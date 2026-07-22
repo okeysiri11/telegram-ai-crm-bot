@@ -1,10 +1,10 @@
-# DronePlatformApplication — facade (Sprint 11.1–11.5).
+# DronePlatformApplication — facade (Sprint 11.1–11.6).
 
 from __future__ import annotations
 
 from typing import Any
 
-from applications.drone_platform.ai.engineering_suite_ai import EngineeringSuiteAIAssistant, engineering_suite_ai
+from applications.drone_platform.ai.production_ai import ProductionAIAssistant, production_ai
 from applications.drone_platform.analytics.service import AnalyticsService, analytics_service
 from applications.drone_platform.autonomy import AutonomyEngine, autonomy_engine
 from applications.drone_platform.config import DEFAULT_CONFIG, DronePlatformConfig
@@ -22,6 +22,7 @@ from applications.drone_platform.integrations.ecosystem_bridge import EcosystemB
 from applications.drone_platform.integrations.platform_bridge import PlatformBridge, platform_bridge
 from applications.drone_platform.inventory.service import InventoryService, inventory_service
 from applications.drone_platform.manufacturing.service import ManufacturingService, manufacturing_service
+from applications.drone_platform.manufacturing.suite import ManufacturingSuite, manufacturing_suite
 from applications.drone_platform.mapping import MappingService, mapping_service
 from applications.drone_platform.mavlink import MAVLinkManager, mavlink_manager
 from applications.drone_platform.mission_intelligence import MissionIntelligenceManager, mission_intelligence
@@ -71,9 +72,10 @@ class DronePlatformApplication:
         inventory: InventoryService | None = None,
         warehouse: WarehouseService | None = None,
         manufacturing: ManufacturingService | None = None,
+        manufacturing_suite_facade: ManufacturingSuite | None = None,
         simulation: SimulationService | None = None,
         documentation: DocumentationService | None = None,
-        ai: EngineeringSuiteAIAssistant | None = None,
+        ai: ProductionAIAssistant | None = None,
         analytics: AnalyticsService | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -105,9 +107,10 @@ class DronePlatformApplication:
         self.inventory = inventory or inventory_service
         self.warehouse = warehouse or warehouse_service
         self.manufacturing = manufacturing or manufacturing_service
+        self.manufacturing_suite = manufacturing_suite_facade or manufacturing_suite
         self.simulation = simulation or simulation_service
         self.documentation = documentation or documentation_service
-        self.ai = ai or engineering_suite_ai
+        self.ai = ai or production_ai
         self.analytics = analytics or analytics_service
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -134,6 +137,12 @@ class DronePlatformApplication:
             "cad_integration_ready": True,
             "engineering_ai_ready": True,
             "drone_engineering_suite_ready": True,
+            "drone_manufacturing_ready": True,
+            "assembly_platform_ready": True,
+            "warehouse_ready": True,
+            "production_ai_ready": True,
+            "quality_assurance_ready": True,
+            "lifecycle_management_ready": True,
             "firmware_workspace_ready": True,
             "firmware_intelligence_ready": True,
             "ardupilot_ready": True,
@@ -160,6 +169,7 @@ class DronePlatformApplication:
                 "registry": self.config.registry_engine,
                 "engineering": self.config.engineering_engine,
                 "engineering_suite": self.config.engineering_suite,
+                "manufacturing_suite": self.config.manufacturing_suite,
                 "firmware": self.config.firmware_engine,
                 "firmware_intelligence": self.config.firmware_intelligence,
                 "ardupilot": self.config.ardupilot_engine,
@@ -194,6 +204,7 @@ class DronePlatformApplication:
             "autonomy_status": self.autonomy.status(),
             "simulation_status": self.simulation.status(),
             "engineering_suite_status": self.engineering_suite.status(),
+            "manufacturing_suite_status": self.manufacturing_suite.status(),
             "bridges": {
                 "platform": self.platform.health(),
                 "ecosystem": self.ecosystem.health(),

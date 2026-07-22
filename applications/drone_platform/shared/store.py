@@ -103,6 +103,20 @@ class DroneStore:
         self.cad_assemblies: EntityStore = EntityStore()
         self.eng_simulations: EntityStore = EntityStore()
         self.eng_calculations: EntityStore = EntityStore()
+        # Sprint 11.6 — manufacturing / production
+        self.production_orders: EntityStore = EntityStore()
+        self.work_centers: EntityStore = EntityStore()
+        self.assembly_templates: EntityStore = EntityStore()
+        self.assemblies: EntityStore = EntityStore()
+        self.work_instructions: EntityStore = EntityStore()
+        self.boms: EntityStore = EntityStore()
+        self.workflow_jobs: EntityStore = EntityStore()
+        self.programming_sessions: EntityStore = EntityStore()
+        self.calibration_reports: EntityStore = EntityStore()
+        self.qa_checks: EntityStore = EntityStore()
+        self.flight_tests: EntityStore = EntityStore()
+        self.aircraft_lifecycle: EntityStore = EntityStore()
+        self.production_calendar: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

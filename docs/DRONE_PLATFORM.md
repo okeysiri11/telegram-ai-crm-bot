@@ -1,12 +1,12 @@
 # Drone Platform — Foundation (Sprint 11.1)
 
-**Version:** `1.4.0-alpha`  
-**Status:** Drone Engineering Suite Alpha  
+**Version:** `1.5.0-alpha`  
+**Status:** Manufacturing & Production Alpha  
 **API prefix:** `/api/drone/v1`
 
-Engineering ERP + AI workspace for UAV development. Sprint **11.5** adds the Drone Engineering Suite (airframe, propulsion, battery, electronics, PCB, CAD, performance simulation, Engineering AI).
+Engineering ERP + AI workspace for UAV development. Sprint **11.6** adds Manufacturing & Production (orders, assembly, BOM, warehouse, workflow, programming, calibration, QA, flight testing, lifecycle, Production AI).
 
-See also: [ENGINEERING.md](ENGINEERING.md), [AIRFRAME.md](AIRFRAME.md), [POWER_SYSTEM.md](POWER_SYSTEM.md), [BATTERY_ENGINEERING.md](BATTERY_ENGINEERING.md), [PCB_ENGINEERING.md](PCB_ENGINEERING.md), [CAD_INTEGRATION.md](CAD_INTEGRATION.md), [COMPUTER_VISION.md](COMPUTER_VISION.md), [MAVLINK.md](MAVLINK.md).
+See also: [MANUFACTURING.md](MANUFACTURING.md), [ASSEMBLY.md](ASSEMBLY.md), [QUALITY_CONTROL.md](QUALITY_CONTROL.md), [PRODUCTION_WORKFLOW.md](PRODUCTION_WORKFLOW.md), [LIFECYCLE.md](LIFECYCLE.md), [ENGINEERING.md](ENGINEERING.md).
 
 ## Scope
 

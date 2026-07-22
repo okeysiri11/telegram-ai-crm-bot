@@ -1,13 +1,15 @@
 {
   "application_name": "Drone Platform",
   "application": "drone_platform",
-  "application_version": "1.4.0-alpha",
-  "release_status": "Drone Engineering Suite Alpha",
+  "application_version": "1.5.0-alpha",
+  "release_status": "Manufacturing & Production Alpha",
   "platform_dependency": "AI Platform Core v3",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "registry_engine": "1.0",
   "engineering_engine": "1.1",
   "engineering_suite": "1.0",
+  "manufacturing_engine": "1.1",
+  "manufacturing_suite": "1.0",
   "firmware_engine": "1.1",
   "firmware_intelligence": "1.0",
   "ardupilot_engine": "1.0",
@@ -24,10 +26,10 @@
   "autonomy_engine": "1.0",
   "simulation_engine": "1.1",
   "mission_engine": "1.1",
-  "inventory_engine": "1.0",
-  "ai_engine": "1.4",
+  "inventory_engine": "1.1",
+  "ai_engine": "1.5",
   "modules": {
-    "api": "1.4",
+    "api": "1.5",
     "models": "1.0",
     "registry": "1.0",
     "projects": "1.0",
@@ -45,15 +47,15 @@
     "mapping": "1.0",
     "autonomy": "1.0",
     "visualization": "1.0",
-    "inventory": "1.0",
-    "warehouse": "1.0",
-    "manufacturing": "1.0",
+    "inventory": "1.1",
+    "warehouse": "1.1",
+    "manufacturing": "1.1",
     "simulation": "1.1",
-    "ai": "1.4",
+    "ai": "1.5",
     "documentation": "1.0",
     "integrations": "1.0",
     "analytics": "1.0",
-    "shared": "1.4"
+    "shared": "1.5"
   },
-  "sprint": "11.5"
+  "sprint": "11.6"
 }

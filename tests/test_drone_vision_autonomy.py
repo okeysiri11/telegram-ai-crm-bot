@@ -38,7 +38,7 @@ def reset_store():
 
 def test_version_vision_autonomy_ready():
     health = drone_platform.health()
-    assert health["application_version"] == "1.4.0-alpha"
+    assert health["application_version"] == "1.5.0-alpha"
     assert health["computer_vision_ready"] is True
     assert health["navigation_ai_ready"] is True
     assert health["autonomous_flight_ready"] is True
@@ -47,7 +47,7 @@ def test_version_vision_autonomy_ready():
     assert health["drone_ai_vision_platform_ready"] is True
     assert health["vision_flight_ai_ready"] is True
     assert health["engines"]["vision"] == "1.0"
-    assert health["engines"]["ai"] == "1.4"
+    assert health["engines"]["ai"] == "1.5"
 
 
 def test_vision_cameras_pipeline_detection_tracking():
@@ -192,7 +192,7 @@ def test_vision_flight_ai():
 async def test_api_vision_navigation_autonomy(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.4.0-alpha"
+    assert body["application_version"] == "1.5.0-alpha"
     assert body["computer_vision_ready"] is True
 
     cam = await client.post(f"{PREFIX}/vision/cameras", json={"name": "cam1", "camera_type": "rgb"})
@@ -233,5 +233,5 @@ def test_docs_and_knowledge_11_4():
     for name in ("VISION_REGISTRY.md", "NAVIGATION_REGISTRY.md", "MAPPING_REGISTRY.md", "AUTONOMY_REGISTRY.md", "DRONE_DASHBOARD.md"):
         assert (ROOT / "knowledge" / "drone" / name).exists()
     manifest = (ROOT / "applications" / "drone_platform" / "manifest.json").read_text()
-    assert "1.4.0-alpha" in manifest
-    assert "11.5" in manifest
+    assert "1.5.0-alpha" in manifest
+    assert "11.6" in manifest

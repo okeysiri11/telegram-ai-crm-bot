@@ -23,4 +23,19 @@ flowchart LR
   AF --> Dash[[drone/DRONE_DASHBOARD]]
 ```
 
-Links: [[drone/ENGINEERING_REGISTRY]] · [[drone/DRONE_DASHBOARD]] · [[INDEX]]
+## Manufacturing & Production (11.6)
+
+```mermaid
+flowchart LR
+  MFG[Manufacturing Suite] --> ORD[Orders]
+  MFG --> ASM[Assembly]
+  MFG --> BOM[BOM]
+  MFG --> WH[Warehouse]
+  MFG --> WF[Workflow]
+  MFG --> QA[QA]
+  MFG --> LIFE[Lifecycle]
+  MFG --> PAI[Production AI]
+  ORD --> PD[[drone/PRODUCTION_DASHBOARD]]
+```
+
+Links: [[drone/ENGINEERING_REGISTRY]] · [[drone/MANUFACTURING_REGISTRY]] · [[drone/PRODUCTION_DASHBOARD]] · [[drone/DRONE_DASHBOARD]] · [[INDEX]]

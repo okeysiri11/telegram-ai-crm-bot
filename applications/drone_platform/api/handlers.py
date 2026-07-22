@@ -1261,6 +1261,239 @@ async def simulation_scenario_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+# ---- manufacturing suite (11.6) ----
+async def manufacturing_suite_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.manufacturing_suite.status())
+
+
+async def manufacturing_orders_handler(request: web.Request) -> web.Response:
+    try:
+        prod = drone_platform.manufacturing_suite.production
+        if request.method == "GET":
+            return json_response({"orders": prod.list_orders(), "work_centers": prod.list_work_centers()})
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        if action == "work_center":
+            return json_response(prod.create_work_center(name=body.get("name", ""), center_type=body.get("center_type", "assembly")), status=201)
+        if action == "plan":
+            return json_response(prod.plan(order_id=body.get("order_id", ""), work_center_id=body.get("work_center_id", ""), start=body.get("start", ""), end=body.get("end", "")))
+        if action == "calendar":
+            return json_response(prod.calendar_event(title=body.get("title", ""), date=body.get("date", ""), order_id=body.get("order_id", "")), status=201)
+        order = prod.create_order(
+            product_name=body.get("product_name", ""),
+            quantity=int(body.get("quantity", 1)),
+            project_id=body.get("project_id", ""),
+            bom_id=body.get("bom_id", ""),
+            revision=body.get("revision", "A"),
+            due_date=body.get("due_date", ""),
+        )
+        return json_response(order, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def manufacturing_assembly_handler(request: web.Request) -> web.Response:
+    try:
+        asm = drone_platform.manufacturing_suite.assembly
+        if request.method == "GET":
+            return json_response({"assemblies": asm.list(), "templates": asm.list_templates()})
+        body = await _read_json(request)
+        action = body.get("action", "start")
+        if action == "template":
+            return json_response(asm.create_template(name=body.get("name", ""), product=body.get("product", "multirotor"), steps=body.get("steps")), status=201)
+        if action == "instruction":
+            return json_response(asm.create_work_instruction(title=body.get("title", ""), steps=body.get("steps", []), template_id=body.get("template_id", "")), status=201)
+        if action == "complete_step":
+            return json_response(asm.complete_step(body.get("assembly_id", ""), notes=body.get("notes", "")))
+        if action == "line":
+            return json_response(asm.assembly_line_status(body.get("line_name", "Line-1")))
+        started = asm.start_assembly(
+            order_id=body.get("order_id", ""),
+            template_id=body.get("template_id", ""),
+            serial_number=body.get("serial_number", ""),
+            line_name=body.get("line_name", "Line-1"),
+        )
+        return json_response(started, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def manufacturing_bom_handler(request: web.Request) -> web.Response:
+    try:
+        bom = drone_platform.manufacturing_suite.bom
+        if request.method == "GET":
+            return json_response({"boms": bom.list(bom_type=request.rel_url.query.get("type"))})
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        if action == "cost":
+            return json_response(bom.cost_calculator(body.get("bom_id", "")))
+        if action == "availability":
+            return json_response(bom.availability_checker(body.get("bom_id", ""), warehouse_id=body.get("warehouse_id")))
+        if action == "procure":
+            return json_response(bom.procurement_suggestions(body.get("bom_id", ""), warehouse_id=body.get("warehouse_id")))
+        item = bom.create(
+            name=body.get("name", ""),
+            bom_type=body.get("bom_type", "manufacturing"),
+            version=body.get("version", "1.0"),
+            lines=body.get("lines"),
+            alternatives=body.get("alternatives"),
+        )
+        return json_response(item, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def manufacturing_warehouse_handler(request: web.Request) -> web.Response:
+    try:
+        wh = drone_platform.manufacturing_suite.warehouse
+        if request.method == "GET":
+            return json_response({"categories": wh.categories(), "levels": wh.stock_levels(), "suppliers": wh.supplier_registry()})
+        body = await _read_json(request)
+        if body.get("action") == "trace":
+            return json_response(wh.traceability(serial_number=body.get("serial_number", "")))
+        received = wh.receive_components(
+            warehouse_id=body.get("warehouse_id", ""),
+            component_type=body.get("component_type", "motors"),
+            sku=body.get("sku", ""),
+            quantity=int(body.get("quantity", 1)),
+            serial_numbers=body.get("serial_numbers"),
+            batch_id=body.get("batch_id", ""),
+        )
+        return json_response(received, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def manufacturing_workflow_handler(request: web.Request) -> web.Response:
+    try:
+        wf = drone_platform.manufacturing_suite.workflow
+        body = await _read_json(request)
+        if body.get("action") == "advance":
+            return json_response(wf.advance(body.get("job_id", ""), notes=body.get("notes", ""), result=body.get("result", "pass")))
+        job = wf.start_job(order_id=body.get("order_id", ""), assembly_id=body.get("assembly_id", ""), serial_number=body.get("serial_number", ""))
+        return json_response(job, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def manufacturing_programming_handler(request: web.Request) -> web.Response:
+    try:
+        prg = drone_platform.manufacturing_suite.programming
+        body = await _read_json(request)
+        action = body.get("action", "flash")
+        if action == "params":
+            return json_response(prg.upload_parameters(serial_number=body.get("serial_number", ""), parameters=body.get("parameters", {}), profile=body.get("profile", "default")), status=201)
+        if action == "serial":
+            return json_response(prg.assign_serial_number(prefix=body.get("prefix", "UAV")))
+        if action == "qr":
+            return json_response(prg.qr_code_generator(serial_number=body.get("serial_number", "")))
+        if action == "register":
+            return json_response(prg.device_registration(serial_number=body.get("serial_number", ""), model=body.get("model", ""), order_id=body.get("order_id", "")), status=201)
+        return json_response(
+            prg.flash_firmware(
+                serial_number=body.get("serial_number", ""),
+                firmware_version=body.get("firmware_version", ""),
+                stack=body.get("stack", "ardupilot"),
+                artifact_id=body.get("artifact_id", ""),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def manufacturing_calibration_handler(request: web.Request) -> web.Response:
+    try:
+        cal = drone_platform.manufacturing_suite.calibration
+        body = await _read_json(request)
+        if body.get("action") == "suite":
+            return json_response(cal.run_suite(serial_number=body.get("serial_number", ""), types=body.get("types")), status=201)
+        return json_response(
+            cal.calibrate(
+                serial_number=body.get("serial_number", ""),
+                calibration_type=body.get("calibration_type", "accelerometer"),
+                result=body.get("result", "pass"),
+                details=body.get("details"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def manufacturing_qa_handler(request: web.Request) -> web.Response:
+    try:
+        qa = drone_platform.manufacturing_suite.qa
+        body = await _read_json(request)
+        action = body.get("action", "checklist")
+        if action == "certify":
+            return json_response(qa.final_certification(serial_number=body.get("serial_number", ""), inspector=body.get("inspector", "qa")))
+        if action == "check":
+            return json_response(
+                qa.run_check(
+                    serial_number=body.get("serial_number", ""),
+                    check_type=body.get("check_type", "visual_inspection"),
+                    passed=bool(body.get("passed", True)),
+                    notes=body.get("notes", ""),
+                    measurements=body.get("measurements"),
+                ),
+                status=201,
+            )
+        return json_response(qa.run_full_checklist(serial_number=body.get("serial_number", ""), results=body.get("results")), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def manufacturing_flight_tests_handler(request: web.Request) -> web.Response:
+    try:
+        ft = drone_platform.manufacturing_suite.flight_tests
+        body = await _read_json(request)
+        action = body.get("action", "run")
+        if action == "acceptance":
+            return json_response(ft.acceptance_protocol(serial_number=body.get("serial_number", "")))
+        if action == "report":
+            return json_response(ft.flight_report(serial_number=body.get("serial_number", "")))
+        return json_response(
+            ft.run_test(
+                serial_number=body.get("serial_number", ""),
+                test_type=body.get("test_type", "bench"),
+                result=body.get("result", "pass"),
+                metrics=body.get("metrics"),
+                notes=body.get("notes", ""),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def manufacturing_lifecycle_handler(request: web.Request) -> web.Response:
+    try:
+        life = drone_platform.manufacturing_suite.lifecycle
+        if request.method == "GET":
+            return json_response({"aircraft": life.list(), **life.status()})
+        body = await _read_json(request)
+        action = body.get("action", "register")
+        if action == "hours":
+            return json_response(life.add_flight_hours(body.get("aircraft_id", ""), float(body.get("hours", 0))))
+        if action == "cycles":
+            return json_response(life.add_battery_cycles(body.get("aircraft_id", ""), int(body.get("cycles", 1))))
+        if action == "eol":
+            return json_response(life.end_of_life(body.get("aircraft_id", ""), reason=body.get("reason", "retired")))
+        if action == "event":
+            return json_response(life.add_event(body.get("aircraft_id", ""), bucket=body.get("bucket", "maintenance"), event=body.get("event", {})))
+        return json_response(
+            life.register_aircraft(
+                serial_number=body.get("serial_number", ""),
+                model=body.get("model", ""),
+                order_id=body.get("order_id", ""),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 # ---- inventory ----
 async def inventory_warehouses_handler(request: web.Request) -> web.Response:
     try:
