@@ -4,49 +4,49 @@ aliases:
   - Dashboard
 tags:
   - dashboard
-  - knowledge-1.3
+  - knowledge-2.0
 generated: 2026-07-22
-sprint: Knowledge 1.3
+sprint: Knowledge 2.0
+version: 2.0.0
 ---
 # Dashboard
 
 ## Overview
-Auto-updated for Knowledge 1.3 Architecture Guardian — Dashboard.
+Operational dashboard for Knowledge 2.0.
 
 ## Architecture
-Scores and health derived from read-only repository analysis.
+Part of Enterprise Development Infrastructure (Knowledge 2.0).
 
 ## Components
-| Metric | Value |
-|--------|------:|
-| Architecture quality | 84.0 |
-| Documentation % | 100.0 |
-| Risk index | 24 |
-| Overall score | 77.2 |
-| Sprint completion | 85.0% |
-
-[[PROJECT_HEALTH]] · [[TECHNICAL_DEBT]] · [[reports/ARCHITECTURE_GUARDIAN]] · [[ARCHITECT_RECOMMENDATIONS]]
+| Area | Link |
+|------|------|
+| Executive | [[EXECUTIVE_DASHBOARD]] |
+| Analytics | [[dashboard/README]] |
+| GitHub | [[github/README]] |
+| Developer | [[developer/README]] |
+| Pipeline | [[pipeline/README]] |
+| Architecture | [[architecture/README]] |
 
 ## Relationships
-[[automation/ARCHITECTURE_GUARDIAN]] · [[PROJECT_HEALTH]]
+[[INDEX]] · [[dashboard/README]] · [[pipeline/README]]
 
 ## Responsibilities
-Surface architecture quality to the vault.
+Provide enterprise development infrastructure without changing runtime logic.
 
 ## Interfaces
-`full_architecture_review.py`
+Markdown + generators under `knowledge/tools/`.
 
 ## REST APIs
-[[registries/API_REGISTRY]]
+N/A — documentation/infrastructure only.
 
 ## Events
-dashboard_updated_from_guardian
+generated_by_enterprise_infra
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-Architecture scores JSON
+[[automation/ENTERPRISE_INFRASTRUCTURE]]
 
 ## Related pages
-[[INDEX]] · [[TECHNICAL_DEBT]]
+[[INDEX]] · [[PROJECT_STATUS]] · [[EXECUTIVE_DASHBOARD]]

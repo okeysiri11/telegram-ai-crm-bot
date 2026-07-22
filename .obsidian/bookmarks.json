@@ -83,6 +83,42 @@
       "ctime": 1721652000005,
       "path": "knowledge/automation/ARCHITECTURE_GUARDIAN.md",
       "title": "Architecture Guardian"
+    },
+    {
+      "type": "file",
+      "ctime": 1721653000000,
+      "path": "knowledge/github/README.md",
+      "title": "GitHub Enterprise"
+    },
+    {
+      "type": "file",
+      "ctime": 1721653000000,
+      "path": "knowledge/architecture/README.md",
+      "title": "Architecture Viz"
+    },
+    {
+      "type": "file",
+      "ctime": 1721653000000,
+      "path": "knowledge/dashboard/README.md",
+      "title": "Analytics Dashboards"
+    },
+    {
+      "type": "file",
+      "ctime": 1721653000000,
+      "path": "knowledge/developer/README.md",
+      "title": "Developer Portal"
+    },
+    {
+      "type": "file",
+      "ctime": 1721653000000,
+      "path": "knowledge/pipeline/README.md",
+      "title": "Release Pipeline"
+    },
+    {
+      "type": "file",
+      "ctime": 1721653000000,
+      "path": "knowledge/automation/ENTERPRISE_INFRASTRUCTURE.md",
+      "title": "Enterprise Infra"
     }
   ]
 }

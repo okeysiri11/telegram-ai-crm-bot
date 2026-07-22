@@ -1,0 +1,7 @@
+@startuml
+node GitHubActions
+node AppProcess
+cloud ObsidianVault
+GitHubActions --> ObsidianVault
+AppProcess --> GitHubActions
+@enduml

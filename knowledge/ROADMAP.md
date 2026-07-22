@@ -4,70 +4,54 @@ aliases:
   - Roadmap
 tags:
   - roadmap
-  - knowledge-1.1
+  - knowledge-2.0
 generated: 2026-07-22
+sprint: Knowledge 2.0
+version: 2.0.0
 ---
-
 # Roadmap
 
 ## Overview
-Portfolio roadmap across **Completed**, **Current**, **Planned**, and **Future** horizons with estimated milestones.
+Roadmap including completed Knowledge 2.0 enterprise infrastructure.
 
 ## Architecture
-Roadmap items respect layering: Core frozen → Ecosystem extends → Apps evolve via bridges → Knowledge vault documents.
+Part of Enterprise Development Infrastructure (Knowledge 2.0).
 
 ## Components
-
 ### Completed
-| Milestone | When (est.) | Notes |
-|-----------|-------------|-------|
-| Platform Core 3.0 certified | 2026-07 | Sprints 1.5–5.5 |
-| Ecosystem 1.5.0-alpha | 2026-07 | Sprints 7.1–7.6 |
-| Agro / Port / Auto 2.0.0 | 2026-07 | 8.x / 9.x / 10.x |
-| Drone 11.1 foundation | 2026-07 | 1.0.0-alpha |
-| Knowledge 1.1 living docs | 2026-07 | Obsidian vault |
-| Knowledge 1.2 Documentation Assistant | 2026-07 | Incremental sync + Git + validation |
-
-### Current
-| Milestone | Est. | Notes |
-|-----------|------|-------|
-| Knowledge 1.2 adoption | 2026-07 | Run `update_docs.py` after sprints |
+| Milestone | Version |
+|-----------|---------|
+| Knowledge 1.1–1.3 | 1.x |
+| Knowledge 2.0 Enterprise Infra | **2.0.0** |
+| Platform / Apps commercial stack | Core 3.0 / Apps 2.0 |
 
 ### Planned
-| Milestone | Est. | Dependencies |
-|-----------|------|--------------|
-| Drone 11.2 manufacturing/fleet depth | 2026-08–10 | 11.1 |
-| Ecosystem 1.6 universal app registry | 2026-09–11 | 7.6 |
-| Legal Platform L1.0 productization | 2026-10–12 | Knowledge 1.2, Core |
-| Knowledge 1.3 link auto-fix + CI hook | 2026-09 | Knowledge 1.2 |
-
-### Future
-| Milestone | Est. | Notes |
-|-----------|------|-------|
-| Multi-region Ecosystem deployments | 2027-H1 | [[DEPLOYMENT]] |
-| Plugin marketplace | 2027-H1 | [[Plugin SDK]] |
-| Federated domain knowledge graphs | 2027-H1 | [[Knowledge Graph]] |
+| Milestone | Notes |
+|-----------|-------|
+| Knowledge 2.6+ | CI auto-publish releases, deeper coverage badges |
+| Drone 11.2+ | App runtime (separate from knowledge) |
+| Ecosystem 1.6 | App registry federation |
 
 ## Relationships
-[[SPRINT_PROGRESS]] · [[registries/SPRINT_REGISTRY]] · [[PROJECT_STATUS]] · [[PLATFORM_TIMELINE]]
+[[INDEX]] · [[dashboard/README]] · [[pipeline/README]]
 
 ## Responsibilities
-Guide sequencing of future sprints without changing runtime code from the knowledge vault.
+Provide enterprise development infrastructure without changing runtime logic.
 
 ## Interfaces
-This note + registry JSON planned sprints.
+Markdown + generators under `knowledge/tools/`.
 
 ## REST APIs
-New APIs will be registered in [[registries/API_REGISTRY]] when delivered.
+N/A — documentation/infrastructure only.
 
 ## Events
-Milestone completion → changelog + generator run.
+generated_by_enterprise_infra
 
 ## Future roadmap
-This page **is** the roadmap; revise estimates each planning cycle.
+[[ROADMAP]]
 
 ## References
-[[releases/RELEASE_NOTES]] · [[CHANGELOG]]
+[[automation/ENTERPRISE_INFRASTRUCTURE]]
 
 ## Related pages
-[[INDEX]] · [[DASHBOARD]] · [[EXECUTIVE_DASHBOARD]]
+[[INDEX]] · [[PROJECT_STATUS]] · [[EXECUTIVE_DASHBOARD]]

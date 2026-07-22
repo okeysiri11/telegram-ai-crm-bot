@@ -1,0 +1,7 @@
+@startuml
+rectangle PlatformCore
+rectangle Ecosystem
+rectangle Knowledge
+Knowledge --> Ecosystem
+Ecosystem --> PlatformCore
+@enduml

@@ -1,0 +1,26 @@
+name: Knowledge Validation
+
+on:
+  push:
+    paths:
+      - 'knowledge/**'
+      - '.github/workflows/knowledge-validation.yml'
+  pull_request:
+    paths:
+      - 'knowledge/**'
+  workflow_dispatch:
+
+jobs:
+  validate-knowledge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate wiki links
+        run: python3 knowledge/tools/check_links.py
+      - name: Architecture check (read-only)
+        run: python3 knowledge/tools/architecture_check.py
+      - name: Pipeline validation
+        run: python3 knowledge/tools/validate_release_pipeline.py

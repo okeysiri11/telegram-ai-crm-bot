@@ -1,0 +1,320 @@
+{
+  "at": "2026-07-22T10:53:46.817611+00:00",
+  "version": "2.0.0",
+  "stats": {
+    "applications": [
+      "__pycache__",
+      "agro_marketplace",
+      "auto_marketplace",
+      "drone_platform",
+      "port_erp"
+    ],
+    "platform_packages": [
+      "platform_agents",
+      "platform_ai",
+      "platform_api",
+      "platform_architecture",
+      "platform_certification",
+      "platform_collaboration",
+      "platform_configuration",
+      "platform_console",
+      "platform_decision",
+      "platform_identity",
+      "platform_integrations",
+      "platform_jobs",
+      "platform_learning",
+      "platform_legacy",
+      "platform_management",
+      "platform_memory",
+      "platform_observability",
+      "platform_operations",
+      "platform_orchestrator",
+      "platform_planning",
+      "platform_plugin_sdk",
+      "platform_plugins",
+      "platform_realtime",
+      "platform_reasoning",
+      "platform_reliability",
+      "platform_sdk",
+      "platform_security",
+      "platform_tools",
+      "platform_validation",
+      "platform_workflow",
+      "platform_workflows"
+    ],
+    "python_files": 2424,
+    "test_files": 146,
+    "loc_sample": 294279,
+    "knowledge_md": 122,
+    "agents": 12,
+    "commits": 320,
+    "branch": "main",
+    "latest": "419eed4 Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update optimizes integration with the event bus and supports the ongoing unification of event management across the platform.",
+    "tags": [
+      "v1.2.0-alpha",
+      "v1.1.0-alpha",
+      "platform-core-v1.0.0-rc1"
+    ],
+    "sprints": [
+      {
+        "id": "1.5",
+        "stream": "Platform Core",
+        "purpose": "Certification & RC1",
+        "version": "3.0.0",
+        "status": "completed",
+        "deps": []
+      },
+      {
+        "id": "2.1-2.2",
+        "stream": "Platform Core",
+        "purpose": "Memory + semantic memory",
+        "version": "memory 2.2.0",
+        "status": "completed",
+        "deps": [
+          "1.5"
+        ]
+      },
+      {
+        "id": "2.3",
+        "stream": "Platform Core",
+        "purpose": "Multi-agent orchestrator",
+        "version": "orchestrator 2.3.0",
+        "status": "completed",
+        "deps": [
+          "2.1-2.2"
+        ]
+      },
+      {
+        "id": "3.1",
+        "stream": "Platform Core",
+        "purpose": "Agent registry",
+        "version": "registry 1.0",
+        "status": "completed",
+        "deps": [
+          "2.3"
+        ]
+      },
+      {
+        "id": "3.2",
+        "stream": "Platform Core",
+        "purpose": "Workflow/task engine",
+        "version": "workflow 1.0",
+        "status": "completed",
+        "deps": [
+          "3.1"
+        ]
+      },
+      {
+        "id": "3.3",
+        "stream": "Platform Core",
+        "purpose": "Tools & plugin SDK",
+        "version": "plugins 1.0",
+        "status": "completed",
+        "deps": [
+          "3.2"
+        ]
+      },
+      {
+        "id": "4.1-4.5",
+        "stream": "Platform Core",
+        "purpose": "Cognitive stack",
+        "version": "cognition 1.0",
+        "status": "completed",
+        "deps": [
+          "3.3"
+        ]
+      },
+      {
+        "id": "5.1-5.5",
+        "stream": "Platform Core",
+        "purpose": "Ops stack (security\u2192validation)",
+        "version": "ops 1.0",
+        "status": "completed",
+        "deps": [
+          "4.1-4.5"
+        ]
+      },
+      {
+        "id": "6.1-6.8",
+        "stream": "Auto Marketplace",
+        "purpose": "First Core v3 commercial stack",
+        "version": "lineage\u21922.0",
+        "status": "completed",
+        "deps": [
+          "5.1-5.5"
+        ]
+      },
+      {
+        "id": "7.1-7.6",
+        "stream": "Ecosystem",
+        "purpose": "Identity\u2192governance",
+        "version": "1.5.0-alpha",
+        "status": "completed",
+        "deps": [
+          "5.1-5.5"
+        ]
+      },
+      {
+        "id": "8.1-8.8",
+        "stream": "Agro Marketplace",
+        "purpose": "Commercial agro platform",
+        "version": "2.0.0",
+        "status": "completed",
+        "deps": [
+          "7.1-7.6"
+        ]
+      },
+      {
+        "id": "9.1-9.8",
+        "stream": "Port ERP",
+        "purpose": "Enterprise port ERP",
+        "version": "2.0.0",
+        "status": "completed",
+        "deps": [
+          "7.1-7.6"
+        ]
+      },
+      {
+        "id": "10.1-10.8",
+        "stream": "Auto Marketplace",
+        "purpose": "Marketplace expansion commercial",
+        "version": "2.0.0",
+        "status": "completed",
+        "deps": [
+          "6.1-6.8"
+        ]
+      },
+      {
+        "id": "11.1",
+        "stream": "Drone Platform",
+        "purpose": "UAV engineering foundation",
+        "version": "1.0.0-alpha",
+        "status": "completed",
+        "deps": [
+          "7.1-7.6"
+        ]
+      },
+      {
+        "id": "K1.1",
+        "stream": "Knowledge",
+        "purpose": "Obsidian living documentation system",
+        "version": "1.1.0",
+        "status": "completed",
+        "deps": [
+          "11.1"
+        ]
+      },
+      {
+        "id": "11.2+",
+        "stream": "Drone Platform",
+        "purpose": "Manufacturing, fleet, telemetry depth",
+        "version": "planned",
+        "status": "planned",
+        "deps": [
+          "11.1"
+        ]
+      },
+      {
+        "id": "L1.0",
+        "stream": "Legal Platform",
+        "purpose": "Productize legal vertical",
+        "version": "planned",
+        "status": "planned",
+        "deps": [
+          "K1.1"
+        ]
+      },
+      {
+        "id": "E1.6",
+        "stream": "Ecosystem",
+        "purpose": "Universal app registry & knowledge federation",
+        "version": "planned",
+        "status": "planned",
+        "deps": [
+          "7.1-7.6"
+        ]
+      },
+      {
+        "id": "K1.2",
+        "stream": "Knowledge",
+        "purpose": "AI Documentation Assistant incremental sync",
+        "version": "1.2.0",
+        "status": "completed",
+        "deps": [
+          "K1.1"
+        ]
+      },
+      {
+        "id": "K1.3",
+        "stream": "Knowledge",
+        "purpose": "AI Project Architect & Architecture Guardian",
+        "version": "1.3.0",
+        "status": "completed",
+        "deps": [
+          "K1.2"
+        ]
+      },
+      {
+        "id": "K2.0",
+        "stream": "Knowledge",
+        "purpose": "Enterprise Development Infrastructure umbrella",
+        "version": "2.0.0",
+        "status": "completed",
+        "deps": [
+          "K1.3"
+        ]
+      },
+      {
+        "id": "K2.1",
+        "stream": "Knowledge",
+        "purpose": "GitHub Enterprise Automation",
+        "version": "2.0.0",
+        "status": "completed",
+        "deps": [
+          "K2.0"
+        ]
+      },
+      {
+        "id": "K2.2",
+        "stream": "Knowledge",
+        "purpose": "Architecture Visualization",
+        "version": "2.0.0",
+        "status": "completed",
+        "deps": [
+          "K2.0"
+        ]
+      },
+      {
+        "id": "K2.3",
+        "stream": "Knowledge",
+        "purpose": "Project Analytics Dashboards",
+        "version": "2.0.0",
+        "status": "completed",
+        "deps": [
+          "K2.0"
+        ]
+      },
+      {
+        "id": "K2.4",
+        "stream": "Knowledge",
+        "purpose": "Developer Portal",
+        "version": "2.0.0",
+        "status": "completed",
+        "deps": [
+          "K2.0"
+        ]
+      },
+      {
+        "id": "K2.5",
+        "stream": "Knowledge",
+        "purpose": "Enterprise Release Pipeline",
+        "version": "2.0.0",
+        "status": "completed",
+        "deps": [
+          "K2.0"
+        ]
+      }
+    ]
+  },
+  "written_count": 117
+}

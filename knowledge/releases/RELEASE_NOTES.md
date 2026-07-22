@@ -4,68 +4,49 @@ aliases:
   - Release Notes
 tags:
   - releases
-  - knowledge-1.2
+  - knowledge-2.0
 generated: 2026-07-22
-sprint: Knowledge 1.2
+sprint: Knowledge 2.0
+version: 2.0.0
 ---
 # Release Notes
 
-> Generated 2026-07-22 by Documentation Assistant
-
 ## Overview
-Automatically generated release notes from Git history and module/API/agent detection.
+Release notes for Knowledge **2.0.0**.
 
 ## Architecture
-Knowledge-only release pipeline; runtime packages untouched.
+Part of Enterprise Development Infrastructure (Knowledge 2.0).
 
 ## Components
-### Completed features (detected)
-- Knowledge 1.2 Documentation Assistant incremental sync
-
-### Breaking changes
-- None detected
-
-### New APIs
-- None detected
-
-### New AI Agents
-- None detected
-
-### Version history
-| Version | Stream | Notes |
-|---------|--------|-------|
-| 1.2.0 | Knowledge | AI Documentation Assistant |
-| 1.1.0 | Knowledge | Living Obsidian documentation system |
-| 1.0.0-alpha | Drone | Foundation Sprint 11.1 |
-| 2.0.0 | Auto/Port/Agro | Commercial / enterprise releases |
-| 1.5.0-alpha | Ecosystem | Governance complete |
-| 3.0.0 | Platform Core | Certified baseline |
-
-### Git context
-- Branch: `main`
-- Latest commit: `527d9ad` — Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
-- Tags: v1.2.0-alpha, v1.1.0-alpha, platform-core-v1.0.0-rc1
+- Enterprise Development Infrastructure Ready
+- GitHub Enterprise Ready
+- Architecture Visualization Ready
+- Developer Portal Ready
+- Enterprise Release Pipeline Ready
+- Automatic Documentation / Dashboards / Knowledge Updates Ready
+- Git: 419eed4 Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update optimizes integration with the event bus and supports the ongoing unification of event management across the platform.
+- See [[pipeline/EXECUTIVE_SUMMARY]]
 
 ## Relationships
-[[CHANGELOG]] · [[ARCHITECTURE_CHANGES]] · [[registries/SPRINT_REGISTRY]]
+[[INDEX]] · [[dashboard/README]] · [[pipeline/README]]
 
 ## Responsibilities
-Summarize completed features, breaking changes, APIs, and agents.
+Provide enterprise development infrastructure without changing runtime logic.
 
 ## Interfaces
-`python3 knowledge/tools/release_notes.py`
+Markdown + generators under `knowledge/tools/`.
 
 ## REST APIs
-See [[registries/API_REGISTRY]]
+N/A — documentation/infrastructure only.
 
 ## Events
-release_notes_regenerated
+generated_by_enterprise_infra
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-Git log + project snapshot
+[[automation/ENTERPRISE_INFRASTRUCTURE]]
 
 ## Related pages
-[[INDEX]] · [[DASHBOARD]] · [[EXECUTIVE_DASHBOARD]]
+[[INDEX]] · [[PROJECT_STATUS]] · [[EXECUTIVE_DASHBOARD]]

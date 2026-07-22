@@ -1,0 +1,7 @@
+@startuml
+component __pycache__
+component agro_marketplace
+component auto_marketplace
+component drone_platform
+component port_erp
+@enduml

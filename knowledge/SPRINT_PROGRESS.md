@@ -3,53 +3,59 @@ title: Sprint Progress
 aliases:
   - Sprint Progress
 tags:
-  - dashboard
-  - knowledge-1.2
+  - sprints
+  - knowledge-2.0
 generated: 2026-07-22
-sprint: Knowledge 1.2
+sprint: Knowledge 2.0
+version: 2.0.0
 ---
 # Sprint Progress
 
 ## Overview
-Automatically updated dashboard (Sprint Progress) — Knowledge 1.2.
+Sprint completion **88.5%** (23/26).
 
 ## Architecture
-Driven by Documentation Assistant incremental sync.
+Part of Enterprise Development Infrastructure (Knowledge 2.0).
 
 ## Components
-**Completion:** 84.2% (16/19)
-
-### Current
-- Knowledge 1.2 — AI Documentation Assistant
-
-### Completed (summary)
-- Platform 1.5–5.5 · Eco 7.x · Agro 8.x · Port 9.x · Auto 6.x/10.x · Drone 11.1 · Knowledge 1.1–1.2
-
-### Planned
-- Drone 11.2+ · Ecosystem 1.6 · Legal L1.0
-
-[[registries/SPRINT_REGISTRY]] · [[reports/SPRINT_TRACKER]]
+- ### Current
+- Knowledge 2.0 enterprise infrastructure adopted
+- ### Completed recently
+- 11.1 — UAV engineering foundation
+- K1.1 — Obsidian living documentation system
+- K1.2 — AI Documentation Assistant incremental sync
+- K1.3 — AI Project Architect & Architecture Guardian
+- K2.0 — Enterprise Development Infrastructure umbrella
+- K2.1 — GitHub Enterprise Automation
+- K2.2 — Architecture Visualization
+- K2.3 — Project Analytics Dashboards
+- K2.4 — Developer Portal
+- K2.5 — Enterprise Release Pipeline
+- ### Planned
+- 11.2+ — Manufacturing, fleet, telemetry depth
+- L1.0 — Productize legal vertical
+- E1.6 — Universal app registry & knowledge federation
 
 ## Relationships
-[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
+[[INDEX]] · [[dashboard/README]] · [[pipeline/README]]
 
 ## Responsibilities
-Keep stakeholders synchronized with project state.
+Provide enterprise development infrastructure without changing runtime logic.
 
 ## Interfaces
-`python3 knowledge/tools/update_dashboards.py`
+Markdown + generators under `knowledge/tools/`.
 
 ## REST APIs
-[[registries/API_REGISTRY]]
+N/A — documentation/infrastructure only.
 
 ## Events
-dashboard_updated
+generated_by_enterprise_infra
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-Git + snapshot
+[[automation/ENTERPRISE_INFRASTRUCTURE]]
 
 ## Related pages
-[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]
+[[INDEX]] · [[PROJECT_STATUS]] · [[EXECUTIVE_DASHBOARD]]

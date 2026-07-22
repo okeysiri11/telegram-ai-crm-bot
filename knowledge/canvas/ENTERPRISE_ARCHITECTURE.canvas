@@ -1,0 +1,29 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "file",
+      "file": "knowledge/architecture/README.md",
+      "x": 0,
+      "y": 0,
+      "width": 400,
+      "height": 200
+    },
+    {
+      "id": "2",
+      "type": "file",
+      "file": "knowledge/INDEX.md",
+      "x": 500,
+      "y": 0,
+      "width": 400,
+      "height": 200
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "1",
+      "toNode": "2"
+    }
+  ]
+}

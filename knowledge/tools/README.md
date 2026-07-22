@@ -4,59 +4,56 @@ aliases:
   - Knowledge Tools README
 tags:
   - tools
-  - knowledge-1.2
+  - knowledge-2.0
 ---
 
 # Knowledge Tools
 
 ## Overview
-Automation utilities for the Obsidian knowledge vault (Sprints Knowledge 1.1–1.2).
+Automation utilities for the Obsidian knowledge vault (Knowledge 1.1 → **2.0**).
 
 ## Architecture
 | Script | Purpose |
 |--------|---------|
-| `documentation_assistant.py` | Core assistant engine |
-| `generate_docs.py` | Registry generator (1.1) |
-| `update_docs.py` | Incremental doc sync |
-| `build_graph.py` | Mermaid automation |
-| `update_dashboards.py` | Dashboard refresh |
-| `check_links.py` | Validation report |
-| `release_notes.py` | Release notes + changelog |
-| `project_report.py` | Project report |
-| `update_everything.py` | Full pipeline |
-| `architecture_guardian.py` | Architecture Guardian engine (1.3) |
-| `architecture_check.py` | Architecture + dependency check |
-| `project_health.py` | Project health |
-| `technical_debt.py` | Technical debt register |
-| `recommendations.py` | Architect recommendations |
-| `full_architecture_review.py` | Full architect review |
+| `enterprise_infra.py` | Knowledge 2.0 enterprise engine |
+| `knowledge20_update.py` | Full Knowledge 2.0 refresh |
+| `generate_github.py` | GitHub automation pack |
+| `generate_architecture_viz.py` | Architecture visualization |
+| `generate_analytics_dashboards.py` | Analytics dashboards |
+| `generate_developer_portal.py` | Developer portal |
+| `generate_release_pipeline.py` | Release pipeline docs |
+| `validate_release_pipeline.py` | Pipeline artifact validation |
+| `documentation_assistant.py` | Knowledge 1.2 assistant |
+| `architecture_guardian.py` | Knowledge 1.3 guardian |
+| `generate_docs.py` / `update_*` / `check_links.py` | Living docs tooling |
 
 ## Components
-- Data: `../data/ecosystem_registry.json`, `../data/project_snapshot.json`
-- Docs: [[automation/DOCUMENTATION_ASSISTANT]] · [[automation/DOCUMENTATION_AUTOMATION]]
+- Packs: `knowledge/github`, `architecture`, `dashboard`, `developer`, `pipeline`
+- Data: `knowledge/data/*`
 
 ## Relationships
-Outputs land only under `knowledge/` and `.obsidian/`.
+[[automation/ENTERPRISE_INFRASTRUCTURE]] · [[automation/DOCUMENTATION_ASSISTANT]] · [[automation/ARCHITECTURE_GUARDIAN]]
 
 ## Responsibilities
-Keep documentation synchronized without touching application source code.
+Generate documentation and developer infrastructure only — never mutate runtime application logic.
 
 ## Interfaces
 ```bash
-python3 knowledge/tools/update_everything.py
+python3 knowledge/tools/knowledge20_update.py
+python3 knowledge/tools/validate_release_pipeline.py
 ```
 
 ## REST APIs
 N/A
 
 ## Events
-CLI invocation → analysis → write markdown → save snapshot
+enterprise_infra_run
 
 ## Future roadmap
-CI workflow calling `update_docs.py` on merge.
+[[ROADMAP]]
 
 ## References
-[[VALIDATION_REPORT]] · [[ARCHITECTURE_CHANGES]]
+[[INDEX]]
 
 ## Related pages
-[[INDEX]] · [[DASHBOARD]]
+[[github/README]] · [[developer/README]] · [[pipeline/README]]

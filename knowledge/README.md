@@ -4,46 +4,46 @@ aliases:
   - Knowledge README
 tags:
   - readme
-  - knowledge-1.1
+  - knowledge-2.0
 ---
 
 # AI Ecosystem Knowledge Base
 
-Obsidian living architecture documentation for the entire AI Ecosystem.
+Enterprise Obsidian knowledge system — **version 2.0.0**.
 
 > **Start here:** [[INDEX]]
 
 ## Overview
-Sprint **Knowledge 1.1** transforms `knowledge/` into a fully interconnected documentation system with registries, dashboards, Mermaid diagrams, AI agent pages, and a generator that updates Markdown after sprints.
+Self-documenting, self-reporting development infrastructure spanning GitHub automation, architecture visualization, analytics dashboards, developer portal, and release pipeline.
 
 ## Architecture
-Workspaces: hubs · applications · agents · registries · diagrams · dashboards · statistics · standards · automation · templates · canvas · excalidraw.
+Packs under `knowledge/github`, `architecture`, `dashboard`, `developer`, `pipeline` plus living registries and tools.
 
 ## Components
-- Generator: `knowledge/tools/generate_docs.py`
-- Data: `knowledge/data/ecosystem_registry.json`
-- Obsidian config: `.obsidian/`
+- Generators in `knowledge/tools/`
+- GitHub templates in `.github/` (infra only)
+- Obsidian config in `.obsidian/`
 
 ## Relationships
-Does **not** modify Platform Core, Ecosystem, or application business logic.
+Compatible with Platform Core, Ecosystem, Auto/Port/Agro/Drone applications — does not modify their runtime logic.
 
 ## Responsibilities
-Human + automated documentation only.
+Documentation + DX automation only.
 
 ## Interfaces
-Open the folder as an Obsidian vault (or include it in the repo vault). Default note: [[INDEX]].
+`python3 knowledge/tools/knowledge20_update.py`
 
 ## REST APIs
-Documented in [[registries/API_REGISTRY]].
+N/A
 
 ## Events
-Run generator after each sprint completion.
+knowledge20_update
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-[[standards/DOCUMENTATION_STANDARDS]] · [[automation/DOCUMENTATION_AUTOMATION]]
+[[automation/ENTERPRISE_INFRASTRUCTURE]]
 
 ## Related pages
-[[DASHBOARD]] · [[INDEX]] · [[CHANGELOG]]
+[[DASHBOARD]] · [[developer/README]] · [[pipeline/EXECUTIVE_SUMMARY]]

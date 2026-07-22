@@ -4,52 +4,51 @@ aliases:
   - Home
   - Knowledge Home
 tags:
-  - dashboard
-  - knowledge-1.3
+  - index
+  - knowledge-2.0
 generated: 2026-07-22
-sprint: Knowledge 1.3
+sprint: Knowledge 2.0
+version: 2.0.0
 ---
 # INDEX
 
 ## Overview
-Auto-updated for Knowledge 1.3 Architecture Guardian — INDEX.
+**Knowledge 2.0.0** — Enterprise Development Infrastructure is live.
 
 ## Architecture
-Scores and health derived from read-only repository analysis.
+Part of Enterprise Development Infrastructure (Knowledge 2.0).
 
 ## Components
-**Knowledge 1.3** — AI Project Architect & Architecture Guardian enabled.
-
-- Architecture score: **84.0** · Overall: **77.2** · Risk: **Low**
-- Documentation coverage: **100.0%** · Sprint completion: **85.0%**
-
-### Architect suite
-[[PROJECT_HEALTH]] · [[DEPENDENCY_REPORT]] · [[ARCHITECT_RECOMMENDATIONS]] · [[TECHNICAL_DEBT]] · [[ARCHITECTURE_HISTORY]]
-[[reports/ARCHITECTURE_GUARDIAN]] · [[automation/ARCHITECTURE_GUARDIAN]]
-
-### Dashboards
-[[DASHBOARD]] · [[EXECUTIVE_DASHBOARD]] · [[ARCHITECTURE_DASHBOARD]] · [[PROJECT_STATUS]] · [[SPRINT_PROGRESS]]
+- Architecture score: **84.0** · Sprint completion: **88.5%**
+- ### Enterprise packs
+- [[github/README]] · [[architecture/README]] · [[dashboard/README]] · [[developer/README]] · [[pipeline/README]]
+- ### Core dashboards
+- [[DASHBOARD]] · [[EXECUTIVE_DASHBOARD]] · [[ARCHITECTURE_DASHBOARD]] · [[PROJECT_STATUS]] · [[SPRINT_PROGRESS]]
+- ### Registries
+- [[registries/SPRINT_REGISTRY]] · [[registries/APPLICATION_REGISTRY]] · [[registries/API_REGISTRY]] · [[registries/MODULE_REGISTRY]] · [[registries/AI_AGENT_REGISTRY]]
+- ### Automation
+- [[automation/ENTERPRISE_INFRASTRUCTURE]] · [[automation/DOCUMENTATION_ASSISTANT]] · [[automation/ARCHITECTURE_GUARDIAN]]
 
 ## Relationships
-[[automation/ARCHITECTURE_GUARDIAN]] · [[PROJECT_HEALTH]]
+[[INDEX]] · [[dashboard/README]] · [[pipeline/README]]
 
 ## Responsibilities
-Surface architecture quality to the vault.
+Provide enterprise development infrastructure without changing runtime logic.
 
 ## Interfaces
-`full_architecture_review.py`
+Markdown + generators under `knowledge/tools/`.
 
 ## REST APIs
-[[registries/API_REGISTRY]]
+N/A — documentation/infrastructure only.
 
 ## Events
-dashboard_updated_from_guardian
+generated_by_enterprise_infra
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-Architecture scores JSON
+[[automation/ENTERPRISE_INFRASTRUCTURE]]
 
 ## Related pages
-[[INDEX]] · [[TECHNICAL_DEBT]]
+[[INDEX]] · [[PROJECT_STATUS]] · [[EXECUTIVE_DASHBOARD]]
