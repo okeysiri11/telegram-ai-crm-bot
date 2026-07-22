@@ -77,6 +77,15 @@ class PortStore:
         self.crane_assignments: EntityStore = EntityStore()
         self.dispatch_jobs: EntityStore = EntityStore()
         self.terminal_plans: EntityStore = EntityStore()
+        # Sprint 9.4 — customs / documents / trade / compliance
+        self.trade_documents: EntityStore = EntityStore()
+        self.trade_certificates: EntityStore = EntityStore()
+        self.customs_declarations: EntityStore = EntityStore()
+        self.inspections: EntityStore = EntityStore()
+        self.trade_shipments: EntityStore = EntityStore()
+        self.tariff_rates: EntityStore = EntityStore()
+        self.broker_cases: EntityStore = EntityStore()
+        self.compliance_checks: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

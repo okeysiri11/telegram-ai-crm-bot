@@ -1,4 +1,4 @@
-# Port ERP configuration — Sprint 9.3 Terminal Operations.
+# Port ERP configuration — Sprint 9.4 Customs & Trade.
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 @dataclass
 class PortERPConfig:
     application_name: str = "Port ERP"
-    application_version: str = "1.2.0-alpha"
+    application_version: str = "1.3.0-alpha"
     platform_dependency: str = "AI Platform Core v3"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
@@ -19,6 +19,7 @@ class PortERPConfig:
     port_core: str = "1.0"
     tracking_engine: str = "1.0"
     terminal_engine: str = "1.0"
+    customs_engine: str = "1.0"
 
 
 DEFAULT_CONFIG = PortERPConfig()

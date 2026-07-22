@@ -6,6 +6,7 @@ from typing import Any
 
 from applications.port_erp.billing.service import BillingService, billing_service
 from applications.port_erp.config import DEFAULT_CONFIG, PortERPConfig
+from applications.port_erp.customs.facade import CustomsDomainEngine, customs_domain_engine
 from applications.port_erp.documents.service import DocumentsService, documents_service
 from applications.port_erp.integrations.ecosystem_bridge import EcosystemBridge, ecosystem_bridge
 from applications.port_erp.integrations.platform_bridge import PlatformBridge, platform_bridge
@@ -34,6 +35,7 @@ class PortERPApplication:
         permissions: PermissionService | None = None,
         tracking: LiveTrackingEngine | None = None,
         terminal: TerminalOperationsEngine | None = None,
+        customs: CustomsDomainEngine | None = None,
         live_operations: LivePortOperations | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -46,6 +48,7 @@ class PortERPApplication:
         self.permissions = permissions or permission_service
         self.tracking = tracking or live_tracking_engine
         self.terminal = terminal or terminal_operations_engine
+        self.customs = customs or customs_domain_engine
         self.live_operations = live_operations or live_port_operations
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -64,9 +67,11 @@ class PortERPApplication:
             "port_core": self.config.port_core,
             "tracking_engine": self.config.tracking_engine,
             "terminal_engine": self.config.terminal_engine,
+            "customs_engine": self.config.customs_engine,
             "metrics": self.core.metrics(),
             "tracking": self.tracking.metrics(),
             "terminal": self.terminal.metrics(),
+            "customs": self.customs.metrics(),
             "roles": self.permissions.roles(),
             "platform": self.platform.platform_health(),
             "ecosystem": self.ecosystem.ecosystem_health(),

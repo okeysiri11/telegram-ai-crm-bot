@@ -972,7 +972,7 @@ Full details: [AGRO_PORTAL.md](AGRO_PORTAL.md).
 
 Full details: [AGRO_RELEASE.md](AGRO_RELEASE.md), [DEPLOYMENT.md](DEPLOYMENT.md), [OPERATIONS.md](OPERATIONS.md).
 
-## Port ERP Foundation (Sprint 9.1) + Tracking (9.2) + Terminal (9.3)
+## Port ERP Foundation (9.1) + Tracking (9.2) + Terminal (9.3) + Customs (9.4)
 
 | Component | Location | Role |
 |-----------|----------|------|
@@ -980,10 +980,11 @@ Full details: [AGRO_RELEASE.md](AGRO_RELEASE.md), [DEPLOYMENT.md](DEPLOYMENT.md)
 | PortCoreEngine | `applications/port_erp/port_core/engine.py` | Registry facade |
 | LiveTrackingEngine | `applications/port_erp/tracking/engine.py` | AIS / GPS / fleet / ETA facade |
 | TerminalOperationsEngine | `applications/port_erp/terminal_operations/engine.py` | Yard / warehouse / gate / equipment |
+| CustomsDomainEngine | `applications/port_erp/customs/facade.py` | Customs / trade / documents / compliance |
 | Platform Bridge | `applications/port_erp/integrations/platform_bridge.py` | Platform Core bridge |
 | Ecosystem Bridge | `applications/port_erp/integrations/ecosystem_bridge.py` | Ecosystem bridge |
 | REST API | `applications/port_erp/api/` | `/api/port/v1` |
 
-**Application Version 1.2.0-alpha** — Terminal Operations · `terminal_engine = 1.0`
+**Application Version 1.3.0-alpha** — Customs & Trade · `customs_engine = 1.0`
 
-Full details: [PORT_ERP.md](PORT_ERP.md), [PORT_TRACKING.md](PORT_TRACKING.md), [PORT_TERMINAL.md](PORT_TERMINAL.md).
+Full details: [PORT_ERP.md](PORT_ERP.md), [PORT_TRACKING.md](PORT_TRACKING.md), [PORT_TERMINAL.md](PORT_TERMINAL.md), [PORT_CUSTOMS.md](PORT_CUSTOMS.md).

@@ -1,18 +1,19 @@
-# Port ERP — Foundation, Tracking & Terminal Operations
+# Port ERP — Foundation through Customs (Sprint 9.4)
 
-Port operations ERP for **Port ERP 1.2.0-alpha**.
+Port operations ERP for **Port ERP 1.3.0-alpha**.
 
 | Field | Value |
 |-------|-------|
 | Application name | Port ERP |
-| Application version | `1.2.0-alpha` |
+| Application version | `1.3.0-alpha` |
 | Tracking engine | `1.0` |
 | Terminal engine | `1.0` |
+| Customs engine | `1.0` |
 | Platform | AI Platform Core v3 (bridge only) |
 | Ecosystem | AI Ecosystem v1.5 (bridge only) |
 | API | `/api/port/v1` |
 
-**Hard constraint:** AI Platform Core and AI Ecosystem are not modified. Integration is only via `integrations/platform_bridge.py` and `integrations/ecosystem_bridge.py`.
+**Hard constraint:** AI Platform Core and AI Ecosystem are not modified. Integration is only via bridges.
 
 ## Architecture
 
@@ -23,6 +24,7 @@ flowchart TB
     Core[PortCoreEngine]
     Track[LiveTrackingEngine]
     Terminal[TerminalOperationsEngine]
+    Customs[CustomsDomainEngine]
     Bridges[Platform + Ecosystem Bridges]
     Store[PortStore]
 
@@ -30,45 +32,37 @@ flowchart TB
     App --> Core
     App --> Track
     App --> Terminal
+    App --> Customs
     Core --> Store
     Track --> Store
     Terminal --> Store
+    Customs --> Store
     App --> Bridges
 ```
 
 ## Modules
 
-Foundation: `port_core/` · `port_management/` · `terminals/` · `berths/` · `vessels/` · `containers/` · `cargo/` · `customers/` · `companies/` · `operations/` · `documents/` · `billing/` · `shared/`
-
-Tracking (9.2): `tracking/` · `ais/` · `gps/` · `fleet/` · `geofence/` · `maps/` · `timeline/`
-
-Terminal (9.3): `terminal_operations/` · `yard_management/` · `warehouse_management/` · `gate_management/` · `equipment/` · `cranes/` · `dispatch/` · `planning/` · `storage/` · `inventory/`
+Foundation · Tracking (9.2) · Terminal (9.3) · **Customs (9.4):** `customs/` · `documents/` · `compliance/` · `certificates/` · `cargo_flow/` · `inspection/` · `international_trade/` · `incoterms/` · `tariffs/` · `broker/`
 
 ## REST API
 
 | Area | Prefix |
 |------|--------|
-| Health / roles | `/health`, `/roles` |
-| Ports / terminals / berths | `/ports`, `/terminals`, `/berths` |
-| Vessels / containers / cargo | `/vessels`, `/containers`, `/cargo` |
+| Core | `/ports`, `/terminals`, `/vessels`, `/containers`, … |
 | Tracking | `/tracking`, `/gps`, `/maps`, `/timeline` |
-| Terminal ops | `/terminal`, `/warehouse`, `/yard`, `/gate`, `/equipment`, `/planning` |
+| Terminal | `/terminal`, `/warehouse`, `/yard`, `/gate`, `/equipment`, `/planning` |
+| Customs | `/customs`, `/documents`, `/certificates`, `/trade`, `/broker`, `/compliance` |
 
-## Events
+## Docs
 
-Foundation + Tracking + Terminal: `TruckArrived` · `TruckDeparted` · `ContainerStored` · `ContainerMoved` · `ContainerReleased` · `CraneAssigned` · `CraneFinished` · `WarehouseUpdated` · `GateApproved` · `GateRejected`
-
-## Developer guide
+- [PORT_TRACKING.md](PORT_TRACKING.md)
+- [PORT_TERMINAL.md](PORT_TERMINAL.md)
+- [PORT_CUSTOMS.md](PORT_CUSTOMS.md)
 
 ```python
 from applications.port_erp import port_erp
 
 health = port_erp.health()
-assert health["application_version"] == "1.2.0-alpha"
-assert health["terminal_engine"] == "1.0"
+assert health["application_version"] == "1.3.0-alpha"
+assert health["customs_engine"] == "1.0"
 ```
-
-## Docs
-
-- [PORT_TRACKING.md](PORT_TRACKING.md) — live tracking
-- [PORT_TERMINAL.md](PORT_TERMINAL.md) — terminal / yard / warehouse / gate

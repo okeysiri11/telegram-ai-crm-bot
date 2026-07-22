@@ -49,7 +49,7 @@ def reset_store():
 
 def test_version_terminal_engine_docs_and_bridges():
     health = port_erp.health()
-    assert health["application_version"] == "1.2.0-alpha"
+    assert health["application_version"] == "1.3.0-alpha"
     assert health["terminal_engine"] == "1.0"
     assert "terminal" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "PORT_TERMINAL.md"
@@ -249,7 +249,7 @@ async def test_terminal_rest_api(client: TestClient):
     health = await client.get("/api/port/v1/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.2.0-alpha"
+    assert body["application_version"] == "1.3.0-alpha"
     assert body["terminal_engine"] == "1.0"
 
     terminal = await client.get("/api/port/v1/terminal")

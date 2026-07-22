@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.port_erp.api import handlers, terminal_handlers, tracking_handlers
+from applications.port_erp.api import customs_handlers, handlers, terminal_handlers, tracking_handlers
 from applications.port_erp.api.middleware import auth_middleware
 from applications.port_erp.config import DEFAULT_CONFIG
 
@@ -173,3 +173,69 @@ def register_port_erp_routes(app: web.Application) -> None:
         f"{prefix}/planning/{{plan_id}}/activate",
         terminal_handlers.planning_activate_handler,
     )
+
+    # Sprint 9.4 — customs / documents / certificates / trade / broker / compliance
+    app.router.add_get(f"{prefix}/customs", customs_handlers.customs_health_handler)
+    app.router.add_get(f"{prefix}/customs/declarations", customs_handlers.customs_list_handler)
+    app.router.add_post(f"{prefix}/customs/declarations", customs_handlers.customs_create_handler)
+    app.router.add_post(
+        f"{prefix}/customs/declarations/{{declaration_id}}/submit",
+        customs_handlers.customs_submit_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/customs/declarations/{{declaration_id}}/hold",
+        customs_handlers.customs_hold_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/customs/declarations/{{declaration_id}}/release",
+        customs_handlers.customs_release_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/customs/declarations/{{declaration_id}}/complete",
+        customs_handlers.customs_complete_handler,
+    )
+    app.router.add_get(f"{prefix}/customs/tariffs", customs_handlers.tariffs_list_handler)
+    app.router.add_post(f"{prefix}/customs/tariffs", customs_handlers.tariffs_create_handler)
+
+    app.router.add_get(f"{prefix}/documents", customs_handlers.documents_list_handler)
+    app.router.add_post(f"{prefix}/documents", customs_handlers.documents_create_handler)
+    app.router.add_get(f"{prefix}/documents/types", customs_handlers.documents_types_handler)
+    app.router.add_post(
+        f"{prefix}/documents/{{document_id}}/sign",
+        customs_handlers.documents_sign_handler,
+    )
+
+    app.router.add_get(f"{prefix}/certificates", customs_handlers.certificates_list_handler)
+    app.router.add_post(f"{prefix}/certificates", customs_handlers.certificates_create_handler)
+    app.router.add_get(f"{prefix}/certificates/types", customs_handlers.certificates_types_handler)
+    app.router.add_post(
+        f"{prefix}/certificates/{{certificate_id}}/issue",
+        customs_handlers.certificates_issue_handler,
+    )
+
+    app.router.add_get(f"{prefix}/trade", customs_handlers.trade_list_handler)
+    app.router.add_post(f"{prefix}/trade", customs_handlers.trade_create_handler)
+    app.router.add_get(f"{prefix}/trade/incoterms", customs_handlers.trade_incoterms_handler)
+    app.router.add_get(f"{prefix}/trade/stages", customs_handlers.trade_stages_handler)
+    app.router.add_post(
+        f"{prefix}/trade/{{shipment_id}}/advance",
+        customs_handlers.trade_advance_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/trade/{{shipment_id}}/customs",
+        customs_handlers.trade_customs_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/trade/{{shipment_id}}/duties",
+        customs_handlers.trade_duties_handler,
+    )
+
+    app.router.add_get(f"{prefix}/broker", customs_handlers.broker_list_handler)
+    app.router.add_post(f"{prefix}/broker", customs_handlers.broker_create_handler)
+    app.router.add_post(
+        f"{prefix}/broker/{{case_id}}/clear",
+        customs_handlers.broker_clear_handler,
+    )
+
+    app.router.add_get(f"{prefix}/compliance", customs_handlers.compliance_list_handler)
+    app.router.add_post(f"{prefix}/compliance/evaluate", customs_handlers.compliance_evaluate_handler)
