@@ -6,26 +6,26 @@ tags:
   - drone
   - dashboard
 generated: 2026-07-22
-sprint: "11.6"
+sprint: "11.7"
 ---
 
 # Drone Dashboard
 
 ## Overview
-Readiness dashboard for Drone Platform through Sprint 11.6 (Manufacturing & Production).
+Readiness dashboard for Drone Platform through Sprint 11.7 (Mission Operations).
 
 ## Architecture
 Part of [[Drone Platform]].
 
 ## Components
-- Engineering Suite Ready (11.5)
-- Drone Manufacturing Ready
-- Assembly Platform Ready
-- Warehouse Ready
-- Production AI Ready
-- Quality Assurance Ready
-- Lifecycle Management Ready
-- Links: [[drone/PRODUCTION_DASHBOARD]] [[drone/MANUFACTURING_REGISTRY]] [[drone/WAREHOUSE_REGISTRY]] [[drone/BOM_REGISTRY]] [[drone/ASSEMBLY_REGISTRY]] [[drone/ENGINEERING_REGISTRY]] [[drone/KNOWLEDGE_GRAPH]]
+- Manufacturing Ready (11.6)
+- Mission Operations Ready
+- Fleet Command Ready
+- Ground Control Ready
+- Swarm Intelligence Ready
+- Mission AI Ready
+- Drone Platform Operational
+- Links: [[drone/MISSION_OPS_DASHBOARD]] [[drone/MISSION_OPS_REGISTRY]] [[drone/FLEET_REGISTRY]] [[drone/SWARM_REGISTRY]] [[drone/PRODUCTION_DASHBOARD]] [[drone/KNOWLEDGE_GRAPH]]
 
 ## Relationships
 [[Drone Platform]] · [[ARCHITECTURE_DASHBOARD]] · [[INDEX]] · [[Knowledge Graph]]

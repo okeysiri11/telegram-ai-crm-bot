@@ -1,6 +1,7 @@
 from applications.drone_platform.ai.assistant import EngineeringAIAssistant, engineering_ai
 from applications.drone_platform.ai.engineering_suite_ai import EngineeringSuiteAIAssistant, engineering_suite_ai
 from applications.drone_platform.ai.firmware_ai import FirmwareAIAssistant, firmware_ai
+from applications.drone_platform.ai.mission_ai import MissionAIAssistant, mission_ai
 from applications.drone_platform.ai.production_ai import ProductionAIAssistant, production_ai
 from applications.drone_platform.ai.telemetry_ai import TelemetryFlightAIAssistant, telemetry_flight_ai
 from applications.drone_platform.ai.vision_ai import VisionFlightAIAssistant, vision_flight_ai
@@ -18,4 +19,6 @@ __all__ = [
     "engineering_suite_ai",
     "ProductionAIAssistant",
     "production_ai",
+    "MissionAIAssistant",
+    "mission_ai",
 ]

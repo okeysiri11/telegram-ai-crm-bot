@@ -92,6 +92,20 @@ def register_drone_platform_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/missions", handlers.missions_handler)
     app.router.add_post(f"{prefix}/missions/{{mission_id}}/waypoints", handlers.mission_waypoints_handler)
 
+    # mission operations (11.7)
+    app.router.add_get(f"{prefix}/ops", handlers.ops_status_handler)
+    app.router.add_get(f"{prefix}/ops/missions", handlers.ops_missions_handler)
+    app.router.add_post(f"{prefix}/ops/missions", handlers.ops_missions_handler)
+    app.router.add_get(f"{prefix}/ops/fleet", handlers.ops_fleet_handler)
+    app.router.add_post(f"{prefix}/ops/fleet", handlers.ops_fleet_handler)
+    app.router.add_get(f"{prefix}/ops/ground", handlers.ops_ground_handler)
+    app.router.add_post(f"{prefix}/ops/ground", handlers.ops_ground_handler)
+    app.router.add_get(f"{prefix}/ops/swarm", handlers.ops_swarm_handler)
+    app.router.add_post(f"{prefix}/ops/swarm", handlers.ops_swarm_handler)
+    app.router.add_post(f"{prefix}/ops/emergency", handlers.ops_emergency_handler)
+    app.router.add_post(f"{prefix}/ops/analytics", handlers.ops_analytics_handler)
+    app.router.add_post(f"{prefix}/ops/collaboration", handlers.ops_collaboration_handler)
+
     # telemetry
     app.router.add_get(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)
     app.router.add_post(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)

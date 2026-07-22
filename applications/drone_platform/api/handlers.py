@@ -1261,6 +1261,200 @@ async def simulation_scenario_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+# ---- mission operations (11.7) ----
+async def ops_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.mission_ops.status())
+
+
+async def ops_missions_handler(request: web.Request) -> web.Response:
+    try:
+        center = drone_platform.mission_ops.center
+        if request.method == "GET":
+            return json_response({"missions": center.list(), "templates": center.list_templates()})
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        if action == "template":
+            return json_response(center.create_template(name=body.get("name", ""), waypoints=body.get("waypoints")), status=201)
+        if action == "schedule":
+            return json_response(center.schedule(body.get("ops_mission_id", ""), scheduled_at=body.get("scheduled_at", ""), window_min=int(body.get("window_min", 60))))
+        if action == "validate":
+            return json_response(center.validate(body.get("ops_mission_id", "")))
+        if action == "simulate":
+            return json_response(center.simulate(body.get("ops_mission_id", ""), speed_mps=float(body.get("speed_mps", 12))))
+        if action == "replay":
+            return json_response(center.replay(body.get("ops_mission_id", "")))
+        if action == "archive":
+            return json_response(center.archive(body.get("ops_mission_id", ""), reason=body.get("reason", "completed")))
+        if action == "report":
+            return json_response(center.report(body.get("ops_mission_id", ""), success=bool(body.get("success", True)), notes=body.get("notes", "")), status=201)
+        if action == "timeline":
+            return json_response(center.timeline(body.get("ops_mission_id", "")))
+        mission = center.create_ops_mission(
+            name=body.get("name", ""),
+            waypoints=body.get("waypoints"),
+            template_id=body.get("template_id", ""),
+            scheduled_at=body.get("scheduled_at", ""),
+            priority=body.get("priority", "normal"),
+            metadata=body.get("metadata"),
+        )
+        return json_response(mission, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_fleet_handler(request: web.Request) -> web.Response:
+    try:
+        fleet = drone_platform.mission_ops.fleet
+        if request.method == "GET":
+            return json_response({"aircraft": fleet.list(), "available": fleet.available_aircraft()})
+        body = await _read_json(request)
+        action = body.get("action", "register")
+        if action == "assign":
+            return json_response(
+                fleet.assign(
+                    body.get("fleet_id", ""),
+                    pilot_id=body.get("pilot_id", ""),
+                    payload_id=body.get("payload_id", ""),
+                    battery_id=body.get("battery_id", ""),
+                    equipment=body.get("equipment"),
+                    ops_mission_id=body.get("ops_mission_id", ""),
+                ),
+                status=201,
+            )
+        if action == "readiness":
+            return json_response(fleet.readiness(body.get("fleet_id", "")))
+        if action == "availability":
+            return json_response(fleet.set_availability(body.get("fleet_id", ""), available=bool(body.get("available", True))))
+        if action == "maintenance":
+            return json_response(fleet.set_maintenance(body.get("fleet_id", ""), maintenance_status=body.get("maintenance_status", "ok")))
+        return json_response(
+            fleet.register_aircraft(
+                name=body.get("name", ""),
+                serial_number=body.get("serial_number", ""),
+                model=body.get("model", ""),
+                status=body.get("status", "available"),
+                maintenance_status=body.get("maintenance_status", "ok"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_ground_handler(request: web.Request) -> web.Response:
+    try:
+        gnd = drone_platform.mission_ops.ground
+        if request.method == "GET":
+            return json_response({"alerts": gnd.list_alerts(), **gnd.status()})
+        body = await _read_json(request)
+        action = body.get("action", "session")
+        if action == "alert":
+            return json_response(gnd.raise_alert(severity=body.get("severity", "info"), message=body.get("message", ""), source=body.get("source", "system"), ops_mission_id=body.get("ops_mission_id", "")), status=201)
+        if action == "dashboard":
+            return json_response(gnd.mission_dashboard(ops_mission_id=body.get("ops_mission_id", ""), fleet_ids=body.get("fleet_ids")))
+        if action == "operator":
+            return json_response(gnd.operator_console(body.get("session_id", "")))
+        if action == "emergency_console":
+            return json_response(gnd.emergency_console(body.get("session_id", "")))
+        return json_response(gnd.open_session(operator_id=body.get("operator_id", ""), role=body.get("role", "operator")), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_swarm_handler(request: web.Request) -> web.Response:
+    try:
+        swarm = drone_platform.mission_ops.swarm
+        if request.method == "GET":
+            return json_response({"swarms": swarm.list(), **swarm.status()})
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        if action == "formation":
+            return json_response(swarm.formation_flight(body.get("swarm_id", ""), formation=body.get("formation", "line")))
+        if action == "tasks":
+            return json_response(swarm.distribute_tasks(body.get("swarm_id", ""), tasks=body.get("tasks", [])))
+        if action == "coverage":
+            return json_response(swarm.area_coverage(body.get("swarm_id", ""), bounds=body.get("bounds", {}), spacing_m=float(body.get("spacing_m", 50))))
+        if action == "recover":
+            return json_response(swarm.automatic_recovery(body.get("swarm_id", ""), failed_fleet_id=body.get("failed_fleet_id", "")))
+        if action == "health":
+            return json_response(swarm.swarm_health(body.get("swarm_id", ""), vehicle_health=body.get("vehicle_health")))
+        if action == "decide":
+            return json_response(swarm.decision_engine(body.get("swarm_id", ""), observations=body.get("observations")))
+        return json_response(
+            swarm.create_swarm_mission(
+                name=body.get("name", ""),
+                fleet_ids=body.get("fleet_ids", []),
+                formation=body.get("formation", "line"),
+                leader_id=body.get("leader_id", ""),
+                tasks=body.get("tasks"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_emergency_handler(request: web.Request) -> web.Response:
+    try:
+        emg = drone_platform.mission_ops.emergency
+        body = await _read_json(request)
+        action = body.get("action", "trigger")
+        if action == "recover":
+            return json_response(emg.automatic_recovery(body.get("emergency_id", "")))
+        if action == "rth":
+            return json_response(
+                emg.return_to_home(
+                    fleet_id=body.get("fleet_id", ""),
+                    home=body.get("home", {}),
+                    current=body.get("current", {}),
+                    battery_pct=float(body.get("battery_pct", 50)),
+                )
+            )
+        return json_response(
+            emg.trigger(
+                emergency_type=body.get("emergency_type", "mission_abort"),
+                fleet_id=body.get("fleet_id", ""),
+                ops_mission_id=body.get("ops_mission_id", ""),
+                details=body.get("details"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_analytics_handler(request: web.Request) -> web.Response:
+    try:
+        anx = drone_platform.mission_ops.analytics
+        body = await _read_json(request)
+        kind = body.get("kind", "success_rate")
+        if kind == "coverage":
+            return json_response(anx.coverage_analysis(planned_area_km2=float(body.get("planned_area_km2", 1)), covered_area_km2=float(body.get("covered_area_km2", 0.8))))
+        if kind == "battery":
+            return json_response(anx.battery_consumption(start_pct=float(body.get("start_pct", 100)), end_pct=float(body.get("end_pct", 60)), duration_min=float(body.get("duration_min", 20))))
+        if kind == "efficiency":
+            return json_response(anx.flight_efficiency(distance_m=float(body.get("distance_m", 5000)), energy_wh=float(body.get("energy_wh", 100))))
+        return json_response(anx.mission_success_rate(reports=body.get("reports", [])), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_collaboration_handler(request: web.Request) -> web.Response:
+    try:
+        collab = drone_platform.mission_ops.collaboration
+        body = await _read_json(request)
+        action = body.get("action", "register")
+        if action == "comment":
+            return json_response(collab.add_comment(ops_mission_id=body.get("ops_mission_id", ""), operator_id=body.get("operator_id", ""), text=body.get("text", "")), status=201)
+        if action == "approve_request":
+            return json_response(collab.request_approval(ops_mission_id=body.get("ops_mission_id", ""), requester_id=body.get("requester_id", "")), status=201)
+        if action == "approve_decide":
+            return json_response(collab.decide_approval(body.get("approval_id", ""), approver_id=body.get("approver_id", ""), approved=bool(body.get("approved", True)), notes=body.get("notes", "")))
+        return json_response(collab.register_operator(name=body.get("name", ""), role=body.get("role", "operator")), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 # ---- manufacturing suite (11.6) ----
 async def manufacturing_suite_status_handler(request: web.Request) -> web.Response:
     return json_response(drone_platform.manufacturing_suite.status())

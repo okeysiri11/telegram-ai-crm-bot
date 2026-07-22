@@ -6,23 +6,22 @@ tags:
   - drone
   - missions
 generated: 2026-07-22
-sprint: "11.3"
+sprint: "11.7"
 ---
 
 # Mission Registry
 
 ## Overview
-Mission library, templates, Mission Planner bridge, and Mission Intelligence (11.3).
+Mission library, templates, Mission Planner bridge, Mission Intelligence (11.3), and Mission Operations Center (11.7).
 
 ## Architecture
-Part of [[Drone Platform]] (Sprints 11.2–11.3).
+Part of [[Drone Platform]] (Sprints 11.2–11.7).
 
 ## Components
 - Mission service waypoints/geofences/rally
-- ArduPilot mission library
-- MP import/export
-- Mission Intelligence: validator, optimizer, terrain, risk, battery/range, RTH, emergency landing, replay, comparison, scoring
-- Links: [[drone/TELEMETRY_REGISTRY]] [[drone/DRONE_DASHBOARD]]
+- ArduPilot mission library / MP import/export
+- Mission Intelligence + Mission Center (ops missions, scheduler, archive, reports)
+- Links: [[drone/MISSION_OPS_REGISTRY]] [[drone/MISSION_OPS_DASHBOARD]] [[drone/TELEMETRY_REGISTRY]] [[drone/DRONE_DASHBOARD]]
 
 ## Relationships
 [[Drone Platform]] · [[applications/DRONE_PLATFORM]] · [[ARCHITECTURE_DASHBOARD]] · [[INDEX]]

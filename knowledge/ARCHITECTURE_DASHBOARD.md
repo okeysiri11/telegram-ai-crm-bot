@@ -60,3 +60,6 @@ generated_by_enterprise_infra
 
 ## Drone Manufacturing (11.6)
 [[drone/PRODUCTION_DASHBOARD]] · [[drone/MANUFACTURING_REGISTRY]] · [[drone/WAREHOUSE_REGISTRY]] · [[drone/BOM_REGISTRY]] · [[drone/ASSEMBLY_REGISTRY]]
+
+## Mission Operations (11.7)
+[[drone/MISSION_OPS_DASHBOARD]] · [[drone/MISSION_OPS_REGISTRY]] · [[drone/FLEET_REGISTRY]] · [[drone/SWARM_REGISTRY]]

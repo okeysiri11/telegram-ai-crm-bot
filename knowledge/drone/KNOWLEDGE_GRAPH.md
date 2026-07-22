@@ -38,4 +38,17 @@ flowchart LR
   ORD --> PD[[drone/PRODUCTION_DASHBOARD]]
 ```
 
-Links: [[drone/ENGINEERING_REGISTRY]] · [[drone/MANUFACTURING_REGISTRY]] · [[drone/PRODUCTION_DASHBOARD]] · [[drone/DRONE_DASHBOARD]] · [[INDEX]]
+## Mission Operations (11.7)
+
+```mermaid
+flowchart LR
+  OPS[Mission Ops] --> MC[Mission Center]
+  OPS --> FL[Fleet]
+  OPS --> GC[Ground Control]
+  OPS --> SW[Swarm]
+  OPS --> EM[Emergency]
+  OPS --> MAI[Mission AI]
+  MC --> MD[[drone/MISSION_OPS_DASHBOARD]]
+```
+
+Links: [[drone/ENGINEERING_REGISTRY]] · [[drone/MANUFACTURING_REGISTRY]] · [[drone/MISSION_OPS_REGISTRY]] · [[drone/MISSION_OPS_DASHBOARD]] · [[INDEX]]

@@ -117,6 +117,21 @@ class DroneStore:
         self.flight_tests: EntityStore = EntityStore()
         self.aircraft_lifecycle: EntityStore = EntityStore()
         self.production_calendar: EntityStore = EntityStore()
+        # Sprint 11.7 — mission ops / fleet / swarm
+        self.ops_missions: EntityStore = EntityStore()
+        self.mission_schedules: EntityStore = EntityStore()
+        self.mission_archives: EntityStore = EntityStore()
+        self.mission_reports: EntityStore = EntityStore()
+        self.fleet_aircraft: EntityStore = EntityStore()
+        self.fleet_assignments: EntityStore = EntityStore()
+        self.operators: EntityStore = EntityStore()
+        self.ground_sessions: EntityStore = EntityStore()
+        self.mission_alerts: EntityStore = EntityStore()
+        self.swarm_missions: EntityStore = EntityStore()
+        self.emergency_events: EntityStore = EntityStore()
+        self.mission_approvals: EntityStore = EntityStore()
+        self.mission_comments: EntityStore = EntityStore()
+        self.ops_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
