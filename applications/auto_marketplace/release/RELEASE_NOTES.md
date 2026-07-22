@@ -1,6 +1,6 @@
 # Auto Marketplace 1.0.0-alpha — Foundation
 
-**Release Status:** Foundation Alpha  
+**Release Status:** Marketplace Alpha  
 **Platform Dependency:** AI Platform Core v3  
 **Ecosystem Dependency:** AI Ecosystem v1.5
 

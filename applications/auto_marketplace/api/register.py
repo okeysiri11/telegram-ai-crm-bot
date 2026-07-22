@@ -12,6 +12,7 @@ from applications.auto_marketplace.api import (
     finance_handlers,
     foundation_handlers,
     internal_handlers,
+    marketplace_handlers,
     ops_handlers,
     portal_handlers,
     rest_handlers,
@@ -49,6 +50,56 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
 
     app.router.add_get(f"{prefix}/dealers", foundation_handlers.dealers_list_foundation_handler)
     app.router.add_post(f"{prefix}/dealers", foundation_handlers.dealers_create_foundation_handler)
+
+    # Sprint 10.2 — marketplace / VIN / history / dealer network / verification / pricing
+    app.router.add_get(f"{prefix}/marketplace", marketplace_handlers.marketplace_health_handler)
+    app.router.add_get(f"{prefix}/marketplace/browse", marketplace_handlers.marketplace_browse_handler)
+    app.router.add_get(f"{prefix}/marketplace/listings", marketplace_handlers.marketplace_listings_handler)
+    app.router.add_post(f"{prefix}/marketplace/listings", marketplace_handlers.marketplace_listings_handler)
+    app.router.add_post(
+        f"{prefix}/marketplace/listings/{{listing_id}}/publish",
+        marketplace_handlers.marketplace_publish_handler,
+    )
+    app.router.add_get(f"{prefix}/marketplace/auctions", marketplace_handlers.marketplace_auctions_handler)
+    app.router.add_post(f"{prefix}/marketplace/auctions", marketplace_handlers.marketplace_auctions_handler)
+    app.router.add_post(
+        f"{prefix}/marketplace/auctions/{{auction_id}}/bids",
+        marketplace_handlers.marketplace_bid_handler,
+    )
+
+    app.router.add_get(f"{prefix}/vin", marketplace_handlers.vin_health_handler)
+    app.router.add_post(f"{prefix}/vin/decode", marketplace_handlers.vin_decode_handler)
+    app.router.add_get(f"{prefix}/vin/{{vin}}", marketplace_handlers.vin_get_handler)
+
+    app.router.add_get(f"{prefix}/history", marketplace_handlers.history_health_handler)
+    app.router.add_get(f"{prefix}/history/{{vin}}", marketplace_handlers.history_get_handler)
+    app.router.add_post(f"{prefix}/history/{{vin}}/events", marketplace_handlers.history_event_handler)
+    app.router.add_post(f"{prefix}/history/ownership", marketplace_handlers.ownership_transfer_handler)
+
+    app.router.add_get(f"{prefix}/dealers/network", marketplace_handlers.dealers_network_list_handler)
+    app.router.add_post(f"{prefix}/dealers/network", marketplace_handlers.dealers_network_create_handler)
+    app.router.add_post(
+        f"{prefix}/dealers/{{dealer_id}}/verify",
+        marketplace_handlers.dealers_verify_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/dealers/{{dealer_id}}/rate",
+        marketplace_handlers.dealers_rate_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/dealers/{{dealer_id}}/analytics",
+        marketplace_handlers.dealers_analytics_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/dealers/{{dealer_id}}/leads",
+        marketplace_handlers.dealers_assign_lead_handler,
+    )
+
+    app.router.add_get(f"{prefix}/verification", marketplace_handlers.verification_health_handler)
+    app.router.add_post(f"{prefix}/verification", marketplace_handlers.verification_run_handler)
+
+    app.router.add_get(f"{prefix}/pricing", marketplace_handlers.pricing_health_handler)
+    app.router.add_post(f"{prefix}/pricing/value", marketplace_handlers.pricing_value_handler)
 
     app.router.add_get(f"{prefix}/buyers", foundation_handlers.buyers_list_handler)
     app.router.add_post(f"{prefix}/buyers", foundation_handlers.buyers_create_handler)

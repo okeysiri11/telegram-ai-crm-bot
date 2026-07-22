@@ -118,6 +118,16 @@ class MarketplaceStore:
         self.price_history: EntityStore = EntityStore()
         self.foundation_favorites: EntityStore = EntityStore()
         self.foundation_garages: EntityStore = EntityStore()
+        # Sprint 10.2 — marketplace / VIN / history / dealer network / verification
+        self.marketplace_listings: EntityStore = EntityStore()
+        self.auction_lots: EntityStore = EntityStore()
+        self.vin_decodes: EntityStore = EntityStore()
+        self.vehicle_histories: EntityStore = EntityStore()
+        self.dealer_network_profiles: EntityStore = EntityStore()
+        self.dealer_lead_assignments: EntityStore = EntityStore()
+        self.verification_reports: EntityStore = EntityStore()
+        self.ownership_transfers: EntityStore = EntityStore()
+        self.market_valuations: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

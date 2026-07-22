@@ -25,6 +25,10 @@ from applications.auto_marketplace.integrations.ecosystem_bridge import Ecosyste
 from applications.auto_marketplace.integrations.platform_bridge import PlatformBridge, platform_bridge
 from applications.auto_marketplace.inventory.service import InventoryService, inventory_service
 from applications.auto_marketplace.inventory_engine.service import InventoryEngine, inventory_engine
+from applications.auto_marketplace.marketplace.facade import (
+    MarketplaceDomainEngine,
+    marketplace_domain_engine,
+)
 from applications.auto_marketplace.media.service import MediaService, media_service
 from applications.auto_marketplace.mobile_api.engine import PortalEngine, portal_engine
 from applications.auto_marketplace.notifications.service import NotificationService, notification_service
@@ -64,6 +68,7 @@ class AutoMarketplaceApplication:
         favorites: FavoritesService | None = None,
         garage: GarageService | None = None,
         inspection: InspectionEngine | None = None,
+        marketplace_domain: MarketplaceDomainEngine | None = None,
         payments: PaymentService | None = None,
         delivery: DeliveryService | None = None,
         analytics: AnalyticsService | None = None,
@@ -97,6 +102,7 @@ class AutoMarketplaceApplication:
         self.favorites = favorites or favorites_service
         self.garage = garage or garage_service
         self.inspection = inspection or inspection_engine
+        self.marketplace = marketplace_domain or marketplace_domain_engine
         self.payments = payments or payment_service
         self.delivery = delivery or delivery_service
         self.analytics = analytics or analytics_service
@@ -131,6 +137,8 @@ class AutoMarketplaceApplication:
             "api_version": self.config.api_version,
             "catalog_engine": self.config.catalog_engine,
             "crm_foundation": self.config.crm_foundation,
+            "vin_engine": self.config.vin_engine,
+            "dealer_engine": self.config.dealer_engine,
             "metrics": self.analytics.dashboard_metrics(),
             "foundation": {
                 "catalog": self.catalog.overview(),
@@ -139,6 +147,7 @@ class AutoMarketplaceApplication:
                 "crm": self.crm.metrics(),
                 "inspection": self.inspection.metrics(),
             },
+            "marketplace": self.marketplace.metrics(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),
             "crm_deals": self.store.crm_deals.count(),

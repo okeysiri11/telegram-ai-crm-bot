@@ -1,11 +1,13 @@
-# Auto Marketplace — Foundation (Sprint 10.1)
+# Auto Marketplace — Foundation through Marketplace (Sprint 10.2)
 
-Auto marketplace foundation for **Auto Marketplace 1.0.0-alpha**.
+Vehicle marketplace for **Auto Marketplace 1.1.0-alpha**.
 
 | Field | Value |
 |-------|-------|
 | Application name | Auto Marketplace |
-| Application version | `1.0.0-alpha` |
+| Application version | `1.1.0-alpha` |
+| VIN engine | `1.0` |
+| Dealer engine | `1.0` |
 | Platform | AI Platform Core v3 (bridge only) |
 | Ecosystem | AI Ecosystem v1.5 (bridge only) |
 | API | `/api/auto/v1` |
@@ -18,43 +20,46 @@ Auto marketplace foundation for **Auto Marketplace 1.0.0-alpha**.
 flowchart TB
     API["/api/auto/v1"]
     App[AutoMarketplaceApplication]
-    Domains[Catalog Vehicles Dealers Buyers CRM Search]
+    Domains[Catalog Marketplace VIN History Dealers Verification]
     Bridges[Platform + Ecosystem Bridges]
     Store[MarketplaceStore]
     API --> App --> Domains --> Store
     App --> Bridges
 ```
 
-## Modules (10.1)
+## Modules (10.2)
 
-`catalog/` · `vehicles/` · `dealers/` · `buyers/` · `crm/` · `search/` · `favorites/` · `garage/` · `inspection/` · `pricing/` · `documents/` · `shared/`
+`marketplace/` · `vin/` · `history/` · `dealer_network/` · `auctions/` · `listings/` · `media/` · `verification/` · `ownership/` · `valuation/`
 
-## Domain Models
+## Marketplace Channels
 
-Vehicle · Dealer · Buyer · VehicleBrand · VehicleModel · Generation · Configuration · Engine · Transmission · DriveType · FuelType · BodyType · VIN · InspectionReport · PriceHistory · Favorite · Garage
+Private Sellers · Dealers · Official Dealers · Auctions · Wholesale · Retail · Commercial Vehicles · Agricultural Machinery · Construction Equipment · Motorcycles · Electric Vehicles
 
-## Catalog Categories
+## Dealer Network
 
-Cars · Motorcycles · Commercial Vehicles · Agricultural Machinery · Construction Machinery · Electric Vehicles · Hybrid Vehicles · Parts · Accessories
+Profiles · Verification · Ratings · Inventory · Branches · Managers · Lead assignment · Analytics
 
-## Search Filters
+## Vehicle Verification
 
-Brand · Model · Year · Mileage · Fuel · Transmission · Body · Region · Price · VIN · Condition
+Photo · VIN · Duplicate detection · Fraud detection · AI image validation · Damage estimation
 
-## CRM
+## Pricing / Valuation
 
-Leads · Requests · Appointments · Negotiations · Vehicle reservations · Customer history
+Market · Average · Dealer · Wholesale · Retail · Price history · AI valuation
 
 ## REST API
 
-`/catalog` · `/vehicles` · `/search` · `/dealers` · `/buyers` · `/crm`
+`/marketplace` · `/vin` · `/history` · `/dealers` · `/verification` · `/pricing`
+
+## Docs
+
+- [AUTO_VIN.md](AUTO_VIN.md)
 
 ```python
 from applications.auto_marketplace import auto_marketplace
 
 health = auto_marketplace.health()
-assert health["application_version"] == "1.0.0-alpha"
-assert health["application_name"] == "Auto Marketplace"
-assert health["platform_dependency"] == "AI Platform Core v3"
-assert health["ecosystem_dependency"] == "AI Ecosystem v1.5"
+assert health["application_version"] == "1.1.0-alpha"
+assert health["vin_engine"] == "1.0"
+assert health["dealer_engine"] == "1.0"
 ```

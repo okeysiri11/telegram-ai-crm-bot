@@ -1,8 +1,8 @@
 {
   "application": "auto_marketplace",
   "application_name": "Auto Marketplace",
-  "application_version": "1.0.0-alpha",
-  "release_status": "Foundation Alpha",
+  "application_version": "1.1.0-alpha",
+  "release_status": "Marketplace Alpha",
   "platform_dependency": "AI Platform Core v3",
   "ecosystem_dependency": "AI Ecosystem v1.5"
 }

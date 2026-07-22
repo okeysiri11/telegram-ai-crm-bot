@@ -1,4 +1,4 @@
-# Auto Marketplace configuration — Sprint 10.1 Foundation.
+# Auto Marketplace configuration — Sprint 10.2 Marketplace, VIN & Dealer Network.
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ class AutoMarketplaceConfig:
     default_currency: str = "USD"
     enable_ai_recommendations: bool = True
     enable_auctions: bool = True
-    application_version: str = "1.0.0-alpha"
-    release_status: str = "Foundation Alpha"
+    application_version: str = "1.1.0-alpha"
+    release_status: str = "Marketplace Alpha"
     platform_dependency: str = "AI Platform Core v3"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     mobile_api_prefix: str = "/api/auto/mobile/v1"
@@ -24,6 +24,8 @@ class AutoMarketplaceConfig:
     portal_prefix: str = "/api/auto/v1/portal"
     catalog_engine: str = "1.0"
     crm_foundation: str = "1.0"
+    vin_engine: str = "1.0"
+    dealer_engine: str = "1.0"
 
 
 DEFAULT_CONFIG = AutoMarketplaceConfig()

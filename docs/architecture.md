@@ -487,9 +487,9 @@ Full details: [VALIDATION.md](../VALIDATION.md).
 
 ---
 
-## Auto Marketplace Application (Sprint 10.1 Foundation)
+## Auto Marketplace Application (Sprint 10.1–10.2)
 
-Auto Marketplace foundation on Platform Core v3 + Ecosystem v1.5 — consumes via bridges only. Does not modify Agro Marketplace or Port ERP.
+Auto Marketplace foundation and vehicle marketplace on Platform Core v3 + Ecosystem v1.5 — bridges only. Does not modify Agro Marketplace or Port ERP.
 
 ```mermaid
 flowchart LR
@@ -507,15 +507,15 @@ flowchart LR
 | Module | Path | Role |
 |--------|------|------|
 | Application | `applications/auto_marketplace/application.py` | Application facade |
-| Catalog / Vehicles | `applications/auto_marketplace/catalog/`, `vehicles/` | Catalog taxonomy |
-| Buyers / Dealers | `applications/auto_marketplace/buyers/`, `dealers/` | Parties |
-| CRM / Search | `applications/auto_marketplace/crm/`, `search/` | Leads, filters |
-| Inspection / Pricing | `applications/auto_marketplace/inspection/`, `pricing/` | Condition & price history |
+| Marketplace Domain | `applications/auto_marketplace/marketplace/` | Listings / auctions facade |
+| VIN / History | `applications/auto_marketplace/vin/`, `history/` | VIN decode & vehicle history |
+| Dealer Network | `applications/auto_marketplace/dealer_network/` | Profiles, ratings, analytics |
+| Verification / Valuation | `verification/`, `valuation/` | Fraud checks & market pricing |
 | Bridges | `applications/auto_marketplace/integrations/` | Platform + Ecosystem |
 
-**Application Version 1.0.0-alpha** — Foundation Alpha
+**Application Version 1.1.0-alpha** — Marketplace Alpha · `vin_engine = 1.0` · `dealer_engine = 1.0`
 
-Full details: [AUTO_MARKETPLACE.md](AUTO_MARKETPLACE.md).
+Full details: [AUTO_MARKETPLACE.md](AUTO_MARKETPLACE.md), [AUTO_VIN.md](AUTO_VIN.md).
 
 ---
 
@@ -676,7 +676,7 @@ flowchart LR
 | QualityAssurance | `applications/auto_marketplace/quality_assurance/` | Validation, performance, security |
 | Operations | `applications/auto_marketplace/monitoring/` | Health probes, incident guide |
 
-**Version 1.0.0-alpha — Foundation Alpha**
+**Version 1.1.0-alpha — Marketplace Alpha**
 
 Full details: [PRODUCTION_RELEASE.md](../PRODUCTION_RELEASE.md).
 
