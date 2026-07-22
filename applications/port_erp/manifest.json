@@ -1,7 +1,7 @@
 {
   "application_name": "Port ERP",
   "application": "port_erp",
-  "application_version": "1.3.0-alpha",
+  "application_version": "1.4.0-alpha",
   "platform_dependency": "AI Platform Core v3",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "api_prefix": "/api/port/v1",
@@ -9,6 +9,7 @@
   "tracking_engine": "1.0",
   "terminal_engine": "1.0",
   "customs_engine": "1.0",
+  "logistics_engine": "1.0",
   "modules": {
     "port_core": "1.0",
     "port_management": "1.0",
@@ -48,7 +49,17 @@
     "international_trade": "1.0",
     "incoterms": "1.0",
     "tariffs": "1.0",
-    "broker": "1.0"
+    "broker": "1.0",
+    "shipping_lines": "1.0",
+    "forwarders": "1.0",
+    "multimodal": "1.0",
+    "rail": "1.0",
+    "road": "1.0",
+    "air": "1.0",
+    "routes": "1.0",
+    "booking": "1.0",
+    "transport_orders": "1.0",
+    "carriers": "1.0"
   },
   "roles": [
     "port_director",

@@ -10,6 +10,7 @@ from applications.port_erp.customs.facade import CustomsDomainEngine, customs_do
 from applications.port_erp.documents.service import DocumentsService, documents_service
 from applications.port_erp.integrations.ecosystem_bridge import EcosystemBridge, ecosystem_bridge
 from applications.port_erp.integrations.platform_bridge import PlatformBridge, platform_bridge
+from applications.port_erp.multimodal.facade import LogisticsDomainEngine, logistics_domain_engine
 from applications.port_erp.operations.live import LivePortOperations, live_port_operations
 from applications.port_erp.port_core.engine import PortCoreEngine, port_core
 from applications.port_erp.security.permissions import PermissionService, permission_service
@@ -36,6 +37,7 @@ class PortERPApplication:
         tracking: LiveTrackingEngine | None = None,
         terminal: TerminalOperationsEngine | None = None,
         customs: CustomsDomainEngine | None = None,
+        logistics: LogisticsDomainEngine | None = None,
         live_operations: LivePortOperations | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -49,6 +51,7 @@ class PortERPApplication:
         self.tracking = tracking or live_tracking_engine
         self.terminal = terminal or terminal_operations_engine
         self.customs = customs or customs_domain_engine
+        self.logistics = logistics or logistics_domain_engine
         self.live_operations = live_operations or live_port_operations
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -68,10 +71,12 @@ class PortERPApplication:
             "tracking_engine": self.config.tracking_engine,
             "terminal_engine": self.config.terminal_engine,
             "customs_engine": self.config.customs_engine,
+            "logistics_engine": self.config.logistics_engine,
             "metrics": self.core.metrics(),
             "tracking": self.tracking.metrics(),
             "terminal": self.terminal.metrics(),
             "customs": self.customs.metrics(),
+            "logistics": self.logistics.metrics(),
             "roles": self.permissions.roles(),
             "platform": self.platform.platform_health(),
             "ecosystem": self.ecosystem.ecosystem_health(),

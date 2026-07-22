@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.port_erp.api import customs_handlers, handlers, terminal_handlers, tracking_handlers
+from applications.port_erp.api import (
+    customs_handlers,
+    handlers,
+    logistics_handlers,
+    terminal_handlers,
+    tracking_handlers,
+)
 from applications.port_erp.api.middleware import auth_middleware
 from applications.port_erp.config import DEFAULT_CONFIG
 
@@ -239,3 +245,73 @@ def register_port_erp_routes(app: web.Application) -> None:
 
     app.router.add_get(f"{prefix}/compliance", customs_handlers.compliance_list_handler)
     app.router.add_post(f"{prefix}/compliance/evaluate", customs_handlers.compliance_evaluate_handler)
+
+    # Sprint 9.5 — shipping / forwarders / carriers / routes / bookings / transport
+    app.router.add_get(f"{prefix}/shipping", logistics_handlers.shipping_health_handler)
+    app.router.add_get(f"{prefix}/shipping/lines", logistics_handlers.shipping_list_lines_handler)
+    app.router.add_post(f"{prefix}/shipping/lines", logistics_handlers.shipping_create_line_handler)
+    app.router.add_get(f"{prefix}/shipping/schedules", logistics_handlers.shipping_list_schedules_handler)
+    app.router.add_post(f"{prefix}/shipping/schedules", logistics_handlers.shipping_create_schedule_handler)
+    app.router.add_post(
+        f"{prefix}/shipping/schedules/{{schedule_id}}/plan",
+        logistics_handlers.shipping_plan_voyage_handler,
+    )
+
+    app.router.add_get(f"{prefix}/forwarders", logistics_handlers.forwarders_list_handler)
+    app.router.add_post(f"{prefix}/forwarders", logistics_handlers.forwarders_create_handler)
+    app.router.add_post(f"{prefix}/forwarders/consolidate", logistics_handlers.forwarders_consolidate_handler)
+
+    app.router.add_get(f"{prefix}/carriers", logistics_handlers.carriers_list_handler)
+    app.router.add_post(f"{prefix}/carriers", logistics_handlers.carriers_create_handler)
+    app.router.add_post(f"{prefix}/carriers/contracts", logistics_handlers.carriers_contract_handler)
+
+    app.router.add_get(f"{prefix}/routes", logistics_handlers.routes_list_handler)
+    app.router.add_post(f"{prefix}/routes", logistics_handlers.routes_create_handler)
+    app.router.add_get(f"{prefix}/routes/hubs", logistics_handlers.routes_list_hubs_handler)
+    app.router.add_post(f"{prefix}/routes/hubs", logistics_handlers.routes_create_hub_handler)
+    app.router.add_post(
+        f"{prefix}/routes/{{route_id}}/optimize",
+        logistics_handlers.routes_optimize_handler,
+    )
+
+    app.router.add_get(f"{prefix}/bookings", logistics_handlers.bookings_list_handler)
+    app.router.add_post(f"{prefix}/bookings", logistics_handlers.bookings_create_handler)
+    app.router.add_post(
+        f"{prefix}/bookings/{{booking_id}}/quote",
+        logistics_handlers.bookings_quote_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/bookings/{{booking_id}}/confirm",
+        logistics_handlers.bookings_confirm_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/bookings/{{booking_id}}/execute",
+        logistics_handlers.bookings_execute_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/bookings/{{booking_id}}/complete",
+        logistics_handlers.bookings_complete_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/bookings/{{booking_id}}/cancel",
+        logistics_handlers.bookings_cancel_handler,
+    )
+
+    app.router.add_get(f"{prefix}/transport", logistics_handlers.transport_list_handler)
+    app.router.add_post(f"{prefix}/transport", logistics_handlers.transport_create_handler)
+    app.router.add_post(
+        f"{prefix}/transport/{{order_id}}/assign",
+        logistics_handlers.transport_assign_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transport/{{order_id}}/dispatch",
+        logistics_handlers.transport_dispatch_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transport/{{order_id}}/complete",
+        logistics_handlers.transport_complete_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transport/{{order_id}}/transfer",
+        logistics_handlers.transport_transfer_handler,
+    )

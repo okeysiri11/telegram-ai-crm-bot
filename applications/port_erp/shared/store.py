@@ -86,6 +86,15 @@ class PortStore:
         self.tariff_rates: EntityStore = EntityStore()
         self.broker_cases: EntityStore = EntityStore()
         self.compliance_checks: EntityStore = EntityStore()
+        # Sprint 9.5 — shipping / forwarders / multimodal logistics
+        self.shipping_schedules: EntityStore = EntityStore()
+        self.carrier_contracts: EntityStore = EntityStore()
+        self.route_hubs: EntityStore = EntityStore()
+        self.logistics_routes: EntityStore = EntityStore()
+        self.transport_bookings: EntityStore = EntityStore()
+        self.transport_orders: EntityStore = EntityStore()
+        self.consolidation_batches: EntityStore = EntityStore()
+        self.fleet_assignments: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
