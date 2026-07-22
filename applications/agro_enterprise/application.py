@@ -13,6 +13,7 @@ from applications.agro_enterprise.precision_agriculture.facade import PrecisionA
 from applications.agro_enterprise.services import AgroDashboard, AgroKnowledge
 from applications.agro_enterprise.shared.store import AgroEnterpriseStore, agro_enterprise_store
 from applications.agro_enterprise.smart_irrigation.facade import SmartIrrigationSuite
+from applications.agro_enterprise.supply_chain.facade import SupplyChainSuite
 
 
 class AgroEnterpriseApplication:
@@ -25,6 +26,7 @@ class AgroEnterpriseApplication:
         irrigation: SmartIrrigationSuite | None = None,
         crop_ai_svc: CropAISuite | None = None,
         controlled_environment_svc: ControlledEnvironmentSuite | None = None,
+        supply_chain_svc: SupplyChainSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or agro_enterprise_store
@@ -38,6 +40,7 @@ class AgroEnterpriseApplication:
         self.irrigation = irrigation or SmartIrrigationSuite(self.store)
         self.crop_ai = crop_ai_svc or CropAISuite(self.store)
         self.controlled_environment = controlled_environment_svc or ControlledEnvironmentSuite(self.store)
+        self.supply_chain = supply_chain_svc or SupplyChainSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -146,6 +149,11 @@ class AgroEnterpriseApplication:
             "poultry_platform_ready": True,
             "aquaculture_platform_ready": True,
             "controlled_environment_agriculture_ready": True,
+            "supply_chain_ready": True,
+            "grain_elevator_ready": True,
+            "warehouse_platform_ready": True,
+            "export_logistics_ready": True,
+            "trading_platform_ready": True,
             "engines": {
                 "agro_marketplace": self.config.agro_marketplace,
                 "farm_registry": self.config.farm_registry,
@@ -157,6 +165,7 @@ class AgroEnterpriseApplication:
                 "smart_irrigation": self.config.smart_irrigation,
                 "crop_ai": self.config.crop_ai,
                 "controlled_environment": self.config.controlled_environment,
+                "supply_chain": self.config.supply_chain,
             },
             "marketplace": self.marketplace.status(),
             "farms": self.farms.status(),
@@ -168,6 +177,7 @@ class AgroEnterpriseApplication:
             "irrigation": self.irrigation.status(),
             "crop_ai": self.crop_ai.status(),
             "controlled_environment": self.controlled_environment.status(),
+            "supply_chain": self.supply_chain.status(),
         }
 
 

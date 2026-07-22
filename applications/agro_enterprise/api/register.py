@@ -10,6 +10,7 @@ from applications.agro_enterprise.api import (
     handlers,
     irrigation_handlers,
     precision_handlers,
+    supply_chain_handlers,
 )
 from applications.agro_enterprise.api.middleware import auth_middleware
 from applications.agro_enterprise.config import DEFAULT_CONFIG
@@ -118,3 +119,24 @@ def register_agro_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{ce}/dashboard", controlled_environment_handlers.ce_dashboard_handler)
     app.router.add_get(f"{ce}/knowledge", controlled_environment_handlers.ce_knowledge_handler)
     app.router.add_post(f"{ce}/knowledge", controlled_environment_handlers.ce_knowledge_handler)
+
+    # Sprint 14.5 — Agro Supply Chain (additive; prior sprint routes unchanged)
+    sc = DEFAULT_CONFIG.supply_chain_api_prefix
+    app.router.add_get(f"{sc}/health", supply_chain_handlers.sc_health_handler)
+    app.router.add_post(f"{sc}/bootstrap", supply_chain_handlers.sc_bootstrap_handler)
+    app.router.add_get(f"{sc}/supply", supply_chain_handlers.sc_supply_handler)
+    app.router.add_post(f"{sc}/supply", supply_chain_handlers.sc_supply_handler)
+    app.router.add_get(f"{sc}/elevator", supply_chain_handlers.sc_elevator_handler)
+    app.router.add_post(f"{sc}/elevator", supply_chain_handlers.sc_elevator_handler)
+    app.router.add_get(f"{sc}/quality", supply_chain_handlers.sc_quality_handler)
+    app.router.add_post(f"{sc}/quality", supply_chain_handlers.sc_quality_handler)
+    app.router.add_get(f"{sc}/warehouse", supply_chain_handlers.sc_warehouse_handler)
+    app.router.add_post(f"{sc}/warehouse", supply_chain_handlers.sc_warehouse_handler)
+    app.router.add_get(f"{sc}/logistics", supply_chain_handlers.sc_logistics_handler)
+    app.router.add_post(f"{sc}/logistics", supply_chain_handlers.sc_logistics_handler)
+    app.router.add_get(f"{sc}/export", supply_chain_handlers.sc_export_handler)
+    app.router.add_post(f"{sc}/export", supply_chain_handlers.sc_export_handler)
+    app.router.add_get(f"{sc}/dashboard", supply_chain_handlers.sc_dashboard_handler)
+    app.router.add_post(f"{sc}/dashboard", supply_chain_handlers.sc_dashboard_handler)
+    app.router.add_get(f"{sc}/knowledge", supply_chain_handlers.sc_knowledge_handler)
+    app.router.add_post(f"{sc}/knowledge", supply_chain_handlers.sc_knowledge_handler)

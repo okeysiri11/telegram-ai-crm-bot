@@ -39,8 +39,8 @@ def reset_store():
 
 def test_version_agro_enterprise_ready():
     health = agro_enterprise.health()
-    assert health["application_version"] == "4.3.4-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.3.3-enterprise"
+    assert health["application_version"] == "4.3.5-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.3.4-enterprise"
     assert health["agro_marketplace_ready"] is True
     assert health["farm_registry_ready"] is True
     assert health["crop_management_ready"] is True
@@ -85,7 +85,7 @@ def test_crm_and_knowledge():
 async def test_api_agro_enterprise(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.3.4-enterprise"
+    assert body["application_version"] == "4.3.5-enterprise"
     assert body["agro_marketplace_ready"] is True
     assert body["farm_registry_ready"] is True
 
@@ -130,8 +130,8 @@ def test_docs_and_regression_14_0():
     assert AGRO.application_version == "2.0.0"
     assert (ROOT / "applications" / "auto_marketplace" / "enterprise_certification" / "facade.py").exists()
     manifest = (ROOT / "applications" / "agro_enterprise" / "manifest.json").read_text()
-    assert "4.3.4-enterprise" in manifest
-    assert "14.4" in manifest
+    assert "4.3.5-enterprise" in manifest
+    assert "14.5" in manifest
     assert "auto_marketplace" in manifest
     # Sprint 14.0 foundation docs remain
     assert (ROOT / "docs" / "AGRO_PLATFORM.md").exists()
