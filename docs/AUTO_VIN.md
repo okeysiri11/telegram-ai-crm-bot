@@ -1,10 +1,10 @@
 # Auto VIN Intelligence — Sprint 10.2
 
-VIN decoding and OEM intelligence for **Auto Marketplace 4.1.3-enterprise** (`vin_engine = 1.0`).
+VIN decoding and OEM intelligence for **Auto Marketplace 4.1.4-enterprise** (`vin_engine = 1.0`).
 
 | Field | Value |
 |-------|-------|
-| Application version | `4.1.3-enterprise` |
+| Application version | `4.1.4-enterprise` |
 | VIN engine | `1.0` |
 | API | `/api/auto/v1/vin` · `/api/auto/v1/history` |
 

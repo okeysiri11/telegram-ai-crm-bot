@@ -255,6 +255,18 @@ class MarketplaceStore:
         self.dc_sales_ai: EntityStore = EntityStore()
         self.dc_dashboards: EntityStore = EntityStore()
         self.dc_integrations: EntityStore = EntityStore()
+        # Sprint 13.4 — Buyer AI
+        self.ba_profiles: EntityStore = EntityStore()
+        self.ba_listings: EntityStore = EntityStore()
+        self.ba_searches: EntityStore = EntityStore()
+        self.ba_recommendations: EntityStore = EntityStore()
+        self.ba_comparisons: EntityStore = EntityStore()
+        self.ba_negotiations: EntityStore = EntityStore()
+        self.ba_purchase_intel: EntityStore = EntityStore()
+        self.ba_protection: EntityStore = EntityStore()
+        self.ba_ownership: EntityStore = EntityStore()
+        self.ba_assistant: EntityStore = EntityStore()
+        self.ba_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

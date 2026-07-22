@@ -26,6 +26,7 @@ from applications.auto_marketplace.api import (
     vin_intelligence_handlers,
     inspection_ai_handlers,
     dealer_crm_handlers,
+    buyer_ai_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -729,3 +730,24 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{dc}/analytics", dealer_crm_handlers.dc_analytics_handler)
     app.router.add_get(f"{dc}/integrations", dealer_crm_handlers.dc_integrations_handler)
     app.router.add_post(f"{dc}/integrations", dealer_crm_handlers.dc_integrations_handler)
+
+    # Sprint 13.4 — Buyer AI (additive; prior sprint routes unchanged)
+    ba = config.buyer_ai_api_prefix
+    app.router.add_get(f"{ba}/health", buyer_ai_handlers.ba_health_handler)
+    app.router.add_post(f"{ba}/bootstrap", buyer_ai_handlers.ba_bootstrap_handler)
+    app.router.add_get(f"{ba}/profile", buyer_ai_handlers.ba_profile_handler)
+    app.router.add_post(f"{ba}/profile", buyer_ai_handlers.ba_profile_handler)
+    app.router.add_get(f"{ba}/search", buyer_ai_handlers.ba_search_handler)
+    app.router.add_post(f"{ba}/search", buyer_ai_handlers.ba_search_handler)
+    app.router.add_get(f"{ba}/negotiation", buyer_ai_handlers.ba_negotiation_handler)
+    app.router.add_post(f"{ba}/negotiation", buyer_ai_handlers.ba_negotiation_handler)
+    app.router.add_get(f"{ba}/purchase", buyer_ai_handlers.ba_purchase_handler)
+    app.router.add_post(f"{ba}/purchase", buyer_ai_handlers.ba_purchase_handler)
+    app.router.add_get(f"{ba}/protection", buyer_ai_handlers.ba_protection_handler)
+    app.router.add_post(f"{ba}/protection", buyer_ai_handlers.ba_protection_handler)
+    app.router.add_get(f"{ba}/ownership", buyer_ai_handlers.ba_ownership_handler)
+    app.router.add_post(f"{ba}/ownership", buyer_ai_handlers.ba_ownership_handler)
+    app.router.add_get(f"{ba}/assistant", buyer_ai_handlers.ba_assistant_handler)
+    app.router.add_post(f"{ba}/assistant", buyer_ai_handlers.ba_assistant_handler)
+    app.router.add_get(f"{ba}/dashboard", buyer_ai_handlers.ba_dashboard_handler)
+    app.router.add_post(f"{ba}/dashboard", buyer_ai_handlers.ba_dashboard_handler)
