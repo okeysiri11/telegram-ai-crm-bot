@@ -1,8 +1,8 @@
 # Automotive ERP
 
-**Version:** `4.1.6-enterprise`  
+**Version:** `4.1.7-enterprise`  
 **Sprint:** 13.6  
-**Foundation:** Enterprise Platform v4.1.5-enterprise  
+**Foundation:** Enterprise Platform v4.1.6-enterprise  
 **API:** `/api/automotive-erp/v1`
 
 Complete Automotive ERP for dealerships, service centers, fleet operators, logistics companies, and enterprise customers.

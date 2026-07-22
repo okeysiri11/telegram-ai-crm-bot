@@ -29,6 +29,7 @@ from applications.auto_marketplace.api import (
     buyer_ai_handlers,
     seller_ai_handlers,
     automotive_erp_handlers,
+    connected_cars_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -791,3 +792,24 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{ae}/analytics", automotive_erp_handlers.ae_analytics_handler)
     app.router.add_get(f"{ae}/integrations", automotive_erp_handlers.ae_integrations_handler)
     app.router.add_post(f"{ae}/integrations", automotive_erp_handlers.ae_integrations_handler)
+
+    # Sprint 13.7 — Connected Cars (additive; prior sprint routes unchanged)
+    cc = config.connected_cars_api_prefix
+    app.router.add_get(f"{cc}/health", connected_cars_handlers.cc_health_handler)
+    app.router.add_post(f"{cc}/bootstrap", connected_cars_handlers.cc_bootstrap_handler)
+    app.router.add_get(f"{cc}/core", connected_cars_handlers.cc_core_handler)
+    app.router.add_post(f"{cc}/core", connected_cars_handlers.cc_core_handler)
+    app.router.add_get(f"{cc}/telematics", connected_cars_handlers.cc_telematics_handler)
+    app.router.add_post(f"{cc}/telematics", connected_cars_handlers.cc_telematics_handler)
+    app.router.add_get(f"{cc}/remote", connected_cars_handlers.cc_remote_handler)
+    app.router.add_post(f"{cc}/remote", connected_cars_handlers.cc_remote_handler)
+    app.router.add_get(f"{cc}/predictive", connected_cars_handlers.cc_predictive_handler)
+    app.router.add_post(f"{cc}/predictive", connected_cars_handlers.cc_predictive_handler)
+    app.router.add_get(f"{cc}/fleet", connected_cars_handlers.cc_fleet_handler)
+    app.router.add_post(f"{cc}/fleet", connected_cars_handlers.cc_fleet_handler)
+    app.router.add_get(f"{cc}/smart", connected_cars_handlers.cc_smart_handler)
+    app.router.add_post(f"{cc}/smart", connected_cars_handlers.cc_smart_handler)
+    app.router.add_get(f"{cc}/dashboard", connected_cars_handlers.cc_dashboard_handler)
+    app.router.add_post(f"{cc}/dashboard", connected_cars_handlers.cc_dashboard_handler)
+    app.router.add_get(f"{cc}/knowledge", connected_cars_handlers.cc_knowledge_handler)
+    app.router.add_post(f"{cc}/knowledge", connected_cars_handlers.cc_knowledge_handler)

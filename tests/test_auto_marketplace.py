@@ -54,13 +54,13 @@ def reset_store():
 def test_version_modules_docs_bridges():
     health = auto_marketplace.health()
     assert health["application_name"] == "Auto Marketplace Enterprise Platform"
-    assert health["application_version"] == "4.1.6-enterprise"
+    assert health["application_version"] == "4.1.7-enterprise"
     assert health["platform_dependency"] == "AI Platform Core v3"
     assert health["ecosystem_dependency"] == "AI Ecosystem v1.5"
     assert "foundation" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "AUTO_MARKETPLACE.md"
     assert docs.exists()
-    assert "4.1.6-enterprise" in docs.read_text(encoding="utf-8")
+    assert "4.1.7-enterprise" in docs.read_text(encoding="utf-8")
     assert auto_marketplace.platform.platform_health()["platform_dependency"] == "AI Platform Core v3"
     assert auto_marketplace.ecosystem.ecosystem_health()["ecosystem_dependency"] == "AI Ecosystem v1.5"
     root = Path(__file__).resolve().parents[1] / "applications" / "auto_marketplace"
@@ -235,7 +235,7 @@ async def test_rest_foundation_endpoints(client: TestClient):
     health = await client.get("/api/auto/v1/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "4.1.6-enterprise"
+    assert body["application_version"] == "4.1.7-enterprise"
 
     catalog = await client.get("/api/auto/v1/catalog")
     assert catalog.status == 200

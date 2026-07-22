@@ -50,16 +50,16 @@ def reset_store():
 
 def test_version_modules_docs_bridges():
     health = auto_marketplace.health()
-    assert health["application_version"] == "4.1.6-enterprise"
+    assert health["application_version"] == "4.1.7-enterprise"
     assert health["service_engine"] == "1.0"
     assert health["parts_engine"] == "1.0"
     assert health["maintenance_engine"] == "1.0"
     assert "service" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "AUTO_SERVICE.md"
     assert docs.exists()
-    assert "4.1.6-enterprise" in docs.read_text(encoding="utf-8")
+    assert "4.1.7-enterprise" in docs.read_text(encoding="utf-8")
     mp = Path(__file__).resolve().parents[1] / "docs" / "AUTO_MARKETPLACE.md"
-    assert "4.1.6-enterprise" in mp.read_text(encoding="utf-8")
+    assert "4.1.7-enterprise" in mp.read_text(encoding="utf-8")
     assert auto_marketplace.platform.platform_health()["platform_dependency"] == "AI Platform Core v3"
     root = Path(__file__).resolve().parents[1] / "applications" / "auto_marketplace"
     for name in (
@@ -190,7 +190,7 @@ def test_appointments_warranty_diagnostics_history():
 async def test_service_api_routes(client: TestClient):
     health = await client.get("/api/auto/v1/health")
     body = await health.json()
-    assert body["application_version"] == "4.1.6-enterprise"
+    assert body["application_version"] == "4.1.7-enterprise"
     assert body["service_engine"] == "1.0"
 
     center = await client.post("/api/auto/v1/service/centers", json={"name": "API Center", "branch_code": "A1"})
