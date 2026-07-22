@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.port_erp.api import handlers, tracking_handlers
+from applications.port_erp.api import handlers, terminal_handlers, tracking_handlers
 from applications.port_erp.api.middleware import auth_middleware
 from applications.port_erp.config import DEFAULT_CONFIG
 
@@ -113,4 +113,63 @@ def register_port_erp_routes(app: web.Application) -> None:
     app.router.add_get(
         f"{prefix}/timeline/{{asset_type}}/{{asset_id}}",
         tracking_handlers.timeline_asset_handler,
+    )
+
+    # Sprint 9.3 — terminal / warehouse / yard / gate / equipment / planning
+    app.router.add_get(f"{prefix}/terminal", terminal_handlers.terminal_health_handler)
+    app.router.add_get(f"{prefix}/terminal/storage/optimize", terminal_handlers.storage_optimize_handler)
+
+    app.router.add_get(f"{prefix}/yard/blocks", terminal_handlers.yard_list_blocks_handler)
+    app.router.add_post(f"{prefix}/yard/blocks", terminal_handlers.yard_create_block_handler)
+    app.router.add_get(f"{prefix}/yard/slots", terminal_handlers.yard_list_slots_handler)
+    app.router.add_post(f"{prefix}/yard/assign", terminal_handlers.yard_assign_handler)
+    app.router.add_post(f"{prefix}/yard/relocate", terminal_handlers.yard_relocate_handler)
+    app.router.add_post(f"{prefix}/yard/release", terminal_handlers.yard_release_handler)
+    app.router.add_get(f"{prefix}/yard/density", terminal_handlers.yard_density_handler)
+
+    app.router.add_get(f"{prefix}/warehouse", terminal_handlers.warehouse_list_handler)
+    app.router.add_post(f"{prefix}/warehouse", terminal_handlers.warehouse_create_handler)
+    app.router.add_post(f"{prefix}/warehouse/zones", terminal_handlers.warehouse_zone_handler)
+    app.router.add_get(f"{prefix}/warehouse/inventory", terminal_handlers.warehouse_inventory_handler)
+    app.router.add_post(f"{prefix}/warehouse/inventory", terminal_handlers.warehouse_inventory_handler)
+    app.router.add_post(f"{prefix}/warehouse/tasks", terminal_handlers.warehouse_task_handler)
+    app.router.add_post(
+        f"{prefix}/warehouse/tasks/{{task_id}}/complete",
+        terminal_handlers.warehouse_complete_task_handler,
+    )
+    app.router.add_post(f"{prefix}/warehouse/cycle-counts", terminal_handlers.warehouse_cycle_count_handler)
+    app.router.add_post(f"{prefix}/warehouse/movements", terminal_handlers.warehouse_move_handler)
+
+    app.router.add_get(f"{prefix}/gate", terminal_handlers.gate_list_handler)
+    app.router.add_post(f"{prefix}/gate", terminal_handlers.gate_create_handler)
+    app.router.add_post(f"{prefix}/gate/{{gate_id}}/open", terminal_handlers.gate_open_handler)
+    app.router.add_post(f"{prefix}/gate/appointments", terminal_handlers.gate_appointment_handler)
+    app.router.add_post(f"{prefix}/gate/check-in", terminal_handlers.gate_checkin_handler)
+    app.router.add_post(f"{prefix}/gate/visits/{{visit_id}}/approve", terminal_handlers.gate_approve_handler)
+    app.router.add_post(f"{prefix}/gate/visits/{{visit_id}}/reject", terminal_handlers.gate_reject_handler)
+    app.router.add_post(f"{prefix}/gate/visits/{{visit_id}}/check-out", terminal_handlers.gate_checkout_handler)
+    app.router.add_get(f"{prefix}/gate/{{gate_id}}/queue", terminal_handlers.gate_queue_handler)
+
+    app.router.add_get(f"{prefix}/equipment", terminal_handlers.equipment_list_handler)
+    app.router.add_post(f"{prefix}/equipment", terminal_handlers.equipment_create_handler)
+    app.router.add_post(
+        f"{prefix}/equipment/{{equipment_id}}/maintenance",
+        terminal_handlers.equipment_maintenance_handler,
+    )
+    app.router.add_post(f"{prefix}/equipment/cranes/assign", terminal_handlers.crane_assign_handler)
+    app.router.add_post(
+        f"{prefix}/equipment/cranes/{{assignment_id}}/finish",
+        terminal_handlers.crane_finish_handler,
+    )
+    app.router.add_post(f"{prefix}/equipment/dispatch", terminal_handlers.dispatch_create_handler)
+    app.router.add_post(
+        f"{prefix}/equipment/dispatch/{{job_id}}/assign",
+        terminal_handlers.dispatch_assign_handler,
+    )
+
+    app.router.add_get(f"{prefix}/planning", terminal_handlers.planning_list_handler)
+    app.router.add_post(f"{prefix}/planning", terminal_handlers.planning_create_handler)
+    app.router.add_post(
+        f"{prefix}/planning/{{plan_id}}/activate",
+        terminal_handlers.planning_activate_handler,
     )

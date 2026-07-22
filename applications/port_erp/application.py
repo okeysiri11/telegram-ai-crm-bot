@@ -13,6 +13,10 @@ from applications.port_erp.operations.live import LivePortOperations, live_port_
 from applications.port_erp.port_core.engine import PortCoreEngine, port_core
 from applications.port_erp.security.permissions import PermissionService, permission_service
 from applications.port_erp.shared.store import PortStore, port_store
+from applications.port_erp.terminal_operations.engine import (
+    TerminalOperationsEngine,
+    terminal_operations_engine,
+)
 from applications.port_erp.tracking.engine import LiveTrackingEngine, live_tracking_engine
 
 
@@ -29,6 +33,7 @@ class PortERPApplication:
         billing: BillingService | None = None,
         permissions: PermissionService | None = None,
         tracking: LiveTrackingEngine | None = None,
+        terminal: TerminalOperationsEngine | None = None,
         live_operations: LivePortOperations | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -40,6 +45,7 @@ class PortERPApplication:
         self.billing = billing or billing_service
         self.permissions = permissions or permission_service
         self.tracking = tracking or live_tracking_engine
+        self.terminal = terminal or terminal_operations_engine
         self.live_operations = live_operations or live_port_operations
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -57,8 +63,10 @@ class PortERPApplication:
             "api_version": self.config.api_version,
             "port_core": self.config.port_core,
             "tracking_engine": self.config.tracking_engine,
+            "terminal_engine": self.config.terminal_engine,
             "metrics": self.core.metrics(),
             "tracking": self.tracking.metrics(),
+            "terminal": self.terminal.metrics(),
             "roles": self.permissions.roles(),
             "platform": self.platform.platform_health(),
             "ecosystem": self.ecosystem.ecosystem_health(),

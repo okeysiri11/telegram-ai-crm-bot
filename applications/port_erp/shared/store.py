@@ -62,6 +62,21 @@ class PortStore:
         self.truck_tracks: EntityStore = EntityStore()
         self.container_lifecycle: EntityStore = EntityStore()
         self.geofence_occupancy: EntityStore = EntityStore()
+        # Sprint 9.3 — terminal / yard / warehouse / gate / equipment / planning
+        self.yard_blocks: EntityStore = EntityStore()
+        self.yard_slots: EntityStore = EntityStore()
+        self.yard_relocations: EntityStore = EntityStore()
+        self.warehouse_zones: EntityStore = EntityStore()
+        self.inventory_items: EntityStore = EntityStore()
+        self.stock_movements: EntityStore = EntityStore()
+        self.warehouse_tasks: EntityStore = EntityStore()
+        self.cycle_counts: EntityStore = EntityStore()
+        self.gate_appointments: EntityStore = EntityStore()
+        self.gate_visits: EntityStore = EntityStore()
+        self.equipment: EntityStore = EntityStore()
+        self.crane_assignments: EntityStore = EntityStore()
+        self.dispatch_jobs: EntityStore = EntityStore()
+        self.terminal_plans: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
