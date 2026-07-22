@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.agro_enterprise.api import crop_ai_handlers, handlers, irrigation_handlers, precision_handlers
+from applications.agro_enterprise.api import (
+    controlled_environment_handlers,
+    crop_ai_handlers,
+    handlers,
+    irrigation_handlers,
+    precision_handlers,
+)
 from applications.agro_enterprise.api.middleware import auth_middleware
 from applications.agro_enterprise.config import DEFAULT_CONFIG
 
@@ -91,3 +97,24 @@ def register_agro_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{ca}/dashboard", crop_ai_handlers.ca_dashboard_handler)
     app.router.add_get(f"{ca}/knowledge", crop_ai_handlers.ca_knowledge_handler)
     app.router.add_post(f"{ca}/knowledge", crop_ai_handlers.ca_knowledge_handler)
+
+    # Sprint 14.4 — Controlled Environment (additive; prior sprint routes unchanged)
+    ce = DEFAULT_CONFIG.controlled_environment_api_prefix
+    app.router.add_get(f"{ce}/health", controlled_environment_handlers.ce_health_handler)
+    app.router.add_post(f"{ce}/bootstrap", controlled_environment_handlers.ce_bootstrap_handler)
+    app.router.add_get(f"{ce}/greenhouse", controlled_environment_handlers.ce_greenhouse_handler)
+    app.router.add_post(f"{ce}/greenhouse", controlled_environment_handlers.ce_greenhouse_handler)
+    app.router.add_get(f"{ce}/climate-ai", controlled_environment_handlers.ce_climate_ai_handler)
+    app.router.add_post(f"{ce}/climate-ai", controlled_environment_handlers.ce_climate_ai_handler)
+    app.router.add_get(f"{ce}/livestock", controlled_environment_handlers.ce_livestock_handler)
+    app.router.add_post(f"{ce}/livestock", controlled_environment_handlers.ce_livestock_handler)
+    app.router.add_get(f"{ce}/poultry", controlled_environment_handlers.ce_poultry_handler)
+    app.router.add_post(f"{ce}/poultry", controlled_environment_handlers.ce_poultry_handler)
+    app.router.add_get(f"{ce}/aquaculture", controlled_environment_handlers.ce_aquaculture_handler)
+    app.router.add_post(f"{ce}/aquaculture", controlled_environment_handlers.ce_aquaculture_handler)
+    app.router.add_get(f"{ce}/biosecurity", controlled_environment_handlers.ce_biosecurity_handler)
+    app.router.add_post(f"{ce}/biosecurity", controlled_environment_handlers.ce_biosecurity_handler)
+    app.router.add_get(f"{ce}/dashboard", controlled_environment_handlers.ce_dashboard_handler)
+    app.router.add_post(f"{ce}/dashboard", controlled_environment_handlers.ce_dashboard_handler)
+    app.router.add_get(f"{ce}/knowledge", controlled_environment_handlers.ce_knowledge_handler)
+    app.router.add_post(f"{ce}/knowledge", controlled_environment_handlers.ce_knowledge_handler)

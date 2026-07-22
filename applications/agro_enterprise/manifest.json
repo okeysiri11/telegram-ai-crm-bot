@@ -1,15 +1,16 @@
 {
   "application_name": "Agro Enterprise Platform",
   "application": "agro_enterprise",
-  "application_version": "4.3.3-enterprise",
-  "release_status": "Crop AI",
+  "application_version": "4.3.4-enterprise",
+  "release_status": "Controlled Environment Agriculture",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v4.3.2-enterprise",
+  "enterprise_foundation": "Enterprise Platform v4.3.3-enterprise",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "14.3",
+  "sprint": "14.4",
   "precision_agriculture": "1.0",
   "smart_irrigation": "1.0",
   "crop_ai": "1.0",
+  "controlled_environment": "1.0",
   "modules": {
     "marketplace": "1.0",
     "farm_registry": "1.0",
@@ -24,6 +25,12 @@
     "pest_intelligence": "1.0",
     "yield_intelligence": "1.0",
     "autonomous_farm": "1.0",
+    "controlled_environment": "1.0",
+    "smart_greenhouse": "1.0",
+    "livestock": "1.0",
+    "poultry": "1.0",
+    "aquaculture": "1.0",
+    "biosecurity": "1.0",
     "api": "4.3"
   },
   "does_not_modify": [

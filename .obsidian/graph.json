@@ -11,28 +11,28 @@
       "query": "tag:#dashboard",
       "color": {
         "a": 1,
-        "rgb": 80
+        "rgb": 11850270
       }
     },
     {
       "query": "tag:#agent",
       "color": {
         "a": 1,
-        "rgb": 120
+        "rgb": 16384000
       }
     },
     {
       "query": "tag:#platform",
       "color": {
         "a": 1,
-        "rgb": 40
+        "rgb": 8456842
       }
     },
     {
       "query": "tag:#app",
       "color": {
         "a": 1,
-        "rgb": 200
+        "rgb": 574629
       }
     },
     {
@@ -53,14 +53,14 @@
       "query": "tag:#knowledge-1.2",
       "color": {
         "a": 1,
-        "rgb": 300
+        "rgb": 16711829
       }
     },
     {
       "query": "tag:#knowledge-1.3",
       "color": {
         "a": 1,
-        "rgb": 20
+        "rgb": 6513681
       }
     },
     {
@@ -81,6 +81,6 @@
   "repelStrength": 10.7630208333333,
   "linkStrength": 0.419487847222222,
   "linkDistance": 316,
-  "scale": 0.21965823520213434,
+  "scale": 0.1978141016619499,
   "close": false
 }
