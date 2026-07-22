@@ -25,20 +25,21 @@ Roadmap items respect layering: Core frozen → Ecosystem extends → Apps evolv
 | Ecosystem 1.5.0-alpha | 2026-07 | Sprints 7.1–7.6 |
 | Agro / Port / Auto 2.0.0 | 2026-07 | 8.x / 9.x / 10.x |
 | Drone 11.1 foundation | 2026-07 | 1.0.0-alpha |
-| Knowledge 1.1 living docs | 2026-07 | This vault |
+| Knowledge 1.1 living docs | 2026-07 | Obsidian vault |
+| Knowledge 1.2 Documentation Assistant | 2026-07 | Incremental sync + Git + validation |
 
 ### Current
 | Milestone | Est. | Notes |
 |-----------|------|-------|
-| Knowledge 1.1 adoption | 2026-07 | Obsidian graph + dashboards in daily use |
+| Knowledge 1.2 adoption | 2026-07 | Run `update_docs.py` after sprints |
 
 ### Planned
 | Milestone | Est. | Dependencies |
 |-----------|------|--------------|
 | Drone 11.2 manufacturing/fleet depth | 2026-08–10 | 11.1 |
 | Ecosystem 1.6 universal app registry | 2026-09–11 | 7.6 |
-| Legal Platform L1.0 productization | 2026-10–12 | Knowledge 1.1, Core |
-| Knowledge 1.2 OpenAPI embeds + canvas packs | 2026-09 | Knowledge 1.1 |
+| Legal Platform L1.0 productization | 2026-10–12 | Knowledge 1.2, Core |
+| Knowledge 1.3 link auto-fix + CI hook | 2026-09 | Knowledge 1.2 |
 
 ### Future
 | Milestone | Est. | Notes |

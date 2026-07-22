@@ -3,64 +3,53 @@ title: Sprint Progress
 aliases:
   - Sprint Progress
 tags:
-  - sprints
-  - knowledge-1.1
+  - dashboard
+  - knowledge-1.2
 generated: 2026-07-22
-sprint: Knowledge 1.1
+sprint: Knowledge 1.2
 ---
-
 # Sprint Progress
 
 ## Overview
-Progress board for completed, current, and planned sprints.
+Automatically updated dashboard (Sprint Progress) — Knowledge 1.2.
 
 ## Architecture
-```mermaid
-gantt
-  title AI Ecosystem Sprint Streams
-  dateFormat  YYYY.MM
-  section Platform
-  Core 1.5-5.5           :done, 2026.01, 2026.07
-  section Ecosystem
-  Eco 7.1-7.6            :done, 2026.06, 2026.07
-  section Apps
-  Auto 6.x/10.x          :done, 2026.05, 2026.07
-  Agro 8.x               :done, 2026.06, 2026.07
-  Port 9.x               :done, 2026.06, 2026.07
-  Drone 11.1             :done, 2026.07, 2026.07
-  Knowledge 1.1          :active, 2026.07, 2026.07
-  section Future
-  Drone 11.2+            :crit, 2026.08, 2026.10
-  Eco 1.6                :2026.09, 2026.11
-  Legal L1.0             :2026.10, 2026.12
-```
+Driven by Documentation Assistant incremental sync.
 
 ## Components
-- **Completed:** Platform 1.5–5.5, Eco 7.x, Agro 8.x, Port 9.x, Auto 6.x+10.x, Drone 11.1, Knowledge 1.1
-- **Current:** Knowledge 1.1 rollout / adoption in Obsidian
-- **Planned:** Drone 11.2+, Ecosystem 1.6, Legal L1.0
-- Full table: [[registries/SPRINT_REGISTRY]]
+**Completion:** 84.2% (16/19)
+
+### Current
+- Knowledge 1.2 — AI Documentation Assistant
+
+### Completed (summary)
+- Platform 1.5–5.5 · Eco 7.x · Agro 8.x · Port 9.x · Auto 6.x/10.x · Drone 11.1 · Knowledge 1.1–1.2
+
+### Planned
+- Drone 11.2+ · Ecosystem 1.6 · Legal L1.0
+
+[[registries/SPRINT_REGISTRY]] · [[reports/SPRINT_TRACKER]]
 
 ## Relationships
-[[PLATFORM_TIMELINE]] · [[sprints/PLATFORM]] · [[sprints/PORT_ERP]] · [[sprints/AUTO_MARKETPLACE]] · [[sprints/DRONE_PLATFORM]]
+[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
 
 ## Responsibilities
-Show percent-complete and dependencies for planning.
+Keep stakeholders synchronized with project state.
 
 ## Interfaces
-Gantt + registry.
+`python3 knowledge/tools/update_dashboards.py`
 
 ## REST APIs
-N/A
+[[registries/API_REGISTRY]]
 
 ## Events
-Sprint close → update registry JSON → run generator.
+dashboard_updated
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-[[CHANGELOG]]
+Git + snapshot
 
 ## Related pages
-[[PROJECT_STATUS]] · [[DASHBOARD]] · [[INDEX]]
+[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]

@@ -48,6 +48,13 @@
         "a": 1,
         "rgb": 160
       }
+    },
+    {
+      "query": "tag:#knowledge-1.2",
+      "color": {
+        "a": 1,
+        "rgb": 300
+      }
     }
   ],
   "collapse-display": false,

@@ -1,37 +1,56 @@
+---
+title: Knowledge Tools
+aliases:
+  - Knowledge Tools README
+tags:
+  - tools
+  - knowledge-1.2
+---
+
 # Knowledge Tools
 
 ## Overview
-Documentation tooling for Sprint Knowledge 1.1.
+Automation utilities for the Obsidian knowledge vault (Sprints Knowledge 1.1–1.2).
 
 ## Architecture
-`generate_docs.py` reads `../data/ecosystem_registry.json` and writes registries, statistics, agents, hubs, changelog, and release notes.
+| Script | Purpose |
+|--------|---------|
+| `documentation_assistant.py` | Core assistant engine |
+| `generate_docs.py` | Registry generator (1.1) |
+| `update_docs.py` | Incremental doc sync |
+| `build_graph.py` | Mermaid automation |
+| `update_dashboards.py` | Dashboard refresh |
+| `check_links.py` | Validation report |
+| `release_notes.py` | Release notes + changelog |
+| `project_report.py` | Project report |
+| `update_everything.py` | Full pipeline |
 
 ## Components
-- `generate_docs.py` — main generator
-- `../data/ecosystem_registry.json` — source of truth
+- Data: `../data/ecosystem_registry.json`, `../data/project_snapshot.json`
+- Docs: [[automation/DOCUMENTATION_ASSISTANT]] · [[automation/DOCUMENTATION_AUTOMATION]]
 
 ## Relationships
-[[automation/DOCUMENTATION_AUTOMATION]] · [[standards/DOCUMENTATION_STANDARDS]]
+Outputs land only under `knowledge/` and `.obsidian/`.
 
 ## Responsibilities
-Regenerate living Markdown after sprints without touching application code.
+Keep documentation synchronized without touching application source code.
 
 ## Interfaces
 ```bash
-python3 knowledge/tools/generate_docs.py
+python3 knowledge/tools/update_everything.py
 ```
 
 ## REST APIs
 N/A
 
 ## Events
-Manual or CI-triggered documentation regeneration.
+CLI invocation → analysis → write markdown → save snapshot
 
 ## Future roadmap
-Knowledge 1.2 read-only manifest scanners.
+CI workflow calling `update_docs.py` on merge.
 
 ## References
-[[registries/SPRINT_REGISTRY]]
+[[VALIDATION_REPORT]] · [[ARCHITECTURE_CHANGES]]
 
 ## Related pages
-[[INDEX]] · [[CHANGELOG]]
+[[INDEX]] · [[DASHBOARD]]

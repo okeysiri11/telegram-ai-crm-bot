@@ -2,54 +2,54 @@
 title: Dashboard
 aliases:
   - Dashboard
-  - Knowledge Dashboard
 tags:
   - dashboard
-  - knowledge-1.1
+  - knowledge-1.2
 generated: 2026-07-22
-sprint: Knowledge 1.1
+sprint: Knowledge 1.2
 ---
-
 # Dashboard
 
 ## Overview
-Primary operational dashboard for the AI Ecosystem knowledge vault (Sprint Knowledge 1.1).
+Automatically updated dashboard (Dashboard) — Knowledge 1.2.
 
 ## Architecture
-Aggregates status from registries, statistics, and sprint progress into one navigation surface.
+Driven by Documentation Assistant incremental sync.
 
 ## Components
-| Panel | Link |
-|-------|------|
-| Executive | [[EXECUTIVE_DASHBOARD]] |
-| Architecture | [[ARCHITECTURE_DASHBOARD]] |
-| Project status | [[PROJECT_STATUS]] |
-| Sprint progress | [[SPRINT_PROGRESS]] |
-| Statistics | [[statistics/STATISTICS]] |
-| Sprint registry | [[registries/SPRINT_REGISTRY]] |
-| Agent registry | [[registries/AGENT_REGISTRY]] |
-| API registry | [[registries/API_REGISTRY]] |
+| Panel | Status |
+|-------|--------|
+| Git branch | `main` |
+| Latest commit | `527d9ad` |
+| Changed files | 29 |
+| Modules | 70 |
+| Agents | 12 |
+| API prefixes | 4 |
+| Sprint completion | 84.2% |
+| Assistant | Knowledge 1.2 Ready |
+
+[[EXECUTIVE_DASHBOARD]] · [[ARCHITECTURE_DASHBOARD]] · [[reports/SPRINT_TRACKER]] · [[statistics/STATISTICS]]
 
 ## Relationships
-Entry from [[INDEX]]. Deep dives into [[Platform Core]], [[Auto Marketplace]], [[Port ERP]], [[Agro Marketplace]], [[Drone Platform]].
+[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
 
 ## Responsibilities
-Give engineers and stakeholders a single pane for living documentation health.
+Keep stakeholders synchronized with project state.
 
 ## Interfaces
-Obsidian note + wiki links + Mermaid (see architecture dashboard).
+`python3 knowledge/tools/update_dashboards.py`
 
 ## REST APIs
-See [[registries/API_REGISTRY]].
+[[registries/API_REGISTRY]]
 
 ## Events
-Documentation regeneration after sprints.
+dashboard_updated
 
 ## Future roadmap
-Embed live CI badges in Knowledge 1.2.
+[[ROADMAP]]
 
 ## References
-[[releases/RELEASE_NOTES]] · [[CHANGELOG]]
+Git + snapshot
 
 ## Related pages
-[[ROADMAP]] · [[diagrams/PLATFORM_GRAPH]] · [[AI Agents]]
+[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]

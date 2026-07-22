@@ -4,57 +4,68 @@ aliases:
   - Release Notes
 tags:
   - releases
-  - knowledge-1.1
+  - knowledge-1.2
 generated: 2026-07-22
-sprint: Knowledge 1.1
+sprint: Knowledge 1.2
 ---
 # Release Notes
 
-> Living release notes · generated 2026-07-22
+> Generated 2026-07-22 by Documentation Assistant
 
 ## Overview
-Release notes spanning Platform Core certification, commercial verticals, Drone foundation, and Knowledge 1.1.
+Automatically generated release notes from Git history and module/API/agent detection.
 
 ## Architecture
-Releases align to sprint streams; Knowledge releases only touch `knowledge/` and `.obsidian/`.
+Knowledge-only release pipeline; runtime packages untouched.
 
 ## Components
-### Platform Core 3.0.0
-- Certified PASS (100.0); frozen baseline
+### Completed features (detected)
+- Knowledge 1.2 Documentation Assistant incremental sync
 
-### Ecosystem 1.5.0-alpha
-- Sprints 7.1–7.6 complete
+### Breaking changes
+- None detected
 
-### Agro / Port / Auto 2.0.0
-- Commercial / enterprise releases complete
+### New APIs
+- None detected
 
-### Drone Platform 1.0.0-alpha
-- Sprint 11.1 foundation complete
+### New AI Agents
+- None detected
 
-### Knowledge 1.1.0
-- Obsidian living documentation system
-- Registries, dashboards, agent graph, Mermaid diagrams, generator
+### Version history
+| Version | Stream | Notes |
+|---------|--------|-------|
+| 1.2.0 | Knowledge | AI Documentation Assistant |
+| 1.1.0 | Knowledge | Living Obsidian documentation system |
+| 1.0.0-alpha | Drone | Foundation Sprint 11.1 |
+| 2.0.0 | Auto/Port/Agro | Commercial / enterprise releases |
+| 1.5.0-alpha | Ecosystem | Governance complete |
+| 3.0.0 | Platform Core | Certified baseline |
+
+### Git context
+- Branch: `main`
+- Latest commit: `527d9ad` — Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
+- Tags: v1.2.0-alpha, v1.1.0-alpha, platform-core-v1.0.0-rc1
 
 ## Relationships
-[[CHANGELOG]] · [[PLATFORM_TIMELINE]] · [[registries/SPRINT_REGISTRY]]
+[[CHANGELOG]] · [[ARCHITECTURE_CHANGES]] · [[registries/SPRINT_REGISTRY]]
 
 ## Responsibilities
-Communicate version status to stakeholders.
+Summarize completed features, breaking changes, APIs, and agents.
 
 ## Interfaces
-Markdown + registry JSON.
+`python3 knowledge/tools/release_notes.py`
 
 ## REST APIs
-No runtime API; documentation only.
+See [[registries/API_REGISTRY]]
 
 ## Events
-Release publication events recorded in changelog.
+release_notes_regenerated
 
 ## Future roadmap
-Knowledge 1.2 — deeper OpenAPI embeds and canvas packs.
+[[ROADMAP]]
 
 ## References
-Root `CHANGELOG.md`, app `*_RELEASE.md` docs.
+Git log + project snapshot
 
 ## Related pages
 [[INDEX]] · [[DASHBOARD]] · [[EXECUTIVE_DASHBOARD]]

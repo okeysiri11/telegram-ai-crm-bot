@@ -185,6 +185,15 @@
   },
   "active": "3afcbb5720da978c",
   "lastOpenFiles": [
+    "knowledge/automation/DOCUMENTATION_ASSISTANT.md",
+    "knowledge/tools/update_everything.py",
+    "knowledge/tools/project_report.py",
+    "knowledge/tools/release_notes.py",
+    "knowledge/tools/check_links.py",
+    "knowledge/tools/update_dashboards.py",
+    "knowledge/tools/build_graph.py",
+    "knowledge/tools/update_docs.py",
+    "knowledge/tools/documentation_assistant.py",
     "knowledge/tools/README.md",
     "knowledge/sprints/registry/FUTURE_PLATFORMS.md",
     "knowledge/sprints/registry/DRONE_PLATFORM_SPRINTS.md",
@@ -210,16 +219,7 @@
     "knowledge/diagrams/architecture/PORT_ERP_DETAIL.md",
     "knowledge/diagrams/architecture/AUTO_MARKETPLACE_DETAIL.md",
     "knowledge/diagrams/architecture/PLUGIN_SDK_DETAIL.md",
-    "knowledge/diagrams/architecture/WORKFLOW_ENGINE_DETAIL.md",
     "knowledge/tools/generate_docs.py",
-    "knowledge/sprints/registry",
-    "knowledge/diagrams/mindmaps",
-    "knowledge/diagrams/flows",
-    "knowledge/diagrams/architecture",
-    "knowledge/excalidraw",
-    "knowledge/canvas",
-    "knowledge/templates",
-    "knowledge/automation",
-    "knowledge/standards"
+    "knowledge/sprints/registry"
   ]
 }

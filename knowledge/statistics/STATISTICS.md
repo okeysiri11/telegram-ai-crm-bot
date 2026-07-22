@@ -29,10 +29,10 @@ Metrics derived from `ecosystem_registry.json` (documentation system source of t
 | Commercial/completed apps | 3 |
 | AI Agents documented | 12 |
 | API surfaces | 7 |
-| Sprints total | 18 |
-| Sprints completed | 15 |
+| Sprints total | 19 |
+| Sprints completed | 16 |
 | Sprints planned | 3 |
-| Sprint completion % | 83.3% |
+| Sprint completion % | 84.2% |
 | Documentation coverage | Living vault (Knowledge 1.1) |
 | Platform maturity | Production Core + Commercial Verticals + Drone Alpha + Living Docs |
 

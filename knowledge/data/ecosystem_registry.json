@@ -1,9 +1,9 @@
 {
   "meta": {
-    "sprint": "Knowledge 1.1",
-    "title": "AI Documentation System for Obsidian",
+    "sprint": "Knowledge 1.2",
+    "title": "AI Documentation Assistant",
     "status": "completed",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "platform_core": "3.0.0",
     "ecosystem": "1.5.0-alpha"
   },
@@ -410,6 +410,16 @@
       "status": "planned",
       "deps": [
         "7.1-7.6"
+      ]
+    },
+    {
+      "id": "K1.2",
+      "stream": "Knowledge",
+      "purpose": "AI Documentation Assistant incremental sync",
+      "version": "1.2.0",
+      "status": "completed",
+      "deps": [
+        "K1.1"
       ]
     }
   ]

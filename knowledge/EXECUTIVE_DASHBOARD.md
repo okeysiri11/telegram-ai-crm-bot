@@ -4,65 +4,51 @@ aliases:
   - Executive Dashboard
 tags:
   - dashboard
-  - executive
-  - knowledge-1.1
+  - knowledge-1.2
 generated: 2026-07-22
-sprint: Knowledge 1.1
+sprint: Knowledge 1.2
 ---
-
 # Executive Dashboard
 
 ## Overview
-Executive view of platform maturity, commercial releases, and roadmap posture.
+Automatically updated dashboard (Executive Dashboard) — Knowledge 1.2.
 
 ## Architecture
-```mermaid
-mindmap
-  root((AI Ecosystem))
-    Platform Core 3.0
-      Certified
-      Memory
-      Orchestrator
-    Ecosystem 1.5
-      Assistant
-      Governance
-    Commercial Apps
-      Agro 2.0
-      Port 2.0
-      Auto 2.0
-    Emerging
-      Drone 1.0-alpha
-      Legal scaffold
-      Knowledge 1.1
-```
+Driven by Documentation Assistant incremental sync.
 
 ## Components
-- Maturity: Platform Core **Production Ready**
-- Commercial: Agro, Port, Auto at **2.0.0**
-- Foundation: Drone **1.0.0-alpha**
-- Documentation: Knowledge **1.1** living vault
-- Metrics: [[statistics/STATISTICS]]
+### Portfolio posture
+- Platform Core 3.0.0 — Production Ready
+- Ecosystem 1.5.0-alpha — complete
+- Agro / Port / Auto — 2.0.0 commercial
+- Drone — 1.0.0-alpha foundation
+- Knowledge — **1.2 Documentation Assistant**
+
+### Delivery signals
+- Sprint completion **84.2%**
+- Pending roadmap items tracked in [[ROADMAP]]
+- Architecture diff: [[ARCHITECTURE_CHANGES]]
 
 ## Relationships
-[[PROJECT_STATUS]] · [[ROADMAP]] · [[releases/RELEASE_NOTES]] · [[SPRINT_PROGRESS]]
+[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
 
 ## Responsibilities
-Communicate completion status and investment focus without engineering noise.
+Keep stakeholders synchronized with project state.
 
 ## Interfaces
-This dashboard note; exportable to PDF via Obsidian.
+`python3 knowledge/tools/update_dashboards.py`
 
 ## REST APIs
-Strategic surfaces listed in [[API_REFERENCE]].
+[[registries/API_REGISTRY]]
 
 ## Events
-Release milestones recorded in [[CHANGELOG]].
+dashboard_updated
 
 ## Future roadmap
-Legal productization; Drone 11.2+; Ecosystem 1.6 — [[ROADMAP]].
+[[ROADMAP]]
 
 ## References
-`platform_manifest.json`, app manifests.
+Git + snapshot
 
 ## Related pages
-[[DASHBOARD]] · [[INDEX]] · [[EXECUTIVE_DASHBOARD]]
+[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]

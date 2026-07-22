@@ -1,29 +1,32 @@
 ---
-title: Changelog
+title: Project Report
 aliases:
-  - Changelog
+  - Project Report
 tags:
-  - changelog
+  - report
   - knowledge-1.2
 generated: 2026-07-22
 sprint: Knowledge 1.2
 ---
-# Changelog
+# Project Report
 
 ## Overview
-Living changelog maintained by the Documentation Assistant.
+Consolidated project report generated 2026-07-22.
 
 ## Architecture
-Entries derived from sprint registry + latest Git signals.
+Combines Git context, module scan, change set, and documentation outputs.
 
 ## Components
-### [1.2.0] Knowledge 1.2 — 2026-07-22
-- AI Documentation Assistant
-- Incremental documentation updates
-- Git integration, architecture diff, validation report
-- CLI: update_docs, build_graph, update_dashboards, check_links, release_notes, project_report, update_everything
+- Branch: `main`
+- Commit: `527d9ad` — Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
+- Changed files: 11
+- Added modules: 70
+- Removed modules: 0
+- Modified modules: 0
+- API change signals: 4
+- Files written this run: 24
 
-### Recent commits
+### Recent log
 - 527d9ad 2026-07-22 Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
 - 2195fce 2026-07-22 Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
 - a5e4516 2026-07-22 Refactor CRM event handling to optimize publish/subscribe interactions and improve code clarity. This update enhances integration with the event bus and supports the ongoing unification of event management across the platform.
@@ -32,38 +35,53 @@ Entries derived from sprint registry + latest Git signals.
 - e872bc6 2026-07-22 Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
 - 5f1977f 2026-07-22 Refactor CRM event handling to optimize publish/subscribe interactions and enhance code clarity. This update improves integration with the event bus and supports the ongoing unification of event management across the platform.
 - 5ae8f7c 2026-07-22 Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
-- dd4ef53 2026-07-22 Refactor CRM event handling to improve publish/subscribe interactions and enhance code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
-- 00e5459 2026-07-22 Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
 
-### [1.1.0] Knowledge 1.1
-- Living Obsidian documentation system
-
-### Platform / Apps (summary)
-- Platform Core 3.0.0 certified
-- Ecosystem 1.5.0-alpha
-- Agro/Port/Auto 2.0.0
-- Drone 1.0.0-alpha (11.1)
+### Written outputs
+- `ARCHITECTURE_CHANGES.md`
+- `reports/SPRINT_TRACKER.md`
+- `registries/SPRINT_REGISTRY.md`
+- `registries/API_REGISTRY.md`
+- `registries/AGENT_REGISTRY.md`
+- `releases/RELEASE_NOTES.md`
+- `CHANGELOG.md`
+- `diagrams/automation/ARCHITECTURE_GRAPH.md`
+- `diagrams/automation/DEPENDENCY_GRAPH.md`
+- `diagrams/automation/WORKFLOW_GRAPH.md`
+- `diagrams/automation/AGENT_GRAPH.md`
+- `diagrams/automation/APPLICATION_GRAPH.md`
+- `diagrams/automation/DEPLOYMENT_GRAPH.md`
+- `diagrams/automation/API_GRAPH.md`
+- `diagrams/automation/KNOWLEDGE_GRAPH.md`
+- `INDEX.md`
+- `DASHBOARD.md`
+- `EXECUTIVE_DASHBOARD.md`
+- `PROJECT_STATUS.md`
+- `SPRINT_PROGRESS.md`
+- `ARCHITECTURE_DASHBOARD.md`
+- `VALIDATION_REPORT.md`
+- `canvas/INDEX.md`
+- `reports/DAILY_NOTES_INDEX.md`
 
 ## Relationships
-[[releases/RELEASE_NOTES]] · [[PLATFORM_TIMELINE]]
+[[DASHBOARD]] · [[VALIDATION_REPORT]] · [[ARCHITECTURE_CHANGES]]
 
 ## Responsibilities
-Keep human-readable history current.
+Single printable status artifact for the vault.
 
 ## Interfaces
-Assistant release_notes + update_docs
+`python3 knowledge/tools/project_report.py`
 
 ## REST APIs
-N/A
+[[registries/API_REGISTRY]]
 
 ## Events
-changelog_updated
+project_report_generated
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-Root `CHANGELOG.md` remains Platform RC1 source of truth
+Git + snapshot
 
 ## Related pages
-[[SPRINT_PROGRESS]] · [[INDEX]]
+[[INDEX]] · [[releases/RELEASE_NOTES]]

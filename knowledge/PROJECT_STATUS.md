@@ -3,52 +3,52 @@ title: Project Status
 aliases:
   - Project Status
 tags:
-  - status
-  - knowledge-1.1
+  - dashboard
+  - knowledge-1.2
 generated: 2026-07-22
-sprint: Knowledge 1.1
+sprint: Knowledge 1.2
 ---
-
 # Project Status
 
 ## Overview
-Current delivery status across the AI Ecosystem portfolio.
+Automatically updated dashboard (Project Status) — Knowledge 1.2.
 
 ## Architecture
-Status dimensions: Core · Ecosystem · Applications · Knowledge.
+Driven by Documentation Assistant incremental sync.
 
 ## Components
-| Stream | Version | Status |
-|--------|---------|--------|
-| Platform Core | 3.0.0 | ✅ Production Ready |
-| Ecosystem | 1.5.0-alpha | ✅ Sprint 7.6 complete |
-| Agro Marketplace | 2.0.0 | ✅ Commercial |
-| Port ERP | 2.0.0 | ✅ Enterprise |
-| Auto Marketplace | 2.0.0 | ✅ Commercial |
-| Drone Platform | 1.0.0-alpha | ✅ Foundation (11.1) |
-| Legal Platform | scaffold | 🔜 Planned |
-| Knowledge | 1.1.0 | ✅ Living docs |
+| Stream | Status |
+|--------|--------|
+| Platform Core | ✅ 3.0.0 |
+| Ecosystem | ✅ 1.5.0-alpha |
+| Agro / Port / Auto | ✅ 2.0.0 |
+| Drone | ✅ 11.1 foundation |
+| Knowledge 1.1 | ✅ Living docs |
+| Knowledge 1.2 | ✅ Assistant |
+| Legal | 🔜 planned |
+
+Git: `main` / `527d9ad` — Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
 
 ## Relationships
-[[SPRINT_PROGRESS]] · [[statistics/STATISTICS]] · [[ROADMAP]]
+[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
 
 ## Responsibilities
-Single source for “what is done vs planned”.
+Keep stakeholders synchronized with project state.
 
 ## Interfaces
-Vault note; data mirrored from registry JSON.
+`python3 knowledge/tools/update_dashboards.py`
 
 ## REST APIs
-Production APIs online per [[registries/API_REGISTRY]].
+[[registries/API_REGISTRY]]
 
 ## Events
-Status transitions on sprint completion.
+dashboard_updated
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-[[registries/SPRINT_REGISTRY]] · [[releases/RELEASE_NOTES]]
+Git + snapshot
 
 ## Related pages
-[[DASHBOARD]] · [[EXECUTIVE_DASHBOARD]] · [[INDEX]]
+[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]

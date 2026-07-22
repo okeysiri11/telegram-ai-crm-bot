@@ -4,75 +4,50 @@ aliases:
   - Architecture Dashboard
 tags:
   - dashboard
-  - architecture
-  - knowledge-1.1
+  - knowledge-1.2
 generated: 2026-07-22
-sprint: Knowledge 1.1
+sprint: Knowledge 1.2
 ---
-
 # Architecture Dashboard
 
 ## Overview
-Visual architecture control panel with Mermaid diagrams for Core, AI, apps, and relationships.
+Automatically updated dashboard (Architecture Dashboard) — Knowledge 1.2.
 
 ## Architecture
-```mermaid
-flowchart TB
-  subgraph Docs[Knowledge Vault]
-    IDX[INDEX]
-    REG[Registries]
-    DIA[Diagrams]
-  end
-  subgraph Runtime[Runtime]
-    CORE[Platform Core]
-    ECO[Ecosystem]
-    APPS[Applications]
-  end
-  IDX --> REG
-  IDX --> DIA
-  APPS -->|bridges| ECO
-  APPS -->|bridges| CORE
-  ECO --> CORE
-```
+Driven by Documentation Assistant incremental sync.
 
 ## Components
-| Diagram | Page |
-|---------|------|
-| Platform Core | [[diagrams/architecture/PLATFORM_CORE_DETAIL]] |
-| Platform AI | [[diagrams/architecture/PLATFORM_AI]] |
-| Memory | [[diagrams/architecture/MEMORY_ENGINE_DETAIL]] |
-| Workflow | [[diagrams/architecture/WORKFLOW_ENGINE_DETAIL]] |
-| Plugin SDK | [[diagrams/architecture/PLUGIN_SDK_DETAIL]] |
-| Auto | [[diagrams/architecture/AUTO_MARKETPLACE_DETAIL]] |
-| Port | [[diagrams/architecture/PORT_ERP_DETAIL]] |
-| Agro | [[diagrams/architecture/AGRO_MARKETPLACE_DETAIL]] |
-| Drone | [[diagrams/architecture/DRONE_PLATFORM_DETAIL]] |
-| Legal | [[diagrams/architecture/LEGAL_PLATFORM_DETAIL]] |
-| CRM | [[diagrams/architecture/CRM_DETAIL]] |
-| Relationships | [[diagrams/architecture/MODULE_RELATIONSHIPS]] |
-| Deployment | [[diagrams/flows/DEPLOYMENT]] |
-| Knowledge Graph | [[diagrams/mindmaps/KNOWLEDGE_MAP]] |
+### Automated graphs
+[[diagrams/automation/ARCHITECTURE_GRAPH]] · [[diagrams/automation/DEPENDENCY_GRAPH]] · [[diagrams/automation/WORKFLOW_GRAPH]]
+[[diagrams/automation/AGENT_GRAPH]] · [[diagrams/automation/APPLICATION_GRAPH]] · [[diagrams/automation/DEPLOYMENT_GRAPH]]
+[[diagrams/automation/API_GRAPH]] · [[diagrams/automation/KNOWLEDGE_GRAPH]]
+
+### Diff
+[[ARCHITECTURE_CHANGES]]
+
+### Classic diagrams
+[[diagrams/PLATFORM_GRAPH]] · [[diagrams/APPLICATION_GRAPH]] · [[diagrams/AGENT_GRAPH]] · [[diagrams/DATA_FLOW]]
 
 ## Relationships
-[[ARCHITECTURE]] · [[diagrams/PLATFORM_GRAPH]] · [[diagrams/APPLICATION_GRAPH]] · [[diagrams/AGENT_GRAPH]] · [[diagrams/DATA_FLOW]]
+[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
 
 ## Responsibilities
-Keep architecture visualization current after each sprint via documentation automation.
+Keep stakeholders synchronized with project state.
 
 ## Interfaces
-Mermaid in Markdown; Obsidian native rendering.
+`python3 knowledge/tools/update_dashboards.py`
 
 ## REST APIs
-[[diagrams/flows/API_COMMUNICATION]]
+[[registries/API_REGISTRY]]
 
 ## Events
-Architecture change notes in sprint registry entries.
+dashboard_updated
 
 ## Future roadmap
-Excalidraw canvases under `knowledge/excalidraw/`.
+[[ROADMAP]]
 
 ## References
-`docs/architecture.md`
+Git + snapshot
 
 ## Related pages
-[[Platform Core]] · [[Plugin SDK]] · [[Memory Engine]] · [[Workflow Engine]]
+[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]

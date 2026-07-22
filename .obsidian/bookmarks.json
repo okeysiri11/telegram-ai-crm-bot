@@ -2,57 +2,51 @@
   "items": [
     {
       "type": "file",
-      "ctime": 1721650000000,
+      "ctime": 1721651000000,
       "path": "knowledge/INDEX.md",
-      "title": "INDEX — Home"
+      "title": "INDEX"
     },
     {
       "type": "file",
-      "ctime": 1721650000001,
+      "ctime": 1721651000001,
       "path": "knowledge/DASHBOARD.md",
       "title": "Dashboard"
     },
     {
       "type": "file",
-      "ctime": 1721650000002,
-      "path": "knowledge/EXECUTIVE_DASHBOARD.md",
-      "title": "Executive Dashboard"
+      "ctime": 1721651000002,
+      "path": "knowledge/VALIDATION_REPORT.md",
+      "title": "Validation"
     },
     {
       "type": "file",
-      "ctime": 1721650000003,
-      "path": "knowledge/ARCHITECTURE_DASHBOARD.md",
-      "title": "Architecture Dashboard"
+      "ctime": 1721651000003,
+      "path": "knowledge/ARCHITECTURE_CHANGES.md",
+      "title": "Architecture Diff"
     },
     {
       "type": "file",
-      "ctime": 1721650000004,
+      "ctime": 1721651000004,
+      "path": "knowledge/automation/DOCUMENTATION_ASSISTANT.md",
+      "title": "Doc Assistant"
+    },
+    {
+      "type": "file",
+      "ctime": 1721651000005,
+      "path": "knowledge/reports/PROJECT_REPORT.md",
+      "title": "Project Report"
+    },
+    {
+      "type": "file",
+      "ctime": 1721651000006,
       "path": "knowledge/SPRINT_PROGRESS.md",
       "title": "Sprint Progress"
     },
     {
       "type": "file",
-      "ctime": 1721650000005,
-      "path": "knowledge/Platform Core.md",
-      "title": "Platform Core"
-    },
-    {
-      "type": "file",
-      "ctime": 1721650000006,
-      "path": "knowledge/AI Agents.md",
-      "title": "AI Agents"
-    },
-    {
-      "type": "file",
-      "ctime": 1721650000007,
-      "path": "knowledge/registries/SPRINT_REGISTRY.md",
-      "title": "Sprint Registry"
-    },
-    {
-      "type": "file",
-      "ctime": 1721650000008,
-      "path": "knowledge/ROADMAP.md",
-      "title": "Roadmap"
+      "ctime": 1721651000007,
+      "path": "knowledge/diagrams/automation/README.md",
+      "title": "Automated Graphs"
     }
   ]
 }

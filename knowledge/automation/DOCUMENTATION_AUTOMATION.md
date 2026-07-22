@@ -47,7 +47,7 @@ None — documentation tooling only.
 `sprint_completed` → update JSON → run generator → commit knowledge diffs
 
 ## Future roadmap
-Knowledge 1.2: optional read-only manifest scanners; canvas pack generation.
+Superseded/extended by [[automation/DOCUMENTATION_ASSISTANT]] (Knowledge **1.2** incremental assistant). Next: Knowledge 1.3 CI hook + broken-link stubs.
 
 ## References
 [[standards/DOCUMENTATION_STANDARDS]] · [[releases/RELEASE_NOTES]]
