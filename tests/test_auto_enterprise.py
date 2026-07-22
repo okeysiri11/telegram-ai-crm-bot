@@ -42,7 +42,7 @@ def reset_store():
 
 def test_version_modules_docs_bridges():
     health = auto_marketplace.health()
-    assert health["application_version"] == "2.0.0"
+    assert health["application_version"] == "4.1.0-enterprise"
     assert health["enterprise_engine"] == "1.0"
     assert health["global_network"] == "1.0"
     assert health["production_ready"] is True
@@ -50,7 +50,7 @@ def test_version_modules_docs_bridges():
     root = Path(__file__).resolve().parents[1]
     for doc in ("AUTO_ENTERPRISE.md", "AUTO_RELEASE.md", "AUTO_MARKETPLACE.md"):
         text = (root / "docs" / doc).read_text(encoding="utf-8")
-        assert "2.0.0" in text
+        assert "4.1.0-enterprise" in text
     assert auto_marketplace.platform.platform_health()["platform_dependency"] == "AI Platform Core v3"
     app_root = root / "applications" / "auto_marketplace"
     for name in (
@@ -106,7 +106,7 @@ def test_network_and_partners():
 
 def test_production_validation_and_release():
     report = auto_marketplace.enterprise.production.generate_report()
-    assert report.application_version == "2.0.0"
+    assert report.application_version == "4.1.0-enterprise"
     assert report.production_ready is True
     assert report.certified is True
     assert report.migration_ok is True
@@ -114,7 +114,7 @@ def test_production_validation_and_release():
     assert not failed, failed
     cert = auto_marketplace.enterprise.release.certify()
     assert cert["certified"] is True
-    pre = auto_marketplace.enterprise.deployment.preflight(version="2.0.0")
+    pre = auto_marketplace.enterprise.deployment.preflight(version="4.1.0-enterprise")
     assert pre["ok"] is True
     deep = auto_marketplace.enterprise.health.deep()
     assert deep["production_ready"] is True
@@ -125,7 +125,7 @@ def test_production_validation_and_release():
 async def test_enterprise_api_routes(client: TestClient):
     health = await client.get("/api/auto/v1/health")
     body = await health.json()
-    assert body["application_version"] == "2.0.0"
+    assert body["application_version"] == "4.1.0-enterprise"
     assert body["production_ready"] is True
 
     deep = await client.get("/api/auto/v1/health/deep")

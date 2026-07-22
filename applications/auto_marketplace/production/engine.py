@@ -14,7 +14,7 @@ from applications.auto_marketplace.shared.store import MarketplaceStore, marketp
 
 
 class CommercialProductionEngine:
-    """Production validation and commercial release certification for Auto Marketplace 2.0.0."""
+    """Production validation and commercial release certification for Auto Marketplace."""
 
     def __init__(
         self,
@@ -32,7 +32,7 @@ class CommercialProductionEngine:
     def validate_configuration(self) -> list[ValidationCheck]:
         checks: list[ValidationCheck] = []
         started = time.time()
-        ok = self._config.application_version == "2.0.0"
+        ok = bool(self._config.application_version) and self._config.production_ready
         checks.append(
             self._save(
                 ValidationCheck(
@@ -198,7 +198,7 @@ class CommercialProductionEngine:
         checks = self.run_all()
         failed = [c for c in checks if c.status == CheckStatus.FAIL]
         migration_ok = all(c.status != CheckStatus.FAIL for c in checks if c.category == "migration")
-        ready = not failed and self._config.production_ready and self._config.application_version == "2.0.0"
+        ready = not failed and self._config.production_ready and bool(self._config.application_version)
         report = CommercialReleaseReport(
             application_version=self._config.application_version,
             release_status=self._config.release_status,

@@ -1,11 +1,14 @@
 {
   "application": "auto_marketplace",
-  "application_name": "Auto Marketplace",
-  "application_version": "2.0.0",
-  "release_status": "Commercial Release",
+  "application_name": "Auto Marketplace Enterprise Platform",
+  "application_version": "4.1.0-enterprise",
+  "release_status": "Enterprise Automotive Suite",
   "platform_dependency": "AI Platform Core v3",
+  "enterprise_foundation": "Enterprise Platform v4.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "enterprise_engine": "1.0",
+  "enterprise_automotive_suite": "1.0",
   "global_network": "1.0",
-  "production_ready": true
+  "production_ready": true,
+  "sprint": "13.0"
 }

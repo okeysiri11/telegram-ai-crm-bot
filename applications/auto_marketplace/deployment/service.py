@@ -8,7 +8,7 @@ from typing import Any
 class DeploymentService:
     CHECKLIST = [
         {"id": "pre.1", "step": "Run production validation suite", "required": True},
-        {"id": "pre.2", "step": "Verify application_version = 2.0.0", "required": True},
+        {"id": "pre.2", "step": "Verify application_version matches release config", "required": True},
         {"id": "pre.2b", "step": "Verify production_ready = true", "required": True},
         {"id": "pre.3", "step": "Create pre-deployment backup", "required": True},
         {"id": "pre.4", "step": "Verify Platform Core v3 connectivity", "required": True},

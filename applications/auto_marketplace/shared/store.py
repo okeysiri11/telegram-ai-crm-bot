@@ -202,6 +202,22 @@ class MarketplaceStore:
         self.commercial_validation_checks: EntityStore = EntityStore()
         self.commercial_release_reports: EntityStore = EntityStore()
         self.enterprise_audit_logs: EntityStore = EntityStore()
+        # Sprint 13.0 — Enterprise Automotive Suite
+        self.ea_vehicles: EntityStore = EntityStore()
+        self.ea_vins: EntityStore = EntityStore()
+        self.ea_dealers: EntityStore = EntityStore()
+        self.ea_customers: EntityStore = EntityStore()
+        self.ea_auctions: EntityStore = EntityStore()
+        self.ea_imports: EntityStore = EntityStore()
+        self.ea_inventory: EntityStore = EntityStore()
+        self.ea_ai_results: EntityStore = EntityStore()
+        self.ea_sales: EntityStore = EntityStore()
+        self.ea_leads: EntityStore = EntityStore()
+        self.ea_communications: EntityStore = EntityStore()
+        self.ea_followups: EntityStore = EntityStore()
+        self.ea_reports: EntityStore = EntityStore()
+        self.ea_integrations: EntityStore = EntityStore()
+        self.ea_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

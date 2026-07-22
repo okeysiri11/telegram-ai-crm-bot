@@ -186,7 +186,9 @@ async def production_manifest_handler(_request: web.Request) -> web.Response:
 
 
 async def production_preflight_handler(request: web.Request) -> web.Response:
-    version = request.query.get("version", "2.0.0")
+    from applications.auto_marketplace.config import DEFAULT_CONFIG
+
+    version = request.query.get("version", DEFAULT_CONFIG.application_version)
     return json_response(auto_marketplace.enterprise.deployment.preflight(version=version))
 
 

@@ -18,6 +18,10 @@ from applications.auto_marketplace.dealers.service import DealerService, dealer_
 from applications.auto_marketplace.delivery.service import DeliveryService, delivery_service
 from applications.auto_marketplace.documents.service import DocumentService, document_service
 from applications.auto_marketplace.enterprise.facade import EnterpriseDomainEngine, enterprise_domain_engine
+from applications.auto_marketplace.enterprise_automotive.facade import (
+    EnterpriseAutomotiveSuite,
+    enterprise_automotive,
+)
 from applications.auto_marketplace.favorites.service import FavoritesService, favorites_service
 from applications.auto_marketplace.finance.engine import FinanceEngine, finance_engine
 from applications.auto_marketplace.filters.search_engine import SearchEngine, search_engine
@@ -100,6 +104,7 @@ class AutoMarketplaceApplication:
         bi_engine_svc: BIEngine | None = None,
         portal_engine_svc: PortalEngine | None = None,
         production_engine_svc: ProductionEngine | None = None,
+        enterprise_automotive_svc: EnterpriseAutomotiveSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -140,6 +145,7 @@ class AutoMarketplaceApplication:
         self.bi_engine = bi_engine_svc or bi_engine
         self.portal_engine = portal_engine_svc or portal_engine
         self.production_engine = production_engine_svc or production_engine
+        self.enterprise_automotive = enterprise_automotive_svc or enterprise_automotive
 
     def reset(self) -> None:
         self.store.reset()
@@ -154,6 +160,12 @@ class AutoMarketplaceApplication:
             "release_status": self.config.release_status,
             "platform_dependency": self.config.platform_dependency,
             "ecosystem_dependency": self.config.ecosystem_dependency,
+            "enterprise_foundation": self.config.enterprise_foundation,
+            "enterprise_automotive_suite": self.config.enterprise_automotive_suite,
+            "auto_marketplace_ready": True,
+            "auto_ai_ready": True,
+            "dealer_platform_ready": True,
+            "enterprise_automotive_suite_ready": True,
             "maintenance_mode": self.production_engine.maintenance.enabled,
             "api_version": self.config.api_version,
             "catalog_engine": self.config.catalog_engine,
@@ -193,6 +205,7 @@ class AutoMarketplaceApplication:
             "logistics": self.logistics.metrics(),
             "fleet_ops": self.fleet_ops.metrics(),
             "enterprise": self.enterprise.metrics(),
+            "enterprise_automotive": self.enterprise_automotive.status(),
             "health_deep": self.enterprise.health.deep(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),

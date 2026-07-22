@@ -10,6 +10,7 @@ from applications.auto_marketplace.api import (
     bi_handlers,
     catalog_handlers,
     crm_handlers,
+    enterprise_automotive_handlers,
     enterprise_handlers,
     finance_handlers,
     fleet_handlers,
@@ -649,3 +650,22 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{webhooks_prefix}/payments", webhooks.payment_webhook_handler)
     app.router.add_post(f"{webhooks_prefix}/delivery", webhooks.delivery_webhook_handler)
     app.router.add_post(f"{webhooks_prefix}/crm", webhooks.crm_webhook_handler)
+
+    # Sprint 13.0 — Enterprise Automotive Suite (additive API; existing /api/auto/v1 unchanged)
+    ea = config.enterprise_api_prefix
+    app.router.add_get(f"{ea}/health", enterprise_automotive_handlers.ea_health_handler)
+    app.router.add_post(f"{ea}/bootstrap", enterprise_automotive_handlers.ea_bootstrap_handler)
+    app.router.add_get(f"{ea}/marketplace", enterprise_automotive_handlers.ea_marketplace_handler)
+    app.router.add_post(f"{ea}/marketplace", enterprise_automotive_handlers.ea_marketplace_handler)
+    app.router.add_get(f"{ea}/ai", enterprise_automotive_handlers.ea_ai_handler)
+    app.router.add_post(f"{ea}/ai", enterprise_automotive_handlers.ea_ai_handler)
+    app.router.add_get(f"{ea}/sales", enterprise_automotive_handlers.ea_sales_handler)
+    app.router.add_post(f"{ea}/sales", enterprise_automotive_handlers.ea_sales_handler)
+    app.router.add_get(f"{ea}/crm", enterprise_automotive_handlers.ea_crm_handler)
+    app.router.add_post(f"{ea}/crm", enterprise_automotive_handlers.ea_crm_handler)
+    app.router.add_get(f"{ea}/analytics", enterprise_automotive_handlers.ea_analytics_handler)
+    app.router.add_post(f"{ea}/analytics", enterprise_automotive_handlers.ea_analytics_handler)
+    app.router.add_get(f"{ea}/integrations", enterprise_automotive_handlers.ea_integrations_handler)
+    app.router.add_post(f"{ea}/integrations", enterprise_automotive_handlers.ea_integrations_handler)
+    app.router.add_get(f"{ea}/dashboard", enterprise_automotive_handlers.ea_dashboard_handler)
+    app.router.add_post(f"{ea}/dashboard", enterprise_automotive_handlers.ea_dashboard_handler)

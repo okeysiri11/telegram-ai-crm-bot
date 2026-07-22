@@ -40,7 +40,7 @@ def reset_store():
 
 def test_version_modules_docs_bridges():
     health = auto_marketplace.health()
-    assert health["application_version"] == "2.0.0"
+    assert health["application_version"] == "4.1.0-enterprise"
     assert health["transaction_engine"] == "1.0"
     assert health["auction_engine"] == "1.0"
     assert health["finance_engine"] == "1.0"
@@ -48,9 +48,9 @@ def test_version_modules_docs_bridges():
     assert "transactions" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "AUTO_TRANSACTIONS.md"
     assert docs.exists()
-    assert "2.0.0" in docs.read_text(encoding="utf-8")
+    assert "4.1.0-enterprise" in docs.read_text(encoding="utf-8")
     mp = Path(__file__).resolve().parents[1] / "docs" / "AUTO_MARKETPLACE.md"
-    assert "2.0.0" in mp.read_text(encoding="utf-8")
+    assert "4.1.0-enterprise" in mp.read_text(encoding="utf-8")
     assert auto_marketplace.platform.platform_health()["platform_dependency"] == "AI Platform Core v3"
     root = Path(__file__).resolve().parents[1] / "applications" / "auto_marketplace"
     for name in (
@@ -155,7 +155,7 @@ def test_vehicle_transaction_workflow():
 async def test_transaction_api_routes(client: TestClient):
     health = await client.get("/api/auto/v1/health")
     body = await health.json()
-    assert body["application_version"] == "2.0.0"
+    assert body["application_version"] == "4.1.0-enterprise"
     assert body["transaction_engine"] == "1.0"
 
     create = await client.post(

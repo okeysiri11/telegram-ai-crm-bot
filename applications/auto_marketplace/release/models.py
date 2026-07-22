@@ -7,6 +7,8 @@ import time
 from dataclasses import dataclass, field
 from typing import Any
 
+from applications.auto_marketplace.config import DEFAULT_CONFIG
+
 
 def _ts() -> float:
     return time.time()
@@ -65,8 +67,8 @@ class PerformanceBenchmark:
 
 @dataclass
 class ReleaseReport:
-    application_version: str = "2.0.0"
-    release_status: str = "Commercial Release"
+    application_version: str = field(default_factory=lambda: DEFAULT_CONFIG.application_version)
+    release_status: str = field(default_factory=lambda: DEFAULT_CONFIG.release_status)
     platform_dependency: str = "AI Platform Core v3"
     validations: list[ValidationResult] = field(default_factory=list)
     benchmarks: list[PerformanceBenchmark] = field(default_factory=list)

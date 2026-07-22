@@ -8,6 +8,8 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Any
 
+from applications.auto_marketplace.config import DEFAULT_CONFIG
+
 
 def _id() -> str:
     return str(uuid.uuid4())
@@ -190,8 +192,8 @@ class ValidationCheck:
 @dataclass
 class CommercialReleaseReport:
     report_id: str = field(default_factory=_id)
-    application_version: str = "2.0.0"
-    release_status: str = "Commercial Release"
+    application_version: str = field(default_factory=lambda: DEFAULT_CONFIG.application_version)
+    release_status: str = field(default_factory=lambda: DEFAULT_CONFIG.release_status)
     production_ready: bool = False
     checks: list[ValidationCheck] = field(default_factory=list)
     migration_ok: bool = False
