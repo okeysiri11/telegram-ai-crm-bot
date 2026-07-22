@@ -52,6 +52,10 @@ def create_app() -> web.Application:
 
     register_port_erp_routes(app)
 
+    from applications.drone_platform.api.register import register_drone_platform_routes
+
+    register_drone_platform_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 

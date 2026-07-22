@@ -1,0 +1,82 @@
+# Drone Platform — Foundation (Sprint 11.1)
+
+**Version:** `1.0.0-alpha`  
+**Status:** Foundation Alpha  
+**API prefix:** `/api/drone/v1`
+
+Engineering ERP + AI workspace for UAV development, manufacturing, configuration, testing, maintenance, and fleet management. Integrates with AI Platform Core and AI Ecosystem via **bridge interfaces only**.
+
+## Scope
+
+This application lives under `applications/drone_platform/` only. It does **not** modify Platform Core, Ecosystem, Agro Marketplace, Port ERP, or Auto Marketplace.
+
+## Package layout
+
+```
+applications/drone_platform/
+  api/ models/ registry/ projects/ engineering/ firmware/
+  missions/ telemetry/ inventory/ warehouse/ manufacturing/
+  simulation/ ai/ documentation/ integrations/ analytics/ shared/
+```
+
+## Capabilities
+
+### Component registry
+
+Catalogs UAVs and component types: frames, motors, ESC, flight controllers, GPS, compass, telemetry radios, ELRS, receivers, cameras, VTX, antennas, batteries, chargers, sensors, payloads, servos, power modules, airspeed sensors, rangefinders, companion computers.
+
+### Engineering projects
+
+Projects with versions, BOM, CAD/PCB references, wiring diagrams, assembly instructions, engineering documentation, revision history, and notes.
+
+### Firmware workspace
+
+Supports ArduPilot, PX4, INAV, and Betaflight projects with catalog/versions, parameter compare/backup/restore/templates, configuration import/export, firmware backup/restore, log organization, and firmware documentation.
+
+### Mission planning
+
+Missions with waypoints, rally points, geofences, payload configuration, flight profiles, templates, and history.
+
+### Inventory & warehouse
+
+Warehouses, suppliers, purchasing, stock, reservations, serial numbers, batches, and component lifecycle.
+
+### Documentation
+
+Manuals, engineering wiki, assembly guides, maintenance procedures, wiring diagrams, firmware notes, and build history.
+
+### AI engineering assistant
+
+Agents for firmware analysis, configuration review, parameter explanation, log interpretation, hardware compatibility, troubleshooting, engineering documentation, build recommendations, and diagnostics.
+
+Policy: engineering assistance only — not intended for misuse.
+
+## REST API
+
+| Area | Paths |
+|------|--------|
+| Health | `GET /api/drone/v1/health` |
+| Registry | `/registry`, `/registry/types`, `/registry/components`, `/registry/uavs` |
+| Projects | `/projects`, `/projects/{id}/versions` |
+| Engineering | `/engineering/{project_id}` |
+| Firmware | `/firmware`, `/firmware/projects`, `/firmware/parameters`, `/firmware/compare`, `/firmware/templates`, `/firmware/export`, `/firmware/import`, `/firmware/backup`, `/firmware/restore` |
+| Missions | `/missions`, `/missions/{id}/waypoints` |
+| Telemetry | `/telemetry/sessions`, `/telemetry/sessions/{id}/samples` |
+| Inventory | `/inventory/warehouses`, `/suppliers`, `/stock`, `/reservations`, `/purchase-orders` |
+| Documentation | `/documentation` |
+| AI | `/ai`, `/ai/assist` |
+
+## Bridges
+
+- `integrations/platform_bridge.py` — optional Platform Core hooks (stub-safe)
+- `integrations/ecosystem_bridge.py` — optional Ecosystem tenant hooks (stub-safe)
+
+## Sprint 11.1 completion checklist
+
+- Drone Platform Foundation Ready
+- Engineering Ready
+- Firmware Workspace Ready
+- Mission Planning Ready
+- Inventory Ready
+- AI Engineering Assistant Ready
+- Version `1.0.0-alpha`

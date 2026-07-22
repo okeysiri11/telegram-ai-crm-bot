@@ -1,0 +1,33 @@
+{
+  "application_name": "Drone Platform",
+  "application": "drone_platform",
+  "application_version": "1.0.0-alpha",
+  "release_status": "Foundation Alpha",
+  "platform_dependency": "AI Platform Core v3",
+  "ecosystem_dependency": "AI Ecosystem v1.5",
+  "registry_engine": "1.0",
+  "engineering_engine": "1.0",
+  "firmware_engine": "1.0",
+  "mission_engine": "1.0",
+  "inventory_engine": "1.0",
+  "ai_engine": "1.0",
+  "modules": {
+    "api": "1.0",
+    "models": "1.0",
+    "registry": "1.0",
+    "projects": "1.0",
+    "engineering": "1.0",
+    "firmware": "1.0",
+    "missions": "1.0",
+    "telemetry": "1.0",
+    "inventory": "1.0",
+    "warehouse": "1.0",
+    "manufacturing": "1.0",
+    "simulation": "1.0",
+    "ai": "1.0",
+    "documentation": "1.0",
+    "integrations": "1.0",
+    "analytics": "1.0",
+    "shared": "1.0"
+  }
+}
