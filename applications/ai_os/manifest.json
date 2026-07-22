@@ -1,0 +1,18 @@
+{
+  "application_name": "AI Operating System",
+  "application": "ai_os",
+  "application_version": "3.4.0-alpha",
+  "release_status": "AI OS Alpha",
+  "platform_dependency": "AI Platform Core v3.0",
+  "sprint": "12.4",
+  "modules": {
+    "kernel": "1.0",
+    "process": "1.0",
+    "bus": "1.0",
+    "memory": "1.0",
+    "runtime": "1.0",
+    "services": "1.0",
+    "api": "3.4"
+  },
+  "does_not_modify": ["platform_core", "existing_applications"]
+}
