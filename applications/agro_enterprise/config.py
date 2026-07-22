@@ -1,4 +1,4 @@
-# Agro Enterprise Platform — Sprint 14.7 AI Agronomist.
+# Agro Enterprise Platform — Sprint 14.8 Certification & Production Release.
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class AgroEnterpriseConfig:
     application_name: str = "Agro Enterprise Platform"
     application: str = "agro_enterprise"
-    application_version: str = "4.3.7-enterprise"
-    release_status: str = "AI Agronomist"
+    application_version: str = "4.4.0-enterprise"
+    release_status: str = "Production Ready"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.3.6-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.3.7-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/agro-enterprise/v1"
@@ -23,6 +23,7 @@ class AgroEnterpriseConfig:
     supply_chain_api_prefix: str = "/api/agro-supply-chain/v1"
     agro_finance_api_prefix: str = "/api/agro-finance/v1"
     ai_agronomist_api_prefix: str = "/api/ai-agronomist/v1"
+    enterprise_certification_api_prefix: str = "/api/agro-enterprise-certification/v1"
     internal_prefix: str = "/internal/agro-enterprise/v1"
     agro_marketplace: str = "1.0"
     farm_registry: str = "1.0"
@@ -37,6 +38,7 @@ class AgroEnterpriseConfig:
     supply_chain: str = "1.0"
     agro_finance: str = "1.0"
     ai_agronomist: str = "1.0"
+    enterprise_certification: str = "1.0"
     listing_categories: list[str] = field(
         default_factory=lambda: ["crops", "seeds", "fertilizers", "equipment", "services"]
     )

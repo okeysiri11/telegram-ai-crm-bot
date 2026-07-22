@@ -220,6 +220,9 @@ class AgroEnterpriseStore:
         self.aa_strategies: EntityStore = EntityStore()
         self.aa_dashboards: EntityStore = EntityStore()
         self.aa_registries: EntityStore = EntityStore()
+        # Sprint 14.8 — Enterprise Certification
+        self.aec_runs: EntityStore = EntityStore()
+        self.aec_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

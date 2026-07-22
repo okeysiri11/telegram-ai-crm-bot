@@ -1,0 +1,28 @@
+{
+  "service": "agro_enterprise",
+  "application_version": "4.4.0-enterprise",
+  "api_prefixes": [
+    "/api/agro-enterprise/v1",
+    "/api/precision-agriculture/v1",
+    "/api/smart-irrigation/v1",
+    "/api/crop-ai/v1",
+    "/api/controlled-environment/v1",
+    "/api/agro-supply-chain/v1",
+    "/api/agro-finance/v1",
+    "/api/ai-agronomist/v1",
+    "/api/agro-enterprise-certification/v1"
+  ],
+  "healthchecks": [
+    "/api/agro-enterprise/v1/health",
+    "/api/precision-agriculture/v1/health",
+    "/api/smart-irrigation/v1/health",
+    "/api/crop-ai/v1/health",
+    "/api/controlled-environment/v1/health",
+    "/api/agro-supply-chain/v1/health",
+    "/api/agro-finance/v1/health",
+    "/api/ai-agronomist/v1/health",
+    "/api/agro-enterprise-certification/v1/health"
+  ],
+  "config_template": "config.template.env",
+  "checklist": "PRODUCTION_CHECKLIST.md"
+}

@@ -9,6 +9,7 @@ from applications.agro_enterprise.api import (
     ai_agronomist_handlers,
     controlled_environment_handlers,
     crop_ai_handlers,
+    enterprise_certification_handlers,
     handlers,
     irrigation_handlers,
     precision_handlers,
@@ -184,3 +185,19 @@ def register_agro_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{aa}/dashboard", ai_agronomist_handlers.aa_dashboard_handler)
     app.router.add_get(f"{aa}/knowledge", ai_agronomist_handlers.aa_knowledge_handler)
     app.router.add_post(f"{aa}/knowledge", ai_agronomist_handlers.aa_knowledge_handler)
+
+    # Sprint 14.8 — Agro Enterprise Certification (additive; prior sprint routes unchanged)
+    aec = DEFAULT_CONFIG.enterprise_certification_api_prefix
+    app.router.add_get(f"{aec}/health", enterprise_certification_handlers.aec_health_handler)
+    app.router.add_post(f"{aec}/bootstrap", enterprise_certification_handlers.aec_bootstrap_handler)
+    app.router.add_get(f"{aec}/architecture", enterprise_certification_handlers.aec_architecture_handler)
+    app.router.add_get(f"{aec}/integration", enterprise_certification_handlers.aec_integration_handler)
+    app.router.add_get(f"{aec}/performance", enterprise_certification_handlers.aec_performance_handler)
+    app.router.add_get(f"{aec}/security", enterprise_certification_handlers.aec_security_handler)
+    app.router.add_get(f"{aec}/documentation", enterprise_certification_handlers.aec_documentation_handler)
+    app.router.add_get(f"{aec}/quality", enterprise_certification_handlers.aec_quality_handler)
+    app.router.add_post(f"{aec}/quality", enterprise_certification_handlers.aec_quality_handler)
+    app.router.add_get(f"{aec}/release", enterprise_certification_handlers.aec_release_handler)
+    app.router.add_get(f"{aec}/executive", enterprise_certification_handlers.aec_executive_handler)
+    app.router.add_get(f"{aec}/dashboard", enterprise_certification_handlers.aec_dashboard_handler)
+    app.router.add_post(f"{aec}/dashboard", enterprise_certification_handlers.aec_dashboard_handler)

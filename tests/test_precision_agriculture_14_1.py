@@ -40,8 +40,8 @@ def reset_store():
 
 def test_version_precision_ready():
     health = agro_enterprise.health()
-    assert health["application_version"] == "4.3.7-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.3.6-enterprise"
+    assert health["application_version"] == "4.4.0-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.3.7-enterprise"
     assert health["precision_agriculture_ready"] is True
     assert health["gis_platform_ready"] is True
     assert health["drone_integration_ready"] is True
@@ -81,7 +81,7 @@ def test_drone_satellite_iot_ai():
 async def test_api_precision_agriculture(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.3.7-enterprise"
+    assert body["application_version"] == "4.4.0-enterprise"
     assert body["precision_agriculture_ready"] is True
     assert body["drone_integration_ready"] is True
 
@@ -133,5 +133,5 @@ def test_docs_and_regression_14_1():
     assert AUTO.application_version == "4.2.0-enterprise"
     assert AGRO.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "agro_enterprise" / "manifest.json").read_text()
-    assert "4.3.7-enterprise" in manifest
-    assert "14.7" in manifest
+    assert "4.4.0-enterprise" in manifest
+    assert "14.8" in manifest
