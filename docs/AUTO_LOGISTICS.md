@@ -1,10 +1,10 @@
 # Auto Marketplace — Logistics, Transport, Export & Import (Sprint 10.6)
 
-Vehicle logistics for **Auto Marketplace 4.1.5-enterprise**.
+Vehicle logistics for **Auto Marketplace 4.1.6-enterprise**.
 
 | Field | Value |
 |-------|-------|
-| Application version | `4.1.5-enterprise` |
+| Application version | `4.1.6-enterprise` |
 | `transport_engine` | `1.0` |
 | `tracking_engine` | `1.0` |
 | `customs_engine` | `1.0` |

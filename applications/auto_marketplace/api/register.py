@@ -28,6 +28,7 @@ from applications.auto_marketplace.api import (
     dealer_crm_handlers,
     buyer_ai_handlers,
     seller_ai_handlers,
+    automotive_erp_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -771,3 +772,22 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{sa}/bi", seller_ai_handlers.sa_bi_handler)
     app.router.add_get(f"{sa}/dashboard", seller_ai_handlers.sa_dashboard_handler)
     app.router.add_post(f"{sa}/dashboard", seller_ai_handlers.sa_dashboard_handler)
+
+    # Sprint 13.6 — Automotive ERP (additive; prior sprint routes unchanged)
+    ae = config.automotive_erp_api_prefix
+    app.router.add_get(f"{ae}/health", automotive_erp_handlers.ae_health_handler)
+    app.router.add_post(f"{ae}/bootstrap", automotive_erp_handlers.ae_bootstrap_handler)
+    app.router.add_get(f"{ae}/service", automotive_erp_handlers.ae_service_handler)
+    app.router.add_post(f"{ae}/service", automotive_erp_handlers.ae_service_handler)
+    app.router.add_get(f"{ae}/fleet", automotive_erp_handlers.ae_fleet_handler)
+    app.router.add_post(f"{ae}/fleet", automotive_erp_handlers.ae_fleet_handler)
+    app.router.add_get(f"{ae}/parts", automotive_erp_handlers.ae_parts_handler)
+    app.router.add_post(f"{ae}/parts", automotive_erp_handlers.ae_parts_handler)
+    app.router.add_get(f"{ae}/maintenance", automotive_erp_handlers.ae_maintenance_handler)
+    app.router.add_post(f"{ae}/maintenance", automotive_erp_handlers.ae_maintenance_handler)
+    app.router.add_get(f"{ae}/enterprise", automotive_erp_handlers.ae_enterprise_handler)
+    app.router.add_post(f"{ae}/enterprise", automotive_erp_handlers.ae_enterprise_handler)
+    app.router.add_get(f"{ae}/analytics", automotive_erp_handlers.ae_analytics_handler)
+    app.router.add_post(f"{ae}/analytics", automotive_erp_handlers.ae_analytics_handler)
+    app.router.add_get(f"{ae}/integrations", automotive_erp_handlers.ae_integrations_handler)
+    app.router.add_post(f"{ae}/integrations", automotive_erp_handlers.ae_integrations_handler)

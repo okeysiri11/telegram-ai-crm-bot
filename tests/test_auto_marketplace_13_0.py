@@ -40,8 +40,8 @@ def reset_store():
 
 def test_version_auto_marketplace_ready():
     health = auto_marketplace.health()
-    assert health["application_version"] == "4.1.5-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.4-enterprise"
+    assert health["application_version"] == "4.1.6-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.5-enterprise"
     assert health["auto_marketplace_ready"] is True
     assert health["auto_ai_ready"] is True
     assert health["dealer_platform_ready"] is True
@@ -141,13 +141,13 @@ def test_ai_analytics_integrations_dashboard():
 async def test_api_auto_marketplace(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.1.5-enterprise"
+    assert body["application_version"] == "4.1.6-enterprise"
     assert body["auto_marketplace_ready"] is True
 
     legacy = await client.get(f"{LEGACY}/health")
     assert legacy.status == 200
     legacy_body = await legacy.json()
-    assert legacy_body["application_version"] == "4.1.5-enterprise"
+    assert legacy_body["application_version"] == "4.1.6-enterprise"
 
     boot = await client.post(f"{PREFIX}/bootstrap", json={})
     assert boot.status == 201
@@ -198,8 +198,8 @@ def test_docs_and_regression_13_0():
         assert (ROOT / "docs" / name).exists()
     assert (ROOT / "knowledge" / "applications" / "AUTO_MARKETPLACE.md").exists()
     manifest = (ROOT / "applications" / "auto_marketplace" / "manifest.json").read_text()
-    assert "4.1.5-enterprise" in manifest
-    assert "13.5" in manifest
+    assert "4.1.6-enterprise" in manifest
+    assert "13.6" in manifest
     assert (ROOT / "applications" / "auto_marketplace" / "enterprise_automotive" / "facade.py").exists()
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS

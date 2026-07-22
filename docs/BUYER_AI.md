@@ -1,6 +1,6 @@
 # Buyer AI
 
-**Version:** `4.1.5-enterprise`  
+**Version:** `4.1.6-enterprise`  
 **Sprint:** 13.4  
 **Foundation:** Enterprise Platform v4.1.3-enterprise  
 **API:** `/api/buyer-ai/v1`

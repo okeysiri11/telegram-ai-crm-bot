@@ -1,6 +1,6 @@
 # Dealer CRM
 
-**Version:** `4.1.5-enterprise`  
+**Version:** `4.1.6-enterprise`  
 **Sprint:** 13.3  
 **Foundation:** Enterprise Platform v4.1.2-enterprise  
 **API:** `/api/dealer-crm/v1`

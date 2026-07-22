@@ -27,6 +27,7 @@ from applications.auto_marketplace.inspection_ai.facade import InspectionAISuite
 from applications.auto_marketplace.dealer_crm.facade import DealerCRMSuite, dealer_crm
 from applications.auto_marketplace.buyer_ai.facade import BuyerAISuite, buyer_ai
 from applications.auto_marketplace.seller_ai.facade import SellerAISuite, seller_ai
+from applications.auto_marketplace.automotive_erp.facade import AutomotiveERPSuite, automotive_erp
 from applications.auto_marketplace.favorites.service import FavoritesService, favorites_service
 from applications.auto_marketplace.finance.engine import FinanceEngine, finance_engine
 from applications.auto_marketplace.filters.search_engine import SearchEngine, search_engine
@@ -115,6 +116,7 @@ class AutoMarketplaceApplication:
         dealer_crm_svc: DealerCRMSuite | None = None,
         buyer_ai_svc: BuyerAISuite | None = None,
         seller_ai_svc: SellerAISuite | None = None,
+        automotive_erp_svc: AutomotiveERPSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -161,6 +163,7 @@ class AutoMarketplaceApplication:
         self.dealer_crm = dealer_crm_svc or dealer_crm
         self.buyer_ai = buyer_ai_svc or buyer_ai
         self.seller_ai = seller_ai_svc or seller_ai
+        self.automotive_erp = automotive_erp_svc or automotive_erp
 
     def reset(self) -> None:
         self.store.reset()
@@ -182,6 +185,7 @@ class AutoMarketplaceApplication:
             "dealer_crm": self.config.dealer_crm,
             "buyer_ai": self.config.buyer_ai,
             "seller_ai": self.config.seller_ai,
+            "automotive_erp": self.config.automotive_erp,
             "auto_marketplace_ready": True,
             "auto_ai_ready": True,
             "dealer_platform_ready": True,
@@ -206,6 +210,10 @@ class AutoMarketplaceApplication:
             "auction_platform_ready": True,
             "global_automotive_network_ready": True,
             "enterprise_automotive_marketplace_ready": True,
+            "automotive_erp_ready": True,
+            "fleet_management_ready": True,
+            "predictive_maintenance_ready": True,
+            "enterprise_service_platform_ready": True,
             "maintenance_mode": self.production_engine.maintenance.enabled,
             "api_version": self.config.api_version,
             "catalog_engine": self.config.catalog_engine,
@@ -251,6 +259,7 @@ class AutoMarketplaceApplication:
             "dealer_crm": self.dealer_crm.status(),
             "buyer_ai": self.buyer_ai.status(),
             "seller_ai": self.seller_ai.status(),
+            "automotive_erp": self.automotive_erp.status(),
             "health_deep": self.enterprise.health.deep(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),

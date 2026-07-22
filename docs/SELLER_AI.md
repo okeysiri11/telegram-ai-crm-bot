@@ -1,8 +1,8 @@
 # Seller AI
 
-**Version:** `4.1.5-enterprise`  
+**Version:** `4.1.6-enterprise`  
 **Sprint:** 13.5  
-**Foundation:** Enterprise Platform v4.1.4-enterprise  
+**Foundation:** Enterprise Platform v4.1.5-enterprise  
 **API:** `/api/seller-ai/v1`
 
 AI platform for private sellers and dealerships — listing wizard, AI copy, photo quality, price recommendation, demand and sale probability.
