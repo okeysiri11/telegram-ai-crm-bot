@@ -56,6 +56,10 @@ def create_app() -> web.Application:
 
     register_drone_platform_routes(app)
 
+    from applications.ecosystem.api.register import register_ai_ecosystem_routes
+
+    register_ai_ecosystem_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 

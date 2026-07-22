@@ -1,0 +1,31 @@
+{
+  "application_name": "Unified AI Ecosystem",
+  "application": "ai_ecosystem",
+  "application_version": "3.0.0-alpha",
+  "release_status": "Unified Integration Alpha",
+  "platform_dependency": "AI Platform Core v3.0",
+  "ecosystem_dependency": "AI Ecosystem v1.5",
+  "sprint": "12.0",
+  "modules": {
+    "manager": "1.0",
+    "ai": "1.0",
+    "memory": "1.0",
+    "communication": "1.0",
+    "identity": "1.0",
+    "workspace": "1.0",
+    "knowledge": "1.0",
+    "analytics": "1.0",
+    "api": "3.0"
+  },
+  "integrates": [
+    "crm",
+    "auto_marketplace",
+    "agro_marketplace",
+    "port_erp",
+    "drone_platform",
+    "platform_core",
+    "knowledge_system",
+    "ecosystem"
+  ],
+  "does_not_modify": ["platform_core", "existing_applications", "top_level_ecosystem"]
+}
