@@ -1,3 +1,16 @@
+# Auto Marketplace 2.0.0 — Commercial Release
+
+**Release Status:** Commercial Release  
+**Platform Dependency:** AI Platform Core v3  
+**Ecosystem Dependency:** AI Ecosystem v1.5  
+**Production Ready:** true
+
+## Summary
+
+Sprint 10.8 delivers enterprise connectors, cross-platform bridges (Agro/Port via stubs only), partner registry, global vehicle network, commercial production validation, and release certification. Platform Core, Agro Marketplace, and Port ERP remain untouched.
+
+---
+
 # Auto Marketplace 1.6.0-alpha — Fleet & Mobility
 
 **Release Status:** Fleet Alpha  

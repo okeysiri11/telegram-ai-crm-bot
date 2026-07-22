@@ -13,6 +13,7 @@ class ProductionValidator:
     MODULES = (
         "crm_engine", "ai_sales_engine", "finance_engine", "bi_engine", "portal_engine",
         "vehicle_catalog", "inventory_engine", "catalog", "dealers", "customers",
+        "marketplace", "auto_ai", "transactions", "service", "logistics", "fleet_ops", "enterprise",
     )
 
     async def validate_all(self) -> list[ValidationResult]:

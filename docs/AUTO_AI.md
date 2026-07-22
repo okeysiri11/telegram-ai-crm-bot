@@ -1,10 +1,10 @@
 # Auto AI — Vehicle Intelligence (Sprint 10.3)
 
-AI recommendations, pricing, inspection, forecasting, and buyer assistant for **Auto Marketplace 1.6.0-alpha**.
+AI recommendations, pricing, inspection, forecasting, and buyer assistant for **Auto Marketplace 2.0.0**.
 
 | Field | Value |
 |-------|-------|
-| Application version | `1.6.0-alpha` |
+| Application version | `2.0.0` |
 | Auto AI engine | `1.0` |
 | Recommendation engine | `1.0` |
 | API | `/api/auto/v1/ai` · `/recommendations` · `/pricing-ai` · `/inspection` · `/forecast` · `/assistant` |

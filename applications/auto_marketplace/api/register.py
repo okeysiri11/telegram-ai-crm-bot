@@ -10,6 +10,7 @@ from applications.auto_marketplace.api import (
     bi_handlers,
     catalog_handlers,
     crm_handlers,
+    enterprise_handlers,
     finance_handlers,
     fleet_handlers,
     foundation_handlers,
@@ -38,6 +39,9 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
 
     # Public REST API
     app.router.add_get(f"{prefix}/health", rest_handlers.health_handler)
+    app.router.add_get(f"{prefix}/health/live", enterprise_handlers.health_live_handler)
+    app.router.add_get(f"{prefix}/health/ready", enterprise_handlers.health_ready_handler)
+    app.router.add_get(f"{prefix}/health/deep", enterprise_handlers.health_deep_handler)
 
     # Sprint 10.1 — foundation catalog / vehicles / search / dealers / buyers / crm
     app.router.add_get(f"{prefix}/catalog", foundation_handlers.catalog_root_handler)
@@ -492,6 +496,31 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/operations/corporate/book", fleet_handlers.operations_corporate_book_handler)
     app.router.add_post(f"{prefix}/operations/travel", fleet_handlers.operations_travel_handler)
     app.router.add_post(f"{prefix}/operations/subscriptions", fleet_handlers.operations_subscription_handler)
+
+    # Sprint 10.8 — Enterprise Integration, Production Validation & Commercial Release
+    app.router.add_get(f"{prefix}/enterprise", enterprise_handlers.enterprise_health_handler)
+    app.router.add_get(f"{prefix}/enterprise/connectors", enterprise_handlers.enterprise_connectors_handler)
+    app.router.add_post(f"{prefix}/enterprise/connectors", enterprise_handlers.enterprise_connectors_handler)
+    app.router.add_post(
+        f"{prefix}/enterprise/connectors/{{connector_id}}/ping",
+        enterprise_handlers.enterprise_ping_handler,
+    )
+    app.router.add_get(f"{prefix}/enterprise/cross-platform", enterprise_handlers.enterprise_cross_platform_handler)
+    app.router.add_post(f"{prefix}/enterprise/cross-platform", enterprise_handlers.enterprise_cross_platform_handler)
+
+    app.router.add_get(f"{prefix}/network", enterprise_handlers.network_health_handler)
+    app.router.add_get(f"{prefix}/network/listings", enterprise_handlers.network_listings_handler)
+    app.router.add_post(f"{prefix}/network/listings", enterprise_handlers.network_listings_handler)
+    app.router.add_post(f"{prefix}/network/exchange", enterprise_handlers.network_exchange_handler)
+
+    app.router.add_get(f"{prefix}/partners", enterprise_handlers.partners_handler)
+    app.router.add_post(f"{prefix}/partners", enterprise_handlers.partners_handler)
+
+    app.router.add_get(f"{prefix}/production", enterprise_handlers.production_health_handler)
+    app.router.add_post(f"{prefix}/production/validate", enterprise_handlers.production_validate_handler)
+    app.router.add_get(f"{prefix}/production/manifest", enterprise_handlers.production_manifest_handler)
+    app.router.add_get(f"{prefix}/production/preflight", enterprise_handlers.production_preflight_handler)
+    app.router.add_get(f"{prefix}/production/rollback", enterprise_handlers.production_rollback_handler)
 
     # Sprint 6.5 — Documents, Contracts & Financial Operations
     fin = f"{prefix}/finance"

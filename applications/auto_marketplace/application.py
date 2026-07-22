@@ -17,6 +17,7 @@ from applications.auto_marketplace.customers.service import CustomerService, cus
 from applications.auto_marketplace.dealers.service import DealerService, dealer_service
 from applications.auto_marketplace.delivery.service import DeliveryService, delivery_service
 from applications.auto_marketplace.documents.service import DocumentService, document_service
+from applications.auto_marketplace.enterprise.facade import EnterpriseDomainEngine, enterprise_domain_engine
 from applications.auto_marketplace.favorites.service import FavoritesService, favorites_service
 from applications.auto_marketplace.finance.engine import FinanceEngine, finance_engine
 from applications.auto_marketplace.filters.search_engine import SearchEngine, search_engine
@@ -82,6 +83,7 @@ class AutoMarketplaceApplication:
         service: ServiceDomainEngine | None = None,
         logistics: LogisticsDomainEngine | None = None,
         fleet_domain: FleetDomainEngine | None = None,
+        enterprise: EnterpriseDomainEngine | None = None,
         payments: PaymentService | None = None,
         delivery: DeliveryService | None = None,
         analytics: AnalyticsService | None = None,
@@ -121,6 +123,7 @@ class AutoMarketplaceApplication:
         self.service = service or service_domain_engine
         self.logistics = logistics or logistics_domain_engine
         self.fleet_ops = fleet_domain or fleet_domain_engine
+        self.enterprise = enterprise or enterprise_domain_engine
         self.payments = payments or payment_service
         self.delivery = delivery or delivery_service
         self.analytics = analytics or analytics_service
@@ -172,6 +175,9 @@ class AutoMarketplaceApplication:
             "fleet_engine": self.config.fleet_engine,
             "rental_engine": self.config.rental_engine,
             "operations_engine": self.config.operations_engine,
+            "enterprise_engine": self.config.enterprise_engine,
+            "global_network": self.config.global_network,
+            "production_ready": self.config.production_ready,
             "metrics": self.analytics.dashboard_metrics(),
             "foundation": {
                 "catalog": self.catalog.overview(),
@@ -186,6 +192,8 @@ class AutoMarketplaceApplication:
             "service": self.service.metrics(),
             "logistics": self.logistics.metrics(),
             "fleet_ops": self.fleet_ops.metrics(),
+            "enterprise": self.enterprise.metrics(),
+            "health_deep": self.enterprise.health.deep(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),
             "crm_deals": self.store.crm_deals.count(),

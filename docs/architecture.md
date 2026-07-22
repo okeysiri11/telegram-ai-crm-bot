@@ -512,9 +512,9 @@ flowchart LR
 | Auto AI Domain | `applications/auto_marketplace/ai/` | Recommendations / pricing / inspection AI |
 | Bridges | `applications/auto_marketplace/integrations/` | Platform + Ecosystem |
 
-**Application Version 1.6.0-alpha** — Fleet Alpha · `fleet_engine = 1.0` · `rental_engine = 1.0` · `operations_engine = 1.0`
+**Application Version 2.0.0** — Commercial Release · `enterprise_engine = 1.0` · `global_network = 1.0` · `production_ready = true`
 
-Full details: [AUTO_MARKETPLACE.md](AUTO_MARKETPLACE.md), [AUTO_VIN.md](AUTO_VIN.md), [AUTO_AI.md](AUTO_AI.md), [AUTO_TRANSACTIONS.md](AUTO_TRANSACTIONS.md), [AUTO_SERVICE.md](AUTO_SERVICE.md), [AUTO_LOGISTICS.md](AUTO_LOGISTICS.md), [AUTO_FLEET.md](AUTO_FLEET.md).
+Full details: [AUTO_MARKETPLACE.md](AUTO_MARKETPLACE.md), [AUTO_ENTERPRISE.md](AUTO_ENTERPRISE.md), [AUTO_RELEASE.md](AUTO_RELEASE.md).
 
 ---
 
@@ -675,7 +675,7 @@ flowchart LR
 | QualityAssurance | `applications/auto_marketplace/quality_assurance/` | Validation, performance, security |
 | Operations | `applications/auto_marketplace/monitoring/` | Health probes, incident guide |
 
-**Version 1.6.0-alpha — Fleet Alpha**
+**Version 2.0.0 — Commercial Release**
 
 Full details: [PRODUCTION_RELEASE.md](../PRODUCTION_RELEASE.md).
 

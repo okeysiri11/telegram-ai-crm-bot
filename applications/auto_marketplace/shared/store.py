@@ -193,6 +193,15 @@ class MarketplaceStore:
         self.fleet_drivers: EntityStore = EntityStore()
         self.fleet_dispatch_jobs: EntityStore = EntityStore()
         self.telematics_readings: EntityStore = EntityStore()
+        # Sprint 10.8 — enterprise / network / commercial release
+        self.enterprise_connectors: EntityStore = EntityStore()
+        self.cross_platform_links: EntityStore = EntityStore()
+        self.network_partners: EntityStore = EntityStore()
+        self.network_listings: EntityStore = EntityStore()
+        self.exchange_offers: EntityStore = EntityStore()
+        self.commercial_validation_checks: EntityStore = EntityStore()
+        self.commercial_release_reports: EntityStore = EntityStore()
+        self.enterprise_audit_logs: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

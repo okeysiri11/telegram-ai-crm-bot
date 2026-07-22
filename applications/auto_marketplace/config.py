@@ -1,4 +1,4 @@
-# Auto Marketplace configuration — Sprint 10.7 Fleet & Mobility.
+# Auto Marketplace configuration — Sprint 10.8 Commercial Release 2.0.0.
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ class AutoMarketplaceConfig:
     default_currency: str = "USD"
     enable_ai_recommendations: bool = True
     enable_auctions: bool = True
-    application_version: str = "1.6.0-alpha"
-    release_status: str = "Fleet Alpha"
+    application_version: str = "2.0.0"
+    release_status: str = "Commercial Release"
     platform_dependency: str = "AI Platform Core v3"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     mobile_api_prefix: str = "/api/auto/mobile/v1"
@@ -41,6 +41,9 @@ class AutoMarketplaceConfig:
     fleet_engine: str = "1.0"
     rental_engine: str = "1.0"
     operations_engine: str = "1.0"
+    enterprise_engine: str = "1.0"
+    global_network: str = "1.0"
+    production_ready: bool = True
 
 
 DEFAULT_CONFIG = AutoMarketplaceConfig()
