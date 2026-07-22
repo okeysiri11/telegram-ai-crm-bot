@@ -1,9 +1,9 @@
 # Digital Twin
 
-Aircraft, battery, mission, maintenance, and engineering twins with live synchronization.
+Digital Twin Engine with application, infrastructure, business, knowledge, agent, workflow, drone, and marketplace twins.
+
+Features: live synchronization, state history, time-travel snapshots.
 
 ## API
 
-- `GET|POST /api/drone/v1/cloud/twins`
-
-Create by `twin_type` or sync with `action=sync`.
+`GET|POST /api/executive/v1/twins`

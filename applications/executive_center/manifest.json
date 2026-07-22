@@ -1,0 +1,16 @@
+{
+  "application_name": "Executive Command Center",
+  "application": "executive_center",
+  "application_version": "3.3.0-alpha",
+  "release_status": "Executive Center Alpha",
+  "platform_dependency": "AI Platform Core v3.0",
+  "sprint": "12.3",
+  "modules": {
+    "dashboard": "1.0",
+    "twins": "1.0",
+    "monitoring": "1.0",
+    "services": "1.0",
+    "api": "3.3"
+  },
+  "does_not_modify": ["platform_core", "existing_applications"]
+}

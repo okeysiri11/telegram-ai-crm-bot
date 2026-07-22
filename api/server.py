@@ -68,6 +68,10 @@ def create_app() -> web.Application:
 
     register_workflow_studio_routes(app)
 
+    from applications.executive_center.api.register import register_executive_center_routes
+
+    register_executive_center_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 
