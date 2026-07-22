@@ -972,7 +972,7 @@ Full details: [AGRO_PORTAL.md](AGRO_PORTAL.md).
 
 Full details: [AGRO_RELEASE.md](AGRO_RELEASE.md), [DEPLOYMENT.md](DEPLOYMENT.md), [OPERATIONS.md](OPERATIONS.md).
 
-## Port ERP (9.1–9.7) — Ops, Trade, Logistics, AI, Finance
+## Port ERP (9.1–9.8) — Ops, Trade, Logistics, AI, Finance, Enterprise Release
 
 | Component | Location | Role |
 |-----------|----------|------|
@@ -983,8 +983,9 @@ Full details: [AGRO_RELEASE.md](AGRO_RELEASE.md), [DEPLOYMENT.md](DEPLOYMENT.md)
 | LogisticsDomainEngine | `applications/port_erp/multimodal/facade.py` | Shipping / multimodal |
 | AIOperationsDomainEngine | `applications/port_erp/digital_twin/facade.py` | Digital twin / executive AI |
 | FinanceDomainEngine | `applications/port_erp/finance/facade.py` | Billing / contracts / accounting |
+| EnterpriseDomainEngine | `applications/port_erp/enterprise/facade.py` | Network / integration / production |
 | Platform / Ecosystem Bridges | `applications/port_erp/integrations/` | Bridges only |
 
-**Application Version 1.6.0-alpha** — Finance & Commercial · `finance_engine = 1.0`
+**Application Version 2.0.0** — Global Network & Production Release · `enterprise_engine = 1.0` · `global_network = 1.0`
 
-Full details: [PORT_ERP.md](PORT_ERP.md), [PORT_FINANCE.md](PORT_FINANCE.md), and prior Port ERP docs.
+Full details: [PORT_ERP.md](PORT_ERP.md), [PORT_NETWORK.md](PORT_NETWORK.md), [PORT_ENTERPRISE.md](PORT_ENTERPRISE.md), [PORT_RELEASE.md](PORT_RELEASE.md), and prior Port ERP docs.

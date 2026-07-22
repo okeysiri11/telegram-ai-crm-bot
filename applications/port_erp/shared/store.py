@@ -117,6 +117,16 @@ class PortStore:
         self.expense_records: EntityStore = EntityStore()
         self.suppliers: EntityStore = EntityStore()
         self.customer_accounts: EntityStore = EntityStore()
+        # Sprint 9.8 — enterprise / network / registry / production
+        self.network_partners: EntityStore = EntityStore()
+        self.network_routes: EntityStore = EntityStore()
+        self.trade_lanes: EntityStore = EntityStore()
+        self.global_registry: EntityStore = EntityStore()
+        self.integration_links: EntityStore = EntityStore()
+        self.exchange_offers: EntityStore = EntityStore()
+        self.deployment_profiles: EntityStore = EntityStore()
+        self.validation_checks: EntityStore = EntityStore()
+        self.release_reports: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

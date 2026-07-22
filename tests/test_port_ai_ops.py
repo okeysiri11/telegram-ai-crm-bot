@@ -37,7 +37,7 @@ def reset_store():
 
 def test_version_ai_ops_docs_bridges():
     health = port_erp.health()
-    assert health["application_version"] == "1.6.0-alpha"
+    assert health["application_version"] == "2.0.0"
     assert health["ai_operations_engine"] == "1.0"
     assert "ai_ops" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "PORT_AI.md"
@@ -152,7 +152,7 @@ async def test_ai_ops_rest_api(client: TestClient):
     health = await client.get("/api/port/v1/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.6.0-alpha"
+    assert body["application_version"] == "2.0.0"
     assert body["ai_operations_engine"] == "1.0"
 
     twin = await client.get("/api/port/v1/digital-twin")

@@ -9,6 +9,7 @@ from applications.port_erp.config import DEFAULT_CONFIG, PortERPConfig
 from applications.port_erp.customs.facade import CustomsDomainEngine, customs_domain_engine
 from applications.port_erp.digital_twin.facade import AIOperationsDomainEngine, ai_operations_domain_engine
 from applications.port_erp.documents.service import DocumentsService, documents_service
+from applications.port_erp.enterprise.facade import EnterpriseDomainEngine, enterprise_domain_engine
 from applications.port_erp.finance.facade import FinanceDomainEngine, finance_domain_engine
 from applications.port_erp.integrations.ecosystem_bridge import EcosystemBridge, ecosystem_bridge
 from applications.port_erp.integrations.platform_bridge import PlatformBridge, platform_bridge
@@ -42,6 +43,7 @@ class PortERPApplication:
         logistics: LogisticsDomainEngine | None = None,
         ai_ops: AIOperationsDomainEngine | None = None,
         finance: FinanceDomainEngine | None = None,
+        enterprise: EnterpriseDomainEngine | None = None,
         live_operations: LivePortOperations | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -58,6 +60,7 @@ class PortERPApplication:
         self.logistics = logistics or logistics_domain_engine
         self.ai_ops = ai_ops or ai_operations_domain_engine
         self.finance = finance or finance_domain_engine
+        self.enterprise = enterprise or enterprise_domain_engine
         self.live_operations = live_operations or live_port_operations
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -81,6 +84,8 @@ class PortERPApplication:
             "logistics_engine": self.config.logistics_engine,
             "ai_operations_engine": self.config.ai_operations_engine,
             "finance_engine": self.config.finance_engine,
+            "enterprise_engine": self.config.enterprise_engine,
+            "global_network": self.config.global_network,
             "metrics": self.core.metrics(),
             "tracking": self.tracking.metrics(),
             "terminal": self.terminal.metrics(),
@@ -88,6 +93,7 @@ class PortERPApplication:
             "logistics": self.logistics.metrics(),
             "ai_ops": self.ai_ops.metrics(),
             "finance": self.finance.metrics(),
+            "enterprise": self.enterprise.metrics(),
             "roles": self.permissions.roles(),
             "platform": self.platform.platform_health(),
             "ecosystem": self.ecosystem.ecosystem_health(),

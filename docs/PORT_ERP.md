@@ -1,13 +1,14 @@
-# Port ERP — Foundation through Finance (Sprint 9.7)
+# Port ERP — Foundation through Production Release (Sprint 9.8)
 
-Port operations ERP for **Port ERP 1.6.0-alpha**.
+Port operations ERP for **Port ERP 2.0.0**.
 
 | Field | Value |
 |-------|-------|
 | Application name | Port ERP |
-| Application version | `1.6.0-alpha` |
-| Tracking / Terminal / Customs / Logistics / AI Ops | `1.0` each |
-| Finance engine | `1.0` |
+| Application version | `2.0.0` |
+| Tracking / Terminal / Customs / Logistics / AI Ops / Finance | `1.0` each |
+| Enterprise engine | `1.0` |
+| Global network | `1.0` |
 | Platform | AI Platform Core v3 (bridge only) |
 | Ecosystem | AI Ecosystem v1.5 (bridge only) |
 | API | `/api/port/v1` |
@@ -20,20 +21,20 @@ Port operations ERP for **Port ERP 1.6.0-alpha**.
 flowchart TB
     API["/api/port/v1"]
     App[PortERPApplication]
-    Domains[Core Track Terminal Customs Logistics AIOps Finance]
+    Domains[Core Track Terminal Customs Logistics AIOps Finance Enterprise]
     Bridges[Platform + Ecosystem Bridges]
     Store[PortStore]
     API --> App --> Domains --> Store
     App --> Bridges
 ```
 
-## Modules (9.7)
+## Modules (9.8)
 
-`finance/` · `billing/` · `contracts/` · `tariffs/` · `invoices/` · `payments/` · `accounting/` · `customers/` · `suppliers/` · `currencies/` · `taxes/` · `budget/` · `profitability/`
+`enterprise/` · `integration/` · `network/` · `digital_exchange/` · `global_registry/` · `partners/` · `analytics_global/` · `production/` · `deployment/` · `health/`
 
-## REST API (Finance)
+## REST API (Enterprise / Network / Production)
 
-`/finance` · `/billing` · `/contracts` · `/tariffs` · `/invoices` · `/payments` · `/accounting`
+`/network` · `/integration` · `/global` · `/production` · `/enterprise`
 
 ## Docs
 
@@ -43,11 +44,15 @@ flowchart TB
 - [PORT_LOGISTICS.md](PORT_LOGISTICS.md)
 - [PORT_AI.md](PORT_AI.md)
 - [PORT_FINANCE.md](PORT_FINANCE.md)
+- [PORT_NETWORK.md](PORT_NETWORK.md)
+- [PORT_ENTERPRISE.md](PORT_ENTERPRISE.md)
+- [PORT_RELEASE.md](PORT_RELEASE.md)
 
 ```python
 from applications.port_erp import port_erp
 
 health = port_erp.health()
-assert health["application_version"] == "1.6.0-alpha"
-assert health["finance_engine"] == "1.0"
+assert health["application_version"] == "2.0.0"
+assert health["enterprise_engine"] == "1.0"
+assert health["global_network"] == "1.0"
 ```

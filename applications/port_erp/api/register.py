@@ -7,6 +7,7 @@ from aiohttp import web
 from applications.port_erp.api import (
     ai_ops_handlers,
     customs_handlers,
+    enterprise_handlers,
     finance_handlers,
     handlers,
     logistics_handlers,
@@ -401,3 +402,50 @@ def register_port_erp_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/accounting/entries", finance_handlers.accounting_post_handler)
     app.router.add_post(f"{prefix}/accounting/fx", finance_handlers.accounting_fx_handler)
     app.router.add_post(f"{prefix}/accounting/tax", finance_handlers.accounting_tax_handler)
+
+    # Sprint 9.8 — enterprise / network / global registry / production
+    app.router.add_get(f"{prefix}/network", enterprise_handlers.network_health_handler)
+    app.router.add_get(f"{prefix}/network/partners", enterprise_handlers.network_partners_list_handler)
+    app.router.add_post(f"{prefix}/network/partners", enterprise_handlers.network_partners_create_handler)
+    app.router.add_get(f"{prefix}/network/discover", enterprise_handlers.network_discover_handler)
+    app.router.add_get(f"{prefix}/network/routes", enterprise_handlers.network_routes_list_handler)
+    app.router.add_post(f"{prefix}/network/routes", enterprise_handlers.network_routes_create_handler)
+    app.router.add_post(f"{prefix}/network/lanes", enterprise_handlers.network_lanes_create_handler)
+    app.router.add_post(f"{prefix}/network/recommend", enterprise_handlers.network_recommend_handler)
+    app.router.add_post(f"{prefix}/network/compare", enterprise_handlers.network_compare_handler)
+    app.router.add_get(
+        f"{prefix}/network/recommendations",
+        enterprise_handlers.network_recommendations_handler,
+    )
+
+    app.router.add_get(f"{prefix}/integration", enterprise_handlers.integration_health_handler)
+    app.router.add_get(f"{prefix}/integration/links", enterprise_handlers.integration_list_handler)
+    app.router.add_post(f"{prefix}/integration/links", enterprise_handlers.integration_create_handler)
+    app.router.add_post(
+        f"{prefix}/integration/bootstrap",
+        enterprise_handlers.integration_bootstrap_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/integration/links/{{link_id}}/connect",
+        enterprise_handlers.integration_connect_handler,
+    )
+
+    app.router.add_get(f"{prefix}/global", enterprise_handlers.global_health_handler)
+    app.router.add_get(f"{prefix}/global/registry", enterprise_handlers.global_registry_list_handler)
+    app.router.add_post(f"{prefix}/global/registry", enterprise_handlers.global_registry_create_handler)
+    app.router.add_get(f"{prefix}/global/exchange", enterprise_handlers.global_exchange_list_handler)
+    app.router.add_post(f"{prefix}/global/exchange", enterprise_handlers.global_exchange_publish_handler)
+    app.router.add_get(f"{prefix}/global/dashboard", enterprise_handlers.global_dashboard_handler)
+
+    app.router.add_get(f"{prefix}/production", enterprise_handlers.production_health_handler)
+    app.router.add_get(f"{prefix}/production/readiness", enterprise_handlers.production_readiness_handler)
+    app.router.add_post(f"{prefix}/production/verify", enterprise_handlers.production_verify_handler)
+    app.router.add_post(
+        f"{prefix}/production/benchmark",
+        enterprise_handlers.production_benchmark_handler,
+    )
+    app.router.add_get(f"{prefix}/production/profiles", enterprise_handlers.production_profile_handler)
+    app.router.add_post(f"{prefix}/production/profiles", enterprise_handlers.production_profile_handler)
+
+    app.router.add_get(f"{prefix}/enterprise", enterprise_handlers.enterprise_health_handler)
+    app.router.add_post(f"{prefix}/enterprise/bootstrap", enterprise_handlers.enterprise_bootstrap_handler)

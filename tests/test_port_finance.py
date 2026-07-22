@@ -46,7 +46,7 @@ def reset_store():
 
 def test_version_finance_docs_bridges():
     health = port_erp.health()
-    assert health["application_version"] == "1.6.0-alpha"
+    assert health["application_version"] == "2.0.0"
     assert health["finance_engine"] == "1.0"
     assert "finance" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "PORT_FINANCE.md"
@@ -189,7 +189,7 @@ async def test_finance_rest_api(client: TestClient):
     health = await client.get("/api/port/v1/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.6.0-alpha"
+    assert body["application_version"] == "2.0.0"
     assert body["finance_engine"] == "1.0"
 
     finance = await client.get("/api/port/v1/finance")

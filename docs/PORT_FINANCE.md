@@ -1,10 +1,10 @@
 # Port ERP Finance & Commercial Management — Sprint 9.7
 
-Port finance, billing, contracts, and accounting for **Port ERP 1.6.0-alpha**.
+Port finance, billing, contracts, and accounting for **Port ERP 2.0.0**.
 
 | Field | Value |
 |-------|-------|
-| Application version | `1.6.0-alpha` |
+| Application version | `2.0.0` |
 | Finance engine | `1.0` |
 | Platform | AI Platform Core v3 (bridge only) |
 | Ecosystem | AI Ecosystem v1.5 (bridge only) |
