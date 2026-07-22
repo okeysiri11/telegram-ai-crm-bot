@@ -30,6 +30,7 @@ from applications.auto_marketplace.api import (
     seller_ai_handlers,
     automotive_erp_handlers,
     connected_cars_handlers,
+    mobility_platform_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -813,3 +814,26 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{cc}/dashboard", connected_cars_handlers.cc_dashboard_handler)
     app.router.add_get(f"{cc}/knowledge", connected_cars_handlers.cc_knowledge_handler)
     app.router.add_post(f"{cc}/knowledge", connected_cars_handlers.cc_knowledge_handler)
+
+    # Sprint 13.8 — Mobility Platform (additive; prior sprint routes unchanged)
+    mp = config.mobility_platform_api_prefix
+    app.router.add_get(f"{mp}/health", mobility_platform_handlers.mp_health_handler)
+    app.router.add_post(f"{mp}/bootstrap", mobility_platform_handlers.mp_bootstrap_handler)
+    app.router.add_get(f"{mp}/hub", mobility_platform_handlers.mp_hub_handler)
+    app.router.add_post(f"{mp}/hub", mobility_platform_handlers.mp_hub_handler)
+    app.router.add_get(f"{mp}/ev", mobility_platform_handlers.mp_ev_handler)
+    app.router.add_post(f"{mp}/ev", mobility_platform_handlers.mp_ev_handler)
+    app.router.add_get(f"{mp}/maas", mobility_platform_handlers.mp_maas_handler)
+    app.router.add_post(f"{mp}/maas", mobility_platform_handlers.mp_maas_handler)
+    app.router.add_get(f"{mp}/transport", mobility_platform_handlers.mp_transport_handler)
+    app.router.add_post(f"{mp}/transport", mobility_platform_handlers.mp_transport_handler)
+    app.router.add_get(f"{mp}/logistics", mobility_platform_handlers.mp_logistics_handler)
+    app.router.add_post(f"{mp}/logistics", mobility_platform_handlers.mp_logistics_handler)
+    app.router.add_get(f"{mp}/ai", mobility_platform_handlers.mp_ai_handler)
+    app.router.add_post(f"{mp}/ai", mobility_platform_handlers.mp_ai_handler)
+    app.router.add_get(f"{mp}/smart-city", mobility_platform_handlers.mp_smart_city_handler)
+    app.router.add_post(f"{mp}/smart-city", mobility_platform_handlers.mp_smart_city_handler)
+    app.router.add_get(f"{mp}/dashboard", mobility_platform_handlers.mp_dashboard_handler)
+    app.router.add_post(f"{mp}/dashboard", mobility_platform_handlers.mp_dashboard_handler)
+    app.router.add_get(f"{mp}/knowledge", mobility_platform_handlers.mp_knowledge_handler)
+    app.router.add_post(f"{mp}/knowledge", mobility_platform_handlers.mp_knowledge_handler)

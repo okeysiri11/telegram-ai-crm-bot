@@ -8,7 +8,7 @@ sprint: "13.3"
 
 # Dealer CRM, Trade-In AI & Inventory Intelligence
 
-Sprint **13.3** — `applications/auto_marketplace/dealer_crm/` version **4.1.7-enterprise**.
+Sprint **13.3** — `applications/auto_marketplace/dealer_crm/` version **4.1.8-enterprise**.
 
 API: `/api/dealer-crm/v1`
 

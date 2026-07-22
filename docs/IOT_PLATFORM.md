@@ -1,6 +1,6 @@
 # IoT Platform
 
-**Version:** `4.1.7-enterprise`  
+**Version:** `4.1.8-enterprise`  
 **Sprint:** 13.7  
 **Package:** `applications/auto_marketplace/connected_cars/`  
 **API:** `/api/connected-cars/v1/core`

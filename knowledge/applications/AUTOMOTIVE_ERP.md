@@ -2,8 +2,8 @@
 
 Sprint 13.6 — Automotive ERP, Service Centers & Fleet Management.
 
-- Version: `4.1.7-enterprise`
-- Foundation: Enterprise Platform v4.1.6-enterprise
+- Version: `4.1.8-enterprise`
+- Foundation: Enterprise Platform v4.1.7-enterprise
 - API: `/api/automotive-erp/v1`
 - Package: `applications/auto_marketplace/automotive_erp/`
 

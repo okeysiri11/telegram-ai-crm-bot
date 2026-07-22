@@ -1,4 +1,4 @@
-# Auto Marketplace configuration — Sprint 13.7 Connected Cars.
+# Auto Marketplace configuration — Sprint 13.8 Mobility Platform.
 
 from __future__ import annotations
 
@@ -18,15 +18,16 @@ class AutoMarketplaceConfig:
     seller_ai_api_prefix: str = "/api/seller-ai/v1"
     automotive_erp_api_prefix: str = "/api/automotive-erp/v1"
     connected_cars_api_prefix: str = "/api/connected-cars/v1"
+    mobility_platform_api_prefix: str = "/api/mobility-platform/v1"
     internal_prefix: str = "/internal/auto/v1"
     webhook_prefix: str = "/webhooks/auto/v1"
     default_currency: str = "USD"
     enable_ai_recommendations: bool = True
     enable_auctions: bool = True
-    application_version: str = "4.1.7-enterprise"
+    application_version: str = "4.1.8-enterprise"
     release_status: str = "Enterprise Automotive Marketplace"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.1.6-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.1.7-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     enterprise_automotive_suite: str = "1.0"
     vin_intelligence: str = "1.0"
@@ -36,6 +37,7 @@ class AutoMarketplaceConfig:
     seller_ai: str = "1.0"
     automotive_erp: str = "1.0"
     connected_cars: str = "1.0"
+    mobility_platform: str = "1.0"
     vehicle_types: list[str] = field(
         default_factory=lambda: [
             "car",

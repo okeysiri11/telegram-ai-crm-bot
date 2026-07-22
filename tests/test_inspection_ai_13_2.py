@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_inspection_ai_ready():
     health = auto_marketplace.health()
-    assert health["application_version"] == "4.1.7-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.6-enterprise"
+    assert health["application_version"] == "4.1.8-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.7-enterprise"
     assert health["inspection_ai_ready"] is True
     assert health["damage_detection_ready"] is True
     assert health["vehicle_health_ai_ready"] is True
@@ -95,7 +95,7 @@ def test_ai_scoring_and_estimation():
 async def test_api_inspection_ai(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.1.7-enterprise"
+    assert body["application_version"] == "4.1.8-enterprise"
     assert body["inspection_ai_ready"] is True
 
     # Prior sprints still present
@@ -162,8 +162,8 @@ def test_docs_and_regression_13_2():
     assert (ROOT / "applications" / "auto_marketplace" / "vin_intelligence" / "facade.py").exists()
     assert (ROOT / "applications" / "auto_marketplace" / "enterprise_automotive" / "facade.py").exists()
     manifest = (ROOT / "applications" / "auto_marketplace" / "manifest.json").read_text()
-    assert "4.1.7-enterprise" in manifest
-    assert "13.7" in manifest
+    assert "4.1.8-enterprise" in manifest
+    assert "13.8" in manifest
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT

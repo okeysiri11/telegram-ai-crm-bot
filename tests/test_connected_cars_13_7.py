@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_connected_cars_ready():
     health = auto_marketplace.health()
-    assert health["application_version"] == "4.1.7-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.6-enterprise"
+    assert health["application_version"] == "4.1.8-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.7-enterprise"
     assert health["connected_cars_ready"] is True
     assert health["telematics_platform_ready"] is True
     assert health["fleet_intelligence_ready"] is True
@@ -87,7 +87,7 @@ def test_fleet_diagnostics_predictive():
 async def test_api_connected_cars(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.1.7-enterprise"
+    assert body["application_version"] == "4.1.8-enterprise"
     assert body["connected_cars_ready"] is True
     assert body["telematics_platform_ready"] is True
     assert body["vehicle_iot_platform_ready"] is True
@@ -126,8 +126,8 @@ def test_docs_and_regression_13_7():
     for pkg in ("automotive_erp", "seller_ai", "buyer_ai", "dealer_crm", "inspection_ai", "vin_intelligence"):
         assert (ROOT / "applications" / "auto_marketplace" / pkg / "facade.py").exists()
     manifest = (ROOT / "applications" / "auto_marketplace" / "manifest.json").read_text()
-    assert "4.1.7-enterprise" in manifest
-    assert "13.7" in manifest
+    assert "4.1.8-enterprise" in manifest
+    assert "13.8" in manifest
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT

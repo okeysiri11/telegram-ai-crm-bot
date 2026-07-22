@@ -8,7 +8,7 @@ sprint: "13.5"
 
 # Seller AI, Automotive Auctions & Global Automotive Network
 
-Sprint **13.5** — `applications/auto_marketplace/seller_ai/` version **4.1.7-enterprise**.
+Sprint **13.5** — `applications/auto_marketplace/seller_ai/` version **4.1.8-enterprise**.
 
 API: `/api/seller-ai/v1`
 

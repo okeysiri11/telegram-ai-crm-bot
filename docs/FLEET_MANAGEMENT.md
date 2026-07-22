@@ -1,6 +1,6 @@
 # Fleet Management
 
-**Version:** `4.1.7-enterprise`  
+**Version:** `4.1.8-enterprise`  
 **Sprint:** 13.6  
 **Package:** `applications/auto_marketplace/automotive_erp/`  
 **API:** `/api/automotive-erp/v1/fleet`
