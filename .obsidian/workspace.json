@@ -49,7 +49,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "tag:#drone",
+                "query": "tag:#agro",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -177,8 +177,9 @@
       "bases:Создать новую базу": false
     }
   },
-  "active": "49c7005055f8039a",
+  "active": "e4b785b913d02f72",
   "lastOpenFiles": [
+    "knowledge/Agro Marketplace.md",
     "knowledge/PROJECT_STATUS.md",
     "docs/architecture.md",
     "applications/auto_marketplace/api/__pycache__/vin_intelligence_handlers.cpython-314.pyc",
@@ -214,7 +215,6 @@
     "knowledge/applications/EXECUTIVE_CENTER.md",
     "docs/SYSTEM_MONITORING.md",
     "docs/EXECUTIVE_DASHBOARD.md",
-    "docs/EXECUTIVE_CENTER.md",
     "knowledge/canvas/ENTERPRISE_ARCHITECTURE.canvas"
   ]
 }
