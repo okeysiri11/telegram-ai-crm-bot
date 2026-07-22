@@ -44,8 +44,8 @@ def reset_store():
 
 def test_version_supply_chain_ready():
     health = agro_enterprise.health()
-    assert health["application_version"] == "4.3.5-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.3.4-enterprise"
+    assert health["application_version"] == "4.3.6-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.3.5-enterprise"
     assert health["supply_chain_ready"] is True
     assert health["grain_elevator_ready"] is True
     assert health["warehouse_platform_ready"] is True
@@ -84,7 +84,7 @@ def test_export_trading_logistics():
 async def test_api_supply_chain(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.3.5-enterprise"
+    assert body["application_version"] == "4.3.6-enterprise"
     assert body["supply_chain_ready"] is True
     assert body["trading_platform_ready"] is True
 
@@ -138,5 +138,5 @@ def test_docs_and_regression_14_5():
     assert AUTO.application_version == "4.2.0-enterprise"
     assert AGRO.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "agro_enterprise" / "manifest.json").read_text()
-    assert "4.3.5-enterprise" in manifest
-    assert "14.5" in manifest
+    assert "4.3.6-enterprise" in manifest
+    assert "14.6" in manifest

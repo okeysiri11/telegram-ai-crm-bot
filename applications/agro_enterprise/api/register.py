@@ -5,6 +5,7 @@ from __future__ import annotations
 from aiohttp import web
 
 from applications.agro_enterprise.api import (
+    agro_finance_handlers,
     controlled_environment_handlers,
     crop_ai_handlers,
     handlers,
@@ -140,3 +141,24 @@ def register_agro_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{sc}/dashboard", supply_chain_handlers.sc_dashboard_handler)
     app.router.add_get(f"{sc}/knowledge", supply_chain_handlers.sc_knowledge_handler)
     app.router.add_post(f"{sc}/knowledge", supply_chain_handlers.sc_knowledge_handler)
+
+    # Sprint 14.6 — Agro Finance (additive; prior sprint routes unchanged)
+    af = DEFAULT_CONFIG.agro_finance_api_prefix
+    app.router.add_get(f"{af}/health", agro_finance_handlers.af_health_handler)
+    app.router.add_post(f"{af}/bootstrap", agro_finance_handlers.af_bootstrap_handler)
+    app.router.add_get(f"{af}/exchange", agro_finance_handlers.af_exchange_handler)
+    app.router.add_post(f"{af}/exchange", agro_finance_handlers.af_exchange_handler)
+    app.router.add_get(f"{af}/contracts", agro_finance_handlers.af_contracts_handler)
+    app.router.add_post(f"{af}/contracts", agro_finance_handlers.af_contracts_handler)
+    app.router.add_get(f"{af}/finance", agro_finance_handlers.af_finance_handler)
+    app.router.add_post(f"{af}/finance", agro_finance_handlers.af_finance_handler)
+    app.router.add_get(f"{af}/insurance", agro_finance_handlers.af_insurance_handler)
+    app.router.add_post(f"{af}/insurance", agro_finance_handlers.af_insurance_handler)
+    app.router.add_get(f"{af}/risk", agro_finance_handlers.af_risk_handler)
+    app.router.add_post(f"{af}/risk", agro_finance_handlers.af_risk_handler)
+    app.router.add_get(f"{af}/market", agro_finance_handlers.af_market_handler)
+    app.router.add_post(f"{af}/market", agro_finance_handlers.af_market_handler)
+    app.router.add_get(f"{af}/dashboard", agro_finance_handlers.af_dashboard_handler)
+    app.router.add_post(f"{af}/dashboard", agro_finance_handlers.af_dashboard_handler)
+    app.router.add_get(f"{af}/knowledge", agro_finance_handlers.af_knowledge_handler)
+    app.router.add_post(f"{af}/knowledge", agro_finance_handlers.af_knowledge_handler)

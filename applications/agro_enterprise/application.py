@@ -7,6 +7,7 @@ from typing import Any
 from applications.agro_enterprise.config import DEFAULT_CONFIG, AgroEnterpriseConfig
 from applications.agro_enterprise.crops_crm import AgroCRM, CropManagement
 from applications.agro_enterprise.marketplace import AgroMarketplace, FarmRegistry
+from applications.agro_enterprise.agro_finance.facade import AgroFinanceSuite
 from applications.agro_enterprise.controlled_environment.facade import ControlledEnvironmentSuite
 from applications.agro_enterprise.crop_ai.facade import CropAISuite
 from applications.agro_enterprise.precision_agriculture.facade import PrecisionAgricultureSuite
@@ -27,6 +28,7 @@ class AgroEnterpriseApplication:
         crop_ai_svc: CropAISuite | None = None,
         controlled_environment_svc: ControlledEnvironmentSuite | None = None,
         supply_chain_svc: SupplyChainSuite | None = None,
+        agro_finance_svc: AgroFinanceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or agro_enterprise_store
@@ -41,6 +43,7 @@ class AgroEnterpriseApplication:
         self.crop_ai = crop_ai_svc or CropAISuite(self.store)
         self.controlled_environment = controlled_environment_svc or ControlledEnvironmentSuite(self.store)
         self.supply_chain = supply_chain_svc or SupplyChainSuite(self.store)
+        self.agro_finance = agro_finance_svc or AgroFinanceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -154,6 +157,11 @@ class AgroEnterpriseApplication:
             "warehouse_platform_ready": True,
             "export_logistics_ready": True,
             "trading_platform_ready": True,
+            "agro_finance_ready": True,
+            "commodity_exchange_ready": True,
+            "risk_intelligence_ready": True,
+            "crop_insurance_ready": True,
+            "market_intelligence_ready": True,
             "engines": {
                 "agro_marketplace": self.config.agro_marketplace,
                 "farm_registry": self.config.farm_registry,
@@ -166,6 +174,7 @@ class AgroEnterpriseApplication:
                 "crop_ai": self.config.crop_ai,
                 "controlled_environment": self.config.controlled_environment,
                 "supply_chain": self.config.supply_chain,
+                "agro_finance": self.config.agro_finance,
             },
             "marketplace": self.marketplace.status(),
             "farms": self.farms.status(),
@@ -178,6 +187,7 @@ class AgroEnterpriseApplication:
             "crop_ai": self.crop_ai.status(),
             "controlled_environment": self.controlled_environment.status(),
             "supply_chain": self.supply_chain.status(),
+            "agro_finance": self.agro_finance.status(),
         }
 
 
