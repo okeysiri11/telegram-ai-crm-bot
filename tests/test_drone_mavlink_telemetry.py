@@ -38,7 +38,7 @@ def reset_store():
 
 def test_version_mavlink_telemetry_ready():
     health = drone_platform.health()
-    assert health["application_version"] == "1.2.0-alpha"
+    assert health["application_version"] == "1.3.0-alpha"
     assert health["mavlink_intelligence_ready"] is True
     assert health["telemetry_ai_ready"] is True
     assert health["flight_log_analysis_ready"] is True
@@ -47,7 +47,7 @@ def test_version_mavlink_telemetry_ready():
     assert health["drone_diagnostics_ready"] is True
     assert health["telemetry_flight_ai_ready"] is True
     assert health["engines"]["mavlink"] == "1.0"
-    assert health["engines"]["ai"] == "1.2"
+    assert health["engines"]["ai"] == "1.3"
 
 
 def test_mavlink_parse_router_heartbeat_stream():
@@ -192,7 +192,7 @@ async def test_api_mavlink_telemetry_flight(client):
     health = await client.get(f"{PREFIX}/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.2.0-alpha"
+    assert body["application_version"] == "1.3.0-alpha"
     assert body["mavlink_intelligence_ready"] is True
 
     msgs = await client.get(f"{PREFIX}/mavlink/messages")
@@ -249,5 +249,5 @@ def test_docs_and_knowledge_11_3():
     ):
         assert (ROOT / "knowledge" / "drone" / name).exists()
     manifest = (ROOT / "applications" / "drone_platform" / "manifest.json").read_text()
-    assert "1.2.0-alpha" in manifest
-    assert "11.3" in manifest
+    assert "1.3.0-alpha" in manifest
+    assert "11.4" in manifest

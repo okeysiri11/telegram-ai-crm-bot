@@ -1,4 +1,4 @@
-# Drone Platform configuration — Sprint 11.3 MAVLink / Telemetry Intelligence.
+# Drone Platform configuration — Sprint 11.4 Vision / Navigation / Autonomy.
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from dataclasses import dataclass
 class DronePlatformConfig:
     application_name: str = "Drone Platform"
     application: str = "drone_platform"
-    application_version: str = "1.2.0-alpha"
-    release_status: str = "MAVLink & Telemetry Intelligence Alpha"
+    application_version: str = "1.3.0-alpha"
+    release_status: str = "Vision Navigation Autonomy Alpha"
     api_version: str = "v1"
     api_prefix: str = "/api/drone/v1"
     internal_prefix: str = "/internal/drone/v1"
@@ -28,9 +28,14 @@ class DronePlatformConfig:
     mission_intelligence_engine: str = "1.0"
     diagnostics_engine: str = "1.0"
     gcs_engine: str = "1.0"
+    vision_engine: str = "1.0"
+    navigation_engine: str = "1.0"
+    mapping_engine: str = "1.0"
+    autonomy_engine: str = "1.0"
+    simulation_engine: str = "1.1"
     mission_engine: str = "1.1"
     inventory_engine: str = "1.0"
-    ai_engine: str = "1.2"
+    ai_engine: str = "1.3"
 
 
 DEFAULT_CONFIG = DronePlatformConfig()

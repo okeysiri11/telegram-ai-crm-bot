@@ -1,11 +1,12 @@
-# DronePlatformApplication — facade (Sprint 11.1–11.3).
+# DronePlatformApplication — facade (Sprint 11.1–11.4).
 
 from __future__ import annotations
 
 from typing import Any
 
-from applications.drone_platform.ai.telemetry_ai import TelemetryFlightAIAssistant, telemetry_flight_ai
+from applications.drone_platform.ai.vision_ai import VisionFlightAIAssistant, vision_flight_ai
 from applications.drone_platform.analytics.service import AnalyticsService, analytics_service
+from applications.drone_platform.autonomy import AutonomyEngine, autonomy_engine
 from applications.drone_platform.config import DEFAULT_CONFIG, DronePlatformConfig
 from applications.drone_platform.diagnostics import FlightDiagnosticsService, flight_diagnostics
 from applications.drone_platform.documentation.service import DocumentationService, documentation_service
@@ -20,21 +21,24 @@ from applications.drone_platform.integrations.ecosystem_bridge import EcosystemB
 from applications.drone_platform.integrations.platform_bridge import PlatformBridge, platform_bridge
 from applications.drone_platform.inventory.service import InventoryService, inventory_service
 from applications.drone_platform.manufacturing.service import ManufacturingService, manufacturing_service
+from applications.drone_platform.mapping import MappingService, mapping_service
 from applications.drone_platform.mavlink import MAVLinkManager, mavlink_manager
 from applications.drone_platform.mission_intelligence import MissionIntelligenceManager, mission_intelligence
 from applications.drone_platform.missions.service import MissionService, mission_service
+from applications.drone_platform.navigation import NavigationEngine, navigation_engine
 from applications.drone_platform.projects.service import ProjectService, project_service
 from applications.drone_platform.registry.service import RegistryService, registry_service
 from applications.drone_platform.shared.store import DroneStore, drone_store
 from applications.drone_platform.simulation.service import SimulationService, simulation_service
 from applications.drone_platform.telemetry.ai_manager import TelemetryAIManager, telemetry_ai_manager
 from applications.drone_platform.telemetry.service import TelemetryService, telemetry_service
+from applications.drone_platform.vision import DetectionSuite, VisionManager, detection_suite, vision_manager
 from applications.drone_platform.visualization import VisualizationService, visualization_service
 from applications.drone_platform.warehouse.service import WarehouseService, warehouse_service
 
 
 class DronePlatformApplication:
-    """UAV engineering ERP + firmware + MAVLink/telemetry intelligence platform."""
+    """UAV engineering + firmware + MAVLink + vision/navigation/autonomy platform."""
 
     def __init__(
         self,
@@ -57,12 +61,17 @@ class DronePlatformApplication:
         mission_intel: MissionIntelligenceManager | None = None,
         gcs: GCSBridgeService | None = None,
         visualization: VisualizationService | None = None,
+        vision: VisionManager | None = None,
+        detection: DetectionSuite | None = None,
+        navigation: NavigationEngine | None = None,
+        mapping: MappingService | None = None,
+        autonomy: AutonomyEngine | None = None,
         inventory: InventoryService | None = None,
         warehouse: WarehouseService | None = None,
         manufacturing: ManufacturingService | None = None,
         simulation: SimulationService | None = None,
         documentation: DocumentationService | None = None,
-        ai: TelemetryFlightAIAssistant | None = None,
+        ai: VisionFlightAIAssistant | None = None,
         analytics: AnalyticsService | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -85,12 +94,17 @@ class DronePlatformApplication:
         self.mission_intel = mission_intel or mission_intelligence
         self.gcs = gcs or gcs_bridge_service
         self.visualization = visualization or visualization_service
+        self.vision = vision or vision_manager
+        self.detection = detection or detection_suite
+        self.navigation = navigation or navigation_engine
+        self.mapping = mapping or mapping_service
+        self.autonomy = autonomy or autonomy_engine
         self.inventory = inventory or inventory_service
         self.warehouse = warehouse or warehouse_service
         self.manufacturing = manufacturing or manufacturing_service
         self.simulation = simulation or simulation_service
         self.documentation = documentation or documentation_service
-        self.ai = ai or telemetry_flight_ai
+        self.ai = ai or vision_flight_ai
         self.analytics = analytics or analytics_service
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -119,11 +133,18 @@ class DronePlatformApplication:
             "mission_intelligence_ready": True,
             "gcs_integration_ready": True,
             "drone_diagnostics_ready": True,
+            "computer_vision_ready": True,
+            "navigation_ai_ready": True,
+            "autonomous_flight_ready": True,
+            "slam_ready": True,
+            "simulation_ready": True,
+            "drone_ai_vision_platform_ready": True,
             "mission_planning_ready": True,
             "inventory_ready": True,
             "ai_engineering_assistant_ready": True,
             "firmware_ai_assistant_ready": True,
             "telemetry_flight_ai_ready": True,
+            "vision_flight_ai_ready": True,
             "engines": {
                 "registry": self.config.registry_engine,
                 "engineering": self.config.engineering_engine,
@@ -137,6 +158,11 @@ class DronePlatformApplication:
                 "mission_intelligence": self.config.mission_intelligence_engine,
                 "diagnostics": self.config.diagnostics_engine,
                 "gcs": self.config.gcs_engine,
+                "vision": self.config.vision_engine,
+                "navigation": self.config.navigation_engine,
+                "mapping": self.config.mapping_engine,
+                "autonomy": self.config.autonomy_engine,
+                "simulation": self.config.simulation_engine,
                 "mission": self.config.mission_engine,
                 "inventory": self.config.inventory_engine,
                 "ai": self.config.ai_engine,
@@ -149,6 +175,12 @@ class DronePlatformApplication:
             "mission_intel_status": self.mission_intel.status(),
             "gcs_status": self.gcs.status(),
             "visualization_status": self.visualization.status(),
+            "vision_status": self.vision.status(),
+            "detection_status": self.detection.status(),
+            "navigation_status": self.navigation.status(),
+            "mapping_status": self.mapping.status(),
+            "autonomy_status": self.autonomy.status(),
+            "simulation_status": self.simulation.status(),
             "bridges": {
                 "platform": self.platform.health(),
                 "ecosystem": self.ecosystem.health(),

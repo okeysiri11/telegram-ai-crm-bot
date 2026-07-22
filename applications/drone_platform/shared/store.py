@@ -79,6 +79,18 @@ class DroneStore:
         self.mission_analyses: EntityStore = EntityStore()
         self.gcs_bridges: EntityStore = EntityStore()
         self.visualization_charts: EntityStore = EntityStore()
+        # Sprint 11.4 — vision / navigation / mapping / autonomy
+        self.cameras: EntityStore = EntityStore()
+        self.video_streams: EntityStore = EntityStore()
+        self.vision_frames: EntityStore = EntityStore()
+        self.detections: EntityStore = EntityStore()
+        self.tracks: EntityStore = EntityStore()
+        self.navigation_plans: EntityStore = EntityStore()
+        self.maps: EntityStore = EntityStore()
+        self.point_clouds: EntityStore = EntityStore()
+        self.autonomy_missions: EntityStore = EntityStore()
+        self.sim_scenarios: EntityStore = EntityStore()
+        self.sim_replays: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

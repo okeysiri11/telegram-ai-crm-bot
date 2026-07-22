@@ -38,7 +38,7 @@ def reset_store():
 
 def test_version_firmware_intelligence_ready():
     health = drone_platform.health()
-    assert health["application_version"] == "1.2.0-alpha"
+    assert health["application_version"] == "1.3.0-alpha"
     assert health["firmware_intelligence_ready"] is True
     assert health["ardupilot_ready"] is True
     assert health["mission_planner_ready"] is True
@@ -158,7 +158,7 @@ async def test_api_firmware_intelligence(client: TestClient):
     health = await client.get(f"{PREFIX}/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.2.0-alpha"
+    assert body["application_version"] == "1.3.0-alpha"
     assert body["firmware_intelligence_ready"] is True
 
     status = await client.get(f"{PREFIX}/firmware/intelligence")

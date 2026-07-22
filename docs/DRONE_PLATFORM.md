@@ -1,12 +1,12 @@
 # Drone Platform — Foundation (Sprint 11.1)
 
-**Version:** `1.2.0-alpha`  
-**Status:** MAVLink & Telemetry Intelligence Alpha  
+**Version:** `1.3.0-alpha`  
+**Status:** Vision Navigation Autonomy Alpha  
 **API prefix:** `/api/drone/v1`
 
-Engineering ERP + AI workspace for UAV development, manufacturing, configuration, testing, maintenance, and fleet management. Sprint **11.2** adds Firmware Intelligence. Sprint **11.3** adds MAVLink Intelligence, Telemetry AI, Flight Log Analysis, Mission Intelligence, GCS bridges, and diagnostics.
+Engineering ERP + AI workspace for UAV development, manufacturing, configuration, testing, maintenance, and fleet management. Sprint **11.2** Firmware Intelligence. Sprint **11.3** MAVLink/Telemetry. Sprint **11.4** Computer Vision, Navigation AI, SLAM, Autonomous Flight, and Simulation.
 
-See also: [DRONE_FIRMWARE.md](DRONE_FIRMWARE.md), [ARDUPILOT.md](ARDUPILOT.md), [MISSION_PLANNER.md](MISSION_PLANNER.md), [FIRMWARE_WORKFLOW.md](FIRMWARE_WORKFLOW.md), [MAVLINK.md](MAVLINK.md), [TELEMETRY_AI.md](TELEMETRY_AI.md), [FLIGHT_LOG_ANALYSIS.md](FLIGHT_LOG_ANALYSIS.md), [DRONE_DIAGNOSTICS.md](DRONE_DIAGNOSTICS.md).
+See also: [DRONE_FIRMWARE.md](DRONE_FIRMWARE.md), [MAVLINK.md](MAVLINK.md), [TELEMETRY_AI.md](TELEMETRY_AI.md), [COMPUTER_VISION.md](COMPUTER_VISION.md), [NAVIGATION_AI.md](NAVIGATION_AI.md), [AUTONOMOUS_FLIGHT.md](AUTONOMOUS_FLIGHT.md), [SLAM_MAPPING.md](SLAM_MAPPING.md).
 
 ## Scope
 
@@ -18,7 +18,8 @@ This application lives under `applications/drone_platform/` only. It does **not*
 applications/drone_platform/
   api/ models/ registry/ projects/ engineering/ firmware/
   mavlink/ missions/ mission_intelligence/ telemetry/ flight_logs/
-  diagnostics/ gcs/ visualization/ inventory/ warehouse/ manufacturing/
+  diagnostics/ gcs/ vision/ navigation/ mapping/ autonomy/
+  visualization/ inventory/ warehouse/ manufacturing/
   simulation/ ai/ documentation/ integrations/ analytics/ shared/
 ```
 
@@ -39,6 +40,10 @@ Supports ArduPilot, PX4, INAV, and Betaflight projects with catalog/versions, pa
 ### MAVLink / Telemetry / Flight logs (11.3)
 
 MAVLink manager/router/parser/registries/protocols, Telemetry AI analyzers, flight log intelligence (including PX4 ULog architecture-ready), AI diagnostics, mission intelligence, GCS bridges, and visualization charts.
+
+### Vision / Navigation / Autonomy (11.4)
+
+Computer vision cameras/pipelines/detection/tracking, Navigation AI, SLAM/mapping, autonomous flight modes, AI flight assistant, SITL-ready simulation.
 
 ### Mission planning
 

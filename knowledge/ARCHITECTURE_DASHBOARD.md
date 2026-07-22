@@ -51,3 +51,6 @@ generated_by_enterprise_infra
 
 ## Drone MAVLink / Telemetry (11.3)
 [[drone/DRONE_DASHBOARD]] · [[drone/MAVLINK_REGISTRY]] · [[drone/TELEMETRY_REGISTRY]] · [[drone/FLIGHT_LOG_REGISTRY]]
+
+## Drone Vision / Autonomy (11.4)
+[[drone/VISION_REGISTRY]] · [[drone/NAVIGATION_REGISTRY]] · [[drone/MAPPING_REGISTRY]] · [[drone/AUTONOMY_REGISTRY]]

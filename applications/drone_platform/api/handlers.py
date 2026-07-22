@@ -750,6 +750,250 @@ async def visualization_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+# ---- vision / detection (11.4) ----
+async def vision_status_handler(request: web.Request) -> web.Response:
+    return json_response({**drone_platform.vision.status(), "detection": drone_platform.detection.status()})
+
+
+async def vision_cameras_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            ctype = request.rel_url.query.get("type")
+            return json_response({"cameras": drone_platform.vision.cameras.list(camera_type=ctype)})
+        body = await _read_json(request)
+        if body.get("multi"):
+            cams = drone_platform.vision.register_multi_camera(uav_id=body.get("uav_id", ""), cameras=body.get("cameras", []))
+            return json_response({"cameras": cams}, status=201)
+        camera = drone_platform.vision.cameras.register(
+            name=body.get("name", ""),
+            camera_type=body.get("camera_type", "rgb"),
+            resolution=body.get("resolution", "1920x1080"),
+            fps=int(body.get("fps", 30)),
+            uav_id=body.get("uav_id", ""),
+            metadata=body.get("metadata"),
+        )
+        return json_response(camera, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vision_streams_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response({"streams": drone_platform.vision.streams.list()})
+        body = await _read_json(request)
+        stream = drone_platform.vision.streams.open(
+            camera_id=body.get("camera_id", ""),
+            name=body.get("name", "primary"),
+        )
+        return json_response(stream, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vision_frames_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        frame = drone_platform.vision.frames.process(
+            stream_id=body.get("stream_id", ""),
+            width=int(body.get("width", 1920)),
+            height=int(body.get("height", 1080)),
+            timestamp_ms=body.get("timestamp_ms"),
+            metadata=body.get("metadata"),
+        )
+        pipeline = drone_platform.vision.pipeline.run(frame, stages=body.get("stages"))
+        return json_response({"frame": frame, "pipeline": pipeline}, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vision_detect_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        result = drone_platform.detection.detector.detect(
+            frame_id=body.get("frame_id", ""),
+            annotations=body.get("annotations"),
+            model=body.get("model", "drone_cv_v1"),
+        )
+        return json_response(result, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vision_track_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        if body.get("detection_ids"):
+            tracks = drone_platform.detection.tracker.multi_object_track(body["detection_ids"])
+            return json_response({"tracks": tracks}, status=201)
+        track = drone_platform.detection.tracker.start_track(
+            detection_id=body.get("detection_id", ""),
+            label=body.get("label", ""),
+        )
+        return json_response(track, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- navigation ----
+async def navigation_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.navigation.status())
+
+
+async def navigation_plan_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        mode = body.get("mode", "dynamic_path")
+        nav = drone_platform.navigation
+        if mode == "visual":
+            result = nav.visual_navigation(landmarks=body.get("landmarks", []), current=body.get("current", {}))
+        elif mode == "gps_assisted":
+            result = nav.gps_assisted(waypoints=body.get("waypoints", []), gps_ok=bool(body.get("gps_ok", True)))
+        elif mode == "gps_denied":
+            result = nav.gps_denied(visual_fix=bool(body.get("visual_fix", True)), imu_ok=bool(body.get("imu_ok", True)))
+        elif mode == "terrain_following":
+            result = nav.terrain_following(clearance_m=float(body.get("clearance_m", 30)), terrain_profile=body.get("terrain_profile"))
+        elif mode == "terrain_avoidance":
+            result = nav.terrain_avoidance(obstacles=body.get("obstacles", []), altitude_m=float(body.get("altitude_m", 40)))
+        elif mode == "obstacle_avoidance":
+            result = nav.obstacle_avoidance(obstacles=body.get("obstacles", []), heading_deg=float(body.get("heading_deg", 0)))
+        elif mode == "safe_landing":
+            result = nav.safe_landing_finder(candidates=body.get("candidates", []))
+        elif mode == "route_optimizer":
+            result = nav.route_optimizer(waypoints=body.get("waypoints", []))
+        elif mode == "emergency_route":
+            result = nav.emergency_route(
+                current=body.get("current", {}),
+                home=body.get("home", {}),
+                battery_pct=float(body.get("battery_pct", 50)),
+            )
+        else:
+            result = nav.dynamic_path_planning(
+                start=body.get("start", {}),
+                goal=body.get("goal", {}),
+                obstacles=body.get("obstacles"),
+            )
+        return json_response(result, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- mapping / slam ----
+async def mapping_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.mapping.status())
+
+
+async def mapping_slam_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        slam = drone_platform.mapping.visual_slam(
+            frame_ids=body.get("frame_ids", []),
+            seed_pose=body.get("seed_pose"),
+        )
+        if body.get("features"):
+            slam = drone_platform.mapping.feature_mapping(map_id=slam["map_id"], features=body["features"])
+        cloud = None
+        if body.get("generate_point_cloud", True):
+            cloud = drone_platform.mapping.point_cloud(map_id=slam["map_id"], points=body.get("points"))
+            slam = drone_platform.mapping.reconstruct_3d(map_id=slam["map_id"], point_cloud_id=cloud["point_cloud_id"])
+        return json_response({"map": slam, "point_cloud": cloud}, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mapping_mission_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        result = drone_platform.mapping.mission_map_builder(
+            mission_id=body.get("mission_id", ""),
+            waypoints=body.get("waypoints", []),
+        )
+        return json_response(result, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- autonomy ----
+async def autonomy_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.autonomy.status())
+
+
+async def autonomy_action_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        mode = body.get("mode", "decision")
+        auto = drone_platform.autonomy
+        if mode == "takeoff":
+            result = auto.takeoff_assistant(target_alt_m=float(body.get("target_alt_m", 10)), clear=bool(body.get("clear", True)))
+        elif mode == "landing":
+            result = auto.landing_assistant(zone=body.get("zone", {}), battery_pct=float(body.get("battery_pct", 50)))
+        elif mode == "patrol":
+            result = auto.autonomous_patrol(waypoints=body.get("waypoints", []), loops=int(body.get("loops", 1)))
+        elif mode == "waypoint_ai":
+            result = auto.waypoint_ai(waypoints=body.get("waypoints", []), adapt=bool(body.get("adapt", True)))
+        elif mode == "target_following":
+            result = auto.target_following(track_id=body.get("track_id", ""), standoff_m=float(body.get("standoff_m", 15)))
+        elif mode == "orbit":
+            result = auto.orbit_mode(
+                center=body.get("center", {}),
+                radius_m=float(body.get("radius_m", 50)),
+                speed_mps=float(body.get("speed_mps", 5)),
+            )
+        elif mode == "search":
+            result = auto.search_pattern(bounds=body.get("bounds", {}), pattern=body.get("pattern", "lawnmower"), spacing_m=float(body.get("spacing_m", 40)))
+        elif mode == "coverage":
+            result = auto.area_coverage(bounds=body.get("bounds", {}), altitude_m=float(body.get("altitude_m", 60)), overlap=float(body.get("overlap", 0.3)))
+        elif mode == "swarm":
+            result = auto.swarm_ready(vehicle_ids=body.get("vehicle_ids", []), formation=body.get("formation", "line"))
+        else:
+            result = auto.decision_engine(
+                observations=body.get("observations", {}),
+                battery_pct=float(body.get("battery_pct", 100)),
+                link_ok=bool(body.get("link_ok", True)),
+            )
+        return json_response(result, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- simulation (11.4) ----
+async def simulation_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.simulation.status())
+
+
+async def simulation_runs_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response({"runs": drone_platform.simulation.list_runs()})
+        body = await _read_json(request)
+        run = drone_platform.simulation.create_run(
+            name=body.get("name", ""),
+            firmware_project_id=body.get("firmware_project_id", ""),
+            mission_id=body.get("mission_id", ""),
+            parameters=body.get("parameters"),
+        )
+        return json_response(run, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def simulation_scenario_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        scenario = drone_platform.simulation.build_scenario(
+            name=body.get("name", ""),
+            environment=body.get("environment"),
+            vehicles=body.get("vehicles"),
+            events=body.get("events"),
+        )
+        sensors = None
+        if body.get("virtual_sensors") is not False:
+            sensors = drone_platform.simulation.virtual_sensors(scenario_id=scenario["scenario_id"], readings=body.get("readings"))
+        return json_response({"scenario": scenario, "virtual_sensors": sensors}, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 # ---- inventory ----
 async def inventory_warehouses_handler(request: web.Request) -> web.Response:
     try:

@@ -54,4 +54,4 @@ generated_by_enterprise_infra
 [[INDEX]] · [[PROJECT_STATUS]] · [[EXECUTIVE_DASHBOARD]]
 
 ## Drone Platform
-[[drone/DRONE_DASHBOARD]] · [[drone/MAVLINK_REGISTRY]] · [[drone/TELEMETRY_REGISTRY]] · [[drone/FLIGHT_LOG_REGISTRY]] · [[drone/MISSION_REGISTRY]] · [[drone/FIRMWARE_DASHBOARD]]
+[[drone/DRONE_DASHBOARD]] · [[drone/MAVLINK_REGISTRY]] · [[drone/TELEMETRY_REGISTRY]] · [[drone/FLIGHT_LOG_REGISTRY]] · [[drone/MISSION_REGISTRY]] · [[drone/FIRMWARE_DASHBOARD]] · [[drone/VISION_REGISTRY]] · [[drone/NAVIGATION_REGISTRY]] · [[drone/MAPPING_REGISTRY]] · [[drone/AUTONOMY_REGISTRY]]
