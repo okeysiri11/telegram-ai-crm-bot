@@ -17,6 +17,11 @@ Living changelog maintained by the Documentation Assistant.
 Entries derived from sprint registry + latest Git signals.
 
 ## Components
+### [1.3.0] Knowledge 1.3
+- AI Project Architect & Architecture Guardian
+- Dependency report, architecture scores, technical debt, project health, evolution tracker
+- CLI: architecture_check, project_health, technical_debt, recommendations, full_architecture_review
+
 ### [1.2.0] Knowledge 1.2 — 2026-07-22
 - AI Documentation Assistant
 - Incremental documentation updates

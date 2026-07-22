@@ -5,51 +5,51 @@ aliases:
   - Knowledge Home
 tags:
   - dashboard
-  - knowledge-1.2
+  - knowledge-1.3
 generated: 2026-07-22
-sprint: Knowledge 1.2
+sprint: Knowledge 1.3
 ---
 # INDEX
 
 ## Overview
-Automatically updated dashboard (INDEX) — Knowledge 1.2.
+Auto-updated for Knowledge 1.3 Architecture Guardian — INDEX.
 
 ## Architecture
-Driven by Documentation Assistant incremental sync.
+Scores and health derived from read-only repository analysis.
 
 ## Components
-**Main entry point** — Knowledge 1.2 AI Documentation Assistant enabled.
+**Knowledge 1.3** — AI Project Architect & Architecture Guardian enabled.
 
-- Branch `main` @ `527d9ad`
-- Modules scanned: **70** · Agents: **12** · APIs: **4**
-- Sprint completion: **84.2%** · Dirty files: **29**
+- Architecture score: **84.0** · Overall: **77.2** · Risk: **Low**
+- Documentation coverage: **100.0%** · Sprint completion: **85.0%**
 
-### Quick links
+### Architect suite
+[[PROJECT_HEALTH]] · [[DEPENDENCY_REPORT]] · [[ARCHITECT_RECOMMENDATIONS]] · [[TECHNICAL_DEBT]] · [[ARCHITECTURE_HISTORY]]
+[[reports/ARCHITECTURE_GUARDIAN]] · [[automation/ARCHITECTURE_GUARDIAN]]
+
+### Dashboards
 [[DASHBOARD]] · [[EXECUTIVE_DASHBOARD]] · [[ARCHITECTURE_DASHBOARD]] · [[PROJECT_STATUS]] · [[SPRINT_PROGRESS]]
-[[VALIDATION_REPORT]] · [[ARCHITECTURE_CHANGES]] · [[releases/RELEASE_NOTES]] · [[reports/PROJECT_REPORT]]
-[[Platform Core]] · [[Auto Marketplace]] · [[Port ERP]] · [[Agro Marketplace]] · [[Drone Platform]] · [[AI Agents]]
-[[automation/DOCUMENTATION_ASSISTANT]] · [[diagrams/automation/README]]
 
 ## Relationships
-[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
+[[automation/ARCHITECTURE_GUARDIAN]] · [[PROJECT_HEALTH]]
 
 ## Responsibilities
-Keep stakeholders synchronized with project state.
+Surface architecture quality to the vault.
 
 ## Interfaces
-`python3 knowledge/tools/update_dashboards.py`
+`full_architecture_review.py`
 
 ## REST APIs
 [[registries/API_REGISTRY]]
 
 ## Events
-dashboard_updated
+dashboard_updated_from_guardian
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-Git + snapshot
+Architecture scores JSON
 
 ## Related pages
-[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]
+[[INDEX]] · [[TECHNICAL_DEBT]]

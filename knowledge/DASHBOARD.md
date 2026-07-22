@@ -4,52 +4,49 @@ aliases:
   - Dashboard
 tags:
   - dashboard
-  - knowledge-1.2
+  - knowledge-1.3
 generated: 2026-07-22
-sprint: Knowledge 1.2
+sprint: Knowledge 1.3
 ---
 # Dashboard
 
 ## Overview
-Automatically updated dashboard (Dashboard) — Knowledge 1.2.
+Auto-updated for Knowledge 1.3 Architecture Guardian — Dashboard.
 
 ## Architecture
-Driven by Documentation Assistant incremental sync.
+Scores and health derived from read-only repository analysis.
 
 ## Components
-| Panel | Status |
-|-------|--------|
-| Git branch | `main` |
-| Latest commit | `527d9ad` |
-| Changed files | 29 |
-| Modules | 70 |
-| Agents | 12 |
-| API prefixes | 4 |
-| Sprint completion | 84.2% |
-| Assistant | Knowledge 1.2 Ready |
+| Metric | Value |
+|--------|------:|
+| Architecture quality | 84.0 |
+| Documentation % | 100.0 |
+| Risk index | 24 |
+| Overall score | 77.2 |
+| Sprint completion | 85.0% |
 
-[[EXECUTIVE_DASHBOARD]] · [[ARCHITECTURE_DASHBOARD]] · [[reports/SPRINT_TRACKER]] · [[statistics/STATISTICS]]
+[[PROJECT_HEALTH]] · [[TECHNICAL_DEBT]] · [[reports/ARCHITECTURE_GUARDIAN]] · [[ARCHITECT_RECOMMENDATIONS]]
 
 ## Relationships
-[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
+[[automation/ARCHITECTURE_GUARDIAN]] · [[PROJECT_HEALTH]]
 
 ## Responsibilities
-Keep stakeholders synchronized with project state.
+Surface architecture quality to the vault.
 
 ## Interfaces
-`python3 knowledge/tools/update_dashboards.py`
+`full_architecture_review.py`
 
 ## REST APIs
 [[registries/API_REGISTRY]]
 
 ## Events
-dashboard_updated
+dashboard_updated_from_guardian
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-Git + snapshot
+Architecture scores JSON
 
 ## Related pages
-[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]
+[[INDEX]] · [[TECHNICAL_DEBT]]

@@ -47,6 +47,42 @@
       "ctime": 1721651000007,
       "path": "knowledge/diagrams/automation/README.md",
       "title": "Automated Graphs"
+    },
+    {
+      "type": "file",
+      "ctime": 1721652000000,
+      "path": "knowledge/PROJECT_HEALTH.md",
+      "title": "Project Health"
+    },
+    {
+      "type": "file",
+      "ctime": 1721652000001,
+      "path": "knowledge/DEPENDENCY_REPORT.md",
+      "title": "Dependency Report"
+    },
+    {
+      "type": "file",
+      "ctime": 1721652000002,
+      "path": "knowledge/ARCHITECT_RECOMMENDATIONS.md",
+      "title": "Architect Recommendations"
+    },
+    {
+      "type": "file",
+      "ctime": 1721652000003,
+      "path": "knowledge/TECHNICAL_DEBT.md",
+      "title": "Technical Debt"
+    },
+    {
+      "type": "file",
+      "ctime": 1721652000004,
+      "path": "knowledge/ARCHITECTURE_HISTORY.md",
+      "title": "Architecture History"
+    },
+    {
+      "type": "file",
+      "ctime": 1721652000005,
+      "path": "knowledge/automation/ARCHITECTURE_GUARDIAN.md",
+      "title": "Architecture Guardian"
     }
   ]
 }

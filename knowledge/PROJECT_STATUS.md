@@ -4,51 +4,46 @@ aliases:
   - Project Status
 tags:
   - dashboard
-  - knowledge-1.2
+  - knowledge-1.3
 generated: 2026-07-22
-sprint: Knowledge 1.2
+sprint: Knowledge 1.3
 ---
 # Project Status
 
 ## Overview
-Automatically updated dashboard (Project Status) — Knowledge 1.2.
+Auto-updated for Knowledge 1.3 Architecture Guardian — Project Status.
 
 ## Architecture
-Driven by Documentation Assistant incremental sync.
+Scores and health derived from read-only repository analysis.
 
 ## Components
-| Stream | Status |
-|--------|--------|
-| Platform Core | ✅ 3.0.0 |
-| Ecosystem | ✅ 1.5.0-alpha |
-| Agro / Port / Auto | ✅ 2.0.0 |
-| Drone | ✅ 11.1 foundation |
-| Knowledge 1.1 | ✅ Living docs |
-| Knowledge 1.2 | ✅ Assistant |
-| Legal | 🔜 planned |
+| Architecture score | 84.0 |
+| Documentation % | 100.0 |
+| Risk | Low |
+| Knowledge sprint | 1.3 Architecture Guardian |
 
-Git: `main` / `527d9ad` — Refactor CRM event handling to enhance publish/subscribe interactions and improve code clarity. This update strengthens integration with the event bus and supports the ongoing unification of event management across the platform.
+See [[PROJECT_HEALTH]] for full metrics.
 
 ## Relationships
-[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
+[[automation/ARCHITECTURE_GUARDIAN]] · [[PROJECT_HEALTH]]
 
 ## Responsibilities
-Keep stakeholders synchronized with project state.
+Surface architecture quality to the vault.
 
 ## Interfaces
-`python3 knowledge/tools/update_dashboards.py`
+`full_architecture_review.py`
 
 ## REST APIs
 [[registries/API_REGISTRY]]
 
 ## Events
-dashboard_updated
+dashboard_updated_from_guardian
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-Git + snapshot
+Architecture scores JSON
 
 ## Related pages
-[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]
+[[INDEX]] · [[TECHNICAL_DEBT]]

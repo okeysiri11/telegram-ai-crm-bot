@@ -4,50 +4,50 @@ aliases:
   - Architecture Dashboard
 tags:
   - dashboard
-  - knowledge-1.2
+  - knowledge-1.3
 generated: 2026-07-22
-sprint: Knowledge 1.2
+sprint: Knowledge 1.3
 ---
 # Architecture Dashboard
 
 ## Overview
-Automatically updated dashboard (Architecture Dashboard) — Knowledge 1.2.
+Auto-updated for Knowledge 1.3 Architecture Guardian — Architecture Dashboard.
 
 ## Architecture
-Driven by Documentation Assistant incremental sync.
+Scores and health derived from read-only repository analysis.
 
 ## Components
-### Automated graphs
-[[diagrams/automation/ARCHITECTURE_GRAPH]] · [[diagrams/automation/DEPENDENCY_GRAPH]] · [[diagrams/automation/WORKFLOW_GRAPH]]
-[[diagrams/automation/AGENT_GRAPH]] · [[diagrams/automation/APPLICATION_GRAPH]] · [[diagrams/automation/DEPLOYMENT_GRAPH]]
-[[diagrams/automation/API_GRAPH]] · [[diagrams/automation/KNOWLEDGE_GRAPH]]
+**Architecture Quality Score:** 84.0
+**Coupling / Cohesion:** 42.0 / 100.0
+**Risk:** Low
 
-### Diff
-[[ARCHITECTURE_CHANGES]]
+### Guardian outputs
+[[DEPENDENCY_REPORT]] · [[ARCHITECT_RECOMMENDATIONS]] · [[TECHNICAL_DEBT]] · [[PROJECT_HEALTH]] · [[ARCHITECTURE_HISTORY]]
+[[reports/ARCHITECTURE_GUARDIAN]] · [[automation/ARCHITECTURE_GUARDIAN]]
 
-### Classic diagrams
-[[diagrams/PLATFORM_GRAPH]] · [[diagrams/APPLICATION_GRAPH]] · [[diagrams/AGENT_GRAPH]] · [[diagrams/DATA_FLOW]]
+### Graphs
+[[diagrams/automation/DEPENDENCY_GRAPH]] · [[diagrams/automation/ARCHITECTURE_GRAPH]]
 
 ## Relationships
-[[INDEX]] · [[DASHBOARD]] · [[automation/DOCUMENTATION_ASSISTANT]]
+[[automation/ARCHITECTURE_GUARDIAN]] · [[PROJECT_HEALTH]]
 
 ## Responsibilities
-Keep stakeholders synchronized with project state.
+Surface architecture quality to the vault.
 
 ## Interfaces
-`python3 knowledge/tools/update_dashboards.py`
+`full_architecture_review.py`
 
 ## REST APIs
 [[registries/API_REGISTRY]]
 
 ## Events
-dashboard_updated
+dashboard_updated_from_guardian
 
 ## Future roadmap
 [[ROADMAP]]
 
 ## References
-Git + snapshot
+Architecture scores JSON
 
 ## Related pages
-[[VALIDATION_REPORT]] · [[reports/PROJECT_REPORT]]
+[[INDEX]] · [[TECHNICAL_DEBT]]

@@ -24,6 +24,12 @@ Automation utilities for the Obsidian knowledge vault (Sprints Knowledge 1.1–1
 | `release_notes.py` | Release notes + changelog |
 | `project_report.py` | Project report |
 | `update_everything.py` | Full pipeline |
+| `architecture_guardian.py` | Architecture Guardian engine (1.3) |
+| `architecture_check.py` | Architecture + dependency check |
+| `project_health.py` | Project health |
+| `technical_debt.py` | Technical debt register |
+| `recommendations.py` | Architect recommendations |
+| `full_architecture_review.py` | Full architect review |
 
 ## Components
 - Data: `../data/ecosystem_registry.json`, `../data/project_snapshot.json`

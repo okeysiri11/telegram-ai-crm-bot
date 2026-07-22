@@ -1,0 +1,47 @@
+{
+  "at": "2026-07-22T10:42:27.534636+00:00",
+  "scores": {
+    "architecture_quality": 84.0,
+    "documentation_coverage": 100.0,
+    "module_cohesion": 100.0,
+    "coupling": 42.0,
+    "maintainability": 13.4,
+    "complexity": 100.0,
+    "scalability": 100.0,
+    "risk_index": 24,
+    "overall": 77.2
+  },
+  "gates": {
+    "folder_naming": {
+      "pass": true,
+      "issues": []
+    },
+    "module_naming": {
+      "pass": true,
+      "issues": []
+    },
+    "api_naming": {
+      "pass": true,
+      "issues": []
+    },
+    "documentation": {
+      "pass": true,
+      "issues": []
+    },
+    "wiki_links": {
+      "pass": true,
+      "issues": []
+    },
+    "mermaid_diagrams": {
+      "pass": true,
+      "issues": []
+    },
+    "dependency_rules": {
+      "pass": false,
+      "issues": [
+        "`applications.auto_marketplace` imports `applications.port_erp` \u2014 prefer bridges only",
+        "`applications.auto_marketplace` imports `applications.agro_marketplace` \u2014 prefer bridges only"
+      ]
+    }
+  }
+}
