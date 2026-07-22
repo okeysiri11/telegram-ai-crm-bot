@@ -136,6 +136,17 @@ class MarketplaceStore:
         self.assistant_replies: EntityStore = EntityStore()
         self.vehicle_knowledge_cards: EntityStore = EntityStore()
         self.ai_risk_scores: EntityStore = EntityStore()
+        # Sprint 10.4 — auctions / financing / insurance / vehicle transactions
+        self.advanced_auctions: EntityStore = EntityStore()
+        self.loan_offers: EntityStore = EntityStore()
+        self.lease_offers: EntityStore = EntityStore()
+        self.insurance_quotes: EntityStore = EntityStore()
+        self.vehicle_transactions: EntityStore = EntityStore()
+        self.escrow_accounts: EntityStore = EntityStore()
+        self.transaction_payments: EntityStore = EntityStore()
+        self.ownership_transfer_records: EntityStore = EntityStore()
+        self.transaction_contracts: EntityStore = EntityStore()
+        self.transaction_documents: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

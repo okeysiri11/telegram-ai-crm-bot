@@ -17,6 +17,7 @@ from applications.auto_marketplace.api import (
     ops_handlers,
     portal_handlers,
     rest_handlers,
+    transaction_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -237,9 +238,92 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{ai}/workflows/onboard", ai_sales_handlers.onboard_customer_handler)
     app.router.add_post(f"{ai}/workflows/follow-up", ai_sales_handlers.schedule_follow_up_ai_handler)
 
+    # Sprint 10.4 — Auctions, Financing, Insurance & Vehicle Transactions
+    app.router.add_get(f"{prefix}/auctions", transaction_handlers.auctions_list_create_handler)
+    app.router.add_post(f"{prefix}/auctions", transaction_handlers.auctions_list_create_handler)
+    app.router.add_get(f"{prefix}/auctions/health", transaction_handlers.auctions_health_handler)
+    app.router.add_post(f"{prefix}/auctions/{{auction_id}}/start", transaction_handlers.auctions_start_handler)
+    app.router.add_post(f"{prefix}/auctions/{{auction_id}}/bids", transaction_handlers.auctions_bid_handler)
+    app.router.add_post(f"{prefix}/auctions/{{auction_id}}/auto-bid", transaction_handlers.auctions_auto_bid_handler)
+    app.router.add_post(f"{prefix}/auctions/{{auction_id}}/buy-now", transaction_handlers.auctions_buy_now_handler)
+    app.router.add_post(f"{prefix}/auctions/{{auction_id}}/close", transaction_handlers.auctions_close_handler)
+
+    app.router.add_get(f"{prefix}/leasing", transaction_handlers.leasing_health_handler)
+    app.router.add_post(f"{prefix}/leasing/quote", transaction_handlers.leasing_quote_handler)
+    app.router.add_post(f"{prefix}/leasing/compare", transaction_handlers.leasing_compare_handler)
+    app.router.add_post(
+        f"{prefix}/leasing/{{lease_id}}/contract",
+        transaction_handlers.leasing_contract_handler,
+    )
+
+    app.router.add_get(f"{prefix}/insurance", transaction_handlers.insurance_health_handler)
+    app.router.add_post(f"{prefix}/insurance/quote", transaction_handlers.insurance_quote_handler)
+    app.router.add_post(f"{prefix}/insurance/compare", transaction_handlers.insurance_compare_handler)
+    app.router.add_post(
+        f"{prefix}/insurance/{{quote_id}}/claims",
+        transaction_handlers.insurance_claim_handler,
+    )
+
+    app.router.add_get(f"{prefix}/transactions", transaction_handlers.transactions_list_create_handler)
+    app.router.add_post(f"{prefix}/transactions", transaction_handlers.transactions_list_create_handler)
+    app.router.add_get(f"{prefix}/transactions/health", transaction_handlers.transactions_health_handler)
+    app.router.add_post(
+        f"{prefix}/transactions/{{transaction_id}}/reserve",
+        transaction_handlers.transactions_reserve_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transactions/{{transaction_id}}/offer",
+        transaction_handlers.transactions_offer_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transactions/{{transaction_id}}/counter",
+        transaction_handlers.transactions_counter_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transactions/{{transaction_id}}/contract",
+        transaction_handlers.transactions_contract_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transactions/{{transaction_id}}/sign",
+        transaction_handlers.transactions_sign_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transactions/{{transaction_id}}/pay",
+        transaction_handlers.transactions_pay_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transactions/{{transaction_id}}/transfer",
+        transaction_handlers.transactions_transfer_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transactions/{{transaction_id}}/deliver",
+        transaction_handlers.transactions_deliver_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transactions/{{transaction_id}}/complete",
+        transaction_handlers.transactions_complete_handler,
+    )
+
+    app.router.add_get(f"{prefix}/payments", transaction_handlers.payments_list_create_handler)
+    app.router.add_post(f"{prefix}/payments", transaction_handlers.payments_list_create_handler)
+    app.router.add_post(
+        f"{prefix}/payments/{{payment_id}}/capture",
+        transaction_handlers.payments_capture_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/payments/{{payment_id}}/refund",
+        transaction_handlers.payments_refund_handler,
+    )
+    app.router.add_post(f"{prefix}/payments/installments", transaction_handlers.payments_installments_handler)
+
     # Sprint 6.5 — Documents, Contracts & Financial Operations
     fin = f"{prefix}/finance"
     app.router.add_get(f"{fin}/metrics", finance_handlers.finance_metrics_handler)
+    app.router.add_post(f"{fin}/calculator", transaction_handlers.finance_calculator_handler)
+    app.router.add_post(f"{fin}/compare", transaction_handlers.finance_compare_handler)
+    app.router.add_get(f"{fin}/loans", transaction_handlers.finance_loans_handler)
+    app.router.add_post(f"{fin}/loans", transaction_handlers.finance_loans_handler)
+    app.router.add_post(f"{fin}/loans/{{offer_id}}/approve", transaction_handlers.finance_approve_handler)
     app.router.add_get(f"{fin}/documents/templates", finance_handlers.list_document_templates_handler)
     app.router.add_post(f"{fin}/documents/generate", finance_handlers.generate_document_handler)
     app.router.add_get(f"{fin}/documents/{{document_id}}", finance_handlers.get_document_handler)

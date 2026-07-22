@@ -1,4 +1,4 @@
-# Auto Marketplace configuration — Sprint 10.3 AI Vehicle Intelligence.
+# Auto Marketplace configuration — Sprint 10.4 Transactions.
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ class AutoMarketplaceConfig:
     default_currency: str = "USD"
     enable_ai_recommendations: bool = True
     enable_auctions: bool = True
-    application_version: str = "1.2.0-alpha"
-    release_status: str = "AI Intelligence Alpha"
+    application_version: str = "1.3.0-alpha"
+    release_status: str = "Transactions Alpha"
     platform_dependency: str = "AI Platform Core v3"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     mobile_api_prefix: str = "/api/auto/mobile/v1"
@@ -28,6 +28,10 @@ class AutoMarketplaceConfig:
     dealer_engine: str = "1.0"
     auto_ai_engine: str = "1.0"
     recommendation_engine: str = "1.0"
+    transaction_engine: str = "1.0"
+    auction_engine: str = "1.0"
+    finance_engine: str = "1.0"
+    insurance_engine: str = "1.0"
 
 
 DEFAULT_CONFIG = AutoMarketplaceConfig()

@@ -1,14 +1,15 @@
-# Auto Marketplace — Foundation through AI Intelligence (Sprint 10.3)
+# Auto Marketplace — Transactions (Sprint 10.4)
 
-Vehicle marketplace with AI intelligence for **Auto Marketplace 1.2.0-alpha**.
+Vehicle marketplace with auctions, financing, insurance, and transaction workflows for **Auto Marketplace 1.3.0-alpha**.
 
 | Field | Value |
 |-------|-------|
 | Application name | Auto Marketplace |
-| Application version | `1.2.0-alpha` |
-| VIN / Dealer engines | `1.0` |
-| Auto AI engine | `1.0` |
-| Recommendation engine | `1.0` |
+| Application version | `1.3.0-alpha` |
+| Transaction engine | `1.0` |
+| Auction engine | `1.0` |
+| Finance engine | `1.0` |
+| Insurance engine | `1.0` |
 | Platform | AI Platform Core v3 (bridge only) |
 | Ecosystem | AI Ecosystem v1.5 (bridge only) |
 | API | `/api/auto/v1` |
@@ -21,31 +22,34 @@ Vehicle marketplace with AI intelligence for **Auto Marketplace 1.2.0-alpha**.
 flowchart TB
     API["/api/auto/v1"]
     App[AutoMarketplaceApplication]
-    Domains[Catalog Marketplace VIN AutoAI]
+    Domains[Catalog Marketplace VIN AutoAI Transactions]
     Bridges[Platform + Ecosystem Bridges]
     Store[MarketplaceStore]
     API --> App --> Domains --> Store
     App --> Bridges
 ```
 
-## Modules (10.3)
+## Modules (10.4)
 
-`ai/` · `recommendations/` · `matching/` · `inspection_ai/` · `pricing_ai/` · `forecasting/` · `risk/` · `assistant/` · `knowledge/` · `analytics/`
+`auctions/` · `financing/` · `leasing/` · `insurance/` · `transactions/` · `escrow/` · `payments/` · `ownership_transfer/` · `contracts/` · `documents/`
 
 ## REST API
 
-`/ai` · `/recommendations` · `/pricing-ai` · `/inspection` · `/forecast` · `/assistant`
+`/auctions` · `/finance` · `/leasing` · `/insurance` · `/transactions` · `/payments`
 
 ## Docs
 
 - [AUTO_VIN.md](AUTO_VIN.md)
 - [AUTO_AI.md](AUTO_AI.md)
+- [AUTO_TRANSACTIONS.md](AUTO_TRANSACTIONS.md)
 
 ```python
 from applications.auto_marketplace import auto_marketplace
 
 health = auto_marketplace.health()
-assert health["application_version"] == "1.2.0-alpha"
-assert health["auto_ai_engine"] == "1.0"
-assert health["recommendation_engine"] == "1.0"
+assert health["application_version"] == "1.3.0-alpha"
+assert health["transaction_engine"] == "1.0"
+assert health["auction_engine"] == "1.0"
+assert health["finance_engine"] == "1.0"
+assert health["insurance_engine"] == "1.0"
 ```
