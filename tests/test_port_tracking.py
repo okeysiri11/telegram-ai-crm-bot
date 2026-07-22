@@ -37,7 +37,7 @@ def reset_store():
 
 def test_version_tracking_engine_and_docs():
     health = port_erp.health()
-    assert health["application_version"] == "1.5.0-alpha"
+    assert health["application_version"] == "1.6.0-alpha"
     assert health["tracking_engine"] == "1.0"
     assert "tracking" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "PORT_TRACKING.md"
@@ -212,7 +212,7 @@ async def test_tracking_rest_api(client: TestClient):
     health = await client.get("/api/port/v1/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.5.0-alpha"
+    assert body["application_version"] == "1.6.0-alpha"
     assert body["tracking_engine"] == "1.0"
 
     tracking = await client.get("/api/port/v1/tracking")

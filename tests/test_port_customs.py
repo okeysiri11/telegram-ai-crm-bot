@@ -46,7 +46,7 @@ def reset_store():
 
 def test_version_customs_docs_bridges():
     health = port_erp.health()
-    assert health["application_version"] == "1.5.0-alpha"
+    assert health["application_version"] == "1.6.0-alpha"
     assert health["customs_engine"] == "1.0"
     assert "customs" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "PORT_CUSTOMS.md"
@@ -215,7 +215,7 @@ async def test_customs_rest_api(client: TestClient):
     health = await client.get("/api/port/v1/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.5.0-alpha"
+    assert body["application_version"] == "1.6.0-alpha"
     assert body["customs_engine"] == "1.0"
 
     customs = await client.get("/api/port/v1/customs")

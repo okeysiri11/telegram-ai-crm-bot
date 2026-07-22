@@ -102,6 +102,21 @@ class PortStore:
         self.optimization_plans: EntityStore = EntityStore()
         self.predictions: EntityStore = EntityStore()
         self.decision_recommendations: EntityStore = EntityStore()
+        # Sprint 9.7 — finance / billing / contracts / accounting
+        self.commercial_tariffs: EntityStore = EntityStore()
+        self.commercial_contracts: EntityStore = EntityStore()
+        self.commercial_invoices: EntityStore = EntityStore()
+        self.credit_notes: EntityStore = EntityStore()
+        self.debit_notes: EntityStore = EntityStore()
+        self.payments: EntityStore = EntityStore()
+        self.journal_entries: EntityStore = EntityStore()
+        self.exchange_rates: EntityStore = EntityStore()
+        self.tax_rates: EntityStore = EntityStore()
+        self.budgets: EntityStore = EntityStore()
+        self.cost_centers: EntityStore = EntityStore()
+        self.expense_records: EntityStore = EntityStore()
+        self.suppliers: EntityStore = EntityStore()
+        self.customer_accounts: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

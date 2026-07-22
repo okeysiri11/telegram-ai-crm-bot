@@ -1,16 +1,13 @@
-# Port ERP — Foundation through AI Operations (Sprint 9.6)
+# Port ERP — Foundation through Finance (Sprint 9.7)
 
-Port operations ERP for **Port ERP 1.5.0-alpha**.
+Port operations ERP for **Port ERP 1.6.0-alpha**.
 
 | Field | Value |
 |-------|-------|
 | Application name | Port ERP |
-| Application version | `1.5.0-alpha` |
-| Tracking engine | `1.0` |
-| Terminal engine | `1.0` |
-| Customs engine | `1.0` |
-| Logistics engine | `1.0` |
-| AI operations engine | `1.0` |
+| Application version | `1.6.0-alpha` |
+| Tracking / Terminal / Customs / Logistics / AI Ops | `1.0` each |
+| Finance engine | `1.0` |
 | Platform | AI Platform Core v3 (bridge only) |
 | Ecosystem | AI Ecosystem v1.5 (bridge only) |
 | API | `/api/port/v1` |
@@ -23,38 +20,20 @@ Port operations ERP for **Port ERP 1.5.0-alpha**.
 flowchart TB
     API["/api/port/v1"]
     App[PortERPApplication]
-    Core[PortCoreEngine]
-    Track[LiveTrackingEngine]
-    Terminal[TerminalOperationsEngine]
-    Customs[CustomsDomainEngine]
-    Logistics[LogisticsDomainEngine]
-    AIOps[AIOperationsDomainEngine]
+    Domains[Core Track Terminal Customs Logistics AIOps Finance]
     Bridges[Platform + Ecosystem Bridges]
     Store[PortStore]
-
-    API --> App
-    App --> Core
-    App --> Track
-    App --> Terminal
-    App --> Customs
-    App --> Logistics
-    App --> AIOps
-    Core --> Store
-    Track --> Store
-    Terminal --> Store
-    Customs --> Store
-    Logistics --> Store
-    AIOps --> Store
+    API --> App --> Domains --> Store
     App --> Bridges
 ```
 
-## Modules
+## Modules (9.7)
 
-Foundation · Tracking (9.2) · Terminal (9.3) · Customs (9.4) · Logistics (9.5) · **AI Ops (9.6):** `digital_twin/` · `executive_ai/` · `operations_center/` · `optimization/` · `berth_scheduler/` · `yard_optimizer/` · `resource_manager/` · `prediction/` · `simulation/` · `dashboard/` · `alerts/`
+`finance/` · `billing/` · `contracts/` · `tariffs/` · `invoices/` · `payments/` · `accounting/` · `customers/` · `suppliers/` · `currencies/` · `taxes/` · `budget/` · `profitability/`
 
-## REST API (AI Ops)
+## REST API (Finance)
 
-`/digital-twin` · `/dashboard` · `/operations/center` · `/simulation` · `/optimization` · `/executive`
+`/finance` · `/billing` · `/contracts` · `/tariffs` · `/invoices` · `/payments` · `/accounting`
 
 ## Docs
 
@@ -63,11 +42,12 @@ Foundation · Tracking (9.2) · Terminal (9.3) · Customs (9.4) · Logistics (9.
 - [PORT_CUSTOMS.md](PORT_CUSTOMS.md)
 - [PORT_LOGISTICS.md](PORT_LOGISTICS.md)
 - [PORT_AI.md](PORT_AI.md)
+- [PORT_FINANCE.md](PORT_FINANCE.md)
 
 ```python
 from applications.port_erp import port_erp
 
 health = port_erp.health()
-assert health["application_version"] == "1.5.0-alpha"
-assert health["ai_operations_engine"] == "1.0"
+assert health["application_version"] == "1.6.0-alpha"
+assert health["finance_engine"] == "1.0"
 ```

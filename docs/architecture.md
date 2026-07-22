@@ -972,21 +972,19 @@ Full details: [AGRO_PORTAL.md](AGRO_PORTAL.md).
 
 Full details: [AGRO_RELEASE.md](AGRO_RELEASE.md), [DEPLOYMENT.md](DEPLOYMENT.md), [OPERATIONS.md](OPERATIONS.md).
 
-## Port ERP (9.1–9.6) — Tracking, Terminal, Customs, Logistics, AI Ops
+## Port ERP (9.1–9.7) — Ops, Trade, Logistics, AI, Finance
 
 | Component | Location | Role |
 |-----------|----------|------|
 | PortERPApplication | `applications/port_erp/application.py` | Application facade |
-| PortCoreEngine | `applications/port_erp/port_core/engine.py` | Registry facade |
-| LiveTrackingEngine | `applications/port_erp/tracking/engine.py` | AIS / GPS / fleet / ETA facade |
-| TerminalOperationsEngine | `applications/port_erp/terminal_operations/engine.py` | Yard / warehouse / gate / equipment |
-| CustomsDomainEngine | `applications/port_erp/customs/facade.py` | Customs / trade / documents / compliance |
-| LogisticsDomainEngine | `applications/port_erp/multimodal/facade.py` | Shipping / forwarders / multimodal |
-| AIOperationsDomainEngine | `applications/port_erp/digital_twin/facade.py` | Digital twin / executive AI / simulation |
-| Platform Bridge | `applications/port_erp/integrations/platform_bridge.py` | Platform Core bridge |
-| Ecosystem Bridge | `applications/port_erp/integrations/ecosystem_bridge.py` | Ecosystem bridge |
-| REST API | `applications/port_erp/api/` | `/api/port/v1` |
+| LiveTrackingEngine | `applications/port_erp/tracking/engine.py` | AIS / GPS / fleet |
+| TerminalOperationsEngine | `applications/port_erp/terminal_operations/engine.py` | Yard / warehouse / gate |
+| CustomsDomainEngine | `applications/port_erp/customs/facade.py` | Customs / trade docs |
+| LogisticsDomainEngine | `applications/port_erp/multimodal/facade.py` | Shipping / multimodal |
+| AIOperationsDomainEngine | `applications/port_erp/digital_twin/facade.py` | Digital twin / executive AI |
+| FinanceDomainEngine | `applications/port_erp/finance/facade.py` | Billing / contracts / accounting |
+| Platform / Ecosystem Bridges | `applications/port_erp/integrations/` | Bridges only |
 
-**Application Version 1.5.0-alpha** — AI Operations & Digital Twin · `ai_operations_engine = 1.0`
+**Application Version 1.6.0-alpha** — Finance & Commercial · `finance_engine = 1.0`
 
-Full details: [PORT_ERP.md](PORT_ERP.md), [PORT_TRACKING.md](PORT_TRACKING.md), [PORT_TERMINAL.md](PORT_TERMINAL.md), [PORT_CUSTOMS.md](PORT_CUSTOMS.md), [PORT_LOGISTICS.md](PORT_LOGISTICS.md), [PORT_AI.md](PORT_AI.md).
+Full details: [PORT_ERP.md](PORT_ERP.md), [PORT_FINANCE.md](PORT_FINANCE.md), and prior Port ERP docs.

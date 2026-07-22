@@ -7,6 +7,7 @@ from aiohttp import web
 from applications.port_erp.api import (
     ai_ops_handlers,
     customs_handlers,
+    finance_handlers,
     handlers,
     logistics_handlers,
     terminal_handlers,
@@ -346,3 +347,57 @@ def register_port_erp_routes(app: web.Application) -> None:
     app.router.add_get(f"{prefix}/executive", ai_ops_handlers.executive_briefing_handler)
     app.router.add_get(f"{prefix}/executive/recommendations", ai_ops_handlers.executive_recommendations_handler)
     app.router.add_get(f"{prefix}/executive/predictions", ai_ops_handlers.executive_predictions_handler)
+
+    # Sprint 9.7 — finance / billing / contracts / tariffs / invoices / payments / accounting
+    app.router.add_get(f"{prefix}/finance", finance_handlers.finance_health_handler)
+    app.router.add_post(f"{prefix}/finance/expenses", finance_handlers.finance_expense_handler)
+    app.router.add_get(f"{prefix}/finance/companies", finance_handlers.finance_companies_handler)
+    app.router.add_post(f"{prefix}/finance/budgets", finance_handlers.finance_budget_handler)
+    app.router.add_post(f"{prefix}/finance/accounts", finance_handlers.finance_customer_account_handler)
+    app.router.add_post(f"{prefix}/finance/suppliers", finance_handlers.finance_supplier_handler)
+
+    app.router.add_get(f"{prefix}/billing/fee-types", finance_handlers.billing_fee_types_handler)
+    app.router.add_post(f"{prefix}/billing", finance_handlers.billing_create_handler)
+
+    app.router.add_get(f"{prefix}/contracts", finance_handlers.contracts_list_handler)
+    app.router.add_post(f"{prefix}/contracts", finance_handlers.contracts_create_handler)
+    app.router.add_post(
+        f"{prefix}/contracts/{{contract_id}}/activate",
+        finance_handlers.contracts_activate_handler,
+    )
+
+    app.router.add_get(f"{prefix}/tariffs", finance_handlers.tariffs_list_handler)
+    app.router.add_post(f"{prefix}/tariffs", finance_handlers.tariffs_create_handler)
+    app.router.add_post(f"{prefix}/tariffs/quote", finance_handlers.tariffs_quote_handler)
+
+    app.router.add_get(f"{prefix}/invoices", finance_handlers.invoices_list_handler)
+    app.router.add_post(f"{prefix}/invoices", finance_handlers.invoices_create_handler)
+    app.router.add_get(f"{prefix}/invoices/outstanding", finance_handlers.invoices_outstanding_handler)
+    app.router.add_post(
+        f"{prefix}/invoices/{{invoice_id}}/charges",
+        finance_handlers.invoices_charge_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/invoices/{{invoice_id}}/issue",
+        finance_handlers.invoices_issue_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/invoices/{{invoice_id}}/credit-notes",
+        finance_handlers.invoices_credit_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/invoices/{{invoice_id}}/debit-notes",
+        finance_handlers.invoices_debit_handler,
+    )
+
+    app.router.add_get(f"{prefix}/payments", finance_handlers.payments_list_handler)
+    app.router.add_post(f"{prefix}/payments", finance_handlers.payments_create_handler)
+    app.router.add_post(
+        f"{prefix}/payments/{{payment_id}}/refund",
+        finance_handlers.payments_refund_handler,
+    )
+
+    app.router.add_get(f"{prefix}/accounting", finance_handlers.accounting_journal_handler)
+    app.router.add_post(f"{prefix}/accounting/entries", finance_handlers.accounting_post_handler)
+    app.router.add_post(f"{prefix}/accounting/fx", finance_handlers.accounting_fx_handler)
+    app.router.add_post(f"{prefix}/accounting/tax", finance_handlers.accounting_tax_handler)
