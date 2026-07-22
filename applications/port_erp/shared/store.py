@@ -95,6 +95,13 @@ class PortStore:
         self.transport_orders: EntityStore = EntityStore()
         self.consolidation_batches: EntityStore = EntityStore()
         self.fleet_assignments: EntityStore = EntityStore()
+        # Sprint 9.6 — digital twin / AI ops / simulation
+        self.twin_snapshots: EntityStore = EntityStore()
+        self.port_alerts: EntityStore = EntityStore()
+        self.simulation_runs: EntityStore = EntityStore()
+        self.optimization_plans: EntityStore = EntityStore()
+        self.predictions: EntityStore = EntityStore()
+        self.decision_recommendations: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

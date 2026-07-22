@@ -48,7 +48,7 @@ def reset_store():
 def test_version_and_roles():
     health = port_erp.health()
     assert health["application_name"] == "Port ERP"
-    assert health["application_version"] == "1.4.0-alpha"
+    assert health["application_version"] == "1.5.0-alpha"
     assert health["tracking_engine"] == "1.0"
     assert health["terminal_engine"] == "1.0"
     assert health["platform_dependency"] == "AI Platform Core v3"
@@ -130,7 +130,7 @@ async def test_rest_api_foundation(client: TestClient):
     health = await client.get("/api/port/v1/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.4.0-alpha"
+    assert body["application_version"] == "1.5.0-alpha"
     assert body["application_name"] == "Port ERP"
 
     roles = await client.get("/api/port/v1/roles")

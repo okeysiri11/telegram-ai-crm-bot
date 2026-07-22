@@ -7,6 +7,7 @@ from typing import Any
 from applications.port_erp.billing.service import BillingService, billing_service
 from applications.port_erp.config import DEFAULT_CONFIG, PortERPConfig
 from applications.port_erp.customs.facade import CustomsDomainEngine, customs_domain_engine
+from applications.port_erp.digital_twin.facade import AIOperationsDomainEngine, ai_operations_domain_engine
 from applications.port_erp.documents.service import DocumentsService, documents_service
 from applications.port_erp.integrations.ecosystem_bridge import EcosystemBridge, ecosystem_bridge
 from applications.port_erp.integrations.platform_bridge import PlatformBridge, platform_bridge
@@ -38,6 +39,7 @@ class PortERPApplication:
         terminal: TerminalOperationsEngine | None = None,
         customs: CustomsDomainEngine | None = None,
         logistics: LogisticsDomainEngine | None = None,
+        ai_ops: AIOperationsDomainEngine | None = None,
         live_operations: LivePortOperations | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -52,12 +54,14 @@ class PortERPApplication:
         self.terminal = terminal or terminal_operations_engine
         self.customs = customs or customs_domain_engine
         self.logistics = logistics or logistics_domain_engine
+        self.ai_ops = ai_ops or ai_operations_domain_engine
         self.live_operations = live_operations or live_port_operations
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
 
     def reset(self) -> None:
         self.store.reset()
+        self.ai_ops.twin.set_weather(condition="clear")
 
     def health(self) -> dict[str, Any]:
         return {
@@ -72,11 +76,13 @@ class PortERPApplication:
             "terminal_engine": self.config.terminal_engine,
             "customs_engine": self.config.customs_engine,
             "logistics_engine": self.config.logistics_engine,
+            "ai_operations_engine": self.config.ai_operations_engine,
             "metrics": self.core.metrics(),
             "tracking": self.tracking.metrics(),
             "terminal": self.terminal.metrics(),
             "customs": self.customs.metrics(),
             "logistics": self.logistics.metrics(),
+            "ai_ops": self.ai_ops.metrics(),
             "roles": self.permissions.roles(),
             "platform": self.platform.platform_health(),
             "ecosystem": self.ecosystem.ecosystem_health(),

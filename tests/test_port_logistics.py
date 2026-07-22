@@ -45,7 +45,7 @@ def reset_store():
 
 def test_version_logistics_docs_bridges():
     health = port_erp.health()
-    assert health["application_version"] == "1.4.0-alpha"
+    assert health["application_version"] == "1.5.0-alpha"
     assert health["logistics_engine"] == "1.0"
     assert "logistics" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "PORT_LOGISTICS.md"
@@ -201,7 +201,7 @@ async def test_logistics_rest_api(client: TestClient):
     health = await client.get("/api/port/v1/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.4.0-alpha"
+    assert body["application_version"] == "1.5.0-alpha"
     assert body["logistics_engine"] == "1.0"
 
     shipping = await client.get("/api/port/v1/shipping")

@@ -1,15 +1,16 @@
-# Port ERP — Foundation through Logistics (Sprint 9.5)
+# Port ERP — Foundation through AI Operations (Sprint 9.6)
 
-Port operations ERP for **Port ERP 1.4.0-alpha**.
+Port operations ERP for **Port ERP 1.5.0-alpha**.
 
 | Field | Value |
 |-------|-------|
 | Application name | Port ERP |
-| Application version | `1.4.0-alpha` |
+| Application version | `1.5.0-alpha` |
 | Tracking engine | `1.0` |
 | Terminal engine | `1.0` |
 | Customs engine | `1.0` |
 | Logistics engine | `1.0` |
+| AI operations engine | `1.0` |
 | Platform | AI Platform Core v3 (bridge only) |
 | Ecosystem | AI Ecosystem v1.5 (bridge only) |
 | API | `/api/port/v1` |
@@ -27,6 +28,7 @@ flowchart TB
     Terminal[TerminalOperationsEngine]
     Customs[CustomsDomainEngine]
     Logistics[LogisticsDomainEngine]
+    AIOps[AIOperationsDomainEngine]
     Bridges[Platform + Ecosystem Bridges]
     Store[PortStore]
 
@@ -36,27 +38,23 @@ flowchart TB
     App --> Terminal
     App --> Customs
     App --> Logistics
+    App --> AIOps
     Core --> Store
     Track --> Store
     Terminal --> Store
     Customs --> Store
     Logistics --> Store
+    AIOps --> Store
     App --> Bridges
 ```
 
 ## Modules
 
-Foundation · Tracking (9.2) · Terminal (9.3) · Customs (9.4) · **Logistics (9.5):** `shipping_lines/` · `forwarders/` · `carriers/` · `multimodal/` · `routes/` · `booking/` · `transport_orders/` · `rail/` · `road/` · `air/` · `fleet/`
+Foundation · Tracking (9.2) · Terminal (9.3) · Customs (9.4) · Logistics (9.5) · **AI Ops (9.6):** `digital_twin/` · `executive_ai/` · `operations_center/` · `optimization/` · `berth_scheduler/` · `yard_optimizer/` · `resource_manager/` · `prediction/` · `simulation/` · `dashboard/` · `alerts/`
 
-## REST API
+## REST API (AI Ops)
 
-| Area | Prefix |
-|------|--------|
-| Core | `/ports`, `/terminals`, `/vessels`, … |
-| Tracking | `/tracking`, `/gps`, `/maps`, `/timeline` |
-| Terminal | `/terminal`, `/warehouse`, `/yard`, `/gate`, `/equipment`, `/planning` |
-| Customs | `/customs`, `/documents`, `/certificates`, `/trade`, `/broker`, `/compliance` |
-| Logistics | `/shipping`, `/forwarders`, `/carriers`, `/routes`, `/bookings`, `/transport` |
+`/digital-twin` · `/dashboard` · `/operations/center` · `/simulation` · `/optimization` · `/executive`
 
 ## Docs
 
@@ -64,11 +62,12 @@ Foundation · Tracking (9.2) · Terminal (9.3) · Customs (9.4) · **Logistics (
 - [PORT_TERMINAL.md](PORT_TERMINAL.md)
 - [PORT_CUSTOMS.md](PORT_CUSTOMS.md)
 - [PORT_LOGISTICS.md](PORT_LOGISTICS.md)
+- [PORT_AI.md](PORT_AI.md)
 
 ```python
 from applications.port_erp import port_erp
 
 health = port_erp.health()
-assert health["application_version"] == "1.4.0-alpha"
-assert health["logistics_engine"] == "1.0"
+assert health["application_version"] == "1.5.0-alpha"
+assert health["ai_operations_engine"] == "1.0"
 ```

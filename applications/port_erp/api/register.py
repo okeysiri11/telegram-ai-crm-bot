@@ -5,6 +5,7 @@ from __future__ import annotations
 from aiohttp import web
 
 from applications.port_erp.api import (
+    ai_ops_handlers,
     customs_handlers,
     handlers,
     logistics_handlers,
@@ -315,3 +316,33 @@ def register_port_erp_routes(app: web.Application) -> None:
         f"{prefix}/transport/{{order_id}}/transfer",
         logistics_handlers.transport_transfer_handler,
     )
+
+    # Sprint 9.6 — digital twin / dashboard / operations center / simulation / optimization / executive
+    app.router.add_get(f"{prefix}/digital-twin", ai_ops_handlers.digital_twin_health_handler)
+    app.router.add_post(f"{prefix}/digital-twin/snapshot", ai_ops_handlers.digital_twin_snapshot_handler)
+    app.router.add_get(f"{prefix}/digital-twin/snapshots", ai_ops_handlers.digital_twin_list_handler)
+    app.router.add_post(f"{prefix}/digital-twin/weather", ai_ops_handlers.digital_twin_weather_handler)
+
+    app.router.add_get(f"{prefix}/dashboard", ai_ops_handlers.dashboard_handler)
+
+    app.router.add_get(f"{prefix}/operations/center", ai_ops_handlers.operations_center_handler)
+    app.router.add_post(f"{prefix}/operations/center/refresh", ai_ops_handlers.operations_refresh_handler)
+    app.router.add_get(f"{prefix}/operations/alerts", ai_ops_handlers.operations_alerts_handler)
+    app.router.add_post(f"{prefix}/operations/alerts", ai_ops_handlers.operations_alert_create_handler)
+    app.router.add_post(
+        f"{prefix}/operations/alerts/{{alert_id}}/acknowledge",
+        ai_ops_handlers.operations_alert_ack_handler,
+    )
+
+    app.router.add_get(f"{prefix}/simulation", ai_ops_handlers.simulation_list_handler)
+    app.router.add_get(f"{prefix}/simulation/scenarios", ai_ops_handlers.simulation_scenarios_handler)
+    app.router.add_post(f"{prefix}/simulation/run", ai_ops_handlers.simulation_run_handler)
+
+    app.router.add_get(f"{prefix}/optimization", ai_ops_handlers.optimization_list_handler)
+    app.router.add_post(f"{prefix}/optimization/run", ai_ops_handlers.optimization_run_handler)
+    app.router.add_post(f"{prefix}/optimization/berth", ai_ops_handlers.optimization_berth_handler)
+    app.router.add_post(f"{prefix}/optimization/yard", ai_ops_handlers.optimization_yard_handler)
+
+    app.router.add_get(f"{prefix}/executive", ai_ops_handlers.executive_briefing_handler)
+    app.router.add_get(f"{prefix}/executive/recommendations", ai_ops_handlers.executive_recommendations_handler)
+    app.router.add_get(f"{prefix}/executive/predictions", ai_ops_handlers.executive_predictions_handler)
