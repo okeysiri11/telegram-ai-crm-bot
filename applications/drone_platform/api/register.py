@@ -106,6 +106,24 @@ def register_drone_platform_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/ops/analytics", handlers.ops_analytics_handler)
     app.router.add_post(f"{prefix}/ops/collaboration", handlers.ops_collaboration_handler)
 
+    # Sprint 11.8 — Drone Cloud / Remote / Global Command
+    app.router.add_get(f"{prefix}/cloud", handlers.cloud_status_handler)
+    app.router.add_get(f"{prefix}/cloud/nodes", handlers.cloud_nodes_handler)
+    app.router.add_post(f"{prefix}/cloud/nodes", handlers.cloud_nodes_handler)
+    app.router.add_post(f"{prefix}/cloud/sync", handlers.cloud_sync_handler)
+    app.router.add_get(f"{prefix}/cloud/remote", handlers.cloud_remote_handler)
+    app.router.add_post(f"{prefix}/cloud/remote", handlers.cloud_remote_handler)
+    app.router.add_get(f"{prefix}/cloud/fleet", handlers.cloud_fleet_handler)
+    app.router.add_post(f"{prefix}/cloud/fleet", handlers.cloud_fleet_handler)
+    app.router.add_get(f"{prefix}/cloud/command", handlers.cloud_command_handler)
+    app.router.add_post(f"{prefix}/cloud/command", handlers.cloud_command_handler)
+    app.router.add_get(f"{prefix}/cloud/twins", handlers.cloud_twins_handler)
+    app.router.add_post(f"{prefix}/cloud/twins", handlers.cloud_twins_handler)
+    app.router.add_post(f"{prefix}/cloud/security", handlers.cloud_security_handler)
+    app.router.add_get(f"{prefix}/cloud/enterprise", handlers.cloud_enterprise_handler)
+    app.router.add_post(f"{prefix}/cloud/enterprise", handlers.cloud_enterprise_handler)
+    app.router.add_post(f"{prefix}/cloud/engineering", handlers.cloud_engineering_handler)
+
     # telemetry
     app.router.add_get(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)
     app.router.add_post(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)

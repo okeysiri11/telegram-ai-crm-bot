@@ -1,12 +1,12 @@
 # Drone Platform — Foundation (Sprint 11.1)
 
-**Version:** `1.6.0-alpha`  
-**Status:** Mission Operations Alpha  
+**Version:** `1.7.0-alpha`  
+**Status:** Enterprise Cloud Alpha  
 **API prefix:** `/api/drone/v1`
 
-Engineering ERP + AI workspace for UAV development. Sprint **11.7** adds Mission Operations, Fleet Command, Ground Control, Swarm Intelligence, and Mission AI.
+Engineering ERP + AI workspace for UAV development. Sprint **11.8** adds Drone Cloud, Remote Operations, Global Command, Digital Twin, and Enterprise APIs.
 
-See also: [MISSION_CENTER.md](MISSION_CENTER.md), [FLEET_COMMAND.md](FLEET_COMMAND.md), [SWARM_AI.md](SWARM_AI.md), [GROUND_CONTROL.md](GROUND_CONTROL.md), [MISSION_ANALYTICS.md](MISSION_ANALYTICS.md), [MANUFACTURING.md](MANUFACTURING.md).
+See also: [CLOUD.md](CLOUD.md), [REMOTE_OPERATIONS.md](REMOTE_OPERATIONS.md), [GLOBAL_COMMAND.md](GLOBAL_COMMAND.md), [DIGITAL_TWIN.md](DIGITAL_TWIN.md), [ENTERPRISE_APIS.md](ENTERPRISE_APIS.md), [MISSION_CENTER.md](MISSION_CENTER.md), [FLEET_COMMAND.md](FLEET_COMMAND.md).
 
 ## Scope
 

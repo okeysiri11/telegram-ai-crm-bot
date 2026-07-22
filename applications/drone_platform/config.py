@@ -1,4 +1,4 @@
-# Drone Platform configuration — Sprint 11.7 Mission Operations & Fleet Command.
+# Drone Platform configuration — Sprint 11.8 Drone Cloud & Global Command.
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from dataclasses import dataclass
 class DronePlatformConfig:
     application_name: str = "Drone Platform"
     application: str = "drone_platform"
-    application_version: str = "1.6.0-alpha"
-    release_status: str = "Mission Operations Alpha"
+    application_version: str = "1.7.0-alpha"
+    release_status: str = "Enterprise Cloud Alpha"
     api_version: str = "v1"
     api_prefix: str = "/api/drone/v1"
     internal_prefix: str = "/internal/drone/v1"
@@ -24,6 +24,11 @@ class DronePlatformConfig:
     mission_operations: str = "1.0"
     fleet_command: str = "1.0"
     swarm_intelligence: str = "1.0"
+    drone_cloud: str = "1.0"
+    remote_operations: str = "1.0"
+    global_command: str = "1.0"
+    digital_twin: str = "1.0"
+    enterprise_apis: str = "1.0"
     firmware_engine: str = "1.1"
     firmware_intelligence: str = "1.0"
     ardupilot_engine: str = "1.0"
@@ -41,7 +46,7 @@ class DronePlatformConfig:
     simulation_engine: str = "1.1"
     mission_engine: str = "1.2"
     inventory_engine: str = "1.1"
-    ai_engine: str = "1.6"
+    ai_engine: str = "1.7"
 
 
 DEFAULT_CONFIG = DronePlatformConfig()

@@ -1,8 +1,8 @@
 {
   "application_name": "Drone Platform",
   "application": "drone_platform",
-  "application_version": "1.6.0-alpha",
-  "release_status": "Mission Operations Alpha",
+  "application_version": "1.7.0-alpha",
+  "release_status": "Enterprise Cloud Alpha",
   "platform_dependency": "AI Platform Core v3",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "registry_engine": "1.0",
@@ -13,6 +13,11 @@
   "mission_operations": "1.0",
   "fleet_command": "1.0",
   "swarm_intelligence": "1.0",
+  "drone_cloud": "1.0",
+  "remote_operations": "1.0",
+  "global_command": "1.0",
+  "digital_twin": "1.0",
+  "enterprise_apis": "1.0",
   "firmware_engine": "1.1",
   "firmware_intelligence": "1.0",
   "ardupilot_engine": "1.0",
@@ -30,17 +35,18 @@
   "simulation_engine": "1.1",
   "mission_engine": "1.2",
   "inventory_engine": "1.1",
-  "ai_engine": "1.6",
+  "ai_engine": "1.7",
   "modules": {
-    "api": "1.6",
+    "api": "1.7",
+    "cloud": "1.0",
     "mission_center": "1.0",
     "fleet": "1.0",
     "ground_control": "1.0",
     "swarm": "1.0",
     "manufacturing": "1.1",
     "engineering": "1.1",
-    "ai": "1.6",
-    "shared": "1.6"
+    "ai": "1.7",
+    "shared": "1.7"
   },
-  "sprint": "11.7"
+  "sprint": "11.8"
 }

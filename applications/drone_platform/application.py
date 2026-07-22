@@ -1,12 +1,13 @@
-# DronePlatformApplication — facade (Sprint 11.1–11.7).
+# DronePlatformApplication — facade (Sprint 11.1–11.8).
 
 from __future__ import annotations
 
 from typing import Any
 
-from applications.drone_platform.ai.mission_ai import MissionAIAssistant, mission_ai
+from applications.drone_platform.ai.cloud_ai import CloudAIAssistant, cloud_ai
 from applications.drone_platform.analytics.service import AnalyticsService, analytics_service
 from applications.drone_platform.autonomy import AutonomyEngine, autonomy_engine
+from applications.drone_platform.cloud.suite import DroneCloudSuite, drone_cloud
 from applications.drone_platform.config import DEFAULT_CONFIG, DronePlatformConfig
 from applications.drone_platform.diagnostics import FlightDiagnosticsService, flight_diagnostics
 from applications.drone_platform.documentation.service import DocumentationService, documentation_service
@@ -75,9 +76,10 @@ class DronePlatformApplication:
         manufacturing: ManufacturingService | None = None,
         manufacturing_suite_facade: ManufacturingSuite | None = None,
         mission_ops_facade: MissionOperationsSuite | None = None,
+        cloud_facade: DroneCloudSuite | None = None,
         simulation: SimulationService | None = None,
         documentation: DocumentationService | None = None,
-        ai: MissionAIAssistant | None = None,
+        ai: CloudAIAssistant | None = None,
         analytics: AnalyticsService | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -111,9 +113,10 @@ class DronePlatformApplication:
         self.manufacturing = manufacturing or manufacturing_service
         self.manufacturing_suite = manufacturing_suite_facade or manufacturing_suite
         self.mission_ops = mission_ops_facade or mission_operations
+        self.cloud = cloud_facade or drone_cloud
         self.simulation = simulation or simulation_service
         self.documentation = documentation or documentation_service
-        self.ai = ai or mission_ai
+        self.ai = ai or cloud_ai
         self.analytics = analytics or analytics_service
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -151,6 +154,12 @@ class DronePlatformApplication:
             "ground_control_ready": True,
             "swarm_intelligence_ready": True,
             "mission_ai_ready": True,
+            "drone_cloud_ready": True,
+            "remote_operations_ready": True,
+            "global_command_ready": True,
+            "digital_twin_ready": True,
+            "enterprise_apis_ready": True,
+            "drone_platform_enterprise_ready": True,
             "drone_platform_operational": True,
             "firmware_workspace_ready": True,
             "firmware_intelligence_ready": True,
@@ -182,6 +191,11 @@ class DronePlatformApplication:
                 "mission_operations": self.config.mission_operations,
                 "fleet_command": self.config.fleet_command,
                 "swarm_intelligence": self.config.swarm_intelligence,
+                "drone_cloud": self.config.drone_cloud,
+                "remote_operations": self.config.remote_operations,
+                "global_command": self.config.global_command,
+                "digital_twin": self.config.digital_twin,
+                "enterprise_apis": self.config.enterprise_apis,
                 "firmware": self.config.firmware_engine,
                 "firmware_intelligence": self.config.firmware_intelligence,
                 "ardupilot": self.config.ardupilot_engine,
@@ -218,6 +232,7 @@ class DronePlatformApplication:
             "engineering_suite_status": self.engineering_suite.status(),
             "manufacturing_suite_status": self.manufacturing_suite.status(),
             "mission_ops_status": self.mission_ops.status(),
+            "cloud_status": self.cloud.status(),
             "bridges": {
                 "platform": self.platform.health(),
                 "ecosystem": self.ecosystem.health(),

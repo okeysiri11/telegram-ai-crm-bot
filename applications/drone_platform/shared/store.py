@@ -132,6 +132,25 @@ class DroneStore:
         self.mission_approvals: EntityStore = EntityStore()
         self.mission_comments: EntityStore = EntityStore()
         self.ops_analytics: EntityStore = EntityStore()
+        # Sprint 11.8 — drone cloud / remote / global command
+        self.cloud_nodes: EntityStore = EntityStore()
+        self.cloud_syncs: EntityStore = EntityStore()
+        self.cloud_backups: EntityStore = EntityStore()
+        self.cloud_objects: EntityStore = EntityStore()
+        self.cloud_sessions: EntityStore = EntityStore()
+        self.cloud_audit: EntityStore = EntityStore()
+        self.remote_sessions: EntityStore = EntityStore()
+        self.remote_jobs: EntityStore = EntityStore()
+        self.cloud_fleets: EntityStore = EntityStore()
+        self.cloud_assignments: EntityStore = EntityStore()
+        self.cloud_tracks: EntityStore = EntityStore()
+        self.cloud_incidents: EntityStore = EntityStore()
+        self.digital_twins: EntityStore = EntityStore()
+        self.remote_eng_jobs: EntityStore = EntityStore()
+        self.cloud_certificates: EntityStore = EntityStore()
+        self.cloud_rbac: EntityStore = EntityStore()
+        self.cloud_permissions: EntityStore = EntityStore()
+        self.cloud_security_audit: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

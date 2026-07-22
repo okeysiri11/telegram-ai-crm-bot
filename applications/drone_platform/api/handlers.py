@@ -1455,6 +1455,286 @@ async def ops_collaboration_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+# ---- drone cloud (11.8) ----
+async def cloud_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.cloud.status())
+
+
+async def cloud_nodes_handler(request: web.Request) -> web.Response:
+    try:
+        mgr = drone_platform.cloud.manager
+        if request.method == "GET":
+            return json_response({"nodes": mgr.list_nodes(), "api": mgr.cloud_api_info()})
+        body = await _read_json(request)
+        action = body.get("action", "register")
+        if action == "backup":
+            return json_response(mgr.backup(cloud_id=body.get("cloud_id", ""), label=body.get("label", "scheduled")), status=201)
+        if action == "store":
+            return json_response(mgr.store_object(key=body.get("key", ""), content=body.get("content", ""), content_type=body.get("content_type", "application/json"), cloud_id=body.get("cloud_id", "")), status=201)
+        if action == "auth":
+            return json_response(mgr.authenticate(principal=body.get("principal", ""), token=body.get("token", ""), role=body.get("role", "operator")), status=201)
+        if action == "audit":
+            return json_response(mgr.audit(actor=body.get("actor", ""), action=body.get("audit_action", body.get("event", "")), resource=body.get("resource", ""), details=body.get("details")), status=201)
+        if action == "gateway":
+            return json_response(mgr.gateway_route(path=body.get("path", "/"), method=body.get("method", "GET"), target=body.get("target", "mission_ops")))
+        return json_response(
+            mgr.register_node(
+                name=body.get("name", ""),
+                region=body.get("region", "eu-central"),
+                node_type=body.get("node_type", "edge"),
+                company_id=body.get("company_id", ""),
+                metadata=body.get("metadata"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def cloud_sync_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(
+            drone_platform.cloud.manager.sync(
+                source_id=body.get("source_id", ""),
+                target_id=body.get("target_id", ""),
+                entities=body.get("entities"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def cloud_remote_handler(request: web.Request) -> web.Response:
+    try:
+        remote = drone_platform.cloud.remote
+        if request.method == "GET":
+            return json_response(remote.status())
+        body = await _read_json(request)
+        action = body.get("action", "open")
+        sid = body.get("remote_session_id", "")
+        if action == "command":
+            return json_response(remote.remote_mission_control(sid, command=body.get("command", ""), params=body.get("params")))
+        if action == "gcs":
+            return json_response(remote.remote_ground_station(sid))
+        if action == "firmware":
+            return json_response(remote.remote_firmware_upload(sid, firmware_id=body.get("firmware_id", ""), version=body.get("version", "")), status=201)
+        if action == "parameters":
+            return json_response(remote.remote_parameter_edit(sid, parameters=body.get("parameters") or {}))
+        if action == "mission_upload":
+            return json_response(remote.remote_mission_upload(sid, waypoints=body.get("waypoints") or [], mission_name=body.get("mission_name", "")), status=201)
+        if action == "log_download":
+            return json_response(remote.remote_log_download(sid, log_id=body.get("log_id", "")))
+        if action == "diagnostics":
+            return json_response(remote.remote_diagnostics(sid))
+        if action == "camera":
+            return json_response(remote.remote_camera_stream(sid, enable=bool(body.get("enable", True))))
+        if action == "telemetry":
+            return json_response(remote.remote_telemetry(sid, enable=bool(body.get("enable", True))))
+        if action == "shell":
+            return json_response(remote.remote_shell(sid, command=body.get("command", "")))
+        return json_response(
+            remote.open_session(
+                operator_id=body.get("operator_id", ""),
+                aircraft_id=body.get("aircraft_id", ""),
+                mode=body.get("mode", "mission_control"),
+                location=body.get("location", "remote"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def cloud_fleet_handler(request: web.Request) -> web.Response:
+    try:
+        fleet = drone_platform.cloud.fleet
+        if request.method == "GET":
+            return json_response({"fleets": fleet.list_fleets(), "dashboard": fleet.global_dashboard(), "availability": fleet.global_availability()})
+        body = await _read_json(request)
+        action = body.get("action", "register")
+        if action == "share":
+            return json_response(fleet.share_fleet(body.get("cloud_fleet_id", ""), with_company_id=body.get("with_company_id", "")))
+        if action == "federate":
+            return json_response(fleet.federate(body.get("cloud_fleet_id", ""), peer_fleet_id=body.get("peer_fleet_id", "")))
+        if action == "assign":
+            return json_response(
+                fleet.remote_assignment(
+                    body.get("cloud_fleet_id", ""),
+                    operator_id=body.get("operator_id", ""),
+                    mission_id=body.get("mission_id", ""),
+                ),
+                status=201,
+            )
+        if action == "maintenance":
+            return json_response(fleet.remote_maintenance(body.get("cloud_fleet_id", ""), notes=body.get("notes", ""), enable=bool(body.get("enable", True))))
+        return json_response(
+            fleet.register_org_fleet(
+                name=body.get("name", ""),
+                company_id=body.get("company_id", ""),
+                country=body.get("country", "UA"),
+                aircraft_ids=body.get("aircraft_ids"),
+                metadata=body.get("metadata"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def cloud_command_handler(request: web.Request) -> web.Response:
+    try:
+        cmd = drone_platform.cloud.command
+        if request.method == "GET":
+            return json_response({
+                "operations_center": cmd.operations_center(),
+                "dashboard": cmd.global_dashboard(),
+                "tracking": cmd.live_aircraft_tracking(),
+                "incidents": cmd.incident_dashboard(),
+            })
+        body = await _read_json(request)
+        action = body.get("action", "track")
+        if action == "incident":
+            return json_response(
+                cmd.raise_incident(
+                    title=body.get("title", ""),
+                    severity=body.get("severity", "medium"),
+                    aircraft_id=body.get("aircraft_id", ""),
+                    mission_id=body.get("mission_id", ""),
+                    details=body.get("details"),
+                ),
+                status=201,
+            )
+        if action == "fleet_map":
+            return json_response(cmd.fleet_map(body.get("fleets")))
+        if action == "mission_map":
+            return json_response(cmd.mission_map(body.get("missions")))
+        if action == "operator_dashboard":
+            return json_response(cmd.operator_dashboard(operator_id=body.get("operator_id", "")))
+        if action == "timeline":
+            return json_response(cmd.mission_timeline(mission_id=body.get("mission_id", ""), events=body.get("events")))
+        return json_response(
+            cmd.live_track(
+                aircraft_id=body.get("aircraft_id", ""),
+                lat=float(body.get("lat", 0)),
+                lon=float(body.get("lon", 0)),
+                alt=float(body.get("alt", 0)),
+                heading=float(body.get("heading", 0)),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def cloud_twins_handler(request: web.Request) -> web.Response:
+    try:
+        twins = drone_platform.cloud.twins
+        if request.method == "GET":
+            twin_type = request.rel_url.query.get("type")
+            return json_response({"twins": twins.list_twins(twin_type=twin_type)})
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        if action == "sync":
+            return json_response(twins.live_sync(body.get("twin_id", ""), state=body.get("state") or {}))
+        twin_type = body.get("twin_type", "aircraft")
+        factories = {
+            "aircraft": twins.aircraft_twin,
+            "battery": twins.battery_twin,
+            "mission": twins.mission_twin,
+            "maintenance": twins.maintenance_twin,
+            "engineering": twins.engineering_twin,
+        }
+        if twin_type in factories and twin_type == "aircraft":
+            return json_response(factories[twin_type](name=body.get("name", ""), aircraft_id=body.get("source_id", ""), state=body.get("state")), status=201)
+        if twin_type == "battery":
+            return json_response(twins.battery_twin(name=body.get("name", ""), battery_id=body.get("source_id", ""), state=body.get("state")), status=201)
+        if twin_type == "mission":
+            return json_response(twins.mission_twin(name=body.get("name", ""), mission_id=body.get("source_id", ""), state=body.get("state")), status=201)
+        if twin_type == "maintenance":
+            return json_response(twins.maintenance_twin(name=body.get("name", ""), asset_id=body.get("source_id", ""), state=body.get("state")), status=201)
+        if twin_type == "engineering":
+            return json_response(twins.engineering_twin(name=body.get("name", ""), project_id=body.get("source_id", ""), state=body.get("state")), status=201)
+        return json_response(
+            twins.create_twin(
+                twin_type=twin_type,
+                name=body.get("name", ""),
+                source_id=body.get("source_id", ""),
+                state=body.get("state"),
+                metadata=body.get("metadata"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def cloud_security_handler(request: web.Request) -> web.Response:
+    try:
+        sec = drone_platform.cloud.security
+        body = await _read_json(request)
+        action = body.get("action", "encrypt_telemetry")
+        if action == "encrypt_command":
+            return json_response(sec.encrypt_command(command=body.get("command", ""), key_id=body.get("key_id", "default")))
+        if action == "certificate":
+            return json_response(sec.issue_certificate(subject=body.get("subject", ""), purpose=body.get("purpose", "operator")), status=201)
+        if action == "rbac":
+            return json_response(sec.grant_role(principal=body.get("principal", ""), role=body.get("role", "operator")), status=201)
+        if action == "operator_permissions":
+            return json_response(sec.operator_permissions(operator_id=body.get("operator_id", ""), permissions=body.get("permissions")), status=201)
+        if action == "mission_permissions":
+            return json_response(sec.mission_permissions(mission_id=body.get("mission_id", ""), principal=body.get("principal", ""), permissions=body.get("permissions")), status=201)
+        if action == "audit":
+            return json_response(sec.audit_log(actor=body.get("actor", ""), action=body.get("audit_action", body.get("event", "")), resource=body.get("resource", "")), status=201)
+        return json_response(sec.encrypt_telemetry(payload=body.get("payload", ""), key_id=body.get("key_id", "default")))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def cloud_enterprise_handler(request: web.Request) -> web.Response:
+    try:
+        ent = drone_platform.cloud.enterprise
+        if request.method == "GET":
+            return json_response({
+                "supported": ent.supported(),
+                "rest": ent.rest_info(),
+                "graphql": ent.graphql_schema(),
+                "websocket": ent.websocket_channels(),
+                "mqtt": ent.mqtt_topics(),
+                "mavlink": ent.mavlink_bridge(),
+                "ros2": ent.ros2_bridge(),
+                "gcs": ent.gcs_bridges(),
+            })
+        body = await _read_json(request)
+        return json_response(ent.connect(protocol=body.get("protocol", "rest"), endpoint=body.get("endpoint", "")), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def cloud_engineering_handler(request: web.Request) -> web.Response:
+    try:
+        eng = drone_platform.cloud.remote_eng
+        body = await _read_json(request)
+        action = body.get("action", "firmware_build")
+        if action == "simulation":
+            return json_response(eng.remote_simulation(scenario=body.get("scenario", "hover"), duration_s=int(body.get("duration_s", 60))), status=201)
+        if action == "pcb_review":
+            return json_response(eng.remote_pcb_review(project_id=body.get("project_id", ""), notes=body.get("notes", "")), status=201)
+        if action == "cad_review":
+            return json_response(eng.remote_cad_review(assembly_id=body.get("assembly_id", ""), notes=body.get("notes", "")), status=201)
+        if action == "ai_assist":
+            return json_response(eng.remote_ai_engineering_assistant(query=body.get("query", ""), context=body.get("context")), status=201)
+        if action == "mission_planning":
+            return json_response(eng.remote_mission_planning(waypoints=body.get("waypoints") or [], name=body.get("name", "remote_plan")), status=201)
+        return json_response(
+            eng.remote_firmware_build(target=body.get("target", "ardupilot"), board=body.get("board", "Pixhawk"), branch=body.get("branch", "main")),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 # ---- manufacturing suite (11.6) ----
 async def manufacturing_suite_status_handler(request: web.Request) -> web.Response:
     return json_response(drone_platform.manufacturing_suite.status())
