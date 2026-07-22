@@ -1,6 +1,6 @@
 # Water Management
 
-**Version:** `4.3.2-enterprise`  
+**Version:** `4.3.3-enterprise`  
 **Sprint:** 14.2  
 **API:** `/api/smart-irrigation/v1/water`
 

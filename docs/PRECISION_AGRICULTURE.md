@@ -1,8 +1,8 @@
 # Precision Agriculture
 
-**Version:** `4.3.2-enterprise`  
+**Version:** `4.3.3-enterprise`  
 **Sprint:** 14.1  
-**Foundation:** Enterprise Platform v4.3.1-enterprise  
+**Foundation:** Enterprise Platform v4.3.2-enterprise  
 **API:** `/api/precision-agriculture/v1`  
 **Package:** `applications/agro_enterprise/precision_agriculture/`
 

@@ -7,6 +7,7 @@ from typing import Any
 from applications.agro_enterprise.config import DEFAULT_CONFIG, AgroEnterpriseConfig
 from applications.agro_enterprise.crops_crm import AgroCRM, CropManagement
 from applications.agro_enterprise.marketplace import AgroMarketplace, FarmRegistry
+from applications.agro_enterprise.crop_ai.facade import CropAISuite
 from applications.agro_enterprise.precision_agriculture.facade import PrecisionAgricultureSuite
 from applications.agro_enterprise.services import AgroDashboard, AgroKnowledge
 from applications.agro_enterprise.shared.store import AgroEnterpriseStore, agro_enterprise_store
@@ -21,6 +22,7 @@ class AgroEnterpriseApplication:
         store: AgroEnterpriseStore | None = None,
         precision: PrecisionAgricultureSuite | None = None,
         irrigation: SmartIrrigationSuite | None = None,
+        crop_ai_svc: CropAISuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or agro_enterprise_store
@@ -32,6 +34,7 @@ class AgroEnterpriseApplication:
         self.dashboard = AgroDashboard(self.store)
         self.precision = precision or PrecisionAgricultureSuite(self.store)
         self.irrigation = irrigation or SmartIrrigationSuite(self.store)
+        self.crop_ai = crop_ai_svc or CropAISuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -130,6 +133,11 @@ class AgroEnterpriseApplication:
             "soil_intelligence_ready": True,
             "water_management_ready": True,
             "environmental_ai_ready": True,
+            "crop_ai_ready": True,
+            "disease_detection_ready": True,
+            "pest_intelligence_ready": True,
+            "yield_intelligence_ready": True,
+            "autonomous_farm_ready": True,
             "engines": {
                 "agro_marketplace": self.config.agro_marketplace,
                 "farm_registry": self.config.farm_registry,
@@ -139,6 +147,7 @@ class AgroEnterpriseApplication:
                 "analytics": self.config.analytics,
                 "precision_agriculture": self.config.precision_agriculture,
                 "smart_irrigation": self.config.smart_irrigation,
+                "crop_ai": self.config.crop_ai,
             },
             "marketplace": self.marketplace.status(),
             "farms": self.farms.status(),
@@ -148,6 +157,7 @@ class AgroEnterpriseApplication:
             "dashboard": self.dashboard.status(),
             "precision": self.precision.status(),
             "irrigation": self.irrigation.status(),
+            "crop_ai": self.crop_ai.status(),
         }
 
 

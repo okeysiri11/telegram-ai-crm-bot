@@ -98,6 +98,19 @@ class AgroEnterpriseStore:
         self.si_env_risks: EntityStore = EntityStore()
         self.si_dashboards: EntityStore = EntityStore()
         self.si_registries: EntityStore = EntityStore()
+        # Sprint 14.3 — Crop AI
+        self.ca_crops: EntityStore = EntityStore()
+        self.ca_stage_events: EntityStore = EntityStore()
+        self.ca_harvest_readiness: EntityStore = EntityStore()
+        self.ca_diseases: EntityStore = EntityStore()
+        self.ca_pests: EntityStore = EntityStore()
+        self.ca_pest_risks: EntityStore = EntityStore()
+        self.ca_yields: EntityStore = EntityStore()
+        self.ca_tasks: EntityStore = EntityStore()
+        self.ca_missions: EntityStore = EntityStore()
+        self.ca_recommendations: EntityStore = EntityStore()
+        self.ca_dashboards: EntityStore = EntityStore()
+        self.ca_registries: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

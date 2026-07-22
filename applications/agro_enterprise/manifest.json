@@ -1,14 +1,15 @@
 {
   "application_name": "Agro Enterprise Platform",
   "application": "agro_enterprise",
-  "application_version": "4.3.2-enterprise",
-  "release_status": "Smart Irrigation",
+  "application_version": "4.3.3-enterprise",
+  "release_status": "Crop AI",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v4.3.1-enterprise",
+  "enterprise_foundation": "Enterprise Platform v4.3.2-enterprise",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "14.2",
+  "sprint": "14.3",
   "precision_agriculture": "1.0",
   "smart_irrigation": "1.0",
+  "crop_ai": "1.0",
   "modules": {
     "marketplace": "1.0",
     "farm_registry": "1.0",
@@ -18,9 +19,11 @@
     "dashboard": "1.0",
     "precision_agriculture": "1.0",
     "smart_irrigation": "1.0",
-    "soil_intelligence": "1.0",
-    "water_management": "1.0",
-    "environmental_ai": "1.0",
+    "crop_ai": "1.0",
+    "disease_detection": "1.0",
+    "pest_intelligence": "1.0",
+    "yield_intelligence": "1.0",
+    "autonomous_farm": "1.0",
     "api": "4.3"
   },
   "does_not_modify": [
@@ -30,6 +33,6 @@
     "auto_marketplace",
     "agro_marketplace",
     "drone_platform",
-    "precision_agriculture_package_internals"
+    "previous_agro_sprint_packages"
   ]
 }

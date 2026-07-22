@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.agro_enterprise.api import handlers, irrigation_handlers, precision_handlers
+from applications.agro_enterprise.api import crop_ai_handlers, handlers, irrigation_handlers, precision_handlers
 from applications.agro_enterprise.api.middleware import auth_middleware
 from applications.agro_enterprise.config import DEFAULT_CONFIG
 
@@ -70,3 +70,24 @@ def register_agro_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{si}/dashboard", irrigation_handlers.si_dashboard_handler)
     app.router.add_get(f"{si}/knowledge", irrigation_handlers.si_knowledge_handler)
     app.router.add_post(f"{si}/knowledge", irrigation_handlers.si_knowledge_handler)
+
+    # Sprint 14.3 — Crop AI (additive; prior sprint routes unchanged)
+    ca = DEFAULT_CONFIG.crop_ai_api_prefix
+    app.router.add_get(f"{ca}/health", crop_ai_handlers.ca_health_handler)
+    app.router.add_post(f"{ca}/bootstrap", crop_ai_handlers.ca_bootstrap_handler)
+    app.router.add_get(f"{ca}/crops", crop_ai_handlers.ca_crops_handler)
+    app.router.add_post(f"{ca}/crops", crop_ai_handlers.ca_crops_handler)
+    app.router.add_get(f"{ca}/disease", crop_ai_handlers.ca_disease_handler)
+    app.router.add_post(f"{ca}/disease", crop_ai_handlers.ca_disease_handler)
+    app.router.add_get(f"{ca}/pests", crop_ai_handlers.ca_pest_handler)
+    app.router.add_post(f"{ca}/pests", crop_ai_handlers.ca_pest_handler)
+    app.router.add_get(f"{ca}/yield", crop_ai_handlers.ca_yield_handler)
+    app.router.add_post(f"{ca}/yield", crop_ai_handlers.ca_yield_handler)
+    app.router.add_get(f"{ca}/ops", crop_ai_handlers.ca_ops_handler)
+    app.router.add_post(f"{ca}/ops", crop_ai_handlers.ca_ops_handler)
+    app.router.add_get(f"{ca}/decisions", crop_ai_handlers.ca_decisions_handler)
+    app.router.add_post(f"{ca}/decisions", crop_ai_handlers.ca_decisions_handler)
+    app.router.add_get(f"{ca}/dashboard", crop_ai_handlers.ca_dashboard_handler)
+    app.router.add_post(f"{ca}/dashboard", crop_ai_handlers.ca_dashboard_handler)
+    app.router.add_get(f"{ca}/knowledge", crop_ai_handlers.ca_knowledge_handler)
+    app.router.add_post(f"{ca}/knowledge", crop_ai_handlers.ca_knowledge_handler)

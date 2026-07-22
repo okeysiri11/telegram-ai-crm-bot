@@ -2,8 +2,8 @@
 
 Sprint 14.0 — Agro Enterprise Foundation & AI Marketplace.
 
-- Version: `4.3.2-enterprise`
-- Foundation: Enterprise Platform v4.3.1-enterprise
+- Version: `4.3.3-enterprise`
+- Foundation: Enterprise Platform v4.3.2-enterprise
 - API: `/api/agro-enterprise/v1`
 - Package: `applications/agro_enterprise/`
 

@@ -1,6 +1,6 @@
 # GIS Platform
 
-**Version:** `4.3.2-enterprise`  
+**Version:** `4.3.3-enterprise`  
 **Sprint:** 14.1  
 **API:** `/api/precision-agriculture/v1/gis`
 

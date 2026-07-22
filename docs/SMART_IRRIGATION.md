@@ -1,8 +1,8 @@
 # Smart Irrigation
 
-**Version:** `4.3.2-enterprise`  
+**Version:** `4.3.3-enterprise`  
 **Sprint:** 14.2  
-**Foundation:** Enterprise Platform v4.3.1-enterprise  
+**Foundation:** Enterprise Platform v4.3.2-enterprise  
 **API:** `/api/smart-irrigation/v1`  
 **Package:** `applications/agro_enterprise/smart_irrigation/`
 
