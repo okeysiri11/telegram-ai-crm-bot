@@ -38,7 +38,7 @@ def reset_store():
 
 def test_version_mission_ops_ready():
     health = drone_platform.health()
-    assert health["application_version"] == "1.7.0-alpha"
+    assert health["application_version"] == "1.8.0-alpha"
     assert health["mission_operations_ready"] is True
     assert health["fleet_command_ready"] is True
     assert health["ground_control_ready"] is True
@@ -46,7 +46,7 @@ def test_version_mission_ops_ready():
     assert health["mission_ai_ready"] is True
     assert health["drone_platform_operational"] is True
     assert health["engines"]["mission_operations"] == "1.0"
-    assert health["engines"]["ai"] == "1.7"
+    assert health["engines"]["ai"] == "1.8"
 
 
 def test_mission_center_flow():
@@ -125,7 +125,7 @@ def test_analytics_collaboration_ai_integrations():
 async def test_api_mission_ops(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.7.0-alpha"
+    assert body["application_version"] == "1.8.0-alpha"
     assert body["drone_platform_operational"] is True
 
     status = await client.get(f"{PREFIX}/ops")
@@ -173,5 +173,5 @@ def test_docs_and_knowledge_11_7():
     ):
         assert (ROOT / "knowledge" / "drone" / name).exists()
     manifest = (ROOT / "applications" / "drone_platform" / "manifest.json").read_text()
-    assert "1.7.0-alpha" in manifest
-    assert "11.8" in manifest
+    assert "1.8.0-alpha" in manifest
+    assert "11.9" in manifest

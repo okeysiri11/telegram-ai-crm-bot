@@ -1735,6 +1735,167 @@ async def cloud_engineering_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+# ---- resilience (11.9) ----
+async def resilience_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.resilience.status())
+
+
+async def resilience_navigation_handler(request: web.Request) -> web.Response:
+    try:
+        nav = drone_platform.resilience.navigation
+        if request.method == "GET":
+            return json_response(nav.status())
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        sid = body.get("nav_session_id", "")
+        if action == "health":
+            return json_response(nav.navigation_health(sid))
+        if action == "gps":
+            return json_response(nav.update_gps(sid, fix_ok=bool(body.get("fix_ok", True)), sat_count=int(body.get("sat_count", 12)), hdop=float(body.get("hdop", 1.0)), lat=float(body.get("lat", 0)), lon=float(body.get("lon", 0)), alt=float(body.get("alt", 0))))
+        if action == "rtk":
+            return json_response(nav.update_rtk(sid, fixed=bool(body.get("fixed", True)), age_s=body.get("age_s", 0.5)))
+        if action == "visual":
+            return json_response(nav.visual_navigation_interface(sid, enabled=bool(body.get("enabled", True)), quality=float(body.get("quality", 0.8))))
+        if action == "dead_reckoning":
+            return json_response(nav.dead_reckoning(sid, dt_s=float(body.get("dt_s", 1.0)), vx=float(body.get("vx", 0)), vy=float(body.get("vy", 0)), vz=float(body.get("vz", 0))))
+        if action == "estimate":
+            return json_response(nav.multi_source_estimate(sid))
+        if action == "confidence":
+            return json_response(nav.position_confidence(sid))
+        return json_response(nav.create_session(aircraft_id=body.get("aircraft_id", ""), sources=body.get("sources"), metadata=body.get("metadata")), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def resilience_communications_handler(request: web.Request) -> web.Response:
+    try:
+        comm = drone_platform.resilience.communications
+        if request.method == "GET":
+            return json_response(comm.status())
+        body = await _read_json(request)
+        action = body.get("action", "open")
+        lid = body.get("link_id", "")
+        if action == "quality":
+            return json_response(comm.link_quality(lid))
+        if action == "update_quality":
+            return json_response(comm.update_quality(lid, channel=body.get("channel", "lte"), quality=float(body.get("quality", 0.5)), latency_ms=float(body.get("latency_ms", 50)), bandwidth_kbps=float(body.get("bandwidth_kbps", 500)), up=bool(body.get("up", True))))
+        if action == "router":
+            return json_response(comm.telemetry_router(lid, prefer=body.get("prefer")))
+        if action == "switch":
+            return json_response(comm.automatic_link_switching(lid, quality_threshold=float(body.get("quality_threshold", 0.5))))
+        if action == "bandwidth":
+            return json_response(comm.bandwidth_optimizer(lid))
+        if action == "latency":
+            return json_response(comm.latency_monitor(lid))
+        if action == "recorder":
+            return json_response(comm.recorder(lid, enable=bool(body.get("enable", True)), frames=int(body.get("frames", 0))))
+        if action == "diagnostics":
+            return json_response(comm.diagnostics(lid))
+        return json_response(comm.open_link(aircraft_id=body.get("aircraft_id", ""), primary=body.get("primary", "lte"), secondary=body.get("secondary", "radio"), metadata=body.get("metadata")), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def resilience_safety_handler(request: web.Request) -> web.Response:
+    try:
+        safety = drone_platform.resilience.safety
+        if request.method == "GET":
+            return json_response({"status": safety.status(), "nofly_zones": safety.list_nofly_zones()})
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        sid = body.get("safety_id", "")
+        if action == "geofence":
+            return json_response(safety.set_geofence(sid, south=float(body.get("south", 0)), north=float(body.get("north", 0)), west=float(body.get("west", 0)), east=float(body.get("east", 0))))
+        if action == "nofly":
+            return json_response(safety.add_nofly_zone(name=body.get("name", ""), south=float(body.get("south", 0)), north=float(body.get("north", 0)), west=float(body.get("west", 0)), east=float(body.get("east", 0))), status=201)
+        if action == "check":
+            return json_response(safety.check_position(sid, lat=float(body.get("lat", 0)), lon=float(body.get("lon", 0)), alt_m=float(body.get("alt_m", 0)), speed_mps=float(body.get("speed_mps", 0)), battery_pct=float(body.get("battery_pct", 100)), esc_temp_c=float(body.get("esc_temp_c", 40))))
+        if action == "envelope":
+            return json_response(safety.flight_envelope(sid))
+        return json_response(
+            safety.create_policy(
+                aircraft_id=body.get("aircraft_id", ""),
+                max_alt_m=float(body.get("max_alt_m", 120)),
+                max_speed_mps=float(body.get("max_speed_mps", 20)),
+                min_battery_pct=float(body.get("min_battery_pct", 25)),
+                max_esc_temp_c=float(body.get("max_esc_temp_c", 90)),
+                geofence=body.get("geofence"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def resilience_health_handler(request: web.Request) -> web.Response:
+    try:
+        health = drone_platform.resilience.health
+        if request.method == "GET":
+            return json_response(health.status())
+        body = await _read_json(request)
+        action = body.get("action", "open")
+        hid = body.get("health_id", "")
+        if action == "update":
+            return json_response(health.update(hid, section=body.get("section", "sensors"), values=body.get("values") or {}))
+        if action == "overview":
+            return json_response(health.overview(hid))
+        if action == "sensors":
+            return json_response(health.sensor_health(hid))
+        if action == "power":
+            return json_response(health.power_health(hid))
+        if action == "motors":
+            return json_response(health.motor_health(hid))
+        if action == "esc":
+            return json_response(health.esc_health(hid))
+        if action == "battery":
+            return json_response(health.battery_health(hid))
+        if action == "storage":
+            return json_response(health.storage_health(hid))
+        if action == "cpu_ram":
+            return json_response(health.cpu_ram_monitor(hid))
+        return json_response(health.open(aircraft_id=body.get("aircraft_id", "")), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def resilience_recovery_handler(request: web.Request) -> web.Response:
+    try:
+        recovery = drone_platform.resilience.recovery
+        if request.method == "GET":
+            return json_response(recovery.status())
+        body = await _read_json(request)
+        action = body.get("action", "start")
+        rid = body.get("recovery_id", "")
+        if action == "rtl":
+            return json_response(recovery.automatic_return(rid))
+        if action == "land":
+            return json_response(recovery.safe_landing(rid, site=body.get("site")))
+        if action == "resume":
+            return json_response(recovery.mission_resume(rid, waypoint_index=int(body.get("waypoint_index", 0))))
+        if action == "connection":
+            return json_response(recovery.connection_recovery(rid, link=body.get("link", "lte")))
+        if action == "sensors":
+            return json_response(recovery.sensor_reconfiguration(rid, disabled=body.get("disabled"), enabled=body.get("enabled")))
+        if action == "mode":
+            return json_response(recovery.emergency_flight_mode(rid, mode=body.get("mode", "rtl")))
+        if action == "complete":
+            return json_response(recovery.complete(rid, outcome=body.get("outcome", "safe")))
+        if action == "report":
+            return json_response(recovery.report(rid))
+        return json_response(
+            recovery.start(
+                aircraft_id=body.get("aircraft_id", ""),
+                reason=body.get("reason", ""),
+                mode=body.get("mode", "rtl"),
+                home=body.get("home"),
+                metadata=body.get("metadata"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 # ---- manufacturing suite (11.6) ----
 async def manufacturing_suite_status_handler(request: web.Request) -> web.Response:
     return json_response(drone_platform.manufacturing_suite.status())

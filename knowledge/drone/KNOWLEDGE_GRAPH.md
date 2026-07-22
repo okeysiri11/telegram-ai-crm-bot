@@ -3,7 +3,7 @@ title: Knowledge Graph
 aliases: [Knowledge Graph]
 tags: [drone, graph]
 generated: 2026-07-22
-sprint: "11.8"
+sprint: "11.9"
 ---
 
 # Knowledge Graph
@@ -65,4 +65,19 @@ flowchart LR
   GCC --> CD[[drone/CLOUD_DASHBOARD]]
 ```
 
-Links: [[drone/ENGINEERING_REGISTRY]] · [[drone/MANUFACTURING_REGISTRY]] · [[drone/MISSION_OPS_REGISTRY]] · [[drone/CLOUD_REGISTRY]] · [[drone/CLOUD_DASHBOARD]] · [[drone/MISSION_OPS_DASHBOARD]] · [[INDEX]]
+## Resilient Navigation & Safety (11.9)
+
+```mermaid
+flowchart LR
+  RES[Resilience Suite] --> NAV[Navigation]
+  RES --> COM[Communications]
+  RES --> SAF[Safety]
+  RES --> HLT[Health]
+  RES --> RCV[Recovery]
+  RES --> SAI[Safety AI]
+  NAV --> RD[[drone/NAVIGATION_REGISTRY]]
+  SAF --> SR[[drone/SAFETY_REGISTRY]]
+  RCV --> RR[[drone/RECOVERY_REGISTRY]]
+```
+
+Links: [[drone/ENGINEERING_REGISTRY]] · [[drone/MANUFACTURING_REGISTRY]] · [[drone/MISSION_OPS_REGISTRY]] · [[drone/CLOUD_REGISTRY]] · [[drone/CLOUD_DASHBOARD]] · [[drone/NAVIGATION_REGISTRY]] · [[drone/COMMUNICATION_REGISTRY]] · [[drone/SAFETY_REGISTRY]] · [[drone/RECOVERY_REGISTRY]] · [[drone/MISSION_OPS_DASHBOARD]] · [[INDEX]]

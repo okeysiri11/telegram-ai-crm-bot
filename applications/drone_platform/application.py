@@ -1,10 +1,10 @@
-# DronePlatformApplication — facade (Sprint 11.1–11.8).
+# DronePlatformApplication — facade (Sprint 11.1–11.9).
 
 from __future__ import annotations
 
 from typing import Any
 
-from applications.drone_platform.ai.cloud_ai import CloudAIAssistant, cloud_ai
+from applications.drone_platform.ai.safety_ai import SafetyAIAssistant, safety_ai
 from applications.drone_platform.analytics.service import AnalyticsService, analytics_service
 from applications.drone_platform.autonomy import AutonomyEngine, autonomy_engine
 from applications.drone_platform.cloud.suite import DroneCloudSuite, drone_cloud
@@ -32,6 +32,7 @@ from applications.drone_platform.missions.service import MissionService, mission
 from applications.drone_platform.navigation import NavigationEngine, navigation_engine
 from applications.drone_platform.projects.service import ProjectService, project_service
 from applications.drone_platform.registry.service import RegistryService, registry_service
+from applications.drone_platform.resilience.suite import ResilienceSuite, resilience_suite
 from applications.drone_platform.shared.store import DroneStore, drone_store
 from applications.drone_platform.simulation.service import SimulationService, simulation_service
 from applications.drone_platform.telemetry.ai_manager import TelemetryAIManager, telemetry_ai_manager
@@ -77,9 +78,10 @@ class DronePlatformApplication:
         manufacturing_suite_facade: ManufacturingSuite | None = None,
         mission_ops_facade: MissionOperationsSuite | None = None,
         cloud_facade: DroneCloudSuite | None = None,
+        resilience_facade: ResilienceSuite | None = None,
         simulation: SimulationService | None = None,
         documentation: DocumentationService | None = None,
-        ai: CloudAIAssistant | None = None,
+        ai: SafetyAIAssistant | None = None,
         analytics: AnalyticsService | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -114,9 +116,10 @@ class DronePlatformApplication:
         self.manufacturing_suite = manufacturing_suite_facade or manufacturing_suite
         self.mission_ops = mission_ops_facade or mission_operations
         self.cloud = cloud_facade or drone_cloud
+        self.resilience = resilience_facade or resilience_suite
         self.simulation = simulation or simulation_service
         self.documentation = documentation or documentation_service
-        self.ai = ai or cloud_ai
+        self.ai = ai or safety_ai
         self.analytics = analytics or analytics_service
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -160,6 +163,12 @@ class DronePlatformApplication:
             "digital_twin_ready": True,
             "enterprise_apis_ready": True,
             "drone_platform_enterprise_ready": True,
+            "navigation_ready": True,
+            "communications_ready": True,
+            "safety_ready": True,
+            "recovery_ready": True,
+            "health_monitoring_ready": True,
+            "drone_platform_production_ready": True,
             "drone_platform_operational": True,
             "firmware_workspace_ready": True,
             "firmware_intelligence_ready": True,
@@ -196,6 +205,11 @@ class DronePlatformApplication:
                 "global_command": self.config.global_command,
                 "digital_twin": self.config.digital_twin,
                 "enterprise_apis": self.config.enterprise_apis,
+                "resilient_navigation": self.config.resilient_navigation,
+                "communications": self.config.communications,
+                "safety": self.config.safety,
+                "health_monitoring": self.config.health_monitoring,
+                "recovery": self.config.recovery,
                 "firmware": self.config.firmware_engine,
                 "firmware_intelligence": self.config.firmware_intelligence,
                 "ardupilot": self.config.ardupilot_engine,
@@ -233,6 +247,7 @@ class DronePlatformApplication:
             "manufacturing_suite_status": self.manufacturing_suite.status(),
             "mission_ops_status": self.mission_ops.status(),
             "cloud_status": self.cloud.status(),
+            "resilience_status": self.resilience.status(),
             "bridges": {
                 "platform": self.platform.health(),
                 "ecosystem": self.ecosystem.health(),

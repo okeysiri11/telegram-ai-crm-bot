@@ -124,6 +124,19 @@ def register_drone_platform_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/cloud/enterprise", handlers.cloud_enterprise_handler)
     app.router.add_post(f"{prefix}/cloud/engineering", handlers.cloud_engineering_handler)
 
+    # Sprint 11.9 — Resilient Navigation / Communications / Safety
+    app.router.add_get(f"{prefix}/resilience", handlers.resilience_status_handler)
+    app.router.add_get(f"{prefix}/resilience/navigation", handlers.resilience_navigation_handler)
+    app.router.add_post(f"{prefix}/resilience/navigation", handlers.resilience_navigation_handler)
+    app.router.add_get(f"{prefix}/resilience/communications", handlers.resilience_communications_handler)
+    app.router.add_post(f"{prefix}/resilience/communications", handlers.resilience_communications_handler)
+    app.router.add_get(f"{prefix}/resilience/safety", handlers.resilience_safety_handler)
+    app.router.add_post(f"{prefix}/resilience/safety", handlers.resilience_safety_handler)
+    app.router.add_get(f"{prefix}/resilience/health", handlers.resilience_health_handler)
+    app.router.add_post(f"{prefix}/resilience/health", handlers.resilience_health_handler)
+    app.router.add_get(f"{prefix}/resilience/recovery", handlers.resilience_recovery_handler)
+    app.router.add_post(f"{prefix}/resilience/recovery", handlers.resilience_recovery_handler)
+
     # telemetry
     app.router.add_get(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)
     app.router.add_post(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)

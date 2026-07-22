@@ -1,4 +1,4 @@
-# Drone Platform configuration — Sprint 11.8 Drone Cloud & Global Command.
+# Drone Platform configuration — Sprint 11.9 Resilient Navigation & Safety.
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from dataclasses import dataclass
 class DronePlatformConfig:
     application_name: str = "Drone Platform"
     application: str = "drone_platform"
-    application_version: str = "1.7.0-alpha"
-    release_status: str = "Enterprise Cloud Alpha"
+    application_version: str = "1.8.0-alpha"
+    release_status: str = "Production Ready Alpha"
     api_version: str = "v1"
     api_prefix: str = "/api/drone/v1"
     internal_prefix: str = "/internal/drone/v1"
@@ -29,6 +29,11 @@ class DronePlatformConfig:
     global_command: str = "1.0"
     digital_twin: str = "1.0"
     enterprise_apis: str = "1.0"
+    resilient_navigation: str = "1.0"
+    communications: str = "1.0"
+    safety: str = "1.0"
+    health_monitoring: str = "1.0"
+    recovery: str = "1.0"
     firmware_engine: str = "1.1"
     firmware_intelligence: str = "1.0"
     ardupilot_engine: str = "1.0"
@@ -40,13 +45,13 @@ class DronePlatformConfig:
     diagnostics_engine: str = "1.0"
     gcs_engine: str = "1.1"
     vision_engine: str = "1.0"
-    navigation_engine: str = "1.0"
+    navigation_engine: str = "1.1"
     mapping_engine: str = "1.0"
     autonomy_engine: str = "1.0"
     simulation_engine: str = "1.1"
     mission_engine: str = "1.2"
     inventory_engine: str = "1.1"
-    ai_engine: str = "1.7"
+    ai_engine: str = "1.8"
 
 
 DEFAULT_CONFIG = DronePlatformConfig()

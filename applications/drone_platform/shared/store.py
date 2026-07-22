@@ -151,6 +151,13 @@ class DroneStore:
         self.cloud_rbac: EntityStore = EntityStore()
         self.cloud_permissions: EntityStore = EntityStore()
         self.cloud_security_audit: EntityStore = EntityStore()
+        # Sprint 11.9 — resilient navigation / communications / safety
+        self.nav_sessions: EntityStore = EntityStore()
+        self.comm_links: EntityStore = EntityStore()
+        self.safety_policies: EntityStore = EntityStore()
+        self.nofly_zones: EntityStore = EntityStore()
+        self.health_snapshots: EntityStore = EntityStore()
+        self.recovery_events: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
