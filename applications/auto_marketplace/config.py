@@ -1,4 +1,4 @@
-# Auto Marketplace configuration — Sprint 10.4 Transactions.
+# Auto Marketplace configuration — Sprint 10.5 Service & Parts.
 
 from __future__ import annotations
 
@@ -15,8 +15,8 @@ class AutoMarketplaceConfig:
     default_currency: str = "USD"
     enable_ai_recommendations: bool = True
     enable_auctions: bool = True
-    application_version: str = "1.3.0-alpha"
-    release_status: str = "Transactions Alpha"
+    application_version: str = "1.4.0-alpha"
+    release_status: str = "Service Alpha"
     platform_dependency: str = "AI Platform Core v3"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     mobile_api_prefix: str = "/api/auto/mobile/v1"
@@ -32,6 +32,9 @@ class AutoMarketplaceConfig:
     auction_engine: str = "1.0"
     finance_engine: str = "1.0"
     insurance_engine: str = "1.0"
+    service_engine: str = "1.0"
+    parts_engine: str = "1.0"
+    maintenance_engine: str = "1.0"
 
 
 DEFAULT_CONFIG = AutoMarketplaceConfig()

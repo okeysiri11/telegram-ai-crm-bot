@@ -147,6 +147,28 @@ class MarketplaceStore:
         self.ownership_transfer_records: EntityStore = EntityStore()
         self.transaction_contracts: EntityStore = EntityStore()
         self.transaction_documents: EntityStore = EntityStore()
+        # Sprint 10.5 — service centers / parts / maintenance
+        self.service_centers: EntityStore = EntityStore()
+        self.service_mechanics: EntityStore = EntityStore()
+        self.service_advisors: EntityStore = EntityStore()
+        self.repair_bays: EntityStore = EntityStore()
+        self.service_queues: EntityStore = EntityStore()
+        self.repair_orders: EntityStore = EntityStore()
+        self.maintenance_plans: EntityStore = EntityStore()
+        self.maintenance_schedules: EntityStore = EntityStore()
+        self.maintenance_reminders: EntityStore = EntityStore()
+        self.service_appointments: EntityStore = EntityStore()
+        self.parts_catalog: EntityStore = EntityStore()
+        self.parts_suppliers: EntityStore = EntityStore()
+        self.parts_warehouses: EntityStore = EntityStore()
+        self.parts_stock: EntityStore = EntityStore()
+        self.stock_movements: EntityStore = EntityStore()
+        self.parts_purchase_orders: EntityStore = EntityStore()
+        self.parts_reservations: EntityStore = EntityStore()
+        self.warranty_policies: EntityStore = EntityStore()
+        self.warranty_claims: EntityStore = EntityStore()
+        self.diagnostic_reports: EntityStore = EntityStore()
+        self.vehicle_service_records: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

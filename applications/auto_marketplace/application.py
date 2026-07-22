@@ -42,6 +42,7 @@ from applications.auto_marketplace.pricing.service import (
 )
 from applications.auto_marketplace.release.engine import ProductionEngine, production_engine
 from applications.auto_marketplace.search.service import SearchService, search_service
+from applications.auto_marketplace.service_centers.facade import ServiceDomainEngine, service_domain_engine
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 from applications.auto_marketplace.transactions.facade import (
     TransactionDomainEngine,
@@ -76,6 +77,7 @@ class AutoMarketplaceApplication:
         marketplace_domain: MarketplaceDomainEngine | None = None,
         auto_ai: AutoAIDomainEngine | None = None,
         transactions: TransactionDomainEngine | None = None,
+        service: ServiceDomainEngine | None = None,
         payments: PaymentService | None = None,
         delivery: DeliveryService | None = None,
         analytics: AnalyticsService | None = None,
@@ -112,6 +114,7 @@ class AutoMarketplaceApplication:
         self.marketplace = marketplace_domain or marketplace_domain_engine
         self.auto_ai = auto_ai or auto_ai_domain_engine
         self.transactions = transactions or transaction_domain_engine
+        self.service = service or service_domain_engine
         self.payments = payments or payment_service
         self.delivery = delivery or delivery_service
         self.analytics = analytics or analytics_service
@@ -154,6 +157,9 @@ class AutoMarketplaceApplication:
             "auction_engine": self.config.auction_engine,
             "finance_engine": self.config.finance_engine,
             "insurance_engine": self.config.insurance_engine,
+            "service_engine": self.config.service_engine,
+            "parts_engine": self.config.parts_engine,
+            "maintenance_engine": self.config.maintenance_engine,
             "metrics": self.analytics.dashboard_metrics(),
             "foundation": {
                 "catalog": self.catalog.overview(),
@@ -165,6 +171,7 @@ class AutoMarketplaceApplication:
             "marketplace": self.marketplace.metrics(),
             "auto_ai": self.auto_ai.metrics(),
             "transactions": self.transactions.metrics(),
+            "service": self.service.metrics(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),
             "crm_deals": self.store.crm_deals.count(),

@@ -172,7 +172,7 @@ auto_marketplace.crm_engine.pipeline.forecast(days=30)
 
 ## Manifest
 
-`application_version: "1.3.0-alpha"`
+`application_version: "1.4.0-alpha"`
 
 ---
 

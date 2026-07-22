@@ -17,6 +17,7 @@ from applications.auto_marketplace.api import (
     ops_handlers,
     portal_handlers,
     rest_handlers,
+    service_handlers,
     transaction_handlers,
     webhooks,
 )
@@ -173,11 +174,18 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_get(f"{catalog}/vehicles/{{vehicle_id}}/duplicates", catalog_handlers.catalog_duplicates_handler)
 
     inv = f"{prefix}/inventory"
+    app.router.add_get(f"{inv}", service_handlers.inventory_parts_health_handler)
     app.router.add_get(f"{inv}/availability", catalog_handlers.inventory_availability_handler)
     app.router.add_get(f"{inv}/dealers/{{dealer_id}}", catalog_handlers.inventory_dealer_handler)
     app.router.add_post(f"{inv}/vehicles/{{vehicle_id}}/reserve", catalog_handlers.inventory_reserve_handler)
     app.router.add_post(f"{inv}/vehicles/{{vehicle_id}}/sold", catalog_handlers.inventory_sold_handler)
     app.router.add_post(f"{inv}/vehicles/{{vehicle_id}}/incoming", catalog_handlers.inventory_incoming_handler)
+    app.router.add_post(f"{inv}/warehouses", service_handlers.inventory_warehouses_handler)
+    app.router.add_post(f"{inv}/stock", service_handlers.inventory_stock_handler)
+    app.router.add_post(f"{inv}/reservations", service_handlers.inventory_reserve_parts_handler)
+    app.router.add_post(f"{inv}/purchase-orders", service_handlers.inventory_po_handler)
+    app.router.add_post(f"{inv}/purchase-orders/{{po_id}}/receive", service_handlers.inventory_po_receive_handler)
+    app.router.add_get(f"{inv}/alerts", service_handlers.inventory_alerts_handler)
 
     app.router.add_get(f"{prefix}/catalog/search", catalog_handlers.search_catalog_handler)
 
@@ -315,6 +323,61 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
         transaction_handlers.payments_refund_handler,
     )
     app.router.add_post(f"{prefix}/payments/installments", transaction_handlers.payments_installments_handler)
+
+    # Sprint 10.5 — Service Centers, Parts Marketplace & Vehicle Maintenance
+    app.router.add_get(f"{prefix}/service", service_handlers.service_health_handler)
+    app.router.add_get(f"{prefix}/service/centers", service_handlers.service_centers_handler)
+    app.router.add_post(f"{prefix}/service/centers", service_handlers.service_centers_handler)
+    app.router.add_get(f"{prefix}/service/orders", service_handlers.repair_orders_handler)
+    app.router.add_post(f"{prefix}/service/orders", service_handlers.repair_orders_handler)
+    app.router.add_post(
+        f"{prefix}/service/orders/{{order_id}}/{{action}}",
+        service_handlers.repair_order_action_handler,
+    )
+    app.router.add_post(f"{prefix}/service/diagnostics", service_handlers.diagnostics_handler)
+    app.router.add_post(
+        f"{prefix}/service/diagnostics/{{report_id}}/ai",
+        service_handlers.diagnostics_ai_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/service/history/{{vehicle_id}}",
+        service_handlers.service_history_handler,
+    )
+
+    app.router.add_get(f"{prefix}/maintenance", service_handlers.maintenance_health_handler)
+    app.router.add_post(f"{prefix}/maintenance/plans", service_handlers.maintenance_plans_handler)
+    app.router.add_post(f"{prefix}/maintenance/schedule", service_handlers.maintenance_schedule_handler)
+    app.router.add_get(f"{prefix}/maintenance/reminders", service_handlers.maintenance_reminders_handler)
+
+    app.router.add_get(f"{prefix}/parts", service_handlers.parts_list_create_handler)
+    app.router.add_post(f"{prefix}/parts", service_handlers.parts_list_create_handler)
+    app.router.add_get(f"{prefix}/parts/health", service_handlers.parts_health_handler)
+    app.router.add_post(f"{prefix}/parts/compare", service_handlers.parts_compare_handler)
+    app.router.add_get(f"{prefix}/parts/vin/{{vin}}", service_handlers.parts_vin_handler)
+    app.router.add_get(f"{prefix}/parts/suppliers", service_handlers.suppliers_handler)
+    app.router.add_post(f"{prefix}/parts/suppliers", service_handlers.suppliers_handler)
+
+    app.router.add_get(f"{prefix}/appointments", service_handlers.appointments_list_create_handler)
+    app.router.add_post(f"{prefix}/appointments", service_handlers.appointments_list_create_handler)
+    app.router.add_post(
+        f"{prefix}/appointments/{{appointment_id}}/allocate",
+        service_handlers.appointments_allocate_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/appointments/{{appointment_id}}/reschedule",
+        service_handlers.appointments_reschedule_handler,
+    )
+
+    app.router.add_get(f"{prefix}/warranty", service_handlers.warranty_health_handler)
+    app.router.add_post(f"{prefix}/warranty", service_handlers.warranty_register_handler)
+    app.router.add_post(
+        f"{prefix}/warranty/{{warranty_id}}/validate",
+        service_handlers.warranty_validate_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/warranty/{{warranty_id}}/claims",
+        service_handlers.warranty_claim_handler,
+    )
 
     # Sprint 6.5 — Documents, Contracts & Financial Operations
     fin = f"{prefix}/finance"

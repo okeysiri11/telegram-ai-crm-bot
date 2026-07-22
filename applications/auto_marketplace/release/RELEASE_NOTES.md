@@ -1,3 +1,15 @@
+# Auto Marketplace 1.4.0-alpha — Service & Parts
+
+**Release Status:** Service Alpha  
+**Platform Dependency:** AI Platform Core v3  
+**Ecosystem Dependency:** AI Ecosystem v1.5
+
+## Summary
+
+Sprint 10.5 delivers service centers, repair orders, maintenance scheduling, parts marketplace, parts inventory, warranty, diagnostics, and vehicle service history under `applications/auto_marketplace/`.
+
+---
+
 # Auto Marketplace 1.3.0-alpha — Transactions
 
 **Release Status:** Transactions Alpha  

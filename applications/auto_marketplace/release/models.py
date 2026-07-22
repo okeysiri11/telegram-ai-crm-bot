@@ -65,8 +65,8 @@ class PerformanceBenchmark:
 
 @dataclass
 class ReleaseReport:
-    application_version: str = "1.3.0-alpha"
-    release_status: str = "Transactions Alpha"
+    application_version: str = "1.4.0-alpha"
+    release_status: str = "Service Alpha"
     platform_dependency: str = "AI Platform Core v3"
     validations: list[ValidationResult] = field(default_factory=list)
     benchmarks: list[PerformanceBenchmark] = field(default_factory=list)
