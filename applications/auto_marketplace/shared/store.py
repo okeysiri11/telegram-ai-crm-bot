@@ -169,6 +169,16 @@ class MarketplaceStore:
         self.warranty_claims: EntityStore = EntityStore()
         self.diagnostic_reports: EntityStore = EntityStore()
         self.vehicle_service_records: EntityStore = EntityStore()
+        # Sprint 10.6 — logistics / transport / customs / import-export
+        self.logistics_carriers: EntityStore = EntityStore()
+        self.vehicle_shipments: EntityStore = EntityStore()
+        self.tracking_sessions: EntityStore = EntityStore()
+        self.optimized_routes: EntityStore = EntityStore()
+        self.dispatch_jobs: EntityStore = EntityStore()
+        self.customs_declarations: EntityStore = EntityStore()
+        self.trade_shipments: EntityStore = EntityStore()
+        self.logistics_documents: EntityStore = EntityStore()
+        self.fleet_movements: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

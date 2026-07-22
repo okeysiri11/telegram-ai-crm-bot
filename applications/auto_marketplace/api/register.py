@@ -13,6 +13,7 @@ from applications.auto_marketplace.api import (
     finance_handlers,
     foundation_handlers,
     internal_handlers,
+    logistics_handlers,
     marketplace_handlers,
     ops_handlers,
     portal_handlers,
@@ -377,6 +378,75 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(
         f"{prefix}/warranty/{{warranty_id}}/claims",
         service_handlers.warranty_claim_handler,
+    )
+
+    # Sprint 10.6 — Logistics, Vehicle Transport, Export & Import
+    app.router.add_get(f"{prefix}/transport", logistics_handlers.transport_health_handler)
+    app.router.add_get(f"{prefix}/transport/shipments", logistics_handlers.transport_shipments_handler)
+    app.router.add_post(f"{prefix}/transport/shipments", logistics_handlers.transport_shipments_handler)
+    app.router.add_post(
+        f"{prefix}/transport/shipments/{{shipment_id}}/book",
+        logistics_handlers.transport_book_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transport/shipments/{{shipment_id}}/dispatch",
+        logistics_handlers.transport_dispatch_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transport/shipments/{{shipment_id}}/transit",
+        logistics_handlers.transport_transit_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/transport/shipments/{{shipment_id}}/deliver",
+        logistics_handlers.transport_deliver_handler,
+    )
+    app.router.add_post(f"{prefix}/transport/optimize", logistics_handlers.transport_optimize_handler)
+    app.router.add_post(f"{prefix}/transport/ai", logistics_handlers.transport_ai_handler)
+    app.router.add_post(f"{prefix}/transport/fleet", logistics_handlers.transport_fleet_handler)
+
+    app.router.add_get(f"{prefix}/tracking", logistics_handlers.tracking_health_handler)
+    app.router.add_get(f"{prefix}/tracking/{{tracking_id}}", logistics_handlers.tracking_get_handler)
+    app.router.add_post(f"{prefix}/tracking/{{tracking_id}}/gps", logistics_handlers.tracking_gps_handler)
+    app.router.add_get(f"{prefix}/tracking/{{tracking_id}}/eta", logistics_handlers.tracking_eta_handler)
+    app.router.add_get(
+        f"{prefix}/tracking/{{tracking_id}}/timeline",
+        logistics_handlers.tracking_timeline_handler,
+    )
+
+    app.router.add_get(f"{prefix}/carriers", logistics_handlers.carriers_handler)
+    app.router.add_post(f"{prefix}/carriers", logistics_handlers.carriers_handler)
+    app.router.add_post(f"{prefix}/carriers/{{carrier_id}}/rate", logistics_handlers.carriers_rate_handler)
+    app.router.add_post(
+        f"{prefix}/carriers/{{carrier_id}}/drivers",
+        logistics_handlers.carriers_driver_handler,
+    )
+
+    app.router.add_get(f"{prefix}/import", logistics_handlers.import_handler)
+    app.router.add_post(f"{prefix}/import", logistics_handlers.import_handler)
+    app.router.add_get(f"{prefix}/export", logistics_handlers.export_handler)
+    app.router.add_post(f"{prefix}/export", logistics_handlers.export_handler)
+    app.router.add_post(
+        f"{prefix}/import/{{trade_id}}/approve",
+        logistics_handlers.trade_approve_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/export/{{trade_id}}/approve",
+        logistics_handlers.trade_approve_handler,
+    )
+
+    app.router.add_get(f"{prefix}/customs", logistics_handlers.customs_health_handler)
+    app.router.add_post(f"{prefix}/customs", logistics_handlers.customs_create_handler)
+    app.router.add_post(
+        f"{prefix}/customs/{{customs_id}}/broker",
+        logistics_handlers.customs_broker_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/customs/{{customs_id}}/submit",
+        logistics_handlers.customs_submit_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/customs/{{customs_id}}/clear",
+        logistics_handlers.customs_clear_handler,
     )
 
     # Sprint 6.5 — Documents, Contracts & Financial Operations

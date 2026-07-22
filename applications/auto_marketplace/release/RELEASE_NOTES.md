@@ -1,3 +1,15 @@
+# Auto Marketplace 1.5.0-alpha — Logistics
+
+**Release Status:** Logistics Alpha  
+**Platform Dependency:** AI Platform Core v3  
+**Ecosystem Dependency:** AI Ecosystem v1.5
+
+## Summary
+
+Sprint 10.6 delivers vehicle transport, carrier network, tracking, route optimization, import/export, customs, logistics documents, and fleet movements under `applications/auto_marketplace/`.
+
+---
+
 # Auto Marketplace 1.4.0-alpha — Service & Parts
 
 **Release Status:** Service Alpha  

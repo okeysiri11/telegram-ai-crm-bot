@@ -48,6 +48,7 @@ from applications.auto_marketplace.transactions.facade import (
     TransactionDomainEngine,
     transaction_domain_engine,
 )
+from applications.auto_marketplace.transport.facade import LogisticsDomainEngine, logistics_domain_engine
 from applications.auto_marketplace.vehicle_catalog.service import VehicleCatalogService, vehicle_catalog_service
 from applications.auto_marketplace.vehicles.engine import VehiclesEngine, vehicles_engine
 
@@ -78,6 +79,7 @@ class AutoMarketplaceApplication:
         auto_ai: AutoAIDomainEngine | None = None,
         transactions: TransactionDomainEngine | None = None,
         service: ServiceDomainEngine | None = None,
+        logistics: LogisticsDomainEngine | None = None,
         payments: PaymentService | None = None,
         delivery: DeliveryService | None = None,
         analytics: AnalyticsService | None = None,
@@ -115,6 +117,7 @@ class AutoMarketplaceApplication:
         self.auto_ai = auto_ai or auto_ai_domain_engine
         self.transactions = transactions or transaction_domain_engine
         self.service = service or service_domain_engine
+        self.logistics = logistics or logistics_domain_engine
         self.payments = payments or payment_service
         self.delivery = delivery or delivery_service
         self.analytics = analytics or analytics_service
@@ -160,6 +163,9 @@ class AutoMarketplaceApplication:
             "service_engine": self.config.service_engine,
             "parts_engine": self.config.parts_engine,
             "maintenance_engine": self.config.maintenance_engine,
+            "transport_engine": self.config.transport_engine,
+            "tracking_engine": self.config.tracking_engine,
+            "customs_engine": self.config.customs_engine,
             "metrics": self.analytics.dashboard_metrics(),
             "foundation": {
                 "catalog": self.catalog.overview(),
@@ -172,6 +178,7 @@ class AutoMarketplaceApplication:
             "auto_ai": self.auto_ai.metrics(),
             "transactions": self.transactions.metrics(),
             "service": self.service.metrics(),
+            "logistics": self.logistics.metrics(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),
             "crm_deals": self.store.crm_deals.count(),

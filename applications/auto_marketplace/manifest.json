@@ -1,8 +1,8 @@
 {
   "application_name": "Auto Marketplace",
   "application": "auto_marketplace",
-  "application_version": "1.4.0-alpha",
-  "release_status": "Service Alpha",
+  "application_version": "1.5.0-alpha",
+  "release_status": "Logistics Alpha",
   "platform_dependency": "AI Platform Core v3",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "platform_version": "3.0.0",
@@ -75,6 +75,20 @@
     "finance_engine": "1.0",
     "bi_engine": "1.0",
     "portal_engine": "1.0",
-    "production_engine": "1.0"
-  }
+    "production_engine": "1.0",
+    "transport": "1.0",
+    "vehicle_shipping": "1.0",
+    "carriers": "1.0",
+    "dispatch": "1.0",
+    "tracking": "1.0",
+    "customs": "1.0",
+    "import_export": "1.0",
+    "international": "1.0",
+    "route_optimizer": "1.0",
+    "delivery": "1.0",
+    "fleet_transport": "1.0"
+  },
+  "transport_engine": "1.0",
+  "tracking_engine": "1.0",
+  "customs_engine": "1.0"
 }
