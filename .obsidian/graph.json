@@ -1,0 +1,65 @@
+{
+  "collapse-filter": true,
+  "search": "",
+  "showTags": true,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "collapse-color-groups": false,
+  "colorGroups": [
+    {
+      "query": "tag:#dashboard",
+      "color": {
+        "a": 1,
+        "rgb": 80
+      }
+    },
+    {
+      "query": "tag:#agent",
+      "color": {
+        "a": 1,
+        "rgb": 120
+      }
+    },
+    {
+      "query": "tag:#platform",
+      "color": {
+        "a": 1,
+        "rgb": 40
+      }
+    },
+    {
+      "query": "tag:#app",
+      "color": {
+        "a": 1,
+        "rgb": 200
+      }
+    },
+    {
+      "query": "path:knowledge/diagrams",
+      "color": {
+        "a": 1,
+        "rgb": 280
+      }
+    },
+    {
+      "query": "tag:#registry",
+      "color": {
+        "a": 1,
+        "rgb": 160
+      }
+    }
+  ],
+  "collapse-display": false,
+  "showArrow": true,
+  "textFadeMultiplier": 0,
+  "nodeSizeMultiplier": 1.2,
+  "lineSizeMultiplier": 1,
+  "collapse-forces": false,
+  "centerStrength": 0.4,
+  "repelStrength": 12,
+  "linkStrength": 1.1,
+  "linkDistance": 220,
+  "scale": 1,
+  "close": false
+}

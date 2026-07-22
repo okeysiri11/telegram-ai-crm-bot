@@ -34,3 +34,21 @@ Each application component set exposes routes under its prefix — [[API_REFEREN
 
 ## Future roadmap
 Add Legal application component list when packaged ([[applications/LEGAL_PLATFORM]]).
+
+## Responsibilities
+Document and navigate this concern within the Obsidian living vault (Knowledge 1.1).
+
+## Interfaces
+Wiki links, dashboards, and registries. Runtime interfaces described where applicable.
+
+## REST APIs
+See [[registries/API_REGISTRY]] and [[API_REFERENCE]] when this page owns HTTP surfaces; otherwise N/A.
+
+## Events
+Domain or documentation events as applicable; see related sprint pages.
+
+## References
+Repository `docs/`, manifests, [[standards/DOCUMENTATION_STANDARDS]].
+
+## Related pages
+[[INDEX]] · [[DASHBOARD]] · [[ROADMAP]] · [[registries/COMPONENT_REGISTRY]]

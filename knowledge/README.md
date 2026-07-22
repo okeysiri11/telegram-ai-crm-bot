@@ -1,37 +1,49 @@
+---
+title: README
+aliases:
+  - Knowledge README
+tags:
+  - readme
+  - knowledge-1.1
+---
+
 # AI Ecosystem Knowledge Base
 
-Obsidian-compatible wiki for the TelegramBotCourse / AI Ecosystem repository.
+Obsidian living architecture documentation for the entire AI Ecosystem.
 
-> Start here: [[INDEX]]
-
-## Navigation
-[[INDEX]] · [[README]] · [[ROADMAP]] · [[CHANGELOG]] · [[ARCHITECTURE]] · [[PLATFORM_CORE]] · [[PLATFORM_TIMELINE]] · [[API_REFERENCE]] · [[SECURITY]] · [[DEPLOYMENT]]
-[[AI_AGENTS]] · [[MEMORY_ENGINE]] · [[KNOWLEDGE_GRAPH]] · [[WORKFLOW_ENGINE]] · [[PLUGIN_SDK]]
-Apps: [[applications/AUTO_MARKETPLACE|Auto]] · [[applications/AGRO_MARKETPLACE|Agro]] · [[applications/PORT_ERP|Port]] · [[applications/DRONE_PLATFORM|Drone]] · [[applications/CRM|CRM]] · [[applications/LEGAL_PLATFORM|Legal]]
-Sprints: [[sprints/PLATFORM|Platform]] · [[sprints/PORT_ERP|Port]] · [[sprints/AUTO_MARKETPLACE|Auto]] · [[sprints/DRONE_PLATFORM|Drone]]
-Diagrams: [[diagrams/PLATFORM_GRAPH|Platform Graph]] · [[diagrams/AGENT_GRAPH|Agent Graph]] · [[diagrams/APPLICATION_GRAPH|App Graph]] · [[diagrams/DATA_FLOW|Data Flow]]
-Glossary: [[glossary/TERMS|Terms]] · [[glossary/COMPONENTS|Components]]
+> **Start here:** [[INDEX]]
 
 ## Overview
-This folder documents Platform Core v3.0.0, AI Ecosystem v1.5.0-alpha, and vertical applications (Agro, Port ERP, Auto Marketplace, Drone Platform). Content mirrors the live repository architecture and completed sprints.
+Sprint **Knowledge 1.1** transforms `knowledge/` into a fully interconnected documentation system with registries, dashboards, Mermaid diagrams, AI agent pages, and a generator that updates Markdown after sprints.
 
 ## Architecture
-Knowledge pages are organized by concern: platform engines, applications, sprint histories, diagrams, and glossary. Wiki links (`[[Page]]`) provide bidirectional navigation inside Obsidian.
+Workspaces: hubs · applications · agents · registries · diagrams · dashboards · statistics · standards · automation · templates · canvas · excalidraw.
 
 ## Components
-- Root reference pages (architecture, APIs, security, deployment)
-- Application pages under `applications/`
-- Sprint summaries under `sprints/`
-- Mermaid-friendly diagrams under `diagrams/`
-- Shared vocabulary under `glossary/`
+- Generator: `knowledge/tools/generate_docs.py`
+- Data: `knowledge/data/ecosystem_registry.json`
+- Obsidian config: `.obsidian/`
 
 ## Relationships
-- Platform Core is the certified baseline — see [[PLATFORM_CORE]]
-- Ecosystem sits above Core via bridges — see [[ARCHITECTURE]]
-- Vertical apps consume Core + Ecosystem through bridge interfaces only
+Does **not** modify Platform Core, Ecosystem, or application business logic.
 
-## APIs
-Canonical HTTP prefixes are listed in [[API_REFERENCE]].
+## Responsibilities
+Human + automated documentation only.
+
+## Interfaces
+Open the folder as an Obsidian vault (or include it in the repo vault). Default note: [[INDEX]].
+
+## REST APIs
+Documented in [[registries/API_REGISTRY]].
+
+## Events
+Run generator after each sprint completion.
 
 ## Future roadmap
-See [[ROADMAP]] for planned platform and application work after the current certified baseline.
+[[ROADMAP]]
+
+## References
+[[standards/DOCUMENTATION_STANDARDS]] · [[automation/DOCUMENTATION_AUTOMATION]]
+
+## Related pages
+[[DASHBOARD]] · [[INDEX]] · [[CHANGELOG]]

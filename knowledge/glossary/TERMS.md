@@ -34,3 +34,21 @@ Component catalog: [[glossary/COMPONENTS]]. Timeline: [[PLATFORM_TIMELINE]].
 
 ## Future roadmap
 Expand glossary as Legal and Drone sprints land ([[ROADMAP]]).
+
+## Responsibilities
+Document and navigate this concern within the Obsidian living vault (Knowledge 1.1).
+
+## Interfaces
+Wiki links, dashboards, and registries. Runtime interfaces described where applicable.
+
+## REST APIs
+See [[registries/API_REGISTRY]] and [[API_REFERENCE]] when this page owns HTTP surfaces; otherwise N/A.
+
+## Events
+Domain or documentation events as applicable; see related sprint pages.
+
+## References
+Repository `docs/`, manifests, [[standards/DOCUMENTATION_STANDARDS]].
+
+## Related pages
+[[INDEX]] · [[DASHBOARD]] · [[ROADMAP]] · [[registries/COMPONENT_REGISTRY]]

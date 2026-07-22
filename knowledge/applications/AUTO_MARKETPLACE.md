@@ -30,3 +30,21 @@ Also: `/api/auto/mobile/v1`, `/api/auto/partner/v1`, portal, `/internal/auto/v1`
 
 ## Future roadmap
 Deeper Ecosystem registration, cross-border commerce, shared CRM fabric with other verticals ([[ROADMAP]]).
+
+## Responsibilities
+Document and navigate this concern within the Obsidian living vault (Knowledge 1.1).
+
+## Interfaces
+Wiki links, dashboards, and registries. Runtime interfaces described where applicable.
+
+## REST APIs
+See [[registries/API_REGISTRY]] and [[API_REFERENCE]] when this page owns HTTP surfaces; otherwise N/A.
+
+## Events
+Domain or documentation events as applicable; see related sprint pages.
+
+## References
+Repository `docs/`, manifests, [[standards/DOCUMENTATION_STANDARDS]].
+
+## Related pages
+[[INDEX]] · [[DASHBOARD]] · [[ROADMAP]] · [[registries/COMPONENT_REGISTRY]]

@@ -1,0 +1,6 @@
+{
+  "folder": "knowledge",
+  "template": "knowledge/templates/Daily Note",
+  "format": "YYYY-MM-DD",
+  "autorun": false
+}

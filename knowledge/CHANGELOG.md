@@ -1,39 +1,67 @@
-# Knowledge / Platform Changelog (Summary)
-
-
 ---
-[[INDEX]] · [[ARCHITECTURE]] · [[PLATFORM_CORE]] · [[ROADMAP]] · [[API_REFERENCE]]
-
+title: Changelog
+aliases:
+  - Changelog
+  - Knowledge Changelog
+tags:
+  - changelog
+  - knowledge-1.1
+generated: 2026-07-22
+sprint: Knowledge 1.1
+---
+# Changelog
 
 ## Overview
-Condensed changelog of platform and application milestones reflected in this knowledge base. Repository root `CHANGELOG.md` remains the source of truth for Platform RC1 details.
+Condensed changelog for platform, ecosystem, applications, and knowledge vault.
 
 ## Architecture
-Entries are grouped by layer: Platform Core → Ecosystem → Applications.
+Entries grouped by layer. Root repository `CHANGELOG.md` remains Platform RC1 source of truth.
 
 ## Components
+### [1.1.0] Knowledge 1.1 — 2026-07-22
+- Living Obsidian documentation system
+- Documentation generator + registries
+- Dashboards, statistics, agent pages, Mermaid packs
+- `.obsidian` templates, bookmarks, graph config
 
-### Platform Core
-- **[3.0.0] / Sprint 1.5** — Certification PASS (score 100); frozen architectural baseline (RC1).
-- **Sprints 2.1–2.3** — Memory 2.2.0, semantic memory, orchestrator 2.3.0.
-- **Sprints 3.1–3.3** — Agent registry, workflow/task engines, tools/plugins.
-- **Sprints 4.1–4.5** — Reasoning, planning, decision, learning, collaboration.
-- **Sprints 5.1–5.5** — Security, observability, reliability, configuration, validation.
+### [1.0.0-alpha] Drone Platform — Sprint 11.1
+- Foundation: registry, engineering, firmware, missions, inventory, AI assistant
 
-### Ecosystem
-- **1.5.0-alpha / Sprints 7.1–7.6** — Identity/workspace → communication → unified assistant → AI workforce → optimization → governance.
+### [2.0.0] Auto Marketplace — Sprint 10.8
+- Enterprise / commercial release
 
-### Applications
-- **Agro Marketplace 2.0.0** — Sprints 8.1–8.8 commercial release.
-- **Port ERP 2.0.0** — Sprints 9.1–9.8 enterprise release.
-- **Auto Marketplace 2.0.0** — Sprints 6.1–6.8 + 10.1–10.8 commercial release.
-- **Drone Platform 1.0.0-alpha** — Sprint 11.1 foundation.
+### [2.0.0] Port ERP — Sprint 9.8
+- Enterprise network & production release
+
+### [2.0.0] Agro Marketplace — Sprint 8.8
+- Commercial release
+
+### [1.5.0-alpha] Ecosystem — Sprint 7.6
+- Governance / compliance complete
+
+### [3.0.0] Platform Core — Sprint 1.5
+- Certification PASS / RC1 baseline
 
 ## Relationships
-See [[PLATFORM_TIMELINE]] and sprint pages under `sprints/`.
+[[releases/RELEASE_NOTES]] · [[PLATFORM_TIMELINE]] · [[registries/SPRINT_REGISTRY]]
 
-## APIs
-API contracts versioned with Platform `api_contract_version` 1.0.0; app APIs listed in [[API_REFERENCE]].
+## Responsibilities
+Record completed milestones for the Obsidian vault audience.
+
+## Interfaces
+Edited by generator for Knowledge entries; historical entries curated.
+
+## REST APIs
+N/A
+
+## Events
+Sprint completion → changelog entry → generator run
 
 ## Future roadmap
-Upcoming entries will track Drone expansion and Legal productization — [[ROADMAP]].
+Keep Knowledge changelog in sync via generator hooks.
+
+## References
+Root `CHANGELOG.md`
+
+## Related pages
+[[ROADMAP]] · [[INDEX]] · [[SPRINT_PROGRESS]]

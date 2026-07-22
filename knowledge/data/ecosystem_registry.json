@@ -1,0 +1,416 @@
+{
+  "meta": {
+    "sprint": "Knowledge 1.1",
+    "title": "AI Documentation System for Obsidian",
+    "status": "completed",
+    "version": "1.1.0",
+    "platform_core": "3.0.0",
+    "ecosystem": "1.5.0-alpha"
+  },
+  "applications": [
+    {
+      "id": "agro",
+      "name": "Agro Marketplace",
+      "package": "applications/agro_marketplace",
+      "version": "2.0.0",
+      "status": "completed",
+      "api": "/api/agro/v1",
+      "page": "applications/AGRO_MARKETPLACE"
+    },
+    {
+      "id": "port",
+      "name": "Port ERP",
+      "package": "applications/port_erp",
+      "version": "2.0.0",
+      "status": "completed",
+      "api": "/api/port/v1",
+      "page": "applications/PORT_ERP"
+    },
+    {
+      "id": "auto",
+      "name": "Auto Marketplace",
+      "package": "applications/auto_marketplace",
+      "version": "2.0.0",
+      "status": "completed",
+      "api": "/api/auto/v1",
+      "page": "applications/AUTO_MARKETPLACE"
+    },
+    {
+      "id": "drone",
+      "name": "Drone Platform",
+      "package": "applications/drone_platform",
+      "version": "1.0.0-alpha",
+      "status": "foundation",
+      "api": "/api/drone/v1",
+      "page": "applications/DRONE_PLATFORM"
+    },
+    {
+      "id": "crm",
+      "name": "CRM",
+      "package": "cross-cutting",
+      "version": "capability",
+      "status": "active",
+      "api": "embedded",
+      "page": "applications/CRM"
+    },
+    {
+      "id": "legal",
+      "name": "Legal Platform",
+      "package": "src/verticals/legal",
+      "version": "scaffold",
+      "status": "planned",
+      "api": "pending",
+      "page": "applications/LEGAL_PLATFORM"
+    }
+  ],
+  "modules": {
+    "platform": [
+      "platform_memory",
+      "platform_orchestrator",
+      "platform_agents",
+      "platform_workflow",
+      "platform_tools",
+      "platform_plugin_sdk",
+      "platform_plugins",
+      "platform_reasoning",
+      "platform_planning",
+      "platform_decision",
+      "platform_learning",
+      "platform_collaboration",
+      "platform_security",
+      "platform_observability",
+      "platform_reliability",
+      "platform_configuration",
+      "platform_validation",
+      "platform_api",
+      "platform_sdk",
+      "platform_management"
+    ],
+    "ecosystem": [
+      "identity",
+      "workspace",
+      "navigation",
+      "organizations",
+      "tenants",
+      "profiles",
+      "permissions",
+      "services",
+      "ai",
+      "communication",
+      "assistant",
+      "workforce",
+      "optimization",
+      "governance"
+    ],
+    "drone": [
+      "registry",
+      "projects",
+      "engineering",
+      "firmware",
+      "missions",
+      "telemetry",
+      "inventory",
+      "warehouse",
+      "manufacturing",
+      "simulation",
+      "ai",
+      "documentation",
+      "integrations",
+      "analytics",
+      "shared",
+      "api",
+      "models"
+    ]
+  },
+  "apis": [
+    {
+      "name": "Platform Public",
+      "prefix": "/api/v1",
+      "owner": "Platform Core"
+    },
+    {
+      "name": "Platform Management",
+      "prefix": "/management/v1",
+      "owner": "Platform Core"
+    },
+    {
+      "name": "Ecosystem",
+      "prefix": "/api/ecosystem/v1",
+      "owner": "Ecosystem"
+    },
+    {
+      "name": "Agro",
+      "prefix": "/api/agro/v1",
+      "owner": "Agro Marketplace"
+    },
+    {
+      "name": "Port",
+      "prefix": "/api/port/v1",
+      "owner": "Port ERP"
+    },
+    {
+      "name": "Auto",
+      "prefix": "/api/auto/v1",
+      "owner": "Auto Marketplace"
+    },
+    {
+      "name": "Drone",
+      "prefix": "/api/drone/v1",
+      "owner": "Drone Platform"
+    }
+  ],
+  "agents": [
+    {
+      "name": "Owner AI",
+      "role": "executive ownership & portfolio decisions",
+      "layer": "ecosystem",
+      "status": "documented"
+    },
+    {
+      "name": "Manager AI",
+      "role": "delivery management & sprint coordination",
+      "layer": "ecosystem",
+      "status": "documented"
+    },
+    {
+      "name": "Developer AI",
+      "role": "implementation assistance & code guidance",
+      "layer": "platform",
+      "status": "documented"
+    },
+    {
+      "name": "Architect AI",
+      "role": "architecture review & system design",
+      "layer": "platform",
+      "status": "documented"
+    },
+    {
+      "name": "QA AI",
+      "role": "quality assurance & regression guidance",
+      "layer": "platform",
+      "status": "documented"
+    },
+    {
+      "name": "Finance AI",
+      "role": "billing, tariffs, financial ops",
+      "layer": "application",
+      "status": "documented"
+    },
+    {
+      "name": "Legal AI",
+      "role": "legal agent / compliance scaffold",
+      "layer": "vertical",
+      "status": "scaffold"
+    },
+    {
+      "name": "Drone Engineer AI",
+      "role": "firmware, config, diagnostics (engineering only)",
+      "layer": "drone",
+      "status": "active"
+    },
+    {
+      "name": "Port AI",
+      "role": "port ops / digital twin / executive ops",
+      "layer": "port",
+      "status": "active"
+    },
+    {
+      "name": "Agro AI",
+      "role": "agro trading, forecasting, quality",
+      "layer": "agro",
+      "status": "active"
+    },
+    {
+      "name": "CRM AI",
+      "role": "sales pipeline & customer intelligence",
+      "layer": "crm",
+      "status": "active"
+    },
+    {
+      "name": "Marketplace AI",
+      "role": "listings, pricing, recommendations",
+      "layer": "auto/agro",
+      "status": "active"
+    }
+  ],
+  "sprints": [
+    {
+      "id": "1.5",
+      "stream": "Platform Core",
+      "purpose": "Certification & RC1",
+      "version": "3.0.0",
+      "status": "completed",
+      "deps": []
+    },
+    {
+      "id": "2.1-2.2",
+      "stream": "Platform Core",
+      "purpose": "Memory + semantic memory",
+      "version": "memory 2.2.0",
+      "status": "completed",
+      "deps": [
+        "1.5"
+      ]
+    },
+    {
+      "id": "2.3",
+      "stream": "Platform Core",
+      "purpose": "Multi-agent orchestrator",
+      "version": "orchestrator 2.3.0",
+      "status": "completed",
+      "deps": [
+        "2.1-2.2"
+      ]
+    },
+    {
+      "id": "3.1",
+      "stream": "Platform Core",
+      "purpose": "Agent registry",
+      "version": "registry 1.0",
+      "status": "completed",
+      "deps": [
+        "2.3"
+      ]
+    },
+    {
+      "id": "3.2",
+      "stream": "Platform Core",
+      "purpose": "Workflow/task engine",
+      "version": "workflow 1.0",
+      "status": "completed",
+      "deps": [
+        "3.1"
+      ]
+    },
+    {
+      "id": "3.3",
+      "stream": "Platform Core",
+      "purpose": "Tools & plugin SDK",
+      "version": "plugins 1.0",
+      "status": "completed",
+      "deps": [
+        "3.2"
+      ]
+    },
+    {
+      "id": "4.1-4.5",
+      "stream": "Platform Core",
+      "purpose": "Cognitive stack",
+      "version": "cognition 1.0",
+      "status": "completed",
+      "deps": [
+        "3.3"
+      ]
+    },
+    {
+      "id": "5.1-5.5",
+      "stream": "Platform Core",
+      "purpose": "Ops stack (security\u2192validation)",
+      "version": "ops 1.0",
+      "status": "completed",
+      "deps": [
+        "4.1-4.5"
+      ]
+    },
+    {
+      "id": "6.1-6.8",
+      "stream": "Auto Marketplace",
+      "purpose": "First Core v3 commercial stack",
+      "version": "lineage\u21922.0",
+      "status": "completed",
+      "deps": [
+        "5.1-5.5"
+      ]
+    },
+    {
+      "id": "7.1-7.6",
+      "stream": "Ecosystem",
+      "purpose": "Identity\u2192governance",
+      "version": "1.5.0-alpha",
+      "status": "completed",
+      "deps": [
+        "5.1-5.5"
+      ]
+    },
+    {
+      "id": "8.1-8.8",
+      "stream": "Agro Marketplace",
+      "purpose": "Commercial agro platform",
+      "version": "2.0.0",
+      "status": "completed",
+      "deps": [
+        "7.1-7.6"
+      ]
+    },
+    {
+      "id": "9.1-9.8",
+      "stream": "Port ERP",
+      "purpose": "Enterprise port ERP",
+      "version": "2.0.0",
+      "status": "completed",
+      "deps": [
+        "7.1-7.6"
+      ]
+    },
+    {
+      "id": "10.1-10.8",
+      "stream": "Auto Marketplace",
+      "purpose": "Marketplace expansion commercial",
+      "version": "2.0.0",
+      "status": "completed",
+      "deps": [
+        "6.1-6.8"
+      ]
+    },
+    {
+      "id": "11.1",
+      "stream": "Drone Platform",
+      "purpose": "UAV engineering foundation",
+      "version": "1.0.0-alpha",
+      "status": "completed",
+      "deps": [
+        "7.1-7.6"
+      ]
+    },
+    {
+      "id": "K1.1",
+      "stream": "Knowledge",
+      "purpose": "Obsidian living documentation system",
+      "version": "1.1.0",
+      "status": "completed",
+      "deps": [
+        "11.1"
+      ]
+    },
+    {
+      "id": "11.2+",
+      "stream": "Drone Platform",
+      "purpose": "Manufacturing, fleet, telemetry depth",
+      "version": "planned",
+      "status": "planned",
+      "deps": [
+        "11.1"
+      ]
+    },
+    {
+      "id": "L1.0",
+      "stream": "Legal Platform",
+      "purpose": "Productize legal vertical",
+      "version": "planned",
+      "status": "planned",
+      "deps": [
+        "K1.1"
+      ]
+    },
+    {
+      "id": "E1.6",
+      "stream": "Ecosystem",
+      "purpose": "Universal app registry & knowledge federation",
+      "version": "planned",
+      "status": "planned",
+      "deps": [
+        "7.1-7.6"
+      ]
+    }
+  ]
+}

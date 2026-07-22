@@ -1,0 +1,8 @@
+/* Knowledge 1.1 — mild graph/readable tweaks */
+.markdown-preview-view h1 {
+  letter-spacing: 0.01em;
+}
+
+.tag[href="#knowledge-1.1"] {
+  background-color: rgba(80, 140, 220, 0.2);
+}

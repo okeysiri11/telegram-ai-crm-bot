@@ -1,1 +1,19 @@
-{}
+{
+  "alwaysUpdateLinks": true,
+  "newFileLocation": "folder",
+  "newFileFolderPath": "knowledge",
+  "attachmentFolderPath": "knowledge/excalidraw",
+  "showLineNumber": true,
+  "strictLineBreaks": false,
+  "showFrontmatter": true,
+  "foldHeading": true,
+  "foldIndent": true,
+  "defaultViewMode": "source",
+  "readableLineLength": true,
+  "promptDelete": true,
+  "showInlineTitle": true,
+  "tabSize": 2,
+  "useMarkdownLinks": false,
+  "newLinkFormat": "shortest",
+  "useTab": false
+}

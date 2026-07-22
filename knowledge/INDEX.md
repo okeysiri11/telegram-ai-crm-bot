@@ -1,50 +1,81 @@
-# Knowledge Base Index
+---
+title: INDEX
+aliases:
+  - Home
+  - Knowledge Home
+  - AI Ecosystem Knowledge
+tags:
+  - index
+  - knowledge-1.1
+generated: 2026-07-22
+sprint: Knowledge 1.1
+---
 
-Entry point for the AI Ecosystem knowledge wiki.
+# AI Ecosystem Knowledge — INDEX
 
-## Navigation
-[[INDEX]] · [[README]] · [[ROADMAP]] · [[CHANGELOG]] · [[ARCHITECTURE]] · [[PLATFORM_CORE]] · [[PLATFORM_TIMELINE]] · [[API_REFERENCE]] · [[SECURITY]] · [[DEPLOYMENT]]
-[[AI_AGENTS]] · [[MEMORY_ENGINE]] · [[KNOWLEDGE_GRAPH]] · [[WORKFLOW_ENGINE]] · [[PLUGIN_SDK]]
-Apps: [[applications/AUTO_MARKETPLACE|Auto]] · [[applications/AGRO_MARKETPLACE|Agro]] · [[applications/PORT_ERP|Port]] · [[applications/DRONE_PLATFORM|Drone]] · [[applications/CRM|CRM]] · [[applications/LEGAL_PLATFORM|Legal]]
-Sprints: [[sprints/PLATFORM|Platform]] · [[sprints/PORT_ERP|Port]] · [[sprints/AUTO_MARKETPLACE|Auto]] · [[sprints/DRONE_PLATFORM|Drone]]
-Diagrams: [[diagrams/PLATFORM_GRAPH|Platform Graph]] · [[diagrams/AGENT_GRAPH|Agent Graph]] · [[diagrams/APPLICATION_GRAPH|App Graph]] · [[diagrams/DATA_FLOW|Data Flow]]
-Glossary: [[glossary/TERMS|Terms]] · [[glossary/COMPONENTS|Components]]
+**Main entry point** for the Obsidian living documentation system (Sprint **Knowledge 1.1**).
 
 ## Overview
-This index links every major knowledge page. Use it as the Obsidian home note or vault entry.
+This vault documents Platform Core v3.0.0, Ecosystem v1.5.0-alpha, commercial applications (Agro, Port, Auto), Drone Platform foundation, CRM/Legal capabilities, AI agents, APIs, sprints, and architecture diagrams — fully interconnected with `[[wiki links]]`.
 
 ## Architecture
-Stack (bottom → top):
-1. [[PLATFORM_CORE|Platform Core v3.0.0]] — certified engines (memory, orchestrator, agents, workflow, tools, cognition, ops)
-2. AI Ecosystem v1.5.0-alpha — identity, workspace, assistant, workforce, governance
-3. Applications — [[applications/AGRO_MARKETPLACE|Agro]], [[applications/PORT_ERP|Port ERP]], [[applications/AUTO_MARKETPLACE|Auto]], [[applications/DRONE_PLATFORM|Drone]]
-
-Diagrams: [[diagrams/PLATFORM_GRAPH]] · [[diagrams/APPLICATION_GRAPH]] · [[diagrams/AGENT_GRAPH]] · [[diagrams/DATA_FLOW]]
+```mermaid
+flowchart TB
+  INDEX[INDEX] --> DASH[Dashboards]
+  INDEX --> REG[Registries]
+  INDEX --> PLAT[Platform Hubs]
+  INDEX --> APPS[Applications]
+  INDEX --> AG[AI Agents]
+  INDEX --> DIA[Diagrams]
+  INDEX --> SPR[Sprints / Roadmap]
+```
 
 ## Components
-| Area | Pages |
-|------|-------|
-| Platform engines | [[MEMORY_ENGINE]] · [[AI_AGENTS]] · [[WORKFLOW_ENGINE]] · [[PLUGIN_SDK]] · [[KNOWLEDGE_GRAPH]] |
-| Ops | [[SECURITY]] · [[DEPLOYMENT]] · [[API_REFERENCE]] |
-| History | [[PLATFORM_TIMELINE]] · [[CHANGELOG]] · [[sprints/PLATFORM]] |
-| Apps | [[applications/AUTO_MARKETPLACE]] · [[applications/AGRO_MARKETPLACE]] · [[applications/PORT_ERP]] · [[applications/DRONE_PLATFORM]] · [[applications/CRM]] · [[applications/LEGAL_PLATFORM]] |
-| Sprint logs | [[sprints/PORT_ERP]] · [[sprints/AUTO_MARKETPLACE]] · [[sprints/DRONE_PLATFORM]] |
-| Glossary | [[glossary/TERMS]] · [[glossary/COMPONENTS]] |
+
+### Dashboards
+[[DASHBOARD]] · [[EXECUTIVE_DASHBOARD]] · [[ARCHITECTURE_DASHBOARD]] · [[PROJECT_STATUS]] · [[SPRINT_PROGRESS]]
+
+### Core hubs
+[[Platform Core]] · [[Platform AI]] · [[Memory Engine]] · [[Workflow Engine]] · [[Plugin SDK]] · [[AI Agents]] · [[Knowledge Graph]]
+
+### Applications
+[[Auto Marketplace]] · [[Agro Marketplace]] · [[Port ERP]] · [[Drone Platform]] · [[CRM]] · [[Legal Platform]]
+
+### Registries
+[[registries/SPRINT_REGISTRY]] · [[registries/COMPONENT_REGISTRY]] · [[registries/API_REGISTRY]] · [[registries/MODULE_REGISTRY]] · [[registries/AGENT_REGISTRY]]
+
+### Agents
+[[Owner AI]] · [[Manager AI]] · [[Developer AI]] · [[Architect AI]] · [[QA AI]] · [[Finance AI]] · [[Legal AI]] · [[Drone Engineer AI]] · [[Port AI]] · [[Agro AI]] · [[CRM AI]] · [[Marketplace AI]]
+
+### Diagrams
+[[diagrams/PLATFORM_GRAPH]] · [[diagrams/AGENT_GRAPH]] · [[diagrams/APPLICATION_GRAPH]] · [[diagrams/DATA_FLOW]] · [[ARCHITECTURE_DASHBOARD]] · [[diagrams/mindmaps/KNOWLEDGE_MAP]]
+
+### Delivery
+[[ROADMAP]] · [[PLATFORM_TIMELINE]] · [[CHANGELOG]] · [[releases/RELEASE_NOTES]] · [[statistics/STATISTICS]] · [[sprints/PLATFORM]] · [[sprints/PORT_ERP]] · [[sprints/AUTO_MARKETPLACE]] · [[sprints/DRONE_PLATFORM]]
+
+### System
+[[automation/DOCUMENTATION_AUTOMATION]] · [[standards/DOCUMENTATION_STANDARDS]] · [[README]] · [[SECURITY]] · [[DEPLOYMENT]] · [[API_REFERENCE]] · [[ARCHITECTURE]]
 
 ## Relationships
-- Apps **must not** mutate Platform Core or Ecosystem packages; they use bridges.
-- Sprint histories summarize completed work without changing code.
-- Canonical deep-dive docs also exist under repository `docs/` (referenced from each page).
+Runtime layering: Applications → bridges → [[Knowledge Graph|Ecosystem]] / [[Platform Core]]. Documentation layering: INDEX → dashboards/registries → hubs → deep pages.
 
-## APIs
-- Platform: `/api/v1`, `/management/v1`
-- Ecosystem: `/api/ecosystem/v1`
-- Agro: `/api/agro/v1`
-- Port: `/api/port/v1`
-- Auto: `/api/auto/v1`
-- Drone: `/api/drone/v1`
+## Responsibilities
+Act as the single Obsidian home note for navigation, search landing, and graph centrality.
 
-Full detail: [[API_REFERENCE]]
+## Interfaces
+Open this file as the vault default note. Use graph view with tags `knowledge-1.1`, `dashboard`, `agent`.
+
+## REST APIs
+Summary: [[registries/API_REGISTRY]] · detail [[API_REFERENCE]]
+
+## Events
+Knowledge regeneration after sprints — [[automation/DOCUMENTATION_AUTOMATION]]
 
 ## Future roadmap
-[[ROADMAP]] tracks post-foundation work (Drone expansion, deeper Ecosystem registration, Legal vertical productization).
+[[ROADMAP]] — Drone 11.2+, Ecosystem 1.6, Legal L1.0, Knowledge 1.2
+
+## References
+Repository `docs/`, manifests, `knowledge/data/ecosystem_registry.json`
+
+## Related pages
+[[DASHBOARD]] · [[EXECUTIVE_DASHBOARD]] · [[PROJECT_STATUS]] · [[SPRINT_PROGRESS]] · [[statistics/STATISTICS]]
