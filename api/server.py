@@ -64,6 +64,10 @@ def create_app() -> web.Application:
 
     register_marketplace_routes(app)
 
+    from applications.workflow_studio.api.register import register_workflow_studio_routes
+
+    register_workflow_studio_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 

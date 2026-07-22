@@ -1,0 +1,16 @@
+{
+  "application_name": "Workflow Studio",
+  "application": "workflow_studio",
+  "application_version": "3.2.0-alpha",
+  "release_status": "Workflow Studio Alpha",
+  "platform_dependency": "AI Platform Core v3.0",
+  "sprint": "12.2",
+  "modules": {
+    "editor": "1.0",
+    "engine": "1.0",
+    "ai_builder": "1.0",
+    "services": "1.0",
+    "api": "3.2"
+  },
+  "does_not_modify": ["platform_core", "existing_applications"]
+}
