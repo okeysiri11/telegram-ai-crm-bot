@@ -8,6 +8,7 @@ from applications.agro_enterprise.config import DEFAULT_CONFIG, AgroEnterpriseCo
 from applications.agro_enterprise.crops_crm import AgroCRM, CropManagement
 from applications.agro_enterprise.marketplace import AgroMarketplace, FarmRegistry
 from applications.agro_enterprise.agro_finance.facade import AgroFinanceSuite
+from applications.agro_enterprise.ai_agronomist.facade import AIAgronomistSuite
 from applications.agro_enterprise.controlled_environment.facade import ControlledEnvironmentSuite
 from applications.agro_enterprise.crop_ai.facade import CropAISuite
 from applications.agro_enterprise.precision_agriculture.facade import PrecisionAgricultureSuite
@@ -29,6 +30,7 @@ class AgroEnterpriseApplication:
         controlled_environment_svc: ControlledEnvironmentSuite | None = None,
         supply_chain_svc: SupplyChainSuite | None = None,
         agro_finance_svc: AgroFinanceSuite | None = None,
+        ai_agronomist_svc: AIAgronomistSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or agro_enterprise_store
@@ -44,6 +46,7 @@ class AgroEnterpriseApplication:
         self.controlled_environment = controlled_environment_svc or ControlledEnvironmentSuite(self.store)
         self.supply_chain = supply_chain_svc or SupplyChainSuite(self.store)
         self.agro_finance = agro_finance_svc or AgroFinanceSuite(self.store)
+        self.ai_agronomist = ai_agronomist_svc or AIAgronomistSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -162,6 +165,10 @@ class AgroEnterpriseApplication:
             "risk_intelligence_ready": True,
             "crop_insurance_ready": True,
             "market_intelligence_ready": True,
+            "ai_agronomist_ready": True,
+            "enterprise_decision_support_ready": True,
+            "autonomous_planning_ready": True,
+            "executive_intelligence_ready": True,
             "engines": {
                 "agro_marketplace": self.config.agro_marketplace,
                 "farm_registry": self.config.farm_registry,
@@ -175,6 +182,7 @@ class AgroEnterpriseApplication:
                 "controlled_environment": self.config.controlled_environment,
                 "supply_chain": self.config.supply_chain,
                 "agro_finance": self.config.agro_finance,
+                "ai_agronomist": self.config.ai_agronomist,
             },
             "marketplace": self.marketplace.status(),
             "farms": self.farms.status(),
@@ -188,6 +196,7 @@ class AgroEnterpriseApplication:
             "controlled_environment": self.controlled_environment.status(),
             "supply_chain": self.supply_chain.status(),
             "agro_finance": self.agro_finance.status(),
+            "ai_agronomist": self.ai_agronomist.status(),
         }
 
 

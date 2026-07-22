@@ -204,6 +204,22 @@ class AgroEnterpriseStore:
         self.af_insights: EntityStore = EntityStore()
         self.af_dashboards: EntityStore = EntityStore()
         self.af_registries: EntityStore = EntityStore()
+        # Sprint 14.7 — AI Agronomist / Decision Support / Autonomous Planning
+        self.aa_consultations: EntityStore = EntityStore()
+        self.aa_advisories: EntityStore = EntityStore()
+        self.aa_decisions: EntityStore = EntityStore()
+        self.aa_scenarios: EntityStore = EntityStore()
+        self.aa_recommendations: EntityStore = EntityStore()
+        self.aa_priorities: EntityStore = EntityStore()
+        self.aa_plans: EntityStore = EntityStore()
+        self.aa_forecasts: EntityStore = EntityStore()
+        self.aa_optimizations: EntityStore = EntityStore()
+        self.aa_exec_chats: EntityStore = EntityStore()
+        self.aa_briefings: EntityStore = EntityStore()
+        self.aa_investments: EntityStore = EntityStore()
+        self.aa_strategies: EntityStore = EntityStore()
+        self.aa_dashboards: EntityStore = EntityStore()
+        self.aa_registries: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

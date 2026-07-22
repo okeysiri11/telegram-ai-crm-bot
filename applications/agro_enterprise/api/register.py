@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.agro_enterprise.api import (
     agro_finance_handlers,
+    ai_agronomist_handlers,
     controlled_environment_handlers,
     crop_ai_handlers,
     handlers,
@@ -162,3 +163,24 @@ def register_agro_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{af}/dashboard", agro_finance_handlers.af_dashboard_handler)
     app.router.add_get(f"{af}/knowledge", agro_finance_handlers.af_knowledge_handler)
     app.router.add_post(f"{af}/knowledge", agro_finance_handlers.af_knowledge_handler)
+
+    # Sprint 14.7 — AI Agronomist (additive; prior sprint routes unchanged)
+    aa = DEFAULT_CONFIG.ai_agronomist_api_prefix
+    app.router.add_get(f"{aa}/health", ai_agronomist_handlers.aa_health_handler)
+    app.router.add_post(f"{aa}/bootstrap", ai_agronomist_handlers.aa_bootstrap_handler)
+    app.router.add_get(f"{aa}/agronomist", ai_agronomist_handlers.aa_agronomist_handler)
+    app.router.add_post(f"{aa}/agronomist", ai_agronomist_handlers.aa_agronomist_handler)
+    app.router.add_get(f"{aa}/decisions", ai_agronomist_handlers.aa_decisions_handler)
+    app.router.add_post(f"{aa}/decisions", ai_agronomist_handlers.aa_decisions_handler)
+    app.router.add_get(f"{aa}/planning", ai_agronomist_handlers.aa_planning_handler)
+    app.router.add_post(f"{aa}/planning", ai_agronomist_handlers.aa_planning_handler)
+    app.router.add_get(f"{aa}/forecast", ai_agronomist_handlers.aa_forecast_handler)
+    app.router.add_post(f"{aa}/forecast", ai_agronomist_handlers.aa_forecast_handler)
+    app.router.add_get(f"{aa}/optimization", ai_agronomist_handlers.aa_optimization_handler)
+    app.router.add_post(f"{aa}/optimization", ai_agronomist_handlers.aa_optimization_handler)
+    app.router.add_get(f"{aa}/executive", ai_agronomist_handlers.aa_executive_handler)
+    app.router.add_post(f"{aa}/executive", ai_agronomist_handlers.aa_executive_handler)
+    app.router.add_get(f"{aa}/dashboard", ai_agronomist_handlers.aa_dashboard_handler)
+    app.router.add_post(f"{aa}/dashboard", ai_agronomist_handlers.aa_dashboard_handler)
+    app.router.add_get(f"{aa}/knowledge", ai_agronomist_handlers.aa_knowledge_handler)
+    app.router.add_post(f"{aa}/knowledge", ai_agronomist_handlers.aa_knowledge_handler)

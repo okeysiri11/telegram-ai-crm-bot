@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_smart_irrigation_ready():
     health = agro_enterprise.health()
-    assert health["application_version"] == "4.3.6-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.3.5-enterprise"
+    assert health["application_version"] == "4.3.7-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.3.6-enterprise"
     assert health["smart_irrigation_ready"] is True
     assert health["soil_intelligence_ready"] is True
     assert health["water_management_ready"] is True
@@ -80,7 +80,7 @@ def test_irrigation_iot_ai():
 async def test_api_smart_irrigation(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.3.6-enterprise"
+    assert body["application_version"] == "4.3.7-enterprise"
     assert body["smart_irrigation_ready"] is True
     assert body["soil_intelligence_ready"] is True
 
@@ -121,5 +121,5 @@ def test_docs_and_regression_14_2():
     assert AUTO.application_version == "4.2.0-enterprise"
     assert AGRO.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "agro_enterprise" / "manifest.json").read_text()
-    assert "4.3.6-enterprise" in manifest
-    assert "14.6" in manifest
+    assert "4.3.7-enterprise" in manifest
+    assert "14.7" in manifest
