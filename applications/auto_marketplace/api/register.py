@@ -24,6 +24,7 @@ from applications.auto_marketplace.api import (
     service_handlers,
     transaction_handlers,
     vin_intelligence_handlers,
+    inspection_ai_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -691,3 +692,22 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{vi}/integrations", vin_intelligence_handlers.vi_integrations_handler)
     app.router.add_get(f"{vi}/dashboard", vin_intelligence_handlers.vi_dashboard_handler)
     app.router.add_post(f"{vi}/dashboard", vin_intelligence_handlers.vi_dashboard_handler)
+
+    # Sprint 13.2 — Inspection AI (additive; 13.0/13.1 routes unchanged)
+    ia = config.inspection_ai_api_prefix
+    app.router.add_get(f"{ia}/health", inspection_ai_handlers.ia_health_handler)
+    app.router.add_post(f"{ia}/bootstrap", inspection_ai_handlers.ia_bootstrap_handler)
+    app.router.add_get(f"{ia}/photo", inspection_ai_handlers.ia_photo_handler)
+    app.router.add_post(f"{ia}/photo", inspection_ai_handlers.ia_photo_handler)
+    app.router.add_get(f"{ia}/damage", inspection_ai_handlers.ia_damage_handler)
+    app.router.add_post(f"{ia}/damage", inspection_ai_handlers.ia_damage_handler)
+    app.router.add_get(f"{ia}/estimate", inspection_ai_handlers.ia_estimate_handler)
+    app.router.add_post(f"{ia}/estimate", inspection_ai_handlers.ia_estimate_handler)
+    app.router.add_get(f"{ia}/score", inspection_ai_handlers.ia_score_handler)
+    app.router.add_post(f"{ia}/score", inspection_ai_handlers.ia_score_handler)
+    app.router.add_get(f"{ia}/report", inspection_ai_handlers.ia_report_handler)
+    app.router.add_post(f"{ia}/report", inspection_ai_handlers.ia_report_handler)
+    app.router.add_get(f"{ia}/knowledge", inspection_ai_handlers.ia_knowledge_handler)
+    app.router.add_post(f"{ia}/knowledge", inspection_ai_handlers.ia_knowledge_handler)
+    app.router.add_get(f"{ia}/dashboard", inspection_ai_handlers.ia_dashboard_handler)
+    app.router.add_post(f"{ia}/dashboard", inspection_ai_handlers.ia_dashboard_handler)

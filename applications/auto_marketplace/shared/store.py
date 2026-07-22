@@ -228,6 +228,14 @@ class MarketplaceStore:
         self.vi_graph_edges: EntityStore = EntityStore()
         self.vi_integrations: EntityStore = EntityStore()
         self.vi_dashboards: EntityStore = EntityStore()
+        # Sprint 13.2 — Inspection AI & Damage Assessment
+        self.ia_photo_analyses: EntityStore = EntityStore()
+        self.ia_damages: EntityStore = EntityStore()
+        self.ia_estimates: EntityStore = EntityStore()
+        self.ia_health_scores: EntityStore = EntityStore()
+        self.ia_reports: EntityStore = EntityStore()
+        self.ia_knowledge_links: EntityStore = EntityStore()
+        self.ia_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

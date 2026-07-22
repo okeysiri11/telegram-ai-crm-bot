@@ -1,10 +1,10 @@
 # Auto Marketplace — Enterprise Automotive Suite (Sprint 10.8)
 
-Production validation and commercial certification for **Auto Marketplace 4.1.1-enterprise**.
+Production validation and commercial certification for **Auto Marketplace 4.1.2-enterprise**.
 
 | Field | Value |
 |-------|-------|
-| Application version | `4.1.1-enterprise` |
+| Application version | `4.1.2-enterprise` |
 | Release status | Enterprise Automotive Suite |
 | `production_ready` | `true` |
 | `enterprise_engine` | `1.0` |
@@ -36,4 +36,4 @@ Platform Core, Agro Marketplace, and Port ERP packages are not modified by this 
 
 ## Manifest
 
-`applications/auto_marketplace/manifest.json` — `application_version = "4.1.1-enterprise"`, `production_ready = true`
+`applications/auto_marketplace/manifest.json` — `application_version = "4.1.2-enterprise"`, `production_ready = true`

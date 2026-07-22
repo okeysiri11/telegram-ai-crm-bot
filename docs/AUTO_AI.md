@@ -1,6 +1,6 @@
 # Auto AI
 
-**Version:** `4.1.1-enterprise`
+**Version:** `4.1.2-enterprise`
 
 VIN Decoder, Market Price Estimator, Damage Prediction, Fraud Detection, Maintenance Prediction, Vehicle History AI, Purchase Advisor.
 

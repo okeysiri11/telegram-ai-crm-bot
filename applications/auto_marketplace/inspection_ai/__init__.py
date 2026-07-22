@@ -1,3 +1,8 @@
-from applications.auto_marketplace.inspection_ai.engine import InspectionAIEngine, inspection_ai_engine
+"""Sprint 13.2 — AI Vehicle Inspection & Damage Assessment."""
 
-__all__ = ["InspectionAIEngine", "inspection_ai_engine"]
+from applications.auto_marketplace.inspection_ai.facade import (
+    InspectionAISuite,
+    inspection_ai,
+)
+
+__all__ = ["InspectionAISuite", "inspection_ai"]

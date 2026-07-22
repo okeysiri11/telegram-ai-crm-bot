@@ -70,8 +70,7 @@
               "title": "Закладки"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -177,21 +176,28 @@
       "bases:Создать новую базу": false
     }
   },
-  "active": "e4b785b913d02f72",
+  "active": "3afcbb5720da978c",
   "lastOpenFiles": [
+    "applications/auto_marketplace/api/__pycache__/inspection_ai_handlers.cpython-314.pyc",
+    "applications/auto_marketplace/inspection_ai/__pycache__/services.cpython-314.pyc",
+    "applications/auto_marketplace/inspection_ai/__pycache__/photo.cpython-314.pyc",
+    "applications/auto_marketplace/inspection_ai/__pycache__/health.cpython-314.pyc",
+    "applications/auto_marketplace/inspection_ai/__pycache__/estimation.cpython-314.pyc",
+    "applications/auto_marketplace/inspection_ai/__pycache__/damage.cpython-314.pyc",
+    "applications/auto_marketplace/inspection_ai/__pycache__/facade.cpython-314.pyc",
+    "tests/__pycache__/test_inspection_ai_13_2.cpython-314-pytest-9.1.1.pyc",
+    "tests/test_inspection_ai_13_2.py",
+    "knowledge/applications/INSPECTION_AI.md",
+    "docs/REPAIR_ESTIMATION.md",
+    "docs/VEHICLE_HEALTH.md",
+    "docs/DAMAGE_DETECTION.md",
+    "docs/INSPECTION_AI.md",
+    "Без названия.canvas",
+    "applications/auto_marketplace/api/inspection_ai_handlers.py",
+    "applications/auto_marketplace/inspection_ai/facade.py",
     "knowledge/Agro Marketplace.md",
     "knowledge/PROJECT_STATUS.md",
     "docs/architecture.md",
-    "applications/auto_marketplace/api/__pycache__/vin_intelligence_handlers.cpython-314.pyc",
-    "applications/auto_marketplace/vin_intelligence/__pycache__/services.cpython-314.pyc",
-    "applications/auto_marketplace/vin_intelligence/__pycache__/recommendations.cpython-314.pyc",
-    "applications/auto_marketplace/vin_intelligence/__pycache__/passport.cpython-314.pyc",
-    "applications/auto_marketplace/vin_intelligence/__pycache__/history.cpython-314.pyc",
-    "applications/auto_marketplace/vin_intelligence/__pycache__/decoder.cpython-314.pyc",
-    "applications/auto_marketplace/vin_intelligence/__pycache__/analysis.cpython-314.pyc",
-    "applications/auto_marketplace/vin_intelligence/__pycache__/facade.cpython-314.pyc",
-    "applications/auto_marketplace/vin_intelligence/__pycache__/__init__.cpython-314.pyc",
-    "applications/auto_marketplace/vin_intelligence/__pycache__",
     "knowledge/applications/VIN_INTELLIGENCE.md",
     "docs/FRAUD_DETECTION.md",
     "docs/VEHICLE_HISTORY.md",
@@ -209,12 +215,6 @@
     "docs/ENTERPRISE.md",
     "knowledge/applications/AI_OS.md",
     "docs/AI_RUNTIME.md",
-    "docs/SYSTEM_BUS.md",
-    "docs/AI_KERNEL.md",
-    "docs/AI_OS.md",
-    "knowledge/applications/EXECUTIVE_CENTER.md",
-    "docs/SYSTEM_MONITORING.md",
-    "docs/EXECUTIVE_DASHBOARD.md",
     "knowledge/canvas/ENTERPRISE_ARCHITECTURE.canvas"
   ]
 }

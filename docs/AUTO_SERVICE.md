@@ -1,10 +1,10 @@
 # Auto Marketplace — Service Centers, Parts & Maintenance (Sprint 10.5)
 
-Multi-branch service operations, parts marketplace, and vehicle maintenance for **Auto Marketplace 4.1.1-enterprise**.
+Multi-branch service operations, parts marketplace, and vehicle maintenance for **Auto Marketplace 4.1.2-enterprise**.
 
 | Field | Value |
 |-------|-------|
-| Application version | `4.1.1-enterprise` |
+| Application version | `4.1.2-enterprise` |
 | `service_engine` | `1.0` |
 | `parts_engine` | `1.0` |
 | `maintenance_engine` | `1.0` |
