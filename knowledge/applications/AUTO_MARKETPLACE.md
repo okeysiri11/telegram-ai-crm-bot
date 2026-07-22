@@ -8,7 +8,7 @@ sprint: "13.0"
 
 # Auto Marketplace Enterprise Platform
 
-Sprint **13.0** — `applications/auto_marketplace/enterprise_automotive/` version **4.1.4-enterprise**.
+Sprint **13.0** — `applications/auto_marketplace/enterprise_automotive/` version **4.1.5-enterprise**.
 
 Foundation: Enterprise Platform v4.0. Existing `/api/auto/v1` routes unchanged; suite API at `/api/auto-marketplace/v1`.
 

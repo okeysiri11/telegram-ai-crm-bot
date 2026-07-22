@@ -40,8 +40,8 @@ def reset_store():
 
 def test_version_vin_intelligence_ready():
     health = auto_marketplace.health()
-    assert health["application_version"] == "4.1.4-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.3-enterprise"
+    assert health["application_version"] == "4.1.5-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.4-enterprise"
     assert health["vin_intelligence_ready"] is True
     assert health["digital_passport_ready"] is True
     assert health["vehicle_history_ai_ready"] is True
@@ -115,7 +115,7 @@ def test_ai_recommendations_graph_dashboard():
 async def test_api_vin_intelligence(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.1.4-enterprise"
+    assert body["application_version"] == "4.1.5-enterprise"
     assert body["vin_intelligence_ready"] is True
 
     # Sprint 13.0 API still present

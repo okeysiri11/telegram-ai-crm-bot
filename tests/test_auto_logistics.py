@@ -47,14 +47,14 @@ def reset_store():
 
 def test_version_modules_docs_bridges():
     health = auto_marketplace.health()
-    assert health["application_version"] == "4.1.4-enterprise"
+    assert health["application_version"] == "4.1.5-enterprise"
     assert health["transport_engine"] == "1.0"
     assert health["tracking_engine"] == "1.0"
     assert health["customs_engine"] == "1.0"
     assert "logistics" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "AUTO_LOGISTICS.md"
-    assert docs.exists() and "4.1.4-enterprise" in docs.read_text(encoding="utf-8")
-    assert "4.1.4-enterprise" in (Path(__file__).resolve().parents[1] / "docs" / "AUTO_MARKETPLACE.md").read_text(
+    assert docs.exists() and "4.1.5-enterprise" in docs.read_text(encoding="utf-8")
+    assert "4.1.5-enterprise" in (Path(__file__).resolve().parents[1] / "docs" / "AUTO_MARKETPLACE.md").read_text(
         encoding="utf-8"
     )
     assert auto_marketplace.platform.platform_health()["platform_dependency"] == "AI Platform Core v3"
@@ -203,7 +203,7 @@ def test_carriers_routes_fleet():
 async def test_logistics_api_routes(client: TestClient):
     health = await client.get("/api/auto/v1/health")
     body = await health.json()
-    assert body["application_version"] == "4.1.4-enterprise"
+    assert body["application_version"] == "4.1.5-enterprise"
     assert body["transport_engine"] == "1.0"
 
     create = await client.post(

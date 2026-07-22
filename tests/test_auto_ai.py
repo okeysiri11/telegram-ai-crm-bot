@@ -35,13 +35,13 @@ def reset_store():
 
 def test_version_modules_docs_bridges():
     health = auto_marketplace.health()
-    assert health["application_version"] == "4.1.4-enterprise"
+    assert health["application_version"] == "4.1.5-enterprise"
     assert health["auto_ai_engine"] == "1.0"
     assert health["recommendation_engine"] == "1.0"
     assert "auto_ai" in health
     docs = Path(__file__).resolve().parents[1] / "docs" / "AUTO_AI.md"
     assert docs.exists()
-    assert "4.1.4-enterprise" in docs.read_text(encoding="utf-8")
+    assert "4.1.5-enterprise" in docs.read_text(encoding="utf-8")
     assert auto_marketplace.platform.platform_health()["platform_dependency"] == "AI Platform Core v3"
     root = Path(__file__).resolve().parents[1] / "applications" / "auto_marketplace"
     for name in (
@@ -131,7 +131,7 @@ async def test_rest_auto_ai_endpoints(client: TestClient):
     health = await client.get("/api/auto/v1/ai")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "4.1.4-enterprise"
+    assert body["application_version"] == "4.1.5-enterprise"
     assert body["auto_ai_engine"] == "1.0"
 
     rec = await client.post(

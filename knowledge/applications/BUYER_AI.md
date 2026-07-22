@@ -8,7 +8,7 @@ sprint: "13.4"
 
 # Buyer AI, Personal Automotive Assistant & Deal Negotiation
 
-Sprint **13.4** — `applications/auto_marketplace/buyer_ai/` version **4.1.4-enterprise**.
+Sprint **13.4** — `applications/auto_marketplace/buyer_ai/` version **4.1.5-enterprise**.
 
 API: `/api/buyer-ai/v1`
 

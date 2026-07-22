@@ -42,8 +42,8 @@ def reset_store():
 
 def test_version_dealer_crm_ready():
     health = auto_marketplace.health()
-    assert health["application_version"] == "4.1.4-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.3-enterprise"
+    assert health["application_version"] == "4.1.5-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.1.4-enterprise"
     assert health["dealer_crm_ready"] is True
     assert health["trade_in_ai_ready"] is True
     assert health["inventory_intelligence_ready"] is True
@@ -103,7 +103,7 @@ def test_sales_ai_and_analytics():
 async def test_api_dealer_crm(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.1.4-enterprise"
+    assert body["application_version"] == "4.1.5-enterprise"
     assert body["dealer_crm_ready"] is True
 
     assert (await client.get(f"{IA}/health")).status == 200
@@ -151,8 +151,8 @@ def test_docs_and_regression_13_3():
     assert (ROOT / "applications" / "auto_marketplace" / "vin_intelligence" / "facade.py").exists()
     assert (ROOT / "applications" / "auto_marketplace" / "enterprise_automotive" / "facade.py").exists()
     manifest = (ROOT / "applications" / "auto_marketplace" / "manifest.json").read_text()
-    assert "4.1.4-enterprise" in manifest
-    assert "13.4" in manifest
+    assert "4.1.5-enterprise" in manifest
+    assert "13.5" in manifest
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT

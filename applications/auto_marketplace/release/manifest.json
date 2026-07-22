@@ -1,7 +1,7 @@
 {
   "application": "auto_marketplace",
   "application_name": "Auto Marketplace Enterprise Platform",
-  "application_version": "4.1.4-enterprise",
+  "application_version": "4.1.5-enterprise",
   "release_status": "Enterprise Automotive Suite",
   "platform_dependency": "AI Platform Core v3",
   "enterprise_foundation": "Enterprise Platform v4.0",

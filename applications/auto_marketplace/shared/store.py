@@ -267,6 +267,20 @@ class MarketplaceStore:
         self.ba_ownership: EntityStore = EntityStore()
         self.ba_assistant: EntityStore = EntityStore()
         self.ba_dashboards: EntityStore = EntityStore()
+        # Sprint 13.5 — Seller AI / Auctions / Global Network
+        self.sa_sellers: EntityStore = EntityStore()
+        self.sa_listings: EntityStore = EntityStore()
+        self.sa_listing_copy: EntityStore = EntityStore()
+        self.sa_market_analyses: EntityStore = EntityStore()
+        self.sa_auctions: EntityStore = EntityStore()
+        self.sa_price_quotes: EntityStore = EntityStore()
+        self.sa_network_dealers: EntityStore = EntityStore()
+        self.sa_trade_listings: EntityStore = EntityStore()
+        self.sa_shipping_routes: EntityStore = EntityStore()
+        self.sa_regulations: EntityStore = EntityStore()
+        self.sa_matches: EntityStore = EntityStore()
+        self.sa_bi_reports: EntityStore = EntityStore()
+        self.sa_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

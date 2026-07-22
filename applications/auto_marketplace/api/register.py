@@ -27,6 +27,7 @@ from applications.auto_marketplace.api import (
     inspection_ai_handlers,
     dealer_crm_handlers,
     buyer_ai_handlers,
+    seller_ai_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -751,3 +752,22 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{ba}/assistant", buyer_ai_handlers.ba_assistant_handler)
     app.router.add_get(f"{ba}/dashboard", buyer_ai_handlers.ba_dashboard_handler)
     app.router.add_post(f"{ba}/dashboard", buyer_ai_handlers.ba_dashboard_handler)
+
+    # Sprint 13.5 — Seller AI (additive; prior sprint routes unchanged)
+    sa = config.seller_ai_api_prefix
+    app.router.add_get(f"{sa}/health", seller_ai_handlers.sa_health_handler)
+    app.router.add_post(f"{sa}/bootstrap", seller_ai_handlers.sa_bootstrap_handler)
+    app.router.add_get(f"{sa}/seller", seller_ai_handlers.sa_seller_handler)
+    app.router.add_post(f"{sa}/seller", seller_ai_handlers.sa_seller_handler)
+    app.router.add_get(f"{sa}/auctions", seller_ai_handlers.sa_auction_handler)
+    app.router.add_post(f"{sa}/auctions", seller_ai_handlers.sa_auction_handler)
+    app.router.add_get(f"{sa}/pricing", seller_ai_handlers.sa_pricing_handler)
+    app.router.add_post(f"{sa}/pricing", seller_ai_handlers.sa_pricing_handler)
+    app.router.add_get(f"{sa}/network", seller_ai_handlers.sa_network_handler)
+    app.router.add_post(f"{sa}/network", seller_ai_handlers.sa_network_handler)
+    app.router.add_get(f"{sa}/matching", seller_ai_handlers.sa_matching_handler)
+    app.router.add_post(f"{sa}/matching", seller_ai_handlers.sa_matching_handler)
+    app.router.add_get(f"{sa}/bi", seller_ai_handlers.sa_bi_handler)
+    app.router.add_post(f"{sa}/bi", seller_ai_handlers.sa_bi_handler)
+    app.router.add_get(f"{sa}/dashboard", seller_ai_handlers.sa_dashboard_handler)
+    app.router.add_post(f"{sa}/dashboard", seller_ai_handlers.sa_dashboard_handler)
