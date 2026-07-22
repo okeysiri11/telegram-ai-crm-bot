@@ -178,6 +178,11 @@
   },
   "active": "e4b785b913d02f72",
   "lastOpenFiles": [
+    "knowledge/ROADMAP.md",
+    "knowledge/DASHBOARD.md",
+    "knowledge/INDEX.md",
+    "knowledge/SPRINT_PROGRESS.md",
+    "knowledge/developer/README.md",
     "applications/agro_enterprise/api/__pycache__/enterprise_certification_handlers.cpython-314.pyc",
     "applications/agro_enterprise/enterprise_certification/__pycache__/facade.cpython-314.pyc",
     "applications/agro_enterprise/enterprise_certification/__pycache__/engines.cpython-314.pyc",
@@ -200,7 +205,6 @@
     "applications/agro_enterprise/release/INSTALLATION_GUIDE.md",
     "applications/agro_enterprise/release/PRODUCTION_CHECKLIST.md",
     "applications/agro_enterprise/release/config.template.env",
-    "applications/agro_enterprise/release/VERSION_MANIFEST.json",
     "knowledge/applications/AI_AGRONOMIST.md",
     "docs/EXECUTIVE_AI.md",
     "docs/PREDICTIVE_INTELLIGENCE.md",
@@ -210,10 +214,6 @@
     "knowledge/applications/AGRO_FINANCE.md",
     "docs/MARKET_INTELLIGENCE.md",
     "docs/CROP_INSURANCE.md",
-    "docs/RISK_MANAGEMENT.md",
-    "docs/COMMODITY_EXCHANGE.md",
-    "docs/AGRO_FINANCE.md",
-    "knowledge/applications/AGRO_SUPPLY_CHAIN.md",
     "Без названия.canvas",
     "knowledge/canvas/ENTERPRISE_ARCHITECTURE.canvas"
   ]
