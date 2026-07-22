@@ -1,16 +1,17 @@
-# DronePlatformApplication — facade (Sprint 11.1–11.4).
+# DronePlatformApplication — facade (Sprint 11.1–11.5).
 
 from __future__ import annotations
 
 from typing import Any
 
-from applications.drone_platform.ai.vision_ai import VisionFlightAIAssistant, vision_flight_ai
+from applications.drone_platform.ai.engineering_suite_ai import EngineeringSuiteAIAssistant, engineering_suite_ai
 from applications.drone_platform.analytics.service import AnalyticsService, analytics_service
 from applications.drone_platform.autonomy import AutonomyEngine, autonomy_engine
 from applications.drone_platform.config import DEFAULT_CONFIG, DronePlatformConfig
 from applications.drone_platform.diagnostics import FlightDiagnosticsService, flight_diagnostics
 from applications.drone_platform.documentation.service import DocumentationService, documentation_service
 from applications.drone_platform.engineering.service import EngineeringService, engineering_service
+from applications.drone_platform.engineering.suite import EngineeringSuite, engineering_suite
 from applications.drone_platform.firmware.ardupilot import ArduPilotService, ardupilot_service
 from applications.drone_platform.firmware.manager import FirmwareManager, firmware_manager
 from applications.drone_platform.firmware.mission_planner import MissionPlannerBridge, mission_planner_bridge
@@ -38,7 +39,7 @@ from applications.drone_platform.warehouse.service import WarehouseService, ware
 
 
 class DronePlatformApplication:
-    """UAV engineering + firmware + MAVLink + vision/navigation/autonomy platform."""
+    """UAV engineering suite + firmware + MAVLink + vision/navigation/autonomy platform."""
 
     def __init__(
         self,
@@ -48,6 +49,7 @@ class DronePlatformApplication:
         registry: RegistryService | None = None,
         projects: ProjectService | None = None,
         engineering: EngineeringService | None = None,
+        engineering_suite_facade: EngineeringSuite | None = None,
         firmware: FirmwareService | None = None,
         firmware_intel: FirmwareManager | None = None,
         ardupilot: ArduPilotService | None = None,
@@ -71,7 +73,7 @@ class DronePlatformApplication:
         manufacturing: ManufacturingService | None = None,
         simulation: SimulationService | None = None,
         documentation: DocumentationService | None = None,
-        ai: VisionFlightAIAssistant | None = None,
+        ai: EngineeringSuiteAIAssistant | None = None,
         analytics: AnalyticsService | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -81,6 +83,7 @@ class DronePlatformApplication:
         self.registry = registry or registry_service
         self.projects = projects or project_service
         self.engineering = engineering or engineering_service
+        self.engineering_suite = engineering_suite_facade or engineering_suite
         self.firmware = firmware or firmware_service
         self.firmware_intel = firmware_intel or firmware_manager
         self.ardupilot = ardupilot or ardupilot_service
@@ -104,7 +107,7 @@ class DronePlatformApplication:
         self.manufacturing = manufacturing or manufacturing_service
         self.simulation = simulation or simulation_service
         self.documentation = documentation or documentation_service
-        self.ai = ai or vision_flight_ai
+        self.ai = ai or engineering_suite_ai
         self.analytics = analytics or analytics_service
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -112,6 +115,8 @@ class DronePlatformApplication:
     def reset(self) -> None:
         self.store.reset()
         self.ardupilot._seed_defaults()
+        self.engineering_suite.propulsion._seed()
+        self.engineering_suite.electronics._seed()
 
     def health(self) -> dict[str, Any]:
         return {
@@ -123,6 +128,12 @@ class DronePlatformApplication:
             "api_prefix": self.config.api_prefix,
             "foundation_ready": True,
             "engineering_ready": True,
+            "drone_engineering_ready": True,
+            "battery_engineering_ready": True,
+            "pcb_engineering_ready": True,
+            "cad_integration_ready": True,
+            "engineering_ai_ready": True,
+            "drone_engineering_suite_ready": True,
             "firmware_workspace_ready": True,
             "firmware_intelligence_ready": True,
             "ardupilot_ready": True,
@@ -148,6 +159,7 @@ class DronePlatformApplication:
             "engines": {
                 "registry": self.config.registry_engine,
                 "engineering": self.config.engineering_engine,
+                "engineering_suite": self.config.engineering_suite,
                 "firmware": self.config.firmware_engine,
                 "firmware_intelligence": self.config.firmware_intelligence,
                 "ardupilot": self.config.ardupilot_engine,
@@ -181,6 +193,7 @@ class DronePlatformApplication:
             "mapping_status": self.mapping.status(),
             "autonomy_status": self.autonomy.status(),
             "simulation_status": self.simulation.status(),
+            "engineering_suite_status": self.engineering_suite.status(),
             "bridges": {
                 "platform": self.platform.health(),
                 "ecosystem": self.ecosystem.health(),

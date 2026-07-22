@@ -1,12 +1,13 @@
 {
   "application_name": "Drone Platform",
   "application": "drone_platform",
-  "application_version": "1.3.0-alpha",
-  "release_status": "Vision Navigation Autonomy Alpha",
+  "application_version": "1.4.0-alpha",
+  "release_status": "Drone Engineering Suite Alpha",
   "platform_dependency": "AI Platform Core v3",
   "ecosystem_dependency": "AI Ecosystem v1.5",
   "registry_engine": "1.0",
-  "engineering_engine": "1.0",
+  "engineering_engine": "1.1",
+  "engineering_suite": "1.0",
   "firmware_engine": "1.1",
   "firmware_intelligence": "1.0",
   "ardupilot_engine": "1.0",
@@ -24,13 +25,13 @@
   "simulation_engine": "1.1",
   "mission_engine": "1.1",
   "inventory_engine": "1.0",
-  "ai_engine": "1.3",
+  "ai_engine": "1.4",
   "modules": {
-    "api": "1.3",
+    "api": "1.4",
     "models": "1.0",
     "registry": "1.0",
     "projects": "1.0",
-    "engineering": "1.0",
+    "engineering": "1.1",
     "firmware": "1.1",
     "mavlink": "1.0",
     "missions": "1.1",
@@ -48,11 +49,11 @@
     "warehouse": "1.0",
     "manufacturing": "1.0",
     "simulation": "1.1",
-    "ai": "1.3",
+    "ai": "1.4",
     "documentation": "1.0",
     "integrations": "1.0",
     "analytics": "1.0",
-    "shared": "1.3"
+    "shared": "1.4"
   },
-  "sprint": "11.4"
+  "sprint": "11.5"
 }

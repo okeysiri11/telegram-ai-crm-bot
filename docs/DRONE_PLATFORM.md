@@ -1,12 +1,12 @@
 # Drone Platform — Foundation (Sprint 11.1)
 
-**Version:** `1.3.0-alpha`  
-**Status:** Vision Navigation Autonomy Alpha  
+**Version:** `1.4.0-alpha`  
+**Status:** Drone Engineering Suite Alpha  
 **API prefix:** `/api/drone/v1`
 
-Engineering ERP + AI workspace for UAV development, manufacturing, configuration, testing, maintenance, and fleet management. Sprint **11.2** Firmware Intelligence. Sprint **11.3** MAVLink/Telemetry. Sprint **11.4** Computer Vision, Navigation AI, SLAM, Autonomous Flight, and Simulation.
+Engineering ERP + AI workspace for UAV development. Sprint **11.5** adds the Drone Engineering Suite (airframe, propulsion, battery, electronics, PCB, CAD, performance simulation, Engineering AI).
 
-See also: [DRONE_FIRMWARE.md](DRONE_FIRMWARE.md), [MAVLINK.md](MAVLINK.md), [TELEMETRY_AI.md](TELEMETRY_AI.md), [COMPUTER_VISION.md](COMPUTER_VISION.md), [NAVIGATION_AI.md](NAVIGATION_AI.md), [AUTONOMOUS_FLIGHT.md](AUTONOMOUS_FLIGHT.md), [SLAM_MAPPING.md](SLAM_MAPPING.md).
+See also: [ENGINEERING.md](ENGINEERING.md), [AIRFRAME.md](AIRFRAME.md), [POWER_SYSTEM.md](POWER_SYSTEM.md), [BATTERY_ENGINEERING.md](BATTERY_ENGINEERING.md), [PCB_ENGINEERING.md](PCB_ENGINEERING.md), [CAD_INTEGRATION.md](CAD_INTEGRATION.md), [COMPUTER_VISION.md](COMPUTER_VISION.md), [MAVLINK.md](MAVLINK.md).
 
 ## Scope
 
@@ -28,6 +28,10 @@ applications/drone_platform/
 ### Component registry
 
 Catalogs UAVs and component types: frames, motors, ESC, flight controllers, GPS, compass, telemetry radios, ELRS, receivers, cameras, VTX, antennas, batteries, chargers, sensors, payloads, servos, power modules, airspeed sensors, rangefinders, companion computers.
+
+### Engineering Suite (11.5)
+
+Airframe designers & CG/structural tools · Propulsion calculators · Battery pack engineering · Electronics registries · Firmware eng helpers · KiCad PCB · FreeCAD/STEP/STL/OBJ CAD · Performance simulators · Engineering AI recommendations.
 
 ### Engineering projects
 

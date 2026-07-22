@@ -54,3 +54,6 @@ generated_by_enterprise_infra
 
 ## Drone Vision / Autonomy (11.4)
 [[drone/VISION_REGISTRY]] · [[drone/NAVIGATION_REGISTRY]] · [[drone/MAPPING_REGISTRY]] · [[drone/AUTONOMY_REGISTRY]]
+
+## Drone Engineering Suite (11.5)
+[[drone/ENGINEERING_REGISTRY]] · [[drone/COMPONENTS_REGISTRY]] · [[drone/BATTERY_REGISTRY]] · [[drone/CAD_REGISTRY]] · [[drone/PCB_REGISTRY]] · [[drone/KNOWLEDGE_GRAPH]]

@@ -137,6 +137,273 @@ async def engineering_workspace_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+# ---- engineering suite (11.5) ----
+async def engineering_suite_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.engineering_suite.status())
+
+
+async def engineering_airframe_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response(
+                {
+                    "airframes": drone_platform.engineering_suite.airframe.list(),
+                    "catalog": drone_platform.engineering_suite.airframe.frame_database(),
+                }
+            )
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        af = drone_platform.engineering_suite.airframe
+        if action == "wing":
+            return json_response(af.wing_calculator(span_m=float(body["span_m"]), chord_m=float(body["chord_m"])))
+        if action == "flying_wing":
+            return json_response(
+                af.flying_wing_designer(
+                    span_m=float(body["span_m"]),
+                    root_chord_m=float(body["root_chord_m"]),
+                    tip_chord_m=float(body["tip_chord_m"]),
+                    sweep_deg=float(body.get("sweep_deg", 30)),
+                ),
+                status=201,
+            )
+        if action == "multirotor":
+            return json_response(
+                af.multirotor_designer(
+                    arms=int(body.get("arms", 4)),
+                    wheelbase_mm=float(body.get("wheelbase_mm", 450)),
+                    auw_kg=float(body.get("auw_kg", 1.5)),
+                ),
+                status=201,
+            )
+        if action == "vtol":
+            return json_response(
+                af.vtol_designer(
+                    span_m=float(body.get("span_m", 2.0)),
+                    lift_motors=int(body.get("lift_motors", 4)),
+                    auw_kg=float(body.get("auw_kg", 5.0)),
+                ),
+                status=201,
+            )
+        if action == "cg":
+            return json_response(af.cg_calculator(stations=body.get("stations", [])))
+        if action == "payload":
+            return json_response(
+                af.payload_calculator(
+                    empty_kg=float(body["empty_kg"]),
+                    max_takeoff_kg=float(body["max_takeoff_kg"]),
+                    reserve_kg=float(body.get("reserve_kg", 0.1)),
+                )
+            )
+        if action == "structural":
+            return json_response(af.structural_validator(auw_kg=float(body.get("auw_kg", 1.5))))
+        item = af.create(name=body.get("name", ""), frame_type=body.get("frame_type", "multirotor"), specs=body.get("specs"), masses=body.get("masses"))
+        return json_response(item, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def engineering_propulsion_handler(request: web.Request) -> web.Response:
+    try:
+        prop = drone_platform.engineering_suite.propulsion
+        if request.method == "GET":
+            return json_response(
+                {
+                    "motors": prop.motor_database(),
+                    "propellers": prop.propeller_database(),
+                    "escs": prop.esc_database(),
+                }
+            )
+        body = await _read_json(request)
+        action = body.get("action", "thrust")
+        if action == "hover":
+            return json_response(
+                prop.hover_calculator(
+                    auw_kg=float(body["auw_kg"]),
+                    motors=int(body.get("motors", 4)),
+                    thrust_per_motor_kgf=float(body["thrust_per_motor_kgf"]),
+                )
+            )
+        if action == "efficiency":
+            return json_response(prop.efficiency_optimizer(candidates=body.get("candidates", [])))
+        if action == "power":
+            return json_response(
+                prop.power_consumption(
+                    voltage=float(body["voltage"]),
+                    current_a=float(body["current_a"]),
+                    motors=int(body.get("motors", 1)),
+                    duty=float(body.get("duty", 1.0)),
+                )
+            )
+        return json_response(
+            prop.thrust_calculator(
+                diameter_in=float(body.get("diameter_in", 10)),
+                pitch_in=float(body.get("pitch_in", 4.7)),
+                rpm=float(body.get("rpm", 8000)),
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def engineering_battery_handler(request: web.Request) -> web.Response:
+    try:
+        batt = drone_platform.engineering_suite.battery
+        if request.method == "GET":
+            return json_response({"packs": batt.list(), **batt.status()})
+        body = await _read_json(request)
+        action = body.get("action", "build")
+        if action == "flight_time":
+            return json_response(
+                batt.flight_time_estimator(
+                    capacity_mah=float(body["capacity_mah"]),
+                    average_current_a=float(body["average_current_a"]),
+                )
+            )
+        if action == "health":
+            return json_response(
+                batt.battery_health(
+                    cycles=int(body.get("cycles", 0)),
+                    measured_capacity_mah=float(body["measured_capacity_mah"]),
+                    rated_capacity_mah=float(body["rated_capacity_mah"]),
+                    ir_increase_pct=float(body.get("ir_increase_pct", 0)),
+                )
+            )
+        if action == "lipo":
+            return json_response(
+                batt.lipo_calculator(
+                    series=int(body.get("series", 4)),
+                    capacity_mah=float(body.get("capacity_mah", 5000)),
+                    c_rating=float(body.get("c_rating", 25)),
+                ),
+                status=201,
+            )
+        pack = batt.build_pack(
+            name=body.get("name", "Pack"),
+            cell_type=body.get("cell_type", "18650"),
+            series=int(body.get("series", 4)),
+            parallel=int(body.get("parallel", 2)),
+            cell_capacity_mah=body.get("cell_capacity_mah"),
+        )
+        return json_response(pack, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def engineering_electronics_handler(request: web.Request) -> web.Response:
+    try:
+        elec = drone_platform.engineering_suite.electronics
+        if request.method == "GET":
+            category = request.rel_url.query.get("category")
+            return json_response({"parts": elec.registry(category), **elec.status()})
+        body = await _read_json(request)
+        action = body.get("action", "pdb")
+        if action == "bec":
+            return json_response(
+                elec.bec_calculator(
+                    input_v=float(body["input_v"]),
+                    output_v=float(body["output_v"]),
+                    load_a=float(body["load_a"]),
+                    efficiency=float(body.get("efficiency", 0.85)),
+                )
+            )
+        if action == "wiring":
+            return json_response(elec.wiring_planner(harness=body.get("harness", [])))
+        return json_response(elec.power_distribution(battery_v=float(body.get("battery_v", 16)), loads=body.get("loads", [])))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def engineering_pcb_handler(request: web.Request) -> web.Response:
+    try:
+        pcb = drone_platform.engineering_suite.pcb
+        if request.method == "GET":
+            return json_response({"projects": pcb.pcb_registry(), "components": pcb.component_library()})
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        if action == "bom":
+            return json_response(pcb.bom_generator(body.get("pcb_project_id", "")))
+        if action == "validate":
+            return json_response(pcb.schematic_validator(body.get("pcb_project_id", "")))
+        if action == "gerber":
+            return json_response(pcb.gerber_export(body.get("pcb_project_id", "")))
+        if action == "mfg":
+            return json_response(pcb.manufacturing_package(body.get("pcb_project_id", "")))
+        project = pcb.create_project(
+            name=body.get("name", ""),
+            tool=body.get("tool", "kicad"),
+            revision=body.get("revision", "A"),
+            components=body.get("components"),
+            layers=int(body.get("layers", 4)),
+        )
+        return json_response(project, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def engineering_cad_handler(request: web.Request) -> web.Response:
+    try:
+        cad = drone_platform.engineering_suite.cad
+        if request.method == "GET":
+            return json_response({"library": cad.part_library(), **cad.status()})
+        body = await _read_json(request)
+        action = body.get("action", "register")
+        if action == "assembly":
+            return json_response(cad.create_assembly(name=body.get("name", ""), part_ids=body.get("part_ids", [])), status=201)
+        if action == "preview":
+            return json_response(cad.preview_3d(body.get("part_id", "")))
+        if action == "export":
+            return json_response(cad.export(body.get("part_id", ""), target_format=body.get("target_format", "stl")))
+        part = cad.register_part(name=body.get("name", ""), format=body.get("format", "step"), path=body.get("path", ""), metadata=body.get("metadata"))
+        return json_response(part, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def engineering_sim_handler(request: web.Request) -> web.Response:
+    try:
+        sim = drone_platform.engineering_suite.simulation
+        body = await _read_json(request)
+        kind = body.get("kind", "flight_performance")
+        if kind == "power":
+            return json_response(
+                sim.power_simulator(
+                    voltage=float(body["voltage"]),
+                    hover_a=float(body["hover_a"]),
+                    cruise_a=float(body["cruise_a"]),
+                    hover_min=float(body.get("hover_min", 1)),
+                    cruise_min=float(body.get("cruise_min", 10)),
+                ),
+                status=201,
+            )
+        if kind == "range":
+            return json_response(
+                sim.range_simulator(
+                    cruise_speed_mps=float(body.get("cruise_speed_mps", 12)),
+                    cruise_min=float(body.get("cruise_min", 15)),
+                ),
+                status=201,
+            )
+        if kind == "weather":
+            return json_response(
+                sim.weather_impact(
+                    base_range_km=float(body.get("base_range_km", 5)),
+                    wind_mps=float(body.get("wind_mps", 5)),
+                    rain=bool(body.get("rain", False)),
+                ),
+                status=201,
+            )
+        return json_response(
+            sim.flight_performance(
+                auw_kg=float(body.get("auw_kg", 1.5)),
+                thrust_kgf=float(body.get("thrust_kgf", 4.0)),
+                drag_n=float(body.get("drag_n", 5)),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 # ---- firmware ----
 async def firmware_catalog_handler(request: web.Request) -> web.Response:
     return json_response(drone_platform.firmware.catalog())
