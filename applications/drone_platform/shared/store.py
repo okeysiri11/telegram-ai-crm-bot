@@ -66,6 +66,19 @@ class DroneStore:
         self.mission_library: EntityStore = EntityStore()
         self.firmware_branches: EntityStore = EntityStore()
         self.mp_profiles: EntityStore = EntityStore()
+        # Sprint 11.3 — MAVLink / telemetry / flight logs / GCS
+        self.mavlink_connections: EntityStore = EntityStore()
+        self.mavlink_routes: EntityStore = EntityStore()
+        self.mavlink_vehicles: EntityStore = EntityStore()
+        self.mavlink_streams: EntityStore = EntityStore()
+        self.mavlink_heartbeats: EntityStore = EntityStore()
+        self.telemetry_recordings: EntityStore = EntityStore()
+        self.telemetry_replays: EntityStore = EntityStore()
+        self.flight_logs: EntityStore = EntityStore()
+        self.diagnostic_reports: EntityStore = EntityStore()
+        self.mission_analyses: EntityStore = EntityStore()
+        self.gcs_bridges: EntityStore = EntityStore()
+        self.visualization_charts: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

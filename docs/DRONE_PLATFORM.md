@@ -1,12 +1,12 @@
 # Drone Platform — Foundation (Sprint 11.1)
 
-**Version:** `1.1.0-alpha`  
-**Status:** Firmware Intelligence Alpha  
+**Version:** `1.2.0-alpha`  
+**Status:** MAVLink & Telemetry Intelligence Alpha  
 **API prefix:** `/api/drone/v1`
 
-Engineering ERP + AI workspace for UAV development, manufacturing, configuration, testing, maintenance, and fleet management. Sprint **11.2** adds Firmware Intelligence (ArduPilot, Mission Planner, builder, analyzer, firmware AI).
+Engineering ERP + AI workspace for UAV development, manufacturing, configuration, testing, maintenance, and fleet management. Sprint **11.2** adds Firmware Intelligence. Sprint **11.3** adds MAVLink Intelligence, Telemetry AI, Flight Log Analysis, Mission Intelligence, GCS bridges, and diagnostics.
 
-See also: [DRONE_FIRMWARE.md](DRONE_FIRMWARE.md), [ARDUPILOT.md](ARDUPILOT.md), [MISSION_PLANNER.md](MISSION_PLANNER.md), [FIRMWARE_WORKFLOW.md](FIRMWARE_WORKFLOW.md).
+See also: [DRONE_FIRMWARE.md](DRONE_FIRMWARE.md), [ARDUPILOT.md](ARDUPILOT.md), [MISSION_PLANNER.md](MISSION_PLANNER.md), [FIRMWARE_WORKFLOW.md](FIRMWARE_WORKFLOW.md), [MAVLINK.md](MAVLINK.md), [TELEMETRY_AI.md](TELEMETRY_AI.md), [FLIGHT_LOG_ANALYSIS.md](FLIGHT_LOG_ANALYSIS.md), [DRONE_DIAGNOSTICS.md](DRONE_DIAGNOSTICS.md).
 
 ## Scope
 
@@ -17,7 +17,8 @@ This application lives under `applications/drone_platform/` only. It does **not*
 ```
 applications/drone_platform/
   api/ models/ registry/ projects/ engineering/ firmware/
-  missions/ telemetry/ inventory/ warehouse/ manufacturing/
+  mavlink/ missions/ mission_intelligence/ telemetry/ flight_logs/
+  diagnostics/ gcs/ visualization/ inventory/ warehouse/ manufacturing/
   simulation/ ai/ documentation/ integrations/ analytics/ shared/
 ```
 
@@ -34,6 +35,10 @@ Projects with versions, BOM, CAD/PCB references, wiring diagrams, assembly instr
 ### Firmware workspace
 
 Supports ArduPilot, PX4, INAV, and Betaflight projects with catalog/versions, parameter compare/backup/restore/templates, configuration import/export, firmware backup/restore, log organization, and firmware documentation.
+
+### MAVLink / Telemetry / Flight logs (11.3)
+
+MAVLink manager/router/parser/registries/protocols, Telemetry AI analyzers, flight log intelligence (including PX4 ULog architecture-ready), AI diagnostics, mission intelligence, GCS bridges, and visualization charts.
 
 ### Mission planning
 

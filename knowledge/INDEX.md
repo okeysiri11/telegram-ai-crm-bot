@@ -52,3 +52,6 @@ generated_by_enterprise_infra
 
 ## Related pages
 [[INDEX]] · [[PROJECT_STATUS]] · [[EXECUTIVE_DASHBOARD]]
+
+## Drone Platform
+[[drone/DRONE_DASHBOARD]] · [[drone/MAVLINK_REGISTRY]] · [[drone/TELEMETRY_REGISTRY]] · [[drone/FLIGHT_LOG_REGISTRY]] · [[drone/MISSION_REGISTRY]] · [[drone/FIRMWARE_DASHBOARD]]

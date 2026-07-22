@@ -82,6 +82,33 @@ def register_drone_platform_routes(app: web.Application) -> None:
     app.router.add_get(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)
     app.router.add_post(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)
     app.router.add_post(f"{prefix}/telemetry/sessions/{{session_id}}/samples", handlers.telemetry_sample_handler)
+    app.router.add_get(f"{prefix}/telemetry/ai", handlers.telemetry_ai_status_handler)
+    app.router.add_post(f"{prefix}/telemetry/analyze", handlers.telemetry_analyze_handler)
+    app.router.add_post(f"{prefix}/telemetry/record", handlers.telemetry_record_handler)
+    app.router.add_post(f"{prefix}/telemetry/replay", handlers.telemetry_replay_handler)
+
+    # mavlink
+    app.router.add_get(f"{prefix}/mavlink", handlers.mavlink_status_handler)
+    app.router.add_get(f"{prefix}/mavlink/messages", handlers.mavlink_messages_handler)
+    app.router.add_get(f"{prefix}/mavlink/commands", handlers.mavlink_commands_handler)
+    app.router.add_post(f"{prefix}/mavlink/parse", handlers.mavlink_parse_handler)
+    app.router.add_get(f"{prefix}/mavlink/connections", handlers.mavlink_connections_handler)
+    app.router.add_post(f"{prefix}/mavlink/connections", handlers.mavlink_connections_handler)
+    app.router.add_post(f"{prefix}/mavlink/heartbeat", handlers.mavlink_heartbeat_handler)
+    app.router.add_get(f"{prefix}/mavlink/streams", handlers.mavlink_stream_handler)
+    app.router.add_post(f"{prefix}/mavlink/streams", handlers.mavlink_stream_handler)
+
+    # flight logs / diagnostics / mission intel / gcs / visualization
+    app.router.add_get(f"{prefix}/flight-logs", handlers.flight_logs_handler)
+    app.router.add_post(f"{prefix}/flight-logs", handlers.flight_logs_handler)
+    app.router.add_get(f"{prefix}/diagnostics", handlers.diagnostics_handler)
+    app.router.add_post(f"{prefix}/diagnostics", handlers.diagnostics_handler)
+    app.router.add_post(f"{prefix}/mission-intel/analyze", handlers.mission_intel_handler)
+    app.router.add_post(f"{prefix}/mission-intel/compare", handlers.mission_intel_compare_handler)
+    app.router.add_post(f"{prefix}/mission-intel/rth", handlers.mission_intel_rth_handler)
+    app.router.add_get(f"{prefix}/gcs/bridges", handlers.gcs_bridges_handler)
+    app.router.add_post(f"{prefix}/gcs/bridges", handlers.gcs_bridges_handler)
+    app.router.add_post(f"{prefix}/visualization/bundle", handlers.visualization_handler)
 
     # inventory
     app.router.add_get(f"{prefix}/inventory/warehouses", handlers.inventory_warehouses_handler)

@@ -48,3 +48,6 @@ generated_by_enterprise_infra
 
 ## Drone Firmware (11.2)
 [[drone/FIRMWARE_DASHBOARD]] · [[drone/FIRMWARE_REGISTRY]]
+
+## Drone MAVLink / Telemetry (11.3)
+[[drone/DRONE_DASHBOARD]] · [[drone/MAVLINK_REGISTRY]] · [[drone/TELEMETRY_REGISTRY]] · [[drone/FLIGHT_LOG_REGISTRY]]

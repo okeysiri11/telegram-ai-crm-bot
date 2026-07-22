@@ -519,6 +519,237 @@ async def telemetry_sample_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+async def telemetry_ai_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.telemetry_ai.status())
+
+
+async def telemetry_analyze_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        result = drone_platform.telemetry_ai.analyze_session(body.get("session_id", ""))
+        return json_response(result)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def telemetry_record_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        action = body.get("action", "start")
+        if action == "stop":
+            return json_response(drone_platform.telemetry_ai.recorder.stop(body.get("recording_id", "")))
+        recording = drone_platform.telemetry_ai.recorder.start(
+            body.get("session_id", ""),
+            label=body.get("label", ""),
+        )
+        return json_response(recording, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def telemetry_replay_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        if body.get("action") == "step":
+            return json_response(drone_platform.telemetry_ai.replay.step(body.get("replay_id", "")))
+        replay = drone_platform.telemetry_ai.replay.create(
+            body.get("session_id", ""),
+            speed=float(body.get("speed", 1.0)),
+        )
+        return json_response(replay, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- mavlink ----
+async def mavlink_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.mavlink.status())
+
+
+async def mavlink_messages_handler(request: web.Request) -> web.Response:
+    category = request.rel_url.query.get("category")
+    return json_response({"messages": drone_platform.mavlink.messages.list_messages(category=category)})
+
+
+async def mavlink_commands_handler(request: web.Request) -> web.Response:
+    category = request.rel_url.query.get("category")
+    return json_response({"commands": drone_platform.mavlink.commands.list_commands(category=category)})
+
+
+async def mavlink_parse_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        if body.get("content"):
+            return json_response({"messages": drone_platform.mavlink.parser.parse_many(body["content"])})
+        return json_response(drone_platform.mavlink.parser.parse(body.get("payload", body)))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mavlink_connections_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response({"connections": drone_platform.mavlink.connections.list()})
+        body = await _read_json(request)
+        profile = drone_platform.mavlink.connections.create(
+            name=body.get("name", ""),
+            transport=body.get("transport", "udp"),
+            endpoint=body.get("endpoint", "udpin:0.0.0.0:14550"),
+            dialect=body.get("dialect", "ardupilotmega"),
+            baud=int(body.get("baud", 57600)),
+            metadata=body.get("metadata"),
+        )
+        return json_response(profile, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mavlink_heartbeat_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        beat = drone_platform.mavlink.heartbeat.record(
+            system_id=int(body.get("system_id", 1)),
+            autopilot=body.get("autopilot", "ardupilot"),
+            vehicle_type=body.get("vehicle_type", "quadrotor"),
+            base_mode=int(body.get("base_mode", 0)),
+        )
+        vehicle = drone_platform.mavlink.discovery.discover_from_heartbeat(beat)
+        return json_response({"heartbeat": beat, "vehicle": vehicle}, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mavlink_stream_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response({"streams": drone_platform.mavlink.streams.list()})
+        body = await _read_json(request)
+        if body.get("action") == "ingest":
+            msg = drone_platform.mavlink.streams.ingest(body.get("stream_id", ""), body.get("payload", {}))
+            return json_response(msg)
+        stream = drone_platform.mavlink.streams.open_stream(
+            connection_id=body.get("connection_id", ""),
+            name=body.get("name", "primary"),
+        )
+        return json_response(stream, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- flight logs ----
+async def flight_logs_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response(
+                {
+                    "logs": drone_platform.flight_logs.list(),
+                    "supported_types": drone_platform.flight_logs.supported_types(),
+                }
+            )
+        body = await _read_json(request)
+        log = drone_platform.flight_logs.ingest(
+            name=body.get("name", "flight.log"),
+            content=body.get("content", ""),
+            filename=body.get("filename", ""),
+            log_type=body.get("log_type", ""),
+            uav_id=body.get("uav_id", ""),
+            mission_id=body.get("mission_id", ""),
+        )
+        return json_response(log, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- diagnostics ----
+async def diagnostics_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response({"reports": drone_platform.diagnostics.list(), **drone_platform.diagnostics.status()})
+        body = await _read_json(request)
+        samples = body.get("samples")
+        if not samples and body.get("session_id"):
+            session = drone_platform.telemetry.get_session(body["session_id"])
+            samples = session.get("samples", [])
+        report = drone_platform.diagnostics.detect(samples or [], source=body.get("source", "telemetry"))
+        return json_response(report, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- mission intelligence ----
+async def mission_intel_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        result = drone_platform.mission_intel.analyze_mission(
+            body.get("mission_id", ""),
+            battery_pct=float(body.get("battery_pct", 100)),
+            wind_mps=float(body.get("wind_mps", 0)),
+            cruise_speed_mps=float(body.get("cruise_speed_mps", 12)),
+        )
+        return json_response(result)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_intel_compare_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(
+            drone_platform.mission_intel.compare_missions(body.get("left_id", ""), body.get("right_id", ""))
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_intel_rth_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(
+            drone_platform.mission_intel.simulate_rth(
+                home=body.get("home", {}),
+                current=body.get("current", {}),
+                battery_pct=float(body.get("battery_pct", 100)),
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- gcs ----
+async def gcs_bridges_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response({"bridges": drone_platform.gcs.list(), **drone_platform.gcs.status()})
+        body = await _read_json(request)
+        bridge = drone_platform.gcs.create_bridge(
+            name=body.get("name", ""),
+            gcs_type=body.get("gcs_type", "custom"),
+            endpoint=body.get("endpoint", ""),
+            metadata=body.get("metadata"),
+        )
+        return json_response(bridge, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+# ---- visualization ----
+async def visualization_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        samples = body.get("samples")
+        if not samples and body.get("session_id"):
+            session = drone_platform.telemetry.get_session(body["session_id"])
+            samples = session.get("samples", [])
+        bundle = drone_platform.visualization.build_bundle(
+            samples or [],
+            waypoints=body.get("waypoints"),
+            events=body.get("events"),
+        )
+        return json_response(bundle)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 # ---- inventory ----
 async def inventory_warehouses_handler(request: web.Request) -> web.Response:
     try:
