@@ -1,10 +1,10 @@
 # Auto Marketplace — Auctions, Financing, Insurance & Transactions (Sprint 10.4)
 
-Commercial auction, loan/lease, insurance, escrow, and vehicle purchase workflows for **Auto Marketplace 4.1.2-enterprise**.
+Commercial auction, loan/lease, insurance, escrow, and vehicle purchase workflows for **Auto Marketplace 4.1.3-enterprise**.
 
 | Field | Value |
 |-------|-------|
-| Application version | `4.1.2-enterprise` |
+| Application version | `4.1.3-enterprise` |
 | `transaction_engine` | `1.0` |
 | `auction_engine` | `1.0` |
 | `finance_engine` | `1.0` |

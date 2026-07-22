@@ -1,12 +1,13 @@
 # Auto Marketplace Enterprise Platform
 
-**Version:** `4.1.2-enterprise`  
-**Sprint:** 13.2  
-**Foundation:** Enterprise Platform v4.1.1-enterprise  
+**Version:** `4.1.3-enterprise`  
+**Sprint:** 13.3  
+**Foundation:** Enterprise Platform v4.1.2-enterprise  
 **Existing API (unchanged):** `/api/auto/v1`  
 **Enterprise Suite API:** `/api/auto-marketplace/v1`  
 **VIN Intelligence API:** `/api/vin-intelligence/v1`  
-**Inspection AI API:** `/api/inspection-ai/v1`
+**Inspection AI API:** `/api/inspection-ai/v1`  
+**Dealer CRM API:** `/api/dealer-crm/v1`
 
 Enterprise Automotive Marketplace powered by AI — vehicles, dealers, auctions, CRM, sales, analytics, VIN intelligence, and digital passports.
 

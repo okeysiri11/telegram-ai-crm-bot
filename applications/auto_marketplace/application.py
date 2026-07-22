@@ -24,6 +24,7 @@ from applications.auto_marketplace.enterprise_automotive.facade import (
 )
 from applications.auto_marketplace.vin_intelligence.facade import VINIntelligenceSuite, vin_intelligence
 from applications.auto_marketplace.inspection_ai.facade import InspectionAISuite, inspection_ai
+from applications.auto_marketplace.dealer_crm.facade import DealerCRMSuite, dealer_crm
 from applications.auto_marketplace.favorites.service import FavoritesService, favorites_service
 from applications.auto_marketplace.finance.engine import FinanceEngine, finance_engine
 from applications.auto_marketplace.filters.search_engine import SearchEngine, search_engine
@@ -109,6 +110,7 @@ class AutoMarketplaceApplication:
         enterprise_automotive_svc: EnterpriseAutomotiveSuite | None = None,
         vin_intelligence_svc: VINIntelligenceSuite | None = None,
         inspection_ai_svc: InspectionAISuite | None = None,
+        dealer_crm_svc: DealerCRMSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or marketplace_store
@@ -152,6 +154,7 @@ class AutoMarketplaceApplication:
         self.enterprise_automotive = enterprise_automotive_svc or enterprise_automotive
         self.vin_intelligence = vin_intelligence_svc or vin_intelligence
         self.inspection_ai = inspection_ai_svc or inspection_ai
+        self.dealer_crm = dealer_crm_svc or dealer_crm
 
     def reset(self) -> None:
         self.store.reset()
@@ -170,6 +173,7 @@ class AutoMarketplaceApplication:
             "enterprise_automotive_suite": self.config.enterprise_automotive_suite,
             "vin_intelligence": self.config.vin_intelligence,
             "inspection_ai": self.config.inspection_ai,
+            "dealer_crm": self.config.dealer_crm,
             "auto_marketplace_ready": True,
             "auto_ai_ready": True,
             "dealer_platform_ready": True,
@@ -182,6 +186,10 @@ class AutoMarketplaceApplication:
             "damage_detection_ready": True,
             "vehicle_health_ai_ready": True,
             "repair_estimation_ready": True,
+            "dealer_crm_ready": True,
+            "trade_in_ai_ready": True,
+            "inventory_intelligence_ready": True,
+            "sales_ai_ready": True,
             "maintenance_mode": self.production_engine.maintenance.enabled,
             "api_version": self.config.api_version,
             "catalog_engine": self.config.catalog_engine,
@@ -224,6 +232,7 @@ class AutoMarketplaceApplication:
             "enterprise_automotive": self.enterprise_automotive.status(),
             "vin_intelligence": self.vin_intelligence.status(),
             "inspection_ai": self.inspection_ai.status(),
+            "dealer_crm": self.dealer_crm.status(),
             "health_deep": self.enterprise.health.deep(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),

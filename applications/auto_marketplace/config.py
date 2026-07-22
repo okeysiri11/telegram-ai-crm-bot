@@ -1,4 +1,4 @@
-# Auto Marketplace configuration — Sprint 13.2 Inspection AI.
+# Auto Marketplace configuration — Sprint 13.3 Dealer CRM.
 
 from __future__ import annotations
 
@@ -13,19 +13,21 @@ class AutoMarketplaceConfig:
     enterprise_api_prefix: str = "/api/auto-marketplace/v1"
     vin_intelligence_api_prefix: str = "/api/vin-intelligence/v1"
     inspection_ai_api_prefix: str = "/api/inspection-ai/v1"
+    dealer_crm_api_prefix: str = "/api/dealer-crm/v1"
     internal_prefix: str = "/internal/auto/v1"
     webhook_prefix: str = "/webhooks/auto/v1"
     default_currency: str = "USD"
     enable_ai_recommendations: bool = True
     enable_auctions: bool = True
-    application_version: str = "4.1.2-enterprise"
-    release_status: str = "Inspection AI"
+    application_version: str = "4.1.3-enterprise"
+    release_status: str = "Dealer CRM"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.1.1-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.1.2-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     enterprise_automotive_suite: str = "1.0"
     vin_intelligence: str = "1.0"
     inspection_ai: str = "1.0"
+    dealer_crm: str = "1.0"
     vehicle_types: list[str] = field(
         default_factory=lambda: [
             "car",

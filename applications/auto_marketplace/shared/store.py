@@ -236,6 +236,25 @@ class MarketplaceStore:
         self.ia_reports: EntityStore = EntityStore()
         self.ia_knowledge_links: EntityStore = EntityStore()
         self.ia_dashboards: EntityStore = EntityStore()
+        # Sprint 13.3 — Dealer CRM / Trade-In / Inventory
+        self.dc_dealerships: EntityStore = EntityStore()
+        self.dc_customers: EntityStore = EntityStore()
+        self.dc_leads: EntityStore = EntityStore()
+        self.dc_contacts: EntityStore = EntityStore()
+        self.dc_call_log: EntityStore = EntityStore()
+        self.dc_email_log: EntityStore = EntityStore()
+        self.dc_tasks: EntityStore = EntityStore()
+        self.dc_calendar: EntityStore = EntityStore()
+        self.dc_appointments: EntityStore = EntityStore()
+        self.dc_tradeins: EntityStore = EntityStore()
+        self.dc_tradein_offers: EntityStore = EntityStore()
+        self.dc_inventory: EntityStore = EntityStore()
+        self.dc_warehouses: EntityStore = EntityStore()
+        self.dc_optimizations: EntityStore = EntityStore()
+        self.dc_recommendations: EntityStore = EntityStore()
+        self.dc_sales_ai: EntityStore = EntityStore()
+        self.dc_dashboards: EntityStore = EntityStore()
+        self.dc_integrations: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

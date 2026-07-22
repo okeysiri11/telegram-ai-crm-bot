@@ -25,6 +25,7 @@ from applications.auto_marketplace.api import (
     transaction_handlers,
     vin_intelligence_handlers,
     inspection_ai_handlers,
+    dealer_crm_handlers,
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
@@ -711,3 +712,20 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{ia}/knowledge", inspection_ai_handlers.ia_knowledge_handler)
     app.router.add_get(f"{ia}/dashboard", inspection_ai_handlers.ia_dashboard_handler)
     app.router.add_post(f"{ia}/dashboard", inspection_ai_handlers.ia_dashboard_handler)
+
+    # Sprint 13.3 — Dealer CRM (additive; prior sprint routes unchanged)
+    dc = config.dealer_crm_api_prefix
+    app.router.add_get(f"{dc}/health", dealer_crm_handlers.dc_health_handler)
+    app.router.add_post(f"{dc}/bootstrap", dealer_crm_handlers.dc_bootstrap_handler)
+    app.router.add_get(f"{dc}/crm", dealer_crm_handlers.dc_crm_handler)
+    app.router.add_post(f"{dc}/crm", dealer_crm_handlers.dc_crm_handler)
+    app.router.add_get(f"{dc}/tradein", dealer_crm_handlers.dc_tradein_handler)
+    app.router.add_post(f"{dc}/tradein", dealer_crm_handlers.dc_tradein_handler)
+    app.router.add_get(f"{dc}/inventory", dealer_crm_handlers.dc_inventory_handler)
+    app.router.add_post(f"{dc}/inventory", dealer_crm_handlers.dc_inventory_handler)
+    app.router.add_get(f"{dc}/sales", dealer_crm_handlers.dc_sales_handler)
+    app.router.add_post(f"{dc}/sales", dealer_crm_handlers.dc_sales_handler)
+    app.router.add_get(f"{dc}/analytics", dealer_crm_handlers.dc_analytics_handler)
+    app.router.add_post(f"{dc}/analytics", dealer_crm_handlers.dc_analytics_handler)
+    app.router.add_get(f"{dc}/integrations", dealer_crm_handlers.dc_integrations_handler)
+    app.router.add_post(f"{dc}/integrations", dealer_crm_handlers.dc_integrations_handler)

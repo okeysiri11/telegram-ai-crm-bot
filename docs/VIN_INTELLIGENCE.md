@@ -1,6 +1,6 @@
 # VIN Intelligence
 
-**Version:** `4.1.2-enterprise`  
+**Version:** `4.1.3-enterprise`  
 **Sprint:** 13.1  
 **Foundation:** Enterprise Platform v4.1.0-enterprise  
 **API:** `/api/vin-intelligence/v1`
