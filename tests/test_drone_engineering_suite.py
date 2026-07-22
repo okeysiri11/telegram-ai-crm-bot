@@ -38,7 +38,7 @@ def reset_store():
 
 def test_version_engineering_suite_ready():
     health = drone_platform.health()
-    assert health["application_version"] == "1.8.0-alpha"
+    assert health["application_version"] == "2.0.0"
     assert health["drone_engineering_ready"] is True
     assert health["battery_engineering_ready"] is True
     assert health["pcb_engineering_ready"] is True
@@ -46,7 +46,7 @@ def test_version_engineering_suite_ready():
     assert health["engineering_ai_ready"] is True
     assert health["drone_engineering_suite_ready"] is True
     assert health["engines"]["engineering_suite"] == "1.0"
-    assert health["engines"]["ai"] == "1.8"
+    assert health["engines"]["ai"] == "2.0"
 
 
 def test_airframe_designers_and_calculators():
@@ -137,7 +137,7 @@ def test_engineering_simulation_and_ai():
 async def test_api_engineering_suite(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.8.0-alpha"
+    assert body["application_version"] == "2.0.0"
     assert body["drone_engineering_suite_ready"] is True
 
     status = await client.get(f"{PREFIX}/engineering/suite")
@@ -181,5 +181,5 @@ def test_docs_and_knowledge_11_5():
     ):
         assert (ROOT / "knowledge" / "drone" / name).exists()
     manifest = (ROOT / "applications" / "drone_platform" / "manifest.json").read_text()
-    assert "1.8.0-alpha" in manifest
-    assert "11.9" in manifest
+    assert "2.0.0" in manifest
+    assert "11.10" in manifest

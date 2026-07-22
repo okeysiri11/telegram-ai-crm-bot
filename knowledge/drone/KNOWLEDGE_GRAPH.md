@@ -3,7 +3,7 @@ title: Knowledge Graph
 aliases: [Knowledge Graph]
 tags: [drone, graph]
 generated: 2026-07-22
-sprint: "11.9"
+sprint: "11.10"
 ---
 
 # Knowledge Graph
@@ -80,4 +80,18 @@ flowchart LR
   RCV --> RR[[drone/RECOVERY_REGISTRY]]
 ```
 
-Links: [[drone/ENGINEERING_REGISTRY]] · [[drone/MANUFACTURING_REGISTRY]] · [[drone/MISSION_OPS_REGISTRY]] · [[drone/CLOUD_REGISTRY]] · [[drone/CLOUD_DASHBOARD]] · [[drone/NAVIGATION_REGISTRY]] · [[drone/COMMUNICATION_REGISTRY]] · [[drone/SAFETY_REGISTRY]] · [[drone/RECOVERY_REGISTRY]] · [[drone/MISSION_OPS_DASHBOARD]] · [[INDEX]]
+## Unified Ecosystem & Certification (11.10)
+
+```mermaid
+flowchart LR
+  ECO[Drone Ecosystem] --> INT[Integration]
+  ECO --> LIFE[Lifecycle]
+  ECO --> UT[Unified Twins]
+  ECO --> EX[Executive Dashboards]
+  ECO --> REP[Enterprise Reports]
+  ECO --> CERT[Certification]
+  ECO --> CAI[Chief Drone AI]
+  CERT --> ED[[drone/ENTERPRISE_DASHBOARD]]
+```
+
+Links: [[drone/ENGINEERING_REGISTRY]] · [[drone/MANUFACTURING_REGISTRY]] · [[drone/MISSION_OPS_REGISTRY]] · [[drone/CLOUD_REGISTRY]] · [[drone/NAVIGATION_REGISTRY]] · [[drone/SAFETY_REGISTRY]] · [[drone/AI_REGISTRY]] · [[drone/DRONE_REGISTRY]] · [[drone/ENTERPRISE_DASHBOARD]] · [[drone/ARCHITECTURE_GRAPH]] · [[drone/DEPENDENCY_GRAPH]] · [[INDEX]]

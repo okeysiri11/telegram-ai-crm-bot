@@ -1896,6 +1896,137 @@ async def resilience_recovery_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+# ---- unified ecosystem (11.10) ----
+async def ecosystem_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.drone_ecosystem.status())
+
+
+async def ecosystem_bootstrap_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(drone_platform.drone_ecosystem.bootstrap(), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ecosystem_registry_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.drone_ecosystem.manager.unified_registry())
+
+
+async def ecosystem_search_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(drone_platform.drone_ecosystem.manager.unified_search(query=body.get("query", ""), domains=body.get("domains")))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ecosystem_dashboard_handler(request: web.Request) -> web.Response:
+    eco = drone_platform.drone_ecosystem.manager
+    return json_response({"dashboard": eco.unified_dashboard(), "analytics": eco.unified_analytics(), "knowledge": eco.unified_knowledge()})
+
+
+async def ecosystem_events_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        if body.get("action") == "list":
+            return json_response({"events": drone_platform.drone_ecosystem.manager.list_events(topic=body.get("topic"))})
+        return json_response(
+            drone_platform.drone_ecosystem.manager.publish_event(topic=body.get("topic", ""), payload=body.get("payload"), source=body.get("source", "api")),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ecosystem_sync_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(drone_platform.drone_ecosystem.manager.cross_module_sync(modules=body.get("modules")), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ecosystem_integration_handler(request: web.Request) -> web.Response:
+    try:
+        integ = drone_platform.drone_ecosystem.integration
+        if request.method == "GET":
+            return json_response({"graph": integ.graph(), "verify": integ.verify()})
+        body = await _read_json(request)
+        action = body.get("action", "connect")
+        if action == "verify":
+            return json_response(integ.verify())
+        return json_response(integ.connect_all(), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ecosystem_lifecycle_handler(request: web.Request) -> web.Response:
+    try:
+        life = drone_platform.drone_ecosystem.lifecycle
+        if request.method == "GET":
+            return json_response(life.status())
+        body = await _read_json(request)
+        action = body.get("action", "start")
+        if action == "advance":
+            return json_response(life.advance(body.get("lifecycle_id", ""), stage=body.get("stage")))
+        if action == "timeline":
+            return json_response(life.timeline(body.get("lifecycle_id", "")))
+        return json_response(life.start(aircraft_id=body.get("aircraft_id", ""), stage=body.get("stage", "design"), metadata=body.get("metadata")), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ecosystem_twins_handler(request: web.Request) -> web.Response:
+    try:
+        twins = drone_platform.drone_ecosystem.twins
+        if request.method == "GET":
+            return json_response({"twins": twins.list_twins(twin_type=request.rel_url.query.get("type")), "status": twins.status()})
+        body = await _read_json(request)
+        action = body.get("action", "create")
+        if action == "sync":
+            return json_response(twins.sync(body.get("twin_id", ""), state=body.get("state") or {}))
+        if action == "sync_all":
+            return json_response(twins.sync_all())
+        return json_response(
+            twins.create(twin_type=body.get("twin_type", "aircraft"), name=body.get("name", ""), source_id=body.get("source_id", ""), state=body.get("state")),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ecosystem_executive_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.drone_ecosystem.dashboards.all_dashboards())
+
+
+async def ecosystem_reports_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        if body.get("action") == "list":
+            return json_response({"reports": drone_platform.drone_ecosystem.reporting.list_reports(report_type=body.get("report_type"))})
+        return json_response(
+            drone_platform.drone_ecosystem.reporting.generate(
+                report_type=body.get("report_type", "executive"),
+                period=body.get("period", "monthly"),
+                context=body.get("context"),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ecosystem_certification_handler(request: web.Request) -> web.Response:
+    try:
+        cert = drone_platform.drone_ecosystem.certification
+        if request.method == "GET":
+            return json_response({"status": cert.status(), "latest": cert.latest()})
+        body = await _read_json(request)
+        return json_response(cert.run(version=body.get("version", drone_platform.config.application_version)), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 # ---- manufacturing suite (11.6) ----
 async def manufacturing_suite_status_handler(request: web.Request) -> web.Response:
     return json_response(drone_platform.manufacturing_suite.status())

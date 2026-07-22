@@ -1,10 +1,10 @@
-# DronePlatformApplication — facade (Sprint 11.1–11.9).
+# DronePlatformApplication — facade (Sprint 11.1–11.10).
 
 from __future__ import annotations
 
 from typing import Any
 
-from applications.drone_platform.ai.safety_ai import SafetyAIAssistant, safety_ai
+from applications.drone_platform.ai.chief_ai import ChiefDroneAIAssistant, chief_drone_ai
 from applications.drone_platform.analytics.service import AnalyticsService, analytics_service
 from applications.drone_platform.autonomy import AutonomyEngine, autonomy_engine
 from applications.drone_platform.cloud.suite import DroneCloudSuite, drone_cloud
@@ -13,6 +13,7 @@ from applications.drone_platform.diagnostics import FlightDiagnosticsService, fl
 from applications.drone_platform.documentation.service import DocumentationService, documentation_service
 from applications.drone_platform.engineering.service import EngineeringService, engineering_service
 from applications.drone_platform.engineering.suite import EngineeringSuite, engineering_suite
+from applications.drone_platform.ecosystem.suite import DroneEcosystemSuite, drone_ecosystem
 from applications.drone_platform.firmware.ardupilot import ArduPilotService, ardupilot_service
 from applications.drone_platform.firmware.manager import FirmwareManager, firmware_manager
 from applications.drone_platform.firmware.mission_planner import MissionPlannerBridge, mission_planner_bridge
@@ -79,9 +80,10 @@ class DronePlatformApplication:
         mission_ops_facade: MissionOperationsSuite | None = None,
         cloud_facade: DroneCloudSuite | None = None,
         resilience_facade: ResilienceSuite | None = None,
+        drone_ecosystem_facade: DroneEcosystemSuite | None = None,
         simulation: SimulationService | None = None,
         documentation: DocumentationService | None = None,
-        ai: SafetyAIAssistant | None = None,
+        ai: ChiefDroneAIAssistant | None = None,
         analytics: AnalyticsService | None = None,
         platform: PlatformBridge | None = None,
         ecosystem: EcosystemBridge | None = None,
@@ -117,9 +119,10 @@ class DronePlatformApplication:
         self.mission_ops = mission_ops_facade or mission_operations
         self.cloud = cloud_facade or drone_cloud
         self.resilience = resilience_facade or resilience_suite
+        self.drone_ecosystem = drone_ecosystem_facade or drone_ecosystem
         self.simulation = simulation or simulation_service
         self.documentation = documentation or documentation_service
-        self.ai = ai or safety_ai
+        self.ai = ai or chief_drone_ai
         self.analytics = analytics or analytics_service
         self.platform = platform or platform_bridge
         self.ecosystem = ecosystem or ecosystem_bridge
@@ -169,6 +172,11 @@ class DronePlatformApplication:
             "recovery_ready": True,
             "health_monitoring_ready": True,
             "drone_platform_production_ready": True,
+            "unified_drone_ai_ecosystem_ready": True,
+            "full_lifecycle_ready": True,
+            "executive_dashboard_ready": True,
+            "drone_platform_enterprise_certified": True,
+            "enterprise_certification_passed": True,
             "drone_platform_operational": True,
             "firmware_workspace_ready": True,
             "firmware_intelligence_ready": True,
@@ -210,6 +218,10 @@ class DronePlatformApplication:
                 "safety": self.config.safety,
                 "health_monitoring": self.config.health_monitoring,
                 "recovery": self.config.recovery,
+                "drone_ecosystem": self.config.drone_ecosystem,
+                "lifecycle_intelligence": self.config.lifecycle_intelligence,
+                "unified_digital_twin": self.config.unified_digital_twin,
+                "enterprise_certification": self.config.enterprise_certification,
                 "firmware": self.config.firmware_engine,
                 "firmware_intelligence": self.config.firmware_intelligence,
                 "ardupilot": self.config.ardupilot_engine,
@@ -248,6 +260,7 @@ class DronePlatformApplication:
             "mission_ops_status": self.mission_ops.status(),
             "cloud_status": self.cloud.status(),
             "resilience_status": self.resilience.status(),
+            "drone_ecosystem_status": self.drone_ecosystem.status(),
             "bridges": {
                 "platform": self.platform.health(),
                 "ecosystem": self.ecosystem.health(),

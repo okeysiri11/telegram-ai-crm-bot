@@ -158,6 +158,14 @@ class DroneStore:
         self.nofly_zones: EntityStore = EntityStore()
         self.health_snapshots: EntityStore = EntityStore()
         self.recovery_events: EntityStore = EntityStore()
+        # Sprint 11.10 — unified ecosystem / certification
+        self.ecosystem_registry: EntityStore = EntityStore()
+        self.ecosystem_events: EntityStore = EntityStore()
+        self.ecosystem_syncs: EntityStore = EntityStore()
+        self.aircraft_lifecycles_eco: EntityStore = EntityStore()
+        self.unified_twins: EntityStore = EntityStore()
+        self.enterprise_reports: EntityStore = EntityStore()
+        self.certification_runs: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

@@ -6,37 +6,23 @@ tags:
   - drone
   - dashboard
 generated: 2026-07-22
-sprint: "11.9"
+sprint: "11.10"
 ---
 
 # Drone Dashboard
 
 ## Overview
-Readiness dashboard for Drone Platform through Sprint 11.9 (Production Ready).
-
-## Architecture
-Part of [[Drone Platform]].
+Enterprise Certified Drone Platform **2.0.0** (Sprint 11.10).
 
 ## Components
-- Manufacturing Ready (11.6)
-- Mission Operations Ready (11.7)
-- Drone Cloud / Enterprise Ready (11.8)
-- Navigation Ready (11.9)
-- Communications Ready
-- Safety Ready
-- Recovery Ready
-- Health Monitoring Ready
-- Drone Platform Production Ready
-- Links: [[drone/NAVIGATION_REGISTRY]] [[drone/COMMUNICATION_REGISTRY]] [[drone/SAFETY_REGISTRY]] [[drone/RECOVERY_REGISTRY]] [[drone/CLOUD_DASHBOARD]] [[drone/MISSION_OPS_DASHBOARD]] [[drone/KNOWLEDGE_GRAPH]]
-
-## Relationships
-[[Drone Platform]] · [[ARCHITECTURE_DASHBOARD]] · [[INDEX]] · [[Knowledge Graph]]
-
-## Interfaces
-Docs: `docs/NAVIGATION.md`, `docs/COMMUNICATIONS.md`, `docs/SAFETY.md`, `docs/RECOVERY.md`, `docs/HEALTH_MONITORING.md`
+- Unified Drone AI Ecosystem Ready
+- Full Lifecycle Ready
+- Executive Dashboard Ready
+- Enterprise Certification Passed
+- Links: [[drone/ENTERPRISE_DASHBOARD]] [[drone/AI_REGISTRY]] [[drone/DRONE_REGISTRY]] [[drone/ARCHITECTURE_GRAPH]] [[drone/KNOWLEDGE_GRAPH]]
 
 ## REST APIs
-`/api/drone/v1/resilience/*`
+`/api/drone/v1/ecosystem/*`
 
 ## Events
-drone_resilience_updated
+drone_ecosystem_certified

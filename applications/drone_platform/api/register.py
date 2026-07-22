@@ -137,6 +137,25 @@ def register_drone_platform_routes(app: web.Application) -> None:
     app.router.add_get(f"{prefix}/resilience/recovery", handlers.resilience_recovery_handler)
     app.router.add_post(f"{prefix}/resilience/recovery", handlers.resilience_recovery_handler)
 
+    # Sprint 11.10 — Unified Drone Ecosystem & Enterprise Certification
+    app.router.add_get(f"{prefix}/ecosystem", handlers.ecosystem_status_handler)
+    app.router.add_post(f"{prefix}/ecosystem/bootstrap", handlers.ecosystem_bootstrap_handler)
+    app.router.add_get(f"{prefix}/ecosystem/registry", handlers.ecosystem_registry_handler)
+    app.router.add_post(f"{prefix}/ecosystem/search", handlers.ecosystem_search_handler)
+    app.router.add_get(f"{prefix}/ecosystem/dashboard", handlers.ecosystem_dashboard_handler)
+    app.router.add_post(f"{prefix}/ecosystem/events", handlers.ecosystem_events_handler)
+    app.router.add_post(f"{prefix}/ecosystem/sync", handlers.ecosystem_sync_handler)
+    app.router.add_get(f"{prefix}/ecosystem/integration", handlers.ecosystem_integration_handler)
+    app.router.add_post(f"{prefix}/ecosystem/integration", handlers.ecosystem_integration_handler)
+    app.router.add_get(f"{prefix}/ecosystem/lifecycle", handlers.ecosystem_lifecycle_handler)
+    app.router.add_post(f"{prefix}/ecosystem/lifecycle", handlers.ecosystem_lifecycle_handler)
+    app.router.add_get(f"{prefix}/ecosystem/twins", handlers.ecosystem_twins_handler)
+    app.router.add_post(f"{prefix}/ecosystem/twins", handlers.ecosystem_twins_handler)
+    app.router.add_get(f"{prefix}/ecosystem/executive", handlers.ecosystem_executive_handler)
+    app.router.add_post(f"{prefix}/ecosystem/reports", handlers.ecosystem_reports_handler)
+    app.router.add_get(f"{prefix}/ecosystem/certification", handlers.ecosystem_certification_handler)
+    app.router.add_post(f"{prefix}/ecosystem/certification", handlers.ecosystem_certification_handler)
+
     # telemetry
     app.router.add_get(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)
     app.router.add_post(f"{prefix}/telemetry/sessions", handlers.telemetry_sessions_handler)
