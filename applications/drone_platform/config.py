@@ -1,4 +1,4 @@
-# Drone Platform configuration — Sprint 11.1 Foundation.
+# Drone Platform configuration — Sprint 11.2 Firmware Intelligence.
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from dataclasses import dataclass
 class DronePlatformConfig:
     application_name: str = "Drone Platform"
     application: str = "drone_platform"
-    application_version: str = "1.0.0-alpha"
-    release_status: str = "Foundation Alpha"
+    application_version: str = "1.1.0-alpha"
+    release_status: str = "Firmware Intelligence Alpha"
     api_version: str = "v1"
     api_prefix: str = "/api/drone/v1"
     internal_prefix: str = "/internal/drone/v1"
@@ -18,10 +18,13 @@ class DronePlatformConfig:
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     registry_engine: str = "1.0"
     engineering_engine: str = "1.0"
-    firmware_engine: str = "1.0"
+    firmware_engine: str = "1.1"
+    firmware_intelligence: str = "1.0"
+    ardupilot_engine: str = "1.0"
+    mission_planner_bridge: str = "1.0"
     mission_engine: str = "1.0"
     inventory_engine: str = "1.0"
-    ai_engine: str = "1.0"
+    ai_engine: str = "1.1"
 
 
 DEFAULT_CONFIG = DronePlatformConfig()

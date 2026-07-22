@@ -5,7 +5,7 @@
 
 
 ## Overview
-**Drone Platform** (`applications/drone_platform/`) version **1.0.0-alpha** — UAV engineering ERP + AI workspace. Sprint **11.1** foundation. Detail: [[sprints/DRONE_PLATFORM]] · `docs/DRONE_PLATFORM.md`.
+**Drone Platform** (`applications/drone_platform/`) version **1.1.0-alpha** — UAV engineering ERP + AI workspace. Sprint **11.1** foundation. Detail: [[sprints/DRONE_PLATFORM]] · `docs/DRONE_PLATFORM.md`.
 
 ## Architecture
 Facade: `DronePlatformApplication`. In-memory foundation store with domain services for registry, projects/engineering, firmware, missions, telemetry, inventory, documentation, and engineering AI. Bridges only — does not modify Core, Ecosystem, Agro, Port, or Auto.
@@ -47,3 +47,6 @@ Repository `docs/`, manifests, [[standards/DOCUMENTATION_STANDARDS]].
 
 ## Related pages
 [[INDEX]] · [[DASHBOARD]] · [[ROADMAP]] · [[registries/COMPONENT_REGISTRY]]
+
+## Sprint 11.2
+Firmware Intelligence — [[drone/FIRMWARE_DASHBOARD]]

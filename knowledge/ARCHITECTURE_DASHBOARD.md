@@ -45,3 +45,6 @@ generated_by_enterprise_infra
 
 ## Related pages
 [[INDEX]] · [[PROJECT_STATUS]] · [[EXECUTIVE_DASHBOARD]]
+
+## Drone Firmware (11.2)
+[[drone/FIRMWARE_DASHBOARD]] · [[drone/FIRMWARE_REGISTRY]]

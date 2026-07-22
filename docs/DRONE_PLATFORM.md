@@ -1,10 +1,12 @@
 # Drone Platform — Foundation (Sprint 11.1)
 
-**Version:** `1.0.0-alpha`  
-**Status:** Foundation Alpha  
+**Version:** `1.1.0-alpha`  
+**Status:** Firmware Intelligence Alpha  
 **API prefix:** `/api/drone/v1`
 
-Engineering ERP + AI workspace for UAV development, manufacturing, configuration, testing, maintenance, and fleet management. Integrates with AI Platform Core and AI Ecosystem via **bridge interfaces only**.
+Engineering ERP + AI workspace for UAV development, manufacturing, configuration, testing, maintenance, and fleet management. Sprint **11.2** adds Firmware Intelligence (ArduPilot, Mission Planner, builder, analyzer, firmware AI).
+
+See also: [DRONE_FIRMWARE.md](DRONE_FIRMWARE.md), [ARDUPILOT.md](ARDUPILOT.md), [MISSION_PLANNER.md](MISSION_PLANNER.md), [FIRMWARE_WORKFLOW.md](FIRMWARE_WORKFLOW.md).
 
 ## Scope
 

@@ -1,4 +1,4 @@
-# In-memory entity store for Drone Platform foundation.
+# In-memory entity store for Drone Platform.
 
 from __future__ import annotations
 
@@ -52,6 +52,20 @@ class DroneStore:
         self.ai_sessions: EntityStore = EntityStore()
         self.manufacturing_builds: EntityStore = EntityStore()
         self.simulations: EntityStore = EntityStore()
+        # Sprint 11.2 — firmware intelligence
+        self.firmware_artifacts: EntityStore = EntityStore()
+        self.firmware_builds: EntityStore = EntityStore()
+        self.firmware_patches: EntityStore = EntityStore()
+        self.firmware_releases: EntityStore = EntityStore()
+        self.firmware_signatures: EntityStore = EntityStore()
+        self.firmware_configs: EntityStore = EntityStore()
+        self.ardupilot_projects: EntityStore = EntityStore()
+        self.parameter_definitions: EntityStore = EntityStore()
+        self.vehicle_profiles: EntityStore = EntityStore()
+        self.flight_modes: EntityStore = EntityStore()
+        self.mission_library: EntityStore = EntityStore()
+        self.firmware_branches: EntityStore = EntityStore()
+        self.mp_profiles: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

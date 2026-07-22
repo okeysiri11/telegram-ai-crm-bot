@@ -46,3 +46,6 @@ Keep alias in sync with [[applications/DRONE_PLATFORM]].
 
 ## Related pages
 [[INDEX]] · [[registries/COMPONENT_REGISTRY]] · [[ARCHITECTURE]]
+
+## Sprint 11.2
+See [[drone/FIRMWARE_DASHBOARD]]

@@ -42,7 +42,7 @@ def test_version_and_foundation_ready():
     health = drone_platform.health()
     assert health["application"] == "drone_platform"
     assert health["application_name"] == "Drone Platform"
-    assert health["application_version"] == "1.0.0-alpha"
+    assert health["application_version"] == "1.1.0-alpha"
     assert health["foundation_ready"] is True
     assert health["engineering_ready"] is True
     assert health["firmware_workspace_ready"] is True
@@ -57,7 +57,8 @@ def test_docs_and_manifest():
     manifest = ROOT / "applications" / "drone_platform" / "manifest.json"
     assert manifest.exists()
     text = manifest.read_text()
-    assert "1.0.0-alpha" in text
+    assert "1.1.0-alpha" in text
+    assert "11.2" in text
 
 
 def test_package_layout():
@@ -278,7 +279,7 @@ async def test_api_health_registry_firmware_missions(client: TestClient):
     health = await client.get(f"{PREFIX}/health")
     assert health.status == 200
     body = await health.json()
-    assert body["application_version"] == "1.0.0-alpha"
+    assert body["application_version"] == "1.1.0-alpha"
 
     types = await client.get(f"{PREFIX}/registry/types")
     assert types.status == 200

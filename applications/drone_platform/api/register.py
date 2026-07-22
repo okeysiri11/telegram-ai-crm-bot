@@ -42,6 +42,37 @@ def register_drone_platform_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/firmware/backup", handlers.firmware_backup_handler)
     app.router.add_post(f"{prefix}/firmware/restore", handlers.firmware_restore_handler)
 
+    # firmware intelligence 11.2
+    app.router.add_get(f"{prefix}/firmware/intelligence", handlers.firmware_intel_status_handler)
+    app.router.add_get(f"{prefix}/firmware/artifacts", handlers.firmware_artifacts_handler)
+    app.router.add_post(f"{prefix}/firmware/artifacts", handlers.firmware_artifacts_handler)
+    app.router.add_post(f"{prefix}/firmware/analyze", handlers.firmware_analyze_handler)
+    app.router.add_post(f"{prefix}/firmware/build", handlers.firmware_build_handler)
+    app.router.add_post(f"{prefix}/firmware/compare-artifacts", handlers.firmware_compare_artifacts_handler)
+    app.router.add_post(f"{prefix}/firmware/patches", handlers.firmware_patch_handler)
+    app.router.add_post(f"{prefix}/firmware/sign", handlers.firmware_sign_handler)
+    app.router.add_get(f"{prefix}/firmware/releases", handlers.firmware_release_handler)
+    app.router.add_post(f"{prefix}/firmware/releases", handlers.firmware_release_handler)
+    app.router.add_post(f"{prefix}/firmware/rollback", handlers.firmware_rollback_handler)
+
+    # ardupilot
+    app.router.add_get(f"{prefix}/ardupilot/projects", handlers.ardupilot_projects_handler)
+    app.router.add_post(f"{prefix}/ardupilot/projects", handlers.ardupilot_projects_handler)
+    app.router.add_get(f"{prefix}/ardupilot/parameters", handlers.ardupilot_params_handler)
+    app.router.add_get(f"{prefix}/ardupilot/modes", handlers.ardupilot_modes_handler)
+    app.router.add_get(f"{prefix}/ardupilot/vehicles", handlers.ardupilot_vehicles_handler)
+    app.router.add_post(f"{prefix}/ardupilot/vehicles", handlers.ardupilot_vehicles_handler)
+    app.router.add_get(f"{prefix}/ardupilot/branches", handlers.ardupilot_branches_handler)
+    app.router.add_post(f"{prefix}/ardupilot/branches", handlers.ardupilot_branches_handler)
+
+    # mission planner
+    app.router.add_post(f"{prefix}/mission-planner/import", handlers.mission_planner_import_handler)
+    app.router.add_post(f"{prefix}/mission-planner/export", handlers.mission_planner_export_handler)
+    app.router.add_post(
+        f"{prefix}/mission-planner/missions/{{mission_id}}/waypoints",
+        handlers.mission_planner_waypoints_handler,
+    )
+
     # missions
     app.router.add_get(f"{prefix}/missions", handlers.missions_handler)
     app.router.add_post(f"{prefix}/missions", handlers.missions_handler)

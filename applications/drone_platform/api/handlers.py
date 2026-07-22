@@ -247,6 +247,218 @@ async def firmware_restore_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+# ---- firmware intelligence (11.2) ----
+async def firmware_intel_status_handler(request: web.Request) -> web.Response:
+    return json_response(drone_platform.firmware_intel.status())
+
+
+async def firmware_artifacts_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            t = request.rel_url.query.get("type")
+            return json_response({"artifacts": drone_platform.firmware_intel.repository.list(t)})
+        body = await _read_json(request)
+        art = drone_platform.firmware_intel.repository.add_artifact(
+            name=body.get("name", ""),
+            artifact_type=body.get("artifact_type", ".param"),
+            content=body.get("content", ""),
+            firmware_project_id=body.get("firmware_project_id", ""),
+            version=body.get("version", ""),
+            metadata=body.get("metadata"),
+            artifact_id=body.get("artifact_id"),
+        )
+        return json_response(art, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def firmware_analyze_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(drone_platform.firmware_intel.analyzer.analyze_artifact(body.get("artifact_id", "")))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def firmware_build_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        build = drone_platform.firmware_intel.builder.build(
+            firmware_project_id=body.get("firmware_project_id", ""),
+            profile=body.get("profile", "release"),
+            custom_modules=body.get("custom_modules"),
+            custom_drivers=body.get("custom_drivers"),
+            custom_sensors=body.get("custom_sensors"),
+            custom_mavlink=body.get("custom_mavlink"),
+            validate_dependencies=bool(body.get("validate_dependencies", True)),
+        )
+        return json_response(build, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def firmware_compare_artifacts_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(
+            drone_platform.firmware_intel.comparator.compare_artifacts(
+                body.get("left_id", ""), body.get("right_id", "")
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def firmware_patch_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        patch = drone_platform.firmware_intel.patches.create_patch(
+            firmware_project_id=body.get("firmware_project_id", ""),
+            title=body.get("title", ""),
+            diff=body.get("diff", ""),
+            description=body.get("description", ""),
+            metadata=body.get("metadata"),
+        )
+        return json_response(patch, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def firmware_sign_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(
+            drone_platform.firmware_intel.signing.sign_artifact(
+                body.get("artifact_id", ""), signer=body.get("signer", "drone-engineering")
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def firmware_release_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response({"releases": drone_platform.firmware_intel.releases.list()})
+        body = await _read_json(request)
+        release = drone_platform.firmware_intel.releases.create_release(
+            firmware_project_id=body.get("firmware_project_id", ""),
+            version=body.get("version", ""),
+            notes=body.get("notes", ""),
+            artifact_ids=body.get("artifact_ids"),
+            channel=body.get("channel", "stable"),
+            metadata=body.get("metadata"),
+        )
+        return json_response(release, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def firmware_rollback_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        if body.get("backup_id"):
+            return json_response(drone_platform.firmware_intel.rollback.rollback_firmware(body["backup_id"]))
+        return json_response(
+            drone_platform.firmware_intel.rollback.rollback_parameters(
+                body.get("parameter_set_id", ""),
+                target_name=body.get("target_name", "rollback"),
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ardupilot_projects_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response({"projects": drone_platform.ardupilot.list_projects()})
+        body = await _read_json(request)
+        project = drone_platform.ardupilot.create_project(
+            name=body.get("name", ""),
+            vehicle_type=body.get("vehicle_type", "copter"),
+            branch=body.get("branch", "master"),
+            version=body.get("version", ""),
+            metadata=body.get("metadata"),
+        )
+        return json_response(project, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ardupilot_params_handler(request: web.Request) -> web.Response:
+    vehicle = request.rel_url.query.get("vehicle")
+    return json_response({"parameters": drone_platform.ardupilot.parameter_database(vehicle)})
+
+
+async def ardupilot_modes_handler(request: web.Request) -> web.Response:
+    vehicle = request.rel_url.query.get("vehicle")
+    return json_response({"modes": drone_platform.ardupilot.modes(vehicle)})
+
+
+async def ardupilot_vehicles_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response(
+                {
+                    "supported": drone_platform.ardupilot.supported_vehicles(),
+                    "profiles": drone_platform.ardupilot.list_vehicle_profiles(),
+                }
+            )
+        body = await _read_json(request)
+        profile = drone_platform.ardupilot.create_vehicle_profile(
+            name=body.get("name", ""),
+            vehicle_type=body.get("vehicle_type", "copter"),
+            parameters=body.get("parameters"),
+            metadata=body.get("metadata"),
+        )
+        return json_response(profile, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ardupilot_branches_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response({"branches": drone_platform.ardupilot.list_branches()})
+        body = await _read_json(request)
+        branch = drone_platform.ardupilot.create_branch(
+            name=body.get("name", ""),
+            base=body.get("base", "master"),
+            ardupilot_project_id=body.get("ardupilot_project_id", ""),
+            notes=body.get("notes", ""),
+        )
+        return json_response(branch, status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_planner_import_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(drone_platform.mission_planner.import_mission(body), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_planner_export_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response({"export": drone_platform.mission_planner.export_mission(body.get("mission_id", ""))})
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_planner_waypoints_handler(request: web.Request) -> web.Response:
+    try:
+        mission_id = request.match_info["mission_id"]
+        body = await _read_json(request)
+        return json_response(drone_platform.mission_planner.edit_waypoints(mission_id, body.get("waypoints", [])))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 # ---- missions ----
 async def missions_handler(request: web.Request) -> web.Response:
     try:
