@@ -77,6 +77,27 @@ class AgroEnterpriseStore:
         self.pa_ai_monitoring: EntityStore = EntityStore()
         self.pa_dashboards: EntityStore = EntityStore()
         self.pa_registries: EntityStore = EntityStore()
+        # Sprint 14.2 — Smart Irrigation / Soil / Water
+        self.si_soils: EntityStore = EntityStore()
+        self.si_nutrient_analyses: EntityStore = EntityStore()
+        self.si_water_sources: EntityStore = EntityStore()
+        self.si_consumption: EntityStore = EntityStore()
+        self.si_water_balance: EntityStore = EntityStore()
+        self.si_water_quality: EntityStore = EntityStore()
+        self.si_zones: EntityStore = EntityStore()
+        self.si_schedules: EntityStore = EntityStore()
+        self.si_valves: EntityStore = EntityStore()
+        self.si_pumps: EntityStore = EntityStore()
+        self.si_flow: EntityStore = EntityStore()
+        self.si_remote_commands: EntityStore = EntityStore()
+        self.si_gateways: EntityStore = EntityStore()
+        self.si_iot_sensors: EntityStore = EntityStore()
+        self.si_iot_readings: EntityStore = EntityStore()
+        self.si_ai_predictions: EntityStore = EntityStore()
+        self.si_weather: EntityStore = EntityStore()
+        self.si_env_risks: EntityStore = EntityStore()
+        self.si_dashboards: EntityStore = EntityStore()
+        self.si_registries: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

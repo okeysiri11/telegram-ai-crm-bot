@@ -1,8 +1,8 @@
 # Agro Enterprise Platform
 
-**Version:** `4.3.1-enterprise`  
+**Version:** `4.3.2-enterprise`  
 **Sprint:** 14.0 (+ 14.1 Precision Agriculture)  
-**Foundation:** Enterprise Platform v4.3.0-enterprise  
+**Foundation:** Enterprise Platform v4.3.1-enterprise  
 **API:** `/api/agro-enterprise/v1`  
 **Package:** `applications/agro_enterprise/`
 

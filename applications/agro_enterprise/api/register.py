@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.agro_enterprise.api import handlers, precision_handlers
+from applications.agro_enterprise.api import handlers, irrigation_handlers, precision_handlers
 from applications.agro_enterprise.api.middleware import auth_middleware
 from applications.agro_enterprise.config import DEFAULT_CONFIG
 
@@ -49,3 +49,24 @@ def register_agro_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{pa}/dashboard", precision_handlers.pa_dashboard_handler)
     app.router.add_get(f"{pa}/knowledge", precision_handlers.pa_knowledge_handler)
     app.router.add_post(f"{pa}/knowledge", precision_handlers.pa_knowledge_handler)
+
+    # Sprint 14.2 — Smart Irrigation (additive; prior sprint routes unchanged)
+    si = DEFAULT_CONFIG.smart_irrigation_api_prefix
+    app.router.add_get(f"{si}/health", irrigation_handlers.si_health_handler)
+    app.router.add_post(f"{si}/bootstrap", irrigation_handlers.si_bootstrap_handler)
+    app.router.add_get(f"{si}/soil", irrigation_handlers.si_soil_handler)
+    app.router.add_post(f"{si}/soil", irrigation_handlers.si_soil_handler)
+    app.router.add_get(f"{si}/water", irrigation_handlers.si_water_handler)
+    app.router.add_post(f"{si}/water", irrigation_handlers.si_water_handler)
+    app.router.add_get(f"{si}/irrigation", irrigation_handlers.si_irrigation_handler)
+    app.router.add_post(f"{si}/irrigation", irrigation_handlers.si_irrigation_handler)
+    app.router.add_get(f"{si}/iot", irrigation_handlers.si_iot_handler)
+    app.router.add_post(f"{si}/iot", irrigation_handlers.si_iot_handler)
+    app.router.add_get(f"{si}/ai", irrigation_handlers.si_ai_handler)
+    app.router.add_post(f"{si}/ai", irrigation_handlers.si_ai_handler)
+    app.router.add_get(f"{si}/environment", irrigation_handlers.si_environment_handler)
+    app.router.add_post(f"{si}/environment", irrigation_handlers.si_environment_handler)
+    app.router.add_get(f"{si}/dashboard", irrigation_handlers.si_dashboard_handler)
+    app.router.add_post(f"{si}/dashboard", irrigation_handlers.si_dashboard_handler)
+    app.router.add_get(f"{si}/knowledge", irrigation_handlers.si_knowledge_handler)
+    app.router.add_post(f"{si}/knowledge", irrigation_handlers.si_knowledge_handler)

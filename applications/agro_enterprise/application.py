@@ -10,6 +10,7 @@ from applications.agro_enterprise.marketplace import AgroMarketplace, FarmRegist
 from applications.agro_enterprise.precision_agriculture.facade import PrecisionAgricultureSuite
 from applications.agro_enterprise.services import AgroDashboard, AgroKnowledge
 from applications.agro_enterprise.shared.store import AgroEnterpriseStore, agro_enterprise_store
+from applications.agro_enterprise.smart_irrigation.facade import SmartIrrigationSuite
 
 
 class AgroEnterpriseApplication:
@@ -19,6 +20,7 @@ class AgroEnterpriseApplication:
         config: AgroEnterpriseConfig | None = None,
         store: AgroEnterpriseStore | None = None,
         precision: PrecisionAgricultureSuite | None = None,
+        irrigation: SmartIrrigationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or agro_enterprise_store
@@ -29,6 +31,7 @@ class AgroEnterpriseApplication:
         self.knowledge = AgroKnowledge(self.store)
         self.dashboard = AgroDashboard(self.store)
         self.precision = precision or PrecisionAgricultureSuite(self.store)
+        self.irrigation = irrigation or SmartIrrigationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -123,6 +126,10 @@ class AgroEnterpriseApplication:
             "drone_integration_ready": True,
             "satellite_intelligence_ready": True,
             "smart_fields_ready": True,
+            "smart_irrigation_ready": True,
+            "soil_intelligence_ready": True,
+            "water_management_ready": True,
+            "environmental_ai_ready": True,
             "engines": {
                 "agro_marketplace": self.config.agro_marketplace,
                 "farm_registry": self.config.farm_registry,
@@ -131,6 +138,7 @@ class AgroEnterpriseApplication:
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
                 "precision_agriculture": self.config.precision_agriculture,
+                "smart_irrigation": self.config.smart_irrigation,
             },
             "marketplace": self.marketplace.status(),
             "farms": self.farms.status(),
@@ -139,6 +147,7 @@ class AgroEnterpriseApplication:
             "knowledge": self.knowledge.status(),
             "dashboard": self.dashboard.status(),
             "precision": self.precision.status(),
+            "irrigation": self.irrigation.status(),
         }
 
 
