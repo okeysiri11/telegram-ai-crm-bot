@@ -1,0 +1,19 @@
+{
+  "application_name": "AI Ecosystem Enterprise Edition",
+  "application": "enterprise",
+  "application_version": "4.0.0-enterprise",
+  "release_status": "Enterprise Edition",
+  "platform_dependency": "AI Platform Core v3.0",
+  "sprint": "12.5",
+  "modules": {
+    "platform": "1.0",
+    "administration": "1.0",
+    "enterprise_ai": "1.0",
+    "services": "1.0",
+    "infrastructure": "1.0",
+    "analytics": "1.0",
+    "knowledge": "1.0",
+    "api": "4.0"
+  },
+  "does_not_modify": ["platform_core", "existing_applications", "existing_apis"]
+}

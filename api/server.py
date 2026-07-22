@@ -76,6 +76,10 @@ def create_app() -> web.Application:
 
     register_ai_os_routes(app)
 
+    from applications.enterprise.api.register import register_enterprise_routes
+
+    register_enterprise_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 
