@@ -11,6 +11,7 @@ from applications.auto_marketplace.api import (
     catalog_handlers,
     crm_handlers,
     finance_handlers,
+    fleet_handlers,
     foundation_handlers,
     internal_handlers,
     logistics_handlers,
@@ -264,6 +265,11 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
         f"{prefix}/leasing/{{lease_id}}/contract",
         transaction_handlers.leasing_contract_handler,
     )
+    app.router.add_post(f"{prefix}/leasing/fleet/quote", fleet_handlers.fleet_leasing_quote_handler)
+    app.router.add_post(
+        f"{prefix}/leasing/fleet/{{lease_id}}/approve",
+        fleet_handlers.fleet_leasing_approve_handler,
+    )
 
     app.router.add_get(f"{prefix}/insurance", transaction_handlers.insurance_health_handler)
     app.router.add_post(f"{prefix}/insurance/quote", transaction_handlers.insurance_quote_handler)
@@ -448,6 +454,44 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
         f"{prefix}/customs/{{customs_id}}/clear",
         logistics_handlers.customs_clear_handler,
     )
+
+    # Sprint 10.7 — Fleet Management, Rental, Corporate Mobility & AI Operations
+    app.router.add_get(f"{prefix}/fleet", fleet_handlers.fleet_health_handler)
+    app.router.add_post(f"{prefix}/fleet", fleet_handlers.fleet_create_handler)
+    app.router.add_get(f"{prefix}/fleet/vehicles", fleet_handlers.fleet_vehicles_handler)
+    app.router.add_post(f"{prefix}/fleet/vehicles", fleet_handlers.fleet_vehicles_handler)
+    app.router.add_post(
+        f"{prefix}/fleet/vehicles/{{fleet_vehicle_id}}/assign",
+        fleet_handlers.fleet_assign_handler,
+    )
+    app.router.add_get(f"{prefix}/fleet/analytics", fleet_handlers.fleet_analytics_handler)
+
+    app.router.add_get(f"{prefix}/rental", fleet_handlers.rental_health_handler)
+    app.router.add_get(f"{prefix}/rental/availability", fleet_handlers.rental_availability_handler)
+    app.router.add_post(f"{prefix}/rental/price", fleet_handlers.rental_price_handler)
+    app.router.add_post(f"{prefix}/rental/reserve", fleet_handlers.rental_reserve_handler)
+    app.router.add_post(f"{prefix}/rental/{{rental_id}}/return", fleet_handlers.rental_return_handler)
+
+    app.router.add_get(f"{prefix}/drivers", fleet_handlers.drivers_handler)
+    app.router.add_post(f"{prefix}/drivers", fleet_handlers.drivers_handler)
+    app.router.add_post(f"{prefix}/drivers/{{driver_id}}/rate", fleet_handlers.drivers_rate_handler)
+
+    app.router.add_get(f"{prefix}/dispatch", fleet_handlers.dispatch_health_handler)
+    app.router.add_get(f"{prefix}/dispatch/jobs", fleet_handlers.dispatch_jobs_handler)
+    app.router.add_post(f"{prefix}/dispatch/jobs", fleet_handlers.dispatch_jobs_handler)
+    app.router.add_post(f"{prefix}/dispatch/jobs/{{job_id}}/assign", fleet_handlers.dispatch_assign_handler)
+    app.router.add_post(f"{prefix}/dispatch/optimize", fleet_handlers.dispatch_optimize_handler)
+    app.router.add_post(f"{prefix}/dispatch/emergency", fleet_handlers.dispatch_emergency_handler)
+
+    app.router.add_get(f"{prefix}/operations", fleet_handlers.operations_health_handler)
+    app.router.add_get(f"{prefix}/operations/executive", fleet_handlers.operations_executive_handler)
+    app.router.add_get(f"{prefix}/operations/map", fleet_handlers.operations_map_handler)
+    app.router.add_post(f"{prefix}/operations/assistant", fleet_handlers.operations_assistant_handler)
+    app.router.add_post(f"{prefix}/operations/ai", fleet_handlers.operations_ai_handler)
+    app.router.add_post(f"{prefix}/operations/telematics", fleet_handlers.operations_telematics_handler)
+    app.router.add_post(f"{prefix}/operations/corporate/book", fleet_handlers.operations_corporate_book_handler)
+    app.router.add_post(f"{prefix}/operations/travel", fleet_handlers.operations_travel_handler)
+    app.router.add_post(f"{prefix}/operations/subscriptions", fleet_handlers.operations_subscription_handler)
 
     # Sprint 6.5 — Documents, Contracts & Financial Operations
     fin = f"{prefix}/finance"

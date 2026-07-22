@@ -179,6 +179,20 @@ class MarketplaceStore:
         self.trade_shipments: EntityStore = EntityStore()
         self.logistics_documents: EntityStore = EntityStore()
         self.fleet_movements: EntityStore = EntityStore()
+        # Sprint 10.7 — fleet / rental / corporate mobility / AI ops
+        self.fleet_registries: EntityStore = EntityStore()
+        self.fleet_vehicles: EntityStore = EntityStore()
+        self.fleet_maintenance_plans: EntityStore = EntityStore()
+        self.fleet_fuel_logs: EntityStore = EntityStore()
+        self.rental_contracts: EntityStore = EntityStore()
+        self.fleet_lease_contracts: EntityStore = EntityStore()
+        self.subscription_plans: EntityStore = EntityStore()
+        self.corporate_assignments: EntityStore = EntityStore()
+        self.mobility_bookings: EntityStore = EntityStore()
+        self.travel_requests: EntityStore = EntityStore()
+        self.fleet_drivers: EntityStore = EntityStore()
+        self.fleet_dispatch_jobs: EntityStore = EntityStore()
+        self.telematics_readings: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

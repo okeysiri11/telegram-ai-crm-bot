@@ -33,8 +33,8 @@ def reset_store():
 
 
 def test_version_and_release_status():
-    assert DEFAULT_CONFIG.application_version == "1.5.0-alpha"
-    assert DEFAULT_CONFIG.release_status == "Logistics Alpha"
+    assert DEFAULT_CONFIG.application_version == "1.6.0-alpha"
+    assert DEFAULT_CONFIG.release_status == "Fleet Alpha"
     assert DEFAULT_CONFIG.platform_dependency == "AI Platform Core v3"
     assert DEFAULT_CONFIG.ecosystem_dependency == "AI Ecosystem v1.5"
 
@@ -66,8 +66,8 @@ async def test_security_audit():
 @pytest.mark.asyncio
 async def test_release_report_production_ready():
     report = await auto_marketplace.production_engine.generate_release_report(run_benchmarks=True)
-    assert report.application_version == "1.5.0-alpha"
-    assert report.release_status == "Logistics Alpha"
+    assert report.application_version == "1.6.0-alpha"
+    assert report.release_status == "Fleet Alpha"
     assert report.production_ready, report.to_dict()
 
 
@@ -92,8 +92,8 @@ def test_deployment_checklist():
 
 def test_release_manifest():
     manifest = auto_marketplace.production_engine.release_manifest()
-    assert manifest["application_version"] == "1.5.0-alpha"
-    assert manifest["release_status"] == "Logistics Alpha"
+    assert manifest["application_version"] == "1.6.0-alpha"
+    assert manifest["release_status"] == "Fleet Alpha"
 
 
 @pytest.mark.asyncio
@@ -101,7 +101,7 @@ async def test_ops_api(client: TestClient):
     resp = await client.get("/api/auto/v1/ops/health")
     assert resp.status == 200
     data = await resp.json()
-    assert data["application_version"] == "1.5.0-alpha"
+    assert data["application_version"] == "1.6.0-alpha"
 
     resp = await client.get("/api/auto/v1/ops/release/report")
     assert resp.status == 200

@@ -1,14 +1,14 @@
-# Auto Marketplace — Logistics (Sprint 10.6)
+# Auto Marketplace — Fleet & Mobility (Sprint 10.7)
 
-Vehicle transport, tracking, customs, and import/export for **Auto Marketplace 1.5.0-alpha**.
+Fleet management, rental, corporate mobility, and AI operations for **Auto Marketplace 1.6.0-alpha**.
 
 | Field | Value |
 |-------|-------|
 | Application name | Auto Marketplace |
-| Application version | `1.5.0-alpha` |
-| Transport engine | `1.0` |
-| Tracking engine | `1.0` |
-| Customs engine | `1.0` |
+| Application version | `1.6.0-alpha` |
+| Fleet engine | `1.0` |
+| Rental engine | `1.0` |
+| Operations engine | `1.0` |
 | Platform | AI Platform Core v3 (bridge only) |
 | Ecosystem | AI Ecosystem v1.5 (bridge only) |
 | API | `/api/auto/v1` |
@@ -21,20 +21,20 @@ Vehicle transport, tracking, customs, and import/export for **Auto Marketplace 1
 flowchart TB
     API["/api/auto/v1"]
     App[AutoMarketplaceApplication]
-    Domains[Catalog Marketplace VIN AutoAI Transactions Service Logistics]
+    Domains[Catalog Marketplace VIN AutoAI Transactions Service Logistics Fleet]
     Bridges[Platform + Ecosystem Bridges]
     Store[MarketplaceStore]
     API --> App --> Domains --> Store
     App --> Bridges
 ```
 
-## Modules (10.6)
+## Modules (10.7)
 
-`transport/` · `vehicle_shipping/` · `carriers/` · `dispatch/` · `tracking/` · `customs/` · `import_export/` · `international/` · `route_optimizer/` · `delivery/` · `fleet_transport/` · `documents/`
+`fleet/` · `rental/` · `leasing/` · `subscriptions/` · `corporate/` · `dispatch/` · `telematics/` · `drivers/` · `operations/` · `executive/` · `mobility/` · `ai_operations/`
 
 ## REST API
 
-`/transport` · `/tracking` · `/import` · `/export` · `/customs` · `/carriers`
+`/fleet` · `/rental` · `/leasing` · `/drivers` · `/dispatch` · `/operations`
 
 ## Docs
 
@@ -43,13 +43,14 @@ flowchart TB
 - [AUTO_TRANSACTIONS.md](AUTO_TRANSACTIONS.md)
 - [AUTO_SERVICE.md](AUTO_SERVICE.md)
 - [AUTO_LOGISTICS.md](AUTO_LOGISTICS.md)
+- [AUTO_FLEET.md](AUTO_FLEET.md)
 
 ```python
 from applications.auto_marketplace import auto_marketplace
 
 health = auto_marketplace.health()
-assert health["application_version"] == "1.5.0-alpha"
-assert health["transport_engine"] == "1.0"
-assert health["tracking_engine"] == "1.0"
-assert health["customs_engine"] == "1.0"
+assert health["application_version"] == "1.6.0-alpha"
+assert health["fleet_engine"] == "1.0"
+assert health["rental_engine"] == "1.0"
+assert health["operations_engine"] == "1.0"
 ```

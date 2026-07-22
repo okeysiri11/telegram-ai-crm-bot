@@ -1,3 +1,3 @@
-from applications.auto_marketplace.operations.service import OperationsService, operations_service
+from applications.auto_marketplace.operations.engine import OperationsEngine, operations_engine
 
-__all__ = ["OperationsService", "operations_service"]
+__all__ = ["OperationsEngine", "operations_engine"]

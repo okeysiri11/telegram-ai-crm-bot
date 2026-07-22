@@ -20,6 +20,7 @@ from applications.auto_marketplace.documents.service import DocumentService, doc
 from applications.auto_marketplace.favorites.service import FavoritesService, favorites_service
 from applications.auto_marketplace.finance.engine import FinanceEngine, finance_engine
 from applications.auto_marketplace.filters.search_engine import SearchEngine, search_engine
+from applications.auto_marketplace.fleet.facade import FleetDomainEngine, fleet_domain_engine
 from applications.auto_marketplace.garage.service import GarageService, garage_service
 from applications.auto_marketplace.inspection.engine import InspectionEngine, inspection_engine
 from applications.auto_marketplace.integrations.ecosystem_bridge import EcosystemBridge, ecosystem_bridge
@@ -80,6 +81,7 @@ class AutoMarketplaceApplication:
         transactions: TransactionDomainEngine | None = None,
         service: ServiceDomainEngine | None = None,
         logistics: LogisticsDomainEngine | None = None,
+        fleet_domain: FleetDomainEngine | None = None,
         payments: PaymentService | None = None,
         delivery: DeliveryService | None = None,
         analytics: AnalyticsService | None = None,
@@ -118,6 +120,7 @@ class AutoMarketplaceApplication:
         self.transactions = transactions or transaction_domain_engine
         self.service = service or service_domain_engine
         self.logistics = logistics or logistics_domain_engine
+        self.fleet_ops = fleet_domain or fleet_domain_engine
         self.payments = payments or payment_service
         self.delivery = delivery or delivery_service
         self.analytics = analytics or analytics_service
@@ -166,6 +169,9 @@ class AutoMarketplaceApplication:
             "transport_engine": self.config.transport_engine,
             "tracking_engine": self.config.tracking_engine,
             "customs_engine": self.config.customs_engine,
+            "fleet_engine": self.config.fleet_engine,
+            "rental_engine": self.config.rental_engine,
+            "operations_engine": self.config.operations_engine,
             "metrics": self.analytics.dashboard_metrics(),
             "foundation": {
                 "catalog": self.catalog.overview(),
@@ -179,6 +185,7 @@ class AutoMarketplaceApplication:
             "transactions": self.transactions.metrics(),
             "service": self.service.metrics(),
             "logistics": self.logistics.metrics(),
+            "fleet_ops": self.fleet_ops.metrics(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
             "crm_leads": self.store.crm_leads.count(),
             "crm_deals": self.store.crm_deals.count(),

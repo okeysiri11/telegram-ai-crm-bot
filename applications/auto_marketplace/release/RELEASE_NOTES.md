@@ -1,3 +1,15 @@
+# Auto Marketplace 1.6.0-alpha — Fleet & Mobility
+
+**Release Status:** Fleet Alpha  
+**Platform Dependency:** AI Platform Core v3  
+**Ecosystem Dependency:** AI Ecosystem v1.5
+
+## Summary
+
+Sprint 10.7 delivers fleet management, rental, fleet leasing, corporate mobility, telematics, driver management, dispatch, executive dashboards, and AI operations under `applications/auto_marketplace/`.
+
+---
+
 # Auto Marketplace 1.5.0-alpha — Logistics
 
 **Release Status:** Logistics Alpha  

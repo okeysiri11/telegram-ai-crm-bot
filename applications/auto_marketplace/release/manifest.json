@@ -1,8 +1,8 @@
 {
   "application": "auto_marketplace",
   "application_name": "Auto Marketplace",
-  "application_version": "1.5.0-alpha",
-  "release_status": "Logistics Alpha",
+  "application_version": "1.6.0-alpha",
+  "release_status": "Fleet Alpha",
   "platform_dependency": "AI Platform Core v3",
   "ecosystem_dependency": "AI Ecosystem v1.5"
 }
