@@ -11,6 +11,7 @@ from applications.legal_enterprise.compliance.facade import ComplianceSuite
 from applications.legal_enterprise.config import DEFAULT_CONFIG, LegalEnterpriseConfig
 from applications.legal_enterprise.courts import CourtInfrastructure
 from applications.legal_enterprise.document_intelligence.facade import DocumentIntelligenceSuite
+from applications.legal_enterprise.executive_intelligence.facade import ExecutiveIntelligenceSuite
 from applications.legal_enterprise.judicial_intelligence.facade import JudicialIntelligenceSuite
 from applications.legal_enterprise.legal_registry import LegalRegistry
 from applications.legal_enterprise.legislation import LegislationRegistry
@@ -31,6 +32,7 @@ class LegalEnterpriseApplication:
         document_intelligence_svc: DocumentIntelligenceSuite | None = None,
         compliance_svc: ComplianceSuite | None = None,
         ai_legal_assistant_svc: AILegalAssistantSuite | None = None,
+        executive_intelligence_svc: ExecutiveIntelligenceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or legal_enterprise_store
@@ -48,6 +50,7 @@ class LegalEnterpriseApplication:
         self.document_intelligence = document_intelligence_svc or DocumentIntelligenceSuite(self.store)
         self.compliance_platform = compliance_svc or ComplianceSuite(self.store)
         self.ai_legal_assistant = ai_legal_assistant_svc or AILegalAssistantSuite(self.store)
+        self.executive_intelligence = executive_intelligence_svc or ExecutiveIntelligenceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -310,6 +313,10 @@ class LegalEnterpriseApplication:
             "legal_research_engine_ready": True,
             "legal_reasoning_ready": True,
             "ai_legal_intelligence_ready": True,
+            "executive_legal_intelligence_ready": True,
+            "decision_support_ready": True,
+            "enterprise_legal_analytics_ready": True,
+            "regulatory_forecasting_ready": True,
             "engines": {
                 "legal_registry": self.config.legal_registry,
                 "legislation_registry": self.config.legislation_registry,
@@ -321,6 +328,7 @@ class LegalEnterpriseApplication:
                 "document_intelligence": self.config.document_intelligence,
                 "compliance": self.config.compliance,
                 "ai_legal_assistant": self.config.ai_legal_assistant,
+                "executive_intelligence": self.config.executive_intelligence,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -336,6 +344,7 @@ class LegalEnterpriseApplication:
             "document_intelligence": self.document_intelligence.status(),
             "compliance_platform": self.compliance_platform.status(),
             "ai_legal_assistant": self.ai_legal_assistant.status(),
+            "executive_intelligence": self.executive_intelligence.status(),
         }
 
 

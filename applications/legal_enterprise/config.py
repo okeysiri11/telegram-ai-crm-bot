@@ -1,4 +1,4 @@
-# Legal Enterprise Platform — Sprint 17.6 AI Legal Assistant.
+# Legal Enterprise Platform — Sprint 17.7 Executive Legal Intelligence.
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class LegalEnterpriseConfig:
     application_name: str = "Legal Intelligence Platform"
     application: str = "legal_enterprise"
-    application_version: str = "4.9.6-enterprise"
-    release_status: str = "AI Legal Assistant"
+    application_version: str = "4.9.7-enterprise"
+    release_status: str = "Executive Legal Intelligence"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.9.5-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.9.6-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/legal-enterprise/v1"
@@ -22,6 +22,7 @@ class LegalEnterpriseConfig:
     document_intelligence_api_prefix: str = "/api/legal-di/v1"
     compliance_api_prefix: str = "/api/legal-cp/v1"
     ai_legal_assistant_api_prefix: str = "/api/legal-aa/v1"
+    executive_intelligence_api_prefix: str = "/api/legal-ei/v1"
     internal_prefix: str = "/internal/legal-enterprise/v1"
     legal_registry: str = "1.0"
     legislation_registry: str = "1.0"
@@ -33,6 +34,7 @@ class LegalEnterpriseConfig:
     document_intelligence: str = "1.0"
     compliance: str = "1.0"
     ai_legal_assistant: str = "1.0"
+    executive_intelligence: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     legal_roles: list[str] = field(
@@ -246,6 +248,55 @@ class LegalEnterpriseConfig:
     )
     aa_knowledge_bases: list[str] = field(
         default_factory=lambda: ["assistant", "research", "opinion", "authority", "reasoning"]
+    )
+    ei_analytics_kinds: list[str] = field(
+        default_factory=lambda: [
+            "case_success",
+            "court_performance",
+            "judge",
+            "legal_cost",
+            "contract",
+            "compliance",
+            "risk_trend",
+        ]
+    )
+    ei_risk_score_types: list[str] = field(
+        default_factory=lambda: ["enterprise", "department", "counterparty", "contract"]
+    )
+    ei_decision_kinds: list[str] = field(
+        default_factory=lambda: [
+            "executive",
+            "priority_action",
+            "strategy",
+            "resource_allocation",
+            "mitigation",
+            "scenario",
+        ]
+    )
+    ei_report_types: list[str] = field(
+        default_factory=lambda: [
+            "daily_briefing",
+            "weekly_summary",
+            "monthly_risk",
+            "nl_report",
+            "strategic_insight",
+        ]
+    )
+    ei_alert_types: list[str] = field(
+        default_factory=lambda: [
+            "critical",
+            "deadline",
+            "compliance",
+            "court",
+            "contract",
+            "regulatory",
+        ]
+    )
+    ei_dashboard_types: list[str] = field(
+        default_factory=lambda: ["executive", "risk", "forecast", "strategy", "operations"]
+    )
+    ei_knowledge_bases: list[str] = field(
+        default_factory=lambda: ["executive", "risk", "forecast", "recommendation", "alert"]
     )
 
 

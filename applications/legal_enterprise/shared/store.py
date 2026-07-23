@@ -221,6 +221,18 @@ class LegalEnterpriseStore:
         self.aa_knowledge: EntityStore = EntityStore()
         self.aa_explanations: EntityStore = EntityStore()
         self.aa_dashboards: EntityStore = EntityStore()
+        # Sprint 17.7 — Executive Legal Intelligence
+        self.ei_overview: EntityStore = EntityStore()
+        self.ei_analytics: EntityStore = EntityStore()
+        self.ei_risks: EntityStore = EntityStore()
+        self.ei_risk_forecasts: EntityStore = EntityStore()
+        self.ei_forecasts: EntityStore = EntityStore()
+        self.ei_recommendations: EntityStore = EntityStore()
+        self.ei_reports: EntityStore = EntityStore()
+        self.ei_qa: EntityStore = EntityStore()
+        self.ei_alerts: EntityStore = EntityStore()
+        self.ei_knowledge: EntityStore = EntityStore()
+        self.ei_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

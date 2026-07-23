@@ -9,6 +9,7 @@ from applications.legal_enterprise.api import (
     cm_handlers,
     cp_handlers,
     di_handlers,
+    ei_handlers,
     handlers,
     ji_handlers,
     li_handlers,
@@ -164,3 +165,26 @@ def register_legal_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{aa}/explain", aa_handlers.aa_explain_handler)
     app.router.add_get(f"{aa}/dashboard", aa_handlers.aa_dashboard_handler)
     app.router.add_post(f"{aa}/dashboard", aa_handlers.aa_dashboard_handler)
+
+    # Sprint 17.7 — Executive Legal Intelligence (additive; prior routes unchanged)
+    ei = DEFAULT_CONFIG.executive_intelligence_api_prefix
+    app.router.add_get(f"{ei}/health", ei_handlers.ei_health_handler)
+    app.router.add_post(f"{ei}/bootstrap", ei_handlers.ei_bootstrap_handler)
+    app.router.add_get(f"{ei}/executive", ei_handlers.ei_executive_handler)
+    app.router.add_post(f"{ei}/executive", ei_handlers.ei_executive_handler)
+    app.router.add_get(f"{ei}/analytics", ei_handlers.ei_analytics_handler)
+    app.router.add_post(f"{ei}/analytics", ei_handlers.ei_analytics_handler)
+    app.router.add_get(f"{ei}/risk", ei_handlers.ei_risk_handler)
+    app.router.add_post(f"{ei}/risk", ei_handlers.ei_risk_handler)
+    app.router.add_get(f"{ei}/forecast", ei_handlers.ei_forecast_handler)
+    app.router.add_post(f"{ei}/forecast", ei_handlers.ei_forecast_handler)
+    app.router.add_get(f"{ei}/decisions", ei_handlers.ei_decisions_handler)
+    app.router.add_post(f"{ei}/decisions", ei_handlers.ei_decisions_handler)
+    app.router.add_get(f"{ei}/ai", ei_handlers.ei_ai_handler)
+    app.router.add_post(f"{ei}/ai", ei_handlers.ei_ai_handler)
+    app.router.add_get(f"{ei}/alerts", ei_handlers.ei_alerts_handler)
+    app.router.add_post(f"{ei}/alerts", ei_handlers.ei_alerts_handler)
+    app.router.add_get(f"{ei}/knowledge", ei_handlers.ei_knowledge_handler)
+    app.router.add_post(f"{ei}/knowledge", ei_handlers.ei_knowledge_handler)
+    app.router.add_get(f"{ei}/dashboard", ei_handlers.ei_dashboard_handler)
+    app.router.add_post(f"{ei}/dashboard", ei_handlers.ei_dashboard_handler)
