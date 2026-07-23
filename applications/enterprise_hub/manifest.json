@@ -1,0 +1,36 @@
+{
+  "application_name": "Enterprise Integration Hub",
+  "application": "enterprise_hub",
+  "application_version": "5.3.0-enterprise",
+  "release_status": "Enterprise Hub Foundation",
+  "platform_dependency": "AI Platform Core v3",
+  "enterprise_foundation": "Enterprise Platform v5.2.0-enterprise",
+  "ecosystem_dependency": "AI Ecosystem v1.5",
+  "sprint": "19.0",
+  "enterprise_registry": "1.0",
+  "integration_layer": "1.0",
+  "enterprise_identity": "1.0",
+  "enterprise_configuration": "1.0",
+  "event_infrastructure": "1.0",
+  "modules": {
+    "enterprise_registry": "1.0",
+    "integration_layer": "1.0",
+    "enterprise_identity": "1.0",
+    "enterprise_configuration": "1.0",
+    "event_infrastructure": "1.0",
+    "knowledge": "1.0",
+    "dashboard": "1.0",
+    "api": "5.3"
+  },
+  "does_not_modify": [
+    "platform_core",
+    "ai_os",
+    "enterprise",
+    "auto_marketplace",
+    "agro_enterprise",
+    "port_enterprise",
+    "crypto_enterprise",
+    "legal_enterprise",
+    "finance_enterprise"
+  ]
+}

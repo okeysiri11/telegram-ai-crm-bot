@@ -100,6 +100,10 @@ def create_app() -> web.Application:
 
     register_finance_enterprise_routes(app)
 
+    from applications.enterprise_hub.api.register import register_enterprise_hub_routes
+
+    register_enterprise_hub_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 
