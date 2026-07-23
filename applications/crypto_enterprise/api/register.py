@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.crypto_enterprise.api import handlers, ta_handlers
+from applications.crypto_enterprise.api import handlers, mm_handlers, ta_handlers
 from applications.crypto_enterprise.api.middleware import auth_middleware
 from applications.crypto_enterprise.config import DEFAULT_CONFIG
 
@@ -49,3 +49,24 @@ def register_crypto_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{ta}/dashboard", ta_handlers.ta_dashboard_handler)
     app.router.add_get(f"{ta}/knowledge", ta_handlers.ta_knowledge_handler)
     app.router.add_post(f"{ta}/knowledge", ta_handlers.ta_knowledge_handler)
+
+    # Sprint 16.2 — Market Microstructure (additive; prior routes unchanged)
+    mm = DEFAULT_CONFIG.market_microstructure_api_prefix
+    app.router.add_get(f"{mm}/health", mm_handlers.mm_health_handler)
+    app.router.add_post(f"{mm}/bootstrap", mm_handlers.mm_bootstrap_handler)
+    app.router.add_get(f"{mm}/order-book", mm_handlers.mm_order_book_handler)
+    app.router.add_post(f"{mm}/order-book", mm_handlers.mm_order_book_handler)
+    app.router.add_get(f"{mm}/trade-flow", mm_handlers.mm_trade_flow_handler)
+    app.router.add_post(f"{mm}/trade-flow", mm_handlers.mm_trade_flow_handler)
+    app.router.add_get(f"{mm}/derivatives", mm_handlers.mm_derivatives_handler)
+    app.router.add_post(f"{mm}/derivatives", mm_handlers.mm_derivatives_handler)
+    app.router.add_get(f"{mm}/liquidations", mm_handlers.mm_liquidations_handler)
+    app.router.add_post(f"{mm}/liquidations", mm_handlers.mm_liquidations_handler)
+    app.router.add_get(f"{mm}/liquidity", mm_handlers.mm_liquidity_handler)
+    app.router.add_post(f"{mm}/liquidity", mm_handlers.mm_liquidity_handler)
+    app.router.add_get(f"{mm}/ai", mm_handlers.mm_ai_handler)
+    app.router.add_post(f"{mm}/ai", mm_handlers.mm_ai_handler)
+    app.router.add_get(f"{mm}/dashboard", mm_handlers.mm_dashboard_handler)
+    app.router.add_post(f"{mm}/dashboard", mm_handlers.mm_dashboard_handler)
+    app.router.add_get(f"{mm}/knowledge", mm_handlers.mm_knowledge_handler)
+    app.router.add_post(f"{mm}/knowledge", mm_handlers.mm_knowledge_handler)

@@ -7,6 +7,7 @@ from typing import Any
 from applications.crypto_enterprise.assets import AssetRegistry
 from applications.crypto_enterprise.config import DEFAULT_CONFIG, CryptoEnterpriseConfig
 from applications.crypto_enterprise.exchanges import ExchangeIntegration
+from applications.crypto_enterprise.market_microstructure.facade import MarketMicrostructureSuite
 from applications.crypto_enterprise.markets import MarketData
 from applications.crypto_enterprise.portfolio import PortfolioManagement
 from applications.crypto_enterprise.services import CryptoDashboard, CryptoKnowledge
@@ -21,6 +22,7 @@ class CryptoEnterpriseApplication:
         config: CryptoEnterpriseConfig | None = None,
         store: CryptoEnterpriseStore | None = None,
         technical_analysis_svc: TechnicalAnalysisSuite | None = None,
+        market_microstructure_svc: MarketMicrostructureSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or crypto_enterprise_store
@@ -31,6 +33,7 @@ class CryptoEnterpriseApplication:
         self.dashboard = CryptoDashboard(self.store)
         self.knowledge = CryptoKnowledge(self.store)
         self.technical_analysis = technical_analysis_svc or TechnicalAnalysisSuite(self.store)
+        self.market_microstructure = market_microstructure_svc or MarketMicrostructureSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -171,12 +174,18 @@ class CryptoEnterpriseApplication:
             "technical_analysis_ready": True,
             "pattern_recognition_ready": True,
             "ai_technical_intelligence_ready": True,
+            "order_book_intelligence_ready": True,
+            "trade_flow_analytics_ready": True,
+            "derivatives_intelligence_ready": True,
+            "liquidity_intelligence_ready": True,
+            "ai_market_interpretation_ready": True,
             "engines": {
                 "exchange_integration": self.config.exchange_integration,
                 "market_data": self.config.market_data,
                 "asset_registry": self.config.asset_registry,
                 "portfolio_management": self.config.portfolio_management,
                 "technical_analysis": self.config.technical_analysis,
+                "market_microstructure": self.config.market_microstructure,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -187,6 +196,7 @@ class CryptoEnterpriseApplication:
             "knowledge": self.knowledge.status(),
             "dashboard": self.dashboard.status(),
             "technical_analysis": self.technical_analysis.status(),
+            "market_microstructure": self.market_microstructure.status(),
         }
 
 
