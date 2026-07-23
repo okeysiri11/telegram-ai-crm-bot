@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.enterprise_hub.api import handlers, kg_handlers, orch_handlers
+from applications.enterprise_hub.api import aa_handlers, handlers, kg_handlers, orch_handlers
 from applications.enterprise_hub.api.middleware import auth_middleware
 from applications.enterprise_hub.config import DEFAULT_CONFIG
 
@@ -74,3 +74,24 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{kg}/dashboard", kg_handlers.kg_dashboard_handler)
     app.router.add_get(f"{kg}/meta", kg_handlers.kg_meta_handler)
     app.router.add_post(f"{kg}/meta", kg_handlers.kg_meta_handler)
+
+    # Sprint 19.3 — Enterprise AI Agents (additive; prior routes unchanged)
+    aa = DEFAULT_CONFIG.ai_agents_api_prefix
+    app.router.add_get(f"{aa}/health", aa_handlers.aa_health_handler)
+    app.router.add_post(f"{aa}/bootstrap", aa_handlers.aa_bootstrap_handler)
+    app.router.add_get(f"{aa}/registry", aa_handlers.aa_registry_handler)
+    app.router.add_post(f"{aa}/registry", aa_handlers.aa_registry_handler)
+    app.router.add_get(f"{aa}/execution", aa_handlers.aa_execution_handler)
+    app.router.add_post(f"{aa}/execution", aa_handlers.aa_execution_handler)
+    app.router.add_get(f"{aa}/collaboration", aa_handlers.aa_collaboration_handler)
+    app.router.add_post(f"{aa}/collaboration", aa_handlers.aa_collaboration_handler)
+    app.router.add_get(f"{aa}/automation", aa_handlers.aa_automation_handler)
+    app.router.add_post(f"{aa}/automation", aa_handlers.aa_automation_handler)
+    app.router.add_get(f"{aa}/intelligence", aa_handlers.aa_intelligence_handler)
+    app.router.add_post(f"{aa}/intelligence", aa_handlers.aa_intelligence_handler)
+    app.router.add_get(f"{aa}/governance", aa_handlers.aa_governance_handler)
+    app.router.add_post(f"{aa}/governance", aa_handlers.aa_governance_handler)
+    app.router.add_get(f"{aa}/dashboard", aa_handlers.aa_dashboard_handler)
+    app.router.add_post(f"{aa}/dashboard", aa_handlers.aa_dashboard_handler)
+    app.router.add_get(f"{aa}/meta", aa_handlers.aa_meta_handler)
+    app.router.add_post(f"{aa}/meta", aa_handlers.aa_meta_handler)

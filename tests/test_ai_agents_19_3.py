@@ -1,4 +1,4 @@
-"""Tests — Unified Knowledge Graph & AI Memory (Sprint 19.2)."""
+"""Tests — Enterprise AI Agents & Autonomous Automation (Sprint 19.3)."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 HUB = "/api/enterprise-hub/v1"
 ORCH = "/api/enterprise-orch/v1"
 KG = "/api/enterprise-kg/v1"
+AA = "/api/enterprise-agents/v1"
 
 
 @pytest.fixture
@@ -39,91 +40,100 @@ def reset_store():
     enterprise_hub.reset()
 
 
-def test_version_knowledge_ready():
+def test_version_agents_ready():
     health = enterprise_hub.health()
     assert health["application_version"] == "5.3.3-enterprise"
     assert health["enterprise_foundation"] == "Enterprise Platform v5.3.2-enterprise"
+    assert health["enterprise_ai_agents_ready"] is True
+    assert health["autonomous_automation_ready"] is True
+    assert health["multi_agent_collaboration_ready"] is True
+    assert health["ai_agent_governance_ready"] is True
     assert health["unified_knowledge_graph_ready"] is True
-    assert health["ai_memory_ready"] is True
-    assert health["semantic_intelligence_ready"] is True
-    assert health["cross_platform_context_ready"] is True
     assert health["ai_orchestrator_ready"] is True
-    assert health["engines"]["unified_knowledge"] == "1.0"
+    assert health["engines"]["ai_agents"] == "1.0"
 
 
-def test_graph_and_memory():
-    suite = enterprise_hub.unified_knowledge
-    org = suite.graph.register_entity(name="QA Org", entity_type="organization")
-    person = suite.graph.register_entity(name="QA User", entity_type="person")
-    rel = suite.graph.relate(
-        from_entity_id=person["entity_id"],
-        to_entity_id=org["entity_id"],
-        relation="member_of",
+def test_agent_automation_collaboration():
+    suite = enterprise_hub.ai_agents
+    agent = suite.registry.register_agent(
+        name="QA Agent",
+        agent_type="general",
+        capabilities=["qa"],
+        permissions=["hub_coordinate"],
     )
-    mem = suite.memory.remember(
-        memory_type="business", subject="QA", content="Test memory"
+    suite.registry.set_lifecycle(agent_id=agent["agent_id"], lifecycle="active")
+    task = suite.execution.assign_task(
+        agent_id=agent["agent_id"], title="QA run", priority=1, mode="sequential"
     )
-    assert rel["relationship_id"] and mem["memory_id"]
+    exec_rec = suite.execution.execute(task_id=task["task_id"])
+    auto = suite.automation.create(
+        name="QA schedule", kind="scheduled", agent_id=agent["agent_id"], schedule="0 * * * *"
+    )
+    peer = suite.registry.register_agent(name="Peer", agent_type="finance", permissions=["view_treasury"])
+    msg = suite.collaboration.communicate(
+        from_agent_id=agent["agent_id"],
+        to_agent_id=peer["agent_id"],
+        message="sync",
+    )
+    assert exec_rec["execution_id"] and auto["automation_id"] and msg["message_id"]
     with pytest.raises(ValidationError):
-        suite.graph.register_entity(name="", entity_type="organization")
+        suite.registry.register_agent(name="", agent_type="general")
 
 
-def test_semantic_sync_ai_bootstrap():
-    suite = enterprise_hub.unified_knowledge
+def test_governance_performance_bootstrap():
+    suite = enterprise_hub.ai_agents
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
     assert boot["version"] == "5.3.3-enterprise"
-    assert boot["graph_id"] and boot["ai_nl_id"] and boot["sync_finance_id"]
-    assert suite.semantic.operate(operation="semantic_search", query="Bidex")["operation"] == "semantic_search"
-    assert suite.ai.nl_query(question="Who is Bidex?")["insight_type"] == "nl_query"
-    for dtype in ("knowledge", "entity", "relationship", "ai_memory", "semantic"):
+    assert boot["agent_general_id"] and boot["emergency_stop_id"] and boot["consensus_id"]
+    health = suite.governance.health_check(agent_id=boot["agent_general_id"])
+    assert health["status"] == "healthy"
+    intel = suite.intelligence.insight(
+        insight_type="task_optimization", subject="qa", detail="batch"
+    )
+    assert intel["insight_id"]
+    for dtype in ("agents", "automation", "execution", "performance", "governance"):
         assert suite.dashboard.render(dashboard_type=dtype)["dashboard_type"] == dtype
 
 
 @pytest.mark.asyncio
-async def test_api_knowledge_graph(client):
-    health = await client.get(f"{KG}/health")
+async def test_api_ai_agents(client):
+    health = await client.get(f"{AA}/health")
     body = await health.json()
     assert body["application_version"] == "5.3.3-enterprise"
-    assert body["unified_knowledge_graph_ready"] is True
-    assert body["ai_memory_ready"] is True
+    assert body["enterprise_ai_agents_ready"] is True
+    assert body["autonomous_automation_ready"] is True
 
-    boot = await client.post(f"{KG}/bootstrap", json={})
+    boot = await client.post(f"{AA}/bootstrap", json={})
     assert boot.status == 201
     boot_body = await boot.json()
 
-    sem = await client.post(
-        f"{KG}/semantic",
-        json={"operation": "entity_resolution", "query": "Acme"},
+    reg = await client.post(
+        f"{AA}/registry",
+        json={"name": "API Agent", "agent_type": "legal", "permissions": ["read_cases"]},
     )
-    assert sem.status == 201
+    assert reg.status == 201
 
-    ai = await client.post(
-        f"{KG}/ai",
-        json={"action": "nl_query", "question": "Summarize graph", "audience": "board"},
-    )
-    assert ai.status == 201
-
-    for prefix in (HUB, ORCH):
+    for prefix in (HUB, ORCH, KG):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         assert (await resp.json())["application_version"] == "5.3.3-enterprise"
 
-    assert boot_body["ontology_id"]
+    assert boot_body["agent_finance_id"]
 
 
-def test_docs_and_regression_19_2():
+def test_docs_and_regression_19_3():
     for name in (
-        "UNIFIED_KNOWLEDGE_GRAPH.md",
-        "AI_MEMORY.md",
-        "SEMANTIC_SEARCH.md",
-        "ENTERPRISE_ONTOLOGY.md",
-        "CROSS_PLATFORM_CONTEXT.md",
+        "AI_AGENTS.md",
+        "AUTONOMOUS_AUTOMATION.md",
+        "MULTI_AGENT_COLLABORATION.md",
+        "AI_AGENT_GOVERNANCE.md",
+        "ENTERPRISE_AUTOMATION.md",
     ):
         assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "UNIFIED_KNOWLEDGE_GRAPH.md").exists()
+    assert (ROOT / "knowledge" / "applications" / "AI_AGENTS.md").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "ai_agents" / "facade.py").exists()
     assert (ROOT / "applications" / "enterprise_hub" / "knowledge" / "facade.py").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "orchestrator" / "facade.py").exists()
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT

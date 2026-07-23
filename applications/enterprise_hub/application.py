@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.enterprise_hub.ai_agents.facade import AIAgentSuite
 from applications.enterprise_hub.config import DEFAULT_CONFIG, EnterpriseHubConfig
 from applications.enterprise_hub.configuration import EnterpriseConfiguration
 from applications.enterprise_hub.events import EventInfrastructure
@@ -24,6 +25,7 @@ class EnterpriseHubApplication:
         store: EnterpriseHubStore | None = None,
         orchestrator_svc: OrchestratorSuite | None = None,
         unified_knowledge_svc: UnifiedKnowledgeSuite | None = None,
+        ai_agents_svc: AIAgentSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -36,6 +38,7 @@ class EnterpriseHubApplication:
         self.dashboard = HubDashboard(self.store)
         self.orchestrator = orchestrator_svc or OrchestratorSuite(self.store)
         self.unified_knowledge = unified_knowledge_svc or UnifiedKnowledgeSuite(self.store)
+        self.ai_agents = ai_agents_svc or AIAgentSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -206,6 +209,10 @@ class EnterpriseHubApplication:
             "ai_memory_ready": True,
             "semantic_intelligence_ready": True,
             "cross_platform_context_ready": True,
+            "enterprise_ai_agents_ready": True,
+            "autonomous_automation_ready": True,
+            "multi_agent_collaboration_ready": True,
+            "ai_agent_governance_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -214,6 +221,7 @@ class EnterpriseHubApplication:
                 "event_infrastructure": self.config.event_infrastructure,
                 "orchestrator": self.config.orchestrator,
                 "unified_knowledge": self.config.unified_knowledge,
+                "ai_agents": self.config.ai_agents,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -226,6 +234,7 @@ class EnterpriseHubApplication:
             "dashboard": self.dashboard.status(),
             "orchestrator": self.orchestrator.status(),
             "unified_knowledge": self.unified_knowledge.status(),
+            "ai_agents": self.ai_agents.status(),
         }
 
 

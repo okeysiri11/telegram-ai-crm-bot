@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 19.2 Unified Knowledge Graph."""
+"""Enterprise Hub — Sprint 19.3 Enterprise AI Agents."""
 
 from __future__ import annotations
 
@@ -9,15 +9,16 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.3.2-enterprise"
-    release_status: str = "Unified Knowledge Graph"
+    application_version: str = "5.3.3-enterprise"
+    release_status: str = "Enterprise AI Agents"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.3.1-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.3.2-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
     orchestrator_api_prefix: str = "/api/enterprise-orch/v1"
     knowledge_graph_api_prefix: str = "/api/enterprise-kg/v1"
+    ai_agents_api_prefix: str = "/api/enterprise-agents/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -26,6 +27,7 @@ class EnterpriseHubConfig:
     event_infrastructure: str = "1.0"
     orchestrator: str = "1.0"
     unified_knowledge: str = "1.0"
+    ai_agents: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -200,6 +202,52 @@ class EnterpriseHubConfig:
             "memory",
             "entity",
             "relationship",
+        ]
+    )
+    aa_agent_types: list[str] = field(
+        default_factory=lambda: [
+            "automotive",
+            "agro",
+            "port",
+            "crypto",
+            "legal",
+            "finance",
+            "general",
+        ]
+    )
+    aa_automation_kinds: list[str] = field(
+        default_factory=lambda: [
+            "scheduled",
+            "event_driven",
+            "rule_based",
+            "approval",
+        ]
+    )
+    aa_intel_types: list[str] = field(
+        default_factory=lambda: [
+            "task_optimization",
+            "resource_optimization",
+            "performance_recommendation",
+            "knowledge_reuse",
+            "context_decision",
+        ]
+    )
+    aa_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "agents",
+            "automation",
+            "execution",
+            "performance",
+            "governance",
+        ]
+    )
+    aa_knowledge_bases: list[str] = field(
+        default_factory=lambda: [
+            "agent_graph",
+            "capability",
+            "execution",
+            "automation",
+            "performance",
         ]
     )
 

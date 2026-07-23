@@ -1,24 +1,16 @@
 # AI Agents
 
-Agents registered in the Unified AI registry:
+**Version:** `5.3.3-enterprise`  
+**Sprint:** 19.3  
+**API:** `/api/enterprise-agents/v1`  
+**Package:** `applications/enterprise_hub/ai_agents/`
 
-| Agent | Status |
-|-------|--------|
-| Chief AI | active |
-| CRM AI | active |
-| Auto AI | active |
-| Agro AI | active |
-| Port AI | active |
-| Drone AI | active |
-| Legal AI | future |
-| Construction AI | future |
-| Medical AI | future |
-| Manufacturing AI | future |
-| Accounting AI | future |
+Enterprise AI Agent Platform for creating, managing, and coordinating autonomous agents across all Enterprise platforms.
 
-Collaboration uses the Platform Multi-Agent Engine facade and may synthesize via existing Drone Chief AI / Ecosystem Assistant bridges.
+## Agent Types
 
-## API
+Automotive · Agro · Port · Crypto · Legal · Finance · General Enterprise
 
-- `GET /api/ai-ecosystem/v1/agents`
-- `POST /api/ai-ecosystem/v1/agents` with `action=collaborate|chief|register`
+## Readiness
+
+Enterprise AI Agents Ready · Autonomous Automation Ready · Multi-Agent Collaboration Ready · AI Agent Governance Ready
