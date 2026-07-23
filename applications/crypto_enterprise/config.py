@@ -1,4 +1,4 @@
-# Crypto Enterprise Platform — Sprint 16.6 On-Chain Intelligence.
+# Crypto Enterprise Platform — Sprint 16.7 AI Crypto Trader.
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class CryptoEnterpriseConfig:
     application_name: str = "Crypto Intelligence Platform"
     application: str = "crypto_enterprise"
-    application_version: str = "4.7.6-enterprise"
-    release_status: str = "On-Chain Intelligence"
+    application_version: str = "4.7.7-enterprise"
+    release_status: str = "AI Crypto Trader"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.7.5-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.7.6-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/crypto-enterprise/v1"
@@ -22,6 +22,7 @@ class CryptoEnterpriseConfig:
     strategy_engine_api_prefix: str = "/api/crypto-se/v1"
     risk_management_api_prefix: str = "/api/crypto-rm/v1"
     onchain_intelligence_api_prefix: str = "/api/crypto-oc/v1"
+    ai_trader_api_prefix: str = "/api/crypto-at/v1"
     internal_prefix: str = "/internal/crypto-enterprise/v1"
     exchange_integration: str = "1.0"
     market_data: str = "1.0"
@@ -33,6 +34,7 @@ class CryptoEnterpriseConfig:
     strategy_engine: str = "1.0"
     risk_management: str = "1.0"
     onchain_intelligence: str = "1.0"
+    ai_trader: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     supported_exchanges: list[str] = field(

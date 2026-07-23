@@ -5,6 +5,7 @@ from __future__ import annotations
 from aiohttp import web
 
 from applications.crypto_enterprise.api import (
+    at_handlers,
     handlers,
     mi_handlers,
     mm_handlers,
@@ -166,3 +167,26 @@ def register_crypto_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{oc}/dashboard", oc_handlers.oc_dashboard_handler)
     app.router.add_get(f"{oc}/knowledge", oc_handlers.oc_knowledge_handler)
     app.router.add_post(f"{oc}/knowledge", oc_handlers.oc_knowledge_handler)
+
+    # Sprint 16.7 — AI Crypto Trader (additive; prior routes unchanged)
+    at = DEFAULT_CONFIG.ai_trader_api_prefix
+    app.router.add_get(f"{at}/health", at_handlers.at_health_handler)
+    app.router.add_post(f"{at}/bootstrap", at_handlers.at_bootstrap_handler)
+    app.router.add_get(f"{at}/decision", at_handlers.at_decision_handler)
+    app.router.add_post(f"{at}/decision", at_handlers.at_decision_handler)
+    app.router.add_get(f"{at}/assistant", at_handlers.at_assistant_handler)
+    app.router.add_post(f"{at}/assistant", at_handlers.at_assistant_handler)
+    app.router.add_get(f"{at}/recommendations", at_handlers.at_recommendations_handler)
+    app.router.add_post(f"{at}/recommendations", at_handlers.at_recommendations_handler)
+    app.router.add_get(f"{at}/portfolio", at_handlers.at_portfolio_handler)
+    app.router.add_post(f"{at}/portfolio", at_handlers.at_portfolio_handler)
+    app.router.add_get(f"{at}/executive", at_handlers.at_executive_handler)
+    app.router.add_post(f"{at}/executive", at_handlers.at_executive_handler)
+    app.router.add_get(f"{at}/explainability", at_handlers.at_explainability_handler)
+    app.router.add_post(f"{at}/explainability", at_handlers.at_explainability_handler)
+    app.router.add_get(f"{at}/alerts", at_handlers.at_alerts_handler)
+    app.router.add_post(f"{at}/alerts", at_handlers.at_alerts_handler)
+    app.router.add_get(f"{at}/dashboard", at_handlers.at_dashboard_handler)
+    app.router.add_post(f"{at}/dashboard", at_handlers.at_dashboard_handler)
+    app.router.add_get(f"{at}/knowledge", at_handlers.at_knowledge_handler)
+    app.router.add_post(f"{at}/knowledge", at_handlers.at_knowledge_handler)

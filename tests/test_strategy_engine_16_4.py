@@ -43,8 +43,8 @@ def reset_store():
 
 def test_version_strategy_engine_ready():
     health = crypto_enterprise.health()
-    assert health["application_version"] == "4.7.6-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.7.5-enterprise"
+    assert health["application_version"] == "4.7.7-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.7.6-enterprise"
     assert health["strategy_builder_ready"] is True
     assert health["backtesting_engine_ready"] is True
     assert health["signal_generation_ready"] is True
@@ -100,7 +100,7 @@ def test_ai_strategy_and_bootstrap():
     suite = crypto_enterprise.strategy_engine
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "4.7.6-enterprise"
+    assert boot["version"] == "4.7.7-enterprise"
     assert boot["strategy_id"] and boot["backtest_id"] and boot["entry_id"]
     eval_row = suite.ai.evaluate(strategy_id=boot["strategy_id"], score=85)
     assert eval_row["grade"] == "A"
@@ -114,7 +114,7 @@ def test_ai_strategy_and_bootstrap():
 async def test_api_strategy_engine(client):
     health = await client.get(f"{SE}/health")
     body = await health.json()
-    assert body["application_version"] == "4.7.6-enterprise"
+    assert body["application_version"] == "4.7.7-enterprise"
     assert body["strategy_builder_ready"] is True
     assert body["portfolio_simulation_ready"] is True
 
@@ -144,7 +144,7 @@ async def test_api_strategy_engine(client):
     for path in (PREFIX, TA, MM, MI):
         resp = await client.get(f"{path}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "4.7.6-enterprise"
+        assert (await resp.json())["application_version"] == "4.7.7-enterprise"
 
 
 def test_docs_and_regression_16_4():
@@ -173,7 +173,7 @@ def test_docs_and_regression_16_4():
     assert PORT.application_version == "4.6.0-enterprise"
     assert PORT_ERP.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "crypto_enterprise" / "manifest.json").read_text()
-    assert "4.7.6-enterprise" in manifest
-    assert "16.6" in manifest
+    assert "4.7.7-enterprise" in manifest
+    assert "16.7" in manifest
     assert (ROOT / "applications" / "crypto_enterprise" / "market_intelligence" / "facade.py").exists()
     assert (ROOT / "applications" / "crypto_enterprise" / "market_microstructure" / "facade.py").exists()

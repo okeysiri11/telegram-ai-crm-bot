@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_crypto_enterprise_ready():
     health = crypto_enterprise.health()
-    assert health["application_version"] == "4.7.6-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.7.5-enterprise"
+    assert health["application_version"] == "4.7.7-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.7.6-enterprise"
     assert health["crypto_enterprise_foundation_ready"] is True
     assert health["exchange_integration_ready"] is True
     assert health["market_data_ready"] is True
@@ -82,7 +82,7 @@ def test_assets_and_portfolio():
 async def test_api_crypto_enterprise(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.7.6-enterprise"
+    assert body["application_version"] == "4.7.7-enterprise"
     assert body["exchange_integration_ready"] is True
     assert body["market_data_ready"] is True
 
@@ -137,8 +137,8 @@ def test_docs_and_regression_16_0():
     assert PORT.application_version == "4.6.0-enterprise"
     assert PORT_ERP.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "crypto_enterprise" / "manifest.json").read_text()
-    assert "4.7.6-enterprise" in manifest
-    assert "16.6" in manifest
+    assert "4.7.7-enterprise" in manifest
+    assert "16.7" in manifest
     # Prior Port routes remain registered in server (not modified package contents)
     assert (ROOT / "applications" / "port_enterprise" / "enterprise_certification" / "facade.py").exists()
     _ = (PE, PEC)

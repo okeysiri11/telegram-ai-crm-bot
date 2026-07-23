@@ -1,24 +1,22 @@
 # Decision Support
 
-**Version:** `4.5.7-enterprise`  
-**Sprint:** 15.7  
-**Foundation:** Enterprise Platform v4.5.6-enterprise  
-**Package:** `applications/port_enterprise/ai_port_director/`  
-**API:** `/api/port-ai-director/v1`
+**Version:** `4.7.7-enterprise`  
+**Sprint:** 16.7  
+**Package:** `applications/crypto_enterprise/ai_trader/`  
+**API:** `/api/crypto-at/v1`
 
 ## Capabilities
 
-- Decision engine and scenario analysis
-- Operational recommendations and resource allocation
-- Priority management, cost optimization, profitability analysis
-- Strategic planning
+- Multi-factor market decision engine
+- Bullish/bearish/neutral probability and confidence scoring
+- Scenario generation and opportunity ranking
+- Risk classification
+- Natural language chat and executive briefings
 
 ## Endpoints
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET/POST | `/decisions` | Decide, scenario, recommend, allocate, priority, cost, profitability, strategy |
+`/decision` · `/assistant` · `/executive`
 
 ## Readiness
 
-Decision Support Ready (within AI Port Director platform)
+Decision Support Ready · Executive Intelligence Ready
