@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.legal_enterprise.api import handlers, ji_handlers, li_handlers
+from applications.legal_enterprise.api import cm_handlers, handlers, ji_handlers, li_handlers
 from applications.legal_enterprise.api.middleware import auth_middleware
 from applications.legal_enterprise.config import DEFAULT_CONFIG
 
@@ -70,3 +70,24 @@ def register_legal_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{ji}/dashboard", ji_handlers.ji_dashboard_handler)
     app.router.add_get(f"{ji}/knowledge", ji_handlers.ji_knowledge_handler)
     app.router.add_post(f"{ji}/knowledge", ji_handlers.ji_knowledge_handler)
+
+    # Sprint 17.3 — Case Management Platform (additive; prior routes unchanged)
+    cm = DEFAULT_CONFIG.case_management_api_prefix
+    app.router.add_get(f"{cm}/health", cm_handlers.cm_health_handler)
+    app.router.add_post(f"{cm}/bootstrap", cm_handlers.cm_bootstrap_handler)
+    app.router.add_get(f"{cm}/cases", cm_handlers.cm_cases_handler)
+    app.router.add_post(f"{cm}/cases", cm_handlers.cm_cases_handler)
+    app.router.add_get(f"{cm}/calendar", cm_handlers.cm_calendar_handler)
+    app.router.add_post(f"{cm}/calendar", cm_handlers.cm_calendar_handler)
+    app.router.add_get(f"{cm}/deadlines", cm_handlers.cm_deadlines_handler)
+    app.router.add_post(f"{cm}/deadlines", cm_handlers.cm_deadlines_handler)
+    app.router.add_get(f"{cm}/tasks", cm_handlers.cm_tasks_handler)
+    app.router.add_post(f"{cm}/tasks", cm_handlers.cm_tasks_handler)
+    app.router.add_get(f"{cm}/documents", cm_handlers.cm_documents_handler)
+    app.router.add_post(f"{cm}/documents", cm_handlers.cm_documents_handler)
+    app.router.add_get(f"{cm}/ai", cm_handlers.cm_ai_handler)
+    app.router.add_post(f"{cm}/ai", cm_handlers.cm_ai_handler)
+    app.router.add_get(f"{cm}/dashboard", cm_handlers.cm_dashboard_handler)
+    app.router.add_post(f"{cm}/dashboard", cm_handlers.cm_dashboard_handler)
+    app.router.add_get(f"{cm}/knowledge", cm_handlers.cm_knowledge_handler)
+    app.router.add_post(f"{cm}/knowledge", cm_handlers.cm_knowledge_handler)

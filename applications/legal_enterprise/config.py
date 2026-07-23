@@ -1,4 +1,4 @@
-# Legal Enterprise Platform — Sprint 17.2 Judicial Intelligence.
+# Legal Enterprise Platform — Sprint 17.3 Case Management Platform.
 
 from __future__ import annotations
 
@@ -9,20 +9,22 @@ from dataclasses import dataclass, field
 class LegalEnterpriseConfig:
     application_name: str = "Legal Intelligence Platform"
     application: str = "legal_enterprise"
-    application_version: str = "4.9.2-enterprise"
-    release_status: str = "Judicial Intelligence"
+    application_version: str = "4.9.3-enterprise"
+    release_status: str = "Case Management Platform"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.9.1-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.9.2-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/legal-enterprise/v1"
     legislation_intelligence_api_prefix: str = "/api/legal-li/v1"
     judicial_intelligence_api_prefix: str = "/api/legal-ji/v1"
+    case_management_api_prefix: str = "/api/legal-cm/v1"
     internal_prefix: str = "/internal/legal-enterprise/v1"
     legal_registry: str = "1.0"
     legislation_registry: str = "1.0"
     court_infrastructure: str = "1.0"
     case_management: str = "1.0"
+    case_management_platform: str = "1.0"
     legislation_intelligence: str = "1.0"
     judicial_intelligence: str = "1.0"
     knowledge: str = "1.0"
@@ -143,6 +145,45 @@ class LegalEnterpriseConfig:
     )
     ji_knowledge_bases: list[str] = field(
         default_factory=lambda: ["judicial", "decision", "judge", "court", "case_law"]
+    )
+    cm_case_statuses: list[str] = field(
+        default_factory=lambda: [
+            "intake",
+            "active",
+            "hearing",
+            "appeal",
+            "settled",
+            "closed",
+            "archived",
+        ]
+    )
+    cm_priorities: list[str] = field(
+        default_factory=lambda: ["low", "medium", "high", "critical"]
+    )
+    cm_categories: list[str] = field(
+        default_factory=lambda: [
+            "civil",
+            "commercial",
+            "criminal",
+            "administrative",
+            "labor",
+            "family",
+        ]
+    )
+    cm_deadline_types: list[str] = field(
+        default_factory=lambda: [
+            "procedural",
+            "limitation",
+            "appeal",
+            "evidence",
+            "filing",
+        ]
+    )
+    cm_dashboard_types: list[str] = field(
+        default_factory=lambda: ["case", "calendar", "deadline", "workflow", "ai_case"]
+    )
+    cm_knowledge_bases: list[str] = field(
+        default_factory=lambda: ["case", "deadline", "task", "document", "calendar"]
     )
 
 
