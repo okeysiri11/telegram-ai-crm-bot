@@ -1,4 +1,4 @@
-"""Tests — Unified Knowledge Graph & AI Memory (Sprint 19.2)."""
+"""Tests — Enterprise AI Orchestration Platform (Sprint 20.1)."""
 
 from __future__ import annotations
 
@@ -17,6 +17,15 @@ ROOT = Path(__file__).resolve().parents[1]
 HUB = "/api/enterprise-hub/v1"
 ORCH = "/api/enterprise-orch/v1"
 KG = "/api/enterprise-kg/v1"
+AA = "/api/enterprise-agents/v1"
+CM = "/api/enterprise-comms/v1"
+WF = "/api/enterprise-workflow/v1"
+EIP = "/api/enterprise-eip/v1"
+EDP = "/api/enterprise-edp/v1"
+ISAM = "/api/enterprise-isam/v1"
+OBS = "/api/enterprise-obs/v1"
+TN = "/api/enterprise-tenancy/v1"
+AOP = "/api/enterprise-aop/v1"
 
 
 @pytest.fixture
@@ -39,91 +48,84 @@ def reset_store():
     enterprise_hub.reset()
 
 
-def test_version_knowledge_ready():
+def test_version_aop_ready():
     health = enterprise_hub.health()
     assert health["application_version"] == "5.4.1-enterprise"
     assert health["enterprise_foundation"] == "Enterprise Platform v5.4.0-enterprise"
-    assert health["unified_knowledge_graph_ready"] is True
-    assert health["ai_memory_ready"] is True
-    assert health["semantic_intelligence_ready"] is True
-    assert health["cross_platform_context_ready"] is True
-    assert health["ai_orchestrator_ready"] is True
-    assert health["engines"]["unified_knowledge"] == "1.0"
+    assert health["ai_orchestration_ready"] is True
+    assert health["agent_registry_ready"] is True
+    assert health["task_planning_ready"] is True
+    assert health["result_aggregation_ready"] is True
+    assert health["multi_tenant_ready"] is True
+    assert health["engines"]["ai_orchestrator"] == "1.0"
+    assert health["engines"]["orchestrator"] == "1.0"
 
 
-def test_graph_and_memory():
-    suite = enterprise_hub.unified_knowledge
-    org = suite.graph.register_entity(name="QA Org", entity_type="organization")
-    person = suite.graph.register_entity(name="QA User", entity_type="person")
-    rel = suite.graph.relate(
-        from_entity_id=person["entity_id"],
-        to_entity_id=org["entity_id"],
-        relation="member_of",
+def test_registry_orchestrate_policy():
+    suite = enterprise_hub.ai_orchestrator
+    legal = suite.registry.register(name="Legal", specialization="legal", cost_per_task=0.04)
+    suite.registry.register(name="Finance", specialization="finance")
+    suite.registry.register(name="CRM", specialization="crm")
+    suite.registry.register(name="Writer", specialization="writer")
+    suite.registry.register(name="Agg", specialization="aggregator")
+    suite.policy.define(kind="cost_quality", name="cap", rules={"max_cost": 50})
+    run = suite.orchestrator.orchestrate(
+        request="Подготовить коммерческое предложение.", strategy="sequential"
     )
-    mem = suite.memory.remember(
-        memory_type="business", subject="QA", content="Test memory"
-    )
-    assert rel["relationship_id"] and mem["memory_id"]
+    assert run["task_id"] and run["aggregation_id"] and run["result"]["ok"] is True
     with pytest.raises(ValidationError):
-        suite.graph.register_entity(name="", entity_type="organization")
+        suite.registry.register(name="", specialization="x")
+    assert legal["agent_id"]
 
 
-def test_semantic_sync_ai_bootstrap():
-    suite = enterprise_hub.unified_knowledge
+def test_bootstrap_analytics():
+    suite = enterprise_hub.ai_orchestrator
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
     assert boot["version"] == "5.4.1-enterprise"
-    assert boot["graph_id"] and boot["ai_nl_id"] and boot["sync_finance_id"]
-    assert suite.semantic.operate(operation="semantic_search", query="Bidex")["operation"] == "semantic_search"
-    assert suite.ai.nl_query(question="Who is Bidex?")["insight_type"] == "nl_query"
-    for dtype in ("knowledge", "entity", "relationship", "ai_memory", "semantic"):
-        assert suite.dashboard.render(dashboard_type=dtype)["dashboard_type"] == dtype
+    assert boot["execution_id"] and boot["performance_id"] and boot["cost_id"]
+    assert "sequential" in boot["strategies"]
 
 
 @pytest.mark.asyncio
-async def test_api_knowledge_graph(client):
-    health = await client.get(f"{KG}/health")
+async def test_api_aop(client):
+    health = await client.get(f"{AOP}/health")
     body = await health.json()
     assert body["application_version"] == "5.4.1-enterprise"
-    assert body["unified_knowledge_graph_ready"] is True
-    assert body["ai_memory_ready"] is True
+    assert body["ai_orchestration_ready"] is True
 
-    boot = await client.post(f"{KG}/bootstrap", json={})
+    boot = await client.post(f"{AOP}/bootstrap", json={})
     assert boot.status == 201
     boot_body = await boot.json()
 
-    sem = await client.post(
-        f"{KG}/semantic",
-        json={"operation": "entity_resolution", "query": "Acme"},
+    created = await client.post(
+        f"{AOP}/agents",
+        json={"name": "Ops", "specialization": "ops"},
     )
-    assert sem.status == 201
+    assert created.status == 201
 
-    ai = await client.post(
-        f"{KG}/ai",
-        json={"action": "nl_query", "question": "Summarize graph", "audience": "board"},
-    )
-    assert ai.status == 201
-
-    for prefix in (HUB, ORCH):
+    for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         assert (await resp.json())["application_version"] == "5.4.1-enterprise"
 
-    assert boot_body["ontology_id"]
+    assert boot_body["aggregation_id"]
 
 
-def test_docs_and_regression_19_2():
+def test_docs_and_regression_20_1():
     for name in (
-        "UNIFIED_KNOWLEDGE_GRAPH.md",
-        "AI_MEMORY.md",
-        "SEMANTIC_SEARCH.md",
-        "ENTERPRISE_ONTOLOGY.md",
-        "CROSS_PLATFORM_CONTEXT.md",
+        "ENTERPRISE_AI_ORCHESTRATION.md",
+        "AOP_AGENTS.md",
+        "AOP_PLANNING.md",
+        "AOP_CONTEXT_MEMORY.md",
+        "AOP_ANALYTICS.md",
     ):
         assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "UNIFIED_KNOWLEDGE_GRAPH.md").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "knowledge" / "facade.py").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "orchestrator" / "facade.py").exists()
+    assert (ROOT / "knowledge" / "applications" / "ENTERPRISE_AI_ORCHESTRATION.md").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "ai_orchestrator" / "facade.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "ai_orchestrator" / "agents" / "registry.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "ai_orchestrator" / "strategies" / "parallel.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "ai_orchestrator" / "analytics" / "costs.py").exists()
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT

@@ -10,6 +10,7 @@ from applications.enterprise_hub.communications import api as comm_api
 from applications.enterprise_hub.config import DEFAULT_CONFIG
 from applications.enterprise_hub.data_platform import api as edp_api
 from applications.enterprise_hub.integrations import api as eip_api
+from applications.enterprise_hub.ai_orchestrator import api as aop_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
 from applications.enterprise_hub.tenancy import api as tenancy_api
@@ -273,3 +274,29 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{tn}/migration", tenancy_api.tenancy_migration_handler)
     app.router.add_get(f"{tn}/analytics", tenancy_api.tenancy_analytics_handler)
     app.router.add_post(f"{tn}/analytics", tenancy_api.tenancy_analytics_handler)
+
+    # Sprint 20.1 — AI Orchestration Platform (additive; prior routes unchanged)
+    aop = DEFAULT_CONFIG.ai_orchestrator_api_prefix
+    app.router.add_get(f"{aop}/health", aop_api.aop_health_handler)
+    app.router.add_post(f"{aop}/bootstrap", aop_api.aop_bootstrap_handler)
+    app.router.add_get(f"{aop}/agents", aop_api.aop_agents_handler)
+    app.router.add_post(f"{aop}/agents", aop_api.aop_agents_handler)
+    app.router.add_get(f"{aop}/tasks", aop_api.aop_tasks_handler)
+    app.router.add_post(f"{aop}/tasks", aop_api.aop_tasks_handler)
+    app.router.add_post(f"{aop}/orchestrate", aop_api.aop_orchestrate_handler)
+    app.router.add_get(f"{aop}/plan", aop_api.aop_plan_handler)
+    app.router.add_post(f"{aop}/plan", aop_api.aop_plan_handler)
+    app.router.add_get(f"{aop}/dispatch", aop_api.aop_dispatch_handler)
+    app.router.add_post(f"{aop}/dispatch", aop_api.aop_dispatch_handler)
+    app.router.add_get(f"{aop}/execute", aop_api.aop_execute_handler)
+    app.router.add_post(f"{aop}/execute", aop_api.aop_execute_handler)
+    app.router.add_get(f"{aop}/context", aop_api.aop_context_handler)
+    app.router.add_post(f"{aop}/context", aop_api.aop_context_handler)
+    app.router.add_get(f"{aop}/memory", aop_api.aop_memory_handler)
+    app.router.add_post(f"{aop}/memory", aop_api.aop_memory_handler)
+    app.router.add_get(f"{aop}/aggregate", aop_api.aop_aggregate_handler)
+    app.router.add_post(f"{aop}/aggregate", aop_api.aop_aggregate_handler)
+    app.router.add_get(f"{aop}/policy", aop_api.aop_policy_handler)
+    app.router.add_post(f"{aop}/policy", aop_api.aop_policy_handler)
+    app.router.add_get(f"{aop}/analytics", aop_api.aop_analytics_handler)
+    app.router.add_post(f"{aop}/analytics", aop_api.aop_analytics_handler)

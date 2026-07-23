@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from applications.enterprise_hub.ai_agents.facade import AIAgentSuite
+from applications.enterprise_hub.ai_orchestrator.facade import AIOrchestrationSuite
 from applications.enterprise_hub.communications.facade import CommunicationsSuite
 from applications.enterprise_hub.config import DEFAULT_CONFIG, EnterpriseHubConfig
 from applications.enterprise_hub.configuration import EnterpriseConfiguration
@@ -40,6 +41,7 @@ class EnterpriseHubApplication:
         isam_svc: SecuritySuite | None = None,
         observability_svc: ObservabilitySuite | None = None,
         tenancy_svc: TenancySuite | None = None,
+        ai_orchestrator_svc: AIOrchestrationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -60,6 +62,7 @@ class EnterpriseHubApplication:
         self.isam = isam_svc or SecuritySuite(self.store)
         self.observability = observability_svc or ObservabilitySuite(self.store)
         self.tenancy = tenancy_svc or TenancySuite(self.store)
+        self.ai_orchestrator = ai_orchestrator_svc or AIOrchestrationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -263,6 +266,10 @@ class EnterpriseHubApplication:
             "isolation_ready": True,
             "licensing_ready": True,
             "billing_ready": True,
+            "ai_orchestration_ready": True,
+            "agent_registry_ready": True,
+            "task_planning_ready": True,
+            "result_aggregation_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -279,6 +286,7 @@ class EnterpriseHubApplication:
                 "isam": self.config.isam,
                 "observability": self.config.observability,
                 "tenancy": self.config.tenancy,
+                "ai_orchestrator": self.config.ai_orchestrator,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -299,6 +307,7 @@ class EnterpriseHubApplication:
             "isam": self.isam.status(),
             "observability": self.observability.status(),
             "tenancy": self.tenancy.status(),
+            "ai_orchestrator": self.ai_orchestrator.status(),
         }
 
 

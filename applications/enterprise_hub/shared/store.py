@@ -258,6 +258,22 @@ class EnterpriseHubStore:
         self.tn_imports: EntityStore = EntityStore()
         self.tn_exports: EntityStore = EntityStore()
         self.tn_migrations: EntityStore = EntityStore()
+        # Sprint 20.1 — AI Orchestration Platform
+        self.aop_agents: EntityStore = EntityStore()
+        self.aop_lifecycle: EntityStore = EntityStore()
+        self.aop_health: EntityStore = EntityStore()
+        self.aop_capabilities: EntityStore = EntityStore()
+        self.aop_tasks: EntityStore = EntityStore()
+        self.aop_plans: EntityStore = EntityStore()
+        self.aop_dispatches: EntityStore = EntityStore()
+        self.aop_schedule: EntityStore = EntityStore()
+        self.aop_executions: EntityStore = EntityStore()
+        self.aop_contexts: EntityStore = EntityStore()
+        self.aop_memory: EntityStore = EntityStore()
+        self.aop_aggregations: EntityStore = EntityStore()
+        self.aop_policies: EntityStore = EntityStore()
+        self.aop_policy_evals: EntityStore = EntityStore()
+        self.aop_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
