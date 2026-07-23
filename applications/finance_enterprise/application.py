@@ -11,6 +11,7 @@ from applications.finance_enterprise.config import DEFAULT_CONFIG, FinanceEnterp
 from applications.finance_enterprise.currency import MultiCurrency
 from applications.finance_enterprise.digital_assets.facade import DigitalAssetsSuite
 from applications.finance_enterprise.finance_registry import FinanceRegistry
+from applications.finance_enterprise.integration.facade import IntegrationSuite
 from applications.finance_enterprise.ledger import GeneralLedger
 from applications.finance_enterprise.payments.facade import PaymentsSuite
 from applications.finance_enterprise.reporting.facade import ReportingSuite
@@ -31,6 +32,7 @@ class FinanceEnterpriseApplication:
         digital_assets_svc: DigitalAssetsSuite | None = None,
         reporting_svc: ReportingSuite | None = None,
         ai_cfo_svc: AICFOSuite | None = None,
+        integration_svc: IntegrationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or finance_enterprise_store
@@ -46,6 +48,7 @@ class FinanceEnterpriseApplication:
         self.digital_assets = digital_assets_svc or DigitalAssetsSuite(self.store)
         self.reporting = reporting_svc or ReportingSuite(self.store)
         self.ai_cfo = ai_cfo_svc or AICFOSuite(self.store)
+        self.integration = integration_svc or IntegrationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -195,6 +198,10 @@ class FinanceEnterpriseApplication:
             "financial_decision_support_ready": True,
             "financial_modeling_ready": True,
             "executive_financial_intelligence_ready": True,
+            "enterprise_financial_integration_ready": True,
+            "cross_platform_operations_ready": True,
+            "financial_event_bus_ready": True,
+            "ai_enterprise_finance_ready": True,
             "engines": {
                 "financial_registry": self.config.financial_registry,
                 "general_ledger": self.config.general_ledger,
@@ -206,6 +213,7 @@ class FinanceEnterpriseApplication:
                 "digital_assets": self.config.digital_assets,
                 "reporting": self.config.reporting,
                 "ai_cfo": self.config.ai_cfo,
+                "integration": self.config.integration,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -221,6 +229,7 @@ class FinanceEnterpriseApplication:
             "digital_assets": self.digital_assets.status(),
             "reporting": self.reporting.status(),
             "ai_cfo": self.ai_cfo.status(),
+            "integration": self.integration.status(),
         }
 
 

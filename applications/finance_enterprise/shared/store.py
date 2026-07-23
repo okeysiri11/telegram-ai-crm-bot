@@ -188,6 +188,19 @@ class FinanceEnterpriseStore:
         self.cfo_reports: EntityStore = EntityStore()
         self.cfo_knowledge: EntityStore = EntityStore()
         self.cfo_dashboards: EntityStore = EntityStore()
+        # Sprint 18.7 — Enterprise Financial Integration
+        self.int_event_types: EntityStore = EntityStore()
+        self.int_events: EntityStore = EntityStore()
+        self.int_event_logs: EntityStore = EntityStore()
+        self.int_routes: EntityStore = EntityStore()
+        self.int_replays: EntityStore = EntityStore()
+        self.int_monitors: EntityStore = EntityStore()
+        self.int_operations: EntityStore = EntityStore()
+        self.int_analytics: EntityStore = EntityStore()
+        self.int_dependencies: EntityStore = EntityStore()
+        self.int_ai_insights: EntityStore = EntityStore()
+        self.int_knowledge: EntityStore = EntityStore()
+        self.int_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

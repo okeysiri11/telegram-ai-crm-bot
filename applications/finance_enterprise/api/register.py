@@ -9,6 +9,7 @@ from applications.finance_enterprise.api import (
     cfo_handlers,
     da_handlers,
     handlers,
+    int_handlers,
     pay_handlers,
     rpt_handlers,
     tr_handlers,
@@ -168,3 +169,20 @@ def register_finance_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{cfo}/dashboard", cfo_handlers.cfo_dashboard_handler)
     app.router.add_get(f"{cfo}/knowledge", cfo_handlers.cfo_knowledge_handler)
     app.router.add_post(f"{cfo}/knowledge", cfo_handlers.cfo_knowledge_handler)
+
+    # Sprint 18.7 — Enterprise Financial Integration (additive; prior routes unchanged)
+    integ = DEFAULT_CONFIG.integration_api_prefix
+    app.router.add_get(f"{integ}/health", int_handlers.int_health_handler)
+    app.router.add_post(f"{integ}/bootstrap", int_handlers.int_bootstrap_handler)
+    app.router.add_get(f"{integ}/events", int_handlers.int_events_handler)
+    app.router.add_post(f"{integ}/events", int_handlers.int_events_handler)
+    app.router.add_get(f"{integ}/platforms", int_handlers.int_platforms_handler)
+    app.router.add_post(f"{integ}/platforms", int_handlers.int_platforms_handler)
+    app.router.add_get(f"{integ}/intelligence", int_handlers.int_intelligence_handler)
+    app.router.add_post(f"{integ}/intelligence", int_handlers.int_intelligence_handler)
+    app.router.add_get(f"{integ}/ai", int_handlers.int_ai_handler)
+    app.router.add_post(f"{integ}/ai", int_handlers.int_ai_handler)
+    app.router.add_get(f"{integ}/dashboard", int_handlers.int_dashboard_handler)
+    app.router.add_post(f"{integ}/dashboard", int_handlers.int_dashboard_handler)
+    app.router.add_get(f"{integ}/knowledge", int_handlers.int_knowledge_handler)
+    app.router.add_post(f"{integ}/knowledge", int_handlers.int_knowledge_handler)
