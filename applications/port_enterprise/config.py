@@ -1,4 +1,4 @@
-# Port Enterprise Platform — Sprint 15.4 Customs & Trade.
+# Port Enterprise Platform — Sprint 15.5 Warehouse & Distribution.
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class PortEnterpriseConfig:
     application_name: str = "Port Enterprise Platform"
     application: str = "port_enterprise"
-    application_version: str = "4.5.4-enterprise"
-    release_status: str = "Customs & International Trade"
+    application_version: str = "4.5.5-enterprise"
+    release_status: str = "Warehouse & Distribution"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.5.3-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.5.4-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/port-enterprise/v1"
@@ -20,6 +20,7 @@ class PortEnterpriseConfig:
     container_management_api_prefix: str = "/api/port-containers/v1"
     multimodal_logistics_api_prefix: str = "/api/port-multimodal/v1"
     customs_trade_api_prefix: str = "/api/port-customs/v1"
+    warehouse_distribution_api_prefix: str = "/api/port-warehouse/v1"
     internal_prefix: str = "/internal/port-enterprise/v1"
     port_registry: str = "1.0"
     terminal_management: str = "1.0"
@@ -31,6 +32,7 @@ class PortEnterpriseConfig:
     container_management: str = "1.0"
     multimodal_logistics: str = "1.0"
     customs_trade: str = "1.0"
+    warehouse_distribution: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     terminal_types: list[str] = field(

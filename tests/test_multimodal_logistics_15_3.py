@@ -42,8 +42,8 @@ def reset_store():
 
 def test_version_multimodal_ready():
     health = port_enterprise.health()
-    assert health["application_version"] == "4.5.4-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.5.3-enterprise"
+    assert health["application_version"] == "4.5.5-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.5.4-enterprise"
     assert health["rail_logistics_ready"] is True
     assert health["truck_logistics_ready"] is True
     assert health["multimodal_platform_ready"] is True
@@ -90,7 +90,7 @@ def test_shipment_multimodal_ai():
 async def test_api_multimodal(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.5.4-enterprise"
+    assert body["application_version"] == "4.5.5-enterprise"
     assert body["rail_logistics_ready"] is True
     assert body["ai_logistics_ready"] is True
 
@@ -144,5 +144,5 @@ def test_docs_and_regression_15_3():
     assert AGRO.application_version == "4.4.0-enterprise"
     assert PORT_ERP.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "port_enterprise" / "manifest.json").read_text()
-    assert "4.5.4-enterprise" in manifest
-    assert "15.4" in manifest
+    assert "4.5.5-enterprise" in manifest
+    assert "15.5" in manifest

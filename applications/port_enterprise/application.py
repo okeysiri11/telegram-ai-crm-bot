@@ -13,6 +13,7 @@ from applications.port_enterprise.navigation.facade import NavigationSuite
 from applications.port_enterprise.operations import PortDashboard, PortKnowledge, PortOperations
 from applications.port_enterprise.registry import PortRegistry, TerminalManagement
 from applications.port_enterprise.shared.store import PortEnterpriseStore, port_enterprise_store
+from applications.port_enterprise.warehouse_distribution.facade import WarehouseDistributionSuite
 
 
 class PortEnterpriseApplication:
@@ -25,6 +26,7 @@ class PortEnterpriseApplication:
         container_mgmt_svc: ContainerManagementSuite | None = None,
         multimodal_svc: MultimodalLogisticsSuite | None = None,
         customs_svc: CustomsTradeSuite | None = None,
+        warehouse_svc: WarehouseDistributionSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or port_enterprise_store
@@ -40,6 +42,7 @@ class PortEnterpriseApplication:
         self.container_management = container_mgmt_svc or ContainerManagementSuite(self.store)
         self.multimodal_logistics = multimodal_svc or MultimodalLogisticsSuite(self.store)
         self.customs_trade = customs_svc or CustomsTradeSuite(self.store)
+        self.warehouse_distribution = warehouse_svc or WarehouseDistributionSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -166,6 +169,11 @@ class PortEnterpriseApplication:
             "international_trade_ready": True,
             "trade_compliance_ready": True,
             "ai_trade_intelligence_ready": True,
+            "warehouse_platform_ready": True,
+            "distribution_centers_ready": True,
+            "free_economic_zones_ready": True,
+            "warehouse_automation_ready": True,
+            "ai_warehouse_ready": True,
             "engines": {
                 "port_registry": self.config.port_registry,
                 "terminal_management": self.config.terminal_management,
@@ -177,6 +185,7 @@ class PortEnterpriseApplication:
                 "container_management": self.config.container_management,
                 "multimodal_logistics": self.config.multimodal_logistics,
                 "customs_trade": self.config.customs_trade,
+                "warehouse_distribution": self.config.warehouse_distribution,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -192,6 +201,7 @@ class PortEnterpriseApplication:
             "container_management": self.container_management.status(),
             "multimodal_logistics": self.multimodal_logistics.status(),
             "customs_trade": self.customs_trade.status(),
+            "warehouse_distribution": self.warehouse_distribution.status(),
         }
 
 

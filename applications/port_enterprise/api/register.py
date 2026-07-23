@@ -10,6 +10,7 @@ from applications.port_enterprise.api import (
     handlers,
     multimodal_handlers,
     navigation_handlers,
+    warehouse_handlers,
 )
 from applications.port_enterprise.api.middleware import auth_middleware
 from applications.port_enterprise.config import DEFAULT_CONFIG
@@ -122,3 +123,24 @@ def register_port_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{ct}/dashboard", customs_handlers.ct_dashboard_handler)
     app.router.add_get(f"{ct}/knowledge", customs_handlers.ct_knowledge_handler)
     app.router.add_post(f"{ct}/knowledge", customs_handlers.ct_knowledge_handler)
+
+    # Sprint 15.5 — Warehouse / FEZ / Distribution (additive; prior routes unchanged)
+    wd = DEFAULT_CONFIG.warehouse_distribution_api_prefix
+    app.router.add_get(f"{wd}/health", warehouse_handlers.wd_health_handler)
+    app.router.add_post(f"{wd}/bootstrap", warehouse_handlers.wd_bootstrap_handler)
+    app.router.add_get(f"{wd}/warehouse", warehouse_handlers.wd_warehouse_handler)
+    app.router.add_post(f"{wd}/warehouse", warehouse_handlers.wd_warehouse_handler)
+    app.router.add_get(f"{wd}/distribution", warehouse_handlers.wd_distribution_handler)
+    app.router.add_post(f"{wd}/distribution", warehouse_handlers.wd_distribution_handler)
+    app.router.add_get(f"{wd}/fez", warehouse_handlers.wd_fez_handler)
+    app.router.add_post(f"{wd}/fez", warehouse_handlers.wd_fez_handler)
+    app.router.add_get(f"{wd}/inventory", warehouse_handlers.wd_inventory_handler)
+    app.router.add_post(f"{wd}/inventory", warehouse_handlers.wd_inventory_handler)
+    app.router.add_get(f"{wd}/automation", warehouse_handlers.wd_automation_handler)
+    app.router.add_post(f"{wd}/automation", warehouse_handlers.wd_automation_handler)
+    app.router.add_get(f"{wd}/ai", warehouse_handlers.wd_ai_handler)
+    app.router.add_post(f"{wd}/ai", warehouse_handlers.wd_ai_handler)
+    app.router.add_get(f"{wd}/dashboard", warehouse_handlers.wd_dashboard_handler)
+    app.router.add_post(f"{wd}/dashboard", warehouse_handlers.wd_dashboard_handler)
+    app.router.add_get(f"{wd}/knowledge", warehouse_handlers.wd_knowledge_handler)
+    app.router.add_post(f"{wd}/knowledge", warehouse_handlers.wd_knowledge_handler)
