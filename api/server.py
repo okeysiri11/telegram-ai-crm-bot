@@ -88,6 +88,10 @@ def create_app() -> web.Application:
 
     register_port_enterprise_routes(app)
 
+    from applications.crypto_enterprise.api.register import register_crypto_enterprise_routes
+
+    register_crypto_enterprise_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 

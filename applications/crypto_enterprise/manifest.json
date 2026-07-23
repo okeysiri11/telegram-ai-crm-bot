@@ -1,0 +1,32 @@
+{
+  "application_name": "Crypto Intelligence Platform",
+  "application": "crypto_enterprise",
+  "application_version": "4.7.0-enterprise",
+  "release_status": "Crypto Enterprise Foundation",
+  "platform_dependency": "AI Platform Core v3",
+  "enterprise_foundation": "Enterprise Platform v4.6.0-enterprise",
+  "ecosystem_dependency": "AI Ecosystem v1.5",
+  "sprint": "16.0",
+  "exchange_integration": "1.0",
+  "market_data": "1.0",
+  "asset_registry": "1.0",
+  "portfolio_management": "1.0",
+  "modules": {
+    "exchange_integration": "1.0",
+    "market_data": "1.0",
+    "asset_registry": "1.0",
+    "portfolio_management": "1.0",
+    "knowledge": "1.0",
+    "dashboard": "1.0",
+    "api": "4.7"
+  },
+  "supported_exchanges": ["binance", "bybit", "okx", "kraken", "htx", "coinbase"],
+  "does_not_modify": [
+    "platform_core",
+    "ai_os",
+    "enterprise",
+    "auto_marketplace",
+    "agro_enterprise",
+    "port_enterprise"
+  ]
+}
