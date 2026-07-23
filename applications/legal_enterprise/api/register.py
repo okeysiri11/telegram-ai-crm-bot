@@ -5,6 +5,7 @@ from __future__ import annotations
 from aiohttp import web
 
 from applications.legal_enterprise.api import (
+    aa_handlers,
     cm_handlers,
     cp_handlers,
     di_handlers,
@@ -142,3 +143,24 @@ def register_legal_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{cp}/dashboard", cp_handlers.cp_dashboard_handler)
     app.router.add_get(f"{cp}/knowledge", cp_handlers.cp_knowledge_handler)
     app.router.add_post(f"{cp}/knowledge", cp_handlers.cp_knowledge_handler)
+
+    # Sprint 17.6 — AI Legal Assistant (additive; prior routes unchanged)
+    aa = DEFAULT_CONFIG.ai_legal_assistant_api_prefix
+    app.router.add_get(f"{aa}/health", aa_handlers.aa_health_handler)
+    app.router.add_post(f"{aa}/bootstrap", aa_handlers.aa_bootstrap_handler)
+    app.router.add_get(f"{aa}/assistant", aa_handlers.aa_assistant_handler)
+    app.router.add_post(f"{aa}/assistant", aa_handlers.aa_assistant_handler)
+    app.router.add_get(f"{aa}/research", aa_handlers.aa_research_handler)
+    app.router.add_post(f"{aa}/research", aa_handlers.aa_research_handler)
+    app.router.add_get(f"{aa}/analysis", aa_handlers.aa_analysis_handler)
+    app.router.add_post(f"{aa}/analysis", aa_handlers.aa_analysis_handler)
+    app.router.add_get(f"{aa}/opinion", aa_handlers.aa_opinion_handler)
+    app.router.add_post(f"{aa}/opinion", aa_handlers.aa_opinion_handler)
+    app.router.add_get(f"{aa}/documents", aa_handlers.aa_documents_handler)
+    app.router.add_post(f"{aa}/documents", aa_handlers.aa_documents_handler)
+    app.router.add_get(f"{aa}/knowledge", aa_handlers.aa_knowledge_handler)
+    app.router.add_post(f"{aa}/knowledge", aa_handlers.aa_knowledge_handler)
+    app.router.add_get(f"{aa}/explain", aa_handlers.aa_explain_handler)
+    app.router.add_post(f"{aa}/explain", aa_handlers.aa_explain_handler)
+    app.router.add_get(f"{aa}/dashboard", aa_handlers.aa_dashboard_handler)
+    app.router.add_post(f"{aa}/dashboard", aa_handlers.aa_dashboard_handler)

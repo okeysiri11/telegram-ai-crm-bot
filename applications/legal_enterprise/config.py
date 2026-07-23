@@ -1,4 +1,4 @@
-# Legal Enterprise Platform — Sprint 17.5 Compliance Platform.
+# Legal Enterprise Platform — Sprint 17.6 AI Legal Assistant.
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class LegalEnterpriseConfig:
     application_name: str = "Legal Intelligence Platform"
     application: str = "legal_enterprise"
-    application_version: str = "4.9.5-enterprise"
-    release_status: str = "Compliance Platform"
+    application_version: str = "4.9.6-enterprise"
+    release_status: str = "AI Legal Assistant"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.9.4-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.9.5-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/legal-enterprise/v1"
@@ -21,6 +21,7 @@ class LegalEnterpriseConfig:
     case_management_api_prefix: str = "/api/legal-cm/v1"
     document_intelligence_api_prefix: str = "/api/legal-di/v1"
     compliance_api_prefix: str = "/api/legal-cp/v1"
+    ai_legal_assistant_api_prefix: str = "/api/legal-aa/v1"
     internal_prefix: str = "/internal/legal-enterprise/v1"
     legal_registry: str = "1.0"
     legislation_registry: str = "1.0"
@@ -31,6 +32,7 @@ class LegalEnterpriseConfig:
     judicial_intelligence: str = "1.0"
     document_intelligence: str = "1.0"
     compliance: str = "1.0"
+    ai_legal_assistant: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     legal_roles: list[str] = field(
@@ -228,6 +230,22 @@ class LegalEnterpriseConfig:
     )
     cp_knowledge_bases: list[str] = field(
         default_factory=lambda: ["compliance", "corporate", "license", "policy", "risk"]
+    )
+    aa_research_modes: list[str] = field(
+        default_factory=lambda: [
+            "semantic",
+            "multi_source",
+            "statute",
+            "case_law",
+            "document",
+            "cross_reference",
+        ]
+    )
+    aa_dashboard_types: list[str] = field(
+        default_factory=lambda: ["assistant", "research", "knowledge", "intelligence"]
+    )
+    aa_knowledge_bases: list[str] = field(
+        default_factory=lambda: ["assistant", "research", "opinion", "authority", "reasoning"]
     )
 
 

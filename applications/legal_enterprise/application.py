@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.legal_enterprise.ai_legal_assistant.facade import AILegalAssistantSuite
 from applications.legal_enterprise.case_management.facade import CaseManagementSuite
 from applications.legal_enterprise.cases import CaseManagement
 from applications.legal_enterprise.compliance.facade import ComplianceSuite
@@ -29,6 +30,7 @@ class LegalEnterpriseApplication:
         case_management_svc: CaseManagementSuite | None = None,
         document_intelligence_svc: DocumentIntelligenceSuite | None = None,
         compliance_svc: ComplianceSuite | None = None,
+        ai_legal_assistant_svc: AILegalAssistantSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or legal_enterprise_store
@@ -45,6 +47,7 @@ class LegalEnterpriseApplication:
         self.case_management_platform = case_management_svc or CaseManagementSuite(self.store)
         self.document_intelligence = document_intelligence_svc or DocumentIntelligenceSuite(self.store)
         self.compliance_platform = compliance_svc or ComplianceSuite(self.store)
+        self.ai_legal_assistant = ai_legal_assistant_svc or AILegalAssistantSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -303,6 +306,10 @@ class LegalEnterpriseApplication:
             "corporate_governance_ready": True,
             "legal_risk_management_ready": True,
             "ai_compliance_intelligence_ready": True,
+            "ai_legal_assistant_ready": True,
+            "legal_research_engine_ready": True,
+            "legal_reasoning_ready": True,
+            "ai_legal_intelligence_ready": True,
             "engines": {
                 "legal_registry": self.config.legal_registry,
                 "legislation_registry": self.config.legislation_registry,
@@ -313,6 +320,7 @@ class LegalEnterpriseApplication:
                 "judicial_intelligence": self.config.judicial_intelligence,
                 "document_intelligence": self.config.document_intelligence,
                 "compliance": self.config.compliance,
+                "ai_legal_assistant": self.config.ai_legal_assistant,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -327,6 +335,7 @@ class LegalEnterpriseApplication:
             "case_management_platform": self.case_management_platform.status(),
             "document_intelligence": self.document_intelligence.status(),
             "compliance_platform": self.compliance_platform.status(),
+            "ai_legal_assistant": self.ai_legal_assistant.status(),
         }
 
 

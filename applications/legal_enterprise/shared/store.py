@@ -202,6 +202,25 @@ class LegalEnterpriseStore:
         self.cp_ai_insights: EntityStore = EntityStore()
         self.cp_knowledge: EntityStore = EntityStore()
         self.cp_dashboards: EntityStore = EntityStore()
+        # Sprint 17.6 — AI Legal Assistant
+        self.aa_workspaces: EntityStore = EntityStore()
+        self.aa_conversations: EntityStore = EntityStore()
+        self.aa_messages: EntityStore = EntityStore()
+        self.aa_memory: EntityStore = EntityStore()
+        self.aa_searches: EntityStore = EntityStore()
+        self.aa_citations: EntityStore = EntityStore()
+        self.aa_authorities: EntityStore = EntityStore()
+        self.aa_analyses: EntityStore = EntityStore()
+        self.aa_opinions: EntityStore = EntityStore()
+        self.aa_doc_analyses: EntityStore = EntityStore()
+        self.aa_graph_nav: EntityStore = EntityStore()
+        self.aa_concepts: EntityStore = EntityStore()
+        self.aa_relationships: EntityStore = EntityStore()
+        self.aa_terminology: EntityStore = EntityStore()
+        self.aa_entities: EntityStore = EntityStore()
+        self.aa_knowledge: EntityStore = EntityStore()
+        self.aa_explanations: EntityStore = EntityStore()
+        self.aa_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
