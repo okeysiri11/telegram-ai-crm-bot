@@ -9,6 +9,7 @@ from applications.finance_enterprise.api import (
     da_handlers,
     handlers,
     pay_handlers,
+    rpt_handlers,
     tr_handlers,
 )
 from applications.finance_enterprise.api.middleware import auth_middleware
@@ -122,3 +123,24 @@ def register_finance_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{da}/dashboard", da_handlers.da_dashboard_handler)
     app.router.add_get(f"{da}/knowledge", da_handlers.da_knowledge_handler)
     app.router.add_post(f"{da}/knowledge", da_handlers.da_knowledge_handler)
+
+    # Sprint 18.5 — Financial Reporting & BI (additive; prior routes unchanged)
+    rpt = DEFAULT_CONFIG.reporting_api_prefix
+    app.router.add_get(f"{rpt}/health", rpt_handlers.rpt_health_handler)
+    app.router.add_post(f"{rpt}/bootstrap", rpt_handlers.rpt_bootstrap_handler)
+    app.router.add_get(f"{rpt}/statements", rpt_handlers.rpt_statements_handler)
+    app.router.add_post(f"{rpt}/statements", rpt_handlers.rpt_statements_handler)
+    app.router.add_get(f"{rpt}/management", rpt_handlers.rpt_management_handler)
+    app.router.add_post(f"{rpt}/management", rpt_handlers.rpt_management_handler)
+    app.router.add_get(f"{rpt}/intelligence", rpt_handlers.rpt_intelligence_handler)
+    app.router.add_post(f"{rpt}/intelligence", rpt_handlers.rpt_intelligence_handler)
+    app.router.add_get(f"{rpt}/consolidation", rpt_handlers.rpt_consolidation_handler)
+    app.router.add_post(f"{rpt}/consolidation", rpt_handlers.rpt_consolidation_handler)
+    app.router.add_get(f"{rpt}/forecast", rpt_handlers.rpt_forecast_handler)
+    app.router.add_post(f"{rpt}/forecast", rpt_handlers.rpt_forecast_handler)
+    app.router.add_get(f"{rpt}/ai", rpt_handlers.rpt_ai_handler)
+    app.router.add_post(f"{rpt}/ai", rpt_handlers.rpt_ai_handler)
+    app.router.add_get(f"{rpt}/dashboard", rpt_handlers.rpt_dashboard_handler)
+    app.router.add_post(f"{rpt}/dashboard", rpt_handlers.rpt_dashboard_handler)
+    app.router.add_get(f"{rpt}/knowledge", rpt_handlers.rpt_knowledge_handler)
+    app.router.add_post(f"{rpt}/knowledge", rpt_handlers.rpt_knowledge_handler)

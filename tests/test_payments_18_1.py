@@ -40,8 +40,8 @@ def reset_store():
 
 def test_version_payments_ready():
     health = finance_enterprise.health()
-    assert health["application_version"] == "5.1.4-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.3-enterprise"
+    assert health["application_version"] == "5.1.5-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.4-enterprise"
     assert health["banking_platform_ready"] is True
     assert health["digital_wallets_ready"] is True
     assert health["payment_engine_ready"] is True
@@ -71,7 +71,7 @@ def test_cash_approvals_bootstrap():
     suite = finance_enterprise.payments
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "5.1.4-enterprise"
+    assert boot["version"] == "5.1.5-enterprise"
     assert boot["bank_id"] and boot["approval_id"] and boot["register_id"]
     assert suite.processing.approve(
         payment_id=boot["outgoing_payment_id"], approver="controller", decision="approved"
@@ -84,7 +84,7 @@ def test_cash_approvals_bootstrap():
 async def test_api_payments(client):
     health = await client.get(f"{PAY}/health")
     body = await health.json()
-    assert body["application_version"] == "5.1.4-enterprise"
+    assert body["application_version"] == "5.1.5-enterprise"
     assert body["banking_platform_ready"] is True
     assert body["payment_engine_ready"] is True
 
@@ -110,7 +110,7 @@ async def test_api_payments(client):
 
     resp = await client.get(f"{PREFIX}/health")
     assert resp.status == 200
-    assert (await resp.json())["application_version"] == "5.1.4-enterprise"
+    assert (await resp.json())["application_version"] == "5.1.5-enterprise"
 
 
 def test_docs_and_regression_18_1():
@@ -144,5 +144,5 @@ def test_docs_and_regression_18_1():
     assert CRYPTO.application_version == "4.8.0-enterprise"
     assert LEGAL.application_version == "5.0.0-enterprise"
     manifest = (ROOT / "applications" / "finance_enterprise" / "manifest.json").read_text()
-    assert "5.1.4-enterprise" in manifest
-    assert "18.4" in manifest
+    assert "5.1.5-enterprise" in manifest
+    assert "18.5" in manifest

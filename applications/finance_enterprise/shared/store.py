@@ -165,6 +165,18 @@ class FinanceEnterpriseStore:
         self.da_ai_insights: EntityStore = EntityStore()
         self.da_knowledge: EntityStore = EntityStore()
         self.da_dashboards: EntityStore = EntityStore()
+        # Sprint 18.5 — Financial Reporting & BI
+        self.rpt_statements: EntityStore = EntityStore()
+        self.rpt_management: EntityStore = EntityStore()
+        self.rpt_kpis: EntityStore = EntityStore()
+        self.rpt_analytics: EntityStore = EntityStore()
+        self.rpt_consolidations: EntityStore = EntityStore()
+        self.rpt_forecasts: EntityStore = EntityStore()
+        self.rpt_scenarios: EntityStore = EntityStore()
+        self.rpt_sensitivity: EntityStore = EntityStore()
+        self.rpt_ai_insights: EntityStore = EntityStore()
+        self.rpt_knowledge: EntityStore = EntityStore()
+        self.rpt_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
