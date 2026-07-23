@@ -1,4 +1,4 @@
-"""Tests — Enterprise Communications & Notifications (Sprint 19.4)."""
+"""Tests — Enterprise Identity, Security & Access Management (Sprint 19.8)."""
 
 from __future__ import annotations
 
@@ -19,6 +19,10 @@ ORCH = "/api/enterprise-orch/v1"
 KG = "/api/enterprise-kg/v1"
 AA = "/api/enterprise-agents/v1"
 CM = "/api/enterprise-comms/v1"
+WF = "/api/enterprise-workflow/v1"
+EIP = "/api/enterprise-eip/v1"
+EDP = "/api/enterprise-edp/v1"
+ISAM = "/api/enterprise-isam/v1"
 
 
 @pytest.fixture
@@ -41,106 +45,89 @@ def reset_store():
     enterprise_hub.reset()
 
 
-def test_version_communications_ready():
+def test_version_isam_ready():
     health = enterprise_hub.health()
     assert health["application_version"] == "5.3.8-enterprise"
     assert health["enterprise_foundation"] == "Enterprise Platform v5.3.7-enterprise"
-    assert health["enterprise_communications_ready"] is True
-    assert health["notification_center_ready"] is True
-    assert health["multi_channel_delivery_ready"] is True
-    assert health["corporate_chat_ready"] is True
-    assert health["enterprise_ai_agents_ready"] is True
-    assert health["engines"]["communications"] == "1.0"
+    assert health["enterprise_isam_ready"] is True
+    assert health["authentication_ready"] is True
+    assert health["authorization_ready"] is True
+    assert health["security_monitoring_ready"] is True
+    assert health["enterprise_data_platform_ready"] is True
+    assert health["engines"]["isam"] == "1.0"
+    assert health["engines"]["enterprise_identity"] == "1.0"
 
 
-def test_center_router_priority_queue():
-    suite = enterprise_hub.communications
-    evt = suite.center.publish(
-        source="crm",
-        event="new_lead",
-        recipient="sales@bidex.io",
-        subject="New Lead",
-        body="Acme",
+def test_identity_auth_rbac_session():
+    suite = enterprise_hub.isam
+    user = suite.identity.register(
+        subject="qa@bidex.io", identity_type="user", roles=["manager"]
     )
-    prio = suite.priority.classify(subject="Server Down", event="outage")
-    assert prio["priority"] == "critical"
-    assert "telegram" in prio["channels"]
-    route = suite.router.route(event_id=evt["event_id"])
-    assert route["route_id"] and route["delivery_ids"]
-    q = suite.queue.enqueue(
-        event_id=evt["event_id"],
-        recipient="sales@bidex.io",
-        channel="email",
-        priority="medium",
-        mode="fifo",
+    login = suite.authentication.login(subject="qa@bidex.io", provider="local")
+    suite.permissions.grant(identity_id=user["identity_id"], permission="approve")
+    authz = suite.authorization.authorize(
+        identity_id=user["identity_id"], permission="approve", mode="rbac"
     )
-    assert q["status"] == "pending"
+    assert authz["allowed"] is True
+    sess = suite.sessions.create(identity_id=user["identity_id"], device="linux", ip="127.0.0.1")
+    tok = suite.tokens.issue(identity_id=user["identity_id"], token_type="access")
+    assert login["auth_id"] and sess["session_id"] and tok["token_id"]
     with pytest.raises(ValidationError):
-        suite.center.publish(source="", event="x", recipient="a")
+        suite.identity.register(subject="", identity_type="user")
 
 
-def test_templates_chat_delivery_bootstrap():
-    suite = enterprise_hub.communications
+def test_mfa_monitor_audit_bootstrap():
+    suite = enterprise_hub.isam
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
     assert boot["version"] == "5.3.8-enterprise"
-    assert boot["route_critical_id"] and boot["chat_ai_id"] and boot["audit_id"]
-    tpl = suite.templates.register(kind="lead", name="QA Lead", fmt="plain")
-    rend = suite.templates.render(
-        template_id=tpl["template_id"],
-        variables={"name": "Sam", "company": "Bidex", "project": "Hub", "date": "2026-07-23", "status": "open"},
-    )
-    assert "Sam" in rend["body"]
-    chat = suite.chat.ai_to_ai(from_agent="a1", to_agent="a2", message="ping")
-    assert chat["party_type"] == "ai_agent"
-    for dtype in ("delivery", "queue", "channels", "audit", "analytics"):
+    assert boot["identity_admin_id"] and boot["intrusion_id"] and boot["mfa_totp_id"]
+    mfa = suite.mfa.challenge(method="totp", subject="qa")
+    assert mfa["verified"] is True
+    for dtype in ("identity", "sessions", "access", "monitoring", "audit"):
         assert suite.dashboard.render(dashboard_type=dtype)["dashboard_type"] == dtype
 
 
 @pytest.mark.asyncio
-async def test_api_communications(client):
-    health = await client.get(f"{CM}/health")
+async def test_api_isam(client):
+    health = await client.get(f"{ISAM}/health")
     body = await health.json()
     assert body["application_version"] == "5.3.8-enterprise"
-    assert body["enterprise_communications_ready"] is True
-    assert body["notification_center_ready"] is True
+    assert body["enterprise_isam_ready"] is True
+    assert body["authentication_ready"] is True
 
-    boot = await client.post(f"{CM}/bootstrap", json={})
+    boot = await client.post(f"{ISAM}/bootstrap", json={})
     assert boot.status == 201
     boot_body = await boot.json()
 
-    center = await client.post(
-        f"{CM}/center",
-        json={
-            "source": "agro",
-            "event": "harvest_alert",
-            "recipient": "agro@bidex.io",
-            "subject": "Harvest ready",
-        },
+    created = await client.post(
+        f"{ISAM}/identity",
+        json={"subject": "api@bidex.io", "identity_type": "user", "roles": ["employee"]},
     )
-    assert center.status == 201
+    assert created.status == 201
 
-    for prefix in (HUB, ORCH, KG, AA):
+    for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         assert (await resp.json())["application_version"] == "5.3.8-enterprise"
 
-    assert boot_body["template_invoice_id"]
+    assert boot_body["policy_ip_id"]
 
 
-def test_docs_and_regression_19_4():
+def test_docs_and_regression_19_8():
     for name in (
-        "ENTERPRISE_COMMUNICATIONS.md",
-        "NOTIFICATION_CENTER.md",
-        "NOTIFICATION_CHANNELS.md",
-        "NOTIFICATION_TEMPLATES.md",
-        "CORPORATE_CHAT.md",
+        "ENTERPRISE_ISAM.md",
+        "IDENTITY_PROVIDER.md",
+        "AUTHENTICATION.md",
+        "AUTHORIZATION.md",
+        "SECURITY_MONITORING.md",
     ):
         assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "ENTERPRISE_COMMUNICATIONS.md").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "communications" / "facade.py").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "communications" / "channels" / "telegram.py").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "communications" / "templates" / "engine.py").exists()
+    assert (ROOT / "knowledge" / "applications" / "ENTERPRISE_ISAM.md").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "security" / "facade.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "security" / "providers" / "oauth2.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "security" / "mfa" / "totp.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "security" / "monitoring" / "intrusion.py").exists()
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT

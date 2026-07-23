@@ -16,6 +16,7 @@ from applications.enterprise_hub.integrations.facade import IntegrationPlatformS
 from applications.enterprise_hub.knowledge.facade import UnifiedKnowledgeSuite
 from applications.enterprise_hub.orchestrator.facade import OrchestratorSuite
 from applications.enterprise_hub.registry import EnterpriseRegistry
+from applications.enterprise_hub.security.facade import SecuritySuite
 from applications.enterprise_hub.services import HubDashboard, HubKnowledge
 from applications.enterprise_hub.shared.store import EnterpriseHubStore, enterprise_hub_store
 from applications.enterprise_hub.workflow.facade import WorkflowSuite
@@ -34,6 +35,7 @@ class EnterpriseHubApplication:
         workflow_svc: WorkflowSuite | None = None,
         eip_svc: IntegrationPlatformSuite | None = None,
         edp_svc: DataPlatformSuite | None = None,
+        isam_svc: SecuritySuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -51,6 +53,7 @@ class EnterpriseHubApplication:
         self.workflow = workflow_svc or WorkflowSuite(self.store)
         self.eip = eip_svc or IntegrationPlatformSuite(self.store)
         self.edp = edp_svc or DataPlatformSuite(self.store)
+        self.isam = isam_svc or SecuritySuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -241,6 +244,10 @@ class EnterpriseHubApplication:
             "master_data_ready": True,
             "data_quality_ready": True,
             "data_governance_ready": True,
+            "enterprise_isam_ready": True,
+            "authentication_ready": True,
+            "authorization_ready": True,
+            "security_monitoring_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -254,6 +261,7 @@ class EnterpriseHubApplication:
                 "workflow": self.config.workflow,
                 "eip": self.config.eip,
                 "edp": self.config.edp,
+                "isam": self.config.isam,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -271,6 +279,7 @@ class EnterpriseHubApplication:
             "workflow": self.workflow.status(),
             "eip": self.eip.status(),
             "edp": self.edp.status(),
+            "isam": self.isam.status(),
         }
 
 

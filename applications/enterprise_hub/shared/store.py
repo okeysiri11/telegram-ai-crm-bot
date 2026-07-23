@@ -203,6 +203,24 @@ class EnterpriseHubStore:
         self.edp_stats: EntityStore = EntityStore()
         self.edp_ai_assists: EntityStore = EntityStore()
         self.edp_dashboards: EntityStore = EntityStore()
+        # Sprint 19.8 — Enterprise ISAM
+        self.isam_identities: EntityStore = EntityStore()
+        self.isam_auth_events: EntityStore = EntityStore()
+        self.isam_authz: EntityStore = EntityStore()
+        self.isam_permissions: EntityStore = EntityStore()
+        self.isam_permission_resolutions: EntityStore = EntityStore()
+        self.isam_role_assigns: EntityStore = EntityStore()
+        self.isam_policies: EntityStore = EntityStore()
+        self.isam_policy_evals: EntityStore = EntityStore()
+        self.isam_sessions: EntityStore = EntityStore()
+        self.isam_tokens: EntityStore = EntityStore()
+        self.isam_api_keys: EntityStore = EntityStore()
+        self.isam_mfa: EntityStore = EntityStore()
+        self.isam_audit: EntityStore = EntityStore()
+        self.isam_intrusions: EntityStore = EntityStore()
+        self.isam_anomalies: EntityStore = EntityStore()
+        self.isam_risks: EntityStore = EntityStore()
+        self.isam_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

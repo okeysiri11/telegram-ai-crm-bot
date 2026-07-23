@@ -10,6 +10,7 @@ from applications.enterprise_hub.communications import api as comm_api
 from applications.enterprise_hub.config import DEFAULT_CONFIG
 from applications.enterprise_hub.data_platform import api as edp_api
 from applications.enterprise_hub.integrations import api as eip_api
+from applications.enterprise_hub.security import api as isam_api
 from applications.enterprise_hub.workflow import api as wf_api
 
 
@@ -191,3 +192,28 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{edp}/analytics", edp_api.edp_analytics_handler)
     app.router.add_get(f"{edp}/dashboard", edp_api.edp_dashboard_handler)
     app.router.add_post(f"{edp}/dashboard", edp_api.edp_dashboard_handler)
+
+    # Sprint 19.8 — Enterprise ISAM (additive; prior routes unchanged)
+    isam = DEFAULT_CONFIG.isam_api_prefix
+    app.router.add_get(f"{isam}/health", isam_api.isam_health_handler)
+    app.router.add_post(f"{isam}/bootstrap", isam_api.isam_bootstrap_handler)
+    app.router.add_get(f"{isam}/identity", isam_api.isam_identity_handler)
+    app.router.add_post(f"{isam}/identity", isam_api.isam_identity_handler)
+    app.router.add_get(f"{isam}/auth", isam_api.isam_auth_handler)
+    app.router.add_post(f"{isam}/auth", isam_api.isam_auth_handler)
+    app.router.add_get(f"{isam}/roles", isam_api.isam_roles_handler)
+    app.router.add_post(f"{isam}/roles", isam_api.isam_roles_handler)
+    app.router.add_get(f"{isam}/sessions", isam_api.isam_session_handler)
+    app.router.add_post(f"{isam}/sessions", isam_api.isam_session_handler)
+    app.router.add_get(f"{isam}/tokens", isam_api.isam_token_handler)
+    app.router.add_post(f"{isam}/tokens", isam_api.isam_token_handler)
+    app.router.add_get(f"{isam}/mfa", isam_api.isam_mfa_handler)
+    app.router.add_post(f"{isam}/mfa", isam_api.isam_mfa_handler)
+    app.router.add_get(f"{isam}/policies", isam_api.isam_policy_handler)
+    app.router.add_post(f"{isam}/policies", isam_api.isam_policy_handler)
+    app.router.add_get(f"{isam}/monitor", isam_api.isam_monitor_handler)
+    app.router.add_post(f"{isam}/monitor", isam_api.isam_monitor_handler)
+    app.router.add_get(f"{isam}/audit", isam_api.isam_audit_handler)
+    app.router.add_post(f"{isam}/audit", isam_api.isam_audit_handler)
+    app.router.add_get(f"{isam}/dashboard", isam_api.isam_dashboard_handler)
+    app.router.add_post(f"{isam}/dashboard", isam_api.isam_dashboard_handler)

@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 19.7 Enterprise Data Platform & MDM."""
+"""Enterprise Hub — Sprint 19.8 Enterprise Identity, Security & Access Management."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.3.7-enterprise"
-    release_status: str = "Enterprise Data Platform"
+    application_version: str = "5.3.8-enterprise"
+    release_status: str = "Enterprise ISAM"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.3.6-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.3.7-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -23,6 +23,7 @@ class EnterpriseHubConfig:
     workflow_api_prefix: str = "/api/enterprise-workflow/v1"
     eip_api_prefix: str = "/api/enterprise-eip/v1"
     edp_api_prefix: str = "/api/enterprise-edp/v1"
+    isam_api_prefix: str = "/api/enterprise-isam/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -36,6 +37,7 @@ class EnterpriseHubConfig:
     workflow: str = "1.0"
     eip: str = "1.0"
     edp: str = "1.0"
+    isam: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -341,6 +343,15 @@ class EnterpriseHubConfig:
             "governance",
             "lineage",
             "analytics",
+        ]
+    )
+    isam_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "identity",
+            "sessions",
+            "access",
+            "monitoring",
+            "audit",
         ]
     )
 
