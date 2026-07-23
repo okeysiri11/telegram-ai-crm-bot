@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.port_enterprise.api import (
     container_handlers,
+    customs_handlers,
     handlers,
     multimodal_handlers,
     navigation_handlers,
@@ -100,3 +101,24 @@ def register_port_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{ml}/dashboard", multimodal_handlers.ml_dashboard_handler)
     app.router.add_get(f"{ml}/knowledge", multimodal_handlers.ml_knowledge_handler)
     app.router.add_post(f"{ml}/knowledge", multimodal_handlers.ml_knowledge_handler)
+
+    # Sprint 15.4 — Customs / Border / Trade (additive; prior routes unchanged)
+    ct = DEFAULT_CONFIG.customs_trade_api_prefix
+    app.router.add_get(f"{ct}/health", customs_handlers.ct_health_handler)
+    app.router.add_post(f"{ct}/bootstrap", customs_handlers.ct_bootstrap_handler)
+    app.router.add_get(f"{ct}/customs", customs_handlers.ct_customs_handler)
+    app.router.add_post(f"{ct}/customs", customs_handlers.ct_customs_handler)
+    app.router.add_get(f"{ct}/border", customs_handlers.ct_border_handler)
+    app.router.add_post(f"{ct}/border", customs_handlers.ct_border_handler)
+    app.router.add_get(f"{ct}/trade", customs_handlers.ct_trade_handler)
+    app.router.add_post(f"{ct}/trade", customs_handlers.ct_trade_handler)
+    app.router.add_get(f"{ct}/compliance", customs_handlers.ct_compliance_handler)
+    app.router.add_post(f"{ct}/compliance", customs_handlers.ct_compliance_handler)
+    app.router.add_get(f"{ct}/documents", customs_handlers.ct_documents_handler)
+    app.router.add_post(f"{ct}/documents", customs_handlers.ct_documents_handler)
+    app.router.add_get(f"{ct}/ai", customs_handlers.ct_ai_handler)
+    app.router.add_post(f"{ct}/ai", customs_handlers.ct_ai_handler)
+    app.router.add_get(f"{ct}/dashboard", customs_handlers.ct_dashboard_handler)
+    app.router.add_post(f"{ct}/dashboard", customs_handlers.ct_dashboard_handler)
+    app.router.add_get(f"{ct}/knowledge", customs_handlers.ct_knowledge_handler)
+    app.router.add_post(f"{ct}/knowledge", customs_handlers.ct_knowledge_handler)

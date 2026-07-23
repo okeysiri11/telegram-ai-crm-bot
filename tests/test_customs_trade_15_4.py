@@ -1,4 +1,4 @@
-"""Tests — Rail, Truck & Multimodal Logistics (Sprint 15.3)."""
+"""Tests — Customs, Border Control & International Trade (Sprint 15.4)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,8 @@ from applications.port_enterprise.shared.exceptions import ValidationError
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PREFIX = "/api/port-multimodal/v1"
+PREFIX = "/api/port-customs/v1"
+ML = "/api/port-multimodal/v1"
 CM = "/api/port-containers/v1"
 NAV = "/api/port-navigation/v1"
 PE = "/api/port-enterprise/v1"
@@ -40,60 +41,58 @@ def reset_store():
     port_enterprise.reset()
 
 
-def test_version_multimodal_ready():
+def test_version_customs_ready():
     health = port_enterprise.health()
     assert health["application_version"] == "4.5.4-enterprise"
     assert health["enterprise_foundation"] == "Enterprise Platform v4.5.3-enterprise"
-    assert health["rail_logistics_ready"] is True
-    assert health["truck_logistics_ready"] is True
-    assert health["multimodal_platform_ready"] is True
-    assert health["shipment_management_ready"] is True
-    assert health["ai_logistics_ready"] is True
+    assert health["customs_platform_ready"] is True
+    assert health["border_control_ready"] is True
+    assert health["international_trade_ready"] is True
+    assert health["trade_compliance_ready"] is True
+    assert health["ai_trade_intelligence_ready"] is True
 
 
-def test_rail_and_truck():
-    suite = port_enterprise.multimodal_logistics
-    net = suite.rail.register_network(name="Test Corridor", region="UA")
-    train = suite.rail.register_train(name="T1")
-    suite.rail.schedule(
-        train_id=train["train_id"],
-        origin="A",
-        destination="B",
-        departs_at="2026-08-20T10:00:00Z",
+def test_customs_and_border():
+    suite = port_enterprise.customs_trade
+    office = suite.customs.register_office(name="Test Customs", code="T1")
+    decl = suite.customs.declare(
+        declaration_type="export",
+        reference="DEC-T1",
+        office_id=office["office_id"],
+        value=5000,
     )
-    assert suite.rail.status()["networks"] == 1
-    truck = suite.truck.register_truck(plate="TEST1111")
-    driver = suite.truck.register_driver(name="Driver A")
-    suite.truck.dispatch(
-        truck_id=truck["truck_id"], driver_id=driver["driver_id"], destination="Hub"
-    )
-    assert suite.truck.status()["dispatches"] == 1
+    duty = suite.customs.calculate_duty(declaration_id=decl["declaration_id"], duty_rate=0.05)
+    assert duty["total"] > 0
+    suite.customs.clear(decl["declaration_id"])
+    cp = suite.border.register_checkpoint(name="Gate 1")
+    suite.border.crossing(checkpoint_id=cp["checkpoint_id"], direction="out", subject_ref="V1")
     with pytest.raises(ValidationError):
-        suite.rail.register_network(name="")
-    assert net["network_id"]
+        suite.customs.declare(declaration_type="smuggle", reference="X")
 
 
-def test_shipment_multimodal_ai():
-    suite = port_enterprise.multimodal_logistics
+def test_trade_compliance_ai():
+    suite = port_enterprise.customs_trade
     boot = suite.bootstrap()
-    assert boot["shipment_id"] and boot["chain_id"] and boot["carbon_id"]
-    assert suite.shipments.status()["pods"] >= 1
-    assert suite.multimodal.status()["chains"] >= 1
-    assert suite.ai.status()["demand_forecasts"] >= 1
+    assert boot["declaration_id"] and boot["import_id"] and boot["fraud_id"]
+    assert suite.trade.status()["imports"] >= 1
+    assert suite.compliance.status()["licenses"] >= 1
+    assert suite.documents.status()["signatures"] >= 1
+    assert suite.ai.status()["risk_scores"] >= 1
     with pytest.raises(ValidationError):
-        suite.ai.optimize_route(origin="A", destination="B", mode="teleport")
-    for dtype in ("rail", "truck", "multimodal", "shipment", "ai_logistics"):
+        suite.trade.set_incoterm(trade_ref="x", incoterm="ZZZ")
+    for dtype in ("customs", "border", "trade", "compliance", "ai_trade"):
         assert suite.dashboard.render(dashboard_type=dtype)["dashboard_type"] == dtype
 
 
 @pytest.mark.asyncio
-async def test_api_multimodal(client):
+async def test_api_customs(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
     assert body["application_version"] == "4.5.4-enterprise"
-    assert body["rail_logistics_ready"] is True
-    assert body["ai_logistics_ready"] is True
+    assert body["customs_platform_ready"] is True
+    assert body["ai_trade_intelligence_ready"] is True
 
+    assert (await client.get(f"{ML}/health")).status == 200
     assert (await client.get(f"{CM}/health")).status == 200
     assert (await client.get(f"{NAV}/health")).status == 200
     assert (await client.get(f"{PE}/health")).status == 200
@@ -102,35 +101,34 @@ async def test_api_multimodal(client):
     assert boot.status == 201
     boot_body = await boot.json()
 
-    ship = await client.post(
-        f"{PREFIX}/shipments",
-        json={"action": "eta", "shipment_id": boot_body["shipment_id"], "hours": 12},
+    clear = await client.post(
+        f"{PREFIX}/customs",
+        json={"action": "clear", "declaration_id": boot_body["declaration_id"], "status": "cleared"},
     )
-    assert ship.status == 201
+    assert clear.status == 201
 
-    ai = await client.post(
+    fraud = await client.post(
         f"{PREFIX}/ai",
-        json={"action": "carbon", "shipment_id": boot_body["shipment_id"], "ton_km": 1000},
+        json={"action": "fraud", "trade_ref": boot_body["import_id"], "anomaly_score": 0.1},
     )
-    assert ai.status == 201
+    assert fraud.status == 201
 
-    dash = await client.get(f"{PREFIX}/dashboard?type=rail")
+    dash = await client.get(f"{PREFIX}/dashboard?type=compliance")
     assert dash.status == 200
 
 
-def test_docs_and_regression_15_3():
+def test_docs_and_regression_15_4():
     for name in (
-        "RAIL_LOGISTICS.md",
-        "TRUCK_LOGISTICS.md",
-        "MULTIMODAL_TRANSPORT.md",
-        "SHIPMENT_MANAGEMENT.md",
-        "AI_LOGISTICS.md",
+        "CUSTOMS_MANAGEMENT.md",
+        "BORDER_CONTROL.md",
+        "INTERNATIONAL_TRADE.md",
+        "TRADE_COMPLIANCE.md",
+        "TRADE_DOCUMENTS.md",
     ):
         assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "PORT_MULTIMODAL.md").exists()
+    assert (ROOT / "knowledge" / "applications" / "PORT_CUSTOMS.md").exists()
+    assert (ROOT / "applications" / "port_enterprise" / "customs_trade" / "facade.py").exists()
     assert (ROOT / "applications" / "port_enterprise" / "multimodal_logistics" / "facade.py").exists()
-    assert (ROOT / "applications" / "port_enterprise" / "container_management" / "facade.py").exists()
-    assert (ROOT / "applications" / "port_enterprise" / "navigation" / "facade.py").exists()
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT
