@@ -43,8 +43,8 @@ def reset_store():
 
 def test_version_customs_ready():
     health = port_enterprise.health()
-    assert health["application_version"] == "4.5.5-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.5.4-enterprise"
+    assert health["application_version"] == "4.5.6-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.5.5-enterprise"
     assert health["customs_platform_ready"] is True
     assert health["border_control_ready"] is True
     assert health["international_trade_ready"] is True
@@ -88,7 +88,7 @@ def test_trade_compliance_ai():
 async def test_api_customs(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.5.5-enterprise"
+    assert body["application_version"] == "4.5.6-enterprise"
     assert body["customs_platform_ready"] is True
     assert body["ai_trade_intelligence_ready"] is True
 
@@ -142,5 +142,5 @@ def test_docs_and_regression_15_4():
     assert AGRO.application_version == "4.4.0-enterprise"
     assert PORT_ERP.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "port_enterprise" / "manifest.json").read_text()
-    assert "4.5.5-enterprise" in manifest
-    assert "15.5" in manifest
+    assert "4.5.6-enterprise" in manifest
+    assert "15.6" in manifest

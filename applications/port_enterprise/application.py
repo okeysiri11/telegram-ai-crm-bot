@@ -8,6 +8,7 @@ from applications.port_enterprise.cargo_fleet import CargoManagement, FleetRegis
 from applications.port_enterprise.config import DEFAULT_CONFIG, PortEnterpriseConfig
 from applications.port_enterprise.container_management.facade import ContainerManagementSuite
 from applications.port_enterprise.customs_trade.facade import CustomsTradeSuite
+from applications.port_enterprise.freight_marketplace.facade import FreightMarketplaceSuite
 from applications.port_enterprise.multimodal_logistics.facade import MultimodalLogisticsSuite
 from applications.port_enterprise.navigation.facade import NavigationSuite
 from applications.port_enterprise.operations import PortDashboard, PortKnowledge, PortOperations
@@ -27,6 +28,7 @@ class PortEnterpriseApplication:
         multimodal_svc: MultimodalLogisticsSuite | None = None,
         customs_svc: CustomsTradeSuite | None = None,
         warehouse_svc: WarehouseDistributionSuite | None = None,
+        freight_svc: FreightMarketplaceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or port_enterprise_store
@@ -43,6 +45,7 @@ class PortEnterpriseApplication:
         self.multimodal_logistics = multimodal_svc or MultimodalLogisticsSuite(self.store)
         self.customs_trade = customs_svc or CustomsTradeSuite(self.store)
         self.warehouse_distribution = warehouse_svc or WarehouseDistributionSuite(self.store)
+        self.freight_marketplace = freight_svc or FreightMarketplaceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -174,6 +177,11 @@ class PortEnterpriseApplication:
             "free_economic_zones_ready": True,
             "warehouse_automation_ready": True,
             "ai_warehouse_ready": True,
+            "freight_marketplace_ready": True,
+            "freight_exchange_ready": True,
+            "global_logistics_network_ready": True,
+            "ai_logistics_marketplace_ready": True,
+            "carrier_platform_ready": True,
             "engines": {
                 "port_registry": self.config.port_registry,
                 "terminal_management": self.config.terminal_management,
@@ -186,6 +194,7 @@ class PortEnterpriseApplication:
                 "multimodal_logistics": self.config.multimodal_logistics,
                 "customs_trade": self.config.customs_trade,
                 "warehouse_distribution": self.config.warehouse_distribution,
+                "freight_marketplace": self.config.freight_marketplace,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -202,6 +211,7 @@ class PortEnterpriseApplication:
             "multimodal_logistics": self.multimodal_logistics.status(),
             "customs_trade": self.customs_trade.status(),
             "warehouse_distribution": self.warehouse_distribution.status(),
+            "freight_marketplace": self.freight_marketplace.status(),
         }
 
 

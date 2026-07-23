@@ -7,6 +7,7 @@ from aiohttp import web
 from applications.port_enterprise.api import (
     container_handlers,
     customs_handlers,
+    freight_handlers,
     handlers,
     multimodal_handlers,
     navigation_handlers,
@@ -144,3 +145,24 @@ def register_port_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{wd}/dashboard", warehouse_handlers.wd_dashboard_handler)
     app.router.add_get(f"{wd}/knowledge", warehouse_handlers.wd_knowledge_handler)
     app.router.add_post(f"{wd}/knowledge", warehouse_handlers.wd_knowledge_handler)
+
+    # Sprint 15.6 — Freight Marketplace (additive; prior routes unchanged)
+    fm = DEFAULT_CONFIG.freight_marketplace_api_prefix
+    app.router.add_get(f"{fm}/health", freight_handlers.fm_health_handler)
+    app.router.add_post(f"{fm}/bootstrap", freight_handlers.fm_bootstrap_handler)
+    app.router.add_get(f"{fm}/marketplace", freight_handlers.fm_marketplace_handler)
+    app.router.add_post(f"{fm}/marketplace", freight_handlers.fm_marketplace_handler)
+    app.router.add_get(f"{fm}/carriers", freight_handlers.fm_carriers_handler)
+    app.router.add_post(f"{fm}/carriers", freight_handlers.fm_carriers_handler)
+    app.router.add_get(f"{fm}/exchange", freight_handlers.fm_exchange_handler)
+    app.router.add_post(f"{fm}/exchange", freight_handlers.fm_exchange_handler)
+    app.router.add_get(f"{fm}/network", freight_handlers.fm_network_handler)
+    app.router.add_post(f"{fm}/network", freight_handlers.fm_network_handler)
+    app.router.add_get(f"{fm}/collaboration", freight_handlers.fm_collaboration_handler)
+    app.router.add_post(f"{fm}/collaboration", freight_handlers.fm_collaboration_handler)
+    app.router.add_get(f"{fm}/ai", freight_handlers.fm_ai_handler)
+    app.router.add_post(f"{fm}/ai", freight_handlers.fm_ai_handler)
+    app.router.add_get(f"{fm}/dashboard", freight_handlers.fm_dashboard_handler)
+    app.router.add_post(f"{fm}/dashboard", freight_handlers.fm_dashboard_handler)
+    app.router.add_get(f"{fm}/knowledge", freight_handlers.fm_knowledge_handler)
+    app.router.add_post(f"{fm}/knowledge", freight_handlers.fm_knowledge_handler)
