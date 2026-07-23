@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.port_enterprise.ai_port_director.facade import AIPortDirectorSuite
 from applications.port_enterprise.cargo_fleet import CargoManagement, FleetRegistry, ShippingCompanies
 from applications.port_enterprise.config import DEFAULT_CONFIG, PortEnterpriseConfig
 from applications.port_enterprise.container_management.facade import ContainerManagementSuite
@@ -29,6 +30,7 @@ class PortEnterpriseApplication:
         customs_svc: CustomsTradeSuite | None = None,
         warehouse_svc: WarehouseDistributionSuite | None = None,
         freight_svc: FreightMarketplaceSuite | None = None,
+        director_svc: AIPortDirectorSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or port_enterprise_store
@@ -46,6 +48,7 @@ class PortEnterpriseApplication:
         self.customs_trade = customs_svc or CustomsTradeSuite(self.store)
         self.warehouse_distribution = warehouse_svc or WarehouseDistributionSuite(self.store)
         self.freight_marketplace = freight_svc or FreightMarketplaceSuite(self.store)
+        self.ai_port_director = director_svc or AIPortDirectorSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -182,6 +185,10 @@ class PortEnterpriseApplication:
             "global_logistics_network_ready": True,
             "ai_logistics_marketplace_ready": True,
             "carrier_platform_ready": True,
+            "ai_port_director_ready": True,
+            "predictive_logistics_ready": True,
+            "autonomous_operations_ready": True,
+            "executive_intelligence_ready": True,
             "engines": {
                 "port_registry": self.config.port_registry,
                 "terminal_management": self.config.terminal_management,
@@ -195,6 +202,7 @@ class PortEnterpriseApplication:
                 "customs_trade": self.config.customs_trade,
                 "warehouse_distribution": self.config.warehouse_distribution,
                 "freight_marketplace": self.config.freight_marketplace,
+                "ai_port_director": self.config.ai_port_director,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -212,6 +220,7 @@ class PortEnterpriseApplication:
             "customs_trade": self.customs_trade.status(),
             "warehouse_distribution": self.warehouse_distribution.status(),
             "freight_marketplace": self.freight_marketplace.status(),
+            "ai_port_director": self.ai_port_director.status(),
         }
 
 

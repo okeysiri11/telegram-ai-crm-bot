@@ -1,4 +1,4 @@
-"""Tests — Warehouse, FEZ & Distribution Centers (Sprint 15.5)."""
+"""Tests — AI Port Director, Predictive & Autonomous Ops (Sprint 15.7)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,9 @@ from applications.port_enterprise.shared.exceptions import ValidationError
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PREFIX = "/api/port-warehouse/v1"
+PREFIX = "/api/port-ai-director/v1"
+FM = "/api/port-freight/v1"
+WD = "/api/port-warehouse/v1"
 CT = "/api/port-customs/v1"
 ML = "/api/port-multimodal/v1"
 CM = "/api/port-containers/v1"
@@ -42,50 +44,57 @@ def reset_store():
     port_enterprise.reset()
 
 
-def test_version_warehouse_ready():
+def test_version_ai_director_ready():
     health = port_enterprise.health()
     assert health["application_version"] == "4.5.7-enterprise"
     assert health["enterprise_foundation"] == "Enterprise Platform v4.5.6-enterprise"
-    assert health["warehouse_platform_ready"] is True
-    assert health["distribution_centers_ready"] is True
-    assert health["free_economic_zones_ready"] is True
-    assert health["warehouse_automation_ready"] is True
-    assert health["ai_warehouse_ready"] is True
+    assert health["ai_port_director_ready"] is True
+    assert health["predictive_logistics_ready"] is True
+    assert health["autonomous_operations_ready"] is True
+    assert health["executive_intelligence_ready"] is True
 
 
-def test_warehouse_and_distribution():
-    suite = port_enterprise.warehouse_distribution
-    wh = suite.warehouse.register_warehouse(name="WH-Test", capacity_teu=1000)
-    suite.warehouse.create_zone(warehouse_id=wh["warehouse_id"], name="Z1", zone_type="cold")
-    suite.warehouse.receive(warehouse_id=wh["warehouse_id"], sku="S1", qty=10)
-    dc = suite.distribution.register_dc(name="DC-Test")
-    suite.distribution.fulfill(dc_id=dc["dc_id"], order_ref="O1")
+def test_director_and_decisions():
+    suite = port_enterprise.ai_port_director
+    ask = suite.director.ask(prompt="Status?", context="port")
+    suite.director.advise(advisory_type="cargo", subject="Lot A")
+    decision = suite.decisions.decide(topic="Priority berth", options=["A", "B"])
+    suite.decisions.scenario(name="Peak day")
+    assert ask["assistant_id"] and decision["decision_id"]
     with pytest.raises(ValidationError):
-        suite.warehouse.create_zone(warehouse_id=wh["warehouse_id"], name="Bad", zone_type="orbit")
+        suite.director.advise(advisory_type="orbit", subject="X")
 
 
-def test_fez_inventory_automation():
-    suite = port_enterprise.warehouse_distribution
+def test_predictive_autonomous_executive():
+    suite = port_enterprise.ai_port_director
     boot = suite.bootstrap()
-    assert boot["warehouse_id"] and boot["fez_id"] and boot["agv_id"]
-    assert suite.fez.status()["residents"] >= 1
-    assert suite.inventory.status()["items"] >= 1
-    assert suite.automation.status()["agvs"] >= 1
-    assert suite.ai.status()["demand_forecasts"] >= 1
+    assert boot["arrival_id"] and boot["yard_id"] and boot["briefing_id"]
+    assert suite.predictive.status()["arrivals"] >= 1
+    assert suite.autonomous.status()["dock_schedules"] >= 1
+    assert suite.intelligence.status()["risks"] >= 1
+    assert suite.executive.status()["briefings"] >= 1
     with pytest.raises(ValidationError):
-        suite.inventory.barcode(sku="S", code="")
-    for dtype in ("warehouse", "distribution", "fez", "inventory", "ai_warehouse"):
+        suite.executive.health_score(score=150)
+    for dtype in (
+        "ai_director",
+        "decision_support",
+        "predictive_logistics",
+        "autonomous_operations",
+        "executive_intelligence",
+    ):
         assert suite.dashboard.render(dashboard_type=dtype)["dashboard_type"] == dtype
 
 
 @pytest.mark.asyncio
-async def test_api_warehouse(client):
+async def test_api_ai_director(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
     assert body["application_version"] == "4.5.7-enterprise"
-    assert body["warehouse_platform_ready"] is True
-    assert body["ai_warehouse_ready"] is True
+    assert body["ai_port_director_ready"] is True
+    assert body["executive_intelligence_ready"] is True
 
+    assert (await client.get(f"{FM}/health")).status == 200
+    assert (await client.get(f"{WD}/health")).status == 200
     assert (await client.get(f"{CT}/health")).status == 200
     assert (await client.get(f"{ML}/health")).status == 200
     assert (await client.get(f"{CM}/health")).status == 200
@@ -97,33 +106,34 @@ async def test_api_warehouse(client):
     boot_body = await boot.json()
 
     auto = await client.post(
-        f"{PREFIX}/automation",
-        json={"action": "agv", "warehouse_id": boot_body["warehouse_id"], "task": "move"},
+        f"{PREFIX}/autonomous",
+        json={"action": "yard", "yard_ref": "Yard North"},
     )
     assert auto.status == 201
 
-    ai = await client.post(
-        f"{PREFIX}/ai",
-        json={"action": "ops", "warehouse_id": boot_body["warehouse_id"]},
+    exec_resp = await client.post(
+        f"{PREFIX}/executive",
+        json={"action": "health", "score": 90},
     )
-    assert ai.status == 201
+    assert exec_resp.status == 201
+    assert boot_body["decision_id"]
 
-    dash = await client.get(f"{PREFIX}/dashboard?type=fez")
+    dash = await client.get(f"{PREFIX}/dashboard?type=predictive_logistics")
     assert dash.status == 200
 
 
-def test_docs_and_regression_15_5():
+def test_docs_and_regression_15_7():
     for name in (
-        "WAREHOUSE_PLATFORM.md",
-        "DISTRIBUTION_CENTERS.md",
-        "FREE_ECONOMIC_ZONES.md",
-        "WAREHOUSE_AUTOMATION.md",
-        "INVENTORY_INTELLIGENCE.md",
+        "AI_PORT_DIRECTOR.md",
+        "PREDICTIVE_LOGISTICS.md",
+        "AUTONOMOUS_PORT_OPERATIONS.md",
+        "EXECUTIVE_INTELLIGENCE.md",
+        "DECISION_SUPPORT.md",
     ):
         assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "PORT_WAREHOUSE.md").exists()
-    assert (ROOT / "applications" / "port_enterprise" / "warehouse_distribution" / "facade.py").exists()
-    assert (ROOT / "applications" / "port_enterprise" / "customs_trade" / "facade.py").exists()
+    assert (ROOT / "knowledge" / "applications" / "PORT_AI_DIRECTOR.md").exists()
+    assert (ROOT / "applications" / "port_enterprise" / "ai_port_director" / "facade.py").exists()
+    assert (ROOT / "applications" / "port_enterprise" / "freight_marketplace" / "facade.py").exists()
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT

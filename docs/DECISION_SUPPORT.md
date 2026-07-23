@@ -1,23 +1,24 @@
 # Decision Support
 
-**Version:** `4.3.7-enterprise`  
-**Sprint:** 14.7  
-**Foundation:** Enterprise Platform v4.3.6-enterprise  
-**Package:** `applications/agro_enterprise/ai_agronomist/`  
-**API:** `/api/ai-agronomist/v1`
+**Version:** `4.5.7-enterprise`  
+**Sprint:** 15.7  
+**Foundation:** Enterprise Platform v4.5.6-enterprise  
+**Package:** `applications/port_enterprise/ai_port_director/`  
+**API:** `/api/port-ai-director/v1`
 
 ## Capabilities
 
-- Decision engine with operational, risk, cost, profit, and executive intents
-- Scenario analysis and recommendation engine
-- Operational prioritization and executive recommendations
+- Decision engine and scenario analysis
+- Operational recommendations and resource allocation
+- Priority management, cost optimization, profitability analysis
+- Strategic planning
 
 ## Endpoints
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| GET/POST | `/decisions` | Decide / scenario / recommend / prioritize |
+| GET/POST | `/decisions` | Decide, scenario, recommend, allocate, priority, cost, profitability, strategy |
 
 ## Readiness
 
-Enterprise Decision Support Ready
+Decision Support Ready (within AI Port Director platform)

@@ -7,6 +7,7 @@ from aiohttp import web
 from applications.port_enterprise.api import (
     container_handlers,
     customs_handlers,
+    director_handlers,
     freight_handlers,
     handlers,
     multimodal_handlers,
@@ -166,3 +167,24 @@ def register_port_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{fm}/dashboard", freight_handlers.fm_dashboard_handler)
     app.router.add_get(f"{fm}/knowledge", freight_handlers.fm_knowledge_handler)
     app.router.add_post(f"{fm}/knowledge", freight_handlers.fm_knowledge_handler)
+
+    # Sprint 15.7 — AI Port Director (additive; prior routes unchanged)
+    ad = DEFAULT_CONFIG.ai_port_director_api_prefix
+    app.router.add_get(f"{ad}/health", director_handlers.ad_health_handler)
+    app.router.add_post(f"{ad}/bootstrap", director_handlers.ad_bootstrap_handler)
+    app.router.add_get(f"{ad}/director", director_handlers.ad_director_handler)
+    app.router.add_post(f"{ad}/director", director_handlers.ad_director_handler)
+    app.router.add_get(f"{ad}/decisions", director_handlers.ad_decisions_handler)
+    app.router.add_post(f"{ad}/decisions", director_handlers.ad_decisions_handler)
+    app.router.add_get(f"{ad}/predictive", director_handlers.ad_predictive_handler)
+    app.router.add_post(f"{ad}/predictive", director_handlers.ad_predictive_handler)
+    app.router.add_get(f"{ad}/autonomous", director_handlers.ad_autonomous_handler)
+    app.router.add_post(f"{ad}/autonomous", director_handlers.ad_autonomous_handler)
+    app.router.add_get(f"{ad}/intelligence", director_handlers.ad_intelligence_handler)
+    app.router.add_post(f"{ad}/intelligence", director_handlers.ad_intelligence_handler)
+    app.router.add_get(f"{ad}/executive", director_handlers.ad_executive_handler)
+    app.router.add_post(f"{ad}/executive", director_handlers.ad_executive_handler)
+    app.router.add_get(f"{ad}/dashboard", director_handlers.ad_dashboard_handler)
+    app.router.add_post(f"{ad}/dashboard", director_handlers.ad_dashboard_handler)
+    app.router.add_get(f"{ad}/knowledge", director_handlers.ad_knowledge_handler)
+    app.router.add_post(f"{ad}/knowledge", director_handlers.ad_knowledge_handler)

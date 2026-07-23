@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_container_ready():
     health = port_enterprise.health()
-    assert health["application_version"] == "4.5.6-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.5.5-enterprise"
+    assert health["application_version"] == "4.5.7-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.5.6-enterprise"
     assert health["container_platform_ready"] is True
     assert health["yard_automation_ready"] is True
     assert health["port_equipment_ready"] is True
@@ -82,7 +82,7 @@ def test_automation_and_twin():
 async def test_api_containers(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.5.6-enterprise"
+    assert body["application_version"] == "4.5.7-enterprise"
     assert body["container_platform_ready"] is True
     assert body["digital_twin_ready"] is True
 
@@ -134,5 +134,5 @@ def test_docs_and_regression_15_2():
     assert AGRO.application_version == "4.4.0-enterprise"
     assert PORT_ERP.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "port_enterprise" / "manifest.json").read_text()
-    assert "4.5.6-enterprise" in manifest
-    assert "15.6" in manifest
+    assert "4.5.7-enterprise" in manifest
+    assert "15.7" in manifest
