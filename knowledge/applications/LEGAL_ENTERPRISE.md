@@ -1,12 +1,10 @@
 # Legal Enterprise (knowledge)
 
-Sprint 17.0 — Legal Intelligence Platform Foundation.
+Sprint 17.1 — Legal Intelligence Platform (Legislation Intelligence).
 
-- Version: `4.9.0-enterprise`
-- Foundation: Enterprise Platform v4.8.0-enterprise
-- API: `/api/legal-enterprise/v1`
-- Package: `applications/legal_enterprise/`
+- Version: `4.9.1-enterprise`
+- Foundation: Enterprise Platform v4.9.0-enterprise
+- API: `/api/legal-enterprise/v1` · `/api/legal-li/v1`
+- Package: `applications/legal_enterprise/` · `legislation_intelligence/`
 
-Registries: Legal · Legislation · Courts · Cases · Knowledge Graph.
-
-Readiness: Legal Enterprise Foundation Ready · Legislation Registry Ready · Case Management Foundation Ready · Legal Knowledge Graph Ready.
+Readiness: Foundation through Legal Knowledge Platform Ready.
