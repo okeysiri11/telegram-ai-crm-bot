@@ -1,0 +1,21 @@
+{
+  "service": "legal_enterprise",
+  "application_version": "5.0.0-enterprise",
+  "api_prefixes": [
+    "/api/legal-enterprise/v1",
+    "/api/legal-li/v1",
+    "/api/legal-ji/v1",
+    "/api/legal-cm/v1",
+    "/api/legal-di/v1",
+    "/api/legal-cp/v1",
+    "/api/legal-aa/v1",
+    "/api/legal-ei/v1",
+    "/api/legal-enterprise-certification/v1"
+  ],
+  "healthchecks": [
+    "/api/legal-enterprise/v1/health",
+    "/api/legal-enterprise-certification/v1/health"
+  ],
+  "config_template": "applications/legal_enterprise/release/config.template.env",
+  "checklist": "applications/legal_enterprise/release/PRODUCTION_CHECKLIST.md"
+}

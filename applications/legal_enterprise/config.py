@@ -1,4 +1,4 @@
-# Legal Enterprise Platform — Sprint 17.7 Executive Legal Intelligence.
+# Legal Enterprise Platform — Sprint 17.8 Production Release.
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class LegalEnterpriseConfig:
     application_name: str = "Legal Intelligence Platform"
     application: str = "legal_enterprise"
-    application_version: str = "4.9.7-enterprise"
-    release_status: str = "Executive Legal Intelligence"
+    application_version: str = "5.0.0-enterprise"
+    release_status: str = "Production Ready"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.9.6-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.9.7-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/legal-enterprise/v1"
@@ -23,6 +23,7 @@ class LegalEnterpriseConfig:
     compliance_api_prefix: str = "/api/legal-cp/v1"
     ai_legal_assistant_api_prefix: str = "/api/legal-aa/v1"
     executive_intelligence_api_prefix: str = "/api/legal-ei/v1"
+    enterprise_certification_api_prefix: str = "/api/legal-enterprise-certification/v1"
     internal_prefix: str = "/internal/legal-enterprise/v1"
     legal_registry: str = "1.0"
     legislation_registry: str = "1.0"
@@ -35,6 +36,7 @@ class LegalEnterpriseConfig:
     compliance: str = "1.0"
     ai_legal_assistant: str = "1.0"
     executive_intelligence: str = "1.0"
+    enterprise_certification: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     legal_roles: list[str] = field(

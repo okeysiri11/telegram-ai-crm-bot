@@ -233,6 +233,9 @@ class LegalEnterpriseStore:
         self.ei_alerts: EntityStore = EntityStore()
         self.ei_knowledge: EntityStore = EntityStore()
         self.ei_dashboards: EntityStore = EntityStore()
+        # Sprint 17.8 — Enterprise Certification
+        self.lec_runs: EntityStore = EntityStore()
+        self.lec_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

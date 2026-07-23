@@ -12,6 +12,7 @@ from applications.legal_enterprise.api import (
     ei_handlers,
     handlers,
     ji_handlers,
+    lec_handlers,
     li_handlers,
 )
 from applications.legal_enterprise.api.middleware import auth_middleware
@@ -188,3 +189,18 @@ def register_legal_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{ei}/knowledge", ei_handlers.ei_knowledge_handler)
     app.router.add_get(f"{ei}/dashboard", ei_handlers.ei_dashboard_handler)
     app.router.add_post(f"{ei}/dashboard", ei_handlers.ei_dashboard_handler)
+
+    # Sprint 17.8 — Enterprise Certification (additive; prior routes unchanged)
+    lec = DEFAULT_CONFIG.enterprise_certification_api_prefix
+    app.router.add_get(f"{lec}/health", lec_handlers.lec_health_handler)
+    app.router.add_post(f"{lec}/bootstrap", lec_handlers.lec_bootstrap_handler)
+    app.router.add_get(f"{lec}/architecture", lec_handlers.lec_architecture_handler)
+    app.router.add_get(f"{lec}/integration", lec_handlers.lec_integration_handler)
+    app.router.add_get(f"{lec}/performance", lec_handlers.lec_performance_handler)
+    app.router.add_get(f"{lec}/security", lec_handlers.lec_security_handler)
+    app.router.add_get(f"{lec}/documentation", lec_handlers.lec_documentation_handler)
+    app.router.add_get(f"{lec}/quality", lec_handlers.lec_quality_handler)
+    app.router.add_get(f"{lec}/release", lec_handlers.lec_release_handler)
+    app.router.add_get(f"{lec}/executive", lec_handlers.lec_executive_handler)
+    app.router.add_get(f"{lec}/dashboard", lec_handlers.lec_dashboard_handler)
+    app.router.add_post(f"{lec}/dashboard", lec_handlers.lec_dashboard_handler)

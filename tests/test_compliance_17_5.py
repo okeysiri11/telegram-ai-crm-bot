@@ -44,8 +44,8 @@ def reset_store():
 
 def test_version_compliance_ready():
     health = legal_enterprise.health()
-    assert health["application_version"] == "4.9.7-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.6-enterprise"
+    assert health["application_version"] == "5.0.0-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.7-enterprise"
     assert health["compliance_platform_ready"] is True
     assert health["corporate_governance_ready"] is True
     assert health["legal_risk_management_ready"] is True
@@ -69,7 +69,7 @@ def test_aml_risk_ai_bootstrap():
     suite = legal_enterprise.compliance_platform
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "4.9.7-enterprise"
+    assert boot["version"] == "5.0.0-enterprise"
     assert boot["company_id"] and boot["aml_id"] and boot["health_id"]
     assert suite.aml.aml_score(name="Test Entity", score=55)["risk_level"] == "medium"
     assert suite.ai.compliance_health_score()["kind"] == "compliance_health"
@@ -81,7 +81,7 @@ def test_aml_risk_ai_bootstrap():
 async def test_api_compliance(client):
     health = await client.get(f"{CP}/health")
     body = await health.json()
-    assert body["application_version"] == "4.9.7-enterprise"
+    assert body["application_version"] == "5.0.0-enterprise"
     assert body["compliance_platform_ready"] is True
     assert body["corporate_governance_ready"] is True
 
@@ -101,7 +101,7 @@ async def test_api_compliance(client):
     for prefix in (PREFIX, LI, JI, CM, DI):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "4.9.7-enterprise"
+        assert (await resp.json())["application_version"] == "5.0.0-enterprise"
 
 
 def test_docs_and_regression_17_5():
@@ -133,5 +133,5 @@ def test_docs_and_regression_17_5():
     assert PORT_ERP.application_version == "2.0.0"
     assert CRYPTO.application_version == "4.8.0-enterprise"
     manifest = (ROOT / "applications" / "legal_enterprise" / "manifest.json").read_text()
-    assert "4.9.7-enterprise" in manifest
-    assert "17.7" in manifest
+    assert "5.0.0-enterprise" in manifest
+    assert "17.8" in manifest

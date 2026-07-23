@@ -42,8 +42,8 @@ def reset_store():
 
 def test_version_legislation_intelligence_ready():
     health = legal_enterprise.health()
-    assert health["application_version"] == "4.9.7-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.6-enterprise"
+    assert health["application_version"] == "5.0.0-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.7-enterprise"
     assert health["legislation_intelligence_ready"] is True
     assert health["ai_legal_search_ready"] is True
     assert health["regulatory_intelligence_ready"] is True
@@ -65,7 +65,7 @@ def test_search_analysis_and_bootstrap():
     suite = legal_enterprise.legislation_intelligence
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "4.9.7-enterprise"
+    assert boot["version"] == "5.0.0-enterprise"
     assert boot["law_id"] and boot["search_id"] and boot["summary_id"]
     for mode in SEARCH_MODES:
         row = suite.search.search(mode=mode, query="data", limit=3)
@@ -82,7 +82,7 @@ def test_search_analysis_and_bootstrap():
 async def test_api_legislation_intelligence(client):
     health = await client.get(f"{LI}/health")
     body = await health.json()
-    assert body["application_version"] == "4.9.7-enterprise"
+    assert body["application_version"] == "5.0.0-enterprise"
     assert body["legislation_intelligence_ready"] is True
     assert body["ai_legal_search_ready"] is True
 
@@ -104,7 +104,7 @@ async def test_api_legislation_intelligence(client):
 
     ce = await client.get(f"{PREFIX}/health")
     assert ce.status == 200
-    assert (await ce.json())["application_version"] == "4.9.7-enterprise"
+    assert (await ce.json())["application_version"] == "5.0.0-enterprise"
 
 
 def test_docs_and_regression_17_1():
@@ -134,7 +134,7 @@ def test_docs_and_regression_17_1():
     assert PORT_ERP.application_version == "2.0.0"
     assert CRYPTO.application_version == "4.8.0-enterprise"
     manifest = (ROOT / "applications" / "legal_enterprise" / "manifest.json").read_text()
-    assert "4.9.7-enterprise" in manifest
-    assert "17.7" in manifest
+    assert "5.0.0-enterprise" in manifest
+    assert "17.8" in manifest
     assert (ROOT / "applications" / "legal_enterprise" / "legal_registry.py").exists()
     _ = (CE,)
