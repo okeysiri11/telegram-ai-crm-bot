@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.finance_enterprise.ai_cfo.facade import AICFOSuite
 from applications.finance_enterprise.architecture import FinancialArchitecture
 from applications.finance_enterprise.billing.facade import BillingSuite
 from applications.finance_enterprise.config import DEFAULT_CONFIG, FinanceEnterpriseConfig
@@ -29,6 +30,7 @@ class FinanceEnterpriseApplication:
         treasury_svc: TreasurySuite | None = None,
         digital_assets_svc: DigitalAssetsSuite | None = None,
         reporting_svc: ReportingSuite | None = None,
+        ai_cfo_svc: AICFOSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or finance_enterprise_store
@@ -43,6 +45,7 @@ class FinanceEnterpriseApplication:
         self.treasury = treasury_svc or TreasurySuite(self.store)
         self.digital_assets = digital_assets_svc or DigitalAssetsSuite(self.store)
         self.reporting = reporting_svc or ReportingSuite(self.store)
+        self.ai_cfo = ai_cfo_svc or AICFOSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -188,6 +191,10 @@ class FinanceEnterpriseApplication:
             "business_intelligence_ready": True,
             "executive_analytics_ready": True,
             "enterprise_bi_ready": True,
+            "ai_cfo_ready": True,
+            "financial_decision_support_ready": True,
+            "financial_modeling_ready": True,
+            "executive_financial_intelligence_ready": True,
             "engines": {
                 "financial_registry": self.config.financial_registry,
                 "general_ledger": self.config.general_ledger,
@@ -198,6 +205,7 @@ class FinanceEnterpriseApplication:
                 "treasury": self.config.treasury,
                 "digital_assets": self.config.digital_assets,
                 "reporting": self.config.reporting,
+                "ai_cfo": self.config.ai_cfo,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -212,6 +220,7 @@ class FinanceEnterpriseApplication:
             "treasury": self.treasury.status(),
             "digital_assets": self.digital_assets.status(),
             "reporting": self.reporting.status(),
+            "ai_cfo": self.ai_cfo.status(),
         }
 
 

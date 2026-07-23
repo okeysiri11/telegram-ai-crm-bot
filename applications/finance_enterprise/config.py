@@ -1,4 +1,4 @@
-"""Finance Enterprise Platform — Sprint 18.5 Financial Reporting & BI (Bidex)."""
+"""Finance Enterprise Platform — Sprint 18.6 AI CFO & Decision Support (Bidex)."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class FinanceEnterpriseConfig:
     application_name: str = "Finance Enterprise Platform (Bidex)"
     application: str = "finance_enterprise"
-    application_version: str = "5.1.5-enterprise"
-    release_status: str = "Financial Reporting & BI"
+    application_version: str = "5.1.6-enterprise"
+    release_status: str = "AI CFO & Decision Support"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.1.4-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.1.5-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/finance-enterprise/v1"
@@ -21,6 +21,7 @@ class FinanceEnterpriseConfig:
     treasury_api_prefix: str = "/api/finance-tr/v1"
     digital_assets_api_prefix: str = "/api/finance-da/v1"
     reporting_api_prefix: str = "/api/finance-rpt/v1"
+    ai_cfo_api_prefix: str = "/api/finance-cfo/v1"
     internal_prefix: str = "/internal/finance-enterprise/v1"
     financial_registry: str = "1.0"
     general_ledger: str = "1.0"
@@ -31,6 +32,7 @@ class FinanceEnterpriseConfig:
     treasury: str = "1.0"
     digital_assets: str = "1.0"
     reporting: str = "1.0"
+    ai_cfo: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     base_currency: str = "USD"
@@ -266,6 +268,86 @@ class FinanceEnterpriseConfig:
     )
     rpt_knowledge_bases: list[str] = field(
         default_factory=lambda: ["reporting", "kpi", "report", "forecast", "analytics"]
+    )
+    cfo_assistant_roles: list[str] = field(
+        default_factory=lambda: ["executive_assistant", "qa", "analyst"]
+    )
+    cfo_performance_types: list[str] = field(
+        default_factory=lambda: [
+            "revenue",
+            "expense",
+            "profitability",
+            "margin",
+            "cost_structure",
+            "working_capital",
+        ]
+    )
+    cfo_strategy_types: list[str] = field(
+        default_factory=lambda: [
+            "capital_allocation",
+            "investment_analysis",
+            "budget_optimization",
+            "resource_allocation",
+            "growth_planning",
+            "expansion_scenario",
+        ]
+    )
+    cfo_model_types: list[str] = field(
+        default_factory=lambda: [
+            "roi",
+            "npv",
+            "irr",
+            "break_even",
+            "sensitivity",
+            "what_if",
+        ]
+    )
+    cfo_risk_types: list[str] = field(
+        default_factory=lambda: [
+            "liquidity",
+            "credit",
+            "cash_flow",
+            "budget_deviation",
+            "financial_stability",
+            "mitigation",
+        ]
+    )
+    cfo_recommendation_types: list[str] = field(
+        default_factory=lambda: [
+            "executive",
+            "cost_optimization",
+            "revenue_improvement",
+            "investment",
+            "cash_management",
+            "strategic_priority",
+        ]
+    )
+    cfo_report_types: list[str] = field(
+        default_factory=lambda: [
+            "daily_briefing",
+            "weekly_summary",
+            "monthly_executive",
+            "board",
+            "nl_report",
+        ]
+    )
+    cfo_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "ai_cfo",
+            "financial_health",
+            "investment",
+            "risk",
+            "strategy",
+        ]
+    )
+    cfo_knowledge_bases: list[str] = field(
+        default_factory=lambda: [
+            "intelligence",
+            "investment",
+            "risk",
+            "strategy",
+            "recommendation",
+        ]
     )
 
 

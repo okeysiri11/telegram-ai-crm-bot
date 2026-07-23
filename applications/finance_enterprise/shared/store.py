@@ -177,6 +177,17 @@ class FinanceEnterpriseStore:
         self.rpt_ai_insights: EntityStore = EntityStore()
         self.rpt_knowledge: EntityStore = EntityStore()
         self.rpt_dashboards: EntityStore = EntityStore()
+        # Sprint 18.6 — AI CFO & Decision Support
+        self.cfo_workspaces: EntityStore = EntityStore()
+        self.cfo_conversations: EntityStore = EntityStore()
+        self.cfo_performance: EntityStore = EntityStore()
+        self.cfo_strategies: EntityStore = EntityStore()
+        self.cfo_models: EntityStore = EntityStore()
+        self.cfo_risks: EntityStore = EntityStore()
+        self.cfo_recommendations: EntityStore = EntityStore()
+        self.cfo_reports: EntityStore = EntityStore()
+        self.cfo_knowledge: EntityStore = EntityStore()
+        self.cfo_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

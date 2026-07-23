@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.finance_enterprise.api import (
     bil_handlers,
+    cfo_handlers,
     da_handlers,
     handlers,
     pay_handlers,
@@ -144,3 +145,26 @@ def register_finance_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{rpt}/dashboard", rpt_handlers.rpt_dashboard_handler)
     app.router.add_get(f"{rpt}/knowledge", rpt_handlers.rpt_knowledge_handler)
     app.router.add_post(f"{rpt}/knowledge", rpt_handlers.rpt_knowledge_handler)
+
+    # Sprint 18.6 — AI CFO & Decision Support (additive; prior routes unchanged)
+    cfo = DEFAULT_CONFIG.ai_cfo_api_prefix
+    app.router.add_get(f"{cfo}/health", cfo_handlers.cfo_health_handler)
+    app.router.add_post(f"{cfo}/bootstrap", cfo_handlers.cfo_bootstrap_handler)
+    app.router.add_get(f"{cfo}/workspace", cfo_handlers.cfo_workspace_handler)
+    app.router.add_post(f"{cfo}/workspace", cfo_handlers.cfo_workspace_handler)
+    app.router.add_get(f"{cfo}/performance", cfo_handlers.cfo_performance_handler)
+    app.router.add_post(f"{cfo}/performance", cfo_handlers.cfo_performance_handler)
+    app.router.add_get(f"{cfo}/strategy", cfo_handlers.cfo_strategy_handler)
+    app.router.add_post(f"{cfo}/strategy", cfo_handlers.cfo_strategy_handler)
+    app.router.add_get(f"{cfo}/modeling", cfo_handlers.cfo_modeling_handler)
+    app.router.add_post(f"{cfo}/modeling", cfo_handlers.cfo_modeling_handler)
+    app.router.add_get(f"{cfo}/risk", cfo_handlers.cfo_risk_handler)
+    app.router.add_post(f"{cfo}/risk", cfo_handlers.cfo_risk_handler)
+    app.router.add_get(f"{cfo}/decisions", cfo_handlers.cfo_decisions_handler)
+    app.router.add_post(f"{cfo}/decisions", cfo_handlers.cfo_decisions_handler)
+    app.router.add_get(f"{cfo}/executive", cfo_handlers.cfo_executive_handler)
+    app.router.add_post(f"{cfo}/executive", cfo_handlers.cfo_executive_handler)
+    app.router.add_get(f"{cfo}/dashboard", cfo_handlers.cfo_dashboard_handler)
+    app.router.add_post(f"{cfo}/dashboard", cfo_handlers.cfo_dashboard_handler)
+    app.router.add_get(f"{cfo}/knowledge", cfo_handlers.cfo_knowledge_handler)
+    app.router.add_post(f"{cfo}/knowledge", cfo_handlers.cfo_knowledge_handler)
