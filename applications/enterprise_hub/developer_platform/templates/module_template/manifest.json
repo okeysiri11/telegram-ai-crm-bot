@@ -1,0 +1,11 @@
+{
+  "plugin_id": "example-module",
+  "name": "Example Module",
+  "version": "1.0.0",
+  "author": "bidex",
+  "kind": "module",
+  "permissions": ["crm.read", "ui.extend"],
+  "dependencies": [],
+  "compatibility": "5.4.6-enterprise",
+  "entrypoint": "main:Module"
+}

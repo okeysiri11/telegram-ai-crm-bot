@@ -14,6 +14,7 @@ from applications.enterprise_hub.ai_orchestrator import api as aop_api
 from applications.enterprise_hub.ai_os import api as aios_api
 from applications.enterprise_hub.ai_tools import api as ats_api
 from applications.enterprise_hub.event_platform import api as evp_api
+from applications.enterprise_hub.developer_platform import api as sdp_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -381,3 +382,25 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{evp}/dashboard", evp_api.evp_dashboard_handler)
     app.router.add_get(f"{evp}/analytics", evp_api.evp_analytics_handler)
     app.router.add_post(f"{evp}/analytics", evp_api.evp_analytics_handler)
+
+    # Sprint 20.6 — Developer Platform (additive; prior routes unchanged)
+    sdp = DEFAULT_CONFIG.developer_platform_api_prefix
+    app.router.add_get(f"{sdp}/health", sdp_api.sdp_health_handler)
+    app.router.add_post(f"{sdp}/bootstrap", sdp_api.sdp_bootstrap_handler)
+    app.router.add_get(f"{sdp}/plugins", sdp_api.sdp_plugins_handler)
+    app.router.add_post(f"{sdp}/plugins", sdp_api.sdp_plugins_handler)
+    app.router.add_post(f"{sdp}/lifecycle", sdp_api.sdp_lifecycle_handler)
+    app.router.add_get(f"{sdp}/extensions", sdp_api.sdp_extensions_handler)
+    app.router.add_post(f"{sdp}/extensions", sdp_api.sdp_extensions_handler)
+    app.router.add_get(f"{sdp}/sdk", sdp_api.sdp_sdk_handler)
+    app.router.add_post(f"{sdp}/sdk", sdp_api.sdp_sdk_handler)
+    app.router.add_get(f"{sdp}/marketplace", sdp_api.sdp_marketplace_handler)
+    app.router.add_post(f"{sdp}/marketplace", sdp_api.sdp_marketplace_handler)
+    app.router.add_get(f"{sdp}/packages", sdp_api.sdp_packages_handler)
+    app.router.add_post(f"{sdp}/packages", sdp_api.sdp_packages_handler)
+    app.router.add_get(f"{sdp}/console", sdp_api.sdp_console_handler)
+    app.router.add_post(f"{sdp}/console", sdp_api.sdp_console_handler)
+    app.router.add_get(f"{sdp}/analytics", sdp_api.sdp_analytics_handler)
+    app.router.add_post(f"{sdp}/analytics", sdp_api.sdp_analytics_handler)
+    app.router.add_get(f"{sdp}/docs", sdp_api.sdp_docs_handler)
+    app.router.add_post(f"{sdp}/docs", sdp_api.sdp_docs_handler)

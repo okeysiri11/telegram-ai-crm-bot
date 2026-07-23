@@ -12,6 +12,7 @@ from applications.enterprise_hub.communications.facade import CommunicationsSuit
 from applications.enterprise_hub.config import DEFAULT_CONFIG, EnterpriseHubConfig
 from applications.enterprise_hub.configuration import EnterpriseConfiguration
 from applications.enterprise_hub.data_platform.facade import DataPlatformSuite
+from applications.enterprise_hub.developer_platform.facade import DeveloperPlatformSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -50,6 +51,7 @@ class EnterpriseHubApplication:
         knowledge_platform_svc: KnowledgePlatformSuite | None = None,
         aios_svc: AutonomousAIOSSuite | None = None,
         event_platform_svc: EventPlatformSuite | None = None,
+        developer_platform_svc: DeveloperPlatformSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -75,6 +77,7 @@ class EnterpriseHubApplication:
         self.knowledge_platform = knowledge_platform_svc or KnowledgePlatformSuite(self.store)
         self.aios = aios_svc or AutonomousAIOSSuite(self.store)
         self.event_platform = event_platform_svc or EventPlatformSuite(self.store)
+        self.developer_platform = developer_platform_svc or DeveloperPlatformSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -298,6 +301,10 @@ class EnterpriseHubApplication:
             "event_bus_ready": True,
             "event_replay_ready": True,
             "dead_letter_queue_ready": True,
+            "developer_platform_ready": True,
+            "plugin_framework_ready": True,
+            "sdk_ready": True,
+            "marketplace_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -319,6 +326,7 @@ class EnterpriseHubApplication:
                 "knowledge_platform": self.config.knowledge_platform,
                 "aios": self.config.aios,
                 "event_platform": self.config.event_platform,
+                "developer_platform": self.config.developer_platform,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -344,6 +352,7 @@ class EnterpriseHubApplication:
             "knowledge_platform": self.knowledge_platform.status(),
             "aios": self.aios.status(),
             "event_platform": self.event_platform.status(),
+            "developer_platform": self.developer_platform.status(),
         }
 
 

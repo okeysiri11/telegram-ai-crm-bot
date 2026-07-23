@@ -1,0 +1,11 @@
+{
+  "plugin_id": "example-plugin",
+  "name": "Example Plugin",
+  "version": "1.0.0",
+  "author": "bidex",
+  "kind": "plugin",
+  "permissions": ["events.publish"],
+  "dependencies": [],
+  "compatibility": "5.4.6-enterprise",
+  "entrypoint": "main:Plugin"
+}

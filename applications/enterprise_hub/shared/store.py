@@ -331,6 +331,26 @@ class EnterpriseHubStore:
         self.evp_dlq: EntityStore = EntityStore()
         self.evp_replays: EntityStore = EntityStore()
         self.evp_analytics: EntityStore = EntityStore()
+        # Sprint 20.6 — Developer Platform
+        self.sdp_plugins: EntityStore = EntityStore()
+        self.sdp_manifests: EntityStore = EntityStore()
+        self.sdp_validations: EntityStore = EntityStore()
+        self.sdp_loads: EntityStore = EntityStore()
+        self.sdp_reloads: EntityStore = EntityStore()
+        self.sdp_rollbacks: EntityStore = EntityStore()
+        self.sdp_audit: EntityStore = EntityStore()
+        self.sdp_extensions: EntityStore = EntityStore()
+        self.sdp_dependencies: EntityStore = EntityStore()
+        self.sdp_sandboxes: EntityStore = EntityStore()
+        self.sdp_packages: EntityStore = EntityStore()
+        self.sdp_package_actions: EntityStore = EntityStore()
+        self.sdp_sdk_calls: EntityStore = EntityStore()
+        self.sdp_gateway: EntityStore = EntityStore()
+        self.sdp_listings: EntityStore = EntityStore()
+        self.sdp_signatures: EntityStore = EntityStore()
+        self.sdp_publishes: EntityStore = EntityStore()
+        self.sdp_installs: EntityStore = EntityStore()
+        self.sdp_updates: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

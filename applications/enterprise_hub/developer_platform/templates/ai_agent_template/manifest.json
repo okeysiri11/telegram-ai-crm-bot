@@ -1,0 +1,11 @@
+{
+  "plugin_id": "example-ai-agent",
+  "name": "Example Agent",
+  "version": "1.0.0",
+  "author": "bidex",
+  "kind": "ai_agent",
+  "permissions": ["ai.invoke", "crm.read"],
+  "dependencies": [],
+  "compatibility": "5.4.6-enterprise",
+  "entrypoint": "main:Agent"
+}
