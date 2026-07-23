@@ -320,6 +320,17 @@ class EnterpriseHubStore:
         self.aios_safety: EntityStore = EntityStore()
         self.aios_escalations: EntityStore = EntityStore()
         self.aios_analytics: EntityStore = EntityStore()
+        # Sprint 20.5 — Event Platform
+        self.evp_types: EntityStore = EntityStore()
+        self.evp_schemas: EntityStore = EntityStore()
+        self.evp_events: EntityStore = EntityStore()
+        self.evp_subscriptions: EntityStore = EntityStore()
+        self.evp_routes: EntityStore = EntityStore()
+        self.evp_dispatches: EntityStore = EntityStore()
+        self.evp_retries: EntityStore = EntityStore()
+        self.evp_dlq: EntityStore = EntityStore()
+        self.evp_replays: EntityStore = EntityStore()
+        self.evp_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

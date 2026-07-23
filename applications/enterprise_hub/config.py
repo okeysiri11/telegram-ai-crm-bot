@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 20.4 Enterprise Autonomous AIOS."""
+"""Enterprise Hub — Sprint 20.5 Enterprise Event Platform."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.4.4-enterprise"
-    release_status: str = "Enterprise Autonomous AIOS"
+    application_version: str = "5.4.5-enterprise"
+    release_status: str = "Enterprise Event Platform"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.4.3-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.4.4-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -30,6 +30,7 @@ class EnterpriseHubConfig:
     ai_tools_api_prefix: str = "/api/enterprise-ats/v1"
     knowledge_platform_api_prefix: str = "/api/enterprise-ekp/v1"
     aios_api_prefix: str = "/api/enterprise-aios/v1"
+    event_platform_api_prefix: str = "/api/enterprise-evp/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -50,6 +51,7 @@ class EnterpriseHubConfig:
     ai_tools: str = "1.0"
     knowledge_platform: str = "1.0"
     aios: str = "1.0"
+    event_platform: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -418,6 +420,20 @@ class EnterpriseHubConfig:
     )
     aios_execution_modes: list[str] = field(
         default_factory=lambda: ["sequential", "parallel", "distributed", "recursive", "collaborative"]
+    )
+    evp_event_types: list[str] = field(
+        default_factory=lambda: [
+            "UserCreated",
+            "LeadCreated",
+            "ContractSigned",
+            "PaymentReceived",
+            "InvoiceApproved",
+            "TaskCompleted",
+            "ShipmentCreated",
+            "AIJobFinished",
+            "DocumentUpdated",
+            "SecurityAlert",
+        ]
     )
 
 

@@ -13,6 +13,7 @@ from applications.enterprise_hub.integrations import api as eip_api
 from applications.enterprise_hub.ai_orchestrator import api as aop_api
 from applications.enterprise_hub.ai_os import api as aios_api
 from applications.enterprise_hub.ai_tools import api as ats_api
+from applications.enterprise_hub.event_platform import api as evp_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -362,3 +363,21 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{aios}/dashboard", aios_api.aios_dashboard_handler)
     app.router.add_get(f"{aios}/analytics", aios_api.aios_analytics_handler)
     app.router.add_post(f"{aios}/analytics", aios_api.aios_analytics_handler)
+
+    # Sprint 20.5 — Event Platform (additive; prior routes unchanged)
+    evp = DEFAULT_CONFIG.event_platform_api_prefix
+    app.router.add_get(f"{evp}/health", evp_api.evp_health_handler)
+    app.router.add_post(f"{evp}/bootstrap", evp_api.evp_bootstrap_handler)
+    app.router.add_post(f"{evp}/publish", evp_api.evp_publish_handler)
+    app.router.add_get(f"{evp}/subscribe", evp_api.evp_subscribe_handler)
+    app.router.add_post(f"{evp}/subscribe", evp_api.evp_subscribe_handler)
+    app.router.add_get(f"{evp}/events", evp_api.evp_events_handler)
+    app.router.add_post(f"{evp}/events", evp_api.evp_events_handler)
+    app.router.add_post(f"{evp}/replay", evp_api.evp_replay_handler)
+    app.router.add_get(f"{evp}/dlq", evp_api.evp_dlq_handler)
+    app.router.add_get(f"{evp}/schemas", evp_api.evp_schemas_handler)
+    app.router.add_post(f"{evp}/schemas", evp_api.evp_schemas_handler)
+    app.router.add_get(f"{evp}/dashboard", evp_api.evp_dashboard_handler)
+    app.router.add_post(f"{evp}/dashboard", evp_api.evp_dashboard_handler)
+    app.router.add_get(f"{evp}/analytics", evp_api.evp_analytics_handler)
+    app.router.add_post(f"{evp}/analytics", evp_api.evp_analytics_handler)
