@@ -14,6 +14,7 @@ from applications.enterprise_hub.identity import EnterpriseIdentity
 from applications.enterprise_hub.integration_layer import IntegrationLayer
 from applications.enterprise_hub.integrations.facade import IntegrationPlatformSuite
 from applications.enterprise_hub.knowledge.facade import UnifiedKnowledgeSuite
+from applications.enterprise_hub.observability.facade import ObservabilitySuite
 from applications.enterprise_hub.orchestrator.facade import OrchestratorSuite
 from applications.enterprise_hub.registry import EnterpriseRegistry
 from applications.enterprise_hub.security.facade import SecuritySuite
@@ -36,6 +37,7 @@ class EnterpriseHubApplication:
         eip_svc: IntegrationPlatformSuite | None = None,
         edp_svc: DataPlatformSuite | None = None,
         isam_svc: SecuritySuite | None = None,
+        observability_svc: ObservabilitySuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -54,6 +56,7 @@ class EnterpriseHubApplication:
         self.eip = eip_svc or IntegrationPlatformSuite(self.store)
         self.edp = edp_svc or DataPlatformSuite(self.store)
         self.isam = isam_svc or SecuritySuite(self.store)
+        self.observability = observability_svc or ObservabilitySuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -248,6 +251,10 @@ class EnterpriseHubApplication:
             "authentication_ready": True,
             "authorization_ready": True,
             "security_monitoring_ready": True,
+            "enterprise_observability_ready": True,
+            "metrics_platform_ready": True,
+            "distributed_tracing_ready": True,
+            "incident_management_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -262,6 +269,7 @@ class EnterpriseHubApplication:
                 "eip": self.config.eip,
                 "edp": self.config.edp,
                 "isam": self.config.isam,
+                "observability": self.config.observability,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -280,6 +288,7 @@ class EnterpriseHubApplication:
             "eip": self.eip.status(),
             "edp": self.edp.status(),
             "isam": self.isam.status(),
+            "observability": self.observability.status(),
         }
 
 

@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 19.8 Enterprise Identity, Security & Access Management."""
+"""Enterprise Hub — Sprint 19.9 Enterprise Observability Platform."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.3.8-enterprise"
-    release_status: str = "Enterprise ISAM"
+    application_version: str = "5.3.9-enterprise"
+    release_status: str = "Enterprise Observability"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.3.7-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.3.8-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -24,6 +24,7 @@ class EnterpriseHubConfig:
     eip_api_prefix: str = "/api/enterprise-eip/v1"
     edp_api_prefix: str = "/api/enterprise-edp/v1"
     isam_api_prefix: str = "/api/enterprise-isam/v1"
+    observability_api_prefix: str = "/api/enterprise-obs/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -38,6 +39,7 @@ class EnterpriseHubConfig:
     eip: str = "1.0"
     edp: str = "1.0"
     isam: str = "1.0"
+    observability: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -352,6 +354,15 @@ class EnterpriseHubConfig:
             "access",
             "monitoring",
             "audit",
+        ]
+    )
+    obs_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "platform",
+            "infrastructure",
+            "ai",
+            "integrations",
+            "business",
         ]
     )
 

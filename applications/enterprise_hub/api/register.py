@@ -10,6 +10,7 @@ from applications.enterprise_hub.communications import api as comm_api
 from applications.enterprise_hub.config import DEFAULT_CONFIG
 from applications.enterprise_hub.data_platform import api as edp_api
 from applications.enterprise_hub.integrations import api as eip_api
+from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
 from applications.enterprise_hub.workflow import api as wf_api
 
@@ -217,3 +218,28 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{isam}/audit", isam_api.isam_audit_handler)
     app.router.add_get(f"{isam}/dashboard", isam_api.isam_dashboard_handler)
     app.router.add_post(f"{isam}/dashboard", isam_api.isam_dashboard_handler)
+
+    # Sprint 19.9 — Enterprise Observability (additive; prior routes unchanged)
+    obs = DEFAULT_CONFIG.observability_api_prefix
+    app.router.add_get(f"{obs}/health", obs_api.obs_health_handler)
+    app.router.add_post(f"{obs}/bootstrap", obs_api.obs_bootstrap_handler)
+    app.router.add_get(f"{obs}/metrics", obs_api.obs_metrics_handler)
+    app.router.add_post(f"{obs}/metrics", obs_api.obs_metrics_handler)
+    app.router.add_get(f"{obs}/healthcheck", obs_api.obs_healthcheck_handler)
+    app.router.add_post(f"{obs}/healthcheck", obs_api.obs_healthcheck_handler)
+    app.router.add_get(f"{obs}/services", obs_api.obs_services_handler)
+    app.router.add_post(f"{obs}/services", obs_api.obs_services_handler)
+    app.router.add_get(f"{obs}/logs", obs_api.obs_logs_handler)
+    app.router.add_post(f"{obs}/logs", obs_api.obs_logs_handler)
+    app.router.add_get(f"{obs}/tracing", obs_api.obs_tracing_handler)
+    app.router.add_post(f"{obs}/tracing", obs_api.obs_tracing_handler)
+    app.router.add_get(f"{obs}/alerts", obs_api.obs_alerts_handler)
+    app.router.add_post(f"{obs}/alerts", obs_api.obs_alerts_handler)
+    app.router.add_get(f"{obs}/incidents", obs_api.obs_incidents_handler)
+    app.router.add_post(f"{obs}/incidents", obs_api.obs_incidents_handler)
+    app.router.add_get(f"{obs}/diagnostics", obs_api.obs_diagnostics_handler)
+    app.router.add_post(f"{obs}/diagnostics", obs_api.obs_diagnostics_handler)
+    app.router.add_get(f"{obs}/monitoring", obs_api.obs_monitoring_handler)
+    app.router.add_post(f"{obs}/monitoring", obs_api.obs_monitoring_handler)
+    app.router.add_get(f"{obs}/dashboard", obs_api.obs_dashboard_handler)
+    app.router.add_post(f"{obs}/dashboard", obs_api.obs_dashboard_handler)

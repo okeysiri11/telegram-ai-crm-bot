@@ -221,6 +221,19 @@ class EnterpriseHubStore:
         self.isam_anomalies: EntityStore = EntityStore()
         self.isam_risks: EntityStore = EntityStore()
         self.isam_dashboards: EntityStore = EntityStore()
+        # Sprint 19.9 — Enterprise Observability
+        self.obs_metrics: EntityStore = EntityStore()
+        self.obs_health: EntityStore = EntityStore()
+        self.obs_services: EntityStore = EntityStore()
+        self.obs_logs: EntityStore = EntityStore()
+        self.obs_log_searches: EntityStore = EntityStore()
+        self.obs_traces: EntityStore = EntityStore()
+        self.obs_alerts: EntityStore = EntityStore()
+        self.obs_incidents: EntityStore = EntityStore()
+        self.obs_diagnostics: EntityStore = EntityStore()
+        self.obs_collections: EntityStore = EntityStore()
+        self.obs_exports: EntityStore = EntityStore()
+        self.obs_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
