@@ -20,6 +20,7 @@ from applications.enterprise_hub.registry import EnterpriseRegistry
 from applications.enterprise_hub.security.facade import SecuritySuite
 from applications.enterprise_hub.services import HubDashboard, HubKnowledge
 from applications.enterprise_hub.shared.store import EnterpriseHubStore, enterprise_hub_store
+from applications.enterprise_hub.tenancy.facade import TenancySuite
 from applications.enterprise_hub.workflow.facade import WorkflowSuite
 
 
@@ -38,6 +39,7 @@ class EnterpriseHubApplication:
         edp_svc: DataPlatformSuite | None = None,
         isam_svc: SecuritySuite | None = None,
         observability_svc: ObservabilitySuite | None = None,
+        tenancy_svc: TenancySuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -57,6 +59,7 @@ class EnterpriseHubApplication:
         self.edp = edp_svc or DataPlatformSuite(self.store)
         self.isam = isam_svc or SecuritySuite(self.store)
         self.observability = observability_svc or ObservabilitySuite(self.store)
+        self.tenancy = tenancy_svc or TenancySuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -255,6 +258,11 @@ class EnterpriseHubApplication:
             "metrics_platform_ready": True,
             "distributed_tracing_ready": True,
             "incident_management_ready": True,
+            "multi_tenant_ready": True,
+            "workspace_ready": True,
+            "isolation_ready": True,
+            "licensing_ready": True,
+            "billing_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -270,6 +278,7 @@ class EnterpriseHubApplication:
                 "edp": self.config.edp,
                 "isam": self.config.isam,
                 "observability": self.config.observability,
+                "tenancy": self.config.tenancy,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -289,6 +298,7 @@ class EnterpriseHubApplication:
             "edp": self.edp.status(),
             "isam": self.isam.status(),
             "observability": self.observability.status(),
+            "tenancy": self.tenancy.status(),
         }
 
 

@@ -12,6 +12,7 @@ from applications.enterprise_hub.data_platform import api as edp_api
 from applications.enterprise_hub.integrations import api as eip_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
+from applications.enterprise_hub.tenancy import api as tenancy_api
 from applications.enterprise_hub.workflow import api as wf_api
 
 
@@ -243,3 +244,32 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{obs}/monitoring", obs_api.obs_monitoring_handler)
     app.router.add_get(f"{obs}/dashboard", obs_api.obs_dashboard_handler)
     app.router.add_post(f"{obs}/dashboard", obs_api.obs_dashboard_handler)
+
+    # Sprint 20.0 — Multi-Tenant Platform (additive; prior routes unchanged)
+    tn = DEFAULT_CONFIG.tenancy_api_prefix
+    app.router.add_get(f"{tn}/health", tenancy_api.tenancy_health_handler)
+    app.router.add_post(f"{tn}/bootstrap", tenancy_api.tenancy_bootstrap_handler)
+    app.router.add_get(f"{tn}/tenants", tenancy_api.tenancy_tenants_handler)
+    app.router.add_post(f"{tn}/tenants", tenancy_api.tenancy_tenants_handler)
+    app.router.add_get(f"{tn}/organizations", tenancy_api.tenancy_organizations_handler)
+    app.router.add_post(f"{tn}/organizations", tenancy_api.tenancy_organizations_handler)
+    app.router.add_get(f"{tn}/workspaces", tenancy_api.tenancy_workspaces_handler)
+    app.router.add_post(f"{tn}/workspaces", tenancy_api.tenancy_workspaces_handler)
+    app.router.add_get(f"{tn}/isolation", tenancy_api.tenancy_isolation_handler)
+    app.router.add_post(f"{tn}/isolation", tenancy_api.tenancy_isolation_handler)
+    app.router.add_get(f"{tn}/routing", tenancy_api.tenancy_routing_handler)
+    app.router.add_post(f"{tn}/routing", tenancy_api.tenancy_routing_handler)
+    app.router.add_get(f"{tn}/provisioning", tenancy_api.tenancy_provisioning_handler)
+    app.router.add_post(f"{tn}/provisioning", tenancy_api.tenancy_provisioning_handler)
+    app.router.add_get(f"{tn}/branding", tenancy_api.tenancy_branding_handler)
+    app.router.add_post(f"{tn}/branding", tenancy_api.tenancy_branding_handler)
+    app.router.add_get(f"{tn}/licensing", tenancy_api.tenancy_licensing_handler)
+    app.router.add_post(f"{tn}/licensing", tenancy_api.tenancy_licensing_handler)
+    app.router.add_get(f"{tn}/billing", tenancy_api.tenancy_billing_handler)
+    app.router.add_post(f"{tn}/billing", tenancy_api.tenancy_billing_handler)
+    app.router.add_get(f"{tn}/onboarding", tenancy_api.tenancy_onboarding_handler)
+    app.router.add_post(f"{tn}/onboarding", tenancy_api.tenancy_onboarding_handler)
+    app.router.add_get(f"{tn}/migration", tenancy_api.tenancy_migration_handler)
+    app.router.add_post(f"{tn}/migration", tenancy_api.tenancy_migration_handler)
+    app.router.add_get(f"{tn}/analytics", tenancy_api.tenancy_analytics_handler)
+    app.router.add_post(f"{tn}/analytics", tenancy_api.tenancy_analytics_handler)

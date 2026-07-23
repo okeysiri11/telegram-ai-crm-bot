@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "5.3.9-enterprise",
-  "release_status": "Enterprise Observability",
+  "application_version": "5.4.0-enterprise",
+  "release_status": "Enterprise Multi-Tenant",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v5.3.8-enterprise",
+  "enterprise_foundation": "Enterprise Platform v5.3.9-enterprise",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "19.9",
+  "sprint": "20.0",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
   "enterprise_identity": "1.0",
@@ -21,6 +21,7 @@
   "edp": "1.0",
   "isam": "1.0",
   "observability": "1.0",
+  "tenancy": "1.0",
   "modules": {
     "enterprise_registry": "1.0",
     "integration_layer": "1.0",
@@ -59,9 +60,15 @@
     "metrics_platform": "1.0",
     "distributed_tracing": "1.0",
     "incident_management": "1.0",
+    "tenancy": "1.0",
+    "tenant_manager": "1.0",
+    "workspace_manager": "1.0",
+    "isolation": "1.0",
+    "licensing": "1.0",
+    "billing": "1.0",
     "knowledge": "1.0",
     "dashboard": "1.0",
-    "api": "5.3"
+    "api": "5.4"
   },
   "does_not_modify": [
     "platform_core",

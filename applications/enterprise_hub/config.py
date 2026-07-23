@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 19.9 Enterprise Observability Platform."""
+"""Enterprise Hub — Sprint 20.0 Enterprise Multi-Tenant Platform."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.3.9-enterprise"
-    release_status: str = "Enterprise Observability"
+    application_version: str = "5.4.0-enterprise"
+    release_status: str = "Enterprise Multi-Tenant"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.3.8-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.3.9-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -25,6 +25,7 @@ class EnterpriseHubConfig:
     edp_api_prefix: str = "/api/enterprise-edp/v1"
     isam_api_prefix: str = "/api/enterprise-isam/v1"
     observability_api_prefix: str = "/api/enterprise-obs/v1"
+    tenancy_api_prefix: str = "/api/enterprise-tenancy/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -40,6 +41,7 @@ class EnterpriseHubConfig:
     edp: str = "1.0"
     isam: str = "1.0"
     observability: str = "1.0"
+    tenancy: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -364,6 +366,19 @@ class EnterpriseHubConfig:
             "integrations",
             "business",
         ]
+    )
+    tenancy_license_tiers: list[str] = field(
+        default_factory=lambda: [
+            "free",
+            "startup",
+            "business",
+            "enterprise",
+            "government",
+            "custom",
+        ]
+    )
+    tenancy_workspace_kinds: list[str] = field(
+        default_factory=lambda: ["crm", "erp", "finance", "ai", "custom", "documents"]
     )
 
 

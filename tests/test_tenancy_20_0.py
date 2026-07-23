@@ -1,4 +1,4 @@
-"""Tests — Enterprise Integration Platform (Sprint 19.6)."""
+"""Tests — Enterprise Multi-Tenant Platform (Sprint 20.0)."""
 
 from __future__ import annotations
 
@@ -21,6 +21,10 @@ AA = "/api/enterprise-agents/v1"
 CM = "/api/enterprise-comms/v1"
 WF = "/api/enterprise-workflow/v1"
 EIP = "/api/enterprise-eip/v1"
+EDP = "/api/enterprise-edp/v1"
+ISAM = "/api/enterprise-isam/v1"
+OBS = "/api/enterprise-obs/v1"
+TN = "/api/enterprise-tenancy/v1"
 
 
 @pytest.fixture
@@ -43,97 +47,97 @@ def reset_store():
     enterprise_hub.reset()
 
 
-def test_version_eip_ready():
+def test_version_tenancy_ready():
     health = enterprise_hub.health()
     assert health["application_version"] == "5.4.0-enterprise"
     assert health["enterprise_foundation"] == "Enterprise Platform v5.3.9-enterprise"
-    assert health["enterprise_integration_platform_ready"] is True
-    assert health["connector_engine_ready"] is True
-    assert health["adapter_layer_ready"] is True
-    assert health["sync_engine_ready"] is True
-    assert health["enterprise_workflow_ready"] is True
-    assert health["engines"]["eip"] == "1.0"
-    assert health["engines"]["integration_layer"] == "1.0"
+    assert health["multi_tenant_ready"] is True
+    assert health["workspace_ready"] is True
+    assert health["isolation_ready"] is True
+    assert health["licensing_ready"] is True
+    assert health["billing_ready"] is True
+    assert health["enterprise_observability_ready"] is True
+    assert health["engines"]["tenancy"] == "1.0"
 
 
-def test_manager_engine_mapping_sync():
-    suite = enterprise_hub.eip
-    reg = suite.manager.register(
-        name="QA REST",
-        protocol="rest",
-        adapter="custom",
-        owner="qa",
+def test_tenants_hierarchy_isolation_billing():
+    suite = enterprise_hub.tenancy
+    tenant = suite.tenants.create_tenant(name="QA Corp", license_tier="business")
+    holding = suite.organizations.create_node(
+        tenant_id=tenant["tenant_id"], name="QA Holding", level="holding"
     )
-    suite.manager.start(integration_id=reg["integration_id"])
-    call = suite.engine.connect(protocol="rest", endpoint="/qa")
-    adp = suite.engine.adapt(adapter="gmail", operation="send")
-    sync = suite.engine.sync(integration_id=reg["integration_id"], mode="full", records=3)
-    mapped = suite.mapper.map_fields(
-        source_fields={"a": 1},
-        mapping={"a": "alpha"},
+    company = suite.company.create(
+        tenant_id=tenant["tenant_id"], name="QA Co", parent_id=holding["org_id"]
     )
-    assert call["call_id"] and adp["call_id"] and sync["sync_id"]
-    assert mapped["result"]["alpha"] == 1
+    assert company["level"] == "company"
+    ws = suite.workspaces.create(tenant_id=tenant["tenant_id"], name="QA CRM", kind="crm")
+    iso = suite.isolation.enforce(
+        tenant_id=tenant["tenant_id"], scope="data", resource_key="crm"
+    )
+    assert iso["enforced"] is True
+    lic = suite.licensing.assign(tenant_id=tenant["tenant_id"], tier="startup")
+    sub = suite.billing.subscribe(tenant_id=tenant["tenant_id"], plan="startup", amount=49)
+    inv = suite.billing.invoice(
+        tenant_id=tenant["tenant_id"], subscription_id=sub["subscription_id"], amount=49
+    )
+    pay = suite.billing.pay(invoice_id=inv["invoice_id"])
+    assert lic["tier"] == "startup" and pay["status"] == "succeeded"
     with pytest.raises(ValidationError):
-        suite.manager.register(name="", protocol="rest")
+        suite.isolation.enforce(tenant_id=tenant["tenant_id"], scope="unknown", resource_key="x")
+    assert ws["workspace_id"]
 
 
-def test_security_monitor_ai_bootstrap():
-    suite = enterprise_hub.eip
+def test_provisioning_bootstrap_migration():
+    suite = enterprise_hub.tenancy
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
     assert boot["version"] == "5.4.0-enterprise"
-    assert boot["integration_stripe_id"] and boot["retry_id"] and boot["ai_mapping_id"]
-    sec = suite.security.configure(
-        integration_id=boot["integration_telegram_id"], method="jwt"
-    )
-    assert sec["method"] == "jwt"
-    mon = suite.monitor.snapshot(integration_id=boot["integration_telegram_id"], latency_ms=11)
-    assert mon["monitor_id"]
-    for dtype in ("monitoring", "registry", "sync", "connectors", "analytics"):
-        assert suite.dashboard.render(dashboard_type=dtype)["dashboard_type"] == dtype
+    assert boot["tenant_id"] and boot["analytics_id"] and boot["export_id"]
+    hier = suite.organizations.hierarchy(tenant_id=boot["tenant_id"])
+    assert hier["count"] >= 6
 
 
 @pytest.mark.asyncio
-async def test_api_eip(client):
-    health = await client.get(f"{EIP}/health")
+async def test_api_tenancy(client):
+    health = await client.get(f"{TN}/health")
     body = await health.json()
     assert body["application_version"] == "5.4.0-enterprise"
-    assert body["enterprise_integration_platform_ready"] is True
-    assert body["connector_engine_ready"] is True
+    assert body["multi_tenant_ready"] is True
+    assert body["workspace_ready"] is True
 
-    boot = await client.post(f"{EIP}/bootstrap", json={})
+    boot = await client.post(f"{TN}/bootstrap", json={})
     assert boot.status == 201
     boot_body = await boot.json()
 
     created = await client.post(
-        f"{EIP}/manager",
-        json={"name": "API Connector", "protocol": "graphql", "adapter": "custom"},
+        f"{TN}/tenants",
+        json={"name": "API Tenant", "license_tier": "enterprise"},
     )
     assert created.status == 201
 
-    for prefix in (HUB, ORCH, KG, AA, CM, WF):
+    for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         assert (await resp.json())["application_version"] == "5.4.0-enterprise"
 
-    assert boot_body["adapter_binance_id"]
+    assert boot_body["payment_id"]
 
 
-def test_docs_and_regression_19_6():
+def test_docs_and_regression_20_0():
     for name in (
-        "ENTERPRISE_INTEGRATION_PLATFORM.md",
-        "EIP_CONNECTORS.md",
-        "EIP_ADAPTERS.md",
-        "EIP_MAPPING.md",
-        "EIP_SYNC.md",
+        "ENTERPRISE_TENANCY.md",
+        "TENANCY_TENANTS.md",
+        "TENANCY_ORGANIZATIONS.md",
+        "TENANCY_WORKSPACES.md",
+        "TENANCY_ISOLATION.md",
+        "TENANCY_LICENSING_BILLING.md",
     ):
         assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "ENTERPRISE_INTEGRATION_PLATFORM.md").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "integrations" / "facade.py").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "integrations" / "connectors" / "rest.py").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "integrations" / "adapters" / "stripe.py").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "integrations" / "mapping" / "field_mapper.py").exists()
+    assert (ROOT / "knowledge" / "applications" / "ENTERPRISE_TENANCY.md").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "tenancy" / "facade.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "tenancy" / "organizations" / "company.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "tenancy" / "workspaces" / "crm.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "tenancy" / "onboarding" / "data_import.py").exists()
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT
