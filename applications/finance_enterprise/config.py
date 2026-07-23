@@ -1,4 +1,4 @@
-"""Finance Enterprise Platform — Sprint 18.3 Treasury Platform (Bidex)."""
+"""Finance Enterprise Platform — Sprint 18.4 Digital Asset Treasury (Bidex)."""
 
 from __future__ import annotations
 
@@ -9,16 +9,17 @@ from dataclasses import dataclass, field
 class FinanceEnterpriseConfig:
     application_name: str = "Finance Enterprise Platform (Bidex)"
     application: str = "finance_enterprise"
-    application_version: str = "5.1.3-enterprise"
-    release_status: str = "Treasury Platform"
+    application_version: str = "5.1.4-enterprise"
+    release_status: str = "Digital Asset Treasury"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.1.2-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.1.3-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/finance-enterprise/v1"
     payments_api_prefix: str = "/api/finance-pay/v1"
     billing_api_prefix: str = "/api/finance-bil/v1"
     treasury_api_prefix: str = "/api/finance-tr/v1"
+    digital_assets_api_prefix: str = "/api/finance-da/v1"
     internal_prefix: str = "/internal/finance-enterprise/v1"
     financial_registry: str = "1.0"
     general_ledger: str = "1.0"
@@ -27,6 +28,7 @@ class FinanceEnterpriseConfig:
     payments: str = "1.0"
     billing: str = "1.0"
     treasury: str = "1.0"
+    digital_assets: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     base_currency: str = "USD"
@@ -142,6 +144,58 @@ class FinanceEnterpriseConfig:
     )
     tr_knowledge_bases: list[str] = field(
         default_factory=lambda: ["treasury", "budget", "forecast", "liquidity", "planning"]
+    )
+    da_networks: list[str] = field(
+        default_factory=lambda: [
+            "bitcoin",
+            "ethereum",
+            "tron",
+            "bnb",
+            "polygon",
+            "solana",
+            "evm",
+        ]
+    )
+    da_wallet_types: list[str] = field(
+        default_factory=lambda: ["hot", "cold", "multisig", "hd"]
+    )
+    da_operation_types: list[str] = field(
+        default_factory=lambda: [
+            "deposit",
+            "withdrawal",
+            "internal_transfer",
+            "otc_settlement",
+            "cross_wallet",
+            "rebalance",
+        ]
+    )
+    da_ai_insight_types: list[str] = field(
+        default_factory=lambda: [
+            "portfolio_risk",
+            "wallet_risk",
+            "market_exposure",
+            "treasury_optimization",
+            "liquidity_recommendation",
+            "nl_report",
+        ]
+    )
+    da_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "digital_assets",
+            "treasury",
+            "portfolio",
+            "wallets",
+            "exchange",
+        ]
+    )
+    da_knowledge_bases: list[str] = field(
+        default_factory=lambda: [
+            "digital_asset",
+            "wallet",
+            "blockchain",
+            "exchange",
+            "treasury",
+        ]
     )
 
 

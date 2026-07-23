@@ -4,7 +4,13 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.finance_enterprise.api import bil_handlers, handlers, pay_handlers, tr_handlers
+from applications.finance_enterprise.api import (
+    bil_handlers,
+    da_handlers,
+    handlers,
+    pay_handlers,
+    tr_handlers,
+)
 from applications.finance_enterprise.api.middleware import auth_middleware
 from applications.finance_enterprise.config import DEFAULT_CONFIG
 
@@ -95,3 +101,24 @@ def register_finance_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{tr}/dashboard", tr_handlers.tr_dashboard_handler)
     app.router.add_get(f"{tr}/knowledge", tr_handlers.tr_knowledge_handler)
     app.router.add_post(f"{tr}/knowledge", tr_handlers.tr_knowledge_handler)
+
+    # Sprint 18.4 — Digital Asset Treasury (additive; prior routes unchanged)
+    da = DEFAULT_CONFIG.digital_assets_api_prefix
+    app.router.add_get(f"{da}/health", da_handlers.da_health_handler)
+    app.router.add_post(f"{da}/bootstrap", da_handlers.da_bootstrap_handler)
+    app.router.add_get(f"{da}/registry", da_handlers.da_registry_handler)
+    app.router.add_post(f"{da}/registry", da_handlers.da_registry_handler)
+    app.router.add_get(f"{da}/wallets", da_handlers.da_wallets_handler)
+    app.router.add_post(f"{da}/wallets", da_handlers.da_wallets_handler)
+    app.router.add_get(f"{da}/accounting", da_handlers.da_accounting_handler)
+    app.router.add_post(f"{da}/accounting", da_handlers.da_accounting_handler)
+    app.router.add_get(f"{da}/operations", da_handlers.da_operations_handler)
+    app.router.add_post(f"{da}/operations", da_handlers.da_operations_handler)
+    app.router.add_get(f"{da}/exchange", da_handlers.da_exchange_handler)
+    app.router.add_post(f"{da}/exchange", da_handlers.da_exchange_handler)
+    app.router.add_get(f"{da}/ai", da_handlers.da_ai_handler)
+    app.router.add_post(f"{da}/ai", da_handlers.da_ai_handler)
+    app.router.add_get(f"{da}/dashboard", da_handlers.da_dashboard_handler)
+    app.router.add_post(f"{da}/dashboard", da_handlers.da_dashboard_handler)
+    app.router.add_get(f"{da}/knowledge", da_handlers.da_knowledge_handler)
+    app.router.add_post(f"{da}/knowledge", da_handlers.da_knowledge_handler)

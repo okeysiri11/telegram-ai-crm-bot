@@ -8,6 +8,7 @@ from applications.finance_enterprise.architecture import FinancialArchitecture
 from applications.finance_enterprise.billing.facade import BillingSuite
 from applications.finance_enterprise.config import DEFAULT_CONFIG, FinanceEnterpriseConfig
 from applications.finance_enterprise.currency import MultiCurrency
+from applications.finance_enterprise.digital_assets.facade import DigitalAssetsSuite
 from applications.finance_enterprise.finance_registry import FinanceRegistry
 from applications.finance_enterprise.ledger import GeneralLedger
 from applications.finance_enterprise.payments.facade import PaymentsSuite
@@ -25,6 +26,7 @@ class FinanceEnterpriseApplication:
         payments_svc: PaymentsSuite | None = None,
         billing_svc: BillingSuite | None = None,
         treasury_svc: TreasurySuite | None = None,
+        digital_assets_svc: DigitalAssetsSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or finance_enterprise_store
@@ -37,6 +39,7 @@ class FinanceEnterpriseApplication:
         self.payments = payments_svc or PaymentsSuite(self.store)
         self.billing = billing_svc or BillingSuite(self.store)
         self.treasury = treasury_svc or TreasurySuite(self.store)
+        self.digital_assets = digital_assets_svc or DigitalAssetsSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -174,6 +177,10 @@ class FinanceEnterpriseApplication:
             "budget_management_ready": True,
             "financial_planning_ready": True,
             "ai_financial_forecasting_ready": True,
+            "digital_asset_treasury_ready": True,
+            "crypto_finance_integration_ready": True,
+            "crypto_accounting_ready": True,
+            "ai_digital_asset_intelligence_ready": True,
             "engines": {
                 "financial_registry": self.config.financial_registry,
                 "general_ledger": self.config.general_ledger,
@@ -182,6 +189,7 @@ class FinanceEnterpriseApplication:
                 "payments": self.config.payments,
                 "billing": self.config.billing,
                 "treasury": self.config.treasury,
+                "digital_assets": self.config.digital_assets,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -194,6 +202,7 @@ class FinanceEnterpriseApplication:
             "payments": self.payments.status(),
             "billing": self.billing.status(),
             "treasury": self.treasury.status(),
+            "digital_assets": self.digital_assets.status(),
         }
 
 
