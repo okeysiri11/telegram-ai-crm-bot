@@ -1,12 +1,10 @@
 # Finance Enterprise (knowledge)
 
-Sprint 18.0 — Finance Enterprise Foundation (Bidex).
+Sprint 18.1 — Finance Enterprise Platform (Payments Platform).
 
-- Version: `5.1.0-enterprise`
-- Foundation: Enterprise Platform v5.0.0-enterprise
-- API: `/api/finance-enterprise/v1`
-- Package: `applications/finance_enterprise/`
+- Version: `5.1.1-enterprise`
+- Foundation: Enterprise Platform v5.1.0-enterprise
+- API: `/api/finance-enterprise/v1` · `/api/finance-pay/v1`
+- Package: `applications/finance_enterprise/` · `payments/`
 
-Knowledge bases: account · ledger · currency · entity · finance
-
-Readiness: Finance Enterprise Foundation Ready · General Ledger Ready · Financial Registry Ready.
+Readiness: Foundation through Cash Management Ready.

@@ -9,6 +9,7 @@ from applications.finance_enterprise.config import DEFAULT_CONFIG, FinanceEnterp
 from applications.finance_enterprise.currency import MultiCurrency
 from applications.finance_enterprise.finance_registry import FinanceRegistry
 from applications.finance_enterprise.ledger import GeneralLedger
+from applications.finance_enterprise.payments.facade import PaymentsSuite
 from applications.finance_enterprise.services import FinanceDashboard, FinanceKnowledge
 from applications.finance_enterprise.shared.store import FinanceEnterpriseStore, finance_enterprise_store
 
@@ -19,6 +20,7 @@ class FinanceEnterpriseApplication:
         *,
         config: FinanceEnterpriseConfig | None = None,
         store: FinanceEnterpriseStore | None = None,
+        payments_svc: PaymentsSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or finance_enterprise_store
@@ -28,6 +30,7 @@ class FinanceEnterpriseApplication:
         self.architecture = FinancialArchitecture(self.store)
         self.knowledge = FinanceKnowledge(self.store)
         self.dashboard = FinanceDashboard(self.store)
+        self.payments = payments_svc or PaymentsSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -152,11 +155,16 @@ class FinanceEnterpriseApplication:
             "multi_currency_ready": True,
             "financial_architecture_ready": True,
             "financial_knowledge_graph_ready": True,
+            "banking_platform_ready": True,
+            "digital_wallets_ready": True,
+            "payment_engine_ready": True,
+            "cash_management_ready": True,
             "engines": {
                 "financial_registry": self.config.financial_registry,
                 "general_ledger": self.config.general_ledger,
                 "multi_currency": self.config.multi_currency,
                 "financial_architecture": self.config.financial_architecture,
+                "payments": self.config.payments,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -166,6 +174,7 @@ class FinanceEnterpriseApplication:
             "architecture": self.architecture.status(),
             "knowledge": self.knowledge.status(),
             "dashboard": self.dashboard.status(),
+            "payments": self.payments.status(),
         }
 
 
