@@ -1,44 +1,22 @@
-# Port ERP — Enterprise Integration (Sprint 9.8)
+# Port Enterprise
 
-Enterprise connectors for **Port ERP 2.0.0** (`enterprise_engine = 1.0`).
+**Version:** `4.5.0-enterprise`  
+**Sprint:** 15.0  
+**Foundation:** Enterprise Platform v4.4.0-enterprise  
+**Package:** `applications/port_enterprise/`  
+**API:** `/api/port-enterprise/v1`
 
-| Field | Value |
-|-------|-------|
-| Application version | `2.0.0` |
-| Enterprise engine | `1.0` |
-| API | `/api/port/v1/enterprise` · `/api/port/v1/integration` |
+## Foundation
 
-**Hard constraint:** Integration is bridge-only. Platform Core and Ecosystem packages are never modified.
+Enterprise foundation for global port operations, multimodal logistics, and international trade.
 
-## Connectors
+## Capabilities
 
-| Target | Purpose |
-|--------|---------|
-| Agro Marketplace | Agricultural trade corridor |
-| Auto Marketplace | Vehicle logistics corridor |
-| CRM | Customer relationship |
-| ERP | Enterprise resource planning |
-| Warehouse | Inventory / WMS |
-| Accounting | Ledger bridge |
-| Finance | Commercial finance |
-| AI Workforce | Platform workforce agents |
-| Digital Twin | Port digital twin |
-| Knowledge Graph | Platform knowledge |
-| Identity | Ecosystem identity |
-| Communication Bus | Ecosystem bus |
+- Port, terminal, dock, berth, warehouse, yard, and equipment registries
+- Terminal types: container, bulk, liquid, Ro-Ro, passenger
+- Cargo, shipping companies, fleet, and operations foundations
+- Executive dashboards and knowledge graph registries
 
-## Bootstrap
+## Readiness
 
-`POST /api/port/v1/enterprise/bootstrap` registers default connectors and marks them connected.
-
-## Modules
-
-`enterprise/` · `integration/`
-
-```python
-from applications.port_erp import port_erp
-
-result = port_erp.enterprise.enterprise.bootstrap()
-assert "agro_marketplace" in result["matrix"]
-assert port_erp.config.enterprise_engine == "1.0"
-```
+Port Enterprise Foundation Ready · Terminal Platform Ready · Cargo Registry Ready · Fleet Registry Ready · Operations Foundation Ready
