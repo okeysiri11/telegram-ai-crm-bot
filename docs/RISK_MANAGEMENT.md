@@ -1,23 +1,15 @@
 # Risk Management
 
-**Version:** `4.3.6-enterprise`  
-**Sprint:** 14.6  
-**Foundation:** Enterprise Platform v4.3.5-enterprise  
-**Package:** `applications/agro_enterprise/agro_finance/`  
-**API:** `/api/agro-finance/v1`
+**Version:** `4.7.5-enterprise`  
+**Sprint:** 16.5  
+**Foundation:** Enterprise Platform v4.7.4-enterprise  
+**Package:** `applications/crypto_enterprise/risk_management/`  
+**API:** `/api/crypto-rm/v1`
 
-## Capabilities
+## Domains
 
-- Weather, market, production, supply chain, financial, operational risk
-- AI risk scoring and early warning system
-- Portfolio risk aggregation
-
-## Endpoints
-
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET/POST | `/risk` | Assess / early warning; portfolio score via query |
+Position Sizing · Risk Analytics · Portfolio Optimization · Advanced Risk Models · Trade Protection · AI Risk Intelligence
 
 ## Readiness
 
-Risk Intelligence Ready
+Risk Management Ready · Portfolio Optimization Ready · Position Sizing Ready · AI Risk Intelligence Ready · Capital Protection Ready

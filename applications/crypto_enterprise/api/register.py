@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.crypto_enterprise.api import handlers, mi_handlers, mm_handlers, se_handlers, ta_handlers
+from applications.crypto_enterprise.api import handlers, mi_handlers, mm_handlers, rm_handlers, se_handlers, ta_handlers
 from applications.crypto_enterprise.api.middleware import auth_middleware
 from applications.crypto_enterprise.config import DEFAULT_CONFIG
 
@@ -114,3 +114,24 @@ def register_crypto_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{se}/dashboard", se_handlers.se_dashboard_handler)
     app.router.add_get(f"{se}/knowledge", se_handlers.se_knowledge_handler)
     app.router.add_post(f"{se}/knowledge", se_handlers.se_knowledge_handler)
+
+    # Sprint 16.5 — Risk Management (additive; prior routes unchanged)
+    rm = DEFAULT_CONFIG.risk_management_api_prefix
+    app.router.add_get(f"{rm}/health", rm_handlers.rm_health_handler)
+    app.router.add_post(f"{rm}/bootstrap", rm_handlers.rm_bootstrap_handler)
+    app.router.add_get(f"{rm}/sizing", rm_handlers.rm_sizing_handler)
+    app.router.add_post(f"{rm}/sizing", rm_handlers.rm_sizing_handler)
+    app.router.add_get(f"{rm}/analytics", rm_handlers.rm_analytics_handler)
+    app.router.add_post(f"{rm}/analytics", rm_handlers.rm_analytics_handler)
+    app.router.add_get(f"{rm}/optimization", rm_handlers.rm_optimization_handler)
+    app.router.add_post(f"{rm}/optimization", rm_handlers.rm_optimization_handler)
+    app.router.add_get(f"{rm}/models", rm_handlers.rm_models_handler)
+    app.router.add_post(f"{rm}/models", rm_handlers.rm_models_handler)
+    app.router.add_get(f"{rm}/protection", rm_handlers.rm_protection_handler)
+    app.router.add_post(f"{rm}/protection", rm_handlers.rm_protection_handler)
+    app.router.add_get(f"{rm}/ai", rm_handlers.rm_ai_handler)
+    app.router.add_post(f"{rm}/ai", rm_handlers.rm_ai_handler)
+    app.router.add_get(f"{rm}/dashboard", rm_handlers.rm_dashboard_handler)
+    app.router.add_post(f"{rm}/dashboard", rm_handlers.rm_dashboard_handler)
+    app.router.add_get(f"{rm}/knowledge", rm_handlers.rm_knowledge_handler)
+    app.router.add_post(f"{rm}/knowledge", rm_handlers.rm_knowledge_handler)
