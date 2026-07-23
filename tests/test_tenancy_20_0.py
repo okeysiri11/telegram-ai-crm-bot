@@ -49,8 +49,8 @@ def reset_store():
 
 def test_version_tenancy_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "5.4.1-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.4.0-enterprise"
+    assert health["application_version"] == "5.4.2-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.4.1-enterprise"
     assert health["multi_tenant_ready"] is True
     assert health["workspace_ready"] is True
     assert health["isolation_ready"] is True
@@ -91,7 +91,7 @@ def test_provisioning_bootstrap_migration():
     suite = enterprise_hub.tenancy
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "5.4.1-enterprise"
+    assert boot["version"] == "5.4.2-enterprise"
     assert boot["tenant_id"] and boot["analytics_id"] and boot["export_id"]
     hier = suite.organizations.hierarchy(tenant_id=boot["tenant_id"])
     assert hier["count"] >= 6
@@ -101,7 +101,7 @@ def test_provisioning_bootstrap_migration():
 async def test_api_tenancy(client):
     health = await client.get(f"{TN}/health")
     body = await health.json()
-    assert body["application_version"] == "5.4.1-enterprise"
+    assert body["application_version"] == "5.4.2-enterprise"
     assert body["multi_tenant_ready"] is True
     assert body["workspace_ready"] is True
 
@@ -118,7 +118,7 @@ async def test_api_tenancy(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "5.4.1-enterprise"
+        assert (await resp.json())["application_version"] == "5.4.2-enterprise"
 
     assert boot_body["payment_id"]
 
@@ -159,5 +159,5 @@ def test_docs_and_regression_20_0():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "5.4.1-enterprise" in manifest
-    assert "20.1" in manifest
+    assert "5.4.2-enterprise" in manifest
+    assert "20.2" in manifest

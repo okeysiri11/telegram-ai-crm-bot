@@ -45,8 +45,8 @@ def reset_store():
 
 def test_version_eip_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "5.4.1-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.4.0-enterprise"
+    assert health["application_version"] == "5.4.2-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.4.1-enterprise"
     assert health["enterprise_integration_platform_ready"] is True
     assert health["connector_engine_ready"] is True
     assert health["adapter_layer_ready"] is True
@@ -82,7 +82,7 @@ def test_security_monitor_ai_bootstrap():
     suite = enterprise_hub.eip
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "5.4.1-enterprise"
+    assert boot["version"] == "5.4.2-enterprise"
     assert boot["integration_stripe_id"] and boot["retry_id"] and boot["ai_mapping_id"]
     sec = suite.security.configure(
         integration_id=boot["integration_telegram_id"], method="jwt"
@@ -98,7 +98,7 @@ def test_security_monitor_ai_bootstrap():
 async def test_api_eip(client):
     health = await client.get(f"{EIP}/health")
     body = await health.json()
-    assert body["application_version"] == "5.4.1-enterprise"
+    assert body["application_version"] == "5.4.2-enterprise"
     assert body["enterprise_integration_platform_ready"] is True
     assert body["connector_engine_ready"] is True
 
@@ -115,7 +115,7 @@ async def test_api_eip(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "5.4.1-enterprise"
+        assert (await resp.json())["application_version"] == "5.4.2-enterprise"
 
     assert boot_body["adapter_binance_id"]
 
@@ -155,5 +155,5 @@ def test_docs_and_regression_19_6():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "5.4.1-enterprise" in manifest
-    assert "20.1" in manifest
+    assert "5.4.2-enterprise" in manifest
+    assert "20.2" in manifest

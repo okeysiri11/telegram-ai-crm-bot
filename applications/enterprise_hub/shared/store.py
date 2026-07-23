@@ -274,6 +274,19 @@ class EnterpriseHubStore:
         self.aop_policies: EntityStore = EntityStore()
         self.aop_policy_evals: EntityStore = EntityStore()
         self.aop_analytics: EntityStore = EntityStore()
+        # Sprint 20.2 — AI Tools & Skills
+        self.ats_tools: EntityStore = EntityStore()
+        self.ats_skills: EntityStore = EntityStore()
+        self.ats_contexts: EntityStore = EntityStore()
+        self.ats_sandboxes: EntityStore = EntityStore()
+        self.ats_policies: EntityStore = EntityStore()
+        self.ats_authz: EntityStore = EntityStore()
+        self.ats_audit: EntityStore = EntityStore()
+        self.ats_routes: EntityStore = EntityStore()
+        self.ats_packages: EntityStore = EntityStore()
+        self.ats_signatures: EntityStore = EntityStore()
+        self.ats_installs: EntityStore = EntityStore()
+        self.ats_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

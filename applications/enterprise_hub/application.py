@@ -6,6 +6,7 @@ from typing import Any
 
 from applications.enterprise_hub.ai_agents.facade import AIAgentSuite
 from applications.enterprise_hub.ai_orchestrator.facade import AIOrchestrationSuite
+from applications.enterprise_hub.ai_tools.facade import AIToolsSuite
 from applications.enterprise_hub.communications.facade import CommunicationsSuite
 from applications.enterprise_hub.config import DEFAULT_CONFIG, EnterpriseHubConfig
 from applications.enterprise_hub.configuration import EnterpriseConfiguration
@@ -42,6 +43,7 @@ class EnterpriseHubApplication:
         observability_svc: ObservabilitySuite | None = None,
         tenancy_svc: TenancySuite | None = None,
         ai_orchestrator_svc: AIOrchestrationSuite | None = None,
+        ai_tools_svc: AIToolsSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -63,6 +65,7 @@ class EnterpriseHubApplication:
         self.observability = observability_svc or ObservabilitySuite(self.store)
         self.tenancy = tenancy_svc or TenancySuite(self.store)
         self.ai_orchestrator = ai_orchestrator_svc or AIOrchestrationSuite(self.store)
+        self.ai_tools = ai_tools_svc or AIToolsSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -270,6 +273,10 @@ class EnterpriseHubApplication:
             "agent_registry_ready": True,
             "task_planning_ready": True,
             "result_aggregation_ready": True,
+            "ai_tools_ready": True,
+            "skill_engine_ready": True,
+            "tool_sandbox_ready": True,
+            "tool_marketplace_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -287,6 +294,7 @@ class EnterpriseHubApplication:
                 "observability": self.config.observability,
                 "tenancy": self.config.tenancy,
                 "ai_orchestrator": self.config.ai_orchestrator,
+                "ai_tools": self.config.ai_tools,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -308,6 +316,7 @@ class EnterpriseHubApplication:
             "observability": self.observability.status(),
             "tenancy": self.tenancy.status(),
             "ai_orchestrator": self.ai_orchestrator.status(),
+            "ai_tools": self.ai_tools.status(),
         }
 
 

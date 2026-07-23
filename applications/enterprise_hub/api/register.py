@@ -11,6 +11,7 @@ from applications.enterprise_hub.config import DEFAULT_CONFIG
 from applications.enterprise_hub.data_platform import api as edp_api
 from applications.enterprise_hub.integrations import api as eip_api
 from applications.enterprise_hub.ai_orchestrator import api as aop_api
+from applications.enterprise_hub.ai_tools import api as ats_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
 from applications.enterprise_hub.tenancy import api as tenancy_api
@@ -300,3 +301,23 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{aop}/policy", aop_api.aop_policy_handler)
     app.router.add_get(f"{aop}/analytics", aop_api.aop_analytics_handler)
     app.router.add_post(f"{aop}/analytics", aop_api.aop_analytics_handler)
+
+    # Sprint 20.2 — AI Tools & Skills (additive; prior routes unchanged)
+    ats = DEFAULT_CONFIG.ai_tools_api_prefix
+    app.router.add_get(f"{ats}/health", ats_api.ats_health_handler)
+    app.router.add_post(f"{ats}/bootstrap", ats_api.ats_bootstrap_handler)
+    app.router.add_get(f"{ats}/tools", ats_api.ats_tools_handler)
+    app.router.add_post(f"{ats}/tools", ats_api.ats_tools_handler)
+    app.router.add_post(f"{ats}/execute", ats_api.ats_execute_handler)
+    app.router.add_get(f"{ats}/skills", ats_api.ats_skills_handler)
+    app.router.add_post(f"{ats}/skills", ats_api.ats_skills_handler)
+    app.router.add_get(f"{ats}/policy", ats_api.ats_policy_handler)
+    app.router.add_post(f"{ats}/policy", ats_api.ats_policy_handler)
+    app.router.add_get(f"{ats}/marketplace", ats_api.ats_marketplace_handler)
+    app.router.add_post(f"{ats}/marketplace", ats_api.ats_marketplace_handler)
+    app.router.add_get(f"{ats}/audit", ats_api.ats_audit_handler)
+    app.router.add_post(f"{ats}/audit", ats_api.ats_audit_handler)
+    app.router.add_get(f"{ats}/analytics", ats_api.ats_analytics_handler)
+    app.router.add_post(f"{ats}/analytics", ats_api.ats_analytics_handler)
+    app.router.add_get(f"{ats}/sandbox", ats_api.ats_sandbox_handler)
+    app.router.add_post(f"{ats}/sandbox", ats_api.ats_sandbox_handler)
