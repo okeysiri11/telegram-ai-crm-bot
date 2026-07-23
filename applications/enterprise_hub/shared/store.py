@@ -68,6 +68,28 @@ class EnterpriseHubStore:
         # Knowledge & dashboards
         self.knowledge: EntityStore = EntityStore()
         self.dashboards: EntityStore = EntityStore()
+        # Sprint 19.1 — AI Orchestrator
+        self.orch_workflows: EntityStore = EntityStore()
+        self.orch_plans: EntityStore = EntityStore()
+        self.orch_queue: EntityStore = EntityStore()
+        self.orch_dependencies: EntityStore = EntityStore()
+        self.orch_executions: EntityStore = EntityStore()
+        self.orch_schedules: EntityStore = EntityStore()
+        self.orch_retries: EntityStore = EntityStore()
+        self.orch_rollbacks: EntityStore = EntityStore()
+        self.orch_intents: EntityStore = EntityStore()
+        self.orch_templates: EntityStore = EntityStore()
+        self.orch_dynamic: EntityStore = EntityStore()
+        self.orch_approvals: EntityStore = EntityStore()
+        self.orch_routes: EntityStore = EntityStore()
+        self.orch_coordinations: EntityStore = EntityStore()
+        self.orch_decisions: EntityStore = EntityStore()
+        self.orch_monitors: EntityStore = EntityStore()
+        self.orch_failures: EntityStore = EntityStore()
+        self.orch_history: EntityStore = EntityStore()
+        self.orch_explanations: EntityStore = EntityStore()
+        self.orch_knowledge: EntityStore = EntityStore()
+        self.orch_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
