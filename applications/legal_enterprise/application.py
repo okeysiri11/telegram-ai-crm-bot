@@ -9,6 +9,7 @@ from applications.legal_enterprise.config import DEFAULT_CONFIG, LegalEnterprise
 from applications.legal_enterprise.courts import CourtInfrastructure
 from applications.legal_enterprise.legal_registry import LegalRegistry
 from applications.legal_enterprise.legislation import LegislationRegistry
+from applications.legal_enterprise.judicial_intelligence.facade import JudicialIntelligenceSuite
 from applications.legal_enterprise.legislation_intelligence.facade import LegislationIntelligenceSuite
 from applications.legal_enterprise.services import LegalDashboard, LegalKnowledge
 from applications.legal_enterprise.shared.store import LegalEnterpriseStore, legal_enterprise_store
@@ -21,6 +22,7 @@ class LegalEnterpriseApplication:
         config: LegalEnterpriseConfig | None = None,
         store: LegalEnterpriseStore | None = None,
         legislation_intelligence_svc: LegislationIntelligenceSuite | None = None,
+        judicial_intelligence_svc: JudicialIntelligenceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or legal_enterprise_store
@@ -33,6 +35,7 @@ class LegalEnterpriseApplication:
         self.legislation_intelligence = legislation_intelligence_svc or LegislationIntelligenceSuite(
             self.store
         )
+        self.judicial_intelligence = judicial_intelligence_svc or JudicialIntelligenceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -275,12 +278,17 @@ class LegalEnterpriseApplication:
             "ai_legal_search_ready": True,
             "regulatory_intelligence_ready": True,
             "legal_knowledge_platform_ready": True,
+            "judicial_intelligence_ready": True,
+            "court_decision_repository_ready": True,
+            "ai_judicial_analysis_ready": True,
+            "case_law_intelligence_ready": True,
             "engines": {
                 "legal_registry": self.config.legal_registry,
                 "legislation_registry": self.config.legislation_registry,
                 "court_infrastructure": self.config.court_infrastructure,
                 "case_management": self.config.case_management,
                 "legislation_intelligence": self.config.legislation_intelligence,
+                "judicial_intelligence": self.config.judicial_intelligence,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -291,6 +299,7 @@ class LegalEnterpriseApplication:
             "knowledge": self.knowledge.status(),
             "dashboard": self.dashboard.status(),
             "legislation_intelligence": self.legislation_intelligence.status(),
+            "judicial_intelligence": self.judicial_intelligence.status(),
         }
 
 

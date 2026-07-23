@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.legal_enterprise.api import handlers, li_handlers
+from applications.legal_enterprise.api import handlers, ji_handlers, li_handlers
 from applications.legal_enterprise.api.middleware import auth_middleware
 from applications.legal_enterprise.config import DEFAULT_CONFIG
 
@@ -49,3 +49,24 @@ def register_legal_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{li}/dashboard", li_handlers.li_dashboard_handler)
     app.router.add_get(f"{li}/knowledge", li_handlers.li_knowledge_handler)
     app.router.add_post(f"{li}/knowledge", li_handlers.li_knowledge_handler)
+
+    # Sprint 17.2 — Judicial Intelligence (additive; prior routes unchanged)
+    ji = DEFAULT_CONFIG.judicial_intelligence_api_prefix
+    app.router.add_get(f"{ji}/health", ji_handlers.ji_health_handler)
+    app.router.add_post(f"{ji}/bootstrap", ji_handlers.ji_bootstrap_handler)
+    app.router.add_get(f"{ji}/repository", ji_handlers.ji_repository_handler)
+    app.router.add_post(f"{ji}/repository", ji_handlers.ji_repository_handler)
+    app.router.add_get(f"{ji}/search", ji_handlers.ji_search_handler)
+    app.router.add_post(f"{ji}/search", ji_handlers.ji_search_handler)
+    app.router.add_get(f"{ji}/case-law", ji_handlers.ji_case_law_handler)
+    app.router.add_post(f"{ji}/case-law", ji_handlers.ji_case_law_handler)
+    app.router.add_get(f"{ji}/judges", ji_handlers.ji_judges_handler)
+    app.router.add_post(f"{ji}/judges", ji_handlers.ji_judges_handler)
+    app.router.add_get(f"{ji}/analysis", ji_handlers.ji_analysis_handler)
+    app.router.add_post(f"{ji}/analysis", ji_handlers.ji_analysis_handler)
+    app.router.add_get(f"{ji}/analytics", ji_handlers.ji_analytics_handler)
+    app.router.add_post(f"{ji}/analytics", ji_handlers.ji_analytics_handler)
+    app.router.add_get(f"{ji}/dashboard", ji_handlers.ji_dashboard_handler)
+    app.router.add_post(f"{ji}/dashboard", ji_handlers.ji_dashboard_handler)
+    app.router.add_get(f"{ji}/knowledge", ji_handlers.ji_knowledge_handler)
+    app.router.add_post(f"{ji}/knowledge", ji_handlers.ji_knowledge_handler)

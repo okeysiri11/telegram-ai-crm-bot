@@ -92,6 +92,27 @@ class LegalEnterpriseStore:
         self.li_analyses: EntityStore = EntityStore()
         self.li_knowledge: EntityStore = EntityStore()
         self.li_dashboards: EntityStore = EntityStore()
+        # Sprint 17.2 — Judicial Intelligence
+        self.ji_decisions: EntityStore = EntityStore()
+        self.ji_judgments: EntityStore = EntityStore()
+        self.ji_rulings: EntityStore = EntityStore()
+        self.ji_orders: EntityStore = EntityStore()
+        self.ji_opinions: EntityStore = EntityStore()
+        self.ji_versions: EntityStore = EntityStore()
+        self.ji_searches: EntityStore = EntityStore()
+        self.ji_classifications: EntityStore = EntityStore()
+        self.ji_relationships: EntityStore = EntityStore()
+        self.ji_citations: EntityStore = EntityStore()
+        self.ji_conflicts: EntityStore = EntityStore()
+        self.ji_judges: EntityStore = EntityStore()
+        self.ji_judge_history: EntityStore = EntityStore()
+        self.ji_judge_stats: EntityStore = EntityStore()
+        self.ji_subject_analysis: EntityStore = EntityStore()
+        self.ji_workload: EntityStore = EntityStore()
+        self.ji_analyses: EntityStore = EntityStore()
+        self.ji_analytics: EntityStore = EntityStore()
+        self.ji_knowledge: EntityStore = EntityStore()
+        self.ji_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
