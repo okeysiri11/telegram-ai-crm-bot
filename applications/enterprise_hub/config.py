@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 20.2 Enterprise AI Tools & Skills Platform."""
+"""Enterprise Hub — Sprint 20.3 Enterprise Knowledge Platform."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.4.2-enterprise"
-    release_status: str = "Enterprise AI Tools"
+    application_version: str = "5.4.3-enterprise"
+    release_status: str = "Enterprise Knowledge Platform"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.4.1-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.4.2-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -28,6 +28,7 @@ class EnterpriseHubConfig:
     tenancy_api_prefix: str = "/api/enterprise-tenancy/v1"
     ai_orchestrator_api_prefix: str = "/api/enterprise-aop/v1"
     ai_tools_api_prefix: str = "/api/enterprise-ats/v1"
+    knowledge_platform_api_prefix: str = "/api/enterprise-ekp/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -46,6 +47,7 @@ class EnterpriseHubConfig:
     tenancy: str = "1.0"
     ai_orchestrator: str = "1.0"
     ai_tools: str = "1.0"
+    knowledge_platform: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -400,6 +402,16 @@ class EnterpriseHubConfig:
             "browser",
             "terminal",
             "custom",
+        ]
+    )
+    ekp_memory_tiers: list[str] = field(
+        default_factory=lambda: [
+            "short_term",
+            "long_term",
+            "project",
+            "organization",
+            "personal",
+            "ai_shared",
         ]
     )
 

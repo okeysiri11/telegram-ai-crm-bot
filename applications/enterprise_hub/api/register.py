@@ -12,6 +12,7 @@ from applications.enterprise_hub.data_platform import api as edp_api
 from applications.enterprise_hub.integrations import api as eip_api
 from applications.enterprise_hub.ai_orchestrator import api as aop_api
 from applications.enterprise_hub.ai_tools import api as ats_api
+from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
 from applications.enterprise_hub.tenancy import api as tenancy_api
@@ -321,3 +322,22 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ats}/analytics", ats_api.ats_analytics_handler)
     app.router.add_get(f"{ats}/sandbox", ats_api.ats_sandbox_handler)
     app.router.add_post(f"{ats}/sandbox", ats_api.ats_sandbox_handler)
+
+    # Sprint 20.3 — Knowledge Platform (additive; prior routes unchanged)
+    ekp = DEFAULT_CONFIG.knowledge_platform_api_prefix
+    app.router.add_get(f"{ekp}/health", ekp_api.ekp_health_handler)
+    app.router.add_post(f"{ekp}/bootstrap", ekp_api.ekp_bootstrap_handler)
+    app.router.add_get(f"{ekp}/documents", ekp_api.ekp_documents_handler)
+    app.router.add_post(f"{ekp}/documents", ekp_api.ekp_documents_handler)
+    app.router.add_post(f"{ekp}/index", ekp_api.ekp_index_handler)
+    app.router.add_post(f"{ekp}/rag", ekp_api.ekp_rag_handler)
+    app.router.add_get(f"{ekp}/search", ekp_api.ekp_search_handler)
+    app.router.add_post(f"{ekp}/search", ekp_api.ekp_search_handler)
+    app.router.add_get(f"{ekp}/graph", ekp_api.ekp_graph_handler)
+    app.router.add_post(f"{ekp}/graph", ekp_api.ekp_graph_handler)
+    app.router.add_get(f"{ekp}/memory", ekp_api.ekp_memory_handler)
+    app.router.add_post(f"{ekp}/memory", ekp_api.ekp_memory_handler)
+    app.router.add_get(f"{ekp}/analytics", ekp_api.ekp_analytics_handler)
+    app.router.add_post(f"{ekp}/analytics", ekp_api.ekp_analytics_handler)
+    app.router.add_get(f"{ekp}/governance", ekp_api.ekp_governance_handler)
+    app.router.add_post(f"{ekp}/governance", ekp_api.ekp_governance_handler)

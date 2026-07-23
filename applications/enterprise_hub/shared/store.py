@@ -287,6 +287,23 @@ class EnterpriseHubStore:
         self.ats_signatures: EntityStore = EntityStore()
         self.ats_installs: EntityStore = EntityStore()
         self.ats_analytics: EntityStore = EntityStore()
+        # Sprint 20.3 — Enterprise Knowledge Platform
+        self.ekp_documents: EntityStore = EntityStore()
+        self.ekp_chunks: EntityStore = EntityStore()
+        self.ekp_embeddings: EntityStore = EntityStore()
+        self.ekp_vectors: EntityStore = EntityStore()
+        self.ekp_retrievals: EntityStore = EntityStore()
+        self.ekp_answers: EntityStore = EntityStore()
+        self.ekp_citations: EntityStore = EntityStore()
+        self.ekp_entities: EntityStore = EntityStore()
+        self.ekp_relations: EntityStore = EntityStore()
+        self.ekp_ontologies: EntityStore = EntityStore()
+        self.ekp_memory: EntityStore = EntityStore()
+        self.ekp_contexts: EntityStore = EntityStore()
+        self.ekp_bases: EntityStore = EntityStore()
+        self.ekp_governance: EntityStore = EntityStore()
+        self.ekp_connectors: EntityStore = EntityStore()
+        self.ekp_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

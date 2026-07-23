@@ -16,6 +16,7 @@ from applications.enterprise_hub.identity import EnterpriseIdentity
 from applications.enterprise_hub.integration_layer import IntegrationLayer
 from applications.enterprise_hub.integrations.facade import IntegrationPlatformSuite
 from applications.enterprise_hub.knowledge.facade import UnifiedKnowledgeSuite
+from applications.enterprise_hub.knowledge_platform.facade import KnowledgePlatformSuite
 from applications.enterprise_hub.observability.facade import ObservabilitySuite
 from applications.enterprise_hub.orchestrator.facade import OrchestratorSuite
 from applications.enterprise_hub.registry import EnterpriseRegistry
@@ -44,6 +45,7 @@ class EnterpriseHubApplication:
         tenancy_svc: TenancySuite | None = None,
         ai_orchestrator_svc: AIOrchestrationSuite | None = None,
         ai_tools_svc: AIToolsSuite | None = None,
+        knowledge_platform_svc: KnowledgePlatformSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -66,6 +68,7 @@ class EnterpriseHubApplication:
         self.tenancy = tenancy_svc or TenancySuite(self.store)
         self.ai_orchestrator = ai_orchestrator_svc or AIOrchestrationSuite(self.store)
         self.ai_tools = ai_tools_svc or AIToolsSuite(self.store)
+        self.knowledge_platform = knowledge_platform_svc or KnowledgePlatformSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -277,6 +280,10 @@ class EnterpriseHubApplication:
             "skill_engine_ready": True,
             "tool_sandbox_ready": True,
             "tool_marketplace_ready": True,
+            "enterprise_knowledge_ready": True,
+            "rag_ready": True,
+            "knowledge_graph_ready": True,
+            "vector_index_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -295,6 +302,7 @@ class EnterpriseHubApplication:
                 "tenancy": self.config.tenancy,
                 "ai_orchestrator": self.config.ai_orchestrator,
                 "ai_tools": self.config.ai_tools,
+                "knowledge_platform": self.config.knowledge_platform,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -317,6 +325,7 @@ class EnterpriseHubApplication:
             "tenancy": self.tenancy.status(),
             "ai_orchestrator": self.ai_orchestrator.status(),
             "ai_tools": self.ai_tools.status(),
+            "knowledge_platform": self.knowledge_platform.status(),
         }
 
 
