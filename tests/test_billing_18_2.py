@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_billing_ready():
     health = finance_enterprise.health()
-    assert health["application_version"] == "5.1.2-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.1-enterprise"
+    assert health["application_version"] == "5.1.3-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.2-enterprise"
     assert health["invoice_platform_ready"] is True
     assert health["accounts_receivable_ready"] is True
     assert health["accounts_payable_ready"] is True
@@ -70,7 +70,7 @@ def test_cashflow_ai_bootstrap():
     suite = finance_enterprise.billing
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "5.1.2-enterprise"
+    assert boot["version"] == "5.1.3-enterprise"
     assert boot["converted_invoice_id"] and boot["tax_calc_id"] and boot["cash_forecast_id"]
     assert suite.ai.nl_summary(audience="board")["insight_type"] == "nl_summary"
     for dtype in ("invoice", "receivables", "payables", "tax", "cashflow"):
@@ -81,7 +81,7 @@ def test_cashflow_ai_bootstrap():
 async def test_api_billing(client):
     health = await client.get(f"{BIL}/health")
     body = await health.json()
-    assert body["application_version"] == "5.1.2-enterprise"
+    assert body["application_version"] == "5.1.3-enterprise"
     assert body["invoice_platform_ready"] is True
     assert body["tax_engine_ready"] is True
 
@@ -104,7 +104,7 @@ async def test_api_billing(client):
     for prefix in (PREFIX, PAY):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "5.1.2-enterprise"
+        assert (await resp.json())["application_version"] == "5.1.3-enterprise"
 
     assert boot_body["receivable_id"]
 
@@ -140,5 +140,5 @@ def test_docs_and_regression_18_2():
     assert CRYPTO.application_version == "4.8.0-enterprise"
     assert LEGAL.application_version == "5.0.0-enterprise"
     manifest = (ROOT / "applications" / "finance_enterprise" / "manifest.json").read_text()
-    assert "5.1.2-enterprise" in manifest
-    assert "18.2" in manifest
+    assert "5.1.3-enterprise" in manifest
+    assert "18.3" in manifest

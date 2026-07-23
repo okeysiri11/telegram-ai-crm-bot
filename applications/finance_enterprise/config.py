@@ -1,4 +1,4 @@
-"""Finance Enterprise Platform — Sprint 18.2 Billing Platform (Bidex)."""
+"""Finance Enterprise Platform — Sprint 18.3 Treasury Platform (Bidex)."""
 
 from __future__ import annotations
 
@@ -9,15 +9,16 @@ from dataclasses import dataclass, field
 class FinanceEnterpriseConfig:
     application_name: str = "Finance Enterprise Platform (Bidex)"
     application: str = "finance_enterprise"
-    application_version: str = "5.1.2-enterprise"
-    release_status: str = "Billing Platform"
+    application_version: str = "5.1.3-enterprise"
+    release_status: str = "Treasury Platform"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.1.1-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.1.2-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/finance-enterprise/v1"
     payments_api_prefix: str = "/api/finance-pay/v1"
     billing_api_prefix: str = "/api/finance-bil/v1"
+    treasury_api_prefix: str = "/api/finance-tr/v1"
     internal_prefix: str = "/internal/finance-enterprise/v1"
     financial_registry: str = "1.0"
     general_ledger: str = "1.0"
@@ -25,6 +26,7 @@ class FinanceEnterpriseConfig:
     financial_architecture: str = "1.0"
     payments: str = "1.0"
     billing: str = "1.0"
+    treasury: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     base_currency: str = "USD"
@@ -100,6 +102,46 @@ class FinanceEnterpriseConfig:
     )
     bil_knowledge_bases: list[str] = field(
         default_factory=lambda: ["invoice", "receivable", "payable", "tax", "cashflow"]
+    )
+    tr_budget_types: list[str] = field(
+        default_factory=lambda: ["department", "project", "cost_center"]
+    )
+    tr_plan_types: list[str] = field(
+        default_factory=lambda: [
+            "revenue",
+            "expense",
+            "capex",
+            "investment",
+            "working_capital",
+        ]
+    )
+    tr_forecast_kinds: list[str] = field(
+        default_factory=lambda: ["cash_flow", "revenue", "expense", "liquidity"]
+    )
+    tr_variance_types: list[str] = field(
+        default_factory=lambda: [
+            "budget_vs_actual",
+            "revenue",
+            "expense",
+            "cash_flow",
+            "department",
+        ]
+    )
+    tr_ai_insight_types: list[str] = field(
+        default_factory=lambda: [
+            "budget_deviation",
+            "liquidity_risk",
+            "forecast_optimization",
+            "financial_anomaly",
+            "capital_allocation",
+            "nl_summary",
+        ]
+    )
+    tr_dashboard_types: list[str] = field(
+        default_factory=lambda: ["treasury", "budget", "forecast", "liquidity", "planning"]
+    )
+    tr_knowledge_bases: list[str] = field(
+        default_factory=lambda: ["treasury", "budget", "forecast", "liquidity", "planning"]
     )
 
 

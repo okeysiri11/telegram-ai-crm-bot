@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.finance_enterprise.api import bil_handlers, handlers, pay_handlers
+from applications.finance_enterprise.api import bil_handlers, handlers, pay_handlers, tr_handlers
 from applications.finance_enterprise.api.middleware import auth_middleware
 from applications.finance_enterprise.config import DEFAULT_CONFIG
 
@@ -72,3 +72,26 @@ def register_finance_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{bil}/dashboard", bil_handlers.bil_dashboard_handler)
     app.router.add_get(f"{bil}/knowledge", bil_handlers.bil_knowledge_handler)
     app.router.add_post(f"{bil}/knowledge", bil_handlers.bil_knowledge_handler)
+
+    # Sprint 18.3 — Treasury Platform (additive; prior routes unchanged)
+    tr = DEFAULT_CONFIG.treasury_api_prefix
+    app.router.add_get(f"{tr}/health", tr_handlers.tr_health_handler)
+    app.router.add_post(f"{tr}/bootstrap", tr_handlers.tr_bootstrap_handler)
+    app.router.add_get(f"{tr}/treasury", tr_handlers.tr_treasury_handler)
+    app.router.add_post(f"{tr}/treasury", tr_handlers.tr_treasury_handler)
+    app.router.add_get(f"{tr}/reconciliation", tr_handlers.tr_reconciliation_handler)
+    app.router.add_post(f"{tr}/reconciliation", tr_handlers.tr_reconciliation_handler)
+    app.router.add_get(f"{tr}/budgets", tr_handlers.tr_budgets_handler)
+    app.router.add_post(f"{tr}/budgets", tr_handlers.tr_budgets_handler)
+    app.router.add_get(f"{tr}/planning", tr_handlers.tr_planning_handler)
+    app.router.add_post(f"{tr}/planning", tr_handlers.tr_planning_handler)
+    app.router.add_get(f"{tr}/forecast", tr_handlers.tr_forecast_handler)
+    app.router.add_post(f"{tr}/forecast", tr_handlers.tr_forecast_handler)
+    app.router.add_get(f"{tr}/variance", tr_handlers.tr_variance_handler)
+    app.router.add_post(f"{tr}/variance", tr_handlers.tr_variance_handler)
+    app.router.add_get(f"{tr}/ai", tr_handlers.tr_ai_handler)
+    app.router.add_post(f"{tr}/ai", tr_handlers.tr_ai_handler)
+    app.router.add_get(f"{tr}/dashboard", tr_handlers.tr_dashboard_handler)
+    app.router.add_post(f"{tr}/dashboard", tr_handlers.tr_dashboard_handler)
+    app.router.add_get(f"{tr}/knowledge", tr_handlers.tr_knowledge_handler)
+    app.router.add_post(f"{tr}/knowledge", tr_handlers.tr_knowledge_handler)

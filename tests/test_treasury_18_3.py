@@ -1,4 +1,4 @@
-"""Tests — Payments Platform (Sprint 18.1)."""
+"""Tests — Treasury Platform (Sprint 18.3)."""
 
 from __future__ import annotations
 
@@ -16,6 +16,8 @@ from applications.finance_enterprise.shared.exceptions import ValidationError
 ROOT = Path(__file__).resolve().parents[1]
 PREFIX = "/api/finance-enterprise/v1"
 PAY = "/api/finance-pay/v1"
+BIL = "/api/finance-bil/v1"
+TR = "/api/finance-tr/v1"
 
 
 @pytest.fixture
@@ -38,93 +40,86 @@ def reset_store():
     finance_enterprise.reset()
 
 
-def test_version_payments_ready():
+def test_version_treasury_ready():
     health = finance_enterprise.health()
     assert health["application_version"] == "5.1.3-enterprise"
     assert health["enterprise_foundation"] == "Enterprise Platform v5.1.2-enterprise"
-    assert health["banking_platform_ready"] is True
-    assert health["digital_wallets_ready"] is True
-    assert health["payment_engine_ready"] is True
-    assert health["cash_management_ready"] is True
-    assert health["general_ledger_ready"] is True
+    assert health["treasury_platform_ready"] is True
+    assert health["budget_management_ready"] is True
+    assert health["financial_planning_ready"] is True
+    assert health["ai_financial_forecasting_ready"] is True
+    assert health["invoice_platform_ready"] is True
 
 
-def test_banking_wallets_payments():
-    suite = finance_enterprise.payments
-    bank = suite.banking.register_bank(name="QA Bank", bic="QABANKXX")
-    acct = suite.banking.register_account(
-        bank_id=bank["bank_id"], account_name="QA Ops", iban="US00QA0001"
+def test_treasury_budget_recon():
+    suite = finance_enterprise.treasury
+    pool = suite.treasury.create_pool(name="QA Pool", balance=100000)
+    bud = suite.budgets.create_budget(
+        name="QA Dept", budget_type="department", amount=50000
     )
-    wal = suite.wallets.create_wallet(owner_ref="org:qa", wallet_type="enterprise")
-    suite.wallets.credit(wallet_id=wal["wallet_id"], amount=1000)
-    pmt = suite.payments.create_payment(
-        payment_type="outgoing", amount=100, from_ref=wal["wallet_id"], external_key="QA-1"
+    stmt = suite.reconciliation.import_statement(
+        account_ref="QA-BANK", period="2026-07", lines=[{"memo": "x", "amount": 10, "external_id": "1"}]
     )
-    assert acct["bank_account_id"] and pmt["payment_id"]
+    assert pool["pool_id"] and bud["budget_id"] and stmt["statement_id"]
     with pytest.raises(ValidationError):
-        suite.payments.create_payment(
-            payment_type="outgoing", amount=50, from_ref=wal["wallet_id"], external_key="QA-1"
-        )
+        suite.budgets.create_budget(name="", budget_type="department", amount=1)
 
 
-def test_cash_approvals_bootstrap():
-    suite = finance_enterprise.payments
+def test_forecast_ai_bootstrap():
+    suite = finance_enterprise.treasury
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
     assert boot["version"] == "5.1.3-enterprise"
-    assert boot["bank_id"] and boot["approval_id"] and boot["register_id"]
-    assert suite.processing.approve(
-        payment_id=boot["outgoing_payment_id"], approver="controller", decision="approved"
-    )["decision"] == "approved"
-    for dtype in ("payments", "wallets", "banking", "cash"):
+    assert boot["pool_id"] and boot["cash_forecast_id"] and boot["ai_nl_id"]
+    assert suite.ai.nl_summary(audience="board")["insight_type"] == "nl_summary"
+    for dtype in ("treasury", "budget", "forecast", "liquidity", "planning"):
         assert suite.dashboard.render(dashboard_type=dtype)["dashboard_type"] == dtype
 
 
 @pytest.mark.asyncio
-async def test_api_payments(client):
-    health = await client.get(f"{PAY}/health")
+async def test_api_treasury(client):
+    health = await client.get(f"{TR}/health")
     body = await health.json()
     assert body["application_version"] == "5.1.3-enterprise"
-    assert body["banking_platform_ready"] is True
-    assert body["payment_engine_ready"] is True
+    assert body["treasury_platform_ready"] is True
+    assert body["budget_management_ready"] is True
 
-    boot = await client.post(f"{PAY}/bootstrap", json={})
+    boot = await client.post(f"{TR}/bootstrap", json={})
     assert boot.status == 201
     boot_body = await boot.json()
 
-    approve = await client.post(
-        f"{PAY}/processing",
-        json={
-            "action": "approve",
-            "payment_id": boot_body["scheduled_payment_id"],
-            "approver": "cfo",
-        },
+    fc = await client.post(
+        f"{TR}/forecast",
+        json={"kind": "liquidity", "horizon_days": 30, "projected": 1000},
     )
-    assert approve.status == 201
+    assert fc.status == 201
 
-    cash = await client.post(
-        f"{PAY}/cash",
-        json={"action": "operate", "register_id": boot_body["register_id"], "operation": "in", "amount": 25},
+    ai = await client.post(
+        f"{TR}/ai",
+        json={"action": "nl_summary", "audience": "cfo"},
     )
-    assert cash.status == 201
+    assert ai.status == 201
 
-    resp = await client.get(f"{PREFIX}/health")
-    assert resp.status == 200
-    assert (await resp.json())["application_version"] == "5.1.3-enterprise"
+    for prefix in (PREFIX, PAY, BIL):
+        resp = await client.get(f"{prefix}/health")
+        assert resp.status == 200
+        assert (await resp.json())["application_version"] == "5.1.3-enterprise"
+
+    assert boot_body["workspace_id"]
 
 
-def test_docs_and_regression_18_1():
+def test_docs_and_regression_18_3():
     for name in (
-        "BANKING_PLATFORM.md",
-        "DIGITAL_WALLETS.md",
-        "PAYMENT_ENGINE.md",
-        "CASH_MANAGEMENT.md",
-        "FINANCIAL_CONTROLS.md",
+        "TREASURY_PLATFORM.md",
+        "BUDGET_MANAGEMENT.md",
+        "BANK_RECONCILIATION.md",
+        "FINANCIAL_PLANNING.md",
+        "AI_FINANCIAL_FORECASTING.md",
     ):
         assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "PAYMENTS_PLATFORM.md").exists()
-    assert (ROOT / "applications" / "finance_enterprise" / "payments" / "facade.py").exists()
-    assert (ROOT / "applications" / "finance_enterprise" / "ledger.py").exists()
+    assert (ROOT / "knowledge" / "applications" / "TREASURY_PLATFORM.md").exists()
+    assert (ROOT / "applications" / "finance_enterprise" / "treasury" / "facade.py").exists()
+    assert (ROOT / "applications" / "finance_enterprise" / "billing" / "facade.py").exists()
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT
