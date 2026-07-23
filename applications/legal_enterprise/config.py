@@ -1,4 +1,4 @@
-# Legal Enterprise Platform — Sprint 17.4 Document Intelligence.
+# Legal Enterprise Platform — Sprint 17.5 Compliance Platform.
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class LegalEnterpriseConfig:
     application_name: str = "Legal Intelligence Platform"
     application: str = "legal_enterprise"
-    application_version: str = "4.9.4-enterprise"
-    release_status: str = "Document Intelligence"
+    application_version: str = "4.9.5-enterprise"
+    release_status: str = "Compliance Platform"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.9.3-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.9.4-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/legal-enterprise/v1"
@@ -20,6 +20,7 @@ class LegalEnterpriseConfig:
     judicial_intelligence_api_prefix: str = "/api/legal-ji/v1"
     case_management_api_prefix: str = "/api/legal-cm/v1"
     document_intelligence_api_prefix: str = "/api/legal-di/v1"
+    compliance_api_prefix: str = "/api/legal-cp/v1"
     internal_prefix: str = "/internal/legal-enterprise/v1"
     legal_registry: str = "1.0"
     legislation_registry: str = "1.0"
@@ -29,6 +30,7 @@ class LegalEnterpriseConfig:
     legislation_intelligence: str = "1.0"
     judicial_intelligence: str = "1.0"
     document_intelligence: str = "1.0"
+    compliance: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     legal_roles: list[str] = field(
@@ -211,6 +213,21 @@ class LegalEnterpriseConfig:
     )
     di_knowledge_bases: list[str] = field(
         default_factory=lambda: ["document", "clause", "contract", "risk", "template"]
+    )
+    cp_compliance_statuses: list[str] = field(
+        default_factory=lambda: ["open", "in_progress", "compliant", "non_compliant", "waived"]
+    )
+    cp_counterparty_types: list[str] = field(
+        default_factory=lambda: ["vendor", "customer", "partner", "other"]
+    )
+    cp_risk_levels: list[str] = field(
+        default_factory=lambda: ["low", "medium", "high", "critical"]
+    )
+    cp_dashboard_types: list[str] = field(
+        default_factory=lambda: ["compliance", "corporate", "license", "risk", "ai_compliance"]
+    )
+    cp_knowledge_bases: list[str] = field(
+        default_factory=lambda: ["compliance", "corporate", "license", "policy", "risk"]
     )
 
 

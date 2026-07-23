@@ -42,8 +42,8 @@ def reset_store():
 
 def test_version_case_management_ready():
     health = legal_enterprise.health()
-    assert health["application_version"] == "4.9.4-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.3-enterprise"
+    assert health["application_version"] == "4.9.5-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.4-enterprise"
     assert health["case_management_ready"] is True
     assert health["court_calendar_ready"] is True
     assert health["procedural_timeline_ready"] is True
@@ -74,7 +74,7 @@ def test_workflow_ai_and_bootstrap():
     suite = legal_enterprise.case_management_platform
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "4.9.4-enterprise"
+    assert boot["version"] == "4.9.5-enterprise"
     assert boot["case_id"] and boot["hearing_id"] and boot["health_id"]
     assert suite.ai.health_score(case_id=boot["case_id"])["kind"] == "health_score"
     assert suite.tasks.status()["tasks"] >= 1
@@ -87,7 +87,7 @@ def test_workflow_ai_and_bootstrap():
 async def test_api_case_management(client):
     health = await client.get(f"{CM}/health")
     body = await health.json()
-    assert body["application_version"] == "4.9.4-enterprise"
+    assert body["application_version"] == "4.9.5-enterprise"
     assert body["case_management_ready"] is True
     assert body["court_calendar_ready"] is True
 
@@ -116,7 +116,7 @@ async def test_api_case_management(client):
     for prefix in (PREFIX, LI, JI):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "4.9.4-enterprise"
+        assert (await resp.json())["application_version"] == "4.9.5-enterprise"
 
 
 def test_docs_and_regression_17_3():
@@ -149,5 +149,5 @@ def test_docs_and_regression_17_3():
     assert PORT_ERP.application_version == "2.0.0"
     assert CRYPTO.application_version == "4.8.0-enterprise"
     manifest = (ROOT / "applications" / "legal_enterprise" / "manifest.json").read_text()
-    assert "4.9.4-enterprise" in manifest
-    assert "17.4" in manifest
+    assert "4.9.5-enterprise" in manifest
+    assert "17.5" in manifest

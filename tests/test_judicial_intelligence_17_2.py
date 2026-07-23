@@ -42,8 +42,8 @@ def reset_store():
 
 def test_version_judicial_intelligence_ready():
     health = legal_enterprise.health()
-    assert health["application_version"] == "4.9.4-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.3-enterprise"
+    assert health["application_version"] == "4.9.5-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.4-enterprise"
     assert health["judicial_intelligence_ready"] is True
     assert health["court_decision_repository_ready"] is True
     assert health["ai_judicial_analysis_ready"] is True
@@ -75,7 +75,7 @@ def test_analysis_analytics_and_bootstrap():
     suite = legal_enterprise.judicial_intelligence
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "4.9.4-enterprise"
+    assert boot["version"] == "4.9.5-enterprise"
     assert boot["judgment_id"] and boot["summary_id"] and boot["timeline_id"]
     assert suite.analysis.summarize(decision_id=boot["judgment_id"])["kind"] == "summarize"
     assert suite.analytics.report(kind="outcome")["kind"] == "outcome"
@@ -88,7 +88,7 @@ def test_analysis_analytics_and_bootstrap():
 async def test_api_judicial_intelligence(client):
     health = await client.get(f"{JI}/health")
     body = await health.json()
-    assert body["application_version"] == "4.9.4-enterprise"
+    assert body["application_version"] == "4.9.5-enterprise"
     assert body["judicial_intelligence_ready"] is True
     assert body["court_decision_repository_ready"] is True
 
@@ -114,7 +114,7 @@ async def test_api_judicial_intelligence(client):
     for prefix in (PREFIX, LI):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "4.9.4-enterprise"
+        assert (await resp.json())["application_version"] == "4.9.5-enterprise"
 
 
 def test_docs_and_regression_17_2():
@@ -146,5 +146,5 @@ def test_docs_and_regression_17_2():
     assert PORT_ERP.application_version == "2.0.0"
     assert CRYPTO.application_version == "4.8.0-enterprise"
     manifest = (ROOT / "applications" / "legal_enterprise" / "manifest.json").read_text()
-    assert "4.9.4-enterprise" in manifest
-    assert "17.4" in manifest
+    assert "4.9.5-enterprise" in manifest
+    assert "17.5" in manifest

@@ -6,6 +6,7 @@ from typing import Any
 
 from applications.legal_enterprise.case_management.facade import CaseManagementSuite
 from applications.legal_enterprise.cases import CaseManagement
+from applications.legal_enterprise.compliance.facade import ComplianceSuite
 from applications.legal_enterprise.config import DEFAULT_CONFIG, LegalEnterpriseConfig
 from applications.legal_enterprise.courts import CourtInfrastructure
 from applications.legal_enterprise.document_intelligence.facade import DocumentIntelligenceSuite
@@ -27,6 +28,7 @@ class LegalEnterpriseApplication:
         judicial_intelligence_svc: JudicialIntelligenceSuite | None = None,
         case_management_svc: CaseManagementSuite | None = None,
         document_intelligence_svc: DocumentIntelligenceSuite | None = None,
+        compliance_svc: ComplianceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or legal_enterprise_store
@@ -42,6 +44,7 @@ class LegalEnterpriseApplication:
         self.judicial_intelligence = judicial_intelligence_svc or JudicialIntelligenceSuite(self.store)
         self.case_management_platform = case_management_svc or CaseManagementSuite(self.store)
         self.document_intelligence = document_intelligence_svc or DocumentIntelligenceSuite(self.store)
+        self.compliance_platform = compliance_svc or ComplianceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -296,6 +299,10 @@ class LegalEnterpriseApplication:
             "document_intelligence_ready": True,
             "ai_risk_review_ready": True,
             "legal_drafting_ready": True,
+            "compliance_platform_ready": True,
+            "corporate_governance_ready": True,
+            "legal_risk_management_ready": True,
+            "ai_compliance_intelligence_ready": True,
             "engines": {
                 "legal_registry": self.config.legal_registry,
                 "legislation_registry": self.config.legislation_registry,
@@ -305,6 +312,7 @@ class LegalEnterpriseApplication:
                 "legislation_intelligence": self.config.legislation_intelligence,
                 "judicial_intelligence": self.config.judicial_intelligence,
                 "document_intelligence": self.config.document_intelligence,
+                "compliance": self.config.compliance,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -318,6 +326,7 @@ class LegalEnterpriseApplication:
             "judicial_intelligence": self.judicial_intelligence.status(),
             "case_management_platform": self.case_management_platform.status(),
             "document_intelligence": self.document_intelligence.status(),
+            "compliance_platform": self.compliance_platform.status(),
         }
 
 

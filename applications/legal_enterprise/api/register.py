@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.legal_enterprise.api import cm_handlers, di_handlers, handlers, ji_handlers, li_handlers
+from applications.legal_enterprise.api import (
+    cm_handlers,
+    cp_handlers,
+    di_handlers,
+    handlers,
+    ji_handlers,
+    li_handlers,
+)
 from applications.legal_enterprise.api.middleware import auth_middleware
 from applications.legal_enterprise.config import DEFAULT_CONFIG
 
@@ -112,3 +119,26 @@ def register_legal_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{di}/dashboard", di_handlers.di_dashboard_handler)
     app.router.add_get(f"{di}/knowledge", di_handlers.di_knowledge_handler)
     app.router.add_post(f"{di}/knowledge", di_handlers.di_knowledge_handler)
+
+    # Sprint 17.5 — Compliance Platform (additive; prior routes unchanged)
+    cp = DEFAULT_CONFIG.compliance_api_prefix
+    app.router.add_get(f"{cp}/health", cp_handlers.cp_health_handler)
+    app.router.add_post(f"{cp}/bootstrap", cp_handlers.cp_bootstrap_handler)
+    app.router.add_get(f"{cp}/governance", cp_handlers.cp_governance_handler)
+    app.router.add_post(f"{cp}/governance", cp_handlers.cp_governance_handler)
+    app.router.add_get(f"{cp}/compliance", cp_handlers.cp_compliance_handler)
+    app.router.add_post(f"{cp}/compliance", cp_handlers.cp_compliance_handler)
+    app.router.add_get(f"{cp}/licenses", cp_handlers.cp_licenses_handler)
+    app.router.add_post(f"{cp}/licenses", cp_handlers.cp_licenses_handler)
+    app.router.add_get(f"{cp}/counterparties", cp_handlers.cp_counterparties_handler)
+    app.router.add_post(f"{cp}/counterparties", cp_handlers.cp_counterparties_handler)
+    app.router.add_get(f"{cp}/aml", cp_handlers.cp_aml_handler)
+    app.router.add_post(f"{cp}/aml", cp_handlers.cp_aml_handler)
+    app.router.add_get(f"{cp}/risk", cp_handlers.cp_risk_handler)
+    app.router.add_post(f"{cp}/risk", cp_handlers.cp_risk_handler)
+    app.router.add_get(f"{cp}/ai", cp_handlers.cp_ai_handler)
+    app.router.add_post(f"{cp}/ai", cp_handlers.cp_ai_handler)
+    app.router.add_get(f"{cp}/dashboard", cp_handlers.cp_dashboard_handler)
+    app.router.add_post(f"{cp}/dashboard", cp_handlers.cp_dashboard_handler)
+    app.router.add_get(f"{cp}/knowledge", cp_handlers.cp_knowledge_handler)
+    app.router.add_post(f"{cp}/knowledge", cp_handlers.cp_knowledge_handler)
