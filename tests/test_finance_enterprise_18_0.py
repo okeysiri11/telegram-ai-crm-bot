@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_finance_enterprise_ready():
     health = finance_enterprise.health()
-    assert health["application_version"] == "5.1.1-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.0-enterprise"
+    assert health["application_version"] == "5.1.2-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.1-enterprise"
     assert health["finance_enterprise_foundation_ready"] is True
     assert health["general_ledger_ready"] is True
     assert health["financial_registry_ready"] is True
@@ -68,7 +68,7 @@ def test_registry_and_currency():
 def test_ledger_and_knowledge():
     boot = finance_enterprise.bootstrap()
     assert boot["journal_id"] and boot["trial_balance_id"] and boot["organization_id"]
-    assert boot["version"] == "5.1.1-enterprise"
+    assert boot["version"] == "5.1.2-enterprise"
     assert finance_enterprise.ledger.status()["postings"] >= 2
     bal = finance_enterprise.ledger.balance(account_code="1000")
     assert bal["debit"] == 100000
@@ -89,7 +89,7 @@ def test_ledger_and_knowledge():
 async def test_api_finance_enterprise(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "5.1.1-enterprise"
+    assert body["application_version"] == "5.1.2-enterprise"
     assert body["general_ledger_ready"] is True
     assert body["financial_registry_ready"] is True
 
@@ -160,5 +160,5 @@ def test_docs_and_regression_18_0():
     assert CRYPTO.application_version == "4.8.0-enterprise"
     assert LEGAL.application_version == "5.0.0-enterprise"
     manifest = (ROOT / "applications" / "finance_enterprise" / "manifest.json").read_text()
-    assert "5.1.1-enterprise" in manifest
-    assert "18.1" in manifest
+    assert "5.1.2-enterprise" in manifest
+    assert "18.2" in manifest
