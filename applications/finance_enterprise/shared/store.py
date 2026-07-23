@@ -201,6 +201,9 @@ class FinanceEnterpriseStore:
         self.int_ai_insights: EntityStore = EntityStore()
         self.int_knowledge: EntityStore = EntityStore()
         self.int_dashboards: EntityStore = EntityStore()
+        # Sprint 18.8 — Enterprise Certification
+        self.fec_runs: EntityStore = EntityStore()
+        self.fec_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

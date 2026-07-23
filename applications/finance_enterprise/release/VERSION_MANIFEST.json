@@ -1,0 +1,11 @@
+{
+  "application": "finance_enterprise",
+  "application_name": "Finance Enterprise Platform (Bidex)",
+  "application_version": "5.2.0-enterprise",
+  "release_status": "Production Ready",
+  "enterprise_foundation": "Enterprise Platform v5.1.7-enterprise",
+  "platform_dependency": "AI Platform Core v3",
+  "ecosystem_dependency": "AI Ecosystem v1.5",
+  "sprint": "18.8",
+  "suite": "Bidex Finance Enterprise Suite"
+}

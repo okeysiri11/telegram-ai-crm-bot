@@ -45,8 +45,8 @@ def reset_store():
 
 def test_version_ai_cfo_ready():
     health = finance_enterprise.health()
-    assert health["application_version"] == "5.1.7-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.6-enterprise"
+    assert health["application_version"] == "5.2.0-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.7-enterprise"
     assert health["ai_cfo_ready"] is True
     assert health["financial_decision_support_ready"] is True
     assert health["financial_modeling_ready"] is True
@@ -73,7 +73,7 @@ def test_decisions_executive_bootstrap():
     suite = finance_enterprise.ai_cfo
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "5.1.7-enterprise"
+    assert boot["version"] == "5.2.0-enterprise"
     assert boot["workspace_id"] and boot["roi_id"] and boot["nl_report_id"]
     assert suite.decisions.recommend(
         recommendation_type="executive", subject="QA"
@@ -87,7 +87,7 @@ def test_decisions_executive_bootstrap():
 async def test_api_ai_cfo(client):
     health = await client.get(f"{CFO}/health")
     body = await health.json()
-    assert body["application_version"] == "5.1.7-enterprise"
+    assert body["application_version"] == "5.2.0-enterprise"
     assert body["ai_cfo_ready"] is True
     assert body["financial_modeling_ready"] is True
 
@@ -110,7 +110,7 @@ async def test_api_ai_cfo(client):
     for prefix in (PREFIX, PAY, BIL, TR, DA, RPT):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "5.1.7-enterprise"
+        assert (await resp.json())["application_version"] == "5.2.0-enterprise"
 
     assert boot_body["rec_priority_id"]
 
@@ -146,5 +146,5 @@ def test_docs_and_regression_18_6():
     assert CRYPTO.application_version == "4.8.0-enterprise"
     assert LEGAL.application_version == "5.0.0-enterprise"
     manifest = (ROOT / "applications" / "finance_enterprise" / "manifest.json").read_text()
-    assert "5.1.7-enterprise" in manifest
-    assert "18.7" in manifest
+    assert "5.2.0-enterprise" in manifest
+    assert "18.8" in manifest

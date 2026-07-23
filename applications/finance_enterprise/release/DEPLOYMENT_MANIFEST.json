@@ -1,0 +1,28 @@
+{
+  "service": "finance_enterprise",
+  "application_version": "5.2.0-enterprise",
+  "api_prefixes": [
+    "/api/finance-enterprise/v1",
+    "/api/finance-pay/v1",
+    "/api/finance-bil/v1",
+    "/api/finance-tr/v1",
+    "/api/finance-da/v1",
+    "/api/finance-rpt/v1",
+    "/api/finance-cfo/v1",
+    "/api/finance-int/v1",
+    "/api/finance-enterprise-certification/v1"
+  ],
+  "healthchecks": [
+    "/api/finance-enterprise/v1/health",
+    "/api/finance-pay/v1/health",
+    "/api/finance-bil/v1/health",
+    "/api/finance-tr/v1/health",
+    "/api/finance-da/v1/health",
+    "/api/finance-rpt/v1/health",
+    "/api/finance-cfo/v1/health",
+    "/api/finance-int/v1/health",
+    "/api/finance-enterprise-certification/v1/health"
+  ],
+  "config_template": "applications/finance_enterprise/release/config.template.env",
+  "checklist": "applications/finance_enterprise/release/PRODUCTION_CHECKLIST.md"
+}

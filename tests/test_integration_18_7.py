@@ -47,8 +47,8 @@ def reset_store():
 
 def test_version_integration_ready():
     health = finance_enterprise.health()
-    assert health["application_version"] == "5.1.7-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.6-enterprise"
+    assert health["application_version"] == "5.2.0-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.1.7-enterprise"
     assert health["enterprise_financial_integration_ready"] is True
     assert health["cross_platform_operations_ready"] is True
     assert health["financial_event_bus_ready"] is True
@@ -75,7 +75,7 @@ def test_ai_cross_platform_bootstrap():
     suite = finance_enterprise.integration
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "5.1.7-enterprise"
+    assert boot["version"] == "5.2.0-enterprise"
     assert boot["auto_sale_id"] and boot["crypto_settlement_id"] and boot["ai_nl_id"]
     assert suite.ai.nl_report(audience="board")["insight_type"] == "nl_report"
     assert suite.port.status()["operations"] >= 1
@@ -94,7 +94,7 @@ def test_ai_cross_platform_bootstrap():
 async def test_api_integration(client):
     health = await client.get(f"{INT}/health")
     body = await health.json()
-    assert body["application_version"] == "5.1.7-enterprise"
+    assert body["application_version"] == "5.2.0-enterprise"
     assert body["financial_event_bus_ready"] is True
     assert body["ai_enterprise_finance_ready"] is True
 
@@ -117,7 +117,7 @@ async def test_api_integration(client):
     for prefix in (PREFIX, PAY, BIL, TR, DA, RPT, CFO):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "5.1.7-enterprise"
+        assert (await resp.json())["application_version"] == "5.2.0-enterprise"
 
     assert boot_body["monitor_id"]
 
@@ -162,5 +162,5 @@ def test_docs_and_regression_18_7():
     assert CRYPTO.application_version == "4.8.0-enterprise"
     assert LEGAL.application_version == "5.0.0-enterprise"
     manifest = (ROOT / "applications" / "finance_enterprise" / "manifest.json").read_text()
-    assert "5.1.7-enterprise" in manifest
-    assert "18.7" in manifest
+    assert "5.2.0-enterprise" in manifest
+    assert "18.8" in manifest

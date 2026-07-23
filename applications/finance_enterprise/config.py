@@ -1,4 +1,4 @@
-"""Finance Enterprise Platform — Sprint 18.7 Enterprise Financial Integration (Bidex)."""
+"""Finance Enterprise Platform — Sprint 18.8 Certification & Production Release (Bidex)."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class FinanceEnterpriseConfig:
     application_name: str = "Finance Enterprise Platform (Bidex)"
     application: str = "finance_enterprise"
-    application_version: str = "5.1.7-enterprise"
-    release_status: str = "Enterprise Financial Integration"
+    application_version: str = "5.2.0-enterprise"
+    release_status: str = "Production Ready"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.1.6-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.1.7-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/finance-enterprise/v1"
@@ -23,6 +23,7 @@ class FinanceEnterpriseConfig:
     reporting_api_prefix: str = "/api/finance-rpt/v1"
     ai_cfo_api_prefix: str = "/api/finance-cfo/v1"
     integration_api_prefix: str = "/api/finance-int/v1"
+    enterprise_certification_api_prefix: str = "/api/finance-enterprise-certification/v1"
     internal_prefix: str = "/internal/finance-enterprise/v1"
     financial_registry: str = "1.0"
     general_ledger: str = "1.0"
@@ -35,6 +36,7 @@ class FinanceEnterpriseConfig:
     reporting: str = "1.0"
     ai_cfo: str = "1.0"
     integration: str = "1.0"
+    enterprise_certification: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     base_currency: str = "USD"

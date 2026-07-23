@@ -8,6 +8,7 @@ from applications.finance_enterprise.api import (
     bil_handlers,
     cfo_handlers,
     da_handlers,
+    fec_handlers,
     handlers,
     int_handlers,
     pay_handlers,
@@ -186,3 +187,19 @@ def register_finance_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{integ}/dashboard", int_handlers.int_dashboard_handler)
     app.router.add_get(f"{integ}/knowledge", int_handlers.int_knowledge_handler)
     app.router.add_post(f"{integ}/knowledge", int_handlers.int_knowledge_handler)
+
+    # Sprint 18.8 — Enterprise Certification (additive; prior routes unchanged)
+    fec = DEFAULT_CONFIG.enterprise_certification_api_prefix
+    app.router.add_get(f"{fec}/health", fec_handlers.fec_health_handler)
+    app.router.add_post(f"{fec}/bootstrap", fec_handlers.fec_bootstrap_handler)
+    app.router.add_get(f"{fec}/architecture", fec_handlers.fec_architecture_handler)
+    app.router.add_get(f"{fec}/integration", fec_handlers.fec_integration_handler)
+    app.router.add_get(f"{fec}/performance", fec_handlers.fec_performance_handler)
+    app.router.add_get(f"{fec}/security", fec_handlers.fec_security_handler)
+    app.router.add_get(f"{fec}/integrity", fec_handlers.fec_integrity_handler)
+    app.router.add_get(f"{fec}/documentation", fec_handlers.fec_documentation_handler)
+    app.router.add_get(f"{fec}/quality", fec_handlers.fec_quality_handler)
+    app.router.add_get(f"{fec}/release", fec_handlers.fec_release_handler)
+    app.router.add_get(f"{fec}/executive", fec_handlers.fec_executive_handler)
+    app.router.add_get(f"{fec}/dashboard", fec_handlers.fec_dashboard_handler)
+    app.router.add_post(f"{fec}/dashboard", fec_handlers.fec_dashboard_handler)
