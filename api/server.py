@@ -92,6 +92,10 @@ def create_app() -> web.Application:
 
     register_crypto_enterprise_routes(app)
 
+    from applications.legal_enterprise.api.register import register_legal_enterprise_routes
+
+    register_legal_enterprise_routes(app)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 
