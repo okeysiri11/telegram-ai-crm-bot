@@ -11,6 +11,7 @@ from applications.enterprise_hub.configuration import EnterpriseConfiguration
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
 from applications.enterprise_hub.integration_layer import IntegrationLayer
+from applications.enterprise_hub.integrations.facade import IntegrationPlatformSuite
 from applications.enterprise_hub.knowledge.facade import UnifiedKnowledgeSuite
 from applications.enterprise_hub.orchestrator.facade import OrchestratorSuite
 from applications.enterprise_hub.registry import EnterpriseRegistry
@@ -30,6 +31,7 @@ class EnterpriseHubApplication:
         ai_agents_svc: AIAgentSuite | None = None,
         communications_svc: CommunicationsSuite | None = None,
         workflow_svc: WorkflowSuite | None = None,
+        eip_svc: IntegrationPlatformSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -45,6 +47,7 @@ class EnterpriseHubApplication:
         self.ai_agents = ai_agents_svc or AIAgentSuite(self.store)
         self.communications = communications_svc or CommunicationsSuite(self.store)
         self.workflow = workflow_svc or WorkflowSuite(self.store)
+        self.eip = eip_svc or IntegrationPlatformSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -227,6 +230,10 @@ class EnterpriseHubApplication:
             "workflow_builder_ready": True,
             "approval_engine_ready": True,
             "workflow_scheduler_ready": True,
+            "enterprise_integration_platform_ready": True,
+            "connector_engine_ready": True,
+            "adapter_layer_ready": True,
+            "sync_engine_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -238,6 +245,7 @@ class EnterpriseHubApplication:
                 "ai_agents": self.config.ai_agents,
                 "communications": self.config.communications,
                 "workflow": self.config.workflow,
+                "eip": self.config.eip,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -253,6 +261,7 @@ class EnterpriseHubApplication:
             "ai_agents": self.ai_agents.status(),
             "communications": self.communications.status(),
             "workflow": self.workflow.status(),
+            "eip": self.eip.status(),
         }
 
 

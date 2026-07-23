@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_orchestrator_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "5.3.5-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.3.4-enterprise"
+    assert health["application_version"] == "5.3.6-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.3.5-enterprise"
     assert health["ai_orchestrator_ready"] is True
     assert health["workflow_engine_ready"] is True
     assert health["cross_platform_routing_ready"] is True
@@ -66,7 +66,7 @@ def test_decisions_bootstrap():
     suite = enterprise_hub.orchestrator
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "5.3.5-enterprise"
+    assert boot["version"] == "5.3.6-enterprise"
     assert boot["execution_id"] and boot["coordination_id"] and boot["explain_nl_id"]
     assert suite.decisions.decide(
         decision_type="recommendation", subject="QA"
@@ -79,7 +79,7 @@ def test_decisions_bootstrap():
 async def test_api_orchestrator(client):
     health = await client.get(f"{ORCH}/health")
     body = await health.json()
-    assert body["application_version"] == "5.3.5-enterprise"
+    assert body["application_version"] == "5.3.6-enterprise"
     assert body["ai_orchestrator_ready"] is True
     assert body["ai_decision_engine_ready"] is True
 
@@ -101,7 +101,7 @@ async def test_api_orchestrator(client):
 
     hub = await client.get(f"{HUB}/health")
     assert hub.status == 200
-    assert (await hub.json())["application_version"] == "5.3.5-enterprise"
+    assert (await hub.json())["application_version"] == "5.3.6-enterprise"
     assert boot_body["intent_id"]
 
 
@@ -146,5 +146,5 @@ def test_docs_and_regression_19_1():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "5.3.5-enterprise" in manifest
-    assert "19.5" in manifest
+    assert "5.3.6-enterprise" in manifest
+    assert "19.6" in manifest

@@ -166,6 +166,23 @@ class EnterpriseHubStore:
         self.wf_events: EntityStore = EntityStore()
         self.wf_optimizations: EntityStore = EntityStore()
         self.wf_dashboards: EntityStore = EntityStore()
+        # Sprint 19.6 — Enterprise Integration Platform
+        self.eip_registry: EntityStore = EntityStore()
+        self.eip_manager_ops: EntityStore = EntityStore()
+        self.eip_journals: EntityStore = EntityStore()
+        self.eip_connector_calls: EntityStore = EntityStore()
+        self.eip_adapter_calls: EntityStore = EntityStore()
+        self.eip_syncs: EntityStore = EntityStore()
+        self.eip_retries: EntityStore = EntityStore()
+        self.eip_mappings: EntityStore = EntityStore()
+        self.eip_transforms: EntityStore = EntityStore()
+        self.eip_mapping_validations: EntityStore = EntityStore()
+        self.eip_security: EntityStore = EntityStore()
+        self.eip_monitors: EntityStore = EntityStore()
+        self.eip_schedules: EntityStore = EntityStore()
+        self.eip_schedule_fires: EntityStore = EntityStore()
+        self.eip_ai_assists: EntityStore = EntityStore()
+        self.eip_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

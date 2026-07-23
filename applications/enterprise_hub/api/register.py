@@ -8,6 +8,7 @@ from applications.enterprise_hub.api import aa_handlers, handlers, kg_handlers, 
 from applications.enterprise_hub.api.middleware import auth_middleware
 from applications.enterprise_hub.communications import api as comm_api
 from applications.enterprise_hub.config import DEFAULT_CONFIG
+from applications.enterprise_hub.integrations import api as eip_api
 from applications.enterprise_hub.workflow import api as wf_api
 
 
@@ -143,3 +144,24 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{wf}/validator", wf_api.wf_validator_handler)
     app.router.add_get(f"{wf}/dashboard", wf_api.wf_dashboard_handler)
     app.router.add_post(f"{wf}/dashboard", wf_api.wf_dashboard_handler)
+
+    # Sprint 19.6 — Enterprise Integration Platform (additive; prior routes unchanged)
+    eip = DEFAULT_CONFIG.eip_api_prefix
+    app.router.add_get(f"{eip}/health", eip_api.eip_health_handler)
+    app.router.add_post(f"{eip}/bootstrap", eip_api.eip_bootstrap_handler)
+    app.router.add_get(f"{eip}/manager", eip_api.eip_manager_handler)
+    app.router.add_post(f"{eip}/manager", eip_api.eip_manager_handler)
+    app.router.add_get(f"{eip}/engine", eip_api.eip_engine_handler)
+    app.router.add_post(f"{eip}/engine", eip_api.eip_engine_handler)
+    app.router.add_get(f"{eip}/mapping", eip_api.eip_mapping_handler)
+    app.router.add_post(f"{eip}/mapping", eip_api.eip_mapping_handler)
+    app.router.add_get(f"{eip}/security", eip_api.eip_security_handler)
+    app.router.add_post(f"{eip}/security", eip_api.eip_security_handler)
+    app.router.add_get(f"{eip}/monitor", eip_api.eip_monitor_handler)
+    app.router.add_post(f"{eip}/monitor", eip_api.eip_monitor_handler)
+    app.router.add_get(f"{eip}/scheduler", eip_api.eip_scheduler_handler)
+    app.router.add_post(f"{eip}/scheduler", eip_api.eip_scheduler_handler)
+    app.router.add_get(f"{eip}/ai", eip_api.eip_ai_handler)
+    app.router.add_post(f"{eip}/ai", eip_api.eip_ai_handler)
+    app.router.add_get(f"{eip}/dashboard", eip_api.eip_dashboard_handler)
+    app.router.add_post(f"{eip}/dashboard", eip_api.eip_dashboard_handler)

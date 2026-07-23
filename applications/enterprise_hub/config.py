@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 19.5 Enterprise Workflow Engine."""
+"""Enterprise Hub — Sprint 19.6 Enterprise Integration Platform."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.3.5-enterprise"
-    release_status: str = "Enterprise Workflow Engine"
+    application_version: str = "5.3.6-enterprise"
+    release_status: str = "Enterprise Integration Platform"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.3.4-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.3.5-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -21,6 +21,7 @@ class EnterpriseHubConfig:
     ai_agents_api_prefix: str = "/api/enterprise-agents/v1"
     communications_api_prefix: str = "/api/enterprise-comms/v1"
     workflow_api_prefix: str = "/api/enterprise-workflow/v1"
+    eip_api_prefix: str = "/api/enterprise-eip/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -32,6 +33,7 @@ class EnterpriseHubConfig:
     ai_agents: str = "1.0"
     communications: str = "1.0"
     workflow: str = "1.0"
+    eip: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -319,6 +321,15 @@ class EnterpriseHubConfig:
             "ai_task_processing",
             "customer_support",
             "equipment_maintenance",
+        ]
+    )
+    eip_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "monitoring",
+            "registry",
+            "sync",
+            "connectors",
+            "analytics",
         ]
     )
 
