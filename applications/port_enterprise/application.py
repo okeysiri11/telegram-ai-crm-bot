@@ -7,6 +7,7 @@ from typing import Any
 from applications.port_enterprise.cargo_fleet import CargoManagement, FleetRegistry, ShippingCompanies
 from applications.port_enterprise.config import DEFAULT_CONFIG, PortEnterpriseConfig
 from applications.port_enterprise.container_management.facade import ContainerManagementSuite
+from applications.port_enterprise.multimodal_logistics.facade import MultimodalLogisticsSuite
 from applications.port_enterprise.navigation.facade import NavigationSuite
 from applications.port_enterprise.operations import PortDashboard, PortKnowledge, PortOperations
 from applications.port_enterprise.registry import PortRegistry, TerminalManagement
@@ -21,6 +22,7 @@ class PortEnterpriseApplication:
         store: PortEnterpriseStore | None = None,
         navigation_svc: NavigationSuite | None = None,
         container_mgmt_svc: ContainerManagementSuite | None = None,
+        multimodal_svc: MultimodalLogisticsSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or port_enterprise_store
@@ -34,6 +36,7 @@ class PortEnterpriseApplication:
         self.knowledge = PortKnowledge(self.store)
         self.navigation = navigation_svc or NavigationSuite(self.store)
         self.container_management = container_mgmt_svc or ContainerManagementSuite(self.store)
+        self.multimodal_logistics = multimodal_svc or MultimodalLogisticsSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -150,6 +153,11 @@ class PortEnterpriseApplication:
             "port_equipment_ready": True,
             "digital_twin_ready": True,
             "terminal_automation_ready": True,
+            "rail_logistics_ready": True,
+            "truck_logistics_ready": True,
+            "multimodal_platform_ready": True,
+            "shipment_management_ready": True,
+            "ai_logistics_ready": True,
             "engines": {
                 "port_registry": self.config.port_registry,
                 "terminal_management": self.config.terminal_management,
@@ -159,6 +167,7 @@ class PortEnterpriseApplication:
                 "port_operations": self.config.port_operations,
                 "navigation": self.config.navigation,
                 "container_management": self.config.container_management,
+                "multimodal_logistics": self.config.multimodal_logistics,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -172,6 +181,7 @@ class PortEnterpriseApplication:
             "dashboard": self.dashboard.status(),
             "navigation": self.navigation.status(),
             "container_management": self.container_management.status(),
+            "multimodal_logistics": self.multimodal_logistics.status(),
         }
 
 

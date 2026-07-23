@@ -1,4 +1,4 @@
-"""Tests — Container Management, Yard & Equipment (Sprint 15.2)."""
+"""Tests — Rail, Truck & Multimodal Logistics (Sprint 15.3)."""
 
 from __future__ import annotations
 
@@ -14,7 +14,8 @@ from applications.port_enterprise.shared.exceptions import ValidationError
 
 
 ROOT = Path(__file__).resolve().parents[1]
-PREFIX = "/api/port-containers/v1"
+PREFIX = "/api/port-multimodal/v1"
+CM = "/api/port-containers/v1"
 NAV = "/api/port-navigation/v1"
 PE = "/api/port-enterprise/v1"
 
@@ -39,53 +40,61 @@ def reset_store():
     port_enterprise.reset()
 
 
-def test_version_container_ready():
+def test_version_multimodal_ready():
     health = port_enterprise.health()
     assert health["application_version"] == "4.5.3-enterprise"
     assert health["enterprise_foundation"] == "Enterprise Platform v4.5.2-enterprise"
-    assert health["container_platform_ready"] is True
-    assert health["yard_automation_ready"] is True
-    assert health["port_equipment_ready"] is True
-    assert health["digital_twin_ready"] is True
-    assert health["terminal_automation_ready"] is True
+    assert health["rail_logistics_ready"] is True
+    assert health["truck_logistics_ready"] is True
+    assert health["multimodal_platform_ready"] is True
+    assert health["shipment_management_ready"] is True
+    assert health["ai_logistics_ready"] is True
 
 
-def test_container_yard_equipment():
-    suite = port_enterprise.container_management
-    ctr = suite.containers.register(container_number="TESTU1234567", iso_type="20GP")
-    suite.operations.gate_in(ctr["container_id"])
-    yard = suite.yard.register_yard(name="Y1", capacity_teu=100)
-    block = suite.yard.create_block(yard_id=yard["yard_id"], name="B1")
-    slot = suite.yard.allocate_slot(
-        block_id=block["block_id"], row=1, bay=1, tier=1, container_id=ctr["container_id"]
+def test_rail_and_truck():
+    suite = port_enterprise.multimodal_logistics
+    net = suite.rail.register_network(name="Test Corridor", region="UA")
+    train = suite.rail.register_train(name="T1")
+    suite.rail.schedule(
+        train_id=train["train_id"],
+        origin="A",
+        destination="B",
+        departs_at="2026-08-20T10:00:00Z",
     )
-    assert "position" in slot
-    eq = suite.equipment.register(name="STS-X", equipment_type="sts", yard_id=yard["yard_id"])
-    suite.equipment.health(eq["equipment_id"], health_score=50)
+    assert suite.rail.status()["networks"] == 1
+    truck = suite.truck.register_truck(plate="TEST1111")
+    driver = suite.truck.register_driver(name="Driver A")
+    suite.truck.dispatch(
+        truck_id=truck["truck_id"], driver_id=driver["driver_id"], destination="Hub"
+    )
+    assert suite.truck.status()["dispatches"] == 1
     with pytest.raises(ValidationError):
-        suite.containers.register(container_number="X", iso_type="99XX")
+        suite.rail.register_network(name="")
+    assert net["network_id"]
 
 
-def test_automation_and_twin():
-    suite = port_enterprise.container_management
+def test_shipment_multimodal_ai():
+    suite = port_enterprise.multimodal_logistics
     boot = suite.bootstrap()
-    assert boot["twin_id"] and boot["task_id"]
-    twin = suite.twin.simulate(boot["twin_id"], hours=12)
-    assert twin["projected_moves"] > 0
+    assert boot["shipment_id"] and boot["chain_id"] and boot["carbon_id"]
+    assert suite.shipments.status()["pods"] >= 1
+    assert suite.multimodal.status()["chains"] >= 1
+    assert suite.ai.status()["demand_forecasts"] >= 1
     with pytest.raises(ValidationError):
-        suite.equipment.register(name="Bad", equipment_type="drone")
-    for dtype in ("container", "yard", "equipment", "automation", "digital_twin"):
+        suite.ai.optimize_route(origin="A", destination="B", mode="teleport")
+    for dtype in ("rail", "truck", "multimodal", "shipment", "ai_logistics"):
         assert suite.dashboard.render(dashboard_type=dtype)["dashboard_type"] == dtype
 
 
 @pytest.mark.asyncio
-async def test_api_containers(client):
+async def test_api_multimodal(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
     assert body["application_version"] == "4.5.3-enterprise"
-    assert body["container_platform_ready"] is True
-    assert body["digital_twin_ready"] is True
+    assert body["rail_logistics_ready"] is True
+    assert body["ai_logistics_ready"] is True
 
+    assert (await client.get(f"{CM}/health")).status == 200
     assert (await client.get(f"{NAV}/health")).status == 200
     assert (await client.get(f"{PE}/health")).status == 200
 
@@ -93,32 +102,33 @@ async def test_api_containers(client):
     assert boot.status == 201
     boot_body = await boot.json()
 
-    ops = await client.post(
-        f"{PREFIX}/operations",
-        json={"action": "reserve", "container_id": boot_body["container_id"], "party": "Agent"},
+    ship = await client.post(
+        f"{PREFIX}/shipments",
+        json={"action": "eta", "shipment_id": boot_body["shipment_id"], "hours": 12},
     )
-    assert ops.status == 201
+    assert ship.status == 201
 
-    twin = await client.post(
-        f"{PREFIX}/twin",
-        json={"action": "forecast", "twin_id": boot_body["twin_id"], "days": 3},
+    ai = await client.post(
+        f"{PREFIX}/ai",
+        json={"action": "carbon", "shipment_id": boot_body["shipment_id"], "ton_km": 1000},
     )
-    assert twin.status == 201
+    assert ai.status == 201
 
-    dash = await client.get(f"{PREFIX}/dashboard?type=yard")
+    dash = await client.get(f"{PREFIX}/dashboard?type=rail")
     assert dash.status == 200
 
 
-def test_docs_and_regression_15_2():
+def test_docs_and_regression_15_3():
     for name in (
-        "CONTAINER_MANAGEMENT.md",
-        "YARD_AUTOMATION.md",
-        "PORT_EQUIPMENT.md",
-        "DIGITAL_TWIN.md",
-        "TERMINAL_AUTOMATION.md",
+        "RAIL_LOGISTICS.md",
+        "TRUCK_LOGISTICS.md",
+        "MULTIMODAL_TRANSPORT.md",
+        "SHIPMENT_MANAGEMENT.md",
+        "AI_LOGISTICS.md",
     ):
         assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "PORT_CONTAINERS.md").exists()
+    assert (ROOT / "knowledge" / "applications" / "PORT_MULTIMODAL.md").exists()
+    assert (ROOT / "applications" / "port_enterprise" / "multimodal_logistics" / "facade.py").exists()
     assert (ROOT / "applications" / "port_enterprise" / "container_management" / "facade.py").exists()
     assert (ROOT / "applications" / "port_enterprise" / "navigation" / "facade.py").exists()
 
