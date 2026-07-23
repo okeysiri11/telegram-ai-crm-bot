@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.enterprise_hub.api import aa_handlers, handlers, kg_handlers, orch_handlers
 from applications.enterprise_hub.api.middleware import auth_middleware
+from applications.enterprise_hub.communications import api as comm_api
 from applications.enterprise_hub.config import DEFAULT_CONFIG
 
 
@@ -95,3 +96,26 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{aa}/dashboard", aa_handlers.aa_dashboard_handler)
     app.router.add_get(f"{aa}/meta", aa_handlers.aa_meta_handler)
     app.router.add_post(f"{aa}/meta", aa_handlers.aa_meta_handler)
+
+    # Sprint 19.4 — Enterprise Communications (additive; prior routes unchanged)
+    cm = DEFAULT_CONFIG.communications_api_prefix
+    app.router.add_get(f"{cm}/health", comm_api.comm_health_handler)
+    app.router.add_post(f"{cm}/bootstrap", comm_api.comm_bootstrap_handler)
+    app.router.add_get(f"{cm}/center", comm_api.comm_center_handler)
+    app.router.add_post(f"{cm}/center", comm_api.comm_center_handler)
+    app.router.add_get(f"{cm}/router", comm_api.comm_router_handler)
+    app.router.add_post(f"{cm}/router", comm_api.comm_router_handler)
+    app.router.add_get(f"{cm}/queue", comm_api.comm_queue_handler)
+    app.router.add_post(f"{cm}/queue", comm_api.comm_queue_handler)
+    app.router.add_get(f"{cm}/delivery", comm_api.comm_delivery_handler)
+    app.router.add_post(f"{cm}/delivery", comm_api.comm_delivery_handler)
+    app.router.add_get(f"{cm}/priority", comm_api.comm_priority_handler)
+    app.router.add_post(f"{cm}/priority", comm_api.comm_priority_handler)
+    app.router.add_get(f"{cm}/templates", comm_api.comm_templates_handler)
+    app.router.add_post(f"{cm}/templates", comm_api.comm_templates_handler)
+    app.router.add_get(f"{cm}/chat", comm_api.comm_chat_handler)
+    app.router.add_post(f"{cm}/chat", comm_api.comm_chat_handler)
+    app.router.add_get(f"{cm}/audit", comm_api.comm_audit_handler)
+    app.router.add_post(f"{cm}/audit", comm_api.comm_audit_handler)
+    app.router.add_get(f"{cm}/dashboard", comm_api.comm_dashboard_handler)
+    app.router.add_post(f"{cm}/dashboard", comm_api.comm_dashboard_handler)

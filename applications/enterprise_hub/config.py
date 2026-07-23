@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 19.3 Enterprise AI Agents."""
+"""Enterprise Hub — Sprint 19.4 Enterprise Communications."""
 
 from __future__ import annotations
 
@@ -9,16 +9,17 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.3.3-enterprise"
-    release_status: str = "Enterprise AI Agents"
+    application_version: str = "5.3.4-enterprise"
+    release_status: str = "Enterprise Communications"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.3.2-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.3.3-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
     orchestrator_api_prefix: str = "/api/enterprise-orch/v1"
     knowledge_graph_api_prefix: str = "/api/enterprise-kg/v1"
     ai_agents_api_prefix: str = "/api/enterprise-agents/v1"
+    communications_api_prefix: str = "/api/enterprise-comms/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -28,6 +29,7 @@ class EnterpriseHubConfig:
     orchestrator: str = "1.0"
     unified_knowledge: str = "1.0"
     ai_agents: str = "1.0"
+    communications: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -248,6 +250,52 @@ class EnterpriseHubConfig:
             "execution",
             "automation",
             "performance",
+        ]
+    )
+    comm_channels: list[str] = field(
+        default_factory=lambda: [
+            "email",
+            "telegram",
+            "sms",
+            "push",
+            "websocket",
+            "webhook",
+            "corporate_chat",
+            "future",
+        ]
+    )
+    comm_priorities: list[str] = field(
+        default_factory=lambda: ["critical", "high", "medium", "low", "silent"]
+    )
+    comm_queue_statuses: list[str] = field(
+        default_factory=lambda: [
+            "pending",
+            "processing",
+            "delivered",
+            "failed",
+            "retry",
+            "expired",
+        ]
+    )
+    comm_template_kinds: list[str] = field(
+        default_factory=lambda: [
+            "crm",
+            "invoice",
+            "lead",
+            "task",
+            "approval",
+            "security",
+            "ai_alert",
+            "report",
+        ]
+    )
+    comm_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "delivery",
+            "queue",
+            "channels",
+            "audit",
+            "analytics",
         ]
     )
 

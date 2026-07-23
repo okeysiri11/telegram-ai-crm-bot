@@ -138,6 +138,19 @@ class EnterpriseHubStore:
         self.aa_resources: EntityStore = EntityStore()
         self.aa_knowledge: EntityStore = EntityStore()
         self.aa_dashboards: EntityStore = EntityStore()
+        # Sprint 19.4 — Enterprise Communications
+        self.comm_events: EntityStore = EntityStore()
+        self.comm_routes: EntityStore = EntityStore()
+        self.comm_queue: EntityStore = EntityStore()
+        self.comm_messages: EntityStore = EntityStore()
+        self.comm_deliveries: EntityStore = EntityStore()
+        self.comm_retries: EntityStore = EntityStore()
+        self.comm_priorities: EntityStore = EntityStore()
+        self.comm_templates: EntityStore = EntityStore()
+        self.comm_renders: EntityStore = EntityStore()
+        self.comm_chat: EntityStore = EntityStore()
+        self.comm_audit: EntityStore = EntityStore()
+        self.comm_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
