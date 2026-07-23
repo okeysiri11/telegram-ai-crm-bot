@@ -6,6 +6,7 @@ from typing import Any
 
 from applications.enterprise_hub.ai_agents.facade import AIAgentSuite
 from applications.enterprise_hub.ai_orchestrator.facade import AIOrchestrationSuite
+from applications.enterprise_hub.ai_os.facade import AutonomousAIOSSuite
 from applications.enterprise_hub.ai_tools.facade import AIToolsSuite
 from applications.enterprise_hub.communications.facade import CommunicationsSuite
 from applications.enterprise_hub.config import DEFAULT_CONFIG, EnterpriseHubConfig
@@ -46,6 +47,7 @@ class EnterpriseHubApplication:
         ai_orchestrator_svc: AIOrchestrationSuite | None = None,
         ai_tools_svc: AIToolsSuite | None = None,
         knowledge_platform_svc: KnowledgePlatformSuite | None = None,
+        aios_svc: AutonomousAIOSSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -69,6 +71,7 @@ class EnterpriseHubApplication:
         self.ai_orchestrator = ai_orchestrator_svc or AIOrchestrationSuite(self.store)
         self.ai_tools = ai_tools_svc or AIToolsSuite(self.store)
         self.knowledge_platform = knowledge_platform_svc or KnowledgePlatformSuite(self.store)
+        self.aios = aios_svc or AutonomousAIOSSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -284,6 +287,10 @@ class EnterpriseHubApplication:
             "rag_ready": True,
             "knowledge_graph_ready": True,
             "vector_index_ready": True,
+            "autonomous_aios_ready": True,
+            "goal_manager_ready": True,
+            "checkpoint_recovery_ready": True,
+            "aios_governance_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -303,6 +310,7 @@ class EnterpriseHubApplication:
                 "ai_orchestrator": self.config.ai_orchestrator,
                 "ai_tools": self.config.ai_tools,
                 "knowledge_platform": self.config.knowledge_platform,
+                "aios": self.config.aios,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -326,6 +334,7 @@ class EnterpriseHubApplication:
             "ai_orchestrator": self.ai_orchestrator.status(),
             "ai_tools": self.ai_tools.status(),
             "knowledge_platform": self.knowledge_platform.status(),
+            "aios": self.aios.status(),
         }
 
 

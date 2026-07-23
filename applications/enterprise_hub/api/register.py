@@ -11,6 +11,7 @@ from applications.enterprise_hub.config import DEFAULT_CONFIG
 from applications.enterprise_hub.data_platform import api as edp_api
 from applications.enterprise_hub.integrations import api as eip_api
 from applications.enterprise_hub.ai_orchestrator import api as aop_api
+from applications.enterprise_hub.ai_os import api as aios_api
 from applications.enterprise_hub.ai_tools import api as ats_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
@@ -341,3 +342,23 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ekp}/analytics", ekp_api.ekp_analytics_handler)
     app.router.add_get(f"{ekp}/governance", ekp_api.ekp_governance_handler)
     app.router.add_post(f"{ekp}/governance", ekp_api.ekp_governance_handler)
+
+    # Sprint 20.4 — Autonomous AIOS (additive; prior routes unchanged)
+    aios = DEFAULT_CONFIG.aios_api_prefix
+    app.router.add_get(f"{aios}/health", aios_api.aios_health_handler)
+    app.router.add_post(f"{aios}/bootstrap", aios_api.aios_bootstrap_handler)
+    app.router.add_get(f"{aios}/goals", aios_api.aios_goals_handler)
+    app.router.add_post(f"{aios}/goals", aios_api.aios_goals_handler)
+    app.router.add_post(f"{aios}/run", aios_api.aios_run_handler)
+    app.router.add_get(f"{aios}/plan", aios_api.aios_plan_handler)
+    app.router.add_post(f"{aios}/plan", aios_api.aios_plan_handler)
+    app.router.add_post(f"{aios}/execute", aios_api.aios_execute_handler)
+    app.router.add_get(f"{aios}/supervise", aios_api.aios_supervise_handler)
+    app.router.add_post(f"{aios}/supervise", aios_api.aios_supervise_handler)
+    app.router.add_post(f"{aios}/recover", aios_api.aios_recover_handler)
+    app.router.add_get(f"{aios}/governance", aios_api.aios_governance_handler)
+    app.router.add_post(f"{aios}/governance", aios_api.aios_governance_handler)
+    app.router.add_get(f"{aios}/dashboard", aios_api.aios_dashboard_handler)
+    app.router.add_post(f"{aios}/dashboard", aios_api.aios_dashboard_handler)
+    app.router.add_get(f"{aios}/analytics", aios_api.aios_analytics_handler)
+    app.router.add_post(f"{aios}/analytics", aios_api.aios_analytics_handler)

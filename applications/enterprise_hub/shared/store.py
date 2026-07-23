@@ -304,6 +304,22 @@ class EnterpriseHubStore:
         self.ekp_governance: EntityStore = EntityStore()
         self.ekp_connectors: EntityStore = EntityStore()
         self.ekp_analytics: EntityStore = EntityStore()
+        # Sprint 20.4 — Autonomous AIOS
+        self.aios_goals: EntityStore = EntityStore()
+        self.aios_objectives: EntityStore = EntityStore()
+        self.aios_tasks: EntityStore = EntityStore()
+        self.aios_plans: EntityStore = EntityStore()
+        self.aios_schedules: EntityStore = EntityStore()
+        self.aios_executions: EntityStore = EntityStore()
+        self.aios_checkpoints: EntityStore = EntityStore()
+        self.aios_recoveries: EntityStore = EntityStore()
+        self.aios_supervisions: EntityStore = EntityStore()
+        self.aios_task_memory: EntityStore = EntityStore()
+        self.aios_approvals: EntityStore = EntityStore()
+        self.aios_limits: EntityStore = EntityStore()
+        self.aios_safety: EntityStore = EntityStore()
+        self.aios_escalations: EntityStore = EntityStore()
+        self.aios_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
