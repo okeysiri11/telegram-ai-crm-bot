@@ -1,0 +1,33 @@
+{
+  "application_name": "Finance Enterprise Platform (Bidex)",
+  "application": "finance_enterprise",
+  "application_version": "5.1.0-enterprise",
+  "release_status": "Finance Enterprise Foundation",
+  "platform_dependency": "AI Platform Core v3",
+  "enterprise_foundation": "Enterprise Platform v5.0.0-enterprise",
+  "ecosystem_dependency": "AI Ecosystem v1.5",
+  "sprint": "18.0",
+  "financial_registry": "1.0",
+  "general_ledger": "1.0",
+  "multi_currency": "1.0",
+  "financial_architecture": "1.0",
+  "modules": {
+    "financial_registry": "1.0",
+    "general_ledger": "1.0",
+    "multi_currency": "1.0",
+    "financial_architecture": "1.0",
+    "knowledge": "1.0",
+    "dashboard": "1.0",
+    "api": "5.1"
+  },
+  "does_not_modify": [
+    "platform_core",
+    "ai_os",
+    "enterprise",
+    "auto_marketplace",
+    "agro_enterprise",
+    "port_enterprise",
+    "crypto_enterprise",
+    "legal_enterprise"
+  ]
+}
