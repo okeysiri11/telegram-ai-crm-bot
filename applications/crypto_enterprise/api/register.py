@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.crypto_enterprise.api import handlers
+from applications.crypto_enterprise.api import handlers, ta_handlers
 from applications.crypto_enterprise.api.middleware import auth_middleware
 from applications.crypto_enterprise.config import DEFAULT_CONFIG
 
@@ -28,3 +28,24 @@ def register_crypto_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/dashboard", handlers.dashboard_handler)
     app.router.add_get(f"{prefix}/knowledge", handlers.knowledge_handler)
     app.router.add_post(f"{prefix}/knowledge", handlers.knowledge_handler)
+
+    # Sprint 16.1 — Technical Analysis (additive; prior routes unchanged)
+    ta = DEFAULT_CONFIG.technical_analysis_api_prefix
+    app.router.add_get(f"{ta}/health", ta_handlers.ta_health_handler)
+    app.router.add_post(f"{ta}/bootstrap", ta_handlers.ta_bootstrap_handler)
+    app.router.add_get(f"{ta}/tradingview", ta_handlers.ta_tradingview_handler)
+    app.router.add_post(f"{ta}/tradingview", ta_handlers.ta_tradingview_handler)
+    app.router.add_get(f"{ta}/charts", ta_handlers.ta_charts_handler)
+    app.router.add_post(f"{ta}/charts", ta_handlers.ta_charts_handler)
+    app.router.add_get(f"{ta}/indicators", ta_handlers.ta_indicators_handler)
+    app.router.add_post(f"{ta}/indicators", ta_handlers.ta_indicators_handler)
+    app.router.add_get(f"{ta}/structures", ta_handlers.ta_structures_handler)
+    app.router.add_post(f"{ta}/structures", ta_handlers.ta_structures_handler)
+    app.router.add_get(f"{ta}/patterns", ta_handlers.ta_patterns_handler)
+    app.router.add_post(f"{ta}/patterns", ta_handlers.ta_patterns_handler)
+    app.router.add_get(f"{ta}/ai", ta_handlers.ta_ai_handler)
+    app.router.add_post(f"{ta}/ai", ta_handlers.ta_ai_handler)
+    app.router.add_get(f"{ta}/dashboard", ta_handlers.ta_dashboard_handler)
+    app.router.add_post(f"{ta}/dashboard", ta_handlers.ta_dashboard_handler)
+    app.router.add_get(f"{ta}/knowledge", ta_handlers.ta_knowledge_handler)
+    app.router.add_post(f"{ta}/knowledge", ta_handlers.ta_knowledge_handler)

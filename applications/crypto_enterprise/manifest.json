@@ -1,21 +1,27 @@
 {
   "application_name": "Crypto Intelligence Platform",
   "application": "crypto_enterprise",
-  "application_version": "4.7.0-enterprise",
-  "release_status": "Crypto Enterprise Foundation",
+  "application_version": "4.7.1-enterprise",
+  "release_status": "Technical Analysis",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v4.6.0-enterprise",
+  "enterprise_foundation": "Enterprise Platform v4.7.0-enterprise",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "16.0",
+  "sprint": "16.1",
   "exchange_integration": "1.0",
   "market_data": "1.0",
   "asset_registry": "1.0",
   "portfolio_management": "1.0",
+  "technical_analysis": "1.0",
   "modules": {
     "exchange_integration": "1.0",
     "market_data": "1.0",
     "asset_registry": "1.0",
     "portfolio_management": "1.0",
+    "technical_analysis": "1.0",
+    "tradingview": "1.0",
+    "market_indicators": "1.0",
+    "pattern_recognition": "1.0",
+    "ai_technical_intelligence": "1.0",
     "knowledge": "1.0",
     "dashboard": "1.0",
     "api": "4.7"
@@ -27,6 +33,7 @@
     "enterprise",
     "auto_marketplace",
     "agro_enterprise",
-    "port_enterprise"
+    "port_enterprise",
+    "previous_crypto_enterprise_modules"
   ]
 }

@@ -11,6 +11,7 @@ from applications.crypto_enterprise.markets import MarketData
 from applications.crypto_enterprise.portfolio import PortfolioManagement
 from applications.crypto_enterprise.services import CryptoDashboard, CryptoKnowledge
 from applications.crypto_enterprise.shared.store import CryptoEnterpriseStore, crypto_enterprise_store
+from applications.crypto_enterprise.technical_analysis.facade import TechnicalAnalysisSuite
 
 
 class CryptoEnterpriseApplication:
@@ -19,6 +20,7 @@ class CryptoEnterpriseApplication:
         *,
         config: CryptoEnterpriseConfig | None = None,
         store: CryptoEnterpriseStore | None = None,
+        technical_analysis_svc: TechnicalAnalysisSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or crypto_enterprise_store
@@ -28,6 +30,7 @@ class CryptoEnterpriseApplication:
         self.portfolio = PortfolioManagement(self.store)
         self.dashboard = CryptoDashboard(self.store)
         self.knowledge = CryptoKnowledge(self.store)
+        self.technical_analysis = technical_analysis_svc or TechnicalAnalysisSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -164,11 +167,16 @@ class CryptoEnterpriseApplication:
             "exchange_integration_ready": True,
             "market_data_ready": True,
             "portfolio_platform_ready": True,
+            "tradingview_integration_ready": True,
+            "technical_analysis_ready": True,
+            "pattern_recognition_ready": True,
+            "ai_technical_intelligence_ready": True,
             "engines": {
                 "exchange_integration": self.config.exchange_integration,
                 "market_data": self.config.market_data,
                 "asset_registry": self.config.asset_registry,
                 "portfolio_management": self.config.portfolio_management,
+                "technical_analysis": self.config.technical_analysis,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -178,6 +186,7 @@ class CryptoEnterpriseApplication:
             "portfolio": self.portfolio.status(),
             "knowledge": self.knowledge.status(),
             "dashboard": self.dashboard.status(),
+            "technical_analysis": self.technical_analysis.status(),
         }
 
 

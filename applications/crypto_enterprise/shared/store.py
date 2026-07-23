@@ -61,6 +61,29 @@ class CryptoEnterpriseStore:
         # Knowledge & dashboards
         self.knowledge: EntityStore = EntityStore()
         self.dashboards: EntityStore = EntityStore()
+        # Sprint 16.1 — Technical Analysis / TradingView / Indicators
+        self.ta_tv_connections: EntityStore = EntityStore()
+        self.ta_watchlists: EntityStore = EntityStore()
+        self.ta_chart_sync: EntityStore = EntityStore()
+        self.ta_timeframes: EntityStore = EntityStore()
+        self.ta_drawings: EntityStore = EntityStore()
+        self.ta_alerts: EntityStore = EntityStore()
+        self.ta_multi_charts: EntityStore = EntityStore()
+        self.ta_charts: EntityStore = EntityStore()
+        self.ta_mtf: EntityStore = EntityStore()
+        self.ta_playback: EntityStore = EntityStore()
+        self.ta_indicators: EntityStore = EntityStore()
+        self.ta_structures: EntityStore = EntityStore()
+        self.ta_patterns: EntityStore = EntityStore()
+        self.ta_ai_trend: EntityStore = EntityStore()
+        self.ta_ai_momentum: EntityStore = EntityStore()
+        self.ta_ai_volatility: EntityStore = EntityStore()
+        self.ta_ai_confluence: EntityStore = EntityStore()
+        self.ta_ai_mtf: EntityStore = EntityStore()
+        self.ta_ai_signals: EntityStore = EntityStore()
+        self.ta_ai_setups: EntityStore = EntityStore()
+        self.ta_dashboards: EntityStore = EntityStore()
+        self.ta_registries: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
