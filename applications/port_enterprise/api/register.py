@@ -5,6 +5,7 @@ from __future__ import annotations
 from aiohttp import web
 
 from applications.port_enterprise.api import (
+    certification_handlers,
     container_handlers,
     customs_handlers,
     director_handlers,
@@ -188,3 +189,19 @@ def register_port_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{ad}/dashboard", director_handlers.ad_dashboard_handler)
     app.router.add_get(f"{ad}/knowledge", director_handlers.ad_knowledge_handler)
     app.router.add_post(f"{ad}/knowledge", director_handlers.ad_knowledge_handler)
+
+    # Sprint 15.8 — Enterprise Certification (additive; prior routes unchanged)
+    pec = DEFAULT_CONFIG.enterprise_certification_api_prefix
+    app.router.add_get(f"{pec}/health", certification_handlers.pec_health_handler)
+    app.router.add_post(f"{pec}/bootstrap", certification_handlers.pec_bootstrap_handler)
+    app.router.add_get(f"{pec}/architecture", certification_handlers.pec_architecture_handler)
+    app.router.add_get(f"{pec}/integration", certification_handlers.pec_integration_handler)
+    app.router.add_get(f"{pec}/performance", certification_handlers.pec_performance_handler)
+    app.router.add_get(f"{pec}/security", certification_handlers.pec_security_handler)
+    app.router.add_get(f"{pec}/documentation", certification_handlers.pec_documentation_handler)
+    app.router.add_get(f"{pec}/quality", certification_handlers.pec_quality_handler)
+    app.router.add_post(f"{pec}/quality", certification_handlers.pec_quality_handler)
+    app.router.add_get(f"{pec}/release", certification_handlers.pec_release_handler)
+    app.router.add_get(f"{pec}/executive", certification_handlers.pec_executive_handler)
+    app.router.add_get(f"{pec}/dashboard", certification_handlers.pec_dashboard_handler)
+    app.router.add_post(f"{pec}/dashboard", certification_handlers.pec_dashboard_handler)

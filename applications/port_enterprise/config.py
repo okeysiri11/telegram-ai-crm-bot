@@ -1,4 +1,4 @@
-# Port Enterprise Platform — Sprint 15.7 AI Port Director.
+# Port Enterprise Platform — Sprint 15.8 Certification & Production Release.
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class PortEnterpriseConfig:
     application_name: str = "Port Enterprise Platform"
     application: str = "port_enterprise"
-    application_version: str = "4.5.7-enterprise"
-    release_status: str = "AI Port Director"
+    application_version: str = "4.6.0-enterprise"
+    release_status: str = "Production Ready"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.5.6-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.5.7-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/port-enterprise/v1"
@@ -23,6 +23,7 @@ class PortEnterpriseConfig:
     warehouse_distribution_api_prefix: str = "/api/port-warehouse/v1"
     freight_marketplace_api_prefix: str = "/api/port-freight/v1"
     ai_port_director_api_prefix: str = "/api/port-ai-director/v1"
+    enterprise_certification_api_prefix: str = "/api/port-enterprise-certification/v1"
     internal_prefix: str = "/internal/port-enterprise/v1"
     port_registry: str = "1.0"
     terminal_management: str = "1.0"
@@ -37,6 +38,7 @@ class PortEnterpriseConfig:
     warehouse_distribution: str = "1.0"
     freight_marketplace: str = "1.0"
     ai_port_director: str = "1.0"
+    enterprise_certification: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     terminal_types: list[str] = field(

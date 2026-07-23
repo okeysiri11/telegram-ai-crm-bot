@@ -1,0 +1,28 @@
+{
+  "service": "port_enterprise",
+  "application_version": "4.6.0-enterprise",
+  "api_prefixes": [
+    "/api/port-enterprise/v1",
+    "/api/port-navigation/v1",
+    "/api/port-containers/v1",
+    "/api/port-multimodal/v1",
+    "/api/port-customs/v1",
+    "/api/port-warehouse/v1",
+    "/api/port-freight/v1",
+    "/api/port-ai-director/v1",
+    "/api/port-enterprise-certification/v1"
+  ],
+  "healthchecks": [
+    "/api/port-enterprise/v1/health",
+    "/api/port-navigation/v1/health",
+    "/api/port-containers/v1/health",
+    "/api/port-multimodal/v1/health",
+    "/api/port-customs/v1/health",
+    "/api/port-warehouse/v1/health",
+    "/api/port-freight/v1/health",
+    "/api/port-ai-director/v1/health",
+    "/api/port-enterprise-certification/v1/health"
+  ],
+  "config_template": "applications/port_enterprise/release/config.template.env",
+  "checklist": "applications/port_enterprise/release/PRODUCTION_CHECKLIST.md"
+}

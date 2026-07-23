@@ -297,7 +297,7 @@ class PortEnterpriseStore:
         self.fm_ai_fraud: EntityStore = EntityStore()
         self.fm_dashboards: EntityStore = EntityStore()
         self.fm_registries: EntityStore = EntityStore()
-        # Sprint 15.7 — AI Port Director / Predictive / Autonomous / Executive
+        # Sprint 15.7 — AI Port Director
         self.ad_assistant: EntityStore = EntityStore()
         self.ad_nl_ops: EntityStore = EntityStore()
         self.ad_advisories: EntityStore = EntityStore()
@@ -340,6 +340,9 @@ class PortEnterpriseStore:
         self.ad_investments: EntityStore = EntityStore()
         self.ad_dashboards: EntityStore = EntityStore()
         self.ad_registries: EntityStore = EntityStore()
+        # Sprint 15.8 — Enterprise Certification
+        self.pec_runs: EntityStore = EntityStore()
+        self.pec_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

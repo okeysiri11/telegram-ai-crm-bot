@@ -46,8 +46,8 @@ def reset_store():
 
 def test_version_ai_director_ready():
     health = port_enterprise.health()
-    assert health["application_version"] == "4.5.7-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.5.6-enterprise"
+    assert health["application_version"] == "4.6.0-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.5.7-enterprise"
     assert health["ai_port_director_ready"] is True
     assert health["predictive_logistics_ready"] is True
     assert health["autonomous_operations_ready"] is True
@@ -89,7 +89,7 @@ def test_predictive_autonomous_executive():
 async def test_api_ai_director(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.5.7-enterprise"
+    assert body["application_version"] == "4.6.0-enterprise"
     assert body["ai_port_director_ready"] is True
     assert body["executive_intelligence_ready"] is True
 
@@ -147,5 +147,5 @@ def test_docs_and_regression_15_7():
     assert AGRO.application_version == "4.4.0-enterprise"
     assert PORT_ERP.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "port_enterprise" / "manifest.json").read_text()
-    assert "4.5.7-enterprise" in manifest
-    assert "15.7" in manifest
+    assert "4.6.0-enterprise" in manifest
+    assert "15.8" in manifest
