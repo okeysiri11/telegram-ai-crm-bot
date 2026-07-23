@@ -6,6 +6,7 @@ from typing import Any
 
 from applications.port_enterprise.cargo_fleet import CargoManagement, FleetRegistry, ShippingCompanies
 from applications.port_enterprise.config import DEFAULT_CONFIG, PortEnterpriseConfig
+from applications.port_enterprise.navigation.facade import NavigationSuite
 from applications.port_enterprise.operations import PortDashboard, PortKnowledge, PortOperations
 from applications.port_enterprise.registry import PortRegistry, TerminalManagement
 from applications.port_enterprise.shared.store import PortEnterpriseStore, port_enterprise_store
@@ -17,6 +18,7 @@ class PortEnterpriseApplication:
         *,
         config: PortEnterpriseConfig | None = None,
         store: PortEnterpriseStore | None = None,
+        navigation_svc: NavigationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or port_enterprise_store
@@ -28,6 +30,7 @@ class PortEnterpriseApplication:
         self.operations = PortOperations(self.store)
         self.dashboard = PortDashboard(self.store)
         self.knowledge = PortKnowledge(self.store)
+        self.navigation = navigation_svc or NavigationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -134,6 +137,11 @@ class PortEnterpriseApplication:
             "cargo_registry_ready": True,
             "fleet_registry_ready": True,
             "operations_foundation_ready": True,
+            "vts_platform_ready": True,
+            "ais_integration_ready": True,
+            "radar_intelligence_ready": True,
+            "navigation_platform_ready": True,
+            "maritime_safety_ready": True,
             "engines": {
                 "port_registry": self.config.port_registry,
                 "terminal_management": self.config.terminal_management,
@@ -141,6 +149,7 @@ class PortEnterpriseApplication:
                 "shipping_companies": self.config.shipping_companies,
                 "fleet_registry": self.config.fleet_registry,
                 "port_operations": self.config.port_operations,
+                "navigation": self.config.navigation,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -152,6 +161,7 @@ class PortEnterpriseApplication:
             "operations": self.operations.status(),
             "knowledge": self.knowledge.status(),
             "dashboard": self.dashboard.status(),
+            "navigation": self.navigation.status(),
         }
 
 

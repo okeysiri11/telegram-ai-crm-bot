@@ -1,18 +1,19 @@
 {
   "application_name": "Port Enterprise Platform",
   "application": "port_enterprise",
-  "application_version": "4.5.0-enterprise",
-  "release_status": "Port Enterprise Foundation",
+  "application_version": "4.5.1-enterprise",
+  "release_status": "VTS & Navigation",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v4.4.0-enterprise",
+  "enterprise_foundation": "Enterprise Platform v4.5.0-enterprise",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "15.0",
+  "sprint": "15.1",
   "port_registry": "1.0",
   "terminal_management": "1.0",
   "cargo_management": "1.0",
   "shipping_companies": "1.0",
   "fleet_registry": "1.0",
   "port_operations": "1.0",
+  "navigation": "1.0",
   "modules": {
     "port_registry": "1.0",
     "terminal_management": "1.0",
@@ -20,6 +21,11 @@
     "shipping_companies": "1.0",
     "fleet_registry": "1.0",
     "port_operations": "1.0",
+    "navigation": "1.0",
+    "vts": "1.0",
+    "ais": "1.0",
+    "radar": "1.0",
+    "maritime_safety": "1.0",
     "knowledge": "1.0",
     "dashboard": "1.0",
     "api": "4.5"
@@ -31,7 +37,6 @@
     "auto_marketplace",
     "agro_enterprise",
     "port_erp",
-    "agro_marketplace",
-    "drone_platform"
+    "previous_port_enterprise_modules"
   ]
 }

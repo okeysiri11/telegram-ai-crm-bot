@@ -1,4 +1,4 @@
-# Port Enterprise Platform — Sprint 15.0 Foundation.
+# Port Enterprise Platform — Sprint 15.1 Navigation / VTS.
 
 from __future__ import annotations
 
@@ -9,13 +9,14 @@ from dataclasses import dataclass, field
 class PortEnterpriseConfig:
     application_name: str = "Port Enterprise Platform"
     application: str = "port_enterprise"
-    application_version: str = "4.5.0-enterprise"
-    release_status: str = "Port Enterprise Foundation"
+    application_version: str = "4.5.1-enterprise"
+    release_status: str = "VTS & Navigation"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.4.0-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.5.0-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/port-enterprise/v1"
+    navigation_api_prefix: str = "/api/port-navigation/v1"
     internal_prefix: str = "/internal/port-enterprise/v1"
     port_registry: str = "1.0"
     terminal_management: str = "1.0"
@@ -23,6 +24,7 @@ class PortEnterpriseConfig:
     shipping_companies: str = "1.0"
     fleet_registry: str = "1.0"
     port_operations: str = "1.0"
+    navigation: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     terminal_types: list[str] = field(

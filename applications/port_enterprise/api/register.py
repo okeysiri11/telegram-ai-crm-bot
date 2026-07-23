@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.port_enterprise.api import handlers
+from applications.port_enterprise.api import handlers, navigation_handlers
 from applications.port_enterprise.api.middleware import auth_middleware
 from applications.port_enterprise.config import DEFAULT_CONFIG
 
@@ -32,3 +32,24 @@ def register_port_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/dashboard", handlers.dashboard_handler)
     app.router.add_get(f"{prefix}/knowledge", handlers.knowledge_handler)
     app.router.add_post(f"{prefix}/knowledge", handlers.knowledge_handler)
+
+    # Sprint 15.1 — Navigation / VTS (additive; prior routes unchanged)
+    nav = DEFAULT_CONFIG.navigation_api_prefix
+    app.router.add_get(f"{nav}/health", navigation_handlers.nav_health_handler)
+    app.router.add_post(f"{nav}/bootstrap", navigation_handlers.nav_bootstrap_handler)
+    app.router.add_get(f"{nav}/vts", navigation_handlers.nav_vts_handler)
+    app.router.add_post(f"{nav}/vts", navigation_handlers.nav_vts_handler)
+    app.router.add_get(f"{nav}/ais", navigation_handlers.nav_ais_handler)
+    app.router.add_post(f"{nav}/ais", navigation_handlers.nav_ais_handler)
+    app.router.add_get(f"{nav}/radar", navigation_handlers.nav_radar_handler)
+    app.router.add_post(f"{nav}/radar", navigation_handlers.nav_radar_handler)
+    app.router.add_get(f"{nav}/navigation", navigation_handlers.nav_navigation_handler)
+    app.router.add_post(f"{nav}/navigation", navigation_handlers.nav_navigation_handler)
+    app.router.add_get(f"{nav}/safety", navigation_handlers.nav_safety_handler)
+    app.router.add_post(f"{nav}/safety", navigation_handlers.nav_safety_handler)
+    app.router.add_get(f"{nav}/ai", navigation_handlers.nav_ai_handler)
+    app.router.add_post(f"{nav}/ai", navigation_handlers.nav_ai_handler)
+    app.router.add_get(f"{nav}/dashboard", navigation_handlers.nav_dashboard_handler)
+    app.router.add_post(f"{nav}/dashboard", navigation_handlers.nav_dashboard_handler)
+    app.router.add_get(f"{nav}/knowledge", navigation_handlers.nav_knowledge_handler)
+    app.router.add_post(f"{nav}/knowledge", navigation_handlers.nav_knowledge_handler)
