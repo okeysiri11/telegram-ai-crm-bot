@@ -90,6 +90,24 @@ class EnterpriseHubStore:
         self.orch_explanations: EntityStore = EntityStore()
         self.orch_knowledge: EntityStore = EntityStore()
         self.orch_dashboards: EntityStore = EntityStore()
+        # Sprint 19.2 — Unified Knowledge Graph
+        self.kg_entities: EntityStore = EntityStore()
+        self.kg_relationships: EntityStore = EntityStore()
+        self.kg_graphs: EntityStore = EntityStore()
+        self.kg_links: EntityStore = EntityStore()
+        self.kg_ontologies: EntityStore = EntityStore()
+        self.kg_versions: EntityStore = EntityStore()
+        self.kg_memories: EntityStore = EntityStore()
+        self.kg_semantics: EntityStore = EntityStore()
+        self.kg_contexts: EntityStore = EntityStore()
+        self.kg_ai_insights: EntityStore = EntityStore()
+        self.kg_syncs: EntityStore = EntityStore()
+        self.kg_conflicts: EntityStore = EntityStore()
+        self.kg_resolutions: EntityStore = EntityStore()
+        self.kg_audit: EntityStore = EntityStore()
+        self.kg_sync_monitors: EntityStore = EntityStore()
+        self.kg_knowledge: EntityStore = EntityStore()
+        self.kg_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

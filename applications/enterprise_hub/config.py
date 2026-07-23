@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 19.1 AI Orchestrator."""
+"""Enterprise Hub — Sprint 19.2 Unified Knowledge Graph."""
 
 from __future__ import annotations
 
@@ -9,14 +9,15 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.3.1-enterprise"
-    release_status: str = "AI Orchestrator"
+    application_version: str = "5.3.2-enterprise"
+    release_status: str = "Unified Knowledge Graph"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.3.0-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.3.1-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
     orchestrator_api_prefix: str = "/api/enterprise-orch/v1"
+    knowledge_graph_api_prefix: str = "/api/enterprise-kg/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -24,6 +25,7 @@ class EnterpriseHubConfig:
     enterprise_configuration: str = "1.0"
     event_infrastructure: str = "1.0"
     orchestrator: str = "1.0"
+    unified_knowledge: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -123,6 +125,81 @@ class EnterpriseHubConfig:
             "task",
             "decision",
             "routing",
+        ]
+    )
+    kg_entity_types: list[str] = field(
+        default_factory=lambda: [
+            "person",
+            "organization",
+            "customer",
+            "supplier",
+            "partner",
+            "asset",
+            "vehicle",
+            "contract",
+            "invoice",
+            "case",
+            "crypto_asset",
+        ]
+    )
+    kg_memory_types: list[str] = field(
+        default_factory=lambda: [
+            "long_term",
+            "conversation",
+            "business",
+            "project",
+            "decision",
+            "workflow",
+        ]
+    )
+    kg_semantic_ops: list[str] = field(
+        default_factory=lambda: [
+            "semantic_search",
+            "entity_resolution",
+            "duplicate_detection",
+            "knowledge_inference",
+            "relationship_discovery",
+            "context_expansion",
+            "similarity_analysis",
+        ]
+    )
+    kg_context_types: list[str] = field(
+        default_factory=lambda: [
+            "automotive",
+            "agro",
+            "port",
+            "crypto",
+            "legal",
+            "finance",
+            "unified",
+        ]
+    )
+    kg_ai_insight_types: list[str] = field(
+        default_factory=lambda: [
+            "recommendation",
+            "context_reasoning",
+            "cross_platform_correlation",
+            "business_insight",
+            "predictive",
+            "nl_query",
+        ]
+    )
+    kg_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "knowledge",
+            "entity",
+            "relationship",
+            "ai_memory",
+            "semantic",
+        ]
+    )
+    kg_knowledge_bases: list[str] = field(
+        default_factory=lambda: [
+            "master",
+            "ontology",
+            "memory",
+            "entity",
+            "relationship",
         ]
     )
 

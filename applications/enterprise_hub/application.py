@@ -9,6 +9,7 @@ from applications.enterprise_hub.configuration import EnterpriseConfiguration
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
 from applications.enterprise_hub.integration_layer import IntegrationLayer
+from applications.enterprise_hub.knowledge.facade import UnifiedKnowledgeSuite
 from applications.enterprise_hub.orchestrator.facade import OrchestratorSuite
 from applications.enterprise_hub.registry import EnterpriseRegistry
 from applications.enterprise_hub.services import HubDashboard, HubKnowledge
@@ -22,6 +23,7 @@ class EnterpriseHubApplication:
         config: EnterpriseHubConfig | None = None,
         store: EnterpriseHubStore | None = None,
         orchestrator_svc: OrchestratorSuite | None = None,
+        unified_knowledge_svc: UnifiedKnowledgeSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -33,6 +35,7 @@ class EnterpriseHubApplication:
         self.knowledge = HubKnowledge(self.store)
         self.dashboard = HubDashboard(self.store)
         self.orchestrator = orchestrator_svc or OrchestratorSuite(self.store)
+        self.unified_knowledge = unified_knowledge_svc or UnifiedKnowledgeSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -199,6 +202,10 @@ class EnterpriseHubApplication:
             "workflow_engine_ready": True,
             "cross_platform_routing_ready": True,
             "ai_decision_engine_ready": True,
+            "unified_knowledge_graph_ready": True,
+            "ai_memory_ready": True,
+            "semantic_intelligence_ready": True,
+            "cross_platform_context_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -206,6 +213,7 @@ class EnterpriseHubApplication:
                 "enterprise_configuration": self.config.enterprise_configuration,
                 "event_infrastructure": self.config.event_infrastructure,
                 "orchestrator": self.config.orchestrator,
+                "unified_knowledge": self.config.unified_knowledge,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -217,6 +225,7 @@ class EnterpriseHubApplication:
             "knowledge": self.knowledge.status(),
             "dashboard": self.dashboard.status(),
             "orchestrator": self.orchestrator.status(),
+            "unified_knowledge": self.unified_knowledge.status(),
         }
 
 

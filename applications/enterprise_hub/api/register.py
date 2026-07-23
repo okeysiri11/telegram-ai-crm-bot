@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.enterprise_hub.api import handlers, orch_handlers
+from applications.enterprise_hub.api import handlers, kg_handlers, orch_handlers
 from applications.enterprise_hub.api.middleware import auth_middleware
 from applications.enterprise_hub.config import DEFAULT_CONFIG
 
@@ -53,3 +53,24 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{orch}/dashboard", orch_handlers.orch_dashboard_handler)
     app.router.add_get(f"{orch}/knowledge", orch_handlers.orch_knowledge_handler)
     app.router.add_post(f"{orch}/knowledge", orch_handlers.orch_knowledge_handler)
+
+    # Sprint 19.2 — Unified Knowledge Graph (additive; prior routes unchanged)
+    kg = DEFAULT_CONFIG.knowledge_graph_api_prefix
+    app.router.add_get(f"{kg}/health", kg_handlers.kg_health_handler)
+    app.router.add_post(f"{kg}/bootstrap", kg_handlers.kg_bootstrap_handler)
+    app.router.add_get(f"{kg}/graph", kg_handlers.kg_graph_handler)
+    app.router.add_post(f"{kg}/graph", kg_handlers.kg_graph_handler)
+    app.router.add_get(f"{kg}/memory", kg_handlers.kg_memory_handler)
+    app.router.add_post(f"{kg}/memory", kg_handlers.kg_memory_handler)
+    app.router.add_get(f"{kg}/semantic", kg_handlers.kg_semantic_handler)
+    app.router.add_post(f"{kg}/semantic", kg_handlers.kg_semantic_handler)
+    app.router.add_get(f"{kg}/context", kg_handlers.kg_context_handler)
+    app.router.add_post(f"{kg}/context", kg_handlers.kg_context_handler)
+    app.router.add_get(f"{kg}/ai", kg_handlers.kg_ai_handler)
+    app.router.add_post(f"{kg}/ai", kg_handlers.kg_ai_handler)
+    app.router.add_get(f"{kg}/sync", kg_handlers.kg_sync_handler)
+    app.router.add_post(f"{kg}/sync", kg_handlers.kg_sync_handler)
+    app.router.add_get(f"{kg}/dashboard", kg_handlers.kg_dashboard_handler)
+    app.router.add_post(f"{kg}/dashboard", kg_handlers.kg_dashboard_handler)
+    app.router.add_get(f"{kg}/meta", kg_handlers.kg_meta_handler)
+    app.router.add_post(f"{kg}/meta", kg_handlers.kg_meta_handler)

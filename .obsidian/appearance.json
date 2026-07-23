@@ -2,7 +2,7 @@
   "cssTheme": "",
   "baseFontSize": 16,
   "theme": "obsidian",
-  "accentColor": "",
+  "accentColor": "#5cf5a6",
   "enabledCssSnippets": [
     "knowledge"
   ]
