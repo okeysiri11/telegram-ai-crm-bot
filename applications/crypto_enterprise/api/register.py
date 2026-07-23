@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.crypto_enterprise.api import handlers, mi_handlers, mm_handlers, ta_handlers
+from applications.crypto_enterprise.api import handlers, mi_handlers, mm_handlers, se_handlers, ta_handlers
 from applications.crypto_enterprise.api.middleware import auth_middleware
 from applications.crypto_enterprise.config import DEFAULT_CONFIG
 
@@ -93,3 +93,24 @@ def register_crypto_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{mi}/dashboard", mi_handlers.mi_dashboard_handler)
     app.router.add_get(f"{mi}/knowledge", mi_handlers.mi_knowledge_handler)
     app.router.add_post(f"{mi}/knowledge", mi_handlers.mi_knowledge_handler)
+
+    # Sprint 16.4 — Strategy Engine (additive; prior routes unchanged)
+    se = DEFAULT_CONFIG.strategy_engine_api_prefix
+    app.router.add_get(f"{se}/health", se_handlers.se_health_handler)
+    app.router.add_post(f"{se}/bootstrap", se_handlers.se_bootstrap_handler)
+    app.router.add_get(f"{se}/strategies", se_handlers.se_strategies_handler)
+    app.router.add_post(f"{se}/strategies", se_handlers.se_strategies_handler)
+    app.router.add_get(f"{se}/backtesting", se_handlers.se_backtesting_handler)
+    app.router.add_post(f"{se}/backtesting", se_handlers.se_backtesting_handler)
+    app.router.add_get(f"{se}/performance", se_handlers.se_performance_handler)
+    app.router.add_post(f"{se}/performance", se_handlers.se_performance_handler)
+    app.router.add_get(f"{se}/signals", se_handlers.se_signals_handler)
+    app.router.add_post(f"{se}/signals", se_handlers.se_signals_handler)
+    app.router.add_get(f"{se}/portfolio", se_handlers.se_portfolio_handler)
+    app.router.add_post(f"{se}/portfolio", se_handlers.se_portfolio_handler)
+    app.router.add_get(f"{se}/ai", se_handlers.se_ai_handler)
+    app.router.add_post(f"{se}/ai", se_handlers.se_ai_handler)
+    app.router.add_get(f"{se}/dashboard", se_handlers.se_dashboard_handler)
+    app.router.add_post(f"{se}/dashboard", se_handlers.se_dashboard_handler)
+    app.router.add_get(f"{se}/knowledge", se_handlers.se_knowledge_handler)
+    app.router.add_post(f"{se}/knowledge", se_handlers.se_knowledge_handler)
