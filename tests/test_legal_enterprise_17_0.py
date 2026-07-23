@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_legal_enterprise_ready():
     health = legal_enterprise.health()
-    assert health["application_version"] == "4.9.3-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.2-enterprise"
+    assert health["application_version"] == "4.9.4-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.9.3-enterprise"
     assert health["legal_enterprise_foundation_ready"] is True
     assert health["legal_registry_ready"] is True
     assert health["legislation_registry_ready"] is True
@@ -83,7 +83,7 @@ def test_cases_and_knowledge_graph():
 async def test_api_legal_enterprise(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "4.9.3-enterprise"
+    assert body["application_version"] == "4.9.4-enterprise"
     assert body["legislation_registry_ready"] is True
     assert body["case_management_foundation_ready"] is True
 
@@ -141,7 +141,7 @@ def test_docs_and_regression_17_0():
     assert PORT_ERP.application_version == "2.0.0"
     assert CRYPTO.application_version == "4.8.0-enterprise"
     manifest = (ROOT / "applications" / "legal_enterprise" / "manifest.json").read_text()
-    assert "4.9.3-enterprise" in manifest
-    assert "17.3" in manifest
+    assert "4.9.4-enterprise" in manifest
+    assert "17.4" in manifest
     assert (ROOT / "applications" / "crypto_enterprise" / "enterprise_certification" / "facade.py").exists()
     _ = (CE, CEC)

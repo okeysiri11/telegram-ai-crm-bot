@@ -1,4 +1,4 @@
-"""Tests — Case Management Platform (Sprint 17.3)."""
+"""Tests — Document Intelligence (Sprint 17.4)."""
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ PREFIX = "/api/legal-enterprise/v1"
 LI = "/api/legal-li/v1"
 JI = "/api/legal-ji/v1"
 CM = "/api/legal-cm/v1"
+DI = "/api/legal-di/v1"
 
 
 @pytest.fixture
@@ -40,98 +41,89 @@ def reset_store():
     legal_enterprise.reset()
 
 
-def test_version_case_management_ready():
+def test_version_document_intelligence_ready():
     health = legal_enterprise.health()
     assert health["application_version"] == "4.9.4-enterprise"
     assert health["enterprise_foundation"] == "Enterprise Platform v4.9.3-enterprise"
+    assert health["contract_builder_ready"] is True
+    assert health["document_intelligence_ready"] is True
+    assert health["ai_risk_review_ready"] is True
+    assert health["legal_drafting_ready"] is True
     assert health["case_management_ready"] is True
-    assert health["court_calendar_ready"] is True
-    assert health["procedural_timeline_ready"] is True
-    assert health["ai_legal_workflow_ready"] is True
-    assert health["judicial_intelligence_ready"] is True
 
 
-def test_cases_calendar_and_deadlines():
-    suite = legal_enterprise.case_management_platform
-    case = suite.cases.register(title="QA Matter", category="civil", priority="high")
-    room = suite.calendar.register_courtroom(name="Room 1")
-    hearing = suite.calendar.schedule_hearing(
-        case_id=case["case_id"],
-        title="Hearing",
-        scheduled_at="2026-08-01T10:00:00Z",
-        courtroom_id=room["courtroom_id"],
-    )
-    assert hearing["hearing_id"]
-    dl = suite.deadlines.register_deadline(
-        case_id=case["case_id"], deadline_type="filing", due_on="2026-07-30", risk="high"
-    )
-    assert dl["deadline_id"]
+def test_contracts_and_ocr():
+    suite = legal_enterprise.document_intelligence
+    clause = suite.contracts.add_clause(title="NDA Core", kind="confidentiality", mandatory=True)
+    nda = suite.contracts.generate_nda(title="QA NDA", clause_ids=[clause["clause_id"]])
+    assert nda["contract_type"] == "nda"
+    pdf = suite.ingest.import_document(title="Scan", format="pdf", content="confidentiality terms")
+    ocr = suite.ingest.run_ocr(document_id=pdf["document_id"])
+    assert ocr["confidence"] >= 0.9
     with pytest.raises(ValidationError):
-        suite.cases.register(title="", category="civil")
+        suite.contracts.generate(contract_type="unknown", title="X")
 
 
-def test_workflow_ai_and_bootstrap():
-    suite = legal_enterprise.case_management_platform
+def test_risk_comparison_drafting_bootstrap():
+    suite = legal_enterprise.document_intelligence
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
     assert boot["version"] == "4.9.4-enterprise"
-    assert boot["case_id"] and boot["hearing_id"] and boot["health_id"]
-    assert suite.ai.health_score(case_id=boot["case_id"])["kind"] == "health_score"
-    assert suite.tasks.status()["tasks"] >= 1
-    assert suite.documents.status()["documents"] >= 3
-    for dtype in ("case", "calendar", "deadline", "workflow", "ai_case"):
+    assert boot["nda_id"] and boot["ocr_id"] and boot["risk_score_id"] and boot["draft_id"]
+    assert suite.risk.risk_score(contract_id=boot["custom_id"])["kind"] == "score"
+    assert suite.drafting.summarize(prompt="short doc")["kind"] == "summary"
+    for dtype in ("contract", "document", "risk", "ai_review"):
         assert suite.dashboard.render(dashboard_type=dtype)["dashboard_type"] == dtype
 
 
 @pytest.mark.asyncio
-async def test_api_case_management(client):
-    health = await client.get(f"{CM}/health")
+async def test_api_document_intelligence(client):
+    health = await client.get(f"{DI}/health")
     body = await health.json()
     assert body["application_version"] == "4.9.4-enterprise"
-    assert body["case_management_ready"] is True
-    assert body["court_calendar_ready"] is True
+    assert body["contract_builder_ready"] is True
+    assert body["document_intelligence_ready"] is True
 
-    boot = await client.post(f"{CM}/bootstrap", json={})
+    boot = await client.post(f"{DI}/bootstrap", json={})
     assert boot.status == 201
     boot_body = await boot.json()
 
-    dl = await client.post(
-        f"{CM}/deadlines",
-        json={
-            "action": "calculate",
-            "case_id": boot_body["case_id"],
-            "deadline_type": "procedural",
-            "from_date": "2026-07-21T00:00:00Z",
-            "days": 7,
-        },
+    risk = await client.post(
+        f"{DI}/risk",
+        json={"action": "score", "contract_id": boot_body["sales_id"]},
     )
-    assert dl.status == 201
+    assert risk.status == 201
 
-    ai = await client.post(
-        f"{CM}/ai",
-        json={"action": "summary", "case_id": boot_body["case_id"]},
+    draft = await client.post(
+        f"{DI}/drafting",
+        json={"action": "negotiate", "prompt": "Push for mutual indemnity"},
     )
-    assert ai.status == 201
+    assert draft.status == 201
 
-    for prefix in (PREFIX, LI, JI):
+    ocr = await client.post(
+        f"{DI}/ingest",
+        json={"action": "ocr", "document_id": boot_body["pdf_id"]},
+    )
+    assert ocr.status == 201
+
+    for prefix in (PREFIX, LI, JI, CM):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         assert (await resp.json())["application_version"] == "4.9.4-enterprise"
 
 
-def test_docs_and_regression_17_3():
+def test_docs_and_regression_17_4():
     for name in (
-        "CASE_MANAGEMENT_PLATFORM.md",
-        "COURT_CALENDAR.md",
-        "PROCEDURAL_TIMELINE.md",
-        "LEGAL_WORKFLOW.md",
-        "AI_CASE_MANAGEMENT.md",
+        "CONTRACT_BUILDER.md",
+        "DOCUMENT_INTELLIGENCE.md",
+        "AI_RISK_REVIEW.md",
+        "CLAUSE_LIBRARY.md",
+        "LEGAL_DOCUMENT_AUTOMATION.md",
     ):
         assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "CASE_MANAGEMENT_PLATFORM.md").exists()
+    assert (ROOT / "knowledge" / "applications" / "DOCUMENT_INTELLIGENCE.md").exists()
+    assert (ROOT / "applications" / "legal_enterprise" / "document_intelligence" / "facade.py").exists()
     assert (ROOT / "applications" / "legal_enterprise" / "case_management" / "facade.py").exists()
-    assert (ROOT / "applications" / "legal_enterprise" / "cases.py").exists()
-    assert (ROOT / "applications" / "legal_enterprise" / "judicial_intelligence" / "facade.py").exists()
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS
     from applications.enterprise.config import DEFAULT_CONFIG as ENT

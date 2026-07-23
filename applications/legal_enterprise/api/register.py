@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.legal_enterprise.api import cm_handlers, handlers, ji_handlers, li_handlers
+from applications.legal_enterprise.api import cm_handlers, di_handlers, handlers, ji_handlers, li_handlers
 from applications.legal_enterprise.api.middleware import auth_middleware
 from applications.legal_enterprise.config import DEFAULT_CONFIG
 
@@ -91,3 +91,24 @@ def register_legal_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{cm}/dashboard", cm_handlers.cm_dashboard_handler)
     app.router.add_get(f"{cm}/knowledge", cm_handlers.cm_knowledge_handler)
     app.router.add_post(f"{cm}/knowledge", cm_handlers.cm_knowledge_handler)
+
+    # Sprint 17.4 — Document Intelligence (additive; prior routes unchanged)
+    di = DEFAULT_CONFIG.document_intelligence_api_prefix
+    app.router.add_get(f"{di}/health", di_handlers.di_health_handler)
+    app.router.add_post(f"{di}/bootstrap", di_handlers.di_bootstrap_handler)
+    app.router.add_get(f"{di}/contracts", di_handlers.di_contracts_handler)
+    app.router.add_post(f"{di}/contracts", di_handlers.di_contracts_handler)
+    app.router.add_get(f"{di}/ingest", di_handlers.di_ingest_handler)
+    app.router.add_post(f"{di}/ingest", di_handlers.di_ingest_handler)
+    app.router.add_get(f"{di}/clauses", di_handlers.di_clauses_handler)
+    app.router.add_post(f"{di}/clauses", di_handlers.di_clauses_handler)
+    app.router.add_get(f"{di}/risk", di_handlers.di_risk_handler)
+    app.router.add_post(f"{di}/risk", di_handlers.di_risk_handler)
+    app.router.add_get(f"{di}/comparison", di_handlers.di_comparison_handler)
+    app.router.add_post(f"{di}/comparison", di_handlers.di_comparison_handler)
+    app.router.add_get(f"{di}/drafting", di_handlers.di_drafting_handler)
+    app.router.add_post(f"{di}/drafting", di_handlers.di_drafting_handler)
+    app.router.add_get(f"{di}/dashboard", di_handlers.di_dashboard_handler)
+    app.router.add_post(f"{di}/dashboard", di_handlers.di_dashboard_handler)
+    app.router.add_get(f"{di}/knowledge", di_handlers.di_knowledge_handler)
+    app.router.add_post(f"{di}/knowledge", di_handlers.di_knowledge_handler)

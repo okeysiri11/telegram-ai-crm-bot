@@ -1,4 +1,4 @@
-# Legal Enterprise Platform — Sprint 17.3 Case Management Platform.
+# Legal Enterprise Platform — Sprint 17.4 Document Intelligence.
 
 from __future__ import annotations
 
@@ -9,16 +9,17 @@ from dataclasses import dataclass, field
 class LegalEnterpriseConfig:
     application_name: str = "Legal Intelligence Platform"
     application: str = "legal_enterprise"
-    application_version: str = "4.9.3-enterprise"
-    release_status: str = "Case Management Platform"
+    application_version: str = "4.9.4-enterprise"
+    release_status: str = "Document Intelligence"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.9.2-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.9.3-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/legal-enterprise/v1"
     legislation_intelligence_api_prefix: str = "/api/legal-li/v1"
     judicial_intelligence_api_prefix: str = "/api/legal-ji/v1"
     case_management_api_prefix: str = "/api/legal-cm/v1"
+    document_intelligence_api_prefix: str = "/api/legal-di/v1"
     internal_prefix: str = "/internal/legal-enterprise/v1"
     legal_registry: str = "1.0"
     legislation_registry: str = "1.0"
@@ -27,6 +28,7 @@ class LegalEnterpriseConfig:
     case_management_platform: str = "1.0"
     legislation_intelligence: str = "1.0"
     judicial_intelligence: str = "1.0"
+    document_intelligence: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     legal_roles: list[str] = field(
@@ -184,6 +186,31 @@ class LegalEnterpriseConfig:
     )
     cm_knowledge_bases: list[str] = field(
         default_factory=lambda: ["case", "deadline", "task", "document", "calendar"]
+    )
+    di_contract_types: list[str] = field(
+        default_factory=lambda: ["sales", "service", "employment", "nda", "lease", "custom"]
+    )
+    di_clause_kinds: list[str] = field(
+        default_factory=lambda: [
+            "general",
+            "confidentiality",
+            "indemnity",
+            "termination",
+            "liability",
+            "payment",
+            "governing_law",
+            "compliance",
+        ]
+    )
+    di_formats: list[str] = field(default_factory=lambda: ["pdf", "docx", "txt", "image"])
+    di_doc_classes: list[str] = field(
+        default_factory=lambda: ["sales", "service", "employment", "nda", "lease", "other"]
+    )
+    di_dashboard_types: list[str] = field(
+        default_factory=lambda: ["contract", "document", "risk", "ai_review"]
+    )
+    di_knowledge_bases: list[str] = field(
+        default_factory=lambda: ["document", "clause", "contract", "risk", "template"]
     )
 
 
