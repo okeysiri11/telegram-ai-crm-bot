@@ -8,6 +8,7 @@ from applications.enterprise_hub.api import aa_handlers, handlers, kg_handlers, 
 from applications.enterprise_hub.api.middleware import auth_middleware
 from applications.enterprise_hub.communications import api as comm_api
 from applications.enterprise_hub.config import DEFAULT_CONFIG
+from applications.enterprise_hub.data_platform import api as edp_api
 from applications.enterprise_hub.integrations import api as eip_api
 from applications.enterprise_hub.workflow import api as wf_api
 
@@ -165,3 +166,28 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{eip}/ai", eip_api.eip_ai_handler)
     app.router.add_get(f"{eip}/dashboard", eip_api.eip_dashboard_handler)
     app.router.add_post(f"{eip}/dashboard", eip_api.eip_dashboard_handler)
+
+    # Sprint 19.7 — Enterprise Data Platform & MDM (additive; prior routes unchanged)
+    edp = DEFAULT_CONFIG.edp_api_prefix
+    app.router.add_get(f"{edp}/health", edp_api.edp_health_handler)
+    app.router.add_post(f"{edp}/bootstrap", edp_api.edp_bootstrap_handler)
+    app.router.add_get(f"{edp}/master", edp_api.edp_master_handler)
+    app.router.add_post(f"{edp}/master", edp_api.edp_master_handler)
+    app.router.add_get(f"{edp}/catalog", edp_api.edp_catalog_handler)
+    app.router.add_post(f"{edp}/catalog", edp_api.edp_catalog_handler)
+    app.router.add_get(f"{edp}/metadata", edp_api.edp_metadata_handler)
+    app.router.add_post(f"{edp}/metadata", edp_api.edp_metadata_handler)
+    app.router.add_get(f"{edp}/quality", edp_api.edp_quality_handler)
+    app.router.add_post(f"{edp}/quality", edp_api.edp_quality_handler)
+    app.router.add_get(f"{edp}/governance", edp_api.edp_governance_handler)
+    app.router.add_post(f"{edp}/governance", edp_api.edp_governance_handler)
+    app.router.add_get(f"{edp}/lineage", edp_api.edp_lineage_handler)
+    app.router.add_post(f"{edp}/lineage", edp_api.edp_lineage_handler)
+    app.router.add_get(f"{edp}/versioning", edp_api.edp_versioning_handler)
+    app.router.add_post(f"{edp}/versioning", edp_api.edp_versioning_handler)
+    app.router.add_get(f"{edp}/ai", edp_api.edp_ai_handler)
+    app.router.add_post(f"{edp}/ai", edp_api.edp_ai_handler)
+    app.router.add_get(f"{edp}/analytics", edp_api.edp_analytics_handler)
+    app.router.add_post(f"{edp}/analytics", edp_api.edp_analytics_handler)
+    app.router.add_get(f"{edp}/dashboard", edp_api.edp_dashboard_handler)
+    app.router.add_post(f"{edp}/dashboard", edp_api.edp_dashboard_handler)

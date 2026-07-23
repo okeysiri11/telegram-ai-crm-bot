@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 19.6 Enterprise Integration Platform."""
+"""Enterprise Hub — Sprint 19.7 Enterprise Data Platform & MDM."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.3.6-enterprise"
-    release_status: str = "Enterprise Integration Platform"
+    application_version: str = "5.3.7-enterprise"
+    release_status: str = "Enterprise Data Platform"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.3.5-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.3.6-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -22,6 +22,7 @@ class EnterpriseHubConfig:
     communications_api_prefix: str = "/api/enterprise-comms/v1"
     workflow_api_prefix: str = "/api/enterprise-workflow/v1"
     eip_api_prefix: str = "/api/enterprise-eip/v1"
+    edp_api_prefix: str = "/api/enterprise-edp/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -34,6 +35,7 @@ class EnterpriseHubConfig:
     communications: str = "1.0"
     workflow: str = "1.0"
     eip: str = "1.0"
+    edp: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -329,6 +331,15 @@ class EnterpriseHubConfig:
             "registry",
             "sync",
             "connectors",
+            "analytics",
+        ]
+    )
+    edp_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "quality",
+            "catalog",
+            "governance",
+            "lineage",
             "analytics",
         ]
     )

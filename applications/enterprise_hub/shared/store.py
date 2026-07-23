@@ -183,6 +183,26 @@ class EnterpriseHubStore:
         self.eip_schedule_fires: EntityStore = EntityStore()
         self.eip_ai_assists: EntityStore = EntityStore()
         self.eip_dashboards: EntityStore = EntityStore()
+        # Sprint 19.7 — Enterprise Data Platform & MDM
+        self.edp_entities: EntityStore = EntityStore()
+        self.edp_relationships: EntityStore = EntityStore()
+        self.edp_metadata: EntityStore = EntityStore()
+        self.edp_catalog: EntityStore = EntityStore()
+        self.edp_quality: EntityStore = EntityStore()
+        self.edp_duplicates: EntityStore = EntityStore()
+        self.edp_consistency: EntityStore = EntityStore()
+        self.edp_normalizations: EntityStore = EntityStore()
+        self.edp_rules: EntityStore = EntityStore()
+        self.edp_governance: EntityStore = EntityStore()
+        self.edp_audit: EntityStore = EntityStore()
+        self.edp_lineage: EntityStore = EntityStore()
+        self.edp_versions: EntityStore = EntityStore()
+        self.edp_version_comps: EntityStore = EntityStore()
+        self.edp_rollbacks: EntityStore = EntityStore()
+        self.edp_profiles: EntityStore = EntityStore()
+        self.edp_stats: EntityStore = EntityStore()
+        self.edp_ai_assists: EntityStore = EntityStore()
+        self.edp_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

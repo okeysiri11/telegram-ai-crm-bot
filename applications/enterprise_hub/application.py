@@ -8,6 +8,7 @@ from applications.enterprise_hub.ai_agents.facade import AIAgentSuite
 from applications.enterprise_hub.communications.facade import CommunicationsSuite
 from applications.enterprise_hub.config import DEFAULT_CONFIG, EnterpriseHubConfig
 from applications.enterprise_hub.configuration import EnterpriseConfiguration
+from applications.enterprise_hub.data_platform.facade import DataPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
 from applications.enterprise_hub.integration_layer import IntegrationLayer
@@ -32,6 +33,7 @@ class EnterpriseHubApplication:
         communications_svc: CommunicationsSuite | None = None,
         workflow_svc: WorkflowSuite | None = None,
         eip_svc: IntegrationPlatformSuite | None = None,
+        edp_svc: DataPlatformSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -48,6 +50,7 @@ class EnterpriseHubApplication:
         self.communications = communications_svc or CommunicationsSuite(self.store)
         self.workflow = workflow_svc or WorkflowSuite(self.store)
         self.eip = eip_svc or IntegrationPlatformSuite(self.store)
+        self.edp = edp_svc or DataPlatformSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -234,6 +237,10 @@ class EnterpriseHubApplication:
             "connector_engine_ready": True,
             "adapter_layer_ready": True,
             "sync_engine_ready": True,
+            "enterprise_data_platform_ready": True,
+            "master_data_ready": True,
+            "data_quality_ready": True,
+            "data_governance_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -246,6 +253,7 @@ class EnterpriseHubApplication:
                 "communications": self.config.communications,
                 "workflow": self.config.workflow,
                 "eip": self.config.eip,
+                "edp": self.config.edp,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -262,6 +270,7 @@ class EnterpriseHubApplication:
             "communications": self.communications.status(),
             "workflow": self.workflow.status(),
             "eip": self.eip.status(),
+            "edp": self.edp.status(),
         }
 
 
