@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 20.6 Enterprise Developer Platform."""
+"""Enterprise Hub — Sprint 20.7 Enterprise Unified Data Fabric."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.4.6-enterprise"
-    release_status: str = "Enterprise Developer Platform"
+    application_version: str = "5.4.7-enterprise"
+    release_status: str = "Enterprise Unified Data Fabric"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.4.5-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.4.6-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -32,6 +32,7 @@ class EnterpriseHubConfig:
     aios_api_prefix: str = "/api/enterprise-aios/v1"
     event_platform_api_prefix: str = "/api/enterprise-evp/v1"
     developer_platform_api_prefix: str = "/api/enterprise-sdp/v1"
+    data_fabric_api_prefix: str = "/api/enterprise-edf/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -54,6 +55,7 @@ class EnterpriseHubConfig:
     aios: str = "1.0"
     event_platform: str = "1.0"
     developer_platform: str = "1.0"
+    data_fabric: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -451,6 +453,20 @@ class EnterpriseHubConfig:
             "forms",
             "events",
         ]
+    )
+    edf_asset_kinds: list[str] = field(
+        default_factory=lambda: [
+            "table",
+            "document",
+            "event",
+            "vector_index",
+            "file_store",
+            "external",
+            "ai_model",
+        ]
+    )
+    edf_virtualization_modes: list[str] = field(
+        default_factory=lambda: ["sql", "nosql", "graph", "vector", "object", "event_stream"]
     )
 
 

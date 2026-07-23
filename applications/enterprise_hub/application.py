@@ -11,6 +11,7 @@ from applications.enterprise_hub.ai_tools.facade import AIToolsSuite
 from applications.enterprise_hub.communications.facade import CommunicationsSuite
 from applications.enterprise_hub.config import DEFAULT_CONFIG, EnterpriseHubConfig
 from applications.enterprise_hub.configuration import EnterpriseConfiguration
+from applications.enterprise_hub.data_fabric.facade import DataFabricSuite
 from applications.enterprise_hub.data_platform.facade import DataPlatformSuite
 from applications.enterprise_hub.developer_platform.facade import DeveloperPlatformSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
@@ -52,6 +53,7 @@ class EnterpriseHubApplication:
         aios_svc: AutonomousAIOSSuite | None = None,
         event_platform_svc: EventPlatformSuite | None = None,
         developer_platform_svc: DeveloperPlatformSuite | None = None,
+        data_fabric_svc: DataFabricSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -78,6 +80,7 @@ class EnterpriseHubApplication:
         self.aios = aios_svc or AutonomousAIOSSuite(self.store)
         self.event_platform = event_platform_svc or EventPlatformSuite(self.store)
         self.developer_platform = developer_platform_svc or DeveloperPlatformSuite(self.store)
+        self.data_fabric = data_fabric_svc or DataFabricSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -305,6 +308,10 @@ class EnterpriseHubApplication:
             "plugin_framework_ready": True,
             "sdk_ready": True,
             "marketplace_ready": True,
+            "data_fabric_ready": True,
+            "data_catalog_ready": True,
+            "federation_ready": True,
+            "data_governance_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -327,6 +334,7 @@ class EnterpriseHubApplication:
                 "aios": self.config.aios,
                 "event_platform": self.config.event_platform,
                 "developer_platform": self.config.developer_platform,
+                "data_fabric": self.config.data_fabric,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -353,6 +361,7 @@ class EnterpriseHubApplication:
             "aios": self.aios.status(),
             "event_platform": self.event_platform.status(),
             "developer_platform": self.developer_platform.status(),
+            "data_fabric": self.data_fabric.status(),
         }
 
 

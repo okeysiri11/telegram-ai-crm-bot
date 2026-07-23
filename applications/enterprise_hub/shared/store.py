@@ -351,6 +351,24 @@ class EnterpriseHubStore:
         self.sdp_publishes: EntityStore = EntityStore()
         self.sdp_installs: EntityStore = EntityStore()
         self.sdp_updates: EntityStore = EntityStore()
+        # Sprint 20.7 — Data Fabric
+        self.edf_assets: EntityStore = EntityStore()
+        self.edf_metadata: EntityStore = EntityStore()
+        self.edf_views: EntityStore = EntityStore()
+        self.edf_virtual_queries: EntityStore = EntityStore()
+        self.edf_federations: EntityStore = EntityStore()
+        self.edf_routes: EntityStore = EntityStore()
+        self.edf_lineage: EntityStore = EntityStore()
+        self.edf_policies: EntityStore = EntityStore()
+        self.edf_governance: EntityStore = EntityStore()
+        self.edf_gov_audit: EntityStore = EntityStore()
+        self.edf_quality: EntityStore = EntityStore()
+        self.edf_schemas: EntityStore = EntityStore()
+        self.edf_cache: EntityStore = EntityStore()
+        self.edf_connectors: EntityStore = EntityStore()
+        self.edf_connector_queries: EntityStore = EntityStore()
+        self.edf_unified: EntityStore = EntityStore()
+        self.edf_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

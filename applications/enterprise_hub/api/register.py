@@ -15,6 +15,7 @@ from applications.enterprise_hub.ai_os import api as aios_api
 from applications.enterprise_hub.ai_tools import api as ats_api
 from applications.enterprise_hub.event_platform import api as evp_api
 from applications.enterprise_hub.developer_platform import api as sdp_api
+from applications.enterprise_hub.data_fabric import api as edf_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -404,3 +405,22 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{sdp}/analytics", sdp_api.sdp_analytics_handler)
     app.router.add_get(f"{sdp}/docs", sdp_api.sdp_docs_handler)
     app.router.add_post(f"{sdp}/docs", sdp_api.sdp_docs_handler)
+
+    # Sprint 20.7 — Data Fabric (additive; prior routes unchanged)
+    edf = DEFAULT_CONFIG.data_fabric_api_prefix
+    app.router.add_get(f"{edf}/health", edf_api.edf_health_handler)
+    app.router.add_post(f"{edf}/bootstrap", edf_api.edf_bootstrap_handler)
+    app.router.add_get(f"{edf}/catalog", edf_api.edf_catalog_handler)
+    app.router.add_post(f"{edf}/catalog", edf_api.edf_catalog_handler)
+    app.router.add_post(f"{edf}/query", edf_api.edf_query_handler)
+    app.router.add_post(f"{edf}/federation", edf_api.edf_federation_handler)
+    app.router.add_get(f"{edf}/governance", edf_api.edf_governance_handler)
+    app.router.add_post(f"{edf}/governance", edf_api.edf_governance_handler)
+    app.router.add_get(f"{edf}/lineage", edf_api.edf_lineage_handler)
+    app.router.add_post(f"{edf}/lineage", edf_api.edf_lineage_handler)
+    app.router.add_get(f"{edf}/quality", edf_api.edf_quality_handler)
+    app.router.add_post(f"{edf}/quality", edf_api.edf_quality_handler)
+    app.router.add_get(f"{edf}/dashboard", edf_api.edf_dashboard_handler)
+    app.router.add_post(f"{edf}/dashboard", edf_api.edf_dashboard_handler)
+    app.router.add_get(f"{edf}/analytics", edf_api.edf_analytics_handler)
+    app.router.add_post(f"{edf}/analytics", edf_api.edf_analytics_handler)
