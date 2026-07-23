@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.crypto_enterprise.api import (
     at_handlers,
+    certification_handlers,
     handlers,
     mi_handlers,
     mm_handlers,
@@ -190,3 +191,18 @@ def register_crypto_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{at}/dashboard", at_handlers.at_dashboard_handler)
     app.router.add_get(f"{at}/knowledge", at_handlers.at_knowledge_handler)
     app.router.add_post(f"{at}/knowledge", at_handlers.at_knowledge_handler)
+
+    # Sprint 16.8 — Enterprise Certification (additive; prior routes unchanged)
+    cec = DEFAULT_CONFIG.enterprise_certification_api_prefix
+    app.router.add_get(f"{cec}/health", certification_handlers.cec_health_handler)
+    app.router.add_post(f"{cec}/bootstrap", certification_handlers.cec_bootstrap_handler)
+    app.router.add_get(f"{cec}/architecture", certification_handlers.cec_architecture_handler)
+    app.router.add_get(f"{cec}/integration", certification_handlers.cec_integration_handler)
+    app.router.add_get(f"{cec}/performance", certification_handlers.cec_performance_handler)
+    app.router.add_get(f"{cec}/security", certification_handlers.cec_security_handler)
+    app.router.add_get(f"{cec}/documentation", certification_handlers.cec_documentation_handler)
+    app.router.add_get(f"{cec}/quality", certification_handlers.cec_quality_handler)
+    app.router.add_get(f"{cec}/release", certification_handlers.cec_release_handler)
+    app.router.add_get(f"{cec}/executive", certification_handlers.cec_executive_handler)
+    app.router.add_get(f"{cec}/dashboard", certification_handlers.cec_dashboard_handler)
+    app.router.add_post(f"{cec}/dashboard", certification_handlers.cec_dashboard_handler)

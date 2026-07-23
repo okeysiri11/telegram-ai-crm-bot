@@ -315,6 +315,9 @@ class CryptoEnterpriseStore:
         self.at_alerts: EntityStore = EntityStore()
         self.at_dashboards: EntityStore = EntityStore()
         self.at_registries: EntityStore = EntityStore()
+        # Sprint 16.8 — Enterprise Certification
+        self.cec_runs: EntityStore = EntityStore()
+        self.cec_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

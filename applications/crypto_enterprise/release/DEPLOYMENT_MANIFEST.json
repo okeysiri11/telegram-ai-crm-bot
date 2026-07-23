@@ -1,0 +1,28 @@
+{
+  "service": "crypto_enterprise",
+  "application_version": "4.8.0-enterprise",
+  "api_prefixes": [
+    "/api/crypto-enterprise/v1",
+    "/api/crypto-ta/v1",
+    "/api/crypto-mm/v1",
+    "/api/crypto-mi/v1",
+    "/api/crypto-se/v1",
+    "/api/crypto-rm/v1",
+    "/api/crypto-oc/v1",
+    "/api/crypto-at/v1",
+    "/api/crypto-enterprise-certification/v1"
+  ],
+  "healthchecks": [
+    "/api/crypto-enterprise/v1/health",
+    "/api/crypto-ta/v1/health",
+    "/api/crypto-mm/v1/health",
+    "/api/crypto-mi/v1/health",
+    "/api/crypto-se/v1/health",
+    "/api/crypto-rm/v1/health",
+    "/api/crypto-oc/v1/health",
+    "/api/crypto-at/v1/health",
+    "/api/crypto-enterprise-certification/v1/health"
+  ],
+  "config_template": "applications/crypto_enterprise/release/config.template.env",
+  "checklist": "applications/crypto_enterprise/release/PRODUCTION_CHECKLIST.md"
+}

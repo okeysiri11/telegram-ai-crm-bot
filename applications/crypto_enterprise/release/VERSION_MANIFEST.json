@@ -1,0 +1,11 @@
+{
+  "application": "crypto_enterprise",
+  "application_name": "Crypto Intelligence Platform",
+  "application_version": "4.8.0-enterprise",
+  "suite": "Crypto Enterprise Suite",
+  "sprint": "16.8",
+  "release_status": "Production Ready",
+  "enterprise_foundation": "Enterprise Platform v4.7.7-enterprise",
+  "platform_dependency": "AI Platform Core v3",
+  "ecosystem_dependency": "AI Ecosystem v1.5"
+}

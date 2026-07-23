@@ -45,8 +45,8 @@ def reset_store():
 
 def test_version_onchain_intelligence_ready():
     health = crypto_enterprise.health()
-    assert health["application_version"] == "4.7.7-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.7.6-enterprise"
+    assert health["application_version"] == "4.8.0-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.7.7-enterprise"
     assert health["onchain_intelligence_ready"] is True
     assert health["whale_intelligence_ready"] is True
     assert health["blockchain_analytics_ready"] is True
@@ -99,7 +99,7 @@ def test_onchain_ai_and_bootstrap():
     suite = crypto_enterprise.onchain_intelligence
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "4.7.7-enterprise"
+    assert boot["version"] == "4.8.0-enterprise"
     assert boot["whale_wallet_id"] and boot["tx_id"] and boot["report_id"]
     whale_ai = suite.ai.whale_activity(chain="bitcoin", intensity=0.9, side="accumulate")
     assert whale_ai["detected"] is True
@@ -111,7 +111,7 @@ def test_onchain_ai_and_bootstrap():
 async def test_api_onchain_intelligence(client):
     health = await client.get(f"{OC}/health")
     body = await health.json()
-    assert body["application_version"] == "4.7.7-enterprise"
+    assert body["application_version"] == "4.8.0-enterprise"
     assert body["onchain_intelligence_ready"] is True
     assert body["ai_onchain_intelligence_ready"] is True
 
@@ -138,7 +138,7 @@ async def test_api_onchain_intelligence(client):
     for path in (PREFIX, TA, MM, MI, SE, RM):
         resp = await client.get(f"{path}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "4.7.7-enterprise"
+        assert (await resp.json())["application_version"] == "4.8.0-enterprise"
 
 
 def test_docs_and_regression_16_6():
@@ -167,7 +167,7 @@ def test_docs_and_regression_16_6():
     assert PORT.application_version == "4.6.0-enterprise"
     assert PORT_ERP.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "crypto_enterprise" / "manifest.json").read_text()
-    assert "4.7.7-enterprise" in manifest
-    assert "16.7" in manifest
+    assert "4.8.0-enterprise" in manifest
+    assert "16.8" in manifest
     assert (ROOT / "applications" / "crypto_enterprise" / "risk_management" / "facade.py").exists()
     assert (ROOT / "applications" / "crypto_enterprise" / "strategy_engine" / "facade.py").exists()
