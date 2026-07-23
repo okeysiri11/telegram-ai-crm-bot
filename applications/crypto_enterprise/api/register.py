@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.crypto_enterprise.api import handlers, mm_handlers, ta_handlers
+from applications.crypto_enterprise.api import handlers, mi_handlers, mm_handlers, ta_handlers
 from applications.crypto_enterprise.api.middleware import auth_middleware
 from applications.crypto_enterprise.config import DEFAULT_CONFIG
 
@@ -70,3 +70,26 @@ def register_crypto_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{mm}/dashboard", mm_handlers.mm_dashboard_handler)
     app.router.add_get(f"{mm}/knowledge", mm_handlers.mm_knowledge_handler)
     app.router.add_post(f"{mm}/knowledge", mm_handlers.mm_knowledge_handler)
+
+    # Sprint 16.3 — Market Intelligence (additive; prior routes unchanged)
+    mi = DEFAULT_CONFIG.market_intelligence_api_prefix
+    app.router.add_get(f"{mi}/health", mi_handlers.mi_health_handler)
+    app.router.add_post(f"{mi}/bootstrap", mi_handlers.mi_bootstrap_handler)
+    app.router.add_get(f"{mi}/news", mi_handlers.mi_news_handler)
+    app.router.add_post(f"{mi}/news", mi_handlers.mi_news_handler)
+    app.router.add_get(f"{mi}/social", mi_handlers.mi_social_handler)
+    app.router.add_post(f"{mi}/social", mi_handlers.mi_social_handler)
+    app.router.add_get(f"{mi}/sentiment", mi_handlers.mi_sentiment_handler)
+    app.router.add_post(f"{mi}/sentiment", mi_handlers.mi_sentiment_handler)
+    app.router.add_get(f"{mi}/fundamentals", mi_handlers.mi_fundamentals_handler)
+    app.router.add_post(f"{mi}/fundamentals", mi_handlers.mi_fundamentals_handler)
+    app.router.add_get(f"{mi}/macro", mi_handlers.mi_macro_handler)
+    app.router.add_post(f"{mi}/macro", mi_handlers.mi_macro_handler)
+    app.router.add_get(f"{mi}/correlation", mi_handlers.mi_correlation_handler)
+    app.router.add_post(f"{mi}/correlation", mi_handlers.mi_correlation_handler)
+    app.router.add_get(f"{mi}/decision", mi_handlers.mi_decision_handler)
+    app.router.add_post(f"{mi}/decision", mi_handlers.mi_decision_handler)
+    app.router.add_get(f"{mi}/dashboard", mi_handlers.mi_dashboard_handler)
+    app.router.add_post(f"{mi}/dashboard", mi_handlers.mi_dashboard_handler)
+    app.router.add_get(f"{mi}/knowledge", mi_handlers.mi_knowledge_handler)
+    app.router.add_post(f"{mi}/knowledge", mi_handlers.mi_knowledge_handler)

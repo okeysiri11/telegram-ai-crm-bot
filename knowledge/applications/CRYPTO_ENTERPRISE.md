@@ -1,12 +1,12 @@
 # Crypto Enterprise (knowledge)
 
-Sprint 16.2 — Crypto Intelligence Platform (Market Microstructure).
+Sprint 16.3 — Crypto Intelligence Platform (Market Intelligence).
 
-- Version: `4.7.2-enterprise`
-- Foundation: Enterprise Platform v4.7.1-enterprise
-- API: `/api/crypto-enterprise/v1` · `/api/crypto-ta/v1` · `/api/crypto-mm/v1`
+- Version: `4.7.3-enterprise`
+- Foundation: Enterprise Platform v4.7.2-enterprise
+- API: `/api/crypto-enterprise/v1` · `/api/crypto-ta/v1` · `/api/crypto-mm/v1` · `/api/crypto-mi/v1`
 - Package: `applications/crypto_enterprise/`
 
-Registries: Crypto Knowledge Graph · Exchange · Asset · Market · Technical Analysis · Indicator · Pattern · TradingView · Market Microstructure · Order Book · Derivatives · Liquidity · Trade Flow.
+Registries: Crypto · Exchange · Asset · Market · Technical · Indicator · Pattern · TradingView · Microstructure · Order Book · Derivatives · Liquidity · Trade Flow · Market Intelligence · News · Sentiment · Macro · Correlation.
 
-Readiness: Foundation · Exchange · Market Data · Portfolio · TradingView · Technical Analysis · Pattern Recognition · AI Technical Intelligence · Order Book · Trade Flow · Derivatives · Liquidity · AI Market Interpretation Ready.
+Readiness: Foundation through AI Decision Engine Ready.

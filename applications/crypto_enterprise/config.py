@@ -1,4 +1,4 @@
-# Crypto Enterprise Platform — Sprint 16.2 Market Microstructure.
+# Crypto Enterprise Platform — Sprint 16.3 Market Intelligence.
 
 from __future__ import annotations
 
@@ -9,15 +9,16 @@ from dataclasses import dataclass, field
 class CryptoEnterpriseConfig:
     application_name: str = "Crypto Intelligence Platform"
     application: str = "crypto_enterprise"
-    application_version: str = "4.7.2-enterprise"
-    release_status: str = "Market Microstructure"
+    application_version: str = "4.7.3-enterprise"
+    release_status: str = "Market Intelligence"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v4.7.1-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v4.7.2-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/crypto-enterprise/v1"
     technical_analysis_api_prefix: str = "/api/crypto-ta/v1"
     market_microstructure_api_prefix: str = "/api/crypto-mm/v1"
+    market_intelligence_api_prefix: str = "/api/crypto-mi/v1"
     internal_prefix: str = "/internal/crypto-enterprise/v1"
     exchange_integration: str = "1.0"
     market_data: str = "1.0"
@@ -25,6 +26,7 @@ class CryptoEnterpriseConfig:
     portfolio_management: str = "1.0"
     technical_analysis: str = "1.0"
     market_microstructure: str = "1.0"
+    market_intelligence: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     supported_exchanges: list[str] = field(
