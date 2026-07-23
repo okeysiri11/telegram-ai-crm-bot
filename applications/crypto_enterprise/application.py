@@ -10,6 +10,7 @@ from applications.crypto_enterprise.exchanges import ExchangeIntegration
 from applications.crypto_enterprise.market_intelligence.facade import MarketIntelligenceSuite
 from applications.crypto_enterprise.market_microstructure.facade import MarketMicrostructureSuite
 from applications.crypto_enterprise.markets import MarketData
+from applications.crypto_enterprise.onchain_intelligence.facade import OnChainIntelligenceSuite
 from applications.crypto_enterprise.portfolio import PortfolioManagement
 from applications.crypto_enterprise.risk_management.facade import RiskManagementSuite
 from applications.crypto_enterprise.services import CryptoDashboard, CryptoKnowledge
@@ -29,6 +30,7 @@ class CryptoEnterpriseApplication:
         market_intelligence_svc: MarketIntelligenceSuite | None = None,
         strategy_engine_svc: StrategyEngineSuite | None = None,
         risk_management_svc: RiskManagementSuite | None = None,
+        onchain_intelligence_svc: OnChainIntelligenceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or crypto_enterprise_store
@@ -43,6 +45,7 @@ class CryptoEnterpriseApplication:
         self.market_intelligence = market_intelligence_svc or MarketIntelligenceSuite(self.store)
         self.strategy_engine = strategy_engine_svc or StrategyEngineSuite(self.store)
         self.risk_management = risk_management_svc or RiskManagementSuite(self.store)
+        self.onchain_intelligence = onchain_intelligence_svc or OnChainIntelligenceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -203,6 +206,11 @@ class CryptoEnterpriseApplication:
             "position_sizing_ready": True,
             "ai_risk_intelligence_ready": True,
             "capital_protection_ready": True,
+            "onchain_intelligence_ready": True,
+            "whale_intelligence_ready": True,
+            "blockchain_analytics_ready": True,
+            "institution_monitoring_ready": True,
+            "ai_onchain_intelligence_ready": True,
             "engines": {
                 "exchange_integration": self.config.exchange_integration,
                 "market_data": self.config.market_data,
@@ -213,6 +221,7 @@ class CryptoEnterpriseApplication:
                 "market_intelligence": self.config.market_intelligence,
                 "strategy_engine": self.config.strategy_engine,
                 "risk_management": self.config.risk_management,
+                "onchain_intelligence": self.config.onchain_intelligence,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -227,6 +236,7 @@ class CryptoEnterpriseApplication:
             "market_intelligence": self.market_intelligence.status(),
             "strategy_engine": self.strategy_engine.status(),
             "risk_management": self.risk_management.status(),
+            "onchain_intelligence": self.onchain_intelligence.status(),
         }
 
 

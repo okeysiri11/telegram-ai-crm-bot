@@ -42,8 +42,8 @@ def reset_store():
 
 def test_version_market_intelligence_ready():
     health = crypto_enterprise.health()
-    assert health["application_version"] == "4.7.5-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v4.7.4-enterprise"
+    assert health["application_version"] == "4.7.6-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v4.7.5-enterprise"
     assert health["news_intelligence_ready"] is True
     assert health["sentiment_intelligence_ready"] is True
     assert health["macro_intelligence_ready"] is True
@@ -88,7 +88,7 @@ def test_ai_decision_and_bootstrap():
     suite = crypto_enterprise.market_intelligence
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "4.7.5-enterprise"
+    assert boot["version"] == "4.7.6-enterprise"
     assert boot["summary_id"] and boot["correlation_id"]
     opp = suite.decision.opportunity(symbol="ETHUSDT", score=66)
     assert opp["score"] == 66
@@ -100,7 +100,7 @@ def test_ai_decision_and_bootstrap():
 async def test_api_market_intelligence(client):
     health = await client.get(f"{MI}/health")
     body = await health.json()
-    assert body["application_version"] == "4.7.5-enterprise"
+    assert body["application_version"] == "4.7.6-enterprise"
     assert body["news_intelligence_ready"] is True
     assert body["ai_decision_engine_ready"] is True
 
@@ -131,7 +131,7 @@ async def test_api_market_intelligence(client):
     for path in (PREFIX, TA, MM):
         resp = await client.get(f"{path}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "4.7.5-enterprise"
+        assert (await resp.json())["application_version"] == "4.7.6-enterprise"
 
 
 def test_docs_and_regression_16_3():
@@ -160,7 +160,7 @@ def test_docs_and_regression_16_3():
     assert PORT.application_version == "4.6.0-enterprise"
     assert PORT_ERP.application_version == "2.0.0"
     manifest = (ROOT / "applications" / "crypto_enterprise" / "manifest.json").read_text()
-    assert "4.7.5-enterprise" in manifest
-    assert "16.5" in manifest
+    assert "4.7.6-enterprise" in manifest
+    assert "16.6" in manifest
     assert (ROOT / "applications" / "crypto_enterprise" / "market_microstructure" / "facade.py").exists()
     assert (ROOT / "applications" / "crypto_enterprise" / "technical_analysis" / "facade.py").exists()

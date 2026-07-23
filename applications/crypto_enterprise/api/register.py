@@ -4,7 +4,15 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.crypto_enterprise.api import handlers, mi_handlers, mm_handlers, rm_handlers, se_handlers, ta_handlers
+from applications.crypto_enterprise.api import (
+    handlers,
+    mi_handlers,
+    mm_handlers,
+    oc_handlers,
+    rm_handlers,
+    se_handlers,
+    ta_handlers,
+)
 from applications.crypto_enterprise.api.middleware import auth_middleware
 from applications.crypto_enterprise.config import DEFAULT_CONFIG
 
@@ -135,3 +143,26 @@ def register_crypto_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{rm}/dashboard", rm_handlers.rm_dashboard_handler)
     app.router.add_get(f"{rm}/knowledge", rm_handlers.rm_knowledge_handler)
     app.router.add_post(f"{rm}/knowledge", rm_handlers.rm_knowledge_handler)
+
+    # Sprint 16.6 — On-Chain Intelligence (additive; prior routes unchanged)
+    oc = DEFAULT_CONFIG.onchain_intelligence_api_prefix
+    app.router.add_get(f"{oc}/health", oc_handlers.oc_health_handler)
+    app.router.add_post(f"{oc}/bootstrap", oc_handlers.oc_bootstrap_handler)
+    app.router.add_get(f"{oc}/chains", oc_handlers.oc_chains_handler)
+    app.router.add_post(f"{oc}/chains", oc_handlers.oc_chains_handler)
+    app.router.add_get(f"{oc}/wallets", oc_handlers.oc_wallets_handler)
+    app.router.add_post(f"{oc}/wallets", oc_handlers.oc_wallets_handler)
+    app.router.add_get(f"{oc}/transactions", oc_handlers.oc_transactions_handler)
+    app.router.add_post(f"{oc}/transactions", oc_handlers.oc_transactions_handler)
+    app.router.add_get(f"{oc}/stablecoins", oc_handlers.oc_stablecoins_handler)
+    app.router.add_post(f"{oc}/stablecoins", oc_handlers.oc_stablecoins_handler)
+    app.router.add_get(f"{oc}/defi", oc_handlers.oc_defi_handler)
+    app.router.add_post(f"{oc}/defi", oc_handlers.oc_defi_handler)
+    app.router.add_get(f"{oc}/nft", oc_handlers.oc_nft_handler)
+    app.router.add_post(f"{oc}/nft", oc_handlers.oc_nft_handler)
+    app.router.add_get(f"{oc}/ai", oc_handlers.oc_ai_handler)
+    app.router.add_post(f"{oc}/ai", oc_handlers.oc_ai_handler)
+    app.router.add_get(f"{oc}/dashboard", oc_handlers.oc_dashboard_handler)
+    app.router.add_post(f"{oc}/dashboard", oc_handlers.oc_dashboard_handler)
+    app.router.add_get(f"{oc}/knowledge", oc_handlers.oc_knowledge_handler)
+    app.router.add_post(f"{oc}/knowledge", oc_handlers.oc_knowledge_handler)
