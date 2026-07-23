@@ -151,6 +151,21 @@ class EnterpriseHubStore:
         self.comm_chat: EntityStore = EntityStore()
         self.comm_audit: EntityStore = EntityStore()
         self.comm_dashboards: EntityStore = EntityStore()
+        # Sprint 19.5 — Enterprise Workflow Engine
+        self.wf_definitions: EntityStore = EntityStore()
+        self.wf_versions: EntityStore = EntityStore()
+        self.wf_validations: EntityStore = EntityStore()
+        self.wf_executions: EntityStore = EntityStore()
+        self.wf_engine_runs: EntityStore = EntityStore()
+        self.wf_actions: EntityStore = EntityStore()
+        self.wf_conditions: EntityStore = EntityStore()
+        self.wf_approvals: EntityStore = EntityStore()
+        self.wf_schedules: EntityStore = EntityStore()
+        self.wf_schedule_fires: EntityStore = EntityStore()
+        self.wf_templates: EntityStore = EntityStore()
+        self.wf_events: EntityStore = EntityStore()
+        self.wf_optimizations: EntityStore = EntityStore()
+        self.wf_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

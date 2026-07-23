@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 19.4 Enterprise Communications."""
+"""Enterprise Hub — Sprint 19.5 Enterprise Workflow Engine."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.3.4-enterprise"
-    release_status: str = "Enterprise Communications"
+    application_version: str = "5.3.5-enterprise"
+    release_status: str = "Enterprise Workflow Engine"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.3.3-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.3.4-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -20,6 +20,7 @@ class EnterpriseHubConfig:
     knowledge_graph_api_prefix: str = "/api/enterprise-kg/v1"
     ai_agents_api_prefix: str = "/api/enterprise-agents/v1"
     communications_api_prefix: str = "/api/enterprise-comms/v1"
+    workflow_api_prefix: str = "/api/enterprise-workflow/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -30,6 +31,7 @@ class EnterpriseHubConfig:
     unified_knowledge: str = "1.0"
     ai_agents: str = "1.0"
     communications: str = "1.0"
+    workflow: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -296,6 +298,27 @@ class EnterpriseHubConfig:
             "channels",
             "audit",
             "analytics",
+        ]
+    )
+    wf_dashboard_types: list[str] = field(
+        default_factory=lambda: [
+            "performance",
+            "approvals",
+            "scheduler",
+            "templates",
+            "optimization",
+        ]
+    )
+    wf_template_kinds: list[str] = field(
+        default_factory=lambda: [
+            "crm_lead_processing",
+            "invoice_approval",
+            "purchase_request",
+            "employee_onboarding",
+            "contract_approval",
+            "ai_task_processing",
+            "customer_support",
+            "equipment_maintenance",
         ]
     )
 

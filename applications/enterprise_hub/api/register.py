@@ -8,6 +8,7 @@ from applications.enterprise_hub.api import aa_handlers, handlers, kg_handlers, 
 from applications.enterprise_hub.api.middleware import auth_middleware
 from applications.enterprise_hub.communications import api as comm_api
 from applications.enterprise_hub.config import DEFAULT_CONFIG
+from applications.enterprise_hub.workflow import api as wf_api
 
 
 def register_enterprise_hub_routes(app: web.Application) -> None:
@@ -119,3 +120,26 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{cm}/audit", comm_api.comm_audit_handler)
     app.router.add_get(f"{cm}/dashboard", comm_api.comm_dashboard_handler)
     app.router.add_post(f"{cm}/dashboard", comm_api.comm_dashboard_handler)
+
+    # Sprint 19.5 — Enterprise Workflow Engine (additive; prior routes unchanged)
+    wf = DEFAULT_CONFIG.workflow_api_prefix
+    app.router.add_get(f"{wf}/health", wf_api.wf_health_handler)
+    app.router.add_post(f"{wf}/bootstrap", wf_api.wf_bootstrap_handler)
+    app.router.add_get(f"{wf}/manager", wf_api.wf_manager_handler)
+    app.router.add_post(f"{wf}/manager", wf_api.wf_manager_handler)
+    app.router.add_get(f"{wf}/engine", wf_api.wf_engine_handler)
+    app.router.add_post(f"{wf}/engine", wf_api.wf_engine_handler)
+    app.router.add_get(f"{wf}/scheduler", wf_api.wf_scheduler_handler)
+    app.router.add_post(f"{wf}/scheduler", wf_api.wf_scheduler_handler)
+    app.router.add_get(f"{wf}/templates", wf_api.wf_templates_handler)
+    app.router.add_post(f"{wf}/templates", wf_api.wf_templates_handler)
+    app.router.add_get(f"{wf}/history", wf_api.wf_history_handler)
+    app.router.add_post(f"{wf}/history", wf_api.wf_history_handler)
+    app.router.add_get(f"{wf}/events", wf_api.wf_events_handler)
+    app.router.add_post(f"{wf}/events", wf_api.wf_events_handler)
+    app.router.add_get(f"{wf}/optimization", wf_api.wf_optimization_handler)
+    app.router.add_post(f"{wf}/optimization", wf_api.wf_optimization_handler)
+    app.router.add_get(f"{wf}/validator", wf_api.wf_validator_handler)
+    app.router.add_post(f"{wf}/validator", wf_api.wf_validator_handler)
+    app.router.add_get(f"{wf}/dashboard", wf_api.wf_dashboard_handler)
+    app.router.add_post(f"{wf}/dashboard", wf_api.wf_dashboard_handler)

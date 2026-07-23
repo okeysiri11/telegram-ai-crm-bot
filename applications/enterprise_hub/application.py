@@ -16,6 +16,7 @@ from applications.enterprise_hub.orchestrator.facade import OrchestratorSuite
 from applications.enterprise_hub.registry import EnterpriseRegistry
 from applications.enterprise_hub.services import HubDashboard, HubKnowledge
 from applications.enterprise_hub.shared.store import EnterpriseHubStore, enterprise_hub_store
+from applications.enterprise_hub.workflow.facade import WorkflowSuite
 
 
 class EnterpriseHubApplication:
@@ -28,6 +29,7 @@ class EnterpriseHubApplication:
         unified_knowledge_svc: UnifiedKnowledgeSuite | None = None,
         ai_agents_svc: AIAgentSuite | None = None,
         communications_svc: CommunicationsSuite | None = None,
+        workflow_svc: WorkflowSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -42,6 +44,7 @@ class EnterpriseHubApplication:
         self.unified_knowledge = unified_knowledge_svc or UnifiedKnowledgeSuite(self.store)
         self.ai_agents = ai_agents_svc or AIAgentSuite(self.store)
         self.communications = communications_svc or CommunicationsSuite(self.store)
+        self.workflow = workflow_svc or WorkflowSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -220,6 +223,10 @@ class EnterpriseHubApplication:
             "notification_center_ready": True,
             "multi_channel_delivery_ready": True,
             "corporate_chat_ready": True,
+            "enterprise_workflow_ready": True,
+            "workflow_builder_ready": True,
+            "approval_engine_ready": True,
+            "workflow_scheduler_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -230,6 +237,7 @@ class EnterpriseHubApplication:
                 "unified_knowledge": self.config.unified_knowledge,
                 "ai_agents": self.config.ai_agents,
                 "communications": self.config.communications,
+                "workflow": self.config.workflow,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -244,6 +252,7 @@ class EnterpriseHubApplication:
             "unified_knowledge": self.unified_knowledge.status(),
             "ai_agents": self.ai_agents.status(),
             "communications": self.communications.status(),
+            "workflow": self.workflow.status(),
         }
 
 
