@@ -1,9 +1,22 @@
 # Digital Twin
 
-Digital Twin Engine with application, infrastructure, business, knowledge, agent, workflow, drone, and marketplace twins.
+**Version:** `4.5.2-enterprise`  
+**Sprint:** 15.2  
+**Package:** `applications/port_enterprise/container_management/`  
+**API:** `/api/port-containers/v1`
 
-Features: live synchronization, state history, time-travel snapshots.
+## Capabilities
 
-## API
+- Terminal digital twin
+- Equipment and container visualization
+- Live yard status, operational simulation, capacity forecasting
 
-`GET|POST /api/executive/v1/twins`
+## Endpoints
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET/POST | `/twin` | Create / equipment / containers / live / simulate / forecast |
+
+## Readiness
+
+Digital Twin Ready

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from aiohttp import web
 
-from applications.port_enterprise.api import handlers, navigation_handlers
+from applications.port_enterprise.api import container_handlers, handlers, navigation_handlers
 from applications.port_enterprise.api.middleware import auth_middleware
 from applications.port_enterprise.config import DEFAULT_CONFIG
 
@@ -53,3 +53,24 @@ def register_port_enterprise_routes(app: web.Application) -> None:
     app.router.add_post(f"{nav}/dashboard", navigation_handlers.nav_dashboard_handler)
     app.router.add_get(f"{nav}/knowledge", navigation_handlers.nav_knowledge_handler)
     app.router.add_post(f"{nav}/knowledge", navigation_handlers.nav_knowledge_handler)
+
+    # Sprint 15.2 — Container Management (additive; prior routes unchanged)
+    cm = DEFAULT_CONFIG.container_management_api_prefix
+    app.router.add_get(f"{cm}/health", container_handlers.cm_health_handler)
+    app.router.add_post(f"{cm}/bootstrap", container_handlers.cm_bootstrap_handler)
+    app.router.add_get(f"{cm}/containers", container_handlers.cm_containers_handler)
+    app.router.add_post(f"{cm}/containers", container_handlers.cm_containers_handler)
+    app.router.add_get(f"{cm}/operations", container_handlers.cm_operations_handler)
+    app.router.add_post(f"{cm}/operations", container_handlers.cm_operations_handler)
+    app.router.add_get(f"{cm}/yard", container_handlers.cm_yard_handler)
+    app.router.add_post(f"{cm}/yard", container_handlers.cm_yard_handler)
+    app.router.add_get(f"{cm}/equipment", container_handlers.cm_equipment_handler)
+    app.router.add_post(f"{cm}/equipment", container_handlers.cm_equipment_handler)
+    app.router.add_get(f"{cm}/automation", container_handlers.cm_automation_handler)
+    app.router.add_post(f"{cm}/automation", container_handlers.cm_automation_handler)
+    app.router.add_get(f"{cm}/twin", container_handlers.cm_twin_handler)
+    app.router.add_post(f"{cm}/twin", container_handlers.cm_twin_handler)
+    app.router.add_get(f"{cm}/dashboard", container_handlers.cm_dashboard_handler)
+    app.router.add_post(f"{cm}/dashboard", container_handlers.cm_dashboard_handler)
+    app.router.add_get(f"{cm}/knowledge", container_handlers.cm_knowledge_handler)
+    app.router.add_post(f"{cm}/knowledge", container_handlers.cm_knowledge_handler)

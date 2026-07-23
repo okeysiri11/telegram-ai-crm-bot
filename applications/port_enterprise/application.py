@@ -6,6 +6,7 @@ from typing import Any
 
 from applications.port_enterprise.cargo_fleet import CargoManagement, FleetRegistry, ShippingCompanies
 from applications.port_enterprise.config import DEFAULT_CONFIG, PortEnterpriseConfig
+from applications.port_enterprise.container_management.facade import ContainerManagementSuite
 from applications.port_enterprise.navigation.facade import NavigationSuite
 from applications.port_enterprise.operations import PortDashboard, PortKnowledge, PortOperations
 from applications.port_enterprise.registry import PortRegistry, TerminalManagement
@@ -19,6 +20,7 @@ class PortEnterpriseApplication:
         config: PortEnterpriseConfig | None = None,
         store: PortEnterpriseStore | None = None,
         navigation_svc: NavigationSuite | None = None,
+        container_mgmt_svc: ContainerManagementSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or port_enterprise_store
@@ -31,6 +33,7 @@ class PortEnterpriseApplication:
         self.dashboard = PortDashboard(self.store)
         self.knowledge = PortKnowledge(self.store)
         self.navigation = navigation_svc or NavigationSuite(self.store)
+        self.container_management = container_mgmt_svc or ContainerManagementSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -142,6 +145,11 @@ class PortEnterpriseApplication:
             "radar_intelligence_ready": True,
             "navigation_platform_ready": True,
             "maritime_safety_ready": True,
+            "container_platform_ready": True,
+            "yard_automation_ready": True,
+            "port_equipment_ready": True,
+            "digital_twin_ready": True,
+            "terminal_automation_ready": True,
             "engines": {
                 "port_registry": self.config.port_registry,
                 "terminal_management": self.config.terminal_management,
@@ -150,6 +158,7 @@ class PortEnterpriseApplication:
                 "fleet_registry": self.config.fleet_registry,
                 "port_operations": self.config.port_operations,
                 "navigation": self.config.navigation,
+                "container_management": self.config.container_management,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -162,6 +171,7 @@ class PortEnterpriseApplication:
             "knowledge": self.knowledge.status(),
             "dashboard": self.dashboard.status(),
             "navigation": self.navigation.status(),
+            "container_management": self.container_management.status(),
         }
 
 
