@@ -50,6 +50,7 @@ from applications.enterprise_hub.autonomous_optimization import api as eoe_api
 from applications.enterprise_hub.strategy_intelligence import api as est_api
 from applications.enterprise_hub.learning_engine import api as ele_api
 from applications.enterprise_hub.ai_provider_hub import api as aph_api
+from applications.enterprise_hub.extension_sdk import api as ees_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -962,4 +963,23 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{aph}/analytics", aph_api.aph_analytics_handler)
     app.router.add_post(f"{aph}/security", aph_api.aph_security_handler)
     app.router.add_post(f"{aph}/invoke", aph_api.aph_invoke_handler)
+
+    # Sprint 25.0 — Extension SDK & Marketplace Foundation (additive; SDP developer-platform routes unchanged)
+    ees = DEFAULT_CONFIG.extension_sdk_api_prefix
+    app.router.add_get(f"{ees}/health", ees_api.ees_health_handler)
+    app.router.add_post(f"{ees}/bootstrap", ees_api.ees_bootstrap_handler)
+    app.router.add_post(f"{ees}/register", ees_api.ees_register_handler)
+    app.router.add_get(f"{ees}/extensions", ees_api.ees_extensions_handler)
+    app.router.add_post(f"{ees}/scaffold", ees_api.ees_scaffold_handler)
+    app.router.add_post(f"{ees}/permissions/request", ees_api.ees_permissions_request_handler)
+    app.router.add_post(f"{ees}/permissions/decide", ees_api.ees_permissions_decide_handler)
+    app.router.add_post(f"{ees}/verify", ees_api.ees_verify_handler)
+    app.router.add_post(f"{ees}/lifecycle", ees_api.ees_lifecycle_handler)
+    app.router.add_post(f"{ees}/install", ees_api.ees_install_handler)
+    app.router.add_post(f"{ees}/update", ees_api.ees_update_handler)
+    app.router.add_post(f"{ees}/uninstall", ees_api.ees_uninstall_handler)
+    app.router.add_post(f"{ees}/rollback", ees_api.ees_rollback_handler)
+    app.router.add_post(f"{ees}/marketplace/list", ees_api.ees_marketplace_list_handler)
+    app.router.add_get(f"{ees}/marketplace", ees_api.ees_marketplace_catalog_handler)
+    app.router.add_post(f"{ees}/public-api", ees_api.ees_public_api_handler)
 

@@ -740,6 +740,13 @@ class EnterpriseHubStore:
         self.aph_analytics: EntityStore = EntityStore()
         self.aph_security: EntityStore = EntityStore()
         self.aph_invokes: EntityStore = EntityStore()
+        # Sprint 25.0 — Extension SDK & Marketplace Foundation
+        self.ees_bootstraps: EntityStore = EntityStore()
+        self.ees_extensions: EntityStore = EntityStore()
+        self.ees_verifications: EntityStore = EntityStore()
+        self.ees_marketplace: EntityStore = EntityStore()
+        self.ees_installs: EntityStore = EntityStore()
+        self.ees_permissions: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

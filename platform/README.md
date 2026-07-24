@@ -32,3 +32,4 @@ Import paths avoid Python stdlib/`platform` collisions.
 - Strategy Intelligence: [`../platform_enterprise_strategy_intelligence/`](../platform_enterprise_strategy_intelligence/)
 - Learning Engine: [`../platform_enterprise_learning_engine/`](../platform_enterprise_learning_engine/)
 - AI Provider Hub: [`../platform_enterprise_ai_provider_hub/`](../platform_enterprise_ai_provider_hub/)
+- Extension SDK: [`../platform_enterprise_extension_sdk/`](../platform_enterprise_extension_sdk/)

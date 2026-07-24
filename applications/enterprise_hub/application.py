@@ -44,6 +44,7 @@ from applications.enterprise_hub.autonomous_optimization.facade import Autonomou
 from applications.enterprise_hub.strategy_intelligence.facade import StrategyIntelligenceSuite
 from applications.enterprise_hub.learning_engine.facade import LearningEngineSuite
 from applications.enterprise_hub.ai_provider_hub.facade import AIProviderHubSuite
+from applications.enterprise_hub.extension_sdk.facade import ExtensionSDKSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -122,6 +123,7 @@ class EnterpriseHubApplication:
         strategy_intelligence_svc: StrategyIntelligenceSuite | None = None,
         learning_engine_svc: LearningEngineSuite | None = None,
         ai_provider_hub_svc: AIProviderHubSuite | None = None,
+        extension_sdk_svc: ExtensionSDKSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -183,6 +185,7 @@ class EnterpriseHubApplication:
         self.strategy_intelligence = strategy_intelligence_svc or StrategyIntelligenceSuite(self.store)
         self.learning_engine = learning_engine_svc or LearningEngineSuite(self.store)
         self.ai_provider_hub = ai_provider_hub_svc or AIProviderHubSuite(self.store)
+        self.extension_sdk = extension_sdk_svc or ExtensionSDKSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -551,6 +554,10 @@ class EnterpriseHubApplication:
             "model_router_ready": True,
             "fallback_engine_ready": True,
             "ai_cost_control_ready": True,
+            "extension_sdk_ready": True,
+            "marketplace_foundation_ready": True,
+            "extension_permissions_ready": True,
+            "extension_lifecycle_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -608,6 +615,7 @@ class EnterpriseHubApplication:
                 "strategy_intelligence": self.config.strategy_intelligence,
                 "learning_engine": self.config.learning_engine,
                 "ai_provider_hub": self.config.ai_provider_hub,
+                "extension_sdk": self.config.extension_sdk,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -669,6 +677,7 @@ class EnterpriseHubApplication:
             "strategy_intelligence": self.strategy_intelligence.status(),
             "learning_engine": self.learning_engine.status(),
             "ai_provider_hub": self.ai_provider_hub.status(),
+            "extension_sdk": self.extension_sdk.status(),
         }
 
 
