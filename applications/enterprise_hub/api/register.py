@@ -43,6 +43,7 @@ from applications.enterprise_hub.pilot_readiness import api as epr_api
 from applications.enterprise_hub.enterprise_ai_orchestrator import api as eao_api
 from applications.enterprise_hub.workflow_intelligence import api as wfi_api
 from applications.enterprise_hub.enterprise_knowledge_graph import api as ekg_api
+from applications.enterprise_hub.predictive_intelligence import api as pin_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -851,4 +852,19 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ekg}/timeline", ekg_api.ekg_timeline_handler)
     app.router.add_post(f"{ekg}/learn", ekg_api.ekg_learn_handler)
     app.router.add_post(f"{ekg}/owner", ekg_api.ekg_owner_handler)
+
+    # Sprint 24.3 — Predictive Intelligence (additive; EPI Product Intelligence unchanged)
+    pin = DEFAULT_CONFIG.predictive_intelligence_api_prefix
+    app.router.add_get(f"{pin}/health", pin_api.pin_health_handler)
+    app.router.add_post(f"{pin}/bootstrap", pin_api.pin_bootstrap_handler)
+    app.router.add_get(f"{pin}/models", pin_api.pin_models_handler)
+    app.router.add_post(f"{pin}/models", pin_api.pin_models_handler)
+    app.router.add_post(f"{pin}/business", pin_api.pin_business_handler)
+    app.router.add_post(f"{pin}/customer", pin_api.pin_customer_handler)
+    app.router.add_post(f"{pin}/marketing", pin_api.pin_marketing_handler)
+    app.router.add_post(f"{pin}/operations", pin_api.pin_operations_handler)
+    app.router.add_post(f"{pin}/risks", pin_api.pin_risk_handler)
+    app.router.add_post(f"{pin}/opportunities", pin_api.pin_opportunity_handler)
+    app.router.add_post(f"{pin}/learn", pin_api.pin_learn_handler)
+    app.router.add_get(f"{pin}/dashboard", pin_api.pin_dashboard_handler)
 

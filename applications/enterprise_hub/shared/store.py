@@ -665,6 +665,18 @@ class EnterpriseHubStore:
         self.ekg_timelines: EntityStore = EntityStore()
         self.ekg_learning: EntityStore = EntityStore()
         self.ekg_owner: EntityStore = EntityStore()
+        # Sprint 24.3 — Predictive Intelligence
+        self.pin_bootstraps: EntityStore = EntityStore()
+        self.pin_models: EntityStore = EntityStore()
+        self.pin_forecasts: EntityStore = EntityStore()
+        self.pin_customers: EntityStore = EntityStore()
+        self.pin_marketing: EntityStore = EntityStore()
+        self.pin_operations: EntityStore = EntityStore()
+        self.pin_risks: EntityStore = EntityStore()
+        self.pin_opportunities: EntityStore = EntityStore()
+        self.pin_scenarios: EntityStore = EntityStore()
+        self.pin_learning: EntityStore = EntityStore()
+        self.pin_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

@@ -23,5 +23,6 @@ Enterprise shared libraries for Stabilization Phase / Enterprise Core v6.0 LTS.
 - Enterprise AI Orchestrator (v7): [`../platform_enterprise_ai_orchestrator/`](../platform_enterprise_ai_orchestrator/)
 - Workflow Intelligence: [`../platform_workflow_intelligence/`](../platform_workflow_intelligence/)
 - Enterprise Knowledge Graph: [`../platform_enterprise_knowledge_graph/`](../platform_enterprise_knowledge_graph/)
+- Predictive Intelligence: [`../platform_predictive_intelligence/`](../platform_predictive_intelligence/)
 
 Import paths avoid Python stdlib/`platform` collisions.

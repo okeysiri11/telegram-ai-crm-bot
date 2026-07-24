@@ -1,4 +1,4 @@
-"""Tests — Enterprise Knowledge Graph & Semantic Memory (Sprint 24.2 / v7.2.0)."""
+"""Tests — Enterprise Knowledge Graph & Semantic Memory (Sprint 24.3 / v7.3.0)."""
 
 from __future__ import annotations
 
@@ -91,8 +91,8 @@ def reset_store():
 
 def test_version_ekg_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "7.2.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v7.1.0"
+    assert health["application_version"] == "7.3.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v7.2.0"
     assert health["enterprise_knowledge_graph_ready"] is True
     assert health["semantic_memory_ready"] is True
     assert health["context_engine_ready"] is True
@@ -158,7 +158,7 @@ def test_bootstrap_ekg():
     suite = enterprise_hub.enterprise_knowledge_graph
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "7.2.0"
+    assert boot["version"] == "7.3.0"
     assert boot["knowledge_graph_ready"] is True
     assert boot["semantic_memory_ready"] is True
     assert boot["context_in_milliseconds"] is True
@@ -172,7 +172,7 @@ def test_bootstrap_ekg():
 async def test_api_ekg(client):
     health = await client.get(f"{EKG}/health")
     body = await health.json()
-    assert body["application_version"] == "7.2.0"
+    assert body["application_version"] == "7.3.0"
     assert body["enterprise_knowledge_graph_ready"] is True
 
     boot = await client.post(f"{EKG}/bootstrap", json={})
@@ -184,7 +184,7 @@ async def test_api_ekg(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "7.2.0"
+        assert version == "7.3.0"
 
 
 def test_docs_and_regression_24_2():
@@ -219,5 +219,5 @@ def test_docs_and_regression_24_2():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "7.2.0"' in manifest
-    assert "24.2" in manifest
+    assert '"application_version": "7.3.0"' in manifest
+    assert "24.3" in manifest
