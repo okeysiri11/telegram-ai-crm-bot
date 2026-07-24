@@ -36,6 +36,7 @@ from applications.enterprise_hub.beauty_client_journey import api as bcj_api
 from applications.enterprise_hub.ai_marketing_os import api as amo_api
 from applications.enterprise_hub.communications_hub import api as ech_api
 from applications.enterprise_hub.commerce_core import api as eco_api
+from applications.enterprise_hub.client_portal import api as cpl_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -744,4 +745,20 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{eco}/payments", eco_api.eco_payment_handler)
     app.router.add_get(f"{eco}/advisor", eco_api.eco_advisor_handler)
     app.router.add_post(f"{eco}/advisor", eco_api.eco_advisor_handler)
+
+    # Sprint 22.8 — Client Portal (additive; prior routes unchanged)
+    cpl = DEFAULT_CONFIG.client_portal_api_prefix
+    app.router.add_get(f"{cpl}/health", cpl_api.cpl_health_handler)
+    app.router.add_post(f"{cpl}/bootstrap", cpl_api.cpl_bootstrap_handler)
+    app.router.add_post(f"{cpl}/account", cpl_api.cpl_account_handler)
+    app.router.add_post(f"{cpl}/book", cpl_api.cpl_book_handler)
+    app.router.add_get(f"{cpl}/calendar", cpl_api.cpl_calendar_handler)
+    app.router.add_post(f"{cpl}/calendar", cpl_api.cpl_calendar_handler)
+    app.router.add_get(f"{cpl}/loyalty", cpl_api.cpl_loyalty_handler)
+    app.router.add_post(f"{cpl}/loyalty", cpl_api.cpl_loyalty_handler)
+    app.router.add_get(f"{cpl}/certificates", cpl_api.cpl_certificates_handler)
+    app.router.add_get(f"{cpl}/memberships", cpl_api.cpl_memberships_handler)
+    app.router.add_post(f"{cpl}/assistant", cpl_api.cpl_assistant_handler)
+    app.router.add_get(f"{cpl}/notifications", cpl_api.cpl_notifications_handler)
+    app.router.add_post(f"{cpl}/security", cpl_api.cpl_security_handler)
 

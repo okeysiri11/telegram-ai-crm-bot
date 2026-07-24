@@ -57,8 +57,8 @@ def reset_store():
 
 def test_version_edt_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.8.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.7.0"
+    assert health["application_version"] == "6.9.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.8.0"
     assert health["digital_twin_ready"] is True
     assert health["twin_registry_ready"] is True
     assert health["realtime_sync_ready"] is True
@@ -86,7 +86,7 @@ def test_bootstrap_snapshots_analytics():
     suite = enterprise_hub.digital_twin
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.8.0"
+    assert boot["version"] == "6.9.0"
     assert boot["consistency_ok"] is True
     assert boot["compare_delta"] >= 1
     assert boot["prediction_context_id"]
@@ -97,7 +97,7 @@ def test_bootstrap_snapshots_analytics():
 async def test_api_edt(client):
     health = await client.get(f"{EDT}/health")
     body = await health.json()
-    assert body["application_version"] == "6.8.0"
+    assert body["application_version"] == "6.9.0"
     assert body["digital_twin_ready"] is True
 
     boot = await client.post(f"{EDT}/bootstrap", json={})
@@ -113,7 +113,7 @@ async def test_api_edt(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN, AOP, ATS, EKP, AIOS, EVP, SDP, EDF):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.8.0"
+        assert (await resp.json())["application_version"] == "6.9.0"
 
     assert boot_body["org_id"]
 
@@ -152,5 +152,5 @@ def test_docs_and_regression_20_8():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.8.0" in manifest
-    assert "22.7" in manifest
+    assert "6.9.0" in manifest
+    assert "22.8" in manifest

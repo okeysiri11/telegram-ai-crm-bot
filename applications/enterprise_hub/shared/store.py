@@ -598,6 +598,16 @@ class EnterpriseHubStore:
         self.eco_payments: EntityStore = EntityStore()
         self.eco_refunds: EntityStore = EntityStore()
         self.eco_advisor: EntityStore = EntityStore()
+        # Sprint 22.8 — Client Portal
+        self.cpl_bootstraps: EntityStore = EntityStore()
+        self.cpl_accounts: EntityStore = EntityStore()
+        self.cpl_bookings: EntityStore = EntityStore()
+        self.cpl_calendars: EntityStore = EntityStore()
+        self.cpl_loyalty: EntityStore = EntityStore()
+        self.cpl_assistant: EntityStore = EntityStore()
+        self.cpl_notifications: EntityStore = EntityStore()
+        self.cpl_security: EntityStore = EntityStore()
+        self.cpl_mobile: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

@@ -16,5 +16,6 @@ Enterprise shared libraries for Stabilization Phase / Enterprise Core v6.0 LTS.
 - AI Marketing OS: [`../platform_ai_marketing_os/`](../platform_ai_marketing_os/)
 - Communications Hub: [`../platform_communications_hub/`](../platform_communications_hub/)
 - Commerce Core: [`../platform_enterprise_commerce/`](../platform_enterprise_commerce/)
+- Client Portal: [`../platform_client_portal/`](../platform_client_portal/)
 
 Import paths avoid Python stdlib/`platform` collisions.

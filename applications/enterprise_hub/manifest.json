@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.8.0",
-  "release_status": "Enterprise Commerce Core",
+  "application_version": "6.9.0",
+  "release_status": "Client Portal & Mobile Experience",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.7.0",
+  "enterprise_foundation": "Enterprise Platform v6.8.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "22.7",
+  "sprint": "22.8",
   "phase": "industry_beauty",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -140,7 +140,11 @@
     "commerce_core": "1.0",
     "pos": "1.0",
     "loyalty_commerce": "1.0",
-    "payment_gateway": "1.0"
+    "payment_gateway": "1.0",
+    "client_portal": "1.0",
+    "online_booking": "1.0",
+    "mobile_experience": "1.0",
+    "portal_security": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -165,5 +169,6 @@
   "beauty_client_journey": "1.0",
   "ai_marketing_os": "1.0",
   "communications_hub": "1.0",
-  "commerce_core": "1.0"
+  "commerce_core": "1.0",
+  "client_portal": "1.0"
 }
