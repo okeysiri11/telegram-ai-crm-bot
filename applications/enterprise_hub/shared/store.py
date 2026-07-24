@@ -629,6 +629,17 @@ class EnterpriseHubStore:
         self.eoc_releases: EntityStore = EntityStore()
         self.eoc_incidents: EntityStore = EntityStore()
         self.eoc_approvals: EntityStore = EntityStore()
+        # Sprint 23.1 — Pilot Readiness / UX Polish
+        self.epr_bootstraps: EntityStore = EntityStore()
+        self.epr_ux_audits: EntityStore = EntityStore()
+        self.epr_workflows: EntityStore = EntityStore()
+        self.epr_empty_states: EntityStore = EntityStore()
+        self.epr_first_launch: EntityStore = EntityStore()
+        self.epr_learning: EntityStore = EntityStore()
+        self.epr_performance: EntityStore = EntityStore()
+        self.epr_accessibility: EntityStore = EntityStore()
+        self.epr_checklists: EntityStore = EntityStore()
+        self.epr_feedback: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

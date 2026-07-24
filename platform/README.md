@@ -19,5 +19,6 @@ Enterprise shared libraries for Stabilization Phase / Enterprise Core v6.0 LTS.
 - Client Portal: [`../platform_client_portal/`](../platform_client_portal/)
 - Enterprise Onboarding: [`../platform_enterprise_onboarding/`](../platform_enterprise_onboarding/)
 - Enterprise Operations Center: [`../platform_enterprise_operations/`](../platform_enterprise_operations/)
+- Pilot Readiness: [`../platform_enterprise_pilot_readiness/`](../platform_enterprise_pilot_readiness/)
 
 Import paths avoid Python stdlib/`platform` collisions.

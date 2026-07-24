@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.11.0",
-  "release_status": "Enterprise Operations Center & Pilot Release",
+  "application_version": "6.12.0",
+  "release_status": "Enterprise UX Polish & Pilot Readiness",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.10.0",
+  "enterprise_foundation": "Enterprise Platform v6.11.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "23.0",
+  "sprint": "23.1",
   "phase": "pilot_release",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -152,7 +152,11 @@
     "enterprise_operations": "1.0",
     "operations_dashboard": "1.0",
     "pilot_control": "1.0",
-    "owner_command": "1.0"
+    "owner_command": "1.0",
+    "pilot_readiness": "1.0",
+    "ux_polish": "1.0",
+    "empty_states": "1.0",
+    "pilot_checklist": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -181,5 +185,6 @@
   "client_portal": "1.0",
   "enterprise_onboarding": "1.0",
   "enterprise_operations": "1.0",
-  "release_stage": "pilot_release"
+  "release_stage": "pilot_release",
+  "pilot_readiness": "1.0"
 }

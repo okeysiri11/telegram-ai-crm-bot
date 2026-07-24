@@ -39,6 +39,7 @@ from applications.enterprise_hub.commerce_core import api as eco_api
 from applications.enterprise_hub.client_portal import api as cpl_api
 from applications.enterprise_hub.onboarding import api as eon_api
 from applications.enterprise_hub.operations_center import api as eoc_api
+from applications.enterprise_hub.pilot_readiness import api as epr_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -793,4 +794,19 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{eoc}/release", eoc_api.eoc_release_handler)
     app.router.add_post(f"{eoc}/incident", eoc_api.eoc_incident_handler)
     app.router.add_post(f"{eoc}/owner", eoc_api.eoc_owner_handler)
+
+    # Sprint 23.1 — Pilot Readiness / UX Polish (additive; prior routes unchanged)
+    epr = DEFAULT_CONFIG.pilot_readiness_api_prefix
+    app.router.add_get(f"{epr}/health", epr_api.epr_health_handler)
+    app.router.add_post(f"{epr}/bootstrap", epr_api.epr_bootstrap_handler)
+    app.router.add_post(f"{epr}/ux-audit", epr_api.epr_ux_handler)
+    app.router.add_post(f"{epr}/workflows", epr_api.epr_workflow_handler)
+    app.router.add_post(f"{epr}/empty-state", epr_api.epr_empty_handler)
+    app.router.add_post(f"{epr}/first-launch", epr_api.epr_first_launch_handler)
+    app.router.add_post(f"{epr}/learning", epr_api.epr_learning_handler)
+    app.router.add_post(f"{epr}/performance", epr_api.epr_performance_handler)
+    app.router.add_post(f"{epr}/accessibility", epr_api.epr_accessibility_handler)
+    app.router.add_get(f"{epr}/checklist", epr_api.epr_checklist_handler)
+    app.router.add_post(f"{epr}/checklist", epr_api.epr_checklist_handler)
+    app.router.add_post(f"{epr}/feedback", epr_api.epr_feedback_handler)
 
