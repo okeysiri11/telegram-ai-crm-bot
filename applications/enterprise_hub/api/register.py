@@ -19,6 +19,7 @@ from applications.enterprise_hub.data_fabric import api as edf_api
 from applications.enterprise_hub.digital_twin import api as edt_api
 from applications.enterprise_hub.simulation_engine import api as esi_api
 from applications.enterprise_hub.process_mining import api as epm_api
+from applications.enterprise_hub.business_capabilities import api as ebc_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -482,3 +483,24 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{epm}/dashboard", epm_api.epm_dashboard_handler)
     app.router.add_get(f"{epm}/analytics", epm_api.epm_analytics_handler)
     app.router.add_post(f"{epm}/analytics", epm_api.epm_analytics_handler)
+
+    # Sprint 20.11 — Business Capabilities (additive; prior routes unchanged)
+    ebc = DEFAULT_CONFIG.business_capabilities_api_prefix
+    app.router.add_get(f"{ebc}/health", ebc_api.ebc_health_handler)
+    app.router.add_post(f"{ebc}/bootstrap", ebc_api.ebc_bootstrap_handler)
+    app.router.add_get(f"{ebc}/capabilities", ebc_api.ebc_capabilities_handler)
+    app.router.add_post(f"{ebc}/capabilities", ebc_api.ebc_capabilities_handler)
+    app.router.add_get(f"{ebc}/hierarchy", ebc_api.ebc_hierarchy_handler)
+    app.router.add_post(f"{ebc}/hierarchy", ebc_api.ebc_hierarchy_handler)
+    app.router.add_get(f"{ebc}/dependencies", ebc_api.ebc_dependencies_handler)
+    app.router.add_post(f"{ebc}/dependencies", ebc_api.ebc_dependencies_handler)
+    app.router.add_get(f"{ebc}/maturity", ebc_api.ebc_maturity_handler)
+    app.router.add_post(f"{ebc}/maturity", ebc_api.ebc_maturity_handler)
+    app.router.add_post(f"{ebc}/impact", ebc_api.ebc_impact_handler)
+    app.router.add_post(f"{ebc}/advise", ebc_api.ebc_advise_handler)
+    app.router.add_get(f"{ebc}/roadmap", ebc_api.ebc_roadmap_handler)
+    app.router.add_post(f"{ebc}/roadmap", ebc_api.ebc_roadmap_handler)
+    app.router.add_get(f"{ebc}/dashboard", ebc_api.ebc_dashboard_handler)
+    app.router.add_post(f"{ebc}/dashboard", ebc_api.ebc_dashboard_handler)
+    app.router.add_get(f"{ebc}/analytics", ebc_api.ebc_analytics_handler)
+    app.router.add_post(f"{ebc}/analytics", ebc_api.ebc_analytics_handler)

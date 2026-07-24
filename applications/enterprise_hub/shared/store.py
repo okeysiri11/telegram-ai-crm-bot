@@ -417,6 +417,20 @@ class EnterpriseHubStore:
         self.epm_analytics: EntityStore = EntityStore()
         self.epm_visualizations: EntityStore = EntityStore()
         self.epm_dashboards: EntityStore = EntityStore()
+        # Sprint 20.11 — Business Capabilities
+        self.ebc_capabilities: EntityStore = EntityStore()
+        self.ebc_catalogs: EntityStore = EntityStore()
+        self.ebc_maps: EntityStore = EntityStore()
+        self.ebc_dependencies: EntityStore = EntityStore()
+        self.ebc_dependency_graphs: EntityStore = EntityStore()
+        self.ebc_alignments: EntityStore = EntityStore()
+        self.ebc_maturity: EntityStore = EntityStore()
+        self.ebc_impacts: EntityStore = EntityStore()
+        self.ebc_advice: EntityStore = EntityStore()
+        self.ebc_analytics: EntityStore = EntityStore()
+        self.ebc_visualizations: EntityStore = EntityStore()
+        self.ebc_roadmaps: EntityStore = EntityStore()
+        self.ebc_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
