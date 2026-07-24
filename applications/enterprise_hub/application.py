@@ -28,6 +28,7 @@ from applications.enterprise_hub.registry import EnterpriseRegistry
 from applications.enterprise_hub.security.facade import SecuritySuite
 from applications.enterprise_hub.services import HubDashboard, HubKnowledge
 from applications.enterprise_hub.shared.store import EnterpriseHubStore, enterprise_hub_store
+from applications.enterprise_hub.simulation_engine.facade import SimulationEngineSuite
 from applications.enterprise_hub.tenancy.facade import TenancySuite
 from applications.enterprise_hub.workflow.facade import WorkflowSuite
 
@@ -56,6 +57,7 @@ class EnterpriseHubApplication:
         developer_platform_svc: DeveloperPlatformSuite | None = None,
         data_fabric_svc: DataFabricSuite | None = None,
         digital_twin_svc: DigitalTwinSuite | None = None,
+        simulation_engine_svc: SimulationEngineSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -84,6 +86,7 @@ class EnterpriseHubApplication:
         self.developer_platform = developer_platform_svc or DeveloperPlatformSuite(self.store)
         self.data_fabric = data_fabric_svc or DataFabricSuite(self.store)
         self.digital_twin = digital_twin_svc or DigitalTwinSuite(self.store)
+        self.simulation_engine = simulation_engine_svc or SimulationEngineSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -319,6 +322,10 @@ class EnterpriseHubApplication:
             "twin_registry_ready": True,
             "realtime_sync_ready": True,
             "twin_analytics_ready": True,
+            "simulation_engine_ready": True,
+            "decision_intelligence_ready": True,
+            "forecasting_ready": True,
+            "risk_engine_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -343,6 +350,7 @@ class EnterpriseHubApplication:
                 "developer_platform": self.config.developer_platform,
                 "data_fabric": self.config.data_fabric,
                 "digital_twin": self.config.digital_twin,
+                "simulation_engine": self.config.simulation_engine,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -371,6 +379,7 @@ class EnterpriseHubApplication:
             "developer_platform": self.developer_platform.status(),
             "data_fabric": self.data_fabric.status(),
             "digital_twin": self.digital_twin.status(),
+            "simulation_engine": self.simulation_engine.status(),
         }
 
 

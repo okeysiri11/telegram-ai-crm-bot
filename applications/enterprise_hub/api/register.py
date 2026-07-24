@@ -17,6 +17,7 @@ from applications.enterprise_hub.event_platform import api as evp_api
 from applications.enterprise_hub.developer_platform import api as sdp_api
 from applications.enterprise_hub.data_fabric import api as edf_api
 from applications.enterprise_hub.digital_twin import api as edt_api
+from applications.enterprise_hub.simulation_engine import api as esi_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -445,3 +446,20 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{edt}/analytics", edt_api.edt_analytics_handler)
     app.router.add_post(f"{edt}/analytics", edt_api.edt_analytics_handler)
     app.router.add_post(f"{edt}/prediction", edt_api.edt_prediction_handler)
+
+    # Sprint 20.9 — Simulation & Decision Intelligence (additive; prior routes unchanged)
+    esi = DEFAULT_CONFIG.simulation_engine_api_prefix
+    app.router.add_get(f"{esi}/health", esi_api.esi_health_handler)
+    app.router.add_post(f"{esi}/bootstrap", esi_api.esi_bootstrap_handler)
+    app.router.add_get(f"{esi}/scenarios", esi_api.esi_scenarios_handler)
+    app.router.add_post(f"{esi}/scenarios", esi_api.esi_scenarios_handler)
+    app.router.add_post(f"{esi}/decisions", esi_api.esi_decisions_handler)
+    app.router.add_post(f"{esi}/forecasts", esi_api.esi_forecasts_handler)
+    app.router.add_post(f"{esi}/optimize", esi_api.esi_optimize_handler)
+    app.router.add_post(f"{esi}/risk", esi_api.esi_risk_handler)
+    app.router.add_post(f"{esi}/monte-carlo", esi_api.esi_monte_carlo_handler)
+    app.router.add_post(f"{esi}/sensitivity", esi_api.esi_sensitivity_handler)
+    app.router.add_get(f"{esi}/dashboard", esi_api.esi_dashboard_handler)
+    app.router.add_post(f"{esi}/dashboard", esi_api.esi_dashboard_handler)
+    app.router.add_get(f"{esi}/analytics", esi_api.esi_analytics_handler)
+    app.router.add_post(f"{esi}/analytics", esi_api.esi_analytics_handler)

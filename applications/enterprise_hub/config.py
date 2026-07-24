@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 20.8 Enterprise Digital Twin Platform."""
+"""Enterprise Hub — Sprint 20.9 Enterprise Simulation & Decision Intelligence."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.4.8-enterprise"
-    release_status: str = "Enterprise Digital Twin Platform"
+    application_version: str = "5.4.9-enterprise"
+    release_status: str = "Enterprise Simulation & Decision Intelligence"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.4.7-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.4.8-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -34,6 +34,7 @@ class EnterpriseHubConfig:
     developer_platform_api_prefix: str = "/api/enterprise-sdp/v1"
     data_fabric_api_prefix: str = "/api/enterprise-edf/v1"
     digital_twin_api_prefix: str = "/api/enterprise-edt/v1"
+    simulation_engine_api_prefix: str = "/api/enterprise-esi/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -58,6 +59,7 @@ class EnterpriseHubConfig:
     developer_platform: str = "1.0"
     data_fabric: str = "1.0"
     digital_twin: str = "1.0"
+    simulation_engine: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -485,6 +487,19 @@ class EnterpriseHubConfig:
             "production",
             "asset",
             "ai_agent",
+            "custom",
+        ]
+    )
+    esi_scenario_domains: list[str] = field(
+        default_factory=lambda: [
+            "finance",
+            "logistics",
+            "manufacturing",
+            "warehouse",
+            "hr",
+            "procurement",
+            "construction",
+            "maritime",
             "custom",
         ]
     )

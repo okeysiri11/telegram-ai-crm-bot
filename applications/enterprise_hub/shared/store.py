@@ -384,6 +384,19 @@ class EnterpriseHubStore:
         self.edt_conflicts: EntityStore = EntityStore()
         self.edt_consistency: EntityStore = EntityStore()
         self.edt_analytics: EntityStore = EntityStore()
+        # Sprint 20.9 — Simulation & Decision Intelligence
+        self.esi_scenarios: EntityStore = EntityStore()
+        self.esi_scenario_runs: EntityStore = EntityStore()
+        self.esi_decisions: EntityStore = EntityStore()
+        self.esi_forecasts: EntityStore = EntityStore()
+        self.esi_optimizations: EntityStore = EntityStore()
+        self.esi_opt_batches: EntityStore = EntityStore()
+        self.esi_risks: EntityStore = EntityStore()
+        self.esi_monte_carlo: EntityStore = EntityStore()
+        self.esi_sensitivity: EntityStore = EntityStore()
+        self.esi_schedules: EntityStore = EntityStore()
+        self.esi_history: EntityStore = EntityStore()
+        self.esi_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
