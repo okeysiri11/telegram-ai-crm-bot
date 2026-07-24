@@ -35,6 +35,7 @@ from applications.enterprise_hub.beauty_workspace import api as bws_api
 from applications.enterprise_hub.beauty_client_journey import api as bcj_api
 from applications.enterprise_hub.ai_marketing_os import api as amo_api
 from applications.enterprise_hub.communications_hub import api as ech_api
+from applications.enterprise_hub.commerce_core import api as eco_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -730,4 +731,17 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ech}/assistant", ech_api.ech_assistant_handler)
     app.router.add_post(f"{ech}/delivery", ech_api.ech_delivery_handler)
     app.router.add_post(f"{ech}/analytics", ech_api.ech_analytics_handler)
+
+    # Sprint 22.7 — Commerce Core (additive; prior routes unchanged)
+    eco = DEFAULT_CONFIG.commerce_core_api_prefix
+    app.router.add_get(f"{eco}/health", eco_api.eco_health_handler)
+    app.router.add_post(f"{eco}/bootstrap", eco_api.eco_bootstrap_handler)
+    app.router.add_post(f"{eco}/pos", eco_api.eco_pos_handler)
+    app.router.add_post(f"{eco}/sales", eco_api.eco_sale_handler)
+    app.router.add_post(f"{eco}/certificates", eco_api.eco_certificate_handler)
+    app.router.add_post(f"{eco}/memberships", eco_api.eco_membership_handler)
+    app.router.add_post(f"{eco}/loyalty", eco_api.eco_loyalty_handler)
+    app.router.add_post(f"{eco}/payments", eco_api.eco_payment_handler)
+    app.router.add_get(f"{eco}/advisor", eco_api.eco_advisor_handler)
+    app.router.add_post(f"{eco}/advisor", eco_api.eco_advisor_handler)
 

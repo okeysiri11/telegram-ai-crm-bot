@@ -29,6 +29,7 @@ from applications.enterprise_hub.beauty_workspace.facade import BeautyWorkspaceS
 from applications.enterprise_hub.beauty_client_journey.facade import BeautyClientJourneySuite
 from applications.enterprise_hub.ai_marketing_os.facade import AIMarketingOSSuite
 from applications.enterprise_hub.communications_hub.facade import CommunicationsHubSuite
+from applications.enterprise_hub.commerce_core.facade import CommerceCoreSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -92,6 +93,7 @@ class EnterpriseHubApplication:
         beauty_client_journey_svc: BeautyClientJourneySuite | None = None,
         ai_marketing_os_svc: AIMarketingOSSuite | None = None,
         communications_hub_svc: CommunicationsHubSuite | None = None,
+        commerce_core_svc: CommerceCoreSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -138,6 +140,7 @@ class EnterpriseHubApplication:
         self.beauty_client_journey = beauty_client_journey_svc or BeautyClientJourneySuite(self.store)
         self.ai_marketing_os = ai_marketing_os_svc or AIMarketingOSSuite(self.store)
         self.communications_hub = communications_hub_svc or CommunicationsHubSuite(self.store)
+        self.commerce_core = commerce_core_svc or CommerceCoreSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -446,6 +449,10 @@ class EnterpriseHubApplication:
             "unified_messaging_ready": True,
             "comms_automation_ready": True,
             "comms_analytics_ready": True,
+            "commerce_core_ready": True,
+            "pos_ready": True,
+            "loyalty_commerce_ready": True,
+            "payment_gateway_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -488,6 +495,7 @@ class EnterpriseHubApplication:
                 "beauty_client_journey": self.config.beauty_client_journey,
                 "ai_marketing_os": self.config.ai_marketing_os,
                 "communications_hub": self.config.communications_hub,
+                "commerce_core": self.config.commerce_core,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -534,6 +542,7 @@ class EnterpriseHubApplication:
             "beauty_client_journey": self.beauty_client_journey.status(),
             "ai_marketing_os": self.ai_marketing_os.status(),
             "communications_hub": self.communications_hub.status(),
+            "commerce_core": self.commerce_core.status(),
         }
 
 

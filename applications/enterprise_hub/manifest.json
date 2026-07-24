@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.7.0",
-  "release_status": "Enterprise Communications Hub",
+  "application_version": "6.8.0",
+  "release_status": "Enterprise Commerce Core",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.6.0",
+  "enterprise_foundation": "Enterprise Platform v6.7.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "22.6",
+  "sprint": "22.7",
   "phase": "industry_beauty",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -136,7 +136,11 @@
     "communications_hub": "1.0",
     "unified_messaging": "1.0",
     "comms_automation": "1.0",
-    "comms_analytics": "1.0"
+    "comms_analytics": "1.0",
+    "commerce_core": "1.0",
+    "pos": "1.0",
+    "loyalty_commerce": "1.0",
+    "payment_gateway": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -160,5 +164,6 @@
   "beauty_workspace": "1.0",
   "beauty_client_journey": "1.0",
   "ai_marketing_os": "1.0",
-  "communications_hub": "1.0"
+  "communications_hub": "1.0",
+  "commerce_core": "1.0"
 }

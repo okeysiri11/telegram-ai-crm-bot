@@ -56,8 +56,8 @@ def reset_store():
 
 def test_version_edf_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.7.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.6.0"
+    assert health["application_version"] == "6.8.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.7.0"
     assert health["data_fabric_ready"] is True
     assert health["data_catalog_ready"] is True
     assert health["federation_ready"] is True
@@ -86,7 +86,7 @@ def test_bootstrap_cache_dashboard():
     suite = enterprise_hub.data_fabric
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.7.0"
+    assert boot["version"] == "6.8.0"
     assert boot["route_cache_hit"] is True
     assert boot["unified_from_cache"] is True
     assert boot["quality_passed"] is True
@@ -98,7 +98,7 @@ def test_bootstrap_cache_dashboard():
 async def test_api_edf(client):
     health = await client.get(f"{EDF}/health")
     body = await health.json()
-    assert body["application_version"] == "6.7.0"
+    assert body["application_version"] == "6.8.0"
     assert body["data_fabric_ready"] is True
 
     boot = await client.post(f"{EDF}/bootstrap", json={})
@@ -114,7 +114,7 @@ async def test_api_edf(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN, AOP, ATS, EKP, AIOS, EVP, SDP):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.7.0"
+        assert (await resp.json())["application_version"] == "6.8.0"
 
     assert boot_body["governance_id"]
 
@@ -154,5 +154,5 @@ def test_docs_and_regression_20_7():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.7.0" in manifest
-    assert "22.6" in manifest
+    assert "6.8.0" in manifest
+    assert "22.7" in manifest

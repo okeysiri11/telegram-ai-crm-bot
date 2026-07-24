@@ -587,6 +587,17 @@ class EnterpriseHubStore:
         self.ech_assistant: EntityStore = EntityStore()
         self.ech_deliveries: EntityStore = EntityStore()
         self.ech_analytics: EntityStore = EntityStore()
+        # Sprint 22.7 — Commerce Core
+        self.eco_bootstraps: EntityStore = EntityStore()
+        self.eco_sales: EntityStore = EntityStore()
+        self.eco_pos: EntityStore = EntityStore()
+        self.eco_certificates: EntityStore = EntityStore()
+        self.eco_memberships: EntityStore = EntityStore()
+        self.eco_loyalty: EntityStore = EntityStore()
+        self.eco_inventory: EntityStore = EntityStore()
+        self.eco_payments: EntityStore = EntityStore()
+        self.eco_refunds: EntityStore = EntityStore()
+        self.eco_advisor: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
