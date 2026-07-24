@@ -20,6 +20,7 @@ from applications.enterprise_hub.digital_twin import api as edt_api
 from applications.enterprise_hub.simulation_engine import api as esi_api
 from applications.enterprise_hub.process_mining import api as epm_api
 from applications.enterprise_hub.business_capabilities import api as ebc_api
+from applications.enterprise_hub.command_center import api as ecc_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -504,3 +505,26 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ebc}/dashboard", ebc_api.ebc_dashboard_handler)
     app.router.add_get(f"{ebc}/analytics", ebc_api.ebc_analytics_handler)
     app.router.add_post(f"{ebc}/analytics", ebc_api.ebc_analytics_handler)
+
+    # Sprint 20.12 — Command Center (additive; prior routes unchanged)
+    ecc = DEFAULT_CONFIG.command_center_api_prefix
+    app.router.add_get(f"{ecc}/health", ecc_api.ecc_health_handler)
+    app.router.add_post(f"{ecc}/bootstrap", ecc_api.ecc_bootstrap_handler)
+    app.router.add_get(f"{ecc}/dashboards", ecc_api.ecc_dashboards_handler)
+    app.router.add_post(f"{ecc}/dashboards", ecc_api.ecc_dashboards_handler)
+    app.router.add_get(f"{ecc}/executive", ecc_api.ecc_executive_handler)
+    app.router.add_post(f"{ecc}/executive", ecc_api.ecc_executive_handler)
+    app.router.add_get(f"{ecc}/enterprise-health", ecc_api.ecc_enterprise_health_handler)
+    app.router.add_post(f"{ecc}/enterprise-health", ecc_api.ecc_enterprise_health_handler)
+    app.router.add_get(f"{ecc}/situation", ecc_api.ecc_situation_handler)
+    app.router.add_post(f"{ecc}/situation", ecc_api.ecc_situation_handler)
+    app.router.add_post(f"{ecc}/assistant", ecc_api.ecc_assistant_handler)
+    app.router.add_get(f"{ecc}/alerts", ecc_api.ecc_alerts_handler)
+    app.router.add_post(f"{ecc}/alerts", ecc_api.ecc_alerts_handler)
+    app.router.add_get(f"{ecc}/actions", ecc_api.ecc_actions_handler)
+    app.router.add_post(f"{ecc}/actions", ecc_api.ecc_actions_handler)
+    app.router.add_post(f"{ecc}/command", ecc_api.ecc_command_handler)
+    app.router.add_get(f"{ecc}/realtime", ecc_api.ecc_realtime_handler)
+    app.router.add_get(f"{ecc}/map", ecc_api.ecc_map_handler)
+    app.router.add_get(f"{ecc}/analytics", ecc_api.ecc_analytics_handler)
+    app.router.add_post(f"{ecc}/analytics", ecc_api.ecc_analytics_handler)

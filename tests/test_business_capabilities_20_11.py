@@ -60,8 +60,8 @@ def reset_store():
 
 def test_version_ebc_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "5.4.11-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.4.10-enterprise"
+    assert health["application_version"] == "5.4.12-enterprise"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.4.11-enterprise"
     assert health["business_capabilities_ready"] is True
     assert health["capability_registry_ready"] is True
     assert health["maturity_engine_ready"] is True
@@ -93,7 +93,7 @@ def test_bootstrap_dashboard():
     suite = enterprise_hub.business_capabilities
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "5.4.11-enterprise"
+    assert boot["version"] == "5.4.12-enterprise"
     assert boot["capabilities_total"] >= 20
     assert boot["dependencies_linked"] >= 5
     assert boot["dashboard_id"]
@@ -106,7 +106,7 @@ def test_bootstrap_dashboard():
 async def test_api_ebc(client):
     health = await client.get(f"{EBC}/health")
     body = await health.json()
-    assert body["application_version"] == "5.4.11-enterprise"
+    assert body["application_version"] == "5.4.12-enterprise"
     assert body["business_capabilities_ready"] is True
 
     boot = await client.post(f"{EBC}/bootstrap", json={})
@@ -122,7 +122,7 @@ async def test_api_ebc(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN, AOP, ATS, EKP, AIOS, EVP, SDP, EDF, EDT, ESI, EPM):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "5.4.11-enterprise"
+        assert (await resp.json())["application_version"] == "5.4.12-enterprise"
 
     assert boot_body["dashboard_id"]
 
@@ -160,5 +160,5 @@ def test_docs_and_regression_20_11():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "5.4.11-enterprise" in manifest
-    assert "20.11" in manifest
+    assert "5.4.12-enterprise" in manifest
+    assert "20.12" in manifest

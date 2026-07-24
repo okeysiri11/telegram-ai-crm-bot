@@ -431,6 +431,22 @@ class EnterpriseHubStore:
         self.ebc_visualizations: EntityStore = EntityStore()
         self.ebc_roadmaps: EntityStore = EntityStore()
         self.ebc_dashboards: EntityStore = EntityStore()
+        # Sprint 20.12 — Command Center
+        self.ecc_widgets: EntityStore = EntityStore()
+        self.ecc_workspaces: EntityStore = EntityStore()
+        self.ecc_navigation: EntityStore = EntityStore()
+        self.ecc_dashboards: EntityStore = EntityStore()
+        self.ecc_executive: EntityStore = EntityStore()
+        self.ecc_health: EntityStore = EntityStore()
+        self.ecc_situation: EntityStore = EntityStore()
+        self.ecc_assistant: EntityStore = EntityStore()
+        self.ecc_alerts: EntityStore = EntityStore()
+        self.ecc_notifications: EntityStore = EntityStore()
+        self.ecc_actions: EntityStore = EntityStore()
+        self.ecc_commands: EntityStore = EntityStore()
+        self.ecc_realtime: EntityStore = EntityStore()
+        self.ecc_maps: EntityStore = EntityStore()
+        self.ecc_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

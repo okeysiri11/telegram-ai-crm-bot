@@ -9,6 +9,7 @@ from applications.enterprise_hub.ai_orchestrator.facade import AIOrchestrationSu
 from applications.enterprise_hub.ai_os.facade import AutonomousAIOSSuite
 from applications.enterprise_hub.ai_tools.facade import AIToolsSuite
 from applications.enterprise_hub.business_capabilities.facade import BusinessCapabilitySuite
+from applications.enterprise_hub.command_center.facade import CommandCenterSuite
 from applications.enterprise_hub.communications.facade import CommunicationsSuite
 from applications.enterprise_hub.config import DEFAULT_CONFIG, EnterpriseHubConfig
 from applications.enterprise_hub.configuration import EnterpriseConfiguration
@@ -62,6 +63,7 @@ class EnterpriseHubApplication:
         simulation_engine_svc: SimulationEngineSuite | None = None,
         process_mining_svc: ProcessMiningSuite | None = None,
         business_capabilities_svc: BusinessCapabilitySuite | None = None,
+        command_center_svc: CommandCenterSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -93,6 +95,7 @@ class EnterpriseHubApplication:
         self.simulation_engine = simulation_engine_svc or SimulationEngineSuite(self.store)
         self.process_mining = process_mining_svc or ProcessMiningSuite(self.store)
         self.business_capabilities = business_capabilities_svc or BusinessCapabilitySuite(self.store)
+        self.command_center = command_center_svc or CommandCenterSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -341,6 +344,10 @@ class EnterpriseHubApplication:
             "capability_registry_ready": True,
             "maturity_engine_ready": True,
             "capability_roadmap_ready": True,
+            "command_center_ready": True,
+            "executive_dashboard_ready": True,
+            "health_monitor_ready": True,
+            "action_center_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -368,6 +375,7 @@ class EnterpriseHubApplication:
                 "simulation_engine": self.config.simulation_engine,
                 "process_mining": self.config.process_mining,
                 "business_capabilities": self.config.business_capabilities,
+                "command_center": self.config.command_center,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -399,6 +407,7 @@ class EnterpriseHubApplication:
             "simulation_engine": self.simulation_engine.status(),
             "process_mining": self.process_mining.status(),
             "business_capabilities": self.business_capabilities.status(),
+            "command_center": self.command_center.status(),
         }
 
 
