@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 21.7 Performance Optimization & Load Testing (Phase 2 Stabilization RC7)."""
+"""Enterprise Hub — Sprint 21.8 Enterprise Release Candidate & Production Readiness (Enterprise Core v6.0 LTS)."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "6.0.0-rc7"
-    release_status: str = "Enterprise Performance Platform"
+    application_version: str = "6.0.0"
+    release_status: str = "Enterprise Core v6.0 LTS"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v6.0.0-rc6"
+    enterprise_foundation: str = "Enterprise Platform v6.0.0-rc7"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -44,6 +44,7 @@ class EnterpriseHubConfig:
     quality_assurance_api_prefix: str = "/api/enterprise-eqa/v1"
     documentation_platform_api_prefix: str = "/api/enterprise-edo/v1"
     performance_platform_api_prefix: str = "/api/enterprise-epf/v1"
+    release_platform_api_prefix: str = "/api/enterprise-erl/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -78,6 +79,7 @@ class EnterpriseHubConfig:
     quality_assurance: str = "1.0"
     documentation_platform: str = "1.0"
     performance_platform: str = "1.0"
+    release_platform: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

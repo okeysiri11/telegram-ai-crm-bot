@@ -509,6 +509,15 @@ class EnterpriseHubStore:
         self.epf_monitoring: EntityStore = EntityStore()
         self.epf_dashboards: EntityStore = EntityStore()
         self.epf_certifications: EntityStore = EntityStore()
+        # Sprint 21.8 — Release Platform
+        self.erl_bootstraps: EntityStore = EntityStore()
+        self.erl_certifications: EntityStore = EntityStore()
+        self.erl_migrations: EntityStore = EntityStore()
+        self.erl_disaster_recovery: EntityStore = EntityStore()
+        self.erl_release_notes: EntityStore = EntityStore()
+        self.erl_validations: EntityStore = EntityStore()
+        self.erl_approvals: EntityStore = EntityStore()
+        self.erl_manifests: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

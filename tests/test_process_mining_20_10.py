@@ -59,8 +59,8 @@ def reset_store():
 
 def test_version_epm_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.0.0-rc7"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc6"
+    assert health["application_version"] == "6.0.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc7"
     assert health["process_mining_ready"] is True
     assert health["process_discovery_ready"] is True
     assert health["conformance_ready"] is True
@@ -89,7 +89,7 @@ def test_bootstrap_dashboard():
     suite = enterprise_hub.process_mining
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.0.0-rc7"
+    assert boot["version"] == "6.0.0"
     assert boot["events_collected"] >= 20
     assert boot["variant_count"] >= 2
     assert boot["top_cause"]
@@ -102,7 +102,7 @@ def test_bootstrap_dashboard():
 async def test_api_epm(client):
     health = await client.get(f"{EPM}/health")
     body = await health.json()
-    assert body["application_version"] == "6.0.0-rc7"
+    assert body["application_version"] == "6.0.0"
     assert body["process_mining_ready"] is True
 
     boot = await client.post(f"{EPM}/bootstrap", json={})
@@ -118,7 +118,7 @@ async def test_api_epm(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN, AOP, ATS, EKP, AIOS, EVP, SDP, EDF, EDT, ESI):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.0.0-rc7"
+        assert (await resp.json())["application_version"] == "6.0.0"
 
     assert boot_body["process_id"]
 
@@ -156,5 +156,5 @@ def test_docs_and_regression_20_10():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.0.0-rc7" in manifest
-    assert "21.7" in manifest
+    assert "6.0.0" in manifest
+    assert "21.8" in manifest

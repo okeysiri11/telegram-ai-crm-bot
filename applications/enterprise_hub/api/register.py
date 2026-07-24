@@ -27,6 +27,7 @@ from applications.enterprise_hub.security_hardening import api as esh_api
 from applications.enterprise_hub.quality_assurance import api as eqa_api
 from applications.enterprise_hub.documentation_platform import api as edo_api
 from applications.enterprise_hub.performance_platform import api as epf_api
+from applications.enterprise_hub.release_platform import api as erl_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -627,4 +628,16 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{epf}/cache", epf_api.epf_cache_handler)
     app.router.add_get(f"{epf}/dashboard", epf_api.epf_dashboard_handler)
     app.router.add_post(f"{epf}/certify", epf_api.epf_certify_handler)
+
+    # Sprint 21.8 — Release Platform (additive; prior routes unchanged)
+    erl = DEFAULT_CONFIG.release_platform_api_prefix
+    app.router.add_get(f"{erl}/health", erl_api.erl_health_handler)
+    app.router.add_post(f"{erl}/bootstrap", erl_api.erl_bootstrap_handler)
+    app.router.add_post(f"{erl}/certify", erl_api.erl_certify_handler)
+    app.router.add_post(f"{erl}/validate", erl_api.erl_validate_handler)
+    app.router.add_post(f"{erl}/migrate", erl_api.erl_migrate_handler)
+    app.router.add_post(f"{erl}/disaster-recovery", erl_api.erl_dr_handler)
+    app.router.add_get(f"{erl}/release-notes", erl_api.erl_notes_handler)
+    app.router.add_post(f"{erl}/approve", erl_api.erl_approve_handler)
+    app.router.add_get(f"{erl}/manifest", erl_api.erl_manifest_handler)
 

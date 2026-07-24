@@ -21,6 +21,7 @@ from applications.enterprise_hub.developer_platform.facade import DeveloperPlatf
 from applications.enterprise_hub.digital_twin.facade import DigitalTwinSuite
 from applications.enterprise_hub.documentation_platform.facade import DocumentationPlatformSuite
 from applications.enterprise_hub.performance_platform.facade import PerformancePlatformSuite
+from applications.enterprise_hub.release_platform.facade import ReleasePlatformSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -76,6 +77,7 @@ class EnterpriseHubApplication:
         quality_assurance_svc: QualityAssuranceSuite | None = None,
         documentation_platform_svc: DocumentationPlatformSuite | None = None,
         performance_platform_svc: PerformancePlatformSuite | None = None,
+        release_platform_svc: ReleasePlatformSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -114,6 +116,7 @@ class EnterpriseHubApplication:
         self.quality_assurance = quality_assurance_svc or QualityAssuranceSuite(self.store)
         self.documentation_platform = documentation_platform_svc or DocumentationPlatformSuite(self.store)
         self.performance_platform = performance_platform_svc or PerformancePlatformSuite(self.store)
+        self.release_platform = release_platform_svc or ReleasePlatformSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -390,6 +393,10 @@ class EnterpriseHubApplication:
             "load_testing_ready": True,
             "autoscaling_ready": True,
             "performance_certification_ready": True,
+            "release_certification_ready": True,
+            "production_ready": True,
+            "disaster_recovery_ready": True,
+            "lts_baseline_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -424,6 +431,7 @@ class EnterpriseHubApplication:
                 "quality_assurance": self.config.quality_assurance,
                 "documentation_platform": self.config.documentation_platform,
                 "performance_platform": self.config.performance_platform,
+                "release_platform": self.config.release_platform,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -462,6 +470,7 @@ class EnterpriseHubApplication:
             "quality_assurance": self.quality_assurance.status(),
             "documentation_platform": self.documentation_platform.status(),
             "performance_platform": self.performance_platform.status(),
+            "release_platform": self.release_platform.status(),
         }
 
 
