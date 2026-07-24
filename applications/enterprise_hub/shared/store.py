@@ -698,6 +698,15 @@ class EnterpriseHubStore:
         self.etw_timemachine: EntityStore = EntityStore()
         self.etw_impacts: EntityStore = EntityStore()
         self.etw_dashboards: EntityStore = EntityStore()
+        # Sprint 24.6 — Autonomous Optimization
+        self.eoe_bootstraps: EntityStore = EntityStore()
+        self.eoe_opportunities: EntityStore = EntityStore()
+        self.eoe_scans: EntityStore = EntityStore()
+        self.eoe_process: EntityStore = EntityStore()
+        self.eoe_council: EntityStore = EntityStore()
+        self.eoe_owner: EntityStore = EntityStore()
+        self.eoe_verification: EntityStore = EntityStore()
+        self.eoe_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

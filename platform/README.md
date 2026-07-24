@@ -28,3 +28,4 @@ Enterprise shared libraries for Stabilization Phase / Enterprise Core v6.0 LTS.
 - Enterprise Digital Twin 2.0: [`../platform_enterprise_digital_twin/`](../platform_enterprise_digital_twin/)
 
 Import paths avoid Python stdlib/`platform` collisions.
+- Autonomous Optimization: [`../platform_enterprise_autonomous_optimization/`](../platform_enterprise_autonomous_optimization/)

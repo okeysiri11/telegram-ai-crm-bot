@@ -46,6 +46,7 @@ from applications.enterprise_hub.enterprise_knowledge_graph import api as ekg_ap
 from applications.enterprise_hub.predictive_intelligence import api as pin_api
 from applications.enterprise_hub.simulation_lab import api as esl_api
 from applications.enterprise_hub.enterprise_digital_twin import api as etw_api
+from applications.enterprise_hub.autonomous_optimization import api as eoe_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -898,4 +899,15 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{etw}/impact", etw_api.etw_impact_handler)
     app.router.add_get(f"{etw}/dashboard", etw_api.etw_dashboard_handler)
     app.router.add_post(f"{etw}/dashboard", etw_api.etw_dashboard_handler)
+
+    # Sprint 24.6 — Autonomous Optimization (additive; EAO orchestrator routes unchanged)
+    eoe = DEFAULT_CONFIG.autonomous_optimization_api_prefix
+    app.router.add_get(f"{eoe}/health", eoe_api.eoe_health_handler)
+    app.router.add_post(f"{eoe}/bootstrap", eoe_api.eoe_bootstrap_handler)
+    app.router.add_post(f"{eoe}/scan", eoe_api.eoe_scan_handler)
+    app.router.add_post(f"{eoe}/propose", eoe_api.eoe_propose_handler)
+    app.router.add_get(f"{eoe}/opportunities", eoe_api.eoe_opportunities_handler)
+    app.router.add_post(f"{eoe}/owner", eoe_api.eoe_owner_handler)
+    app.router.add_post(f"{eoe}/verify", eoe_api.eoe_verify_handler)
+    app.router.add_get(f"{eoe}/dashboard", eoe_api.eoe_dashboard_handler)
 

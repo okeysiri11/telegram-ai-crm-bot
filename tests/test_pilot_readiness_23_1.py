@@ -1,4 +1,4 @@
-"""Tests — Enterprise UX Polish & Pilot Readiness (Sprint 24.5 / v7.5.0)."""
+"""Tests — Enterprise UX Polish & Pilot Readiness (Sprint 24.6 / v7.6.0)."""
 
 from __future__ import annotations
 
@@ -89,8 +89,8 @@ def reset_store():
 
 def test_version_epr_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "7.5.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v7.4.0"
+    assert health["application_version"] == "7.6.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v7.5.0"
     assert health["pilot_ux_ready"] is True
     assert health["workflow_optimized"] is True
     assert health["empty_states_ready"] is True
@@ -147,7 +147,7 @@ def test_bootstrap_epr():
     suite = enterprise_hub.pilot_readiness
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "7.5.0"
+    assert boot["version"] == "7.6.0"
     assert boot["pilot_ux_ready"] is True
     assert boot["core_flows_under_60s"] is True
     assert boot["ai_may_act"] is False
@@ -161,7 +161,7 @@ def test_bootstrap_epr():
 async def test_api_epr(client):
     health = await client.get(f"{EPR}/health")
     body = await health.json()
-    assert body["application_version"] == "7.5.0"
+    assert body["application_version"] == "7.6.0"
     assert body["pilot_ux_ready"] is True
 
     boot = await client.post(f"{EPR}/bootstrap", json={})
@@ -173,7 +173,7 @@ async def test_api_epr(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "7.5.0"
+        assert version == "7.6.0"
 
 
 def test_docs_and_regression_23_1():
@@ -208,5 +208,5 @@ def test_docs_and_regression_23_1():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "7.5.0"' in manifest
-    assert "24.5" in manifest
+    assert '"application_version": "7.6.0"' in manifest
+    assert "24.6" in manifest
