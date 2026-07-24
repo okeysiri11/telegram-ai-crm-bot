@@ -44,6 +44,7 @@ from applications.enterprise_hub.enterprise_ai_orchestrator import api as eao_ap
 from applications.enterprise_hub.workflow_intelligence import api as wfi_api
 from applications.enterprise_hub.enterprise_knowledge_graph import api as ekg_api
 from applications.enterprise_hub.predictive_intelligence import api as pin_api
+from applications.enterprise_hub.simulation_lab import api as esl_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -867,4 +868,14 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{pin}/opportunities", pin_api.pin_opportunity_handler)
     app.router.add_post(f"{pin}/learn", pin_api.pin_learn_handler)
     app.router.add_get(f"{pin}/dashboard", pin_api.pin_dashboard_handler)
+
+    # Sprint 24.4 — Simulation Lab (additive; legacy ESI simulation engine unchanged)
+    esl = DEFAULT_CONFIG.simulation_lab_api_prefix
+    app.router.add_get(f"{esl}/health", esl_api.esl_health_handler)
+    app.router.add_post(f"{esl}/bootstrap", esl_api.esl_bootstrap_handler)
+    app.router.add_post(f"{esl}/scenarios", esl_api.esl_scenario_handler)
+    app.router.add_post(f"{esl}/what-if", esl_api.esl_what_if_handler)
+    app.router.add_post(f"{esl}/simulate", esl_api.esl_simulate_handler)
+    app.router.add_post(f"{esl}/compare", esl_api.esl_compare_handler)
+    app.router.add_post(f"{esl}/owner", esl_api.esl_owner_handler)
 

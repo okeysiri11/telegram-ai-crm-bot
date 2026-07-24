@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 24.3 Enterprise Predictive Intelligence Engine."""
+"""Enterprise Hub — Sprint 24.4 Enterprise Simulation Lab & Scenario Engine."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "7.3.0"
-    release_status: str = "Enterprise Predictive Intelligence Engine"
+    application_version: str = "7.4.0"
+    release_status: str = "Enterprise Simulation Lab & Scenario Engine"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v7.2.0"
+    enterprise_foundation: str = "Enterprise Platform v7.3.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -61,6 +61,7 @@ class EnterpriseHubConfig:
     workflow_intelligence_api_prefix: str = "/api/enterprise-wfi/v1"
     enterprise_knowledge_graph_api_prefix: str = "/api/enterprise-ekg/v1"
     predictive_intelligence_api_prefix: str = "/api/enterprise-pin/v1"
+    simulation_lab_api_prefix: str = "/api/enterprise-esl/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -112,6 +113,7 @@ class EnterpriseHubConfig:
     workflow_intelligence: str = "1.0"
     enterprise_knowledge_graph: str = "1.0"
     predictive_intelligence: str = "1.0"
+    simulation_lab: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

@@ -1,4 +1,4 @@
-"""Tests — Enterprise Operations Center & Pilot Release (Sprint 24.3 / v7.3.0)."""
+"""Tests — Enterprise Operations Center & Pilot Release (Sprint 24.4 / v7.4.0)."""
 
 from __future__ import annotations
 
@@ -87,8 +87,8 @@ def reset_store():
 
 def test_version_eoc_pilot_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "7.3.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v7.2.0"
+    assert health["application_version"] == "7.4.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v7.3.0"
     assert health["operations_center_ready"] is True
     assert health["pilot_release_ready"] is True
     assert health["tenant_health_ready"] is True
@@ -109,7 +109,7 @@ def test_dashboard_health_feedback_owner():
         ],
         users=10,
         ai_agents=3,
-        releases=[{"version": "7.3.0"}],
+        releases=[{"version": "7.4.0"}],
     )
     assert dash["pilot"] == 1
     assert dash["onboarding"] == 1
@@ -156,8 +156,8 @@ def test_dashboard_health_feedback_owner():
     assert report["ai_may_act"] is False
     assert report["requires_owner_approval"] is True
 
-    rel = suite.record_release(version="7.3.0", changelog=["eoc"], test_results={"passed": True})
-    assert rel["version"] == "7.3.0"
+    rel = suite.record_release(version="7.4.0", changelog=["eoc"], test_results={"passed": True})
+    assert rel["version"] == "7.4.0"
 
     inc = suite.open_incident(title="API timeout", severity="high")
     resolved = suite.resolve_incident(incident_id=inc["incident_id"], investigation="lb", fix="restart")
@@ -174,7 +174,7 @@ def test_bootstrap_ops():
     suite = enterprise_hub.operations_center
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "7.3.0"
+    assert boot["version"] == "7.4.0"
     assert boot["operations_center_ready"] is True
     assert boot["pilot_release"] is True
     assert boot["pilot_release_ready"] is True
@@ -190,7 +190,7 @@ def test_bootstrap_ops():
 async def test_api_eoc(client):
     health = await client.get(f"{EOC}/health")
     body = await health.json()
-    assert body["application_version"] == "7.3.0"
+    assert body["application_version"] == "7.4.0"
     assert body["operations_center_ready"] is True
     assert body["release_stage"] == "pilot_release"
 
@@ -203,7 +203,7 @@ async def test_api_eoc(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "7.3.0"
+        assert version == "7.4.0"
 
 
 def test_docs_and_regression_23_0():
@@ -238,6 +238,6 @@ def test_docs_and_regression_23_0():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "7.3.0"' in manifest
-    assert "24.3" in manifest
+    assert '"application_version": "7.4.0"' in manifest
+    assert "24.4" in manifest
     assert "pilot_release" in manifest

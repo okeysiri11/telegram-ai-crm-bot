@@ -38,6 +38,7 @@ from applications.enterprise_hub.enterprise_ai_orchestrator.facade import Enterp
 from applications.enterprise_hub.workflow_intelligence.facade import WorkflowIntelligenceSuite
 from applications.enterprise_hub.enterprise_knowledge_graph.facade import EnterpriseKnowledgeGraphSuite
 from applications.enterprise_hub.predictive_intelligence.facade import PredictiveIntelligenceSuite
+from applications.enterprise_hub.simulation_lab.facade import SimulationLabSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -110,6 +111,7 @@ class EnterpriseHubApplication:
         workflow_intelligence_svc: WorkflowIntelligenceSuite | None = None,
         enterprise_knowledge_graph_svc: EnterpriseKnowledgeGraphSuite | None = None,
         predictive_intelligence_svc: PredictiveIntelligenceSuite | None = None,
+        simulation_lab_svc: SimulationLabSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -165,6 +167,7 @@ class EnterpriseHubApplication:
         self.workflow_intelligence = workflow_intelligence_svc or WorkflowIntelligenceSuite(self.store)
         self.enterprise_knowledge_graph = enterprise_knowledge_graph_svc or EnterpriseKnowledgeGraphSuite(self.store)
         self.predictive_intelligence = predictive_intelligence_svc or PredictiveIntelligenceSuite(self.store)
+        self.simulation_lab = simulation_lab_svc or SimulationLabSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -509,6 +512,10 @@ class EnterpriseHubApplication:
             "business_forecast_ready": True,
             "risk_intelligence_ready": True,
             "opportunity_detector_ready": True,
+            "simulation_lab_ready": True,
+            "what_if_ready": True,
+            "multi_scenario_ready": True,
+            "owner_simulation_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -560,6 +567,7 @@ class EnterpriseHubApplication:
                 "workflow_intelligence": self.config.workflow_intelligence,
                 "enterprise_knowledge_graph": self.config.enterprise_knowledge_graph,
                 "predictive_intelligence": self.config.predictive_intelligence,
+                "simulation_lab": self.config.simulation_lab,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -615,6 +623,7 @@ class EnterpriseHubApplication:
             "workflow_intelligence": self.workflow_intelligence.status(),
             "enterprise_knowledge_graph": self.enterprise_knowledge_graph.status(),
             "predictive_intelligence": self.predictive_intelligence.status(),
+            "simulation_lab": self.simulation_lab.status(),
         }
 
 

@@ -1,4 +1,4 @@
-"""Tests — Enterprise Predictive Intelligence Engine (Sprint 24.3 / v7.3.0)."""
+"""Tests — Enterprise Predictive Intelligence Engine (Sprint 24.4 / v7.4.0)."""
 
 from __future__ import annotations
 
@@ -92,8 +92,8 @@ def reset_store():
 
 def test_version_pin_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "7.3.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v7.2.0"
+    assert health["application_version"] == "7.4.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v7.3.0"
     assert health["predictive_intelligence_ready"] is True
     assert health["business_forecast_ready"] is True
     assert health["risk_intelligence_ready"] is True
@@ -160,7 +160,7 @@ def test_bootstrap_pin():
     suite = enterprise_hub.predictive_intelligence
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "7.3.0"
+    assert boot["version"] == "7.4.0"
     assert boot["predictive_intelligence_ready"] is True
     assert boot["ai_may_act"] is False
     assert boot["auto_actions"] is False
@@ -174,7 +174,7 @@ def test_bootstrap_pin():
 async def test_api_pin(client):
     health = await client.get(f"{PIN}/health")
     body = await health.json()
-    assert body["application_version"] == "7.3.0"
+    assert body["application_version"] == "7.4.0"
     assert body["predictive_intelligence_ready"] is True
 
     boot = await client.post(f"{PIN}/bootstrap", json={})
@@ -186,7 +186,7 @@ async def test_api_pin(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "7.3.0"
+        assert version == "7.4.0"
 
 
 def test_docs_and_regression_24_3():
@@ -221,5 +221,5 @@ def test_docs_and_regression_24_3():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "7.3.0"' in manifest
-    assert "24.3" in manifest
+    assert '"application_version": "7.4.0"' in manifest
+    assert "24.4" in manifest

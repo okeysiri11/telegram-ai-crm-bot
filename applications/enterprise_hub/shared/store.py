@@ -677,6 +677,17 @@ class EnterpriseHubStore:
         self.pin_scenarios: EntityStore = EntityStore()
         self.pin_learning: EntityStore = EntityStore()
         self.pin_dashboards: EntityStore = EntityStore()
+        # Sprint 24.4 — Simulation Lab
+        self.esl_bootstraps: EntityStore = EntityStore()
+        self.esl_scenarios: EntityStore = EntityStore()
+        self.esl_what_ifs: EntityStore = EntityStore()
+        self.esl_runs: EntityStore = EntityStore()
+        self.esl_impacts: EntityStore = EntityStore()
+        self.esl_multi: EntityStore = EntityStore()
+        self.esl_comparisons: EntityStore = EntityStore()
+        self.esl_debates: EntityStore = EntityStore()
+        self.esl_history: EntityStore = EntityStore()
+        self.esl_owner: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

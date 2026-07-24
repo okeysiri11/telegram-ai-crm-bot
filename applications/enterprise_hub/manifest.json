@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "7.3.0",
-  "release_status": "Enterprise Predictive Intelligence Engine",
+  "application_version": "7.4.0",
+  "release_status": "Enterprise Simulation Lab & Scenario Engine",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v7.2.0",
+  "enterprise_foundation": "Enterprise Platform v7.3.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "24.3",
+  "sprint": "24.4",
   "phase": "enterprise_ai_v7",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -171,7 +171,11 @@
     "semantic_search": "1.0",
     "predictive_intelligence": "1.0",
     "business_forecast": "1.0",
-    "risk_intelligence": "1.0"
+    "risk_intelligence": "1.0",
+    "simulation_lab": "1.0",
+    "what_if_analysis": "1.0",
+    "multi_scenario": "1.0",
+    "owner_simulation": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -206,5 +210,6 @@
   "platform_major": "7.0",
   "workflow_intelligence": "1.0",
   "enterprise_knowledge_graph": "1.0",
-  "predictive_intelligence": "1.0"
+  "predictive_intelligence": "1.0",
+  "simulation_lab": "1.0"
 }
