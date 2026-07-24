@@ -14,6 +14,7 @@ from applications.enterprise_hub.command_center.facade import CommandCenterSuite
 from applications.enterprise_hub.communications.facade import CommunicationsSuite
 from applications.enterprise_hub.config import DEFAULT_CONFIG, EnterpriseHubConfig
 from applications.enterprise_hub.configuration import EnterpriseConfiguration
+from applications.enterprise_hub.data_contracts.facade import DataContractsSuite
 from applications.enterprise_hub.data_fabric.facade import DataFabricSuite
 from applications.enterprise_hub.data_platform.facade import DataPlatformSuite
 from applications.enterprise_hub.developer_platform.facade import DeveloperPlatformSuite
@@ -66,6 +67,7 @@ class EnterpriseHubApplication:
         business_capabilities_svc: BusinessCapabilitySuite | None = None,
         command_center_svc: CommandCenterSuite | None = None,
         api_standardization_svc: ApiStandardizationSuite | None = None,
+        data_contracts_svc: DataContractsSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -99,6 +101,7 @@ class EnterpriseHubApplication:
         self.business_capabilities = business_capabilities_svc or BusinessCapabilitySuite(self.store)
         self.command_center = command_center_svc or CommandCenterSuite(self.store)
         self.api_standardization = api_standardization_svc or ApiStandardizationSuite(self.store)
+        self.data_contracts = data_contracts_svc or DataContractsSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -355,6 +358,10 @@ class EnterpriseHubApplication:
             "api_inventory_ready": True,
             "openapi_ready": True,
             "api_governance_ready": True,
+            "data_contracts_ready": True,
+            "dto_registry_ready": True,
+            "schema_registry_ready": True,
+            "contract_testing_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -384,6 +391,7 @@ class EnterpriseHubApplication:
                 "business_capabilities": self.config.business_capabilities,
                 "command_center": self.config.command_center,
                 "api_standardization": self.config.api_standardization,
+                "data_contracts": self.config.data_contracts,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -417,6 +425,7 @@ class EnterpriseHubApplication:
             "business_capabilities": self.business_capabilities.status(),
             "command_center": self.command_center.status(),
             "api_standardization": self.api_standardization.status(),
+            "data_contracts": self.data_contracts.status(),
         }
 
 

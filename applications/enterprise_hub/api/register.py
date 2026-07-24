@@ -22,6 +22,7 @@ from applications.enterprise_hub.process_mining import api as epm_api
 from applications.enterprise_hub.business_capabilities import api as ebc_api
 from applications.enterprise_hub.command_center import api as ecc_api
 from applications.enterprise_hub.api_standardization import api as eas_api
+from applications.enterprise_hub.data_contracts import api as edc_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -553,3 +554,17 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{eas}/gateway", eas_api.eas_gateway_handler)
     app.router.add_get(f"{eas}/governance", eas_api.eas_governance_handler)
     app.router.add_post(f"{eas}/governance", eas_api.eas_governance_handler)
+
+    # Sprint 21.3 — Data Contracts (additive; prior routes unchanged)
+    edc = DEFAULT_CONFIG.data_contracts_api_prefix
+    app.router.add_get(f"{edc}/health", edc_api.edc_health_handler)
+    app.router.add_post(f"{edc}/bootstrap", edc_api.edc_bootstrap_handler)
+    app.router.add_get(f"{edc}/dtos", edc_api.edc_dtos_handler)
+    app.router.add_post(f"{edc}/dtos", edc_api.edc_dtos_handler)
+    app.router.add_get(f"{edc}/schemas", edc_api.edc_schemas_handler)
+    app.router.add_post(f"{edc}/schemas", edc_api.edc_schemas_handler)
+    app.router.add_post(f"{edc}/validate", edc_api.edc_validate_handler)
+    app.router.add_post(f"{edc}/serialize", edc_api.edc_serialize_handler)
+    app.router.add_post(f"{edc}/map", edc_api.edc_map_handler)
+    app.router.add_post(f"{edc}/tests", edc_api.edc_tests_handler)
+    app.router.add_get(f"{edc}/docs", edc_api.edc_docs_handler)

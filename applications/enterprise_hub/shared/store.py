@@ -464,6 +464,15 @@ class EnterpriseHubStore:
         self.eas_gateway: EntityStore = EntityStore()
         self.eas_governance: EntityStore = EntityStore()
         self.eas_governance_runs: EntityStore = EntityStore()
+        # Sprint 21.3 — Data Contracts
+        self.edc_bootstraps: EntityStore = EntityStore()
+        self.edc_dto_registry: EntityStore = EntityStore()
+        self.edc_schemas: EntityStore = EntityStore()
+        self.edc_validations: EntityStore = EntityStore()
+        self.edc_serializations: EntityStore = EntityStore()
+        self.edc_mappings: EntityStore = EntityStore()
+        self.edc_tests: EntityStore = EntityStore()
+        self.edc_docs: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
