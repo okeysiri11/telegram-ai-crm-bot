@@ -25,5 +25,6 @@ Enterprise shared libraries for Stabilization Phase / Enterprise Core v6.0 LTS.
 - Enterprise Knowledge Graph: [`../platform_enterprise_knowledge_graph/`](../platform_enterprise_knowledge_graph/)
 - Predictive Intelligence: [`../platform_predictive_intelligence/`](../platform_predictive_intelligence/)
 - Simulation Lab: [`../platform_enterprise_simulation_lab/`](../platform_enterprise_simulation_lab/)
+- Enterprise Digital Twin 2.0: [`../platform_enterprise_digital_twin/`](../platform_enterprise_digital_twin/)
 
 Import paths avoid Python stdlib/`platform` collisions.

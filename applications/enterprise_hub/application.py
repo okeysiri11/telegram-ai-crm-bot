@@ -39,6 +39,7 @@ from applications.enterprise_hub.workflow_intelligence.facade import WorkflowInt
 from applications.enterprise_hub.enterprise_knowledge_graph.facade import EnterpriseKnowledgeGraphSuite
 from applications.enterprise_hub.predictive_intelligence.facade import PredictiveIntelligenceSuite
 from applications.enterprise_hub.simulation_lab.facade import SimulationLabSuite
+from applications.enterprise_hub.enterprise_digital_twin.facade import EnterpriseDigitalTwinSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -112,6 +113,7 @@ class EnterpriseHubApplication:
         enterprise_knowledge_graph_svc: EnterpriseKnowledgeGraphSuite | None = None,
         predictive_intelligence_svc: PredictiveIntelligenceSuite | None = None,
         simulation_lab_svc: SimulationLabSuite | None = None,
+        enterprise_digital_twin_svc: EnterpriseDigitalTwinSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -168,6 +170,7 @@ class EnterpriseHubApplication:
         self.enterprise_knowledge_graph = enterprise_knowledge_graph_svc or EnterpriseKnowledgeGraphSuite(self.store)
         self.predictive_intelligence = predictive_intelligence_svc or PredictiveIntelligenceSuite(self.store)
         self.simulation_lab = simulation_lab_svc or SimulationLabSuite(self.store)
+        self.enterprise_digital_twin = enterprise_digital_twin_svc or EnterpriseDigitalTwinSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -516,6 +519,10 @@ class EnterpriseHubApplication:
             "what_if_ready": True,
             "multi_scenario_ready": True,
             "owner_simulation_ready": True,
+            "enterprise_digital_twin_ready": True,
+            "live_state_ready": True,
+            "twin_sync_ready": True,
+            "twin_time_machine_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -568,6 +575,7 @@ class EnterpriseHubApplication:
                 "enterprise_knowledge_graph": self.config.enterprise_knowledge_graph,
                 "predictive_intelligence": self.config.predictive_intelligence,
                 "simulation_lab": self.config.simulation_lab,
+                "enterprise_digital_twin": self.config.enterprise_digital_twin,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -624,6 +632,7 @@ class EnterpriseHubApplication:
             "enterprise_knowledge_graph": self.enterprise_knowledge_graph.status(),
             "predictive_intelligence": self.predictive_intelligence.status(),
             "simulation_lab": self.simulation_lab.status(),
+            "enterprise_digital_twin": self.enterprise_digital_twin.status(),
         }
 
 

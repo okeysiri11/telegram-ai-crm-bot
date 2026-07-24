@@ -688,6 +688,16 @@ class EnterpriseHubStore:
         self.esl_debates: EntityStore = EntityStore()
         self.esl_history: EntityStore = EntityStore()
         self.esl_owner: EntityStore = EntityStore()
+        # Sprint 24.5 — Enterprise Digital Twin 2.0
+        self.etw_bootstraps: EntityStore = EntityStore()
+        self.etw_twins: EntityStore = EntityStore()
+        self.etw_live: EntityStore = EntityStore()
+        self.etw_org: EntityStore = EntityStore()
+        self.etw_processes: EntityStore = EntityStore()
+        self.etw_sync: EntityStore = EntityStore()
+        self.etw_timemachine: EntityStore = EntityStore()
+        self.etw_impacts: EntityStore = EntityStore()
+        self.etw_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

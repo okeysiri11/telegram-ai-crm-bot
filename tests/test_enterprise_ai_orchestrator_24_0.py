@@ -1,4 +1,4 @@
-"""Tests — Enterprise AI Orchestrator & Multi-Agent Council (Sprint 24.4 / v7.4.0)."""
+"""Tests — Enterprise AI Orchestrator & Multi-Agent Council (Sprint 24.5 / v7.5.0)."""
 
 from __future__ import annotations
 
@@ -89,8 +89,8 @@ def reset_store():
 
 def test_version_eao_v7_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "7.4.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v7.3.0"
+    assert health["application_version"] == "7.5.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v7.4.0"
     assert health["enterprise_ai_orchestrator_ready"] is True
     assert health["multi_agent_council_ready"] is True
     assert health["council_decision_ready"] is True
@@ -148,7 +148,7 @@ def test_bootstrap_eao():
     suite = enterprise_hub.enterprise_ai_orchestrator
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "7.4.0"
+    assert boot["version"] == "7.5.0"
     assert boot["enterprise_ai_orchestrator_ready"] is True
     assert boot["multi_agent_council_ready"] is True
     assert boot["agents_registered"] >= 12
@@ -163,9 +163,9 @@ def test_bootstrap_eao():
 async def test_api_eao(client):
     health = await client.get(f"{EAO}/health")
     body = await health.json()
-    assert body["application_version"] == "7.4.0"
+    assert body["application_version"] == "7.5.0"
     assert body["enterprise_ai_orchestrator_ready"] is True
-    assert body["platform_version"] == "7.4.0"
+    assert body["platform_version"] == "7.5.0"
 
     boot = await client.post(f"{EAO}/bootstrap", json={})
     assert boot.status == 201
@@ -176,7 +176,7 @@ async def test_api_eao(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "7.4.0"
+        assert version == "7.5.0"
 
 
 def test_docs_and_regression_24_0():
@@ -211,6 +211,6 @@ def test_docs_and_regression_24_0():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "7.4.0"' in manifest
-    assert "24.4" in manifest
+    assert '"application_version": "7.5.0"' in manifest
+    assert "24.5" in manifest
     assert "7.0" in manifest

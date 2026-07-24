@@ -45,6 +45,7 @@ from applications.enterprise_hub.workflow_intelligence import api as wfi_api
 from applications.enterprise_hub.enterprise_knowledge_graph import api as ekg_api
 from applications.enterprise_hub.predictive_intelligence import api as pin_api
 from applications.enterprise_hub.simulation_lab import api as esl_api
+from applications.enterprise_hub.enterprise_digital_twin import api as etw_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -878,4 +879,23 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{esl}/simulate", esl_api.esl_simulate_handler)
     app.router.add_post(f"{esl}/compare", esl_api.esl_compare_handler)
     app.router.add_post(f"{esl}/owner", esl_api.esl_owner_handler)
+
+    # Sprint 24.5 — Enterprise Digital Twin 2.0 (additive; legacy EDT unchanged)
+    etw = DEFAULT_CONFIG.enterprise_digital_twin_api_prefix
+    app.router.add_get(f"{etw}/health", etw_api.etw_health_handler)
+    app.router.add_post(f"{etw}/bootstrap", etw_api.etw_bootstrap_handler)
+    app.router.add_post(f"{etw}/twins", etw_api.etw_create_handler)
+    app.router.add_get(f"{etw}/state", etw_api.etw_state_handler)
+    app.router.add_post(f"{etw}/state", etw_api.etw_state_handler)
+    app.router.add_post(f"{etw}/live", etw_api.etw_live_handler)
+    app.router.add_get(f"{etw}/org", etw_api.etw_org_handler)
+    app.router.add_post(f"{etw}/org", etw_api.etw_org_handler)
+    app.router.add_get(f"{etw}/processes", etw_api.etw_processes_handler)
+    app.router.add_post(f"{etw}/processes", etw_api.etw_processes_handler)
+    app.router.add_post(f"{etw}/sync", etw_api.etw_sync_handler)
+    app.router.add_get(f"{etw}/time-machine", etw_api.etw_timemachine_handler)
+    app.router.add_post(f"{etw}/time-machine", etw_api.etw_timemachine_handler)
+    app.router.add_post(f"{etw}/impact", etw_api.etw_impact_handler)
+    app.router.add_get(f"{etw}/dashboard", etw_api.etw_dashboard_handler)
+    app.router.add_post(f"{etw}/dashboard", etw_api.etw_dashboard_handler)
 
