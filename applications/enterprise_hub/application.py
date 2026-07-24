@@ -34,6 +34,7 @@ from applications.enterprise_hub.client_portal.facade import ClientPortalSuite
 from applications.enterprise_hub.onboarding.facade import EnterpriseOnboardingSuite
 from applications.enterprise_hub.operations_center.facade import EnterpriseOperationsSuite
 from applications.enterprise_hub.pilot_readiness.facade import PilotReadinessSuite
+from applications.enterprise_hub.enterprise_ai_orchestrator.facade import EnterpriseAIOrchestratorSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -102,6 +103,7 @@ class EnterpriseHubApplication:
         onboarding_svc: EnterpriseOnboardingSuite | None = None,
         operations_center_svc: EnterpriseOperationsSuite | None = None,
         pilot_readiness_svc: PilotReadinessSuite | None = None,
+        enterprise_ai_orchestrator_svc: EnterpriseAIOrchestratorSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -153,6 +155,7 @@ class EnterpriseHubApplication:
         self.onboarding = onboarding_svc or EnterpriseOnboardingSuite(self.store)
         self.operations_center = operations_center_svc or EnterpriseOperationsSuite(self.store)
         self.pilot_readiness = pilot_readiness_svc or PilotReadinessSuite(self.store)
+        self.enterprise_ai_orchestrator = enterprise_ai_orchestrator_svc or EnterpriseAIOrchestratorSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -481,6 +484,10 @@ class EnterpriseHubApplication:
             "workflow_optimized": True,
             "empty_states_ready": True,
             "pilot_checklist_ready": True,
+            "enterprise_ai_orchestrator_ready": True,
+            "multi_agent_council_ready": True,
+            "council_decision_ready": True,
+            "owner_decision_center_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -528,6 +535,7 @@ class EnterpriseHubApplication:
                 "enterprise_onboarding": self.config.enterprise_onboarding,
                 "enterprise_operations": self.config.enterprise_operations,
                 "pilot_readiness": self.config.pilot_readiness,
+                "enterprise_ai_orchestrator": self.config.enterprise_ai_orchestrator,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -579,6 +587,7 @@ class EnterpriseHubApplication:
             "onboarding": self.onboarding.status(),
             "operations_center": self.operations_center.status(),
             "pilot_readiness": self.pilot_readiness.status(),
+            "enterprise_ai_orchestrator": self.enterprise_ai_orchestrator.status(),
         }
 
 

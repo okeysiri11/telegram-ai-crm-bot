@@ -52,8 +52,8 @@ def reset_store():
 
 def test_version_ekp_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.12.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.11.0"
+    assert health["application_version"] == "7.0.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.12.0"
     assert health["enterprise_knowledge_ready"] is True
     assert health["rag_ready"] is True
     assert health["knowledge_graph_ready"] is True
@@ -88,7 +88,7 @@ def test_bootstrap_analytics():
     suite = enterprise_hub.knowledge_platform
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.12.0"
+    assert boot["version"] == "7.0.0"
     assert boot["answer_id"] and boot["relevance_id"] and boot["context_id"]
 
 
@@ -96,7 +96,7 @@ def test_bootstrap_analytics():
 async def test_api_ekp(client):
     health = await client.get(f"{EKP}/health")
     body = await health.json()
-    assert body["application_version"] == "6.12.0"
+    assert body["application_version"] == "7.0.0"
     assert body["enterprise_knowledge_ready"] is True
     assert body["rag_ready"] is True
 
@@ -113,7 +113,7 @@ async def test_api_ekp(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN, AOP, ATS):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.12.0"
+        assert (await resp.json())["application_version"] == "7.0.0"
 
     assert boot_body["citation_id"]
 
@@ -155,5 +155,5 @@ def test_docs_and_regression_20_3():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.12.0" in manifest
-    assert "23.1" in manifest
+    assert "7.0.0" in manifest
+    assert "24.0" in manifest

@@ -640,6 +640,14 @@ class EnterpriseHubStore:
         self.epr_accessibility: EntityStore = EntityStore()
         self.epr_checklists: EntityStore = EntityStore()
         self.epr_feedback: EntityStore = EntityStore()
+        # Sprint 24.0 — Enterprise AI Orchestrator v7
+        self.eao_bootstraps: EntityStore = EntityStore()
+        self.eao_agents: EntityStore = EntityStore()
+        self.eao_decisions: EntityStore = EntityStore()
+        self.eao_conflicts: EntityStore = EntityStore()
+        self.eao_memory: EntityStore = EntityStore()
+        self.eao_learning: EntityStore = EntityStore()
+        self.eao_owner: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

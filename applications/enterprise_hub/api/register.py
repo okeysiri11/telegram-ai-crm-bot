@@ -40,6 +40,7 @@ from applications.enterprise_hub.client_portal import api as cpl_api
 from applications.enterprise_hub.onboarding import api as eon_api
 from applications.enterprise_hub.operations_center import api as eoc_api
 from applications.enterprise_hub.pilot_readiness import api as epr_api
+from applications.enterprise_hub.enterprise_ai_orchestrator import api as eao_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -809,4 +810,14 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{epr}/checklist", epr_api.epr_checklist_handler)
     app.router.add_post(f"{epr}/checklist", epr_api.epr_checklist_handler)
     app.router.add_post(f"{epr}/feedback", epr_api.epr_feedback_handler)
+
+    # Sprint 24.0 — Enterprise AI Orchestrator v7 (additive; prior AOP routes unchanged)
+    eao = DEFAULT_CONFIG.enterprise_ai_orchestrator_api_prefix
+    app.router.add_get(f"{eao}/health", eao_api.eao_health_handler)
+    app.router.add_post(f"{eao}/bootstrap", eao_api.eao_bootstrap_handler)
+    app.router.add_get(f"{eao}/agents", eao_api.eao_agents_handler)
+    app.router.add_post(f"{eao}/agents", eao_api.eao_agents_handler)
+    app.router.add_post(f"{eao}/convene", eao_api.eao_convene_handler)
+    app.router.add_post(f"{eao}/learn", eao_api.eao_learn_handler)
+    app.router.add_post(f"{eao}/owner", eao_api.eao_owner_handler)
 

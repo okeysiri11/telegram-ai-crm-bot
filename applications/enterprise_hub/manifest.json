@@ -1,13 +1,13 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.12.0",
-  "release_status": "Enterprise UX Polish & Pilot Readiness",
+  "application_version": "7.0.0",
+  "release_status": "Enterprise AI Orchestrator & Multi-Agent Council",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.11.0",
+  "enterprise_foundation": "Enterprise Platform v6.12.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "23.1",
-  "phase": "pilot_release",
+  "sprint": "24.0",
+  "phase": "enterprise_ai_v7",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
   "enterprise_identity": "1.0",
@@ -156,7 +156,11 @@
     "pilot_readiness": "1.0",
     "ux_polish": "1.0",
     "empty_states": "1.0",
-    "pilot_checklist": "1.0"
+    "pilot_checklist": "1.0",
+    "enterprise_ai_orchestrator": "1.0",
+    "multi_agent_council": "1.0",
+    "decision_engine": "1.0",
+    "owner_decision_center": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -186,5 +190,7 @@
   "enterprise_onboarding": "1.0",
   "enterprise_operations": "1.0",
   "release_stage": "pilot_release",
-  "pilot_readiness": "1.0"
+  "pilot_readiness": "1.0",
+  "enterprise_ai_orchestrator": "1.0",
+  "platform_major": "7.0"
 }
