@@ -35,6 +35,7 @@ from applications.enterprise_hub.onboarding.facade import EnterpriseOnboardingSu
 from applications.enterprise_hub.operations_center.facade import EnterpriseOperationsSuite
 from applications.enterprise_hub.pilot_readiness.facade import PilotReadinessSuite
 from applications.enterprise_hub.enterprise_ai_orchestrator.facade import EnterpriseAIOrchestratorSuite
+from applications.enterprise_hub.workflow_intelligence.facade import WorkflowIntelligenceSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -104,6 +105,7 @@ class EnterpriseHubApplication:
         operations_center_svc: EnterpriseOperationsSuite | None = None,
         pilot_readiness_svc: PilotReadinessSuite | None = None,
         enterprise_ai_orchestrator_svc: EnterpriseAIOrchestratorSuite | None = None,
+        workflow_intelligence_svc: WorkflowIntelligenceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -156,6 +158,7 @@ class EnterpriseHubApplication:
         self.operations_center = operations_center_svc or EnterpriseOperationsSuite(self.store)
         self.pilot_readiness = pilot_readiness_svc or PilotReadinessSuite(self.store)
         self.enterprise_ai_orchestrator = enterprise_ai_orchestrator_svc or EnterpriseAIOrchestratorSuite(self.store)
+        self.workflow_intelligence = workflow_intelligence_svc or WorkflowIntelligenceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -488,6 +491,10 @@ class EnterpriseHubApplication:
             "multi_agent_council_ready": True,
             "council_decision_ready": True,
             "owner_decision_center_ready": True,
+            "workflow_intelligence_ready": True,
+            "visual_designer_ready": True,
+            "ai_execution_ready": True,
+            "workflow_library_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -536,6 +543,7 @@ class EnterpriseHubApplication:
                 "enterprise_operations": self.config.enterprise_operations,
                 "pilot_readiness": self.config.pilot_readiness,
                 "enterprise_ai_orchestrator": self.config.enterprise_ai_orchestrator,
+                "workflow_intelligence": self.config.workflow_intelligence,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -588,6 +596,7 @@ class EnterpriseHubApplication:
             "operations_center": self.operations_center.status(),
             "pilot_readiness": self.pilot_readiness.status(),
             "enterprise_ai_orchestrator": self.enterprise_ai_orchestrator.status(),
+            "workflow_intelligence": self.workflow_intelligence.status(),
         }
 
 

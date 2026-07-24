@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "7.0.0",
-  "release_status": "Enterprise AI Orchestrator & Multi-Agent Council",
+  "application_version": "7.1.0",
+  "release_status": "Workflow Intelligence & AI Execution Engine",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.12.0",
+  "enterprise_foundation": "Enterprise Platform v7.0.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "24.0",
+  "sprint": "24.1",
   "phase": "enterprise_ai_v7",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -160,7 +160,11 @@
     "enterprise_ai_orchestrator": "1.0",
     "multi_agent_council": "1.0",
     "decision_engine": "1.0",
-    "owner_decision_center": "1.0"
+    "owner_decision_center": "1.0",
+    "workflow_intelligence": "1.0",
+    "visual_workflow_designer": "1.0",
+    "ai_execution_engine": "1.0",
+    "workflow_library": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -192,5 +196,6 @@
   "release_stage": "pilot_release",
   "pilot_readiness": "1.0",
   "enterprise_ai_orchestrator": "1.0",
-  "platform_major": "7.0"
+  "platform_major": "7.0",
+  "workflow_intelligence": "1.0"
 }

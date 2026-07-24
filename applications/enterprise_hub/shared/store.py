@@ -648,6 +648,13 @@ class EnterpriseHubStore:
         self.eao_memory: EntityStore = EntityStore()
         self.eao_learning: EntityStore = EntityStore()
         self.eao_owner: EntityStore = EntityStore()
+        # Sprint 24.1 — Workflow Intelligence
+        self.wfi_bootstraps: EntityStore = EntityStore()
+        self.wfi_workflows: EntityStore = EntityStore()
+        self.wfi_analyses: EntityStore = EntityStore()
+        self.wfi_runs: EntityStore = EntityStore()
+        self.wfi_analytics: EntityStore = EntityStore()
+        self.wfi_optimizations: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

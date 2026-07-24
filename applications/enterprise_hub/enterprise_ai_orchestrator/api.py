@@ -40,7 +40,7 @@ async def eao_health_handler(request: web.Request) -> web.Response:
             "multi_agent_council_ready": health.get("multi_agent_council_ready"),
             "council_decision_ready": health.get("council_decision_ready"),
             "owner_decision_center_ready": health.get("owner_decision_center_ready"),
-            "platform_version": "7.0.0",
+            "platform_version": health["application_version"],
             "suite": _suite().status(),
         }
     )

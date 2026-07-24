@@ -62,8 +62,8 @@ def reset_store():
 
 def test_version_eas_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "7.0.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.12.0"
+    assert health["application_version"] == "7.1.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v7.0.0"
     assert health["api_standardization_ready"] is True
     assert health["api_inventory_ready"] is True
     assert health["openapi_ready"] is True
@@ -105,7 +105,7 @@ def test_bootstrap_governance():
     suite = enterprise_hub.api_standardization
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "7.0.0"
+    assert boot["version"] == "7.1.0"
     assert boot["openapi_version"] == "3.1.0"
     assert boot["swagger_id"]
     assert boot["redoc_id"]
@@ -120,7 +120,7 @@ async def test_api_eas(client):
     health = await client.get(f"{EAS}/health")
     body = await health.json()
     assert body["success"] is True
-    assert body["data"]["application_version"] == "7.0.0"
+    assert body["data"]["application_version"] == "7.1.0"
     assert body["data"]["api_standardization_ready"] is True
 
     boot = await client.post(f"{EAS}/bootstrap", json={})
@@ -138,7 +138,7 @@ async def test_api_eas(client):
     ):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "7.0.0"
+        assert (await resp.json())["application_version"] == "7.1.0"
 
     assert boot_body["governance_passed"] is True
 
@@ -176,5 +176,5 @@ def test_docs_and_regression_21_2():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "7.0.0" in manifest
-    assert "24.0" in manifest
+    assert "7.1.0" in manifest
+    assert "24.1" in manifest

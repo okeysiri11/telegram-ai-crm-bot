@@ -41,6 +41,7 @@ from applications.enterprise_hub.onboarding import api as eon_api
 from applications.enterprise_hub.operations_center import api as eoc_api
 from applications.enterprise_hub.pilot_readiness import api as epr_api
 from applications.enterprise_hub.enterprise_ai_orchestrator import api as eao_api
+from applications.enterprise_hub.workflow_intelligence import api as wfi_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -820,4 +821,18 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{eao}/convene", eao_api.eao_convene_handler)
     app.router.add_post(f"{eao}/learn", eao_api.eao_learn_handler)
     app.router.add_post(f"{eao}/owner", eao_api.eao_owner_handler)
+
+    # Sprint 24.1 — Workflow Intelligence (additive; prior workflow routes unchanged)
+    wfi = DEFAULT_CONFIG.workflow_intelligence_api_prefix
+    app.router.add_get(f"{wfi}/health", wfi_api.wfi_health_handler)
+    app.router.add_post(f"{wfi}/bootstrap", wfi_api.wfi_bootstrap_handler)
+    app.router.add_post(f"{wfi}/workflows", wfi_api.wfi_workflow_handler)
+    app.router.add_post(f"{wfi}/design", wfi_api.wfi_design_handler)
+    app.router.add_post(f"{wfi}/policy", wfi_api.wfi_policy_handler)
+    app.router.add_post(f"{wfi}/analyze", wfi_api.wfi_analyze_handler)
+    app.router.add_post(f"{wfi}/execute", wfi_api.wfi_execute_handler)
+    app.router.add_get(f"{wfi}/analytics", wfi_api.wfi_analytics_handler)
+    app.router.add_post(f"{wfi}/analytics", wfi_api.wfi_analytics_handler)
+    app.router.add_get(f"{wfi}/catalog", wfi_api.wfi_catalog_handler)
+    app.router.add_post(f"{wfi}/invoke", wfi_api.wfi_invoke_handler)
 
