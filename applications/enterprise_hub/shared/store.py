@@ -617,6 +617,18 @@ class EnterpriseHubStore:
         self.eon_configs: EntityStore = EntityStore()
         self.eon_readiness: EntityStore = EntityStore()
         self.eon_go_live: EntityStore = EntityStore()
+        # Sprint 23.0 — Enterprise Operations Center
+        self.eoc_bootstraps: EntityStore = EntityStore()
+        self.eoc_dashboards: EntityStore = EntityStore()
+        self.eoc_tenant_health: EntityStore = EntityStore()
+        self.eoc_monitoring: EntityStore = EntityStore()
+        self.eoc_pilots: EntityStore = EntityStore()
+        self.eoc_feedback: EntityStore = EntityStore()
+        self.eoc_usage: EntityStore = EntityStore()
+        self.eoc_advisor: EntityStore = EntityStore()
+        self.eoc_releases: EntityStore = EntityStore()
+        self.eoc_incidents: EntityStore = EntityStore()
+        self.eoc_approvals: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

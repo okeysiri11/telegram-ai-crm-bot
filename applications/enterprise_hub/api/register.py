@@ -38,6 +38,7 @@ from applications.enterprise_hub.communications_hub import api as ech_api
 from applications.enterprise_hub.commerce_core import api as eco_api
 from applications.enterprise_hub.client_portal import api as cpl_api
 from applications.enterprise_hub.onboarding import api as eon_api
+from applications.enterprise_hub.operations_center import api as eoc_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -775,4 +776,21 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{eon}/readiness", eon_api.eon_readiness_handler)
     app.router.add_post(f"{eon}/readiness", eon_api.eon_readiness_handler)
     app.router.add_post(f"{eon}/go-live", eon_api.eon_go_live_handler)
+
+    # Sprint 23.0 — Enterprise Operations Center (additive; prior routes unchanged)
+    eoc = DEFAULT_CONFIG.operations_center_api_prefix
+    app.router.add_get(f"{eoc}/health", eoc_api.eoc_health_handler)
+    app.router.add_post(f"{eoc}/bootstrap", eoc_api.eoc_bootstrap_handler)
+    app.router.add_get(f"{eoc}/dashboard", eoc_api.eoc_dashboard_handler)
+    app.router.add_post(f"{eoc}/dashboard", eoc_api.eoc_dashboard_handler)
+    app.router.add_post(f"{eoc}/tenant-health", eoc_api.eoc_tenant_health_handler)
+    app.router.add_get(f"{eoc}/monitoring", eoc_api.eoc_monitoring_handler)
+    app.router.add_post(f"{eoc}/monitoring", eoc_api.eoc_monitoring_handler)
+    app.router.add_post(f"{eoc}/pilot", eoc_api.eoc_pilot_handler)
+    app.router.add_post(f"{eoc}/feedback", eoc_api.eoc_feedback_handler)
+    app.router.add_post(f"{eoc}/usage", eoc_api.eoc_usage_handler)
+    app.router.add_post(f"{eoc}/advisor", eoc_api.eoc_advisor_handler)
+    app.router.add_post(f"{eoc}/release", eoc_api.eoc_release_handler)
+    app.router.add_post(f"{eoc}/incident", eoc_api.eoc_incident_handler)
+    app.router.add_post(f"{eoc}/owner", eoc_api.eoc_owner_handler)
 

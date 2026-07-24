@@ -68,8 +68,8 @@ def reset_store():
 
 def test_version_esh_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.10.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.9.0"
+    assert health["application_version"] == "6.11.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.10.0"
     assert health["security_hardening_ready"] is True
     assert health["zero_trust_ready"] is True
     assert health["secrets_management_ready"] is True
@@ -104,7 +104,7 @@ def test_bootstrap_dashboard():
     suite = enterprise_hub.security_hardening
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.10.0"
+    assert boot["version"] == "6.11.0"
     assert boot["secrets"] >= 6
     assert boot["audit_entries"] >= 7
     assert boot["compliance_ready"] is True
@@ -120,7 +120,7 @@ def test_bootstrap_dashboard():
 async def test_api_esh(client):
     health = await client.get(f"{ESH}/health")
     body = await health.json()
-    assert body["application_version"] == "6.10.0"
+    assert body["application_version"] == "6.11.0"
     assert body["security_hardening_ready"] is True
 
     boot = await client.post(f"{ESH}/bootstrap", json={})
@@ -136,7 +136,7 @@ async def test_api_esh(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "6.10.0"
+        assert version == "6.11.0"
 
     assert boot_body["zero_trust_allowed"] is True
 
@@ -186,5 +186,5 @@ def test_docs_and_regression_21_4():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.10.0" in manifest
-    assert "22.9" in manifest
+    assert "6.11.0" in manifest
+    assert "23.0" in manifest
