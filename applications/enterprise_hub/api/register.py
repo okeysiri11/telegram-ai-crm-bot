@@ -33,6 +33,7 @@ from applications.enterprise_hub.ai_business_advisor import api as aba_api
 from applications.enterprise_hub.beauty_os import api as bos_api
 from applications.enterprise_hub.beauty_workspace import api as bws_api
 from applications.enterprise_hub.beauty_client_journey import api as bcj_api
+from applications.enterprise_hub.ai_marketing_os import api as amo_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -703,4 +704,16 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{bcj}/waitlist", bcj_api.bcj_waitlist_handler)
     app.router.add_post(f"{bcj}/loyalty", bcj_api.bcj_loyalty_handler)
     app.router.add_post(f"{bcj}/assistant", bcj_api.bcj_assistant_handler)
+
+    # Sprint 22.5 — AI Marketing OS (additive; prior routes unchanged)
+    amo = DEFAULT_CONFIG.ai_marketing_os_api_prefix
+    app.router.add_get(f"{amo}/health", amo_api.amo_health_handler)
+    app.router.add_post(f"{amo}/bootstrap", amo_api.amo_bootstrap_handler)
+    app.router.add_post(f"{amo}/brand", amo_api.amo_brand_handler)
+    app.router.add_post(f"{amo}/creative", amo_api.amo_creative_handler)
+    app.router.add_post(f"{amo}/content", amo_api.amo_content_handler)
+    app.router.add_post(f"{amo}/opportunities", amo_api.amo_opportunities_handler)
+    app.router.add_post(f"{amo}/campaigns", amo_api.amo_campaign_handler)
+    app.router.add_post(f"{amo}/approve", amo_api.amo_approve_handler)
+    app.router.add_post(f"{amo}/performance", amo_api.amo_performance_handler)
 

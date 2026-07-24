@@ -568,6 +568,16 @@ class EnterpriseHubStore:
         self.bcj_reminders: EntityStore = EntityStore()
         self.bcj_loyalty: EntityStore = EntityStore()
         self.bcj_assistant: EntityStore = EntityStore()
+        # Sprint 22.5 — AI Marketing OS
+        self.amo_bootstraps: EntityStore = EntityStore()
+        self.amo_brands: EntityStore = EntityStore()
+        self.amo_creatives: EntityStore = EntityStore()
+        self.amo_content: EntityStore = EntityStore()
+        self.amo_calendars: EntityStore = EntityStore()
+        self.amo_campaigns: EntityStore = EntityStore()
+        self.amo_opportunities: EntityStore = EntityStore()
+        self.amo_approvals: EntityStore = EntityStore()
+        self.amo_performance: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
