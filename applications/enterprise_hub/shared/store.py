@@ -718,6 +718,17 @@ class EnterpriseHubStore:
         self.est_council: EntityStore = EntityStore()
         self.est_owner: EntityStore = EntityStore()
         self.est_dashboards: EntityStore = EntityStore()
+        # Sprint 24.8 — Learning Engine
+        self.ele_bootstraps: EntityStore = EntityStore()
+        self.ele_learnings: EntityStore = EntityStore()
+        self.ele_collections: EntityStore = EntityStore()
+        self.ele_patterns: EntityStore = EntityStore()
+        self.ele_cross_tenant: EntityStore = EntityStore()
+        self.ele_evolution: EntityStore = EntityStore()
+        self.ele_scores: EntityStore = EntityStore()
+        self.ele_owner: EntityStore = EntityStore()
+        self.ele_product: EntityStore = EntityStore()
+        self.ele_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

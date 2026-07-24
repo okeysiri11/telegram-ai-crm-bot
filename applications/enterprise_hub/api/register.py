@@ -48,6 +48,7 @@ from applications.enterprise_hub.simulation_lab import api as esl_api
 from applications.enterprise_hub.enterprise_digital_twin import api as etw_api
 from applications.enterprise_hub.autonomous_optimization import api as eoe_api
 from applications.enterprise_hub.strategy_intelligence import api as est_api
+from applications.enterprise_hub.learning_engine import api as ele_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -927,4 +928,21 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{est}/council", est_api.est_council_handler)
     app.router.add_post(f"{est}/owner", est_api.est_owner_handler)
     app.router.add_get(f"{est}/dashboard", est_api.est_dashboard_handler)
+
+    # Sprint 24.8 — Learning Engine (additive)
+    ele = DEFAULT_CONFIG.learning_engine_api_prefix
+    app.router.add_get(f"{ele}/health", ele_api.ele_health_handler)
+    app.router.add_post(f"{ele}/bootstrap", ele_api.ele_bootstrap_handler)
+    app.router.add_post(f"{ele}/collect", ele_api.ele_collect_handler)
+    app.router.add_post(f"{ele}/register", ele_api.ele_register_handler)
+    app.router.add_get(f"{ele}/learnings", ele_api.ele_learnings_handler)
+    app.router.add_post(f"{ele}/feedback", ele_api.ele_feedback_handler)
+    app.router.add_post(f"{ele}/patterns", ele_api.ele_patterns_handler)
+    app.router.add_post(f"{ele}/cross-tenant", ele_api.ele_cross_tenant_handler)
+    app.router.add_post(f"{ele}/evolve", ele_api.ele_evolve_handler)
+    app.router.add_post(f"{ele}/score", ele_api.ele_score_handler)
+    app.router.add_post(f"{ele}/owner", ele_api.ele_owner_handler)
+    app.router.add_post(f"{ele}/product", ele_api.ele_product_handler)
+    app.router.add_post(f"{ele}/safety", ele_api.ele_safety_handler)
+    app.router.add_get(f"{ele}/dashboard", ele_api.ele_dashboard_handler)
 
