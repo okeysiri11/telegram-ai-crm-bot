@@ -29,3 +29,4 @@ Enterprise shared libraries for Stabilization Phase / Enterprise Core v6.0 LTS.
 
 Import paths avoid Python stdlib/`platform` collisions.
 - Autonomous Optimization: [`../platform_enterprise_autonomous_optimization/`](../platform_enterprise_autonomous_optimization/)
+- Strategy Intelligence: [`../platform_enterprise_strategy_intelligence/`](../platform_enterprise_strategy_intelligence/)

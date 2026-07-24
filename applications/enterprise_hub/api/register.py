@@ -47,6 +47,7 @@ from applications.enterprise_hub.predictive_intelligence import api as pin_api
 from applications.enterprise_hub.simulation_lab import api as esl_api
 from applications.enterprise_hub.enterprise_digital_twin import api as etw_api
 from applications.enterprise_hub.autonomous_optimization import api as eoe_api
+from applications.enterprise_hub.strategy_intelligence import api as est_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -910,4 +911,20 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{eoe}/owner", eoe_api.eoe_owner_handler)
     app.router.add_post(f"{eoe}/verify", eoe_api.eoe_verify_handler)
     app.router.add_get(f"{eoe}/dashboard", eoe_api.eoe_dashboard_handler)
+
+    # Sprint 24.7 — Strategy Intelligence (additive; ESI simulation-engine routes unchanged)
+    est = DEFAULT_CONFIG.strategy_intelligence_api_prefix
+    app.router.add_get(f"{est}/health", est_api.est_health_handler)
+    app.router.add_post(f"{est}/bootstrap", est_api.est_bootstrap_handler)
+    app.router.add_post(f"{est}/strategy", est_api.est_strategy_handler)
+    app.router.add_get(f"{est}/strategies", est_api.est_strategies_handler)
+    app.router.add_post(f"{est}/goal", est_api.est_goal_handler)
+    app.router.add_post(f"{est}/forecast", est_api.est_forecast_handler)
+    app.router.add_post(f"{est}/scenarios", est_api.est_scenarios_handler)
+    app.router.add_post(f"{est}/investment", est_api.est_investment_handler)
+    app.router.add_post(f"{est}/expansion", est_api.est_expansion_handler)
+    app.router.add_post(f"{est}/risk", est_api.est_risk_handler)
+    app.router.add_post(f"{est}/council", est_api.est_council_handler)
+    app.router.add_post(f"{est}/owner", est_api.est_owner_handler)
+    app.router.add_get(f"{est}/dashboard", est_api.est_dashboard_handler)
 

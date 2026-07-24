@@ -41,6 +41,7 @@ from applications.enterprise_hub.predictive_intelligence.facade import Predictiv
 from applications.enterprise_hub.simulation_lab.facade import SimulationLabSuite
 from applications.enterprise_hub.enterprise_digital_twin.facade import EnterpriseDigitalTwinSuite
 from applications.enterprise_hub.autonomous_optimization.facade import AutonomousOptimizationSuite
+from applications.enterprise_hub.strategy_intelligence.facade import StrategyIntelligenceSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -116,6 +117,7 @@ class EnterpriseHubApplication:
         simulation_lab_svc: SimulationLabSuite | None = None,
         enterprise_digital_twin_svc: EnterpriseDigitalTwinSuite | None = None,
         autonomous_optimization_svc: AutonomousOptimizationSuite | None = None,
+        strategy_intelligence_svc: StrategyIntelligenceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -174,6 +176,7 @@ class EnterpriseHubApplication:
         self.simulation_lab = simulation_lab_svc or SimulationLabSuite(self.store)
         self.enterprise_digital_twin = enterprise_digital_twin_svc or EnterpriseDigitalTwinSuite(self.store)
         self.autonomous_optimization = autonomous_optimization_svc or AutonomousOptimizationSuite(self.store)
+        self.strategy_intelligence = strategy_intelligence_svc or StrategyIntelligenceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -530,6 +533,10 @@ class EnterpriseHubApplication:
             "process_optimizer_ready": True,
             "revenue_optimizer_ready": True,
             "owner_optimization_ready": True,
+            "strategy_intelligence_ready": True,
+            "strategic_goals_ready": True,
+            "long_term_forecast_ready": True,
+            "owner_strategy_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -584,6 +591,7 @@ class EnterpriseHubApplication:
                 "simulation_lab": self.config.simulation_lab,
                 "enterprise_digital_twin": self.config.enterprise_digital_twin,
                 "autonomous_optimization": self.config.autonomous_optimization,
+                "strategy_intelligence": self.config.strategy_intelligence,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -642,6 +650,7 @@ class EnterpriseHubApplication:
             "simulation_lab": self.simulation_lab.status(),
             "enterprise_digital_twin": self.enterprise_digital_twin.status(),
             "autonomous_optimization": self.autonomous_optimization.status(),
+            "strategy_intelligence": self.strategy_intelligence.status(),
         }
 
 

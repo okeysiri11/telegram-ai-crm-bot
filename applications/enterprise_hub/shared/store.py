@@ -707,6 +707,17 @@ class EnterpriseHubStore:
         self.eoe_owner: EntityStore = EntityStore()
         self.eoe_verification: EntityStore = EntityStore()
         self.eoe_dashboards: EntityStore = EntityStore()
+        # Sprint 24.7 — Strategy Intelligence
+        self.est_bootstraps: EntityStore = EntityStore()
+        self.est_strategies: EntityStore = EntityStore()
+        self.est_forecasts: EntityStore = EntityStore()
+        self.est_scenarios: EntityStore = EntityStore()
+        self.est_investments: EntityStore = EntityStore()
+        self.est_expansions: EntityStore = EntityStore()
+        self.est_risks: EntityStore = EntityStore()
+        self.est_council: EntityStore = EntityStore()
+        self.est_owner: EntityStore = EntityStore()
+        self.est_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
