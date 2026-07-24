@@ -24,6 +24,7 @@ from applications.enterprise_hub.command_center import api as ecc_api
 from applications.enterprise_hub.api_standardization import api as eas_api
 from applications.enterprise_hub.data_contracts import api as edc_api
 from applications.enterprise_hub.security_hardening import api as esh_api
+from applications.enterprise_hub.quality_assurance import api as eqa_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -584,3 +585,16 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{esh}/compliance", esh_api.esh_compliance_handler)
     app.router.add_post(f"{esh}/tests", esh_api.esh_tests_handler)
     app.router.add_get(f"{esh}/dashboard", esh_api.esh_dashboard_handler)
+
+    # Sprint 21.5 — Quality Assurance (additive; prior routes unchanged)
+    eqa = DEFAULT_CONFIG.quality_assurance_api_prefix
+    app.router.add_get(f"{eqa}/health", eqa_api.eqa_health_handler)
+    app.router.add_post(f"{eqa}/bootstrap", eqa_api.eqa_bootstrap_handler)
+    app.router.add_get(f"{eqa}/suites", eqa_api.eqa_suites_handler)
+    app.router.add_post(f"{eqa}/suites", eqa_api.eqa_suites_handler)
+    app.router.add_get(f"{eqa}/coverage", eqa_api.eqa_coverage_handler)
+    app.router.add_post(f"{eqa}/coverage", eqa_api.eqa_coverage_handler)
+    app.router.add_get(f"{eqa}/fixtures", eqa_api.eqa_fixtures_handler)
+    app.router.add_post(f"{eqa}/fixtures", eqa_api.eqa_fixtures_handler)
+    app.router.add_get(f"{eqa}/dashboard", eqa_api.eqa_dashboard_handler)
+    app.router.add_post(f"{eqa}/certify", eqa_api.eqa_certify_handler)

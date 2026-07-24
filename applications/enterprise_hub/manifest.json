@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.0.0-rc4",
-  "release_status": "Enterprise Security Hardening",
+  "application_version": "6.0.0-rc5",
+  "release_status": "Enterprise Testing & Quality Assurance",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.0.0-rc3",
+  "enterprise_foundation": "Enterprise Platform v6.0.0-rc4",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "21.4",
+  "sprint": "21.5",
   "phase": "stabilization",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -89,7 +89,11 @@
     "security_hardening": "1.0",
     "zero_trust": "1.0",
     "secrets_management": "1.0",
-    "compliance": "1.0"
+    "compliance": "1.0",
+    "quality_assurance": "1.0",
+    "test_framework": "1.0",
+    "coverage_engine": "1.0",
+    "quality_certification": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -102,5 +106,6 @@
     "legal_enterprise",
     "finance_enterprise"
   ],
-  "security_hardening": "1.0"
+  "security_hardening": "1.0",
+  "quality_assurance": "1.0"
 }

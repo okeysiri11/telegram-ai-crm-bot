@@ -484,6 +484,14 @@ class EnterpriseHubStore:
         self.esh_compliance: EntityStore = EntityStore()
         self.esh_tests: EntityStore = EntityStore()
         self.esh_dashboards: EntityStore = EntityStore()
+        # Sprint 21.5 — Quality Assurance
+        self.eqa_bootstraps: EntityStore = EntityStore()
+        self.eqa_suites: EntityStore = EntityStore()
+        self.eqa_coverage: EntityStore = EntityStore()
+        self.eqa_metrics: EntityStore = EntityStore()
+        self.eqa_fixtures: EntityStore = EntityStore()
+        self.eqa_dashboards: EntityStore = EntityStore()
+        self.eqa_certifications: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

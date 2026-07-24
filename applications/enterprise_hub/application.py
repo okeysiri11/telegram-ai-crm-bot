@@ -29,6 +29,7 @@ from applications.enterprise_hub.knowledge_platform.facade import KnowledgePlatf
 from applications.enterprise_hub.observability.facade import ObservabilitySuite
 from applications.enterprise_hub.orchestrator.facade import OrchestratorSuite
 from applications.enterprise_hub.process_mining.facade import ProcessMiningSuite
+from applications.enterprise_hub.quality_assurance.facade import QualityAssuranceSuite
 from applications.enterprise_hub.registry import EnterpriseRegistry
 from applications.enterprise_hub.security.facade import SecuritySuite
 from applications.enterprise_hub.security_hardening.facade import SecurityHardeningSuite
@@ -70,6 +71,7 @@ class EnterpriseHubApplication:
         api_standardization_svc: ApiStandardizationSuite | None = None,
         data_contracts_svc: DataContractsSuite | None = None,
         security_hardening_svc: SecurityHardeningSuite | None = None,
+        quality_assurance_svc: QualityAssuranceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -105,6 +107,7 @@ class EnterpriseHubApplication:
         self.api_standardization = api_standardization_svc or ApiStandardizationSuite(self.store)
         self.data_contracts = data_contracts_svc or DataContractsSuite(self.store)
         self.security_hardening = security_hardening_svc or SecurityHardeningSuite(self.store)
+        self.quality_assurance = quality_assurance_svc or QualityAssuranceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -369,6 +372,10 @@ class EnterpriseHubApplication:
             "zero_trust_ready": True,
             "secrets_management_ready": True,
             "compliance_ready": True,
+            "quality_assurance_ready": True,
+            "test_framework_ready": True,
+            "coverage_engine_ready": True,
+            "quality_certification_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -400,6 +407,7 @@ class EnterpriseHubApplication:
                 "api_standardization": self.config.api_standardization,
                 "data_contracts": self.config.data_contracts,
                 "security_hardening": self.config.security_hardening,
+                "quality_assurance": self.config.quality_assurance,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -435,6 +443,7 @@ class EnterpriseHubApplication:
             "api_standardization": self.api_standardization.status(),
             "data_contracts": self.data_contracts.status(),
             "security_hardening": self.security_hardening.status(),
+            "quality_assurance": self.quality_assurance.status(),
         }
 
 

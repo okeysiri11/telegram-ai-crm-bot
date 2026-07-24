@@ -58,8 +58,8 @@ def reset_store():
 
 def test_version_esi_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.0.0-rc4"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc3"
+    assert health["application_version"] == "6.0.0-rc5"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc4"
     assert health["simulation_engine_ready"] is True
     assert health["decision_intelligence_ready"] is True
     assert health["forecasting_ready"] is True
@@ -105,7 +105,7 @@ def test_bootstrap_dashboard():
     suite = enterprise_hub.simulation_engine
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.0.0-rc4"
+    assert boot["version"] == "6.0.0-rc5"
     assert boot["schedule_completed"] is True
     assert boot["event_triggered"] is True
     assert boot["continuous_ticks"] >= 1
@@ -129,7 +129,7 @@ def test_bootstrap_dashboard():
 async def test_api_esi(client):
     health = await client.get(f"{ESI}/health")
     body = await health.json()
-    assert body["application_version"] == "6.0.0-rc4"
+    assert body["application_version"] == "6.0.0-rc5"
     assert body["simulation_engine_ready"] is True
     assert body["recommendation_engine_ready"] is True
 
@@ -152,7 +152,7 @@ async def test_api_esi(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN, AOP, ATS, EKP, AIOS, EVP, SDP, EDF, EDT):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.0.0-rc4"
+        assert (await resp.json())["application_version"] == "6.0.0-rc5"
 
     assert boot_body["decision_id"]
     assert boot_body["recommendation_id"]
@@ -195,6 +195,6 @@ def test_docs_and_regression_20_9():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.0.0-rc4" in manifest
-    assert "21.4" in manifest
+    assert "6.0.0-rc5" in manifest
+    assert "21.5" in manifest
     assert "recommendation_engine" in manifest
