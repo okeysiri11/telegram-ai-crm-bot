@@ -24,6 +24,7 @@ from applications.enterprise_hub.performance_platform.facade import PerformanceP
 from applications.enterprise_hub.release_platform.facade import ReleasePlatformSuite
 from applications.enterprise_hub.product_intelligence.facade import ProductIntelligenceSuite
 from applications.enterprise_hub.ai_business_advisor.facade import AIBusinessAdvisorSuite
+from applications.enterprise_hub.beauty_os.facade import BeautyOSSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -82,6 +83,7 @@ class EnterpriseHubApplication:
         release_platform_svc: ReleasePlatformSuite | None = None,
         product_intelligence_svc: ProductIntelligenceSuite | None = None,
         ai_business_advisor_svc: AIBusinessAdvisorSuite | None = None,
+        beauty_os_svc: BeautyOSSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -123,6 +125,7 @@ class EnterpriseHubApplication:
         self.release_platform = release_platform_svc or ReleasePlatformSuite(self.store)
         self.product_intelligence = product_intelligence_svc or ProductIntelligenceSuite(self.store)
         self.ai_business_advisor = ai_business_advisor_svc or AIBusinessAdvisorSuite(self.store)
+        self.beauty_os = beauty_os_svc or BeautyOSSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -411,6 +414,10 @@ class EnterpriseHubApplication:
             "business_health_ready": True,
             "daily_brief_ready": True,
             "advisor_owner_approval_ready": True,
+            "beauty_os_ready": True,
+            "beauty_appointments_ready": True,
+            "beauty_dashboard_ready": True,
+            "beauty_integrations_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -448,6 +455,7 @@ class EnterpriseHubApplication:
                 "release_platform": self.config.release_platform,
                 "product_intelligence": self.config.product_intelligence,
                 "ai_business_advisor": self.config.ai_business_advisor,
+                "beauty_os": self.config.beauty_os,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -489,6 +497,7 @@ class EnterpriseHubApplication:
             "release_platform": self.release_platform.status(),
             "product_intelligence": self.product_intelligence.status(),
             "ai_business_advisor": self.ai_business_advisor.status(),
+            "beauty_os": self.beauty_os.status(),
         }
 
 

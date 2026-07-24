@@ -30,6 +30,7 @@ from applications.enterprise_hub.performance_platform import api as epf_api
 from applications.enterprise_hub.release_platform import api as erl_api
 from applications.enterprise_hub.product_intelligence import api as epi_api
 from applications.enterprise_hub.ai_business_advisor import api as aba_api
+from applications.enterprise_hub.beauty_os import api as bos_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -662,4 +663,16 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{aba}/daily", aba_api.aba_daily_handler)
     app.router.add_get(f"{aba}/brief", aba_api.aba_brief_handler)
     app.router.add_post(f"{aba}/decide", aba_api.aba_decide_handler)
+
+    # Sprint 22.2 — Beauty OS (additive; prior routes unchanged)
+    bos = DEFAULT_CONFIG.beauty_os_api_prefix
+    app.router.add_get(f"{bos}/health", bos_api.bos_health_handler)
+    app.router.add_post(f"{bos}/bootstrap", bos_api.bos_bootstrap_handler)
+    app.router.add_post(f"{bos}/company", bos_api.bos_company_handler)
+    app.router.add_post(f"{bos}/branches", bos_api.bos_branch_handler)
+    app.router.add_post(f"{bos}/employees", bos_api.bos_employee_handler)
+    app.router.add_post(f"{bos}/services", bos_api.bos_service_handler)
+    app.router.add_post(f"{bos}/customers", bos_api.bos_customer_handler)
+    app.router.add_post(f"{bos}/appointments", bos_api.bos_appointment_handler)
+    app.router.add_get(f"{bos}/dashboard", bos_api.bos_dashboard_handler)
 

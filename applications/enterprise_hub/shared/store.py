@@ -536,6 +536,16 @@ class EnterpriseHubStore:
         self.aba_briefs: EntityStore = EntityStore()
         self.aba_handoffs: EntityStore = EntityStore()
         self.aba_decisions: EntityStore = EntityStore()
+        # Sprint 22.2 — Beauty OS
+        self.bos_bootstraps: EntityStore = EntityStore()
+        self.bos_companies: EntityStore = EntityStore()
+        self.bos_branches: EntityStore = EntityStore()
+        self.bos_employees: EntityStore = EntityStore()
+        self.bos_services: EntityStore = EntityStore()
+        self.bos_resources: EntityStore = EntityStore()
+        self.bos_customers: EntityStore = EntityStore()
+        self.bos_appointments: EntityStore = EntityStore()
+        self.bos_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
