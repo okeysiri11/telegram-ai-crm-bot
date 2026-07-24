@@ -32,6 +32,7 @@ from applications.enterprise_hub.product_intelligence import api as epi_api
 from applications.enterprise_hub.ai_business_advisor import api as aba_api
 from applications.enterprise_hub.beauty_os import api as bos_api
 from applications.enterprise_hub.beauty_workspace import api as bws_api
+from applications.enterprise_hub.beauty_client_journey import api as bcj_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -691,4 +692,15 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{bws}/search", bws_api.bws_search_handler)
     app.router.add_get(f"{bws}/notifications", bws_api.bws_notifications_handler)
     app.router.add_get(f"{bws}/assistant", bws_api.bws_assistant_handler)
+
+    # Sprint 22.4 — Beauty Client Journey (additive; prior routes unchanged)
+    bcj = DEFAULT_CONFIG.beauty_client_journey_api_prefix
+    app.router.add_get(f"{bcj}/health", bcj_api.bcj_health_handler)
+    app.router.add_post(f"{bcj}/bootstrap", bcj_api.bcj_bootstrap_handler)
+    app.router.add_post(f"{bcj}/availability", bcj_api.bcj_availability_handler)
+    app.router.add_post(f"{bcj}/book", bcj_api.bcj_book_handler)
+    app.router.add_post(f"{bcj}/journey", bcj_api.bcj_journey_handler)
+    app.router.add_post(f"{bcj}/waitlist", bcj_api.bcj_waitlist_handler)
+    app.router.add_post(f"{bcj}/loyalty", bcj_api.bcj_loyalty_handler)
+    app.router.add_post(f"{bcj}/assistant", bcj_api.bcj_assistant_handler)
 

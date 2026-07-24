@@ -558,6 +558,16 @@ class EnterpriseHubStore:
         self.bws_moves: EntityStore = EntityStore()
         self.bws_certificates: EntityStore = EntityStore()
         self.bws_memberships: EntityStore = EntityStore()
+        # Sprint 22.4 — Beauty Client Journey
+        self.bcj_bootstraps: EntityStore = EntityStore()
+        self.bcj_journeys: EntityStore = EntityStore()
+        self.bcj_bookings: EntityStore = EntityStore()
+        self.bcj_availability: EntityStore = EntityStore()
+        self.bcj_waitlist: EntityStore = EntityStore()
+        self.bcj_offers: EntityStore = EntityStore()
+        self.bcj_reminders: EntityStore = EntityStore()
+        self.bcj_loyalty: EntityStore = EntityStore()
+        self.bcj_assistant: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

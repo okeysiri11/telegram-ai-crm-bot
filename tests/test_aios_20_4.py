@@ -53,8 +53,8 @@ def reset_store():
 
 def test_version_aios_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.4.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.3.0"
+    assert health["application_version"] == "6.5.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.4.0"
     assert health["autonomous_aios_ready"] is True
     assert health["goal_manager_ready"] is True
     assert health["checkpoint_recovery_ready"] is True
@@ -82,7 +82,7 @@ def test_bootstrap_dashboard():
     suite = enterprise_hub.aios
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.4.0"
+    assert boot["version"] == "6.5.0"
     assert boot["recovery_id"] and boot["dashboard"]["productivity_id"]
     assert "collaborative" in boot["modes"]
 
@@ -91,7 +91,7 @@ def test_bootstrap_dashboard():
 async def test_api_aios(client):
     health = await client.get(f"{AIOS}/health")
     body = await health.json()
-    assert body["application_version"] == "6.4.0"
+    assert body["application_version"] == "6.5.0"
     assert body["autonomous_aios_ready"] is True
 
     boot = await client.post(f"{AIOS}/bootstrap", json={})
@@ -104,7 +104,7 @@ async def test_api_aios(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN, AOP, ATS, EKP):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.4.0"
+        assert (await resp.json())["application_version"] == "6.5.0"
 
     assert boot_body["run_sequential"]["plan_id"]
 
@@ -145,5 +145,5 @@ def test_docs_and_regression_20_4():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.4.0" in manifest
-    assert "22.3" in manifest
+    assert "6.5.0" in manifest
+    assert "22.4" in manifest

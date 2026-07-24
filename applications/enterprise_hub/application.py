@@ -26,6 +26,7 @@ from applications.enterprise_hub.product_intelligence.facade import ProductIntel
 from applications.enterprise_hub.ai_business_advisor.facade import AIBusinessAdvisorSuite
 from applications.enterprise_hub.beauty_os.facade import BeautyOSSuite
 from applications.enterprise_hub.beauty_workspace.facade import BeautyWorkspaceSuite
+from applications.enterprise_hub.beauty_client_journey.facade import BeautyClientJourneySuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -86,6 +87,7 @@ class EnterpriseHubApplication:
         ai_business_advisor_svc: AIBusinessAdvisorSuite | None = None,
         beauty_os_svc: BeautyOSSuite | None = None,
         beauty_workspace_svc: BeautyWorkspaceSuite | None = None,
+        beauty_client_journey_svc: BeautyClientJourneySuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -129,6 +131,7 @@ class EnterpriseHubApplication:
         self.ai_business_advisor = ai_business_advisor_svc or AIBusinessAdvisorSuite(self.store)
         self.beauty_os = beauty_os_svc or BeautyOSSuite(self.store)
         self.beauty_workspace = beauty_workspace_svc or BeautyWorkspaceSuite(self.store)
+        self.beauty_client_journey = beauty_client_journey_svc or BeautyClientJourneySuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -425,6 +428,10 @@ class EnterpriseHubApplication:
             "reception_desk_ready": True,
             "live_schedule_ready": True,
             "workspace_assistant_ready": True,
+            "beauty_client_journey_ready": True,
+            "smart_booking_ready": True,
+            "waitlist_ready": True,
+            "loyalty_triggers_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -464,6 +471,7 @@ class EnterpriseHubApplication:
                 "ai_business_advisor": self.config.ai_business_advisor,
                 "beauty_os": self.config.beauty_os,
                 "beauty_workspace": self.config.beauty_workspace,
+                "beauty_client_journey": self.config.beauty_client_journey,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -507,6 +515,7 @@ class EnterpriseHubApplication:
             "ai_business_advisor": self.ai_business_advisor.status(),
             "beauty_os": self.beauty_os.status(),
             "beauty_workspace": self.beauty_workspace.status(),
+            "beauty_client_journey": self.beauty_client_journey.status(),
         }
 
 
