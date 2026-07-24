@@ -29,6 +29,7 @@ from applications.enterprise_hub.documentation_platform import api as edo_api
 from applications.enterprise_hub.performance_platform import api as epf_api
 from applications.enterprise_hub.release_platform import api as erl_api
 from applications.enterprise_hub.product_intelligence import api as epi_api
+from applications.enterprise_hub.ai_business_advisor import api as aba_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -652,4 +653,13 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{epi}/decide", epi_api.epi_decide_handler)
     app.router.add_post(f"{epi}/validate", epi_api.epi_validate_handler)
     app.router.add_get(f"{epi}/knowledge", epi_api.epi_knowledge_handler)
+
+    # Sprint 22.1 — AI Business Advisor (additive; prior routes unchanged)
+    aba = DEFAULT_CONFIG.ai_business_advisor_api_prefix
+    app.router.add_get(f"{aba}/health", aba_api.aba_health_handler)
+    app.router.add_post(f"{aba}/bootstrap", aba_api.aba_bootstrap_handler)
+    app.router.add_post(f"{aba}/analyze", aba_api.aba_analyze_handler)
+    app.router.add_post(f"{aba}/daily", aba_api.aba_daily_handler)
+    app.router.add_get(f"{aba}/brief", aba_api.aba_brief_handler)
+    app.router.add_post(f"{aba}/decide", aba_api.aba_decide_handler)
 

@@ -39,8 +39,8 @@ def reset_store():
 
 def test_version_hub_foundation_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.1.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0"
+    assert health["application_version"] == "6.2.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.1.0"
     assert health["enterprise_hub_foundation_ready"] is True
     assert health["integration_layer_ready"] is True
     assert health["enterprise_event_bus_ready"] is True
@@ -64,7 +64,7 @@ def test_registry_and_gateway():
 def test_event_bus_bootstrap():
     boot = enterprise_hub.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.1.0"
+    assert boot["version"] == "6.2.0"
     assert boot["platform_finance_id"] and boot["event_id"] and boot["replay_id"]
     assert enterprise_hub.events.status()["dead_letters"] >= 1
     for dtype in (
@@ -81,7 +81,7 @@ def test_event_bus_bootstrap():
 async def test_api_enterprise_hub(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "6.1.0"
+    assert body["application_version"] == "6.2.0"
     assert body["enterprise_hub_foundation_ready"] is True
     assert body["unified_api_ready"] is True
 
@@ -136,8 +136,8 @@ def test_docs_and_regression_19_0():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.1.0" in manifest
-    assert "22.0" in manifest
+    assert "6.2.0" in manifest
+    assert "22.1" in manifest
     # Finance suite must remain untouched at certified release
     fin_manifest = (ROOT / "applications" / "finance_enterprise" / "manifest.json").read_text()
     assert "5.2.0-enterprise" in fin_manifest

@@ -23,6 +23,7 @@ from applications.enterprise_hub.documentation_platform.facade import Documentat
 from applications.enterprise_hub.performance_platform.facade import PerformancePlatformSuite
 from applications.enterprise_hub.release_platform.facade import ReleasePlatformSuite
 from applications.enterprise_hub.product_intelligence.facade import ProductIntelligenceSuite
+from applications.enterprise_hub.ai_business_advisor.facade import AIBusinessAdvisorSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -80,6 +81,7 @@ class EnterpriseHubApplication:
         performance_platform_svc: PerformancePlatformSuite | None = None,
         release_platform_svc: ReleasePlatformSuite | None = None,
         product_intelligence_svc: ProductIntelligenceSuite | None = None,
+        ai_business_advisor_svc: AIBusinessAdvisorSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -120,6 +122,7 @@ class EnterpriseHubApplication:
         self.performance_platform = performance_platform_svc or PerformancePlatformSuite(self.store)
         self.release_platform = release_platform_svc or ReleasePlatformSuite(self.store)
         self.product_intelligence = product_intelligence_svc or ProductIntelligenceSuite(self.store)
+        self.ai_business_advisor = ai_business_advisor_svc or AIBusinessAdvisorSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -404,6 +407,10 @@ class EnterpriseHubApplication:
             "feedback_collector_ready": True,
             "expert_board_ready": True,
             "owner_approval_ready": True,
+            "ai_business_advisor_ready": True,
+            "business_health_ready": True,
+            "daily_brief_ready": True,
+            "advisor_owner_approval_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -440,6 +447,7 @@ class EnterpriseHubApplication:
                 "performance_platform": self.config.performance_platform,
                 "release_platform": self.config.release_platform,
                 "product_intelligence": self.config.product_intelligence,
+                "ai_business_advisor": self.config.ai_business_advisor,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -480,6 +488,7 @@ class EnterpriseHubApplication:
             "performance_platform": self.performance_platform.status(),
             "release_platform": self.release_platform.status(),
             "product_intelligence": self.product_intelligence.status(),
+            "ai_business_advisor": self.ai_business_advisor.status(),
         }
 
 

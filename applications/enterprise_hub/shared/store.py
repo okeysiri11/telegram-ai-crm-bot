@@ -527,6 +527,15 @@ class EnterpriseHubStore:
         self.epi_pipelines: EntityStore = EntityStore()
         self.epi_validations: EntityStore = EntityStore()
         self.epi_knowledge: EntityStore = EntityStore()
+        # Sprint 22.1 — AI Business Advisor
+        self.aba_bootstraps: EntityStore = EntityStore()
+        self.aba_health: EntityStore = EntityStore()
+        self.aba_opportunities: EntityStore = EntityStore()
+        self.aba_recommendations: EntityStore = EntityStore()
+        self.aba_forecasts: EntityStore = EntityStore()
+        self.aba_briefs: EntityStore = EntityStore()
+        self.aba_handoffs: EntityStore = EntityStore()
+        self.aba_decisions: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

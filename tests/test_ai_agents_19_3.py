@@ -42,8 +42,8 @@ def reset_store():
 
 def test_version_agents_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.1.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0"
+    assert health["application_version"] == "6.2.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.1.0"
     assert health["enterprise_ai_agents_ready"] is True
     assert health["autonomous_automation_ready"] is True
     assert health["multi_agent_collaboration_ready"] is True
@@ -84,7 +84,7 @@ def test_governance_performance_bootstrap():
     suite = enterprise_hub.ai_agents
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.1.0"
+    assert boot["version"] == "6.2.0"
     assert boot["agent_general_id"] and boot["emergency_stop_id"] and boot["consensus_id"]
     health = suite.governance.health_check(agent_id=boot["agent_general_id"])
     assert health["status"] == "healthy"
@@ -100,7 +100,7 @@ def test_governance_performance_bootstrap():
 async def test_api_ai_agents(client):
     health = await client.get(f"{AA}/health")
     body = await health.json()
-    assert body["application_version"] == "6.1.0"
+    assert body["application_version"] == "6.2.0"
     assert body["enterprise_ai_agents_ready"] is True
     assert body["autonomous_automation_ready"] is True
 
@@ -117,7 +117,7 @@ async def test_api_ai_agents(client):
     for prefix in (HUB, ORCH, KG):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.1.0"
+        assert (await resp.json())["application_version"] == "6.2.0"
 
     assert boot_body["agent_finance_id"]
 
@@ -155,5 +155,5 @@ def test_docs_and_regression_19_3():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.1.0" in manifest
-    assert "22.0" in manifest
+    assert "6.2.0" in manifest
+    assert "22.1" in manifest
