@@ -25,6 +25,7 @@ from applications.enterprise_hub.api_standardization import api as eas_api
 from applications.enterprise_hub.data_contracts import api as edc_api
 from applications.enterprise_hub.security_hardening import api as esh_api
 from applications.enterprise_hub.quality_assurance import api as eqa_api
+from applications.enterprise_hub.documentation_platform import api as edo_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -598,3 +599,17 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{eqa}/fixtures", eqa_api.eqa_fixtures_handler)
     app.router.add_get(f"{eqa}/dashboard", eqa_api.eqa_dashboard_handler)
     app.router.add_post(f"{eqa}/certify", eqa_api.eqa_certify_handler)
+
+    # Sprint 21.6 — Documentation Platform (additive; prior routes unchanged)
+    edo = DEFAULT_CONFIG.documentation_platform_api_prefix
+    app.router.add_get(f"{edo}/health", edo_api.edo_health_handler)
+    app.router.add_post(f"{edo}/bootstrap", edo_api.edo_bootstrap_handler)
+    app.router.add_get(f"{edo}/docs", edo_api.edo_docs_handler)
+    app.router.add_post(f"{edo}/docs", edo_api.edo_docs_handler)
+    app.router.add_get(f"{edo}/search", edo_api.edo_search_handler)
+    app.router.add_post(f"{edo}/search", edo_api.edo_search_handler)
+    app.router.add_post(f"{edo}/generate", edo_api.edo_generate_handler)
+    app.router.add_post(f"{edo}/publish", edo_api.edo_publish_handler)
+    app.router.add_get(f"{edo}/quality", edo_api.edo_quality_handler)
+    app.router.add_post(f"{edo}/quality", edo_api.edo_quality_handler)
+    app.router.add_get(f"{edo}/dashboard", edo_api.edo_dashboard_handler)

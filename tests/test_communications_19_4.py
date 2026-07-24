@@ -43,8 +43,8 @@ def reset_store():
 
 def test_version_communications_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.0.0-rc5"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc4"
+    assert health["application_version"] == "6.0.0-rc6"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc5"
     assert health["enterprise_communications_ready"] is True
     assert health["notification_center_ready"] is True
     assert health["multi_channel_delivery_ready"] is True
@@ -83,7 +83,7 @@ def test_templates_chat_delivery_bootstrap():
     suite = enterprise_hub.communications
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.0.0-rc5"
+    assert boot["version"] == "6.0.0-rc6"
     assert boot["route_critical_id"] and boot["chat_ai_id"] and boot["audit_id"]
     tpl = suite.templates.register(kind="lead", name="QA Lead", fmt="plain")
     rend = suite.templates.render(
@@ -101,7 +101,7 @@ def test_templates_chat_delivery_bootstrap():
 async def test_api_communications(client):
     health = await client.get(f"{CM}/health")
     body = await health.json()
-    assert body["application_version"] == "6.0.0-rc5"
+    assert body["application_version"] == "6.0.0-rc6"
     assert body["enterprise_communications_ready"] is True
     assert body["notification_center_ready"] is True
 
@@ -123,7 +123,7 @@ async def test_api_communications(client):
     for prefix in (HUB, ORCH, KG, AA):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.0.0-rc5"
+        assert (await resp.json())["application_version"] == "6.0.0-rc6"
 
     assert boot_body["template_invoice_id"]
 
@@ -162,5 +162,5 @@ def test_docs_and_regression_19_4():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.0.0-rc5" in manifest
-    assert "21.5" in manifest
+    assert "6.0.0-rc6" in manifest
+    assert "21.6" in manifest

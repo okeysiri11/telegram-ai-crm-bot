@@ -492,6 +492,14 @@ class EnterpriseHubStore:
         self.eqa_fixtures: EntityStore = EntityStore()
         self.eqa_dashboards: EntityStore = EntityStore()
         self.eqa_certifications: EntityStore = EntityStore()
+        # Sprint 21.6 — Documentation Platform
+        self.edo_bootstraps: EntityStore = EntityStore()
+        self.edo_docs: EntityStore = EntityStore()
+        self.edo_searches: EntityStore = EntityStore()
+        self.edo_generations: EntityStore = EntityStore()
+        self.edo_publications: EntityStore = EntityStore()
+        self.edo_quality: EntityStore = EntityStore()
+        self.edo_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

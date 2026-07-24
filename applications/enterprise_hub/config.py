@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 21.5 Enterprise Testing & Quality Assurance (Phase 2 Stabilization RC5)."""
+"""Enterprise Hub — Sprint 21.6 Enterprise Documentation Platform (Phase 2 Stabilization RC6)."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "6.0.0-rc5"
-    release_status: str = "Enterprise Testing & Quality Assurance"
+    application_version: str = "6.0.0-rc6"
+    release_status: str = "Enterprise Documentation Platform"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v6.0.0-rc4"
+    enterprise_foundation: str = "Enterprise Platform v6.0.0-rc5"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -42,6 +42,7 @@ class EnterpriseHubConfig:
     data_contracts_api_prefix: str = "/api/enterprise-edc/v1"
     security_hardening_api_prefix: str = "/api/enterprise-esh/v1"
     quality_assurance_api_prefix: str = "/api/enterprise-eqa/v1"
+    documentation_platform_api_prefix: str = "/api/enterprise-edo/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -74,6 +75,7 @@ class EnterpriseHubConfig:
     data_contracts: str = "1.0"
     security_hardening: str = "1.0"
     quality_assurance: str = "1.0"
+    documentation_platform: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

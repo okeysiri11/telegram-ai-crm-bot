@@ -7,4 +7,5 @@ Enterprise shared libraries for Stabilization Phase.
 
 Import paths avoid Python stdlib/`platform` collisions.
 - Quality: [`../platform_quality/`](../platform_quality/)
+- Documentation: [`../platform_documentation/`](../platform_documentation/)
 

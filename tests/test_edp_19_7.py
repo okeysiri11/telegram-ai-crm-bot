@@ -46,8 +46,8 @@ def reset_store():
 
 def test_version_edp_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.0.0-rc5"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc4"
+    assert health["application_version"] == "6.0.0-rc6"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc5"
     assert health["enterprise_data_platform_ready"] is True
     assert health["master_data_ready"] is True
     assert health["data_quality_ready"] is True
@@ -78,7 +78,7 @@ def test_lineage_versioning_ai_bootstrap():
     suite = enterprise_hub.edp
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.0.0-rc5"
+    assert boot["version"] == "6.0.0-rc6"
     assert boot["customer_id"] and boot["quality_id"] and boot["rollback_id"]
     ai = suite.ai.assist(action="detect_anomalies", subject="financial_object")
     assert ai["assist_id"]
@@ -90,7 +90,7 @@ def test_lineage_versioning_ai_bootstrap():
 async def test_api_edp(client):
     health = await client.get(f"{EDP}/health")
     body = await health.json()
-    assert body["application_version"] == "6.0.0-rc5"
+    assert body["application_version"] == "6.0.0-rc6"
     assert body["enterprise_data_platform_ready"] is True
     assert body["master_data_ready"] is True
 
@@ -107,7 +107,7 @@ async def test_api_edp(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.0.0-rc5"
+        assert (await resp.json())["application_version"] == "6.0.0-rc6"
 
     assert boot_body["schema_user_id"]
 
@@ -147,5 +147,5 @@ def test_docs_and_regression_19_7():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.0.0-rc5" in manifest
-    assert "21.5" in manifest
+    assert "6.0.0-rc6" in manifest
+    assert "21.6" in manifest

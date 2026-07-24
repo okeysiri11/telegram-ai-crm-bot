@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.0.0-rc5",
-  "release_status": "Enterprise Testing & Quality Assurance",
+  "application_version": "6.0.0-rc6",
+  "release_status": "Enterprise Documentation Platform",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.0.0-rc4",
+  "enterprise_foundation": "Enterprise Platform v6.0.0-rc5",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "21.5",
+  "sprint": "21.6",
   "phase": "stabilization",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -93,7 +93,11 @@
     "quality_assurance": "1.0",
     "test_framework": "1.0",
     "coverage_engine": "1.0",
-    "quality_certification": "1.0"
+    "quality_certification": "1.0",
+    "documentation_platform": "1.0",
+    "docs_registry": "1.0",
+    "docs_search": "1.0",
+    "docs_publishing": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -107,5 +111,6 @@
     "finance_enterprise"
   ],
   "security_hardening": "1.0",
-  "quality_assurance": "1.0"
+  "quality_assurance": "1.0",
+  "documentation_platform": "1.0"
 }

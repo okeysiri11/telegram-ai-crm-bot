@@ -19,6 +19,7 @@ from applications.enterprise_hub.data_fabric.facade import DataFabricSuite
 from applications.enterprise_hub.data_platform.facade import DataPlatformSuite
 from applications.enterprise_hub.developer_platform.facade import DeveloperPlatformSuite
 from applications.enterprise_hub.digital_twin.facade import DigitalTwinSuite
+from applications.enterprise_hub.documentation_platform.facade import DocumentationPlatformSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -72,6 +73,7 @@ class EnterpriseHubApplication:
         data_contracts_svc: DataContractsSuite | None = None,
         security_hardening_svc: SecurityHardeningSuite | None = None,
         quality_assurance_svc: QualityAssuranceSuite | None = None,
+        documentation_platform_svc: DocumentationPlatformSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -108,6 +110,7 @@ class EnterpriseHubApplication:
         self.data_contracts = data_contracts_svc or DataContractsSuite(self.store)
         self.security_hardening = security_hardening_svc or SecurityHardeningSuite(self.store)
         self.quality_assurance = quality_assurance_svc or QualityAssuranceSuite(self.store)
+        self.documentation_platform = documentation_platform_svc or DocumentationPlatformSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -376,6 +379,10 @@ class EnterpriseHubApplication:
             "test_framework_ready": True,
             "coverage_engine_ready": True,
             "quality_certification_ready": True,
+            "documentation_platform_ready": True,
+            "docs_registry_ready": True,
+            "docs_search_ready": True,
+            "docs_publishing_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -408,6 +415,7 @@ class EnterpriseHubApplication:
                 "data_contracts": self.config.data_contracts,
                 "security_hardening": self.config.security_hardening,
                 "quality_assurance": self.config.quality_assurance,
+                "documentation_platform": self.config.documentation_platform,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -444,6 +452,7 @@ class EnterpriseHubApplication:
             "data_contracts": self.data_contracts.status(),
             "security_hardening": self.security_hardening.status(),
             "quality_assurance": self.quality_assurance.status(),
+            "documentation_platform": self.documentation_platform.status(),
         }
 
 
