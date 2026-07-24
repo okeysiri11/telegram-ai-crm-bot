@@ -608,6 +608,15 @@ class EnterpriseHubStore:
         self.cpl_notifications: EntityStore = EntityStore()
         self.cpl_security: EntityStore = EntityStore()
         self.cpl_mobile: EntityStore = EntityStore()
+        # Sprint 22.9 — Enterprise Onboarding
+        self.eon_bootstraps: EntityStore = EntityStore()
+        self.eon_wizards: EntityStore = EntityStore()
+        self.eon_imports: EntityStore = EntityStore()
+        self.eon_validations: EntityStore = EntityStore()
+        self.eon_assistant: EntityStore = EntityStore()
+        self.eon_configs: EntityStore = EntityStore()
+        self.eon_readiness: EntityStore = EntityStore()
+        self.eon_go_live: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

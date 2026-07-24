@@ -37,6 +37,7 @@ from applications.enterprise_hub.ai_marketing_os import api as amo_api
 from applications.enterprise_hub.communications_hub import api as ech_api
 from applications.enterprise_hub.commerce_core import api as eco_api
 from applications.enterprise_hub.client_portal import api as cpl_api
+from applications.enterprise_hub.onboarding import api as eon_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -761,4 +762,17 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{cpl}/assistant", cpl_api.cpl_assistant_handler)
     app.router.add_get(f"{cpl}/notifications", cpl_api.cpl_notifications_handler)
     app.router.add_post(f"{cpl}/security", cpl_api.cpl_security_handler)
+
+    # Sprint 22.9 — Enterprise Onboarding (additive; prior routes unchanged)
+    eon = DEFAULT_CONFIG.onboarding_api_prefix
+    app.router.add_get(f"{eon}/health", eon_api.eon_health_handler)
+    app.router.add_post(f"{eon}/bootstrap", eon_api.eon_bootstrap_handler)
+    app.router.add_post(f"{eon}/wizard", eon_api.eon_wizard_handler)
+    app.router.add_post(f"{eon}/import", eon_api.eon_import_handler)
+    app.router.add_post(f"{eon}/validate", eon_api.eon_validate_handler)
+    app.router.add_post(f"{eon}/assistant", eon_api.eon_assistant_handler)
+    app.router.add_post(f"{eon}/config", eon_api.eon_config_handler)
+    app.router.add_get(f"{eon}/readiness", eon_api.eon_readiness_handler)
+    app.router.add_post(f"{eon}/readiness", eon_api.eon_readiness_handler)
+    app.router.add_post(f"{eon}/go-live", eon_api.eon_go_live_handler)
 

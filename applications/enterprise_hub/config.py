@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 22.8 Client Portal & Mobile Experience."""
+"""Enterprise Hub — Sprint 22.9 Enterprise Onboarding & Data Migration."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "6.9.0"
-    release_status: str = "Client Portal & Mobile Experience"
+    application_version: str = "6.10.0"
+    release_status: str = "Enterprise Onboarding & Data Migration"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v6.8.0"
+    enterprise_foundation: str = "Enterprise Platform v6.9.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -54,6 +54,7 @@ class EnterpriseHubConfig:
     communications_hub_api_prefix: str = "/api/enterprise-ech/v1"
     commerce_core_api_prefix: str = "/api/enterprise-eco/v1"
     client_portal_api_prefix: str = "/api/enterprise-cpl/v1"
+    onboarding_api_prefix: str = "/api/enterprise-eon/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -98,6 +99,7 @@ class EnterpriseHubConfig:
     communications_hub: str = "1.0"
     commerce_core: str = "1.0"
     client_portal: str = "1.0"
+    enterprise_onboarding: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

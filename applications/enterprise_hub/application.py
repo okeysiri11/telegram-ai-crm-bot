@@ -31,6 +31,7 @@ from applications.enterprise_hub.ai_marketing_os.facade import AIMarketingOSSuit
 from applications.enterprise_hub.communications_hub.facade import CommunicationsHubSuite
 from applications.enterprise_hub.commerce_core.facade import CommerceCoreSuite
 from applications.enterprise_hub.client_portal.facade import ClientPortalSuite
+from applications.enterprise_hub.onboarding.facade import EnterpriseOnboardingSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -96,6 +97,7 @@ class EnterpriseHubApplication:
         communications_hub_svc: CommunicationsHubSuite | None = None,
         commerce_core_svc: CommerceCoreSuite | None = None,
         client_portal_svc: ClientPortalSuite | None = None,
+        onboarding_svc: EnterpriseOnboardingSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -144,6 +146,7 @@ class EnterpriseHubApplication:
         self.communications_hub = communications_hub_svc or CommunicationsHubSuite(self.store)
         self.commerce_core = commerce_core_svc or CommerceCoreSuite(self.store)
         self.client_portal = client_portal_svc or ClientPortalSuite(self.store)
+        self.onboarding = onboarding_svc or EnterpriseOnboardingSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -460,6 +463,10 @@ class EnterpriseHubApplication:
             "online_booking_ready": True,
             "mobile_experience_ready": True,
             "portal_security_ready": True,
+            "onboarding_ready": True,
+            "data_migration_ready": True,
+            "validation_ready": True,
+            "go_live_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -504,6 +511,7 @@ class EnterpriseHubApplication:
                 "communications_hub": self.config.communications_hub,
                 "commerce_core": self.config.commerce_core,
                 "client_portal": self.config.client_portal,
+                "enterprise_onboarding": self.config.enterprise_onboarding,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -552,6 +560,7 @@ class EnterpriseHubApplication:
             "communications_hub": self.communications_hub.status(),
             "commerce_core": self.commerce_core.status(),
             "client_portal": self.client_portal.status(),
+            "onboarding": self.onboarding.status(),
         }
 
 
