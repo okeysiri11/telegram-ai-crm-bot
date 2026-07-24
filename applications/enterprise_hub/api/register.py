@@ -16,6 +16,7 @@ from applications.enterprise_hub.ai_tools import api as ats_api
 from applications.enterprise_hub.event_platform import api as evp_api
 from applications.enterprise_hub.developer_platform import api as sdp_api
 from applications.enterprise_hub.data_fabric import api as edf_api
+from applications.enterprise_hub.digital_twin import api as edt_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -424,3 +425,23 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{edf}/dashboard", edf_api.edf_dashboard_handler)
     app.router.add_get(f"{edf}/analytics", edf_api.edf_analytics_handler)
     app.router.add_post(f"{edf}/analytics", edf_api.edf_analytics_handler)
+
+    # Sprint 20.8 — Digital Twin (additive; prior routes unchanged)
+    edt = DEFAULT_CONFIG.digital_twin_api_prefix
+    app.router.add_get(f"{edt}/health", edt_api.edt_health_handler)
+    app.router.add_post(f"{edt}/bootstrap", edt_api.edt_bootstrap_handler)
+    app.router.add_get(f"{edt}/twins", edt_api.edt_twins_handler)
+    app.router.add_post(f"{edt}/twins", edt_api.edt_twins_handler)
+    app.router.add_post(f"{edt}/state", edt_api.edt_state_handler)
+    app.router.add_get(f"{edt}/relationships", edt_api.edt_relationships_handler)
+    app.router.add_post(f"{edt}/relationships", edt_api.edt_relationships_handler)
+    app.router.add_post(f"{edt}/sync", edt_api.edt_sync_handler)
+    app.router.add_get(f"{edt}/timeline", edt_api.edt_timeline_handler)
+    app.router.add_post(f"{edt}/timeline", edt_api.edt_timeline_handler)
+    app.router.add_get(f"{edt}/snapshots", edt_api.edt_snapshots_handler)
+    app.router.add_post(f"{edt}/snapshots", edt_api.edt_snapshots_handler)
+    app.router.add_get(f"{edt}/visualize", edt_api.edt_visualize_handler)
+    app.router.add_post(f"{edt}/visualize", edt_api.edt_visualize_handler)
+    app.router.add_get(f"{edt}/analytics", edt_api.edt_analytics_handler)
+    app.router.add_post(f"{edt}/analytics", edt_api.edt_analytics_handler)
+    app.router.add_post(f"{edt}/prediction", edt_api.edt_prediction_handler)

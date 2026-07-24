@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 20.7 Enterprise Unified Data Fabric."""
+"""Enterprise Hub — Sprint 20.8 Enterprise Digital Twin Platform."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "5.4.7-enterprise"
-    release_status: str = "Enterprise Unified Data Fabric"
+    application_version: str = "5.4.8-enterprise"
+    release_status: str = "Enterprise Digital Twin Platform"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v5.4.6-enterprise"
+    enterprise_foundation: str = "Enterprise Platform v5.4.7-enterprise"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -33,6 +33,7 @@ class EnterpriseHubConfig:
     event_platform_api_prefix: str = "/api/enterprise-evp/v1"
     developer_platform_api_prefix: str = "/api/enterprise-sdp/v1"
     data_fabric_api_prefix: str = "/api/enterprise-edf/v1"
+    digital_twin_api_prefix: str = "/api/enterprise-edt/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -56,6 +57,7 @@ class EnterpriseHubConfig:
     event_platform: str = "1.0"
     developer_platform: str = "1.0"
     data_fabric: str = "1.0"
+    digital_twin: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(
@@ -467,6 +469,24 @@ class EnterpriseHubConfig:
     )
     edf_virtualization_modes: list[str] = field(
         default_factory=lambda: ["sql", "nosql", "graph", "vector", "object", "event_stream"]
+    )
+    edt_twin_types: list[str] = field(
+        default_factory=lambda: [
+            "organization",
+            "department",
+            "employee",
+            "customer",
+            "supplier",
+            "project",
+            "warehouse",
+            "equipment",
+            "vehicle",
+            "vessel",
+            "production",
+            "asset",
+            "ai_agent",
+            "custom",
+        ]
     )
 
 

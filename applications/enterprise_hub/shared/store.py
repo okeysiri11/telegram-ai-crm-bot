@@ -369,6 +369,21 @@ class EnterpriseHubStore:
         self.edf_connector_queries: EntityStore = EntityStore()
         self.edf_unified: EntityStore = EntityStore()
         self.edf_analytics: EntityStore = EntityStore()
+        # Sprint 20.8 — Digital Twin
+        self.edt_twins: EntityStore = EntityStore()
+        self.edt_states: EntityStore = EntityStore()
+        self.edt_syncs: EntityStore = EntityStore()
+        self.edt_relationships: EntityStore = EntityStore()
+        self.edt_timeline: EntityStore = EntityStore()
+        self.edt_snapshots: EntityStore = EntityStore()
+        self.edt_snapshot_restores: EntityStore = EntityStore()
+        self.edt_predictions: EntityStore = EntityStore()
+        self.edt_visualizations: EntityStore = EntityStore()
+        self.edt_events: EntityStore = EntityStore()
+        self.edt_realtime: EntityStore = EntityStore()
+        self.edt_conflicts: EntityStore = EntityStore()
+        self.edt_consistency: EntityStore = EntityStore()
+        self.edt_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

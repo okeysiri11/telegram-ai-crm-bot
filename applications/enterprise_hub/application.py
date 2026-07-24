@@ -14,6 +14,7 @@ from applications.enterprise_hub.configuration import EnterpriseConfiguration
 from applications.enterprise_hub.data_fabric.facade import DataFabricSuite
 from applications.enterprise_hub.data_platform.facade import DataPlatformSuite
 from applications.enterprise_hub.developer_platform.facade import DeveloperPlatformSuite
+from applications.enterprise_hub.digital_twin.facade import DigitalTwinSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -54,6 +55,7 @@ class EnterpriseHubApplication:
         event_platform_svc: EventPlatformSuite | None = None,
         developer_platform_svc: DeveloperPlatformSuite | None = None,
         data_fabric_svc: DataFabricSuite | None = None,
+        digital_twin_svc: DigitalTwinSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -81,6 +83,7 @@ class EnterpriseHubApplication:
         self.event_platform = event_platform_svc or EventPlatformSuite(self.store)
         self.developer_platform = developer_platform_svc or DeveloperPlatformSuite(self.store)
         self.data_fabric = data_fabric_svc or DataFabricSuite(self.store)
+        self.digital_twin = digital_twin_svc or DigitalTwinSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -312,6 +315,10 @@ class EnterpriseHubApplication:
             "data_catalog_ready": True,
             "federation_ready": True,
             "data_governance_ready": True,
+            "digital_twin_ready": True,
+            "twin_registry_ready": True,
+            "realtime_sync_ready": True,
+            "twin_analytics_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -335,6 +342,7 @@ class EnterpriseHubApplication:
                 "event_platform": self.config.event_platform,
                 "developer_platform": self.config.developer_platform,
                 "data_fabric": self.config.data_fabric,
+                "digital_twin": self.config.digital_twin,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -362,6 +370,7 @@ class EnterpriseHubApplication:
             "event_platform": self.event_platform.status(),
             "developer_platform": self.developer_platform.status(),
             "data_fabric": self.data_fabric.status(),
+            "digital_twin": self.digital_twin.status(),
         }
 
 
