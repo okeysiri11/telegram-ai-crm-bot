@@ -8,6 +8,7 @@ from applications.enterprise_hub.ai_agents.facade import AIAgentSuite
 from applications.enterprise_hub.ai_orchestrator.facade import AIOrchestrationSuite
 from applications.enterprise_hub.ai_os.facade import AutonomousAIOSSuite
 from applications.enterprise_hub.ai_tools.facade import AIToolsSuite
+from applications.enterprise_hub.api_standardization.facade import ApiStandardizationSuite
 from applications.enterprise_hub.business_capabilities.facade import BusinessCapabilitySuite
 from applications.enterprise_hub.command_center.facade import CommandCenterSuite
 from applications.enterprise_hub.communications.facade import CommunicationsSuite
@@ -64,6 +65,7 @@ class EnterpriseHubApplication:
         process_mining_svc: ProcessMiningSuite | None = None,
         business_capabilities_svc: BusinessCapabilitySuite | None = None,
         command_center_svc: CommandCenterSuite | None = None,
+        api_standardization_svc: ApiStandardizationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -96,6 +98,7 @@ class EnterpriseHubApplication:
         self.process_mining = process_mining_svc or ProcessMiningSuite(self.store)
         self.business_capabilities = business_capabilities_svc or BusinessCapabilitySuite(self.store)
         self.command_center = command_center_svc or CommandCenterSuite(self.store)
+        self.api_standardization = api_standardization_svc or ApiStandardizationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -348,6 +351,10 @@ class EnterpriseHubApplication:
             "executive_dashboard_ready": True,
             "health_monitor_ready": True,
             "action_center_ready": True,
+            "api_standardization_ready": True,
+            "api_inventory_ready": True,
+            "openapi_ready": True,
+            "api_governance_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -376,6 +383,7 @@ class EnterpriseHubApplication:
                 "process_mining": self.config.process_mining,
                 "business_capabilities": self.config.business_capabilities,
                 "command_center": self.config.command_center,
+                "api_standardization": self.config.api_standardization,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -408,6 +416,7 @@ class EnterpriseHubApplication:
             "process_mining": self.process_mining.status(),
             "business_capabilities": self.business_capabilities.status(),
             "command_center": self.command_center.status(),
+            "api_standardization": self.api_standardization.status(),
         }
 
 

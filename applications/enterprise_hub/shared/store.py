@@ -447,6 +447,23 @@ class EnterpriseHubStore:
         self.ecc_realtime: EntityStore = EntityStore()
         self.ecc_maps: EntityStore = EntityStore()
         self.ecc_analytics: EntityStore = EntityStore()
+        # Sprint 21.2 — API Standardization
+        self.eas_endpoints: EntityStore = EntityStore()
+        self.eas_inventories: EntityStore = EntityStore()
+        self.eas_registry: EntityStore = EntityStore()
+        self.eas_rest_standards: EntityStore = EntityStore()
+        self.eas_versioning: EntityStore = EntityStore()
+        self.eas_auth_policies: EntityStore = EntityStore()
+        self.eas_ws_standards: EntityStore = EntityStore()
+        self.eas_event_contracts: EntityStore = EntityStore()
+        self.eas_event_validations: EntityStore = EntityStore()
+        self.eas_events: EntityStore = EntityStore()
+        self.eas_openapi: EntityStore = EntityStore()
+        self.eas_swagger: EntityStore = EntityStore()
+        self.eas_redoc: EntityStore = EntityStore()
+        self.eas_gateway: EntityStore = EntityStore()
+        self.eas_governance: EntityStore = EntityStore()
+        self.eas_governance_runs: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

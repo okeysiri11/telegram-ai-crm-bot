@@ -21,6 +21,7 @@ from applications.enterprise_hub.simulation_engine import api as esi_api
 from applications.enterprise_hub.process_mining import api as epm_api
 from applications.enterprise_hub.business_capabilities import api as ebc_api
 from applications.enterprise_hub.command_center import api as ecc_api
+from applications.enterprise_hub.api_standardization import api as eas_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -528,3 +529,27 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{ecc}/map", ecc_api.ecc_map_handler)
     app.router.add_get(f"{ecc}/analytics", ecc_api.ecc_analytics_handler)
     app.router.add_post(f"{ecc}/analytics", ecc_api.ecc_analytics_handler)
+
+    # Sprint 21.2 — API Standardization (additive; prior routes unchanged)
+    eas = DEFAULT_CONFIG.api_standardization_api_prefix
+    app.router.add_get(f"{eas}/health", eas_api.eas_health_handler)
+    app.router.add_post(f"{eas}/bootstrap", eas_api.eas_bootstrap_handler)
+    app.router.add_get(f"{eas}/inventory", eas_api.eas_inventory_handler)
+    app.router.add_post(f"{eas}/inventory", eas_api.eas_inventory_handler)
+    app.router.add_get(f"{eas}/registry", eas_api.eas_registry_handler)
+    app.router.add_post(f"{eas}/registry", eas_api.eas_registry_handler)
+    app.router.add_get(f"{eas}/rest", eas_api.eas_rest_handler)
+    app.router.add_post(f"{eas}/rest", eas_api.eas_rest_handler)
+    app.router.add_get(f"{eas}/versioning", eas_api.eas_versioning_handler)
+    app.router.add_get(f"{eas}/auth", eas_api.eas_auth_handler)
+    app.router.add_post(f"{eas}/auth", eas_api.eas_auth_handler)
+    app.router.add_get(f"{eas}/websocket", eas_api.eas_websocket_handler)
+    app.router.add_get(f"{eas}/events", eas_api.eas_events_handler)
+    app.router.add_post(f"{eas}/events", eas_api.eas_events_handler)
+    app.router.add_get(f"{eas}/openapi", eas_api.eas_openapi_handler)
+    app.router.add_post(f"{eas}/openapi", eas_api.eas_openapi_handler)
+    app.router.add_get(f"{eas}/docs", eas_api.eas_docs_handler)
+    app.router.add_get(f"{eas}/gateway", eas_api.eas_gateway_handler)
+    app.router.add_post(f"{eas}/gateway", eas_api.eas_gateway_handler)
+    app.router.add_get(f"{eas}/governance", eas_api.eas_governance_handler)
+    app.router.add_post(f"{eas}/governance", eas_api.eas_governance_handler)

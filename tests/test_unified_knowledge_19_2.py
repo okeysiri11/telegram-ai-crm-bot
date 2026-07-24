@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_knowledge_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "5.4.12-enterprise"
-    assert health["enterprise_foundation"] == "Enterprise Platform v5.4.11-enterprise"
+    assert health["application_version"] == "6.0.0-rc2"
+    assert health["enterprise_foundation"] == "Enterprise Platform v5.4.12-enterprise"
     assert health["unified_knowledge_graph_ready"] is True
     assert health["ai_memory_ready"] is True
     assert health["semantic_intelligence_ready"] is True
@@ -72,7 +72,7 @@ def test_semantic_sync_ai_bootstrap():
     suite = enterprise_hub.unified_knowledge
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "5.4.12-enterprise"
+    assert boot["version"] == "6.0.0-rc2"
     assert boot["graph_id"] and boot["ai_nl_id"] and boot["sync_finance_id"]
     assert suite.semantic.operate(operation="semantic_search", query="Bidex")["operation"] == "semantic_search"
     assert suite.ai.nl_query(question="Who is Bidex?")["insight_type"] == "nl_query"
@@ -84,7 +84,7 @@ def test_semantic_sync_ai_bootstrap():
 async def test_api_knowledge_graph(client):
     health = await client.get(f"{KG}/health")
     body = await health.json()
-    assert body["application_version"] == "5.4.12-enterprise"
+    assert body["application_version"] == "6.0.0-rc2"
     assert body["unified_knowledge_graph_ready"] is True
     assert body["ai_memory_ready"] is True
 
@@ -107,7 +107,7 @@ async def test_api_knowledge_graph(client):
     for prefix in (HUB, ORCH):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "5.4.12-enterprise"
+        assert (await resp.json())["application_version"] == "6.0.0-rc2"
 
     assert boot_body["ontology_id"]
 
@@ -145,5 +145,5 @@ def test_docs_and_regression_19_2():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "5.4.12-enterprise" in manifest
-    assert "20.12" in manifest
+    assert "6.0.0-rc2" in manifest
+    assert "21.2" in manifest

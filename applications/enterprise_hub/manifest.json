@@ -1,12 +1,13 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "5.4.12-enterprise",
-  "release_status": "Enterprise Command Center",
+  "application_version": "6.0.0-rc2",
+  "release_status": "Enterprise API Standardization",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v5.4.11-enterprise",
+  "enterprise_foundation": "Enterprise Platform v5.4.12-enterprise",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "20.12",
+  "sprint": "21.2",
+  "phase": "stabilization",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
   "enterprise_identity": "1.0",
@@ -34,6 +35,7 @@
   "process_mining": "1.0",
   "business_capabilities": "1.0",
   "command_center": "1.0",
+  "api_standardization": "1.0",
   "modules": {
     "enterprise_registry": "1.0",
     "integration_layer": "1.0",
@@ -72,9 +74,13 @@
     "executive_dashboard": "1.0",
     "health_monitor": "1.0",
     "action_center": "1.0",
+    "api_standardization": "1.0",
+    "api_inventory": "1.0",
+    "openapi": "1.0",
+    "api_governance": "1.0",
     "knowledge": "1.0",
     "dashboard": "1.0",
-    "api": "5.4"
+    "api": "6.0"
   },
   "does_not_modify": [
     "platform_core",
