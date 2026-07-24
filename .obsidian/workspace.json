@@ -178,6 +178,7 @@
   },
   "active": "e4b785b913d02f72",
   "lastOpenFiles": [
+    "applications/auto_marketplace/dashboard.py",
     "tests/__pycache__/test_ai_provider_hub_24_9.cpython-314-pytest-9.1.1.pyc",
     "applications/enterprise_hub/ai_provider_hub/__pycache__/api.cpython-314.pyc",
     "tests/test_ai_provider_hub_24_9.py",
@@ -194,7 +195,6 @@
     "applications/enterprise_hub/ai_provider_hub/api.py",
     "applications/enterprise_hub/ai_provider_hub/__pycache__",
     "applications/enterprise_hub/ai_provider_hub/__init__.py",
-    "applications/enterprise_hub/ai_provider_hub",
     "docs/architecture/current_architecture.md",
     "knowledge/applications/enterprise_hub/learning_engine/README.md",
     "knowledge/applications/ENTERPRISE_LEARNING_ENGINE.md",
