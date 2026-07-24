@@ -518,6 +518,15 @@ class EnterpriseHubStore:
         self.erl_validations: EntityStore = EntityStore()
         self.erl_approvals: EntityStore = EntityStore()
         self.erl_manifests: EntityStore = EntityStore()
+        # Sprint 22.0 — Product Intelligence
+        self.epi_bootstraps: EntityStore = EntityStore()
+        self.epi_feedback: EntityStore = EntityStore()
+        self.epi_analyses: EntityStore = EntityStore()
+        self.epi_reports: EntityStore = EntityStore()
+        self.epi_decisions: EntityStore = EntityStore()
+        self.epi_pipelines: EntityStore = EntityStore()
+        self.epi_validations: EntityStore = EntityStore()
+        self.epi_knowledge: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

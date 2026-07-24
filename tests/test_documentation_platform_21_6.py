@@ -69,8 +69,8 @@ def reset_store():
 
 def test_version_edo_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.0.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc7"
+    assert health["application_version"] == "6.1.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0"
     assert health["documentation_platform_ready"] is True
     assert health["docs_registry_ready"] is True
     assert health["docs_search_ready"] is True
@@ -100,7 +100,7 @@ def test_bootstrap_publish():
     suite = enterprise_hub.documentation_platform
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.0.0"
+    assert boot["version"] == "6.1.0"
     assert boot["docs_registered"] >= 20
     assert boot["modules_documented"] >= 10
     assert boot["quality_passed"] is True
@@ -118,7 +118,7 @@ def test_bootstrap_publish():
 async def test_api_edo(client):
     health = await client.get(f"{EDO}/health")
     body = await health.json()
-    assert body["application_version"] == "6.0.0"
+    assert body["application_version"] == "6.1.0"
     assert body["documentation_platform_ready"] is True
 
     boot = await client.post(f"{EDO}/bootstrap", json={})
@@ -138,7 +138,7 @@ async def test_api_edo(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "6.0.0"
+        assert version == "6.1.0"
 
     assert boot_body["completeness"] > 0
 
@@ -176,5 +176,5 @@ def test_docs_and_regression_21_6():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.0.0" in manifest
-    assert "21.8" in manifest
+    assert "6.1.0" in manifest
+    assert "22.0" in manifest

@@ -22,6 +22,7 @@ from applications.enterprise_hub.digital_twin.facade import DigitalTwinSuite
 from applications.enterprise_hub.documentation_platform.facade import DocumentationPlatformSuite
 from applications.enterprise_hub.performance_platform.facade import PerformancePlatformSuite
 from applications.enterprise_hub.release_platform.facade import ReleasePlatformSuite
+from applications.enterprise_hub.product_intelligence.facade import ProductIntelligenceSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -78,6 +79,7 @@ class EnterpriseHubApplication:
         documentation_platform_svc: DocumentationPlatformSuite | None = None,
         performance_platform_svc: PerformancePlatformSuite | None = None,
         release_platform_svc: ReleasePlatformSuite | None = None,
+        product_intelligence_svc: ProductIntelligenceSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -117,6 +119,7 @@ class EnterpriseHubApplication:
         self.documentation_platform = documentation_platform_svc or DocumentationPlatformSuite(self.store)
         self.performance_platform = performance_platform_svc or PerformancePlatformSuite(self.store)
         self.release_platform = release_platform_svc or ReleasePlatformSuite(self.store)
+        self.product_intelligence = product_intelligence_svc or ProductIntelligenceSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -397,6 +400,10 @@ class EnterpriseHubApplication:
             "production_ready": True,
             "disaster_recovery_ready": True,
             "lts_baseline_ready": True,
+            "product_intelligence_ready": True,
+            "feedback_collector_ready": True,
+            "expert_board_ready": True,
+            "owner_approval_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -432,6 +439,7 @@ class EnterpriseHubApplication:
                 "documentation_platform": self.config.documentation_platform,
                 "performance_platform": self.config.performance_platform,
                 "release_platform": self.config.release_platform,
+                "product_intelligence": self.config.product_intelligence,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -471,6 +479,7 @@ class EnterpriseHubApplication:
             "documentation_platform": self.documentation_platform.status(),
             "performance_platform": self.performance_platform.status(),
             "release_platform": self.release_platform.status(),
+            "product_intelligence": self.product_intelligence.status(),
         }
 
 

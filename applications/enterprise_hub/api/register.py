@@ -28,6 +28,7 @@ from applications.enterprise_hub.quality_assurance import api as eqa_api
 from applications.enterprise_hub.documentation_platform import api as edo_api
 from applications.enterprise_hub.performance_platform import api as epf_api
 from applications.enterprise_hub.release_platform import api as erl_api
+from applications.enterprise_hub.product_intelligence import api as epi_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -640,4 +641,15 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{erl}/release-notes", erl_api.erl_notes_handler)
     app.router.add_post(f"{erl}/approve", erl_api.erl_approve_handler)
     app.router.add_get(f"{erl}/manifest", erl_api.erl_manifest_handler)
+
+    # Sprint 22.0 — Product Intelligence (additive; prior routes unchanged)
+    epi = DEFAULT_CONFIG.product_intelligence_api_prefix
+    app.router.add_get(f"{epi}/health", epi_api.epi_health_handler)
+    app.router.add_post(f"{epi}/bootstrap", epi_api.epi_bootstrap_handler)
+    app.router.add_post(f"{epi}/feedback", epi_api.epi_feedback_handler)
+    app.router.add_post(f"{epi}/analyze", epi_api.epi_analyze_handler)
+    app.router.add_post(f"{epi}/reports", epi_api.epi_report_handler)
+    app.router.add_post(f"{epi}/decide", epi_api.epi_decide_handler)
+    app.router.add_post(f"{epi}/validate", epi_api.epi_validate_handler)
+    app.router.add_get(f"{epi}/knowledge", epi_api.epi_knowledge_handler)
 

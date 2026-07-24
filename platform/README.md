@@ -8,5 +8,6 @@ Enterprise shared libraries for Stabilization Phase / Enterprise Core v6.0 LTS.
 - Documentation: [`../platform_documentation/`](../platform_documentation/)
 - Performance: [`../platform_performance/`](../platform_performance/)
 - Release: [`../platform_release/`](../platform_release/)
+- Product Intelligence: [`../platform_product_intelligence/`](../platform_product_intelligence/)
 
 Import paths avoid Python stdlib/`platform` collisions.

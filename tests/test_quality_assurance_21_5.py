@@ -69,8 +69,8 @@ def reset_store():
 
 def test_version_eqa_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.0.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc7"
+    assert health["application_version"] == "6.1.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0"
     assert health["quality_assurance_ready"] is True
     assert health["test_framework_ready"] is True
     assert health["coverage_engine_ready"] is True
@@ -98,7 +98,7 @@ def test_bootstrap_certify():
     suite = enterprise_hub.quality_assurance
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.0.0"
+    assert boot["version"] == "6.1.0"
     assert boot["total_tests"] >= 100
     assert boot["pass_rate"] == 1.0
     assert boot["meets_coverage_minimum"] is True
@@ -114,7 +114,7 @@ def test_bootstrap_certify():
 async def test_api_eqa(client):
     health = await client.get(f"{EQA}/health")
     body = await health.json()
-    assert body["application_version"] == "6.0.0"
+    assert body["application_version"] == "6.1.0"
     assert body["quality_assurance_ready"] is True
 
     boot = await client.post(f"{EQA}/bootstrap", json={})
@@ -130,7 +130,7 @@ async def test_api_eqa(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "6.0.0"
+        assert version == "6.1.0"
 
     assert boot_body["certified"] is True
 
@@ -168,5 +168,5 @@ def test_docs_and_regression_21_5():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.0.0" in manifest
-    assert "21.8" in manifest
+    assert "6.1.0" in manifest
+    assert "22.0" in manifest

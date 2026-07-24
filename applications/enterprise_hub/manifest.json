@@ -1,13 +1,13 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.0.0",
-  "release_status": "Enterprise Core v6.0 LTS",
+  "application_version": "6.1.0",
+  "release_status": "Enterprise Product Intelligence",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.0.0-rc7",
+  "enterprise_foundation": "Enterprise Platform v6.0.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "21.8",
-  "phase": "stabilization",
+  "sprint": "22.0",
+  "phase": "product_intelligence",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
   "enterprise_identity": "1.0",
@@ -107,7 +107,12 @@
     "release_certification": "1.0",
     "disaster_recovery": "1.0",
     "lts_baseline": "1.0",
-    "production_manifest": "1.0"
+    "production_manifest": "1.0",
+    "product_intelligence": "1.0",
+    "feedback_collector": "1.0",
+    "expert_board": "1.0",
+    "owner_approval": "1.0",
+    "development_pipeline": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -124,5 +129,6 @@
   "quality_assurance": "1.0",
   "documentation_platform": "1.0",
   "performance_platform": "1.0",
-  "release_platform": "1.0"
+  "release_platform": "1.0",
+  "product_intelligence": "1.0"
 }
