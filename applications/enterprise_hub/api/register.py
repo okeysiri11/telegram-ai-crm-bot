@@ -49,6 +49,7 @@ from applications.enterprise_hub.enterprise_digital_twin import api as etw_api
 from applications.enterprise_hub.autonomous_optimization import api as eoe_api
 from applications.enterprise_hub.strategy_intelligence import api as est_api
 from applications.enterprise_hub.learning_engine import api as ele_api
+from applications.enterprise_hub.ai_provider_hub import api as aph_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -945,4 +946,20 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ele}/product", ele_api.ele_product_handler)
     app.router.add_post(f"{ele}/safety", ele_api.ele_safety_handler)
     app.router.add_get(f"{ele}/dashboard", ele_api.ele_dashboard_handler)
+
+    # Sprint 24.9 — AI Provider Hub (additive; business modules call hub only)
+    aph = DEFAULT_CONFIG.ai_provider_hub_api_prefix
+    app.router.add_get(f"{aph}/health", aph_api.aph_health_handler)
+    app.router.add_post(f"{aph}/bootstrap", aph_api.aph_bootstrap_handler)
+    app.router.add_post(f"{aph}/provider", aph_api.aph_provider_handler)
+    app.router.add_get(f"{aph}/providers", aph_api.aph_providers_handler)
+    app.router.add_post(f"{aph}/model", aph_api.aph_model_handler)
+    app.router.add_get(f"{aph}/models", aph_api.aph_models_handler)
+    app.router.add_post(f"{aph}/route", aph_api.aph_route_handler)
+    app.router.add_post(f"{aph}/fallback", aph_api.aph_fallback_handler)
+    app.router.add_post(f"{aph}/prompt", aph_api.aph_prompt_handler)
+    app.router.add_post(f"{aph}/cost", aph_api.aph_cost_handler)
+    app.router.add_post(f"{aph}/analytics", aph_api.aph_analytics_handler)
+    app.router.add_post(f"{aph}/security", aph_api.aph_security_handler)
+    app.router.add_post(f"{aph}/invoke", aph_api.aph_invoke_handler)
 

@@ -31,3 +31,4 @@ Import paths avoid Python stdlib/`platform` collisions.
 - Autonomous Optimization: [`../platform_enterprise_autonomous_optimization/`](../platform_enterprise_autonomous_optimization/)
 - Strategy Intelligence: [`../platform_enterprise_strategy_intelligence/`](../platform_enterprise_strategy_intelligence/)
 - Learning Engine: [`../platform_enterprise_learning_engine/`](../platform_enterprise_learning_engine/)
+- AI Provider Hub: [`../platform_enterprise_ai_provider_hub/`](../platform_enterprise_ai_provider_hub/)

@@ -43,6 +43,7 @@ from applications.enterprise_hub.enterprise_digital_twin.facade import Enterpris
 from applications.enterprise_hub.autonomous_optimization.facade import AutonomousOptimizationSuite
 from applications.enterprise_hub.strategy_intelligence.facade import StrategyIntelligenceSuite
 from applications.enterprise_hub.learning_engine.facade import LearningEngineSuite
+from applications.enterprise_hub.ai_provider_hub.facade import AIProviderHubSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -120,6 +121,7 @@ class EnterpriseHubApplication:
         autonomous_optimization_svc: AutonomousOptimizationSuite | None = None,
         strategy_intelligence_svc: StrategyIntelligenceSuite | None = None,
         learning_engine_svc: LearningEngineSuite | None = None,
+        ai_provider_hub_svc: AIProviderHubSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -180,6 +182,7 @@ class EnterpriseHubApplication:
         self.autonomous_optimization = autonomous_optimization_svc or AutonomousOptimizationSuite(self.store)
         self.strategy_intelligence = strategy_intelligence_svc or StrategyIntelligenceSuite(self.store)
         self.learning_engine = learning_engine_svc or LearningEngineSuite(self.store)
+        self.ai_provider_hub = ai_provider_hub_svc or AIProviderHubSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -544,6 +547,10 @@ class EnterpriseHubApplication:
             "confirmed_learning_ready": True,
             "cross_tenant_learning_ready": True,
             "owner_learning_ready": True,
+            "ai_provider_hub_ready": True,
+            "model_router_ready": True,
+            "fallback_engine_ready": True,
+            "ai_cost_control_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -600,6 +607,7 @@ class EnterpriseHubApplication:
                 "autonomous_optimization": self.config.autonomous_optimization,
                 "strategy_intelligence": self.config.strategy_intelligence,
                 "learning_engine": self.config.learning_engine,
+                "ai_provider_hub": self.config.ai_provider_hub,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -660,6 +668,7 @@ class EnterpriseHubApplication:
             "autonomous_optimization": self.autonomous_optimization.status(),
             "strategy_intelligence": self.strategy_intelligence.status(),
             "learning_engine": self.learning_engine.status(),
+            "ai_provider_hub": self.ai_provider_hub.status(),
         }
 
 

@@ -729,6 +729,17 @@ class EnterpriseHubStore:
         self.ele_owner: EntityStore = EntityStore()
         self.ele_product: EntityStore = EntityStore()
         self.ele_dashboards: EntityStore = EntityStore()
+        # Sprint 24.9 — AI Provider Hub
+        self.aph_bootstraps: EntityStore = EntityStore()
+        self.aph_providers: EntityStore = EntityStore()
+        self.aph_models: EntityStore = EntityStore()
+        self.aph_routes: EntityStore = EntityStore()
+        self.aph_fallbacks: EntityStore = EntityStore()
+        self.aph_prompts: EntityStore = EntityStore()
+        self.aph_costs: EntityStore = EntityStore()
+        self.aph_analytics: EntityStore = EntityStore()
+        self.aph_security: EntityStore = EntityStore()
+        self.aph_invokes: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
