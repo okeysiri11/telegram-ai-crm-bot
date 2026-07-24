@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 22.5 AI Marketing Operating System (Beauty Edition)."""
+"""Enterprise Hub — Sprint 22.6 Enterprise Communications Hub."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "6.6.0"
-    release_status: str = "AI Marketing OS Beauty Edition"
+    application_version: str = "6.7.0"
+    release_status: str = "Enterprise Communications Hub"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v6.5.0"
+    enterprise_foundation: str = "Enterprise Platform v6.6.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -51,6 +51,7 @@ class EnterpriseHubConfig:
     beauty_workspace_api_prefix: str = "/api/enterprise-bws/v1"
     beauty_client_journey_api_prefix: str = "/api/enterprise-bcj/v1"
     ai_marketing_os_api_prefix: str = "/api/enterprise-amo/v1"
+    communications_hub_api_prefix: str = "/api/enterprise-ech/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -92,6 +93,7 @@ class EnterpriseHubConfig:
     beauty_workspace: str = "1.0"
     beauty_client_journey: str = "1.0"
     ai_marketing_os: str = "1.0"
+    communications_hub: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

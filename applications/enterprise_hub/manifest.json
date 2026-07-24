@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.6.0",
-  "release_status": "AI Marketing OS Beauty Edition",
+  "application_version": "6.7.0",
+  "release_status": "Enterprise Communications Hub",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.5.0",
+  "enterprise_foundation": "Enterprise Platform v6.6.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "22.5",
+  "sprint": "22.6",
   "phase": "industry_beauty",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -132,7 +132,11 @@
     "ai_marketing_os": "1.0",
     "brand_center": "1.0",
     "campaign_manager": "1.0",
-    "marketing_approval": "1.0"
+    "marketing_approval": "1.0",
+    "communications_hub": "1.0",
+    "unified_messaging": "1.0",
+    "comms_automation": "1.0",
+    "comms_analytics": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -155,5 +159,6 @@
   "beauty_os": "1.0",
   "beauty_workspace": "1.0",
   "beauty_client_journey": "1.0",
-  "ai_marketing_os": "1.0"
+  "ai_marketing_os": "1.0",
+  "communications_hub": "1.0"
 }

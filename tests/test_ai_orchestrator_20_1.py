@@ -50,8 +50,8 @@ def reset_store():
 
 def test_version_aop_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.6.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.5.0"
+    assert health["application_version"] == "6.7.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.6.0"
     assert health["ai_orchestration_ready"] is True
     assert health["agent_registry_ready"] is True
     assert health["task_planning_ready"] is True
@@ -82,7 +82,7 @@ def test_bootstrap_analytics():
     suite = enterprise_hub.ai_orchestrator
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.6.0"
+    assert boot["version"] == "6.7.0"
     assert boot["execution_id"] and boot["performance_id"] and boot["cost_id"]
     assert "sequential" in boot["strategies"]
 
@@ -91,7 +91,7 @@ def test_bootstrap_analytics():
 async def test_api_aop(client):
     health = await client.get(f"{AOP}/health")
     body = await health.json()
-    assert body["application_version"] == "6.6.0"
+    assert body["application_version"] == "6.7.0"
     assert body["ai_orchestration_ready"] is True
 
     boot = await client.post(f"{AOP}/bootstrap", json={})
@@ -107,7 +107,7 @@ async def test_api_aop(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.6.0"
+        assert (await resp.json())["application_version"] == "6.7.0"
 
     assert boot_body["aggregation_id"]
 
@@ -147,5 +147,5 @@ def test_docs_and_regression_20_1():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.6.0" in manifest
-    assert "22.5" in manifest
+    assert "6.7.0" in manifest
+    assert "22.6" in manifest

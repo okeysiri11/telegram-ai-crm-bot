@@ -578,6 +578,15 @@ class EnterpriseHubStore:
         self.amo_opportunities: EntityStore = EntityStore()
         self.amo_approvals: EntityStore = EntityStore()
         self.amo_performance: EntityStore = EntityStore()
+        # Sprint 22.6 — Communications Hub
+        self.ech_bootstraps: EntityStore = EntityStore()
+        self.ech_templates: EntityStore = EntityStore()
+        self.ech_automations: EntityStore = EntityStore()
+        self.ech_messages: EntityStore = EntityStore()
+        self.ech_timeline: EntityStore = EntityStore()
+        self.ech_assistant: EntityStore = EntityStore()
+        self.ech_deliveries: EntityStore = EntityStore()
+        self.ech_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

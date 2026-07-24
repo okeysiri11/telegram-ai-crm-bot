@@ -34,6 +34,7 @@ from applications.enterprise_hub.beauty_os import api as bos_api
 from applications.enterprise_hub.beauty_workspace import api as bws_api
 from applications.enterprise_hub.beauty_client_journey import api as bcj_api
 from applications.enterprise_hub.ai_marketing_os import api as amo_api
+from applications.enterprise_hub.communications_hub import api as ech_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -716,4 +717,17 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{amo}/campaigns", amo_api.amo_campaign_handler)
     app.router.add_post(f"{amo}/approve", amo_api.amo_approve_handler)
     app.router.add_post(f"{amo}/performance", amo_api.amo_performance_handler)
+
+    # Sprint 22.6 — Communications Hub (additive; prior routes unchanged)
+    ech = DEFAULT_CONFIG.communications_hub_api_prefix
+    app.router.add_get(f"{ech}/health", ech_api.ech_health_handler)
+    app.router.add_post(f"{ech}/bootstrap", ech_api.ech_bootstrap_handler)
+    app.router.add_post(f"{ech}/send", ech_api.ech_send_handler)
+    app.router.add_post(f"{ech}/templates", ech_api.ech_template_handler)
+    app.router.add_post(f"{ech}/automations", ech_api.ech_automation_handler)
+    app.router.add_get(f"{ech}/timeline", ech_api.ech_timeline_handler)
+    app.router.add_post(f"{ech}/timeline", ech_api.ech_timeline_handler)
+    app.router.add_post(f"{ech}/assistant", ech_api.ech_assistant_handler)
+    app.router.add_post(f"{ech}/delivery", ech_api.ech_delivery_handler)
+    app.router.add_post(f"{ech}/analytics", ech_api.ech_analytics_handler)
 
