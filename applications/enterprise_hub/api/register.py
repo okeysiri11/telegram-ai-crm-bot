@@ -31,6 +31,7 @@ from applications.enterprise_hub.release_platform import api as erl_api
 from applications.enterprise_hub.product_intelligence import api as epi_api
 from applications.enterprise_hub.ai_business_advisor import api as aba_api
 from applications.enterprise_hub.beauty_os import api as bos_api
+from applications.enterprise_hub.beauty_workspace import api as bws_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -675,4 +676,19 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{bos}/customers", bos_api.bos_customer_handler)
     app.router.add_post(f"{bos}/appointments", bos_api.bos_appointment_handler)
     app.router.add_get(f"{bos}/dashboard", bos_api.bos_dashboard_handler)
+
+    # Sprint 22.3 — Beauty Workspace (additive; prior routes unchanged)
+    bws = DEFAULT_CONFIG.beauty_workspace_api_prefix
+    app.router.add_get(f"{bws}/health", bws_api.bws_health_handler)
+    app.router.add_post(f"{bws}/bootstrap", bws_api.bws_bootstrap_handler)
+    app.router.add_get(f"{bws}/dashboard", bws_api.bws_dashboard_handler)
+    app.router.add_get(f"{bws}/schedule", bws_api.bws_schedule_handler)
+    app.router.add_post(f"{bws}/schedule", bws_api.bws_schedule_handler)
+    app.router.add_post(f"{bws}/move", bws_api.bws_move_handler)
+    app.router.add_post(f"{bws}/panel", bws_api.bws_panel_handler)
+    app.router.add_post(f"{bws}/quick", bws_api.bws_quick_handler)
+    app.router.add_get(f"{bws}/search", bws_api.bws_search_handler)
+    app.router.add_post(f"{bws}/search", bws_api.bws_search_handler)
+    app.router.add_get(f"{bws}/notifications", bws_api.bws_notifications_handler)
+    app.router.add_get(f"{bws}/assistant", bws_api.bws_assistant_handler)
 

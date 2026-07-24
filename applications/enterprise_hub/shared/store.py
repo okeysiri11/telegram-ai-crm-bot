@@ -546,6 +546,18 @@ class EnterpriseHubStore:
         self.bos_customers: EntityStore = EntityStore()
         self.bos_appointments: EntityStore = EntityStore()
         self.bos_dashboards: EntityStore = EntityStore()
+        # Sprint 22.3 — Beauty Workspace
+        self.bws_bootstraps: EntityStore = EntityStore()
+        self.bws_dashboards: EntityStore = EntityStore()
+        self.bws_schedules: EntityStore = EntityStore()
+        self.bws_actions: EntityStore = EntityStore()
+        self.bws_quick_actions: EntityStore = EntityStore()
+        self.bws_searches: EntityStore = EntityStore()
+        self.bws_notifications: EntityStore = EntityStore()
+        self.bws_assistant: EntityStore = EntityStore()
+        self.bws_moves: EntityStore = EntityStore()
+        self.bws_certificates: EntityStore = EntityStore()
+        self.bws_memberships: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

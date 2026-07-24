@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.3.0",
-  "release_status": "Beauty Operating System",
+  "application_version": "6.4.0",
+  "release_status": "Beauty Workspace & Reception Desk",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.2.0",
+  "enterprise_foundation": "Enterprise Platform v6.3.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "22.2",
+  "sprint": "22.3",
   "phase": "industry_beauty",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -120,7 +120,11 @@
     "beauty_os": "1.0",
     "beauty_appointments": "1.0",
     "beauty_dashboard": "1.0",
-    "beauty_catalog": "1.0"
+    "beauty_catalog": "1.0",
+    "beauty_workspace": "1.0",
+    "reception_desk": "1.0",
+    "live_schedule": "1.0",
+    "workspace_assistant": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -140,5 +144,6 @@
   "release_platform": "1.0",
   "product_intelligence": "1.0",
   "ai_business_advisor": "1.0",
-  "beauty_os": "1.0"
+  "beauty_os": "1.0",
+  "beauty_workspace": "1.0"
 }
