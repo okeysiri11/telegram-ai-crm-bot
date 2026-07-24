@@ -70,8 +70,8 @@ def reset_store():
 
 def test_version_erl_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "7.1.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v7.0.0"
+    assert health["application_version"] == "7.2.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v7.1.0"
     assert health["release_certification_ready"] is True
     assert health["production_ready"] is True
     assert health["disaster_recovery_ready"] is True
@@ -99,7 +99,7 @@ def test_bootstrap_approve_manifest():
     suite = enterprise_hub.release_platform
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "7.1.0"
+    assert boot["version"] == "7.2.0"
     assert boot["production_ready"] is True
     assert boot["enterprise_certified"] is True
     assert boot["lts_baseline"] is True
@@ -122,7 +122,7 @@ def test_bootstrap_approve_manifest():
 async def test_api_erl(client):
     health = await client.get(f"{ERL}/health")
     body = await health.json()
-    assert body["application_version"] == "7.1.0"
+    assert body["application_version"] == "7.2.0"
     assert body["production_ready"] is True
     assert body["lts_baseline_ready"] is True
 
@@ -140,7 +140,7 @@ async def test_api_erl(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "7.1.0"
+        assert version == "7.2.0"
 
 
 def test_docs_and_regression_21_8():
@@ -177,6 +177,6 @@ def test_docs_and_regression_21_8():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "7.1.0" in manifest
-    assert '"application_version": "7.1.0"' in manifest
-    assert "24.1" in manifest
+    assert "7.2.0" in manifest
+    assert '"application_version": "7.2.0"' in manifest
+    assert "24.2" in manifest

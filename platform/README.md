@@ -22,5 +22,6 @@ Enterprise shared libraries for Stabilization Phase / Enterprise Core v6.0 LTS.
 - Pilot Readiness: [`../platform_enterprise_pilot_readiness/`](../platform_enterprise_pilot_readiness/)
 - Enterprise AI Orchestrator (v7): [`../platform_enterprise_ai_orchestrator/`](../platform_enterprise_ai_orchestrator/)
 - Workflow Intelligence: [`../platform_workflow_intelligence/`](../platform_workflow_intelligence/)
+- Enterprise Knowledge Graph: [`../platform_enterprise_knowledge_graph/`](../platform_enterprise_knowledge_graph/)
 
 Import paths avoid Python stdlib/`platform` collisions.

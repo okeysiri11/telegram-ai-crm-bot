@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 24.1 Workflow Intelligence & AI Execution Engine."""
+"""Enterprise Hub — Sprint 24.2 Enterprise Knowledge Graph & Semantic Memory."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "7.1.0"
-    release_status: str = "Workflow Intelligence & AI Execution Engine"
+    application_version: str = "7.2.0"
+    release_status: str = "Enterprise Knowledge Graph & Semantic Memory"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v7.0.0"
+    enterprise_foundation: str = "Enterprise Platform v7.1.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -59,6 +59,7 @@ class EnterpriseHubConfig:
     pilot_readiness_api_prefix: str = "/api/enterprise-epr/v1"
     enterprise_ai_orchestrator_api_prefix: str = "/api/enterprise-eao/v1"
     workflow_intelligence_api_prefix: str = "/api/enterprise-wfi/v1"
+    enterprise_knowledge_graph_api_prefix: str = "/api/enterprise-ekg/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -108,6 +109,7 @@ class EnterpriseHubConfig:
     pilot_readiness: str = "1.0"
     enterprise_ai_orchestrator: str = "1.0"
     workflow_intelligence: str = "1.0"
+    enterprise_knowledge_graph: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

@@ -655,6 +655,16 @@ class EnterpriseHubStore:
         self.wfi_runs: EntityStore = EntityStore()
         self.wfi_analytics: EntityStore = EntityStore()
         self.wfi_optimizations: EntityStore = EntityStore()
+        # Sprint 24.2 — Enterprise Knowledge Graph
+        self.ekg_bootstraps: EntityStore = EntityStore()
+        self.ekg_entities: EntityStore = EntityStore()
+        self.ekg_edges: EntityStore = EntityStore()
+        self.ekg_memory: EntityStore = EntityStore()
+        self.ekg_contexts: EntityStore = EntityStore()
+        self.ekg_searches: EntityStore = EntityStore()
+        self.ekg_timelines: EntityStore = EntityStore()
+        self.ekg_learning: EntityStore = EntityStore()
+        self.ekg_owner: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

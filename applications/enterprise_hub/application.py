@@ -36,6 +36,7 @@ from applications.enterprise_hub.operations_center.facade import EnterpriseOpera
 from applications.enterprise_hub.pilot_readiness.facade import PilotReadinessSuite
 from applications.enterprise_hub.enterprise_ai_orchestrator.facade import EnterpriseAIOrchestratorSuite
 from applications.enterprise_hub.workflow_intelligence.facade import WorkflowIntelligenceSuite
+from applications.enterprise_hub.enterprise_knowledge_graph.facade import EnterpriseKnowledgeGraphSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -106,6 +107,7 @@ class EnterpriseHubApplication:
         pilot_readiness_svc: PilotReadinessSuite | None = None,
         enterprise_ai_orchestrator_svc: EnterpriseAIOrchestratorSuite | None = None,
         workflow_intelligence_svc: WorkflowIntelligenceSuite | None = None,
+        enterprise_knowledge_graph_svc: EnterpriseKnowledgeGraphSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -159,6 +161,7 @@ class EnterpriseHubApplication:
         self.pilot_readiness = pilot_readiness_svc or PilotReadinessSuite(self.store)
         self.enterprise_ai_orchestrator = enterprise_ai_orchestrator_svc or EnterpriseAIOrchestratorSuite(self.store)
         self.workflow_intelligence = workflow_intelligence_svc or WorkflowIntelligenceSuite(self.store)
+        self.enterprise_knowledge_graph = enterprise_knowledge_graph_svc or EnterpriseKnowledgeGraphSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -495,6 +498,10 @@ class EnterpriseHubApplication:
             "visual_designer_ready": True,
             "ai_execution_ready": True,
             "workflow_library_ready": True,
+            "semantic_memory_ready": True,
+            "context_engine_ready": True,
+            "semantic_search_ready": True,
+            "enterprise_knowledge_graph_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -544,6 +551,7 @@ class EnterpriseHubApplication:
                 "pilot_readiness": self.config.pilot_readiness,
                 "enterprise_ai_orchestrator": self.config.enterprise_ai_orchestrator,
                 "workflow_intelligence": self.config.workflow_intelligence,
+                "enterprise_knowledge_graph": self.config.enterprise_knowledge_graph,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -597,6 +605,7 @@ class EnterpriseHubApplication:
             "pilot_readiness": self.pilot_readiness.status(),
             "enterprise_ai_orchestrator": self.enterprise_ai_orchestrator.status(),
             "workflow_intelligence": self.workflow_intelligence.status(),
+            "enterprise_knowledge_graph": self.enterprise_knowledge_graph.status(),
         }
 
 

@@ -42,6 +42,7 @@ from applications.enterprise_hub.operations_center import api as eoc_api
 from applications.enterprise_hub.pilot_readiness import api as epr_api
 from applications.enterprise_hub.enterprise_ai_orchestrator import api as eao_api
 from applications.enterprise_hub.workflow_intelligence import api as wfi_api
+from applications.enterprise_hub.enterprise_knowledge_graph import api as ekg_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -835,4 +836,19 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{wfi}/analytics", wfi_api.wfi_analytics_handler)
     app.router.add_get(f"{wfi}/catalog", wfi_api.wfi_catalog_handler)
     app.router.add_post(f"{wfi}/invoke", wfi_api.wfi_invoke_handler)
+
+    # Sprint 24.2 — Enterprise Knowledge Graph (additive; legacy KG/EKP unchanged)
+    ekg = DEFAULT_CONFIG.enterprise_knowledge_graph_api_prefix
+    app.router.add_get(f"{ekg}/health", ekg_api.ekg_health_handler)
+    app.router.add_post(f"{ekg}/bootstrap", ekg_api.ekg_bootstrap_handler)
+    app.router.add_post(f"{ekg}/entities", ekg_api.ekg_entity_handler)
+    app.router.add_post(f"{ekg}/links", ekg_api.ekg_link_handler)
+    app.router.add_post(f"{ekg}/memory", ekg_api.ekg_memory_handler)
+    app.router.add_post(f"{ekg}/context", ekg_api.ekg_context_handler)
+    app.router.add_get(f"{ekg}/search", ekg_api.ekg_search_handler)
+    app.router.add_post(f"{ekg}/search", ekg_api.ekg_search_handler)
+    app.router.add_get(f"{ekg}/timeline", ekg_api.ekg_timeline_handler)
+    app.router.add_post(f"{ekg}/timeline", ekg_api.ekg_timeline_handler)
+    app.router.add_post(f"{ekg}/learn", ekg_api.ekg_learn_handler)
+    app.router.add_post(f"{ekg}/owner", ekg_api.ekg_owner_handler)
 
