@@ -18,6 +18,7 @@ from applications.enterprise_hub.developer_platform import api as sdp_api
 from applications.enterprise_hub.data_fabric import api as edf_api
 from applications.enterprise_hub.digital_twin import api as edt_api
 from applications.enterprise_hub.simulation_engine import api as esi_api
+from applications.enterprise_hub.process_mining import api as epm_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -466,3 +467,18 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{esi}/recommendations", esi_api.esi_recommendations_handler)
     app.router.add_get(f"{esi}/schedule", esi_api.esi_schedule_handler)
     app.router.add_post(f"{esi}/schedule", esi_api.esi_schedule_handler)
+
+    # Sprint 20.10 — Process Mining (additive; prior routes unchanged)
+    epm = DEFAULT_CONFIG.process_mining_api_prefix
+    app.router.add_get(f"{epm}/health", epm_api.epm_health_handler)
+    app.router.add_post(f"{epm}/bootstrap", epm_api.epm_bootstrap_handler)
+    app.router.add_get(f"{epm}/events", epm_api.epm_events_handler)
+    app.router.add_post(f"{epm}/events", epm_api.epm_events_handler)
+    app.router.add_post(f"{epm}/discover", epm_api.epm_discover_handler)
+    app.router.add_post(f"{epm}/conformance", epm_api.epm_conformance_handler)
+    app.router.add_post(f"{epm}/bottlenecks", epm_api.epm_bottlenecks_handler)
+    app.router.add_post(f"{epm}/optimize", epm_api.epm_optimize_handler)
+    app.router.add_get(f"{epm}/dashboard", epm_api.epm_dashboard_handler)
+    app.router.add_post(f"{epm}/dashboard", epm_api.epm_dashboard_handler)
+    app.router.add_get(f"{epm}/analytics", epm_api.epm_analytics_handler)
+    app.router.add_post(f"{epm}/analytics", epm_api.epm_analytics_handler)

@@ -24,6 +24,7 @@ from applications.enterprise_hub.knowledge.facade import UnifiedKnowledgeSuite
 from applications.enterprise_hub.knowledge_platform.facade import KnowledgePlatformSuite
 from applications.enterprise_hub.observability.facade import ObservabilitySuite
 from applications.enterprise_hub.orchestrator.facade import OrchestratorSuite
+from applications.enterprise_hub.process_mining.facade import ProcessMiningSuite
 from applications.enterprise_hub.registry import EnterpriseRegistry
 from applications.enterprise_hub.security.facade import SecuritySuite
 from applications.enterprise_hub.services import HubDashboard, HubKnowledge
@@ -58,6 +59,7 @@ class EnterpriseHubApplication:
         data_fabric_svc: DataFabricSuite | None = None,
         digital_twin_svc: DigitalTwinSuite | None = None,
         simulation_engine_svc: SimulationEngineSuite | None = None,
+        process_mining_svc: ProcessMiningSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -87,6 +89,7 @@ class EnterpriseHubApplication:
         self.data_fabric = data_fabric_svc or DataFabricSuite(self.store)
         self.digital_twin = digital_twin_svc or DigitalTwinSuite(self.store)
         self.simulation_engine = simulation_engine_svc or SimulationEngineSuite(self.store)
+        self.process_mining = process_mining_svc or ProcessMiningSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -327,6 +330,10 @@ class EnterpriseHubApplication:
             "forecasting_ready": True,
             "risk_engine_ready": True,
             "recommendation_engine_ready": True,
+            "process_mining_ready": True,
+            "process_discovery_ready": True,
+            "conformance_ready": True,
+            "bottleneck_detection_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -352,6 +359,7 @@ class EnterpriseHubApplication:
                 "data_fabric": self.config.data_fabric,
                 "digital_twin": self.config.digital_twin,
                 "simulation_engine": self.config.simulation_engine,
+                "process_mining": self.config.process_mining,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -381,6 +389,7 @@ class EnterpriseHubApplication:
             "data_fabric": self.data_fabric.status(),
             "digital_twin": self.digital_twin.status(),
             "simulation_engine": self.simulation_engine.status(),
+            "process_mining": self.process_mining.status(),
         }
 
 

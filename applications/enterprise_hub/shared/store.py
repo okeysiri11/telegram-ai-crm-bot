@@ -400,6 +400,23 @@ class EnterpriseHubStore:
         self.esi_recommendations: EntityStore = EntityStore()
         self.esi_integrations: EntityStore = EntityStore()
         self.esi_registry: EntityStore = EntityStore()
+        # Sprint 20.10 — Process Mining
+        self.epm_raw_events: EntityStore = EntityStore()
+        self.epm_normalized: EntityStore = EntityStore()
+        self.epm_processes: EntityStore = EntityStore()
+        self.epm_discoveries: EntityStore = EntityStore()
+        self.epm_conformance: EntityStore = EntityStore()
+        self.epm_bottlenecks: EntityStore = EntityStore()
+        self.epm_optimizations: EntityStore = EntityStore()
+        self.epm_simulations: EntityStore = EntityStore()
+        self.epm_versions: EntityStore = EntityStore()
+        self.epm_performance: EntityStore = EntityStore()
+        self.epm_variant_analyses: EntityStore = EntityStore()
+        self.epm_root_causes: EntityStore = EntityStore()
+        self.epm_anomalies: EntityStore = EntityStore()
+        self.epm_analytics: EntityStore = EntityStore()
+        self.epm_visualizations: EntityStore = EntityStore()
+        self.epm_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
