@@ -47,8 +47,8 @@ def reset_store():
 
 def test_version_isam_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.0.0-rc3"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc2"
+    assert health["application_version"] == "6.0.0-rc4"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc3"
     assert health["enterprise_isam_ready"] is True
     assert health["authentication_ready"] is True
     assert health["authorization_ready"] is True
@@ -80,7 +80,7 @@ def test_mfa_monitor_audit_bootstrap():
     suite = enterprise_hub.isam
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.0.0-rc3"
+    assert boot["version"] == "6.0.0-rc4"
     assert boot["identity_admin_id"] and boot["intrusion_id"] and boot["mfa_totp_id"]
     mfa = suite.mfa.challenge(method="totp", subject="qa")
     assert mfa["verified"] is True
@@ -92,7 +92,7 @@ def test_mfa_monitor_audit_bootstrap():
 async def test_api_isam(client):
     health = await client.get(f"{ISAM}/health")
     body = await health.json()
-    assert body["application_version"] == "6.0.0-rc3"
+    assert body["application_version"] == "6.0.0-rc4"
     assert body["enterprise_isam_ready"] is True
     assert body["authentication_ready"] is True
 
@@ -109,7 +109,7 @@ async def test_api_isam(client):
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.0.0-rc3"
+        assert (await resp.json())["application_version"] == "6.0.0-rc4"
 
     assert boot_body["policy_ip_id"]
 
@@ -149,5 +149,5 @@ def test_docs_and_regression_19_8():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.0.0-rc3" in manifest
-    assert "21.3" in manifest
+    assert "6.0.0-rc4" in manifest
+    assert "21.4" in manifest

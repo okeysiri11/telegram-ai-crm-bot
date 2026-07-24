@@ -31,6 +31,7 @@ from applications.enterprise_hub.orchestrator.facade import OrchestratorSuite
 from applications.enterprise_hub.process_mining.facade import ProcessMiningSuite
 from applications.enterprise_hub.registry import EnterpriseRegistry
 from applications.enterprise_hub.security.facade import SecuritySuite
+from applications.enterprise_hub.security_hardening.facade import SecurityHardeningSuite
 from applications.enterprise_hub.services import HubDashboard, HubKnowledge
 from applications.enterprise_hub.shared.store import EnterpriseHubStore, enterprise_hub_store
 from applications.enterprise_hub.simulation_engine.facade import SimulationEngineSuite
@@ -68,6 +69,7 @@ class EnterpriseHubApplication:
         command_center_svc: CommandCenterSuite | None = None,
         api_standardization_svc: ApiStandardizationSuite | None = None,
         data_contracts_svc: DataContractsSuite | None = None,
+        security_hardening_svc: SecurityHardeningSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -102,6 +104,7 @@ class EnterpriseHubApplication:
         self.command_center = command_center_svc or CommandCenterSuite(self.store)
         self.api_standardization = api_standardization_svc or ApiStandardizationSuite(self.store)
         self.data_contracts = data_contracts_svc or DataContractsSuite(self.store)
+        self.security_hardening = security_hardening_svc or SecurityHardeningSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -362,6 +365,10 @@ class EnterpriseHubApplication:
             "dto_registry_ready": True,
             "schema_registry_ready": True,
             "contract_testing_ready": True,
+            "security_hardening_ready": True,
+            "zero_trust_ready": True,
+            "secrets_management_ready": True,
+            "compliance_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -392,6 +399,7 @@ class EnterpriseHubApplication:
                 "command_center": self.config.command_center,
                 "api_standardization": self.config.api_standardization,
                 "data_contracts": self.config.data_contracts,
+                "security_hardening": self.config.security_hardening,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -426,6 +434,7 @@ class EnterpriseHubApplication:
             "command_center": self.command_center.status(),
             "api_standardization": self.api_standardization.status(),
             "data_contracts": self.data_contracts.status(),
+            "security_hardening": self.security_hardening.status(),
         }
 
 

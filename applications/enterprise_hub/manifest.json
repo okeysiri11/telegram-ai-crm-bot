@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.0.0-rc3",
-  "release_status": "Enterprise Data Contracts",
+  "application_version": "6.0.0-rc4",
+  "release_status": "Enterprise Security Hardening",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.0.0-rc2",
+  "enterprise_foundation": "Enterprise Platform v6.0.0-rc3",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "21.3",
+  "sprint": "21.4",
   "phase": "stabilization",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -85,7 +85,11 @@
     "contract_testing": "1.0",
     "knowledge": "1.0",
     "dashboard": "1.0",
-    "api": "6.0"
+    "api": "6.0",
+    "security_hardening": "1.0",
+    "zero_trust": "1.0",
+    "secrets_management": "1.0",
+    "compliance": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -97,5 +101,6 @@
     "crypto_enterprise",
     "legal_enterprise",
     "finance_enterprise"
-  ]
+  ],
+  "security_hardening": "1.0"
 }

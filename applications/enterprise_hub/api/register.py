@@ -23,6 +23,7 @@ from applications.enterprise_hub.business_capabilities import api as ebc_api
 from applications.enterprise_hub.command_center import api as ecc_api
 from applications.enterprise_hub.api_standardization import api as eas_api
 from applications.enterprise_hub.data_contracts import api as edc_api
+from applications.enterprise_hub.security_hardening import api as esh_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -568,3 +569,18 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{edc}/map", edc_api.edc_map_handler)
     app.router.add_post(f"{edc}/tests", edc_api.edc_tests_handler)
     app.router.add_get(f"{edc}/docs", edc_api.edc_docs_handler)
+
+    # Sprint 21.4 — Security Hardening (additive; prior routes unchanged)
+    esh = DEFAULT_CONFIG.security_hardening_api_prefix
+    app.router.add_get(f"{esh}/health", esh_api.esh_health_handler)
+    app.router.add_post(f"{esh}/bootstrap", esh_api.esh_bootstrap_handler)
+    app.router.add_post(f"{esh}/authenticate", esh_api.esh_authenticate_handler)
+    app.router.add_post(f"{esh}/authorize", esh_api.esh_authorize_handler)
+    app.router.add_get(f"{esh}/zero-trust", esh_api.esh_zero_trust_handler)
+    app.router.add_post(f"{esh}/zero-trust", esh_api.esh_zero_trust_handler)
+    app.router.add_get(f"{esh}/secrets", esh_api.esh_secrets_handler)
+    app.router.add_post(f"{esh}/secrets", esh_api.esh_secrets_handler)
+    app.router.add_get(f"{esh}/compliance", esh_api.esh_compliance_handler)
+    app.router.add_post(f"{esh}/compliance", esh_api.esh_compliance_handler)
+    app.router.add_post(f"{esh}/tests", esh_api.esh_tests_handler)
+    app.router.add_get(f"{esh}/dashboard", esh_api.esh_dashboard_handler)

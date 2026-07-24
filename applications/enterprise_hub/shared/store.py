@@ -473,6 +473,17 @@ class EnterpriseHubStore:
         self.edc_mappings: EntityStore = EntityStore()
         self.edc_tests: EntityStore = EntityStore()
         self.edc_docs: EntityStore = EntityStore()
+        # Sprint 21.4 — Security Hardening
+        self.esh_bootstraps: EntityStore = EntityStore()
+        self.esh_sessions: EntityStore = EntityStore()
+        self.esh_authorizations: EntityStore = EntityStore()
+        self.esh_zero_trust: EntityStore = EntityStore()
+        self.esh_secrets: EntityStore = EntityStore()
+        self.esh_audit: EntityStore = EntityStore()
+        self.esh_alerts: EntityStore = EntityStore()
+        self.esh_compliance: EntityStore = EntityStore()
+        self.esh_tests: EntityStore = EntityStore()
+        self.esh_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

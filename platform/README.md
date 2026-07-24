@@ -2,7 +2,7 @@
 
 Enterprise shared libraries for Stabilization Phase.
 
-**Contracts package:** see [`../platform_contracts/`](../platform_contracts/)  
-(`platform.contracts` would collide with Python’s stdlib `platform` module, so the import path is `platform_contracts`.)
+- Contracts: [`../platform_contracts/`](../platform_contracts/)
+- Security: [`../platform_security/`](../platform_security/)
 
-Design target from Sprint 21.3: `platform/contracts/{dto,events,schemas,validation,serialization,versioning,registry}`.
+Import paths avoid Python stdlib/`platform` collisions.
