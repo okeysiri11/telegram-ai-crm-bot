@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "6.0.0-rc6",
-  "release_status": "Enterprise Documentation Platform",
+  "application_version": "6.0.0-rc7",
+  "release_status": "Enterprise Performance Platform",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v6.0.0-rc5",
+  "enterprise_foundation": "Enterprise Platform v6.0.0-rc6",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "21.6",
+  "sprint": "21.7",
   "phase": "stabilization",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -97,7 +97,12 @@
     "documentation_platform": "1.0",
     "docs_registry": "1.0",
     "docs_search": "1.0",
-    "docs_publishing": "1.0"
+    "docs_publishing": "1.0",
+    "performance_platform": "1.0",
+    "profiler": "1.0",
+    "load_testing": "1.0",
+    "autoscaling": "1.0",
+    "performance_certification": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -112,5 +117,6 @@
   ],
   "security_hardening": "1.0",
   "quality_assurance": "1.0",
-  "documentation_platform": "1.0"
+  "documentation_platform": "1.0",
+  "performance_platform": "1.0"
 }

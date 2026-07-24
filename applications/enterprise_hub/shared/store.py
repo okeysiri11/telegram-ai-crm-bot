@@ -500,6 +500,15 @@ class EnterpriseHubStore:
         self.edo_publications: EntityStore = EntityStore()
         self.edo_quality: EntityStore = EntityStore()
         self.edo_dashboards: EntityStore = EntityStore()
+        # Sprint 21.7 — Performance Platform
+        self.epf_bootstraps: EntityStore = EntityStore()
+        self.epf_profiles: EntityStore = EntityStore()
+        self.epf_benchmarks: EntityStore = EntityStore()
+        self.epf_load_tests: EntityStore = EntityStore()
+        self.epf_stress_tests: EntityStore = EntityStore()
+        self.epf_monitoring: EntityStore = EntityStore()
+        self.epf_dashboards: EntityStore = EntityStore()
+        self.epf_certifications: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

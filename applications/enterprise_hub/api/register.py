@@ -26,6 +26,7 @@ from applications.enterprise_hub.data_contracts import api as edc_api
 from applications.enterprise_hub.security_hardening import api as esh_api
 from applications.enterprise_hub.quality_assurance import api as eqa_api
 from applications.enterprise_hub.documentation_platform import api as edo_api
+from applications.enterprise_hub.performance_platform import api as epf_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -613,3 +614,17 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{edo}/quality", edo_api.edo_quality_handler)
     app.router.add_post(f"{edo}/quality", edo_api.edo_quality_handler)
     app.router.add_get(f"{edo}/dashboard", edo_api.edo_dashboard_handler)
+
+    # Sprint 21.7 — Performance Platform (additive; prior routes unchanged)
+    epf = DEFAULT_CONFIG.performance_platform_api_prefix
+    app.router.add_get(f"{epf}/health", epf_api.epf_health_handler)
+    app.router.add_post(f"{epf}/bootstrap", epf_api.epf_bootstrap_handler)
+    app.router.add_get(f"{epf}/profile", epf_api.epf_profile_handler)
+    app.router.add_post(f"{epf}/profile", epf_api.epf_profile_handler)
+    app.router.add_post(f"{epf}/benchmark", epf_api.epf_benchmark_handler)
+    app.router.add_post(f"{epf}/load", epf_api.epf_load_handler)
+    app.router.add_post(f"{epf}/stress", epf_api.epf_stress_handler)
+    app.router.add_post(f"{epf}/cache", epf_api.epf_cache_handler)
+    app.router.add_get(f"{epf}/dashboard", epf_api.epf_dashboard_handler)
+    app.router.add_post(f"{epf}/certify", epf_api.epf_certify_handler)
+

@@ -44,8 +44,8 @@ def reset_store():
 
 def test_version_workflow_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "6.0.0-rc6"
-    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc5"
+    assert health["application_version"] == "6.0.0-rc7"
+    assert health["enterprise_foundation"] == "Enterprise Platform v6.0.0-rc6"
     assert health["enterprise_workflow_ready"] is True
     assert health["workflow_builder_ready"] is True
     assert health["approval_engine_ready"] is True
@@ -80,7 +80,7 @@ def test_templates_optimization_bootstrap():
     suite = enterprise_hub.workflow
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "6.0.0-rc6"
+    assert boot["version"] == "6.0.0-rc7"
     assert boot["template_invoice_id"] and boot["optimization_id"] and boot["fire_id"]
     tpl = suite.templates.instantiate(kind="customer_support")
     assert tpl["workflow_id"]
@@ -94,7 +94,7 @@ def test_templates_optimization_bootstrap():
 async def test_api_workflow(client):
     health = await client.get(f"{WF}/health")
     body = await health.json()
-    assert body["application_version"] == "6.0.0-rc6"
+    assert body["application_version"] == "6.0.0-rc7"
     assert body["enterprise_workflow_ready"] is True
     assert body["workflow_builder_ready"] is True
 
@@ -111,7 +111,7 @@ async def test_api_workflow(client):
     for prefix in (HUB, ORCH, KG, AA, CM):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "6.0.0-rc6"
+        assert (await resp.json())["application_version"] == "6.0.0-rc7"
 
     assert boot_body["engine_run_lead_id"]
 
@@ -150,5 +150,5 @@ def test_docs_and_regression_19_5():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert "6.0.0-rc6" in manifest
-    assert "21.6" in manifest
+    assert "6.0.0-rc7" in manifest
+    assert "21.7" in manifest
