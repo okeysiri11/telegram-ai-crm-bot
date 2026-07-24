@@ -40,6 +40,7 @@ async def esi_health_handler(request: web.Request) -> web.Response:
             "decision_intelligence_ready": health.get("decision_intelligence_ready"),
             "forecasting_ready": health.get("forecasting_ready"),
             "risk_engine_ready": health.get("risk_engine_ready"),
+            "recommendation_engine_ready": health.get("recommendation_engine_ready"),
             "suite": _suite().status(),
         }
     )
@@ -175,8 +176,58 @@ async def esi_analytics_handler(request: web.Request) -> web.Response:
             {
                 "predictions": suite.predictions.report(),
                 "confidence": suite.confidence.report(),
-                "recommendations": suite.recommendations.report(),
+                "recommendations": suite.recommendation_analytics.report(),
+                "executive": suite.executive.report(),
             }
         )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def esi_recommendations_handler(request: web.Request) -> web.Response:
+    try:
+        body = await _read_json(request)
+        return json_response(
+            _suite().recommendation_engine.generate(
+                scenario_id=body.get("scenario_id"),
+                decision_id=body.get("decision_id"),
+                risk_id=body.get("risk_id"),
+                actions=body.get("actions") if isinstance(body.get("actions"), list) else None,
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def esi_schedule_handler(request: web.Request) -> web.Response:
+    try:
+        suite = _suite()
+        if request.method == "GET":
+            return json_response(suite.scheduler.status())
+        body = await _read_json(request)
+        action = (body.get("action") or "schedule").lower()
+        if action == "schedule":
+            return json_response(
+                suite.scheduler.schedule(
+                    scenario_id=body.get("scenario_id", ""),
+                    mode=body.get("mode", "manual"),
+                    run_at=body.get("run_at", "immediate"),
+                    priority=int(body.get("priority", 5) or 5),
+                    event_type=body.get("event_type"),
+                    interval_sec=body.get("interval_sec"),
+                ),
+                status=201,
+            )
+        if action == "execute":
+            return json_response(suite.scheduler.execute(schedule_id=body.get("schedule_id", "")), status=201)
+        if action == "on_event":
+            return json_response(
+                {"runs": suite.scheduler.on_event(event_type=body.get("event_type", ""), payload=body.get("payload") if isinstance(body.get("payload"), dict) else None)},
+                status=201,
+            )
+        if action == "tick_continuous":
+            return json_response({"runs": suite.scheduler.tick_continuous()}, status=201)
+        raise ValidationError(f"unknown action: {action}")
     except Exception as exc:
         return _handle_error(exc)

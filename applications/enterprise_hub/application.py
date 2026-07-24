@@ -326,6 +326,7 @@ class EnterpriseHubApplication:
             "decision_intelligence_ready": True,
             "forecasting_ready": True,
             "risk_engine_ready": True,
+            "recommendation_engine_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,

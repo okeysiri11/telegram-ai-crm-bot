@@ -397,6 +397,9 @@ class EnterpriseHubStore:
         self.esi_schedules: EntityStore = EntityStore()
         self.esi_history: EntityStore = EntityStore()
         self.esi_analytics: EntityStore = EntityStore()
+        self.esi_recommendations: EntityStore = EntityStore()
+        self.esi_integrations: EntityStore = EntityStore()
+        self.esi_registry: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

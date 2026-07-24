@@ -463,3 +463,6 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{esi}/dashboard", esi_api.esi_dashboard_handler)
     app.router.add_get(f"{esi}/analytics", esi_api.esi_analytics_handler)
     app.router.add_post(f"{esi}/analytics", esi_api.esi_analytics_handler)
+    app.router.add_post(f"{esi}/recommendations", esi_api.esi_recommendations_handler)
+    app.router.add_get(f"{esi}/schedule", esi_api.esi_schedule_handler)
+    app.router.add_post(f"{esi}/schedule", esi_api.esi_schedule_handler)

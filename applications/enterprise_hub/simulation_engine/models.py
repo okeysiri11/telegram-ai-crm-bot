@@ -42,4 +42,21 @@ RISK_KINDS = (
     "project",
     "dependency",
 )
-SIM_STATUSES = ("draft", "scheduled", "running", "completed", "failed", "cancelled")
+SIM_STATUSES = ("draft", "scheduled", "running", "completed", "failed", "cancelled", "continuous")
+SCHEDULE_MODES = ("manual", "scheduled", "event_bus", "continuous")
+RECOMMENDATION_ACTIONS = (
+    "increase_inventory",
+    "reschedule_delivery",
+    "redistribute_workforce",
+    "change_production_schedule",
+    "acquire_equipment",
+)
+INTEGRATION_TARGETS = (
+    "digital_twin",
+    "knowledge_platform",
+    "data_fabric",
+    "event_bus",
+    "workflow",
+    "ai_orchestrator",
+    "business_rules",
+)

@@ -21,16 +21,19 @@ from applications.enterprise_hub.simulation_engine.decision_engine import Decisi
 from applications.enterprise_hub.simulation_engine.forecasting_engine import ForecastingEngine
 from applications.enterprise_hub.simulation_engine.monte_carlo import MonteCarloSimulation
 from applications.enterprise_hub.simulation_engine.optimization.engine import OptimizationEngine
+from applications.enterprise_hub.simulation_engine.recommendation_engine import RecommendationEngine
 from applications.enterprise_hub.simulation_engine.risk_engine import RiskEngine
 from applications.enterprise_hub.simulation_engine.scenario_engine import ScenarioEngine
 from applications.enterprise_hub.simulation_engine.sensitivity_analysis import SensitivityAnalysis
 from applications.enterprise_hub.simulation_engine.simulation_history import SimulationHistory
+from applications.enterprise_hub.simulation_engine.simulation_registry import SimulationRegistry
 from applications.enterprise_hub.simulation_engine.simulation_scheduler import SimulationScheduler
 
 
 class SimulationManager:
     def __init__(self, store: EnterpriseHubStore | None = None) -> None:
         self.store = store or enterprise_hub_store
+        self.registry = SimulationRegistry(self.store)
         self.scenarios = ScenarioEngine(self.store)
         self.decisions = DecisionEngine(self.store)
         self.forecasts = ForecastingEngine(self.store)
@@ -40,9 +43,11 @@ class SimulationManager:
         self.sensitivity = SensitivityAnalysis(self.store)
         self.scheduler = SimulationScheduler(self.store)
         self.history = SimulationHistory(self.store)
+        self.recommendation_engine = RecommendationEngine(self.store)
 
     def status(self) -> dict[str, Any]:
         return {
+            "registry": self.registry.status(),
             "scenarios": self.scenarios.status(),
             "decisions": self.decisions.status(),
             "forecasts": self.forecasts.status(),
@@ -52,4 +57,5 @@ class SimulationManager:
             "sensitivity": self.sensitivity.status(),
             "scheduler": self.scheduler.status(),
             "history": self.history.status(),
+            "recommendation_engine": self.recommendation_engine.status(),
         }

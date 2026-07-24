@@ -63,6 +63,7 @@
     "forecasting": "1.0",
     "risk_engine": "1.0",
     "monte_carlo": "1.0",
+    "recommendation_engine": "1.0",
     "knowledge": "1.0",
     "dashboard": "1.0",
     "api": "5.4"

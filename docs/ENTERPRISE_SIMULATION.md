@@ -6,10 +6,12 @@
 **Package:** `applications/enterprise_hub/simulation_engine/`  
 **Attr:** `enterprise_hub.simulation_engine`
 
-Scenario modeling, decision ranking, forecasting, optimization, risk, Monte Carlo, and sensitivity analysis on top of Digital Twin / Data Fabric / Event Bus.
+Scenario modeling, decision ranking, forecasting, optimization, risk, Monte Carlo, sensitivity, AI recommendations, multi-mode scheduler, and Decision Analytics Dashboard.
+
+Integrations: Digital Twin · Knowledge Platform · Data Fabric · Event Bus · Workflow · AI Orchestrator · Business Rules.
 
 > `OptimizationEngine` lives in `optimization/engine.py` (Python cannot host both `optimization_engine.py` and package `optimization/`).
 
 ## Readiness
 
-Simulation Engine Ready · Decision Intelligence Ready · Forecasting Ready · Risk Engine Ready
+Simulation Engine Ready · Decision Intelligence Ready · Forecasting Ready · Risk Engine Ready · Recommendation Engine Ready

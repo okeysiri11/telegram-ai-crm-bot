@@ -64,6 +64,7 @@ def test_version_esi_ready():
     assert health["decision_intelligence_ready"] is True
     assert health["forecasting_ready"] is True
     assert health["risk_engine_ready"] is True
+    assert health["recommendation_engine_ready"] is True
     assert health["digital_twin_ready"] is True
     assert health["engines"]["simulation_engine"] == "1.0"
 
@@ -88,6 +89,14 @@ def test_scenario_decision_monte_carlo():
     assert mc["p50"]
     sens = suite.sensitivity.analyze(parameters={"fuel_cost": 1.0, "demand": 1.0})
     assert sens["top_driver"] == "fuel_cost"
+    rec = suite.recommendation_engine.generate(scenario_id=scn["scenario_id"], decision_id=dec["decision_id"])
+    assert rec["top_action"] in (
+        "increase_inventory",
+        "reschedule_delivery",
+        "redistribute_workforce",
+        "change_production_schedule",
+        "acquire_equipment",
+    )
     with pytest.raises(ValidationError):
         suite.decisions.evaluate(options=[{"option_id": "only"}])
 
@@ -98,10 +107,22 @@ def test_bootstrap_dashboard():
     assert boot["bootstrap"] is True
     assert boot["version"] == "5.4.9-enterprise"
     assert boot["schedule_completed"] is True
+    assert boot["event_triggered"] is True
+    assert boot["continuous_ticks"] >= 1
+    assert boot["top_recommendation"]
+    assert boot["integrations_linked"] == 7
     assert boot["best_option"]
     assert boot["critical_risks"]
     assert boot["top_driver"]
-    assert boot["dashboard"]["confidence_id"]
+    dash = boot["dashboard"]
+    assert dash["confidence_id"]
+    assert dash["executive_id"]
+    assert "success_probability" in dash
+    assert "potential_profit" in dash
+    assert "potential_loss" in dash
+    assert "ai_recommendations" in dash
+    assert "decision_history" in dash
+    assert dash["active_scenario_count"] >= 1
 
 
 @pytest.mark.asyncio
@@ -110,6 +131,7 @@ async def test_api_esi(client):
     body = await health.json()
     assert body["application_version"] == "5.4.9-enterprise"
     assert body["simulation_engine_ready"] is True
+    assert body["recommendation_engine_ready"] is True
 
     boot = await client.post(f"{ESI}/bootstrap", json={})
     assert boot.status == 201
@@ -121,12 +143,19 @@ async def test_api_esi(client):
     )
     assert created.status == 201
 
+    rec = await client.post(
+        f"{ESI}/recommendations",
+        json={"scenario_id": boot_body["scenario_ids"][2], "decision_id": boot_body["decision_id"]},
+    )
+    assert rec.status == 201
+
     for prefix in (HUB, ORCH, KG, AA, CM, WF, EIP, EDP, ISAM, OBS, TN, AOP, ATS, EKP, AIOS, EVP, SDP, EDF, EDT):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         assert (await resp.json())["application_version"] == "5.4.9-enterprise"
 
     assert boot_body["decision_id"]
+    assert boot_body["recommendation_id"]
 
 
 def test_docs_and_regression_20_9():
@@ -135,10 +164,13 @@ def test_docs_and_regression_20_9():
         "ESI_SCENARIOS.md",
         "ESI_FORECAST_OPT.md",
         "ESI_RISK_MC.md",
+        "ESI_RECOMMENDATIONS_DASHBOARD.md",
     ):
         assert (ROOT / "docs" / name).exists()
     assert (ROOT / "knowledge" / "applications" / "ENTERPRISE_SIMULATION.md").exists()
     assert (ROOT / "applications" / "enterprise_hub" / "simulation_engine" / "facade.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "simulation_engine" / "recommendation_engine.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "simulation_engine" / "integrations.py").exists()
     assert (ROOT / "applications" / "enterprise_hub" / "simulation_engine" / "scenarios" / "maritime.py").exists()
     assert (ROOT / "applications" / "enterprise_hub" / "simulation_engine" / "optimization" / "engine.py").exists()
     assert (ROOT / "applications" / "enterprise_hub" / "digital_twin").exists()
@@ -165,3 +197,4 @@ def test_docs_and_regression_20_9():
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
     assert "5.4.9-enterprise" in manifest
     assert "20.9" in manifest
+    assert "recommendation_engine" in manifest
