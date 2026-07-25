@@ -504,3 +504,32 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/director/sessions/{{session_id}}/create",
         handlers.dir_create_handler,
     )
+
+    # Sprint 29.9 — Visual Story Engine / Enterprise Storytelling
+    app.router.add_get(f"{prefix}/story/catalog", handlers.story_catalog_handler)
+    app.router.add_get(f"{prefix}/story/status", handlers.story_status_handler)
+    app.router.add_get(f"{prefix}/story/engine", handlers.story_engine_handler)
+    app.router.add_get(f"{prefix}/story/types", handlers.story_types_handler)
+    app.router.add_get(f"{prefix}/story/segments", handlers.story_segments_handler)
+    app.router.add_post(f"{prefix}/story/build", handlers.story_build_handler)
+    app.router.add_get(f"{prefix}/story/organization", handlers.story_org_handler)
+    app.router.add_get(f"{prefix}/story/ai", handlers.story_ai_handler)
+    app.router.add_get(f"{prefix}/story/workflow", handlers.story_workflow_handler)
+    app.router.add_get(f"{prefix}/story/knowledge", handlers.story_knowledge_handler)
+    app.router.add_get(f"{prefix}/story/executive", handlers.story_executive_handler)
+    app.router.add_post(f"{prefix}/story/navigate", handlers.story_navigate_handler)
+    app.router.add_get(f"{prefix}/story/timeline", handlers.story_timeline_handler)
+    app.router.add_get(f"{prefix}/story/milestones", handlers.story_milestones_handler)
+    app.router.add_get(f"{prefix}/story/history", handlers.story_history_handler)
+    app.router.add_get(f"{prefix}/story/ui", handlers.story_ui_handler)
+    app.router.add_post(f"{prefix}/story/sessions", handlers.story_session_handler)
+    app.router.add_get(f"{prefix}/story/sessions/{{session_id}}", handlers.story_session_handler)
+    app.router.add_patch(f"{prefix}/story/sessions/{{session_id}}", handlers.story_session_handler)
+    app.router.add_get(
+        f"{prefix}/story/sessions/{{session_id}}/summary",
+        handlers.story_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/story/sessions/{{session_id}}/create",
+        handlers.story_create_handler,
+    )

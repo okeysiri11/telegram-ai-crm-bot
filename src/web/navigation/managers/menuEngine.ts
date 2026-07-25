@@ -126,6 +126,7 @@ const menu: MenuItem[] = [
       { id: "nav_pb_assets", name: "Visual Assets", icon: "analytics", route: "/platform-builder/assets", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_simulation", name: "Visual Simulation", icon: "analytics", route: "/platform-builder/simulation", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_director", name: "Visual Director", icon: "analytics", route: "/platform-builder/director", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_pb_story", name: "Visual Stories", icon: "analytics", route: "/platform-builder/story", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_crm", name: "CRM Builder", icon: "crm", route: "/platform-builder/crm", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_erp", name: "ERP Builder", icon: "erp", route: "/platform-builder/erp", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_workflow", name: "Workflow Builder", icon: "workflow", route: "/platform-builder/workflow", module: "platform_builder", permissions: ["read"], status: "beta" },

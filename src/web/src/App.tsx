@@ -56,6 +56,7 @@ import {
   AssetRegistryPage,
   SimulationEnginePage,
   DirectorEnginePage,
+  StoryEnginePage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -298,6 +299,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <DirectorEnginePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/story"
+        element={
+          <ProtectedRoute>
+            <StoryEnginePage />
           </ProtectedRoute>
         }
       />

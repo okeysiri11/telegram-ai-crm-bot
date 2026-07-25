@@ -2191,3 +2191,167 @@ async def dir_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.9 — Visual Story Engine / Enterprise Storytelling ---
+
+
+async def story_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_types_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.story_types())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_segments_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.story_segments())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_build_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        story_type = body.get("story_type") or body.get("type")
+        if not story_type:
+            raise ValidationError("story_type is required")
+        return json_response(
+            platform_builder.story.build_story(
+                story_type, title=body.get("title"), persist=body.get("persist", True)
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_org_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.organization_evolution())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_ai_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.ai_stories())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_workflow_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.workflow_stories())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_knowledge_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.knowledge_stories())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_executive_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.executive_mode())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_navigate_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        action = body.get("action")
+        if not action:
+            raise ValidationError("action is required")
+        return json_response(
+            platform_builder.story.navigate(
+                action, index=body.get("index"), label=body.get("label")
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_timeline_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.timeline.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_milestones_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.milestone_viewer())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_history_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.story_history())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.story.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.story.update_session(session_id, body))
+        return json_response(platform_builder.story.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.story.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def story_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.story.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

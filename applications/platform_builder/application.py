@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.8."""
+"""Platform Builder application facade — Sprint 29.9."""
 
 from __future__ import annotations
 
@@ -19,6 +19,7 @@ from applications.platform_builder.themes.engine import VisualThemeEngine
 from applications.platform_builder.assets.engine import VisualAssetRegistry
 from applications.platform_builder.simulation.engine import VisualSimulationEngine
 from applications.platform_builder.director.engine import VisualDirectorEngine
+from applications.platform_builder.story.engine import VisualStoryEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -66,6 +67,7 @@ class PlatformBuilderApplication:
         assets: VisualAssetRegistry | None = None,
         simulation: VisualSimulationEngine | None = None,
         director: VisualDirectorEngine | None = None,
+        story: VisualStoryEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -88,6 +90,7 @@ class PlatformBuilderApplication:
         self.assets = assets or VisualAssetRegistry(self.store)
         self.simulation = simulation or VisualSimulationEngine(self.store)
         self.director = director or VisualDirectorEngine(self.store)
+        self.story = story or VisualStoryEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -110,6 +113,7 @@ class PlatformBuilderApplication:
         self.assets = VisualAssetRegistry(self.store)
         self.simulation = VisualSimulationEngine(self.store)
         self.director = VisualDirectorEngine(self.store)
+        self.story = VisualStoryEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -194,6 +198,10 @@ class PlatformBuilderApplication:
             "scene_manager_ready": True,
             "focus_engine_ready": True,
             "priority_manager_ready": True,
+            "story_engine_ready": True,
+            "story_timeline_ready": True,
+            "executive_story_ready": True,
+            "milestone_viewer_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -212,6 +220,7 @@ class PlatformBuilderApplication:
             "assets_page_exists": (web / "pages" / "AssetRegistryPage.tsx").exists(),
             "simulation_page_exists": (web / "pages" / "SimulationEnginePage.tsx").exists(),
             "director_page_exists": (web / "pages" / "DirectorEnginePage.tsx").exists(),
+            "story_page_exists": (web / "pages" / "StoryEnginePage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -311,6 +320,10 @@ class PlatformBuilderApplication:
             "scene_manager_ready": True,
             "focus_engine_ready": True,
             "priority_manager_ready": True,
+            "story_engine_ready": True,
+            "story_timeline_ready": True,
+            "executive_story_ready": True,
+            "milestone_viewer_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -353,6 +366,11 @@ class PlatformBuilderApplication:
                 "scene_manager": self.config.scene_manager,
                 "focus_manager": self.config.focus_manager,
                 "priority_manager": self.config.priority_manager,
+                "story_engine": self.config.story_engine,
+                "story_registry": self.config.story_registry,
+                "story_builder": self.config.story_builder,
+                "story_timeline": self.config.story_timeline,
+                "executive_story_api": self.config.executive_story_api,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -375,6 +393,7 @@ class PlatformBuilderApplication:
             "assets": self.assets.status(),
             "simulation": self.simulation.status(),
             "director": self.director.status(),
+            "story": self.story.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

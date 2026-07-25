@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.15.0",
-  "sprint": "29.8",
-  "release_status": "Visual Director Engine",
+  "application_version": "1.16.0",
+  "sprint": "29.9",
+  "release_status": "Visual Story Engine",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -46,6 +46,11 @@
   "scene_manager": "1.0",
   "focus_manager": "1.0",
   "priority_manager": "1.0",
+  "story_engine": "1.0",
+  "story_registry": "1.0",
+  "story_builder": "1.0",
+  "story_timeline": "1.0",
+  "executive_story_api": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }
