@@ -1,5 +1,5 @@
-export const PLATFORM_BUILDER_VERSION = "1.1.0";
-export const PLATFORM_BUILDER_SPRINT = "28.2";
+export const PLATFORM_BUILDER_VERSION = "1.2.0";
+export const PLATFORM_BUILDER_SPRINT = "28.3";
 export const PLATFORM_BUILDER_API = "/api/platform-builder/v1";
 
 export const FRAMEWORK_PHASES = [
@@ -25,13 +25,14 @@ export const AI_BUILDER_STEPS = [
 ] as const;
 
 export const CONCIERGE_STEPS = [
-  "Organization Scope",
   "Concierge Identity",
-  "Tone & Voice",
-  "Capabilities",
-  "Channels",
-  "Knowledge Sources",
-  "Preview",
+  "Concierge Role",
+  "Organization Access",
+  "AI Orchestration",
+  "Proactive Assistance",
+  "Owner Relationship",
+  "Smart Recommendations",
+  "Summary",
   "Create",
 ] as const;
 

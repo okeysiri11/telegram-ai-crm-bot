@@ -55,3 +55,23 @@ def register_platform_builder_routes(app: web.Application) -> None:
     )
     app.router.add_get(f"{prefix}/ai-builder/registry", handlers.ai_registry_handler)
     app.router.add_get(f"{prefix}/ai-builder/group-chat", handlers.ai_group_chat_handler)
+
+    # Sprint 28.3 — Enterprise AI Concierge
+    app.router.add_get(f"{prefix}/concierge/catalog", handlers.concierge_catalog_handler)
+    app.router.add_post(f"{prefix}/concierge/sessions", handlers.concierge_session_handler)
+    app.router.add_get(f"{prefix}/concierge/sessions/{{session_id}}", handlers.concierge_session_handler)
+    app.router.add_patch(f"{prefix}/concierge/sessions/{{session_id}}", handlers.concierge_session_handler)
+    app.router.add_post(f"{prefix}/concierge/preview", handlers.concierge_preview_handler)
+    app.router.add_get(
+        f"{prefix}/concierge/sessions/{{session_id}}/summary",
+        handlers.concierge_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/concierge/sessions/{{session_id}}/create",
+        handlers.concierge_create_handler,
+    )
+    app.router.add_get(f"{prefix}/concierge/registry", handlers.concierge_registry_handler)
+    app.router.add_get(
+        f"{prefix}/concierge/organizations/{{organization_id}}",
+        handlers.concierge_org_handler,
+    )

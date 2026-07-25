@@ -27,13 +27,14 @@ AI_BUILDER_STEPS = (
 )
 
 CONCIERGE_STEPS = (
-    "Organization Scope",
     "Concierge Identity",
-    "Tone & Voice",
-    "Capabilities",
-    "Channels",
-    "Knowledge Sources",
-    "Preview",
+    "Concierge Role",
+    "Organization Access",
+    "AI Orchestration",
+    "Proactive Assistance",
+    "Owner Relationship",
+    "Smart Recommendations",
+    "Summary",
     "Create",
 )
 
@@ -83,9 +84,9 @@ BUILDERS: list[dict[str, Any]] = [
         "name": "Concierge Builder",
         "route": "/platform-builder/concierge",
         "kind": "builder",
-        "status": "frame",
+        "status": "operational",
         "learning_supported": True,
-        "frame_only": True,
+        "frame_only": False,
         "steps": list(CONCIERGE_STEPS),
         "purpose": "Configure the single organizational Concierge assistant.",
         "constraints": {"one_per_organization": True, "separate_from_ai_agents": True},

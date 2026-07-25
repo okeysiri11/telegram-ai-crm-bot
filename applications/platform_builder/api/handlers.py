@@ -251,3 +251,73 @@ async def ai_group_chat_handler(request: web.Request) -> web.Response:
         return json_response(platform_builder.ai_builder.registry.group_chat_foundation())
     except Exception as exc:
         return _handle_error(exc)
+
+
+async def concierge_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.concierge.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def concierge_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.concierge.start_session(
+                    organization_id=body.get("organization_id") or "org_demo",
+                ),
+                status=201,
+            )
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.concierge.update_session(session_id, body))
+        return json_response(platform_builder.concierge.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def concierge_preview_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        return json_response(platform_builder.concierge.conversation_preview(body.get("draft") or body))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def concierge_summary_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.concierge.summary(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def concierge_create_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.concierge.create(session_id), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def concierge_registry_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.concierge.registry.list_all())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def concierge_org_handler(request: web.Request) -> web.Response:
+    try:
+        organization_id = request.match_info["organization_id"]
+        item = platform_builder.concierge.registry.get_for_organization(organization_id)
+        if not item:
+            return json_response({"organization_id": organization_id, "concierge": None})
+        return json_response({"organization_id": organization_id, "concierge": item})
+    except Exception as exc:
+        return _handle_error(exc)

@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 28.2 Enterprise AI Builder."""
+"""Platform Builder — Sprint 28.3 Enterprise AI Concierge."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.1.0"
-    sprint: str = "28.2"
-    release_status: str = "Enterprise AI Builder"
+    application_version: str = "1.2.0"
+    sprint: str = "28.3"
+    release_status: str = "Enterprise AI Concierge"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"
@@ -22,6 +22,7 @@ class PlatformBuilderConfig:
     god_mode: str = "1.0"
     help_system: str = "1.0"
     ai_builder: str = "1.0"
+    concierge_builder: str = "1.0"
     platform_owner_role: str = "platform_owner"
     academy_modes: list[str] = field(
         default_factory=lambda: ["quick_start", "guided_learning", "expert"]
