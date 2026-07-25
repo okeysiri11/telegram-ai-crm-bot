@@ -40,6 +40,19 @@ CONCIERGE_STEPS = (
     "Create",
 )
 
+VERTICAL_STEPS = (
+    "Vertical Information",
+    "Select Industry",
+    "Module Selection",
+    "AI Configuration",
+    "AI Concierge",
+    "Dashboard",
+    "Workspace",
+    "Live Organization Preview",
+    "Summary",
+    "Create",
+)
+
 GENERIC_STEPS = (
     "Define Scope",
     "Configure Structure",
@@ -64,11 +77,11 @@ BUILDERS: list[dict[str, Any]] = [
         "name": "Vertical Builder",
         "route": "/platform-builder/vertical",
         "kind": "builder",
-        "status": "frame",
+        "status": "operational",
         "learning_supported": True,
-        "frame_only": True,
-        "steps": list(GENERIC_STEPS),
-        "purpose": "Prepare industry vertical blueprints for future activation.",
+        "frame_only": False,
+        "steps": list(VERTICAL_STEPS),
+        "purpose": "Visually create complete Enterprise Verticals without programming.",
     },
     {
         "id": "ai",

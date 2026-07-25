@@ -365,3 +365,62 @@ async def ai_team_status_handler(request: web.Request) -> web.Response:
         return json_response(platform_builder.ai_team.status())
     except Exception as exc:
         return _handle_error(exc)
+
+
+async def vertical_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.vertical.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vertical_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.vertical.start_session(
+                    organization_id=body.get("organization_id") or "org_demo",
+                ),
+                status=201,
+            )
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.vertical.update_session(session_id, body))
+        return json_response(platform_builder.vertical.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vertical_preview_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.vertical.organization_preview(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vertical_summary_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.vertical.summary(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vertical_create_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.vertical.create(session_id), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vertical_registry_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.vertical.registry.list_all())
+    except Exception as exc:
+        return _handle_error(exc)

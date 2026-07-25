@@ -3,11 +3,12 @@ import {
   AI_BUILDER_STEPS,
   CONCIERGE_STEPS,
   GENERIC_STEPS,
+  VERTICAL_STEPS,
 } from "../types";
 
 export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "dashboard", name: "Dashboard", route: "/platform-builder", kind: "hub", status: "operational" },
-  { id: "vertical", name: "Vertical Builder", route: "/platform-builder/vertical", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true, purpose: "Prepare industry vertical blueprints for future activation." },
+  { id: "vertical", name: "Vertical Builder", route: "/platform-builder/vertical", kind: "builder", status: "operational", steps: VERTICAL_STEPS, frameOnly: false, purpose: "Visually create complete Enterprise Verticals without programming." },
   { id: "ai", name: "AI Builder", route: "/platform-builder/ai", kind: "builder", status: "operational", steps: AI_BUILDER_STEPS, frameOnly: false, purpose: "Compose AI agent teams with clear roles and personalities." },
   { id: "concierge", name: "Concierge Builder", route: "/platform-builder/concierge", kind: "builder", status: "operational", steps: CONCIERGE_STEPS, frameOnly: false, purpose: "Configure the single organizational Concierge assistant.", constraints: { onePerOrganization: true, separateFromAiAgents: true } },
   { id: "ai_team", name: "AI Team Center", route: "/platform-builder/ai-team", kind: "hub", status: "operational", purpose: "Monitor and manage all AI Specialists for the organization." },

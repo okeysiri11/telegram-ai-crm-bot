@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 28.3."""
+"""Platform Builder application facade — Sprint 28.4."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from applications.platform_builder.concierge.wizard import ConciergeWizard
 from applications.platform_builder.config import DEFAULT_CONFIG, PlatformBuilderConfig
 from applications.platform_builder.god_mode import PLATFORM_OWNER_ROLE, GodMode, is_platform_owner
 from applications.platform_builder.shared.store import PlatformBuilderStore, platform_builder_store
+from applications.platform_builder.vertical.wizard import VerticalWizard
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -40,6 +41,7 @@ class PlatformBuilderApplication:
         ai_builder: AIBuilderWizard | None = None,
         concierge: ConciergeWizard | None = None,
         ai_team: AITeamCenter | None = None,
+        vertical: VerticalWizard | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -49,6 +51,7 @@ class PlatformBuilderApplication:
         self.ai_builder = ai_builder or AIBuilderWizard(self.store)
         self.concierge = concierge or ConciergeWizard(self.store)
         self.ai_team = ai_team or AITeamCenter(self.store)
+        self.vertical = vertical or VerticalWizard(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -58,6 +61,7 @@ class PlatformBuilderApplication:
         self.ai_builder = AIBuilderWizard(self.store)
         self.concierge = ConciergeWizard(self.store)
         self.ai_team = AITeamCenter(self.store)
+        self.vertical = VerticalWizard(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -82,6 +86,11 @@ class PlatformBuilderApplication:
             "concierge_registry_ready": True,
             "ai_team_center_ready": True,
             "group_ai_foundation_ready": True,
+            "vertical_builder_ready": True,
+            "vertical_registry_ready": True,
+            "platform_registry_ready": True,
+            "visual_layer_ready": True,
+            "organization_preview_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -89,6 +98,7 @@ class PlatformBuilderApplication:
             "framework_exists": (web / "framework" / "BuilderFramework.tsx").exists(),
             "ai_builder_page_exists": (web / "pages" / "AIBuilderPage.tsx").exists(),
             "concierge_page_exists": (web / "pages" / "ConciergeBuilderPage.tsx").exists(),
+            "vertical_page_exists": (web / "pages" / "VerticalBuilderPage.tsx").exists(),
             "bootstrapped_at": _now(),
         }
         self.store.bootstraps.save(bid, record)
@@ -125,6 +135,11 @@ class PlatformBuilderApplication:
             "ai_team_center_ready": True,
             "ai_dashboard_ready": True,
             "group_ai_foundation_ready": True,
+            "vertical_builder_ready": True,
+            "vertical_registry_ready": True,
+            "platform_registry_ready": True,
+            "visual_layer_ready": True,
+            "organization_preview_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -132,11 +147,13 @@ class PlatformBuilderApplication:
                 "help_system": self.config.help_system,
                 "ai_builder": self.config.ai_builder,
                 "concierge_builder": self.config.concierge_builder,
-                "ai_team_center": "1.0",
+                "ai_team_center": self.config.ai_team_center,
+                "vertical_builder": self.config.vertical_builder,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
             "ai_team": self.ai_team.status(),
+            "vertical": self.vertical.status(),
         }
 
     def inventory(self) -> dict[str, Any]:
@@ -150,6 +167,7 @@ class PlatformBuilderApplication:
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "ai_builder": self.ai_builder.catalog(),
             "concierge": self.concierge.catalog(),
+            "vertical": self.vertical.catalog(),
         }
 
     def dashboard(self) -> dict[str, Any]:
@@ -173,6 +191,7 @@ class PlatformBuilderApplication:
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
             "ai_team": self.ai_team.status(),
+            "vertical": self.vertical.status(),
             "stats": {
                 "builders": len([b for b in BUILDERS if b["kind"] == "builder"]),
                 "frame_only": len([b for b in BUILDERS if b.get("frame_only")]),

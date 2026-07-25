@@ -45,6 +45,7 @@ import {
   FrameBuilderPage,
   GodModePage,
   PlatformBuilderDashboard,
+  VerticalBuilderPage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -214,7 +215,7 @@ export function App() {
         path="/platform-builder/vertical"
         element={
           <ProtectedRoute>
-            <FrameBuilderPage builderId="vertical" />
+            <VerticalBuilderPage />
           </ProtectedRoute>
         }
       />

@@ -47,6 +47,12 @@ class PlatformBuilderStore:
         # Sprint 28.3 — AI Team Center
         self.ai_team_centers: EntityStore = EntityStore()
         self.ai_team_actions: EntityStore = EntityStore()
+        # Sprint 28.4 — Vertical Builder
+        self.vertical_sessions: EntityStore = EntityStore()
+        self.vertical_registry: EntityStore = EntityStore()
+        self.vertical_organizations: EntityStore = EntityStore()
+        self.platform_registry: EntityStore = EntityStore()
+        self.visual_layers: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

@@ -1,5 +1,5 @@
-export const PLATFORM_BUILDER_VERSION = "1.2.0";
-export const PLATFORM_BUILDER_SPRINT = "28.3";
+export const PLATFORM_BUILDER_VERSION = "1.3.0";
+export const PLATFORM_BUILDER_SPRINT = "28.4";
 export const PLATFORM_BUILDER_API = "/api/platform-builder/v1";
 
 export const FRAMEWORK_PHASES = [
@@ -34,6 +34,19 @@ export const CONCIERGE_STEPS = [
   "Owner Relationship",
   "Smart Recommendation Engine",
   "Group AI Chat Foundation",
+  "Summary",
+  "Create",
+] as const;
+
+export const VERTICAL_STEPS = [
+  "Vertical Information",
+  "Select Industry",
+  "Module Selection",
+  "AI Configuration",
+  "AI Concierge",
+  "Dashboard",
+  "Workspace",
+  "Live Organization Preview",
   "Summary",
   "Create",
 ] as const;

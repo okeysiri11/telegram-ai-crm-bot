@@ -88,3 +88,22 @@ def register_platform_builder_routes(app: web.Application) -> None:
         handlers.ai_team_action_handler,
     )
     app.router.add_get(f"{prefix}/ai-team/group-chat", handlers.ai_team_group_chat_handler)
+
+    # Sprint 28.4 — Enterprise Vertical Builder
+    app.router.add_get(f"{prefix}/vertical/catalog", handlers.vertical_catalog_handler)
+    app.router.add_post(f"{prefix}/vertical/sessions", handlers.vertical_session_handler)
+    app.router.add_get(f"{prefix}/vertical/sessions/{{session_id}}", handlers.vertical_session_handler)
+    app.router.add_patch(f"{prefix}/vertical/sessions/{{session_id}}", handlers.vertical_session_handler)
+    app.router.add_get(
+        f"{prefix}/vertical/sessions/{{session_id}}/preview",
+        handlers.vertical_preview_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/vertical/sessions/{{session_id}}/summary",
+        handlers.vertical_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/vertical/sessions/{{session_id}}/create",
+        handlers.vertical_create_handler,
+    )
+    app.router.add_get(f"{prefix}/vertical/registry", handlers.vertical_registry_handler)
