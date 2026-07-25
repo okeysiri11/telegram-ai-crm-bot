@@ -1,7 +1,7 @@
 {
   "name": "enterprise-web-platform",
   "private": true,
-  "version": "9.0.6",
+  "version": "9.1.0-rc1",
   "type": "module",
   "scripts": {
     "dev": "vite",

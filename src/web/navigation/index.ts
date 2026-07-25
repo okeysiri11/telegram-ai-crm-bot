@@ -8,6 +8,6 @@ export { QuickSwitcher } from "./components/QuickSwitcher";
 export { NavigationProvider, useNavigationUi } from "./components/NavigationProvider";
 export * from "./pages";
 
-export const NAVIGATION_VERSION = "9.0.6";
+export const NAVIGATION_VERSION = "9.1.0-rc1";
 export const NAVIGATION_PATH = "src/web/navigation";
 export const NAVIGATION_API = "/api/enterprise-navigation/v1";

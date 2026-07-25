@@ -65,6 +65,7 @@ from applications.enterprise_hub.workspace_platform import api as ews_api
 from applications.enterprise_hub.navigation_platform import api as enp_api
 from applications.enterprise_hub.command_center_platform import api as ecc2_api
 from applications.enterprise_hub.navigation import api as env_api
+from applications.enterprise_hub.release_candidate import api as rc_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1154,3 +1155,17 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{env}/quick-switch", env_api.env_quick_switch_handler)
     app.router.add_get(f"{env}/analytics", env_api.env_analytics_handler)
     app.router.add_post(f"{env}/permissions", env_api.env_permissions_handler)
+
+    # Sprint 26.8 — Enterprise Platform Release Candidate (RC1)
+    rc = DEFAULT_CONFIG.release_candidate_api_prefix
+    app.router.add_get(f"{rc}/health", rc_api.rc_health_handler)
+    app.router.add_post(f"{rc}/bootstrap", rc_api.rc_bootstrap_handler)
+    app.router.add_get(f"{rc}/inventory", rc_api.rc_inventory_handler)
+    app.router.add_get(f"{rc}/dashboard", rc_api.rc_dashboard_handler)
+    app.router.add_get(f"{rc}/health-report", rc_api.rc_health_report_handler)
+    app.router.add_get(f"{rc}/integration", rc_api.rc_integration_handler)
+    app.router.add_get(f"{rc}/registry", rc_api.rc_registry_handler)
+    app.router.add_get(f"{rc}/routes", rc_api.rc_routes_handler)
+    app.router.add_get(f"{rc}/security", rc_api.rc_security_handler)
+    app.router.add_get(f"{rc}/performance", rc_api.rc_performance_handler)
+    app.router.add_get(f"{rc}/documentation", rc_api.rc_documentation_handler)

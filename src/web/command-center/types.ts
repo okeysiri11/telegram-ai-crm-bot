@@ -83,7 +83,7 @@ export type ProductivitySnapshot = {
   pinnedObjects: string[];
 };
 
-export const COMMAND_CENTER_VERSION = "9.0.6";
+export const COMMAND_CENTER_VERSION = "9.1.0-rc1";
 export const COMMAND_CENTER_PATH = "src/web/command-center";
 export const COMMAND_CENTER_API = "/api/enterprise-command/v1";
 

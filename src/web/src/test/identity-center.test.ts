@@ -13,7 +13,7 @@ import {
 
 describe("Enterprise Identity Center", () => {
   it("exposes version and auth schemas", () => {
-    expect(AUTH_UI_VERSION).toBe("9.0.6");
+    expect(AUTH_UI_VERSION).toBe("9.1.0-rc1");
     expect(loginSchema.safeParse({
       identifier: "owner@demo.corp",
       password: "demo",

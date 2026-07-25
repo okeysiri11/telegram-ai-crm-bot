@@ -880,6 +880,18 @@ class EnterpriseHubStore:
         self.env_switches: EntityStore = EntityStore()
         self.env_searches: EntityStore = EntityStore()
         self.env_analytics: EntityStore = EntityStore()
+        # Sprint 26.8 — Release Candidate
+        self.rc_bootstraps: EntityStore = EntityStore()
+        self.rc_inventory: EntityStore = EntityStore()
+        self.rc_dashboards: EntityStore = EntityStore()
+        self.rc_integrations: EntityStore = EntityStore()
+        self.rc_health_reports: EntityStore = EntityStore()
+        self.rc_integration: EntityStore = EntityStore()
+        self.rc_registry: EntityStore = EntityStore()
+        self.rc_routes: EntityStore = EntityStore()
+        self.rc_security: EntityStore = EntityStore()
+        self.rc_performance: EntityStore = EntityStore()
+        self.rc_documentation: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

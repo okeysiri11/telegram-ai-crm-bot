@@ -59,6 +59,7 @@ from applications.enterprise_hub.workspace_platform.facade import WorkspacePlatf
 from applications.enterprise_hub.navigation_platform.facade import NavigationPlatformSuite
 from applications.enterprise_hub.command_center_platform.facade import CommandCenterPlatformSuite
 from applications.enterprise_hub.navigation.facade import EnterpriseNavigationSuite
+from applications.enterprise_hub.release_candidate.facade import ReleaseCandidateSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -152,6 +153,7 @@ class EnterpriseHubApplication:
         navigation_platform_svc: NavigationPlatformSuite | None = None,
         command_center_platform_svc: CommandCenterPlatformSuite | None = None,
         enterprise_navigation_svc: EnterpriseNavigationSuite | None = None,
+        release_candidate_svc: ReleaseCandidateSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -228,6 +230,7 @@ class EnterpriseHubApplication:
         self.navigation_platform = navigation_platform_svc or NavigationPlatformSuite(self.store)
         self.command_center_platform = command_center_platform_svc or CommandCenterPlatformSuite(self.store)
         self.enterprise_navigation = enterprise_navigation_svc or EnterpriseNavigationSuite(self.store)
+        self.release_candidate = release_candidate_svc or ReleaseCandidateSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -681,6 +684,9 @@ class EnterpriseHubApplication:
             "enterprise_breadcrumbs_ready": True,
             "quick_switcher_ready": True,
             "navigation_analytics_ready": True,
+            "release_candidate_ready": True,
+            "platform_integrated": True,
+            "platform_health_report_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -753,6 +759,7 @@ class EnterpriseHubApplication:
                 "navigation_platform": self.config.navigation_platform,
                 "enterprise_command_center": self.config.enterprise_command_center,
                 "enterprise_navigation": self.config.enterprise_navigation,
+                "release_candidate": self.config.release_candidate,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -829,6 +836,7 @@ class EnterpriseHubApplication:
             "navigation_platform": self.navigation_platform.status(),
             "command_center_platform": self.command_center_platform.status(),
             "enterprise_navigation": self.enterprise_navigation.status(),
+            "release_candidate": self.release_candidate.status(),
         }
 
 

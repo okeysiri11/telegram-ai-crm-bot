@@ -33,6 +33,7 @@ import {
 } from "../workspace/pages";
 import { NavigationDashboardPage } from "../navigation/pages";
 import { CommandCenterPage } from "../command-center/pages";
+import { ReleaseCandidatePage } from "../release/pages";
 
 export function App() {
   return (
@@ -130,6 +131,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <CommandCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/release"
+        element={
+          <ProtectedRoute>
+            <ReleaseCandidatePage />
           </ProtectedRoute>
         }
       />

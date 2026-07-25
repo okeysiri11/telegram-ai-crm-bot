@@ -1,4 +1,4 @@
-"""Tests — Enterprise Navigation Platform (Sprint 26.5 / v9.1.0-rc1)."""
+"""Tests — Enterprise Platform Release Candidate RC1 (Sprint 26.8 / v9.1.0-rc1)."""
 
 from __future__ import annotations
 
@@ -10,14 +10,13 @@ from aiohttp.test_utils import TestClient, TestServer
 
 from applications.enterprise_hub import enterprise_hub
 from applications.enterprise_hub.api.register import register_enterprise_hub_routes
-from platform_enterprise_navigation.models import (
+from platform_enterprise_release_candidate.models import (
     ARCHITECTURE,
-    COMMAND_KINDS,
-    HOTKEYS,
-    INTEGRATION_TARGETS,
+    INTEGRATION_MODULES,
     KPI_TARGETS,
     PRINCIPLES,
-    SEARCH_CATEGORIES,
+    RELEASE_CODE,
+    VERSION,
 )
 
 
@@ -87,8 +86,11 @@ PREFIXES = [
     "/api/enterprise-eds/v1",
     "/api/enterprise-eic/v1",
     "/api/enterprise-ews/v1",
+    "/api/enterprise-enp/v1",
+    "/api/enterprise-command/v1",
+    "/api/enterprise-navigation/v1",
 ]
-ENP = "/api/enterprise-enp/v1"
+RC = "/api/release/v1"
 
 
 @pytest.fixture
@@ -111,99 +113,136 @@ def reset_store():
     enterprise_hub.reset()
 
 
-def test_version_enp_ready():
+def test_version_release_candidate_ready():
     health = enterprise_hub.health()
     assert health["application_version"] == "9.1.0-rc1"
-    assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
-    assert health["navigation_platform_ready"] is True
-    assert health["command_palette_ready"] is True
-    assert health["global_search_ready"] is True
-    assert health["menu_engine_ready"] is True
-    assert health["search_index_ready"] is True
-    assert health["workspace_ready"] is True
-    assert health["engines"]["navigation_platform"] == "1.0"
-    assert health["enterprise_certified"] is True
-    assert "command_palette" in ARCHITECTURE
-    assert "open_module" in COMMAND_KINDS
-    assert "crm" in SEARCH_CATEGORIES
-    assert "Ctrl+K" in HOTKEYS
-    assert "enterprise_hub" in INTEGRATION_TARGETS
-    assert KPI_TARGETS["command_palette_ready"] is True
-    assert "phase3_navigation_platform" in PRINCIPLES
+    assert health["release_candidate_ready"] is True
+    assert health["platform_integrated"] is True
+    assert health["platform_health_report_ready"] is True
+    assert health["engines"]["release_candidate"] == "1.0"
+    assert VERSION == "9.1.0-rc1"
+    assert RELEASE_CODE == "RC1"
+    assert len(INTEGRATION_MODULES) >= 30
+    assert "platform_integration_auditor" in ARCHITECTURE
+    assert KPI_TARGETS["release_candidate_ready"] is True
+    assert "phase3_release_candidate" in PRINCIPLES
 
 
-def test_bootstrap_inventory_dashboard():
-    suite = enterprise_hub.navigation_platform
+def test_integration_registry_routes_security_performance_docs_health():
+    suite = enterprise_hub.release_candidate
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
     assert boot["hub_version"] == "9.1.0-rc1"
     assert boot["version"] == "9.1.0-rc1"
-    assert boot["navigation_ready"] is True
-    assert boot["command_palette_ready"] is True
-    assert boot["global_search_ready"] is True
-    assert boot["menu_engine_ready"] is True
-    assert boot["search_index_ready"] is True
-    assert boot["path"] == "src/web/navigation"
-    assert boot["navigation_path_exists"] is True
-    assert boot["command_palette_exists"] is True
-    assert boot["search_provider_exists"] is True
+    assert boot["release_code"] == "RC1"
+    assert boot["release_candidate_ready"] is True
+    assert boot["platform_integrated"] is True
+    assert boot["overall_readiness_pct"] >= 90
+    assert boot["release_path_exists"] is True
     assert boot["dashboard_page_exists"] is True
+    assert boot["docs_rc_exists"] is True
+    assert boot["docs_health_exists"] is True
 
-    inv = suite.inventory()
-    assert inv["architecture_count"] >= 12
-    assert inv["search_category_count"] >= 14
-    assert "fuzzy" in inv["search_modes"]
-    assert "lazy_loading" in inv["performance"]
+    integration = suite.integration()
+    assert integration["integrated_count"] == integration["total"]
+    assert integration["score"] >= 90
+    assert integration["status"] == "pass"
+
+    registry = suite.registry()
+    assert registry["application_count"] >= 10
+    assert registry["platform_package_count"] >= 40
+    assert "auto_marketplace" in registry["applications"]
+
+    routes = suite.routes()
+    assert routes["react_route_count"] >= 10
+    assert routes["navigation_ready"] is True
+    assert routes["breadcrumbs_ready"] is True
+    assert "/api/release/v1" in routes["api_prefixes"]
+
+    security = suite.security()
+    assert security["score"] >= 90
+    assert security["status"] == "pass"
+    assert security["checks"]["rbac"] is True
+    assert security["checks"]["authentication"] is True
+
+    performance = suite.performance()
+    assert performance["score"] >= 85
+    assert performance["checks"]["command_center"] is True
+    assert performance["checks"]["search"] is True
+
+    documentation = suite.documentation()
+    assert "docs/RELEASE_CANDIDATE.md" in documentation["present"]
+    assert "docs/PLATFORM_HEALTH_REPORT.md" in documentation["present"]
+    assert documentation["missing"] == []
+
+    report = suite.health_report()
+    assert report["overall_readiness_pct"] >= 90
+    assert report["release_candidate_ready"] is True
+    assert report["critical_issues"] == []
+    assert "coverage" in report
+    assert report["applications"]["count"] >= 10
 
     dash = suite.dashboard()
-    assert dash["command_palette_ready"] is True
-    assert "Cmd+K" in dash["hotkeys"]
+    assert dash["title"] == "Release Candidate Dashboard"
+    assert dash["overall_readiness_pct"] >= 90
 
 
 @pytest.mark.asyncio
-async def test_api_enp(client):
-    health = await client.get(f"{ENP}/health")
+async def test_api_release_candidate(client):
+    health = await client.get(f"{RC}/health")
     body = await health.json()
     assert body["application_version"] == "9.1.0-rc1"
-    assert body["navigation_ready"] is True
-    assert body["command_palette_ready"] is True
+    assert body["release_candidate_ready"] is True
 
-    boot = await client.post(f"{ENP}/bootstrap", json={})
+    boot = await client.post(f"{RC}/bootstrap", json={})
     assert boot.status == 201
-    assert (await boot.json())["global_search_ready"] is True
+    payload = await boot.json()
+    assert payload["release_candidate_ready"] is True
 
-    inv = await client.get(f"{ENP}/inventory")
-    assert inv.status == 200
+    for path in (
+        "/inventory",
+        "/dashboard",
+        "/health-report",
+        "/integration",
+        "/registry",
+        "/routes",
+        "/security",
+        "/performance",
+        "/documentation",
+    ):
+        resp = await client.get(f"{RC}{path}")
+        assert resp.status == 200
 
-    dash = await client.get(f"{ENP}/dashboard")
-    assert dash.status == 200
-
-    ews = await client.get("/api/enterprise-ews/v1/health")
-    assert ews.status == 200
+    # prior platform APIs still healthy at RC version
+    for prefix in (
+        "/api/enterprise-navigation/v1",
+        "/api/enterprise-command/v1",
+        "/api/enterprise-enp/v1",
+        "/api/enterprise-ews/v1",
+    ):
+        resp = await client.get(f"{prefix}/health")
+        assert resp.status == 200
+        assert (await resp.json())["application_version"] == "9.1.0-rc1"
 
     for prefix in PREFIXES:
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        payload = await resp.json()
-        version = payload.get("application_version") or payload.get("data", {}).get("application_version")
+        data = await resp.json()
+        version = data.get("application_version") or data.get("data", {}).get("application_version")
         assert version == "9.1.0-rc1"
 
 
-def test_docs_and_regression_26_5():
-    for name in (
-        "ENTERPRISE_NAVIGATION.md",
-        "ENP_COMMAND_PALETTE_SEARCH.md",
-        "ENP_MENU_HISTORY_SHORTCUTS.md",
-        "ENP_PERFORMANCE_DASHBOARD.md",
-        "ENTERPRISE_WORKSPACE.md",
-        "ENTERPRISE_IDENTITY_CENTER.md",
-    ):
-        assert (ROOT / "docs" / name).exists()
-    assert (ROOT / "knowledge" / "applications" / "ENTERPRISE_NAVIGATION.md").exists()
-    assert (ROOT / "platform_enterprise_navigation" / "facade.py").exists()
-    assert (ROOT / "src" / "web" / "navigation" / "index.ts").exists()
-    assert (ROOT / "src" / "web" / "navigation" / "components" / "CommandPalette.tsx").exists()
-    assert (ROOT / "applications" / "enterprise_hub" / "navigation_platform" / "facade.py").exists()
+def test_docs_and_regression_26_8():
+    assert (ROOT / "docs" / "RELEASE_CANDIDATE.md").exists()
+    assert (ROOT / "docs" / "PLATFORM_HEALTH_REPORT.md").exists()
+    assert (ROOT / "platform_enterprise_release_candidate" / "facade.py").exists()
+    assert (ROOT / "applications" / "enterprise_hub" / "release_candidate" / "facade.py").exists()
+    assert (ROOT / "src" / "web" / "release" / "pages" / "ReleaseCandidatePage.tsx").exists()
+    assert (ROOT / "knowledge" / "applications" / "enterprise_hub" / "release_candidate" / "README.md").exists()
+
+    docs = (ROOT / "docs" / "RELEASE_CANDIDATE.md").read_text()
+    assert "RC1" in docs
+    assert "/api/release/v1" in docs
 
     from applications.ai_os.config import DEFAULT_CONFIG as AIOS_CFG
     from applications.enterprise.config import DEFAULT_CONFIG as ENT
