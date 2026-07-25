@@ -756,6 +756,17 @@ class EnterpriseHubStore:
         self.eti_dashboards: EntityStore = EntityStore()
         self.eti_coverage: EntityStore = EntityStore()
         self.eti_data: EntityStore = EntityStore()
+        # Sprint 25.2 — Performance & Load Testing
+        self.epl_bootstraps: EntityStore = EntityStore()
+        self.epl_loads: EntityStore = EntityStore()
+        self.epl_stress: EntityStore = EntityStore()
+        self.epl_spikes: EntityStore = EntityStore()
+        self.epl_soaks: EntityStore = EntityStore()
+        self.epl_benchmarks: EntityStore = EntityStore()
+        self.epl_monitors: EntityStore = EntityStore()
+        self.epl_bottlenecks: EntityStore = EntityStore()
+        self.epl_advice: EntityStore = EntityStore()
+        self.epl_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

@@ -52,6 +52,7 @@ from applications.enterprise_hub.learning_engine import api as ele_api
 from applications.enterprise_hub.ai_provider_hub import api as aph_api
 from applications.enterprise_hub.extension_sdk import api as ees_api
 from applications.enterprise_hub.test_infrastructure import api as eti_api
+from applications.enterprise_hub.performance_testing import api as epl_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1000,4 +1001,20 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{eti}/environment", eti_api.eti_env_handler)
     app.router.add_get(f"{eti}/dashboard", eti_api.eti_dashboard_handler)
     app.router.add_get(f"{eti}/analytics", eti_api.eti_analytics_handler)
+
+    # Sprint 25.2 — Performance & Load Testing (additive; EPF performance-platform routes unchanged)
+    epl = DEFAULT_CONFIG.performance_testing_api_prefix
+    app.router.add_get(f"{epl}/health", epl_api.epl_health_handler)
+    app.router.add_post(f"{epl}/bootstrap", epl_api.epl_bootstrap_handler)
+    app.router.add_post(f"{epl}/load", epl_api.epl_load_handler)
+    app.router.add_post(f"{epl}/stress", epl_api.epl_stress_handler)
+    app.router.add_post(f"{epl}/spike", epl_api.epl_spike_handler)
+    app.router.add_post(f"{epl}/soak", epl_api.epl_soak_handler)
+    app.router.add_post(f"{epl}/benchmark/api", epl_api.epl_bench_api_handler)
+    app.router.add_post(f"{epl}/benchmark/database", epl_api.epl_bench_db_handler)
+    app.router.add_post(f"{epl}/benchmark/ai", epl_api.epl_bench_ai_handler)
+    app.router.add_post(f"{epl}/benchmark/workflow", epl_api.epl_bench_wf_handler)
+    app.router.add_post(f"{epl}/monitor", epl_api.epl_monitor_handler)
+    app.router.add_post(f"{epl}/analyze", epl_api.epl_analyze_handler)
+    app.router.add_get(f"{epl}/dashboard", epl_api.epl_dashboard_handler)
 
