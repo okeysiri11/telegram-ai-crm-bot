@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 28.5 Universal Builder Framework."""
+"""Platform Builder — Sprint 28.6 Builder Academy 2.0."""
 
 from __future__ import annotations
 
@@ -9,16 +9,16 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.4.0"
-    sprint: str = "28.5"
-    release_status: str = "Universal Builder Framework"
+    application_version: str = "1.5.0"
+    sprint: str = "28.6"
+    release_status: str = "Builder Academy 2.0"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"
     api_prefix: str = "/api/platform-builder/v1"
     internal_prefix: str = "/internal/platform-builder/v1"
     builder_engine: str = "1.0"
-    builder_academy: str = "1.0"
+    builder_academy: str = "2.0"
     god_mode: str = "1.0"
     help_system: str = "1.0"
     ai_builder: str = "1.0"
@@ -27,9 +27,13 @@ class PlatformBuilderConfig:
     vertical_builder: str = "1.0"
     universal_builder_framework: str = "1.0"
     builder_sdk: str = "0.1"
+    ai_guide: str = "1.0"
     platform_owner_role: str = "platform_owner"
     academy_modes: list[str] = field(
         default_factory=lambda: ["quick_start", "guided_learning", "expert"]
+    )
+    experience_levels: list[str] = field(
+        default_factory=lambda: ["beginner", "intermediate", "advanced", "expert"]
     )
     framework_phases: list[str] = field(
         default_factory=lambda: [

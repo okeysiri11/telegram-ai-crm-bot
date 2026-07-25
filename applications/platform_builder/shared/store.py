@@ -34,6 +34,13 @@ class PlatformBuilderStore:
         self.previews: EntityStore = EntityStore()
         self.creations: EntityStore = EntityStore()
         self.academy_sessions: EntityStore = EntityStore()
+        # Sprint 28.6 — Builder Academy 2.0
+        self.academy_v2_sessions: EntityStore = EntityStore()
+        self.academy_progress: EntityStore = EntityStore()
+        self.academy_recommendations: EntityStore = EntityStore()
+        self.academy_learning_states: EntityStore = EntityStore()
+        self.ai_guide_sessions: EntityStore = EntityStore()
+        self.ai_guide_messages: EntityStore = EntityStore()
         self.god_actions: EntityStore = EntityStore()
         self.versions: EntityStore = EntityStore()
         # Sprint 28.2 — AI Builder

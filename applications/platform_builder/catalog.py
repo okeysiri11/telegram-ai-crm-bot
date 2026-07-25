@@ -222,12 +222,13 @@ BUILDERS: list[dict[str, Any]] = [
     },
     {
         "id": "academy",
-        "name": "Builder Academy",
+        "name": "Builder Academy 2.0",
         "route": "/platform-builder/academy",
         "kind": "academy",
         "status": "operational",
         "learning_supported": True,
         "frame_only": False,
+        "purpose": "Interactive learning, AI Guide, and adaptive builder guidance.",
     },
     {
         "id": "god_mode",

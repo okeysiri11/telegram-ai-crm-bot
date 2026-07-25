@@ -1,4 +1,4 @@
-"""Tests — Builder SDK foundation (Sprint 28.5)."""
+"""Tests — Builder SDK foundation (Sprint 28.6)."""
 
 from __future__ import annotations
 

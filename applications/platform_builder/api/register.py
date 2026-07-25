@@ -139,3 +139,30 @@ def register_platform_builder_routes(app: web.Application) -> None:
     )
     app.router.add_get(f"{prefix}/ubf/sdk", handlers.ubf_sdk_handler)
     app.router.add_post(f"{prefix}/ubf/sdk/define", handlers.ubf_sdk_define_handler)
+
+    # Sprint 28.6 — Builder Academy 2.0 & AI Guide
+    app.router.add_get(f"{prefix}/academy/v2/catalog", handlers.academy_v2_catalog_handler)
+    app.router.add_post(f"{prefix}/academy/v2/sessions", handlers.academy_v2_session_handler)
+    app.router.add_get(f"{prefix}/academy/v2/sessions/{{session_id}}", handlers.academy_v2_session_handler)
+    app.router.add_patch(
+        f"{prefix}/academy/v2/sessions/{{session_id}}",
+        handlers.academy_v2_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/academy/v2/sessions/{{session_id}}/summary",
+        handlers.academy_v2_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/academy/v2/sessions/{{session_id}}/create",
+        handlers.academy_v2_create_handler,
+    )
+    app.router.add_get(f"{prefix}/academy/v2/levels/{{level}}", handlers.academy_v2_level_handler)
+    app.router.add_get(f"{prefix}/academy/v2/help/{{field}}", handlers.academy_v2_help_handler)
+    app.router.add_post(f"{prefix}/academy/v2/guide", handlers.academy_v2_guide_handler)
+    app.router.add_post(f"{prefix}/academy/v2/guide/ask", handlers.academy_v2_guide_ask_handler)
+    app.router.add_get(f"{prefix}/academy/v2/recommendations", handlers.academy_v2_recs_handler)
+    app.router.add_post(f"{prefix}/academy/v2/analysis", handlers.academy_v2_analysis_handler)
+    app.router.add_get(f"{prefix}/academy/v2/impact/{{option_id}}", handlers.academy_v2_impact_handler)
+    app.router.add_get(f"{prefix}/academy/v2/learning", handlers.academy_v2_learning_handler)
+    app.router.add_get(f"{prefix}/academy/v2/progress", handlers.academy_v2_progress_handler)
+

@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 28.5."""
+"""Platform Builder application facade — Sprint 28.6."""
 
 from __future__ import annotations
 
@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from applications.platform_builder.academy import BuilderAcademy
+from applications.platform_builder.academy_v2.engine import AcademyV2
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -44,6 +45,7 @@ class PlatformBuilderApplication:
         ai_team: AITeamCenter | None = None,
         vertical: VerticalWizard | None = None,
         ubf: UniversalBuilderFramework | None = None,
+        academy_v2: AcademyV2 | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -55,6 +57,7 @@ class PlatformBuilderApplication:
         self.ai_team = ai_team or AITeamCenter(self.store)
         self.vertical = vertical or VerticalWizard(self.store)
         self.ubf = ubf or UniversalBuilderFramework(self.store)
+        self.academy_v2 = academy_v2 or AcademyV2(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -66,6 +69,7 @@ class PlatformBuilderApplication:
         self.ai_team = AITeamCenter(self.store)
         self.vertical = VerticalWizard(self.store)
         self.ubf = UniversalBuilderFramework(self.store)
+        self.academy_v2 = AcademyV2(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -100,6 +104,11 @@ class PlatformBuilderApplication:
             "builder_registry_ready": True,
             "template_engine_ready": True,
             "builder_sdk_foundation_ready": True,
+            "academy_2_ready": True,
+            "ai_guide_ready": True,
+            "interactive_learning_ready": True,
+            "recommendation_engine_ready": True,
+            "progress_tracking_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -158,6 +167,12 @@ class PlatformBuilderApplication:
             "live_preview_engine_ready": True,
             "validation_framework_ready": True,
             "extension_system_ready": True,
+            "academy_2_ready": True,
+            "ai_guide_ready": True,
+            "interactive_learning_ready": True,
+            "recommendation_engine_ready": True,
+            "progress_tracking_ready": True,
+            "live_builder_analysis_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -169,12 +184,14 @@ class PlatformBuilderApplication:
                 "vertical_builder": self.config.vertical_builder,
                 "universal_builder_framework": self.config.universal_builder_framework,
                 "builder_sdk": self.config.builder_sdk,
+                "ai_guide": self.config.ai_guide,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
             "ai_team": self.ai_team.status(),
             "vertical": self.vertical.status(),
             "ubf": self.ubf.status(),
+            "academy_v2": self.academy_v2.status(),
         }
 
     def inventory(self) -> dict[str, Any]:
@@ -191,6 +208,7 @@ class PlatformBuilderApplication:
             "concierge": self.concierge.catalog(),
             "vertical": self.vertical.catalog(),
             "ubf": self.ubf.catalog(),
+            "academy_v2": self.academy_v2.catalog(),
         }
 
     def dashboard(self) -> dict[str, Any]:
@@ -220,6 +238,7 @@ class PlatformBuilderApplication:
             "ai_team": self.ai_team.status(),
             "vertical": self.vertical.status(),
             "ubf": self.ubf.status(),
+            "academy_v2": self.academy_v2.status(),
             "stats": {
                 "builders": len([b for b in BUILDERS if b["kind"] == "builder"]),
                 "frame_only": len([b for b in BUILDERS if b.get("frame_only")]),

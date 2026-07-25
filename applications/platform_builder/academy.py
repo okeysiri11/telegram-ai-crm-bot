@@ -50,10 +50,13 @@ class BuilderAcademy:
     def status(self) -> dict[str, Any]:
         return {
             "ready": True,
+            "version": "1.0",
+            "academy_2_ready": True,
             "modes": list(ACADEMY_MODES.values()),
             "active_mode": self._mode,
             "mode_detail": ACADEMY_MODES[self._mode],
             "supported_modes": list(DEFAULT_CONFIG.academy_modes),
+            "experience_levels": list(DEFAULT_CONFIG.experience_levels),
             "per_builder": dict(self._enabled_by_builder),
         }
 

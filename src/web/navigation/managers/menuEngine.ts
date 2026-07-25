@@ -125,7 +125,7 @@ const menu: MenuItem[] = [
       { id: "nav_pb_dash_builder", name: "Dashboard Builder", icon: "analytics", route: "/platform-builder/dashboard-builder", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_template", name: "Template Builder", icon: "workflow", route: "/platform-builder/template", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_marketplace", name: "Marketplace Builder", icon: "workflow", route: "/platform-builder/marketplace", module: "platform_builder", permissions: ["read"], status: "beta" },
-      { id: "nav_pb_academy", name: "Builder Academy", icon: "analytics", route: "/platform-builder/academy", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_pb_academy", name: "Builder Academy 2.0", icon: "analytics", route: "/platform-builder/academy", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_god", name: "God Mode", icon: "security", route: "/platform-builder/god-mode", module: "platform_builder", permissions: ["platform_owner"], status: "active" },
     ],
   },

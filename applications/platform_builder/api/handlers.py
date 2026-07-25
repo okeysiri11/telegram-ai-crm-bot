@@ -529,3 +529,147 @@ async def ubf_sdk_define_handler(request: web.Request) -> web.Response:
         return json_response(platform_builder.ubf.sdk.define_builder(body), status=201)
     except Exception as exc:
         return _handle_error(exc)
+
+
+async def academy_v2_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.academy_v2.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json() if request.body_exists else {}
+            return json_response(
+                platform_builder.academy_v2.start_session(user_id=body.get("user_id") or "owner"),
+                status=201,
+            )
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.academy_v2.update_session(session_id, body))
+        return json_response(platform_builder.academy_v2.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.academy_v2.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.academy_v2.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_level_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.academy_v2.adapt_behavior(request.match_info["level"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_help_handler(request: web.Request) -> web.Response:
+    try:
+        builder_id = request.rel_url.query.get("builder_id", "generic")
+        return json_response(
+            platform_builder.academy_v2.contextual_help(request.match_info["field"], builder_id)
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_guide_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        return json_response(
+            platform_builder.academy_v2.guide.coach(
+                builder_id=body.get("builder_id") or "generic",
+                step=body.get("step") or "current",
+                question=body.get("question"),
+                draft=body.get("draft") or {},
+                level=body.get("level") or "beginner",
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_guide_ask_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        question = body.get("question")
+        if not question:
+            raise ValidationError("question is required")
+        return json_response(
+            platform_builder.academy_v2.guide.answer(
+                question=question,
+                builder_id=body.get("builder_id") or "generic",
+                step=body.get("step") or "",
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_recs_handler(request: web.Request) -> web.Response:
+    try:
+        builder_id = request.rel_url.query.get("builder_id", "vertical")
+        industry = request.rel_url.query.get("industry")
+        return json_response(
+            platform_builder.academy_v2.recommendations.recommend(
+                builder_id=builder_id, industry=industry
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_analysis_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json() if request.body_exists else {}
+        return json_response(
+            platform_builder.academy_v2.live_analysis(
+                body.get("draft") or {},
+                builder_id=body.get("builder_id") or "generic",
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_impact_handler(request: web.Request) -> web.Response:
+    try:
+        option_id = request.match_info["option_id"]
+        name = request.rel_url.query.get("name")
+        return json_response(platform_builder.academy_v2.impact(option_id, name))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_learning_handler(request: web.Request) -> web.Response:
+    try:
+        user_id = request.rel_url.query.get("user_id", "owner")
+        return json_response(platform_builder.academy_v2.interactive_learning(user_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def academy_v2_progress_handler(request: web.Request) -> web.Response:
+    try:
+        user_id = request.rel_url.query.get("user_id", "owner")
+        return json_response(platform_builder.academy_v2.progress.snapshot(user_id))
+    except Exception as exc:
+        return _handle_error(exc)

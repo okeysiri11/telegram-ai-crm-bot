@@ -1,12 +1,12 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.4.0",
-  "sprint": "28.5",
-  "release_status": "Universal Builder Framework",
+  "application_version": "1.5.0",
+  "sprint": "28.6",
+  "release_status": "Builder Academy 2.0",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
-  "builder_academy": "1.0",
+  "builder_academy": "2.0",
   "god_mode": "1.0",
   "help_system": "1.0",
   "ai_builder": "1.0",
@@ -15,6 +15,7 @@
   "vertical_builder": "1.0",
   "universal_builder_framework": "1.0",
   "builder_sdk": "0.1",
+  "ai_guide": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }
