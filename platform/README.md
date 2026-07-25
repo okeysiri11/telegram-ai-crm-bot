@@ -38,3 +38,4 @@ Import paths avoid Python stdlib/`platform` collisions.
 - Chaos Engineering: [`../platform_chaos/`](../platform_chaos/)
 - Migration & DR: [`../platform_migration/`](../platform_migration/)
 - Security Verification (v8 gate): [`../platform_enterprise_security_verification/`](../platform_enterprise_security_verification/)
+- Production Readiness (v8 ops gate): [`../platform_enterprise_production/`](../platform_enterprise_production/)

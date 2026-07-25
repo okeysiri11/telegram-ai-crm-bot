@@ -56,6 +56,7 @@ from applications.enterprise_hub.performance_testing import api as epl_api
 from applications.enterprise_hub.chaos_engineering import api as ece_api
 from applications.enterprise_hub.migration import api as emr_api
 from applications.enterprise_hub.security_verification import api as esv_api
+from applications.enterprise_hub.production_readiness import api as epd_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1058,3 +1059,9 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{esv}/gate", esv_api.esv_gate_handler)
     app.router.add_get(f"{esv}/dashboard", esv_api.esv_dashboard_handler)
 
+    # Sprint 25.6 — Production Readiness (additive; OBS/EPR/EPF routes unchanged)
+    epd = DEFAULT_CONFIG.production_readiness_api_prefix
+    app.router.add_get(f"{epd}/health", epd_api.epd_health_handler)
+    app.router.add_post(f"{epd}/bootstrap", epd_api.epd_bootstrap_handler)
+    app.router.add_post(f"{epd}/gate", epd_api.epd_gate_handler)
+    app.router.add_get(f"{epd}/dashboard", epd_api.epd_dashboard_handler)

@@ -804,6 +804,19 @@ class EnterpriseHubStore:
         self.esv_compliance: EntityStore = EntityStore()
         self.esv_reports: EntityStore = EntityStore()
         self.esv_dashboards: EntityStore = EntityStore()
+        # Sprint 25.6 — Production Readiness
+        self.epd_bootstraps: EntityStore = EntityStore()
+        self.epd_runs: EntityStore = EntityStore()
+        self.epd_services: EntityStore = EntityStore()
+        self.epd_health: EntityStore = EntityStore()
+        self.epd_monitoring: EntityStore = EntityStore()
+        self.epd_metrics: EntityStore = EntityStore()
+        self.epd_logs: EntityStore = EntityStore()
+        self.epd_alerts: EntityStore = EntityStore()
+        self.epd_scaling: EntityStore = EntityStore()
+        self.epd_deployments: EntityStore = EntityStore()
+        self.epd_reports: EntityStore = EntityStore()
+        self.epd_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 25.5 Enterprise Security Verification."""
+"""Enterprise Hub — Sprint 25.6 Enterprise Production Readiness."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "8.5.0"
-    release_status: str = "Enterprise Security Verification"
+    application_version: str = "8.6.0"
+    release_status: str = "Enterprise Production Readiness"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v8.4.0"
+    enterprise_foundation: str = "Enterprise Platform v8.5.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -73,6 +73,7 @@ class EnterpriseHubConfig:
     chaos_engineering_api_prefix: str = "/api/enterprise-ece/v1"
     migration_api_prefix: str = "/api/enterprise-emr/v1"
     security_verification_api_prefix: str = "/api/enterprise-esv/v1"
+    production_readiness_api_prefix: str = "/api/enterprise-epd/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -136,6 +137,7 @@ class EnterpriseHubConfig:
     chaos_engineering: str = "1.0"
     migration: str = "1.0"
     security_verification: str = "1.0"
+    production_readiness: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

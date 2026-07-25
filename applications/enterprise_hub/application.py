@@ -50,6 +50,7 @@ from applications.enterprise_hub.performance_testing.facade import PerformanceTe
 from applications.enterprise_hub.chaos_engineering.facade import ChaosEngineeringSuite
 from applications.enterprise_hub.migration.facade import MigrationSuite
 from applications.enterprise_hub.security_verification.facade import SecurityVerificationSuite
+from applications.enterprise_hub.production_readiness.facade import ProductionReadinessSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -134,6 +135,7 @@ class EnterpriseHubApplication:
         chaos_engineering_svc: ChaosEngineeringSuite | None = None,
         migration_svc: MigrationSuite | None = None,
         security_verification_svc: SecurityVerificationSuite | None = None,
+        production_readiness_svc: ProductionReadinessSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -201,6 +203,7 @@ class EnterpriseHubApplication:
         self.chaos_engineering = chaos_engineering_svc or ChaosEngineeringSuite(self.store)
         self.migration = migration_svc or MigrationSuite(self.store)
         self.security_verification = security_verification_svc or SecurityVerificationSuite(self.store)
+        self.production_readiness = production_readiness_svc or ProductionReadinessSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -593,6 +596,10 @@ class EnterpriseHubApplication:
             "vulnerability_scanner_ready": True,
             "secret_scanner_ready": True,
             "compliance_ready": True,
+            "production_platform_ready": True,
+            "continuous_health_ready": True,
+            "centralized_logging_ready": True,
+            "production_scaling_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -656,6 +663,7 @@ class EnterpriseHubApplication:
                 "chaos_engineering": self.config.chaos_engineering,
                 "migration": self.config.migration,
                 "security_verification": self.config.security_verification,
+                "production_readiness": self.config.production_readiness,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -723,6 +731,7 @@ class EnterpriseHubApplication:
             "chaos_engineering": self.chaos_engineering.status(),
             "migration": self.migration.status(),
             "security_verification": self.security_verification.status(),
+            "production_readiness": self.production_readiness.status(),
         }
 
 
