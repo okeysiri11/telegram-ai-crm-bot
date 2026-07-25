@@ -1445,3 +1445,134 @@ async def vb_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.4 — Visual Rendering Engine / LOD / Viewport ---
+
+
+async def render_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.rendering.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.rendering.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_renderer_handler(request: web.Request) -> web.Response:
+    try:
+        zoom = float(request.rel_url.query.get("zoom") or 1.0)
+        return json_response(platform_builder.rendering.renderer(zoom=zoom))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_lod_handler(request: web.Request) -> web.Response:
+    try:
+        zoom = float(request.rel_url.query.get("zoom") or 1.0)
+        return json_response(platform_builder.rendering.lod_view(zoom))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_viewport_handler(request: web.Request) -> web.Response:
+    try:
+        q = request.rel_url.query
+        return json_response(
+            platform_builder.rendering.viewport_view(
+                x=float(q.get("x") or 0),
+                y=float(q.get("y") or 0),
+                width=float(q.get("width") or 800),
+                height=float(q.get("height") or 600),
+                zoom=float(q.get("zoom") or 1.0),
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_layers_handler(request: web.Request) -> web.Response:
+    try:
+        zoom = float(request.rel_url.query.get("zoom") or 1.0)
+        return json_response(platform_builder.rendering.layer_system(zoom))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_priorities_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.rendering.priorities())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_anim_opt_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.rendering.animation_optimization())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_live_org_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.rendering.live_organization_support())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_city_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.rendering.ai_city_foundation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_perf_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.rendering.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_sync_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.rendering.sync_from_sources())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.rendering.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.rendering.update_session(session_id, body))
+        return json_response(platform_builder.rendering.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.rendering.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def render_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.rendering.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

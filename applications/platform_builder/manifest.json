@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.10.0",
-  "sprint": "29.3",
-  "release_status": "Visual Behavior Engine",
+  "application_version": "1.11.0",
+  "sprint": "29.4",
+  "release_status": "Visual Rendering Engine",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -28,6 +28,10 @@
   "visual_behavior_engine": "1.0",
   "animation_framework": "1.0",
   "transition_engine": "1.0",
+  "rendering_engine": "1.0",
+  "visual_lod_engine": "1.0",
+  "viewport_engine": "1.0",
+  "layer_system": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }

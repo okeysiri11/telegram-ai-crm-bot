@@ -51,6 +51,7 @@ import {
   UniversalFrameworkPage,
   VerticalBuilderPage,
   VisualBehaviorPage,
+  RenderingEnginePage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -253,6 +254,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <VisualBehaviorPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/rendering"
+        element={
+          <ProtectedRoute>
+            <RenderingEnginePage />
           </ProtectedRoute>
         }
       />

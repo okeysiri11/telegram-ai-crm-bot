@@ -100,6 +100,12 @@ class PlatformBuilderStore:
         self.behavior_engines: EntityStore = EntityStore()
         self.animation_frameworks: EntityStore = EntityStore()
         self.transition_engines: EntityStore = EntityStore()
+        # Sprint 29.4 — Visual Rendering Engine
+        self.render_wizard_sessions: EntityStore = EntityStore()
+        self.render_engines: EntityStore = EntityStore()
+        self.lod_engines: EntityStore = EntityStore()
+        self.viewport_engines: EntityStore = EntityStore()
+        self.layer_systems: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

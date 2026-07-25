@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.3."""
+"""Platform Builder application facade — Sprint 29.4."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from applications.platform_builder.collaborative_ai.engine import CollaborativeA
 from applications.platform_builder.operations_center.engine import OperationsCenter
 from applications.platform_builder.team_map.engine import LiveOrganizationMap
 from applications.platform_builder.visual_behavior.engine import VisualBehaviorEngine
+from applications.platform_builder.rendering.engine import VisualRenderingEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -56,6 +57,7 @@ class PlatformBuilderApplication:
         operations_center: OperationsCenter | None = None,
         team_map: LiveOrganizationMap | None = None,
         visual_behavior: VisualBehaviorEngine | None = None,
+        rendering: VisualRenderingEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -73,6 +75,7 @@ class PlatformBuilderApplication:
         self.operations_center = operations_center or OperationsCenter(self.store)
         self.team_map = team_map or LiveOrganizationMap(self.store)
         self.visual_behavior = visual_behavior or VisualBehaviorEngine(self.store)
+        self.rendering = rendering or VisualRenderingEngine(self.store, behavior=self.visual_behavior)
 
     def reset(self) -> None:
         self.store.reset()
@@ -90,6 +93,7 @@ class PlatformBuilderApplication:
         self.operations_center = OperationsCenter(self.store)
         self.team_map = LiveOrganizationMap(self.store)
         self.visual_behavior = VisualBehaviorEngine(self.store)
+        self.rendering = VisualRenderingEngine(self.store, behavior=self.visual_behavior)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -153,6 +157,11 @@ class PlatformBuilderApplication:
             "animation_framework_ready": True,
             "transition_engine_ready": True,
             "behavior_performance_optimized": True,
+            "rendering_engine_ready": True,
+            "visual_lod_engine_ready": True,
+            "viewport_engine_ready": True,
+            "layer_system_ready": True,
+            "render_performance_monitor_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -166,6 +175,7 @@ class PlatformBuilderApplication:
             "operations_page_exists": (web / "pages" / "OperationsCenterPage.tsx").exists(),
             "team_map_page_exists": (web / "pages" / "TeamMapPage.tsx").exists(),
             "visual_behavior_page_exists": (web / "pages" / "VisualBehaviorPage.tsx").exists(),
+            "rendering_page_exists": (web / "pages" / "RenderingEnginePage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -244,6 +254,11 @@ class PlatformBuilderApplication:
             "animation_framework_ready": True,
             "transition_engine_ready": True,
             "behavior_performance_optimized": True,
+            "rendering_engine_ready": True,
+            "visual_lod_engine_ready": True,
+            "viewport_engine_ready": True,
+            "layer_system_ready": True,
+            "render_performance_monitor_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -268,6 +283,10 @@ class PlatformBuilderApplication:
                 "visual_behavior_engine": self.config.visual_behavior_engine,
                 "animation_framework": self.config.animation_framework,
                 "transition_engine": self.config.transition_engine,
+                "rendering_engine": self.config.rendering_engine,
+                "visual_lod_engine": self.config.visual_lod_engine,
+                "viewport_engine": self.config.viewport_engine,
+                "layer_system": self.config.layer_system,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -285,6 +304,7 @@ class PlatformBuilderApplication:
             "operations_center": self.operations_center.status(),
             "team_map": self.team_map.status(),
             "visual_behavior": self.visual_behavior.status(),
+            "rendering": self.rendering.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

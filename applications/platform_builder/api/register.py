@@ -367,3 +367,28 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/visual-behavior/sessions/{{session_id}}/create",
         handlers.vb_create_handler,
     )
+
+    # Sprint 29.4 — Visual Rendering Engine / LOD / Viewport
+    app.router.add_get(f"{prefix}/rendering/catalog", handlers.render_catalog_handler)
+    app.router.add_get(f"{prefix}/rendering/status", handlers.render_status_handler)
+    app.router.add_get(f"{prefix}/rendering/renderer", handlers.render_renderer_handler)
+    app.router.add_get(f"{prefix}/rendering/lod", handlers.render_lod_handler)
+    app.router.add_get(f"{prefix}/rendering/viewport", handlers.render_viewport_handler)
+    app.router.add_get(f"{prefix}/rendering/layers", handlers.render_layers_handler)
+    app.router.add_get(f"{prefix}/rendering/priorities", handlers.render_priorities_handler)
+    app.router.add_get(f"{prefix}/rendering/animation-optimization", handlers.render_anim_opt_handler)
+    app.router.add_get(f"{prefix}/rendering/live-organization", handlers.render_live_org_handler)
+    app.router.add_get(f"{prefix}/rendering/ai-city", handlers.render_city_handler)
+    app.router.add_get(f"{prefix}/rendering/performance", handlers.render_perf_handler)
+    app.router.add_post(f"{prefix}/rendering/sync", handlers.render_sync_handler)
+    app.router.add_post(f"{prefix}/rendering/sessions", handlers.render_session_handler)
+    app.router.add_get(f"{prefix}/rendering/sessions/{{session_id}}", handlers.render_session_handler)
+    app.router.add_patch(f"{prefix}/rendering/sessions/{{session_id}}", handlers.render_session_handler)
+    app.router.add_get(
+        f"{prefix}/rendering/sessions/{{session_id}}/summary",
+        handlers.render_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/rendering/sessions/{{session_id}}/create",
+        handlers.render_create_handler,
+    )

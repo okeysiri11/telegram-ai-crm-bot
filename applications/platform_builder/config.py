@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 29.3 Visual Behavior Engine."""
+"""Platform Builder — Sprint 29.4 Visual Rendering Engine."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.10.0"
-    sprint: str = "29.3"
-    release_status: str = "Visual Behavior Engine"
+    application_version: str = "1.11.0"
+    sprint: str = "29.4"
+    release_status: str = "Visual Rendering Engine"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"
@@ -40,6 +40,10 @@ class PlatformBuilderConfig:
     visual_behavior_engine: str = "1.0"
     animation_framework: str = "1.0"
     transition_engine: str = "1.0"
+    rendering_engine: str = "1.0"
+    visual_lod_engine: str = "1.0"
+    viewport_engine: str = "1.0"
+    layer_system: str = "1.0"
     platform_owner_role: str = "platform_owner"
     academy_modes: list[str] = field(
         default_factory=lambda: ["quick_start", "guided_learning", "expert"]

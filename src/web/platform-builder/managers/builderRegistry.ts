@@ -18,6 +18,7 @@ export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "operations_center", name: "AI Operations Center", route: "/platform-builder/operations", kind: "hub", status: "operational", purpose: "Real-time visual control room for the AI Organization." },
   { id: "team_map", name: "AI Team Map", route: "/platform-builder/team-map", kind: "hub", status: "operational", purpose: "Live Organization Map with Visual Event Bus and relationship engine." },
   { id: "visual_behavior", name: "Visual Behavior Engine", route: "/platform-builder/visual-behavior", kind: "hub", status: "operational", purpose: "Event-bus-driven visual behaviors and animations — no business logic." },
+  { id: "rendering", name: "Visual Rendering Engine", route: "/platform-builder/rendering", kind: "hub", status: "operational", purpose: "GPU-friendly rendering with LOD, viewport culling, and layer system." },
   { id: "crm", name: "CRM Builder", route: "/platform-builder/crm", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "erp", name: "ERP Builder", route: "/platform-builder/erp", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "workflow", name: "Workflow Builder", route: "/platform-builder/workflow", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
