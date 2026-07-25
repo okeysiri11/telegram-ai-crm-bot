@@ -858,6 +858,17 @@ class EnterpriseHubStore:
         self.enp_inventory: EntityStore = EntityStore()
         self.enp_dashboards: EntityStore = EntityStore()
         self.enp_integrations: EntityStore = EntityStore()
+        # Sprint 26.6 — Enterprise Command Center
+        self.ecc2_bootstraps: EntityStore = EntityStore()
+        self.ecc2_inventory: EntityStore = EntityStore()
+        self.ecc2_dashboards: EntityStore = EntityStore()
+        self.ecc2_integrations: EntityStore = EntityStore()
+        self.ecc2_nav_index: EntityStore = EntityStore()
+        self.ecc2_productivity: EntityStore = EntityStore()
+        self.ecc2_searches: EntityStore = EntityStore()
+        self.ecc2_executions: EntityStore = EntityStore()
+        self.ecc2_ai_commands: EntityStore = EntityStore()
+        self.ecc2_analytics: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

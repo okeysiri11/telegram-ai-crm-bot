@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
-import { CommandPalette } from "./CommandPalette";
+import { createContext, useContext, useEffect } from "react";
 import { searchIndex } from "../managers/searchIndex";
+import { useCommandCenterUi } from "../../command-center/components/CommandCenterProvider";
 
 type NavUiState = {
   openPalette: () => void;
@@ -17,34 +17,24 @@ export function useNavigationUi() {
   return ctx;
 }
 
+/** Bridges navigation chrome to Enterprise Command Center palette (Sprint 26.6). */
 export function NavigationProvider({ children }: { children: ReactNode }) {
-  const [paletteOpen, setPaletteOpen] = useState(false);
+  const cc = useCommandCenterUi();
 
   useEffect(() => {
     const id = window.setInterval(() => searchIndex.refresh(), 60_000);
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setPaletteOpen(true);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.clearInterval(id);
-      window.removeEventListener("keydown", onKey);
-    };
+    return () => window.clearInterval(id);
   }, []);
 
   return (
     <Ctx.Provider
       value={{
-        paletteOpen,
-        openPalette: () => setPaletteOpen(true),
-        closePalette: () => setPaletteOpen(false),
+        paletteOpen: cc.paletteOpen,
+        openPalette: cc.openPalette,
+        closePalette: cc.close,
       }}
     >
       {children}
-      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </Ctx.Provider>
   );
 }

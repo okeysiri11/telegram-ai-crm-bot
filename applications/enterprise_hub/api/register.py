@@ -63,6 +63,7 @@ from applications.enterprise_hub.design_system import api as eds_api
 from applications.enterprise_hub.identity_center import api as eic_api
 from applications.enterprise_hub.workspace_platform import api as ews_api
 from applications.enterprise_hub.navigation_platform import api as enp_api
+from applications.enterprise_hub.command_center_platform import api as ecc2_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1114,3 +1115,21 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{enp}/bootstrap", enp_api.enp_bootstrap_handler)
     app.router.add_get(f"{enp}/inventory", enp_api.enp_inventory_handler)
     app.router.add_get(f"{enp}/dashboard", enp_api.enp_dashboard_handler)
+
+    # Sprint 26.6 — Enterprise Command Center & Productivity Platform
+    ecc2 = DEFAULT_CONFIG.enterprise_command_api_prefix
+    app.router.add_get(f"{ecc2}/health", ecc2_api.ecc2_health_handler)
+    app.router.add_post(f"{ecc2}/bootstrap", ecc2_api.ecc2_bootstrap_handler)
+    app.router.add_get(f"{ecc2}/inventory", ecc2_api.ecc2_inventory_handler)
+    app.router.add_get(f"{ecc2}/dashboard", ecc2_api.ecc2_dashboard_handler)
+    app.router.add_get(f"{ecc2}/search", ecc2_api.ecc2_search_handler)
+    app.router.add_post(f"{ecc2}/search", ecc2_api.ecc2_search_handler)
+    app.router.add_post(f"{ecc2}/execute", ecc2_api.ecc2_execute_handler)
+    app.router.add_post(f"{ecc2}/ai", ecc2_api.ecc2_ai_handler)
+    app.router.add_get(f"{ecc2}/suggestions", ecc2_api.ecc2_suggestions_handler)
+    app.router.add_get(f"{ecc2}/context", ecc2_api.ecc2_context_handler)
+    app.router.add_post(f"{ecc2}/context", ecc2_api.ecc2_context_handler)
+    app.router.add_get(f"{ecc2}/productivity", ecc2_api.ecc2_productivity_handler)
+    app.router.add_get(f"{ecc2}/analytics", ecc2_api.ecc2_analytics_handler)
+    app.router.add_get(f"{ecc2}/navigation-index", ecc2_api.ecc2_nav_index_handler)
+    app.router.add_post(f"{ecc2}/permissions", ecc2_api.ecc2_permissions_handler)

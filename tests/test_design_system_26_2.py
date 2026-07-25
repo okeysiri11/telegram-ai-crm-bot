@@ -109,7 +109,7 @@ def reset_store():
 
 def test_version_eds_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.0.4"
+    assert health["application_version"] == "9.0.5"
     assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
     assert health["design_system_ready"] is True
     assert health["design_tokens_ready"] is True
@@ -133,8 +133,8 @@ def test_bootstrap_inventory_docs():
     suite = enterprise_hub.design_system
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["hub_version"] == "9.0.4"
-    assert boot["version"] == "9.0.4"
+    assert boot["hub_version"] == "9.0.5"
+    assert boot["version"] == "9.0.5"
     assert boot["design_system_ready"] is True
     assert boot["tokens_ready"] is True
     assert boot["component_catalog_ready"] is True
@@ -168,7 +168,7 @@ def test_bootstrap_inventory_docs():
 async def test_api_eds(client):
     health = await client.get(f"{EDS}/health")
     body = await health.json()
-    assert body["application_version"] == "9.0.4"
+    assert body["application_version"] == "9.0.5"
     assert body["design_system_ready"] is True
     assert body["documentation_ready"] is True
 
@@ -194,7 +194,7 @@ async def test_api_eds(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.0.4"
+        assert version == "9.0.5"
 
 
 def test_docs_and_regression_26_2():
@@ -232,5 +232,5 @@ def test_docs_and_regression_26_2():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.0.4"' in manifest
-    assert "26.5" in manifest
+    assert '"application_version": "9.0.5"' in manifest
+    assert "26.6" in manifest

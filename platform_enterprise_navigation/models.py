@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 NAV_PATH = "src/web/navigation"
-VERSION = "9.0.4"
+VERSION = "9.0.5"
 
 ARCHITECTURE = (
     "navigation_manager",

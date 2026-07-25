@@ -7,5 +7,5 @@ export { CommandPalette } from "./components/CommandPalette";
 export { NavigationProvider, useNavigationUi } from "./components/NavigationProvider";
 export * from "./pages";
 
-export const NAVIGATION_VERSION = "9.0.4";
+export const NAVIGATION_VERSION = "9.0.5";
 export const NAVIGATION_PATH = "src/web/navigation";

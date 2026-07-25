@@ -1,0 +1,73 @@
+import { fuzzyScore } from "./fuzzy";
+import { COMMAND_CATALOG } from "./quickActions";
+import { contextEngine } from "./contextEngine";
+import { navigationIndex } from "./omnibox";
+
+const intentMap: [RegExp, string][] = [
+  [/\bcrm\b/i, "open_crm"],
+  [/\berp\b/i, "open_erp"],
+  [/beauty/i, "open_beauty"],
+  [/\bauto\b/i, "open_auto"],
+  [/\bagro\b/i, "open_agro"],
+  [/marketplace/i, "open_marketplace"],
+  [/dashboard/i, "open_dashboard"],
+  [/find client|search client/i, "find_client"],
+  [/find employee/i, "find_employee"],
+  [/create customer|new customer/i, "create_customer"],
+  [/weekly report/i, "generate_weekly_report"],
+  [/launch workflow|start workflow/i, "launch_workflow"],
+  [/run automation/i, "run_automation"],
+  [/create invoice|invoice/i, "create_invoice"],
+  [/open document/i, "open_document"],
+  [/mass update/i, "mass_update_records"],
+  [/summarize/i, "summarize_workspace"],
+  [/create task/i, "create_task"],
+  [/settings/i, "open_settings"],
+];
+
+const routes: Record<string, string> = {
+  open_crm: "/workspace/crm",
+  open_erp: "/workspace/erp",
+  open_beauty: "/workspace/beauty",
+  open_auto: "/workspace/auto",
+  open_agro: "/workspace/agro",
+  open_marketplace: "/workspace/marketplace",
+  open_dashboard: "/workspace/dashboards",
+  generate_weekly_report: "/workspace/reports/weekly",
+  launch_workflow: "/workspace/workflows/invoice",
+  create_task: "/workspace?action=create_task",
+  open_settings: "/settings",
+  summarize_workspace: "/workspace",
+  create_invoice: "/workspace?action=create_invoice",
+};
+
+export const aiCommandCenter = {
+  interpret(utterance: string): { ok: boolean; intent?: string; route?: string; label?: string } {
+    const text = utterance.trim();
+    if (!text) return { ok: false };
+    for (const [re, intent] of intentMap) {
+      if (re.test(text)) {
+        const cmd = COMMAND_CATALOG.find((c) => c.action === intent);
+        const route = cmd?.route ?? routes[intent];
+        contextEngine.patch({
+          recentAiConversations: [
+            ...contextEngine.get().recentAiConversations,
+            { utterance: text, intent },
+          ].slice(-20),
+        });
+        if (route) navigationIndex.recordUse(cmd?.id ?? intent);
+        return { ok: true, intent, route, label: cmd?.label ?? intent };
+      }
+    }
+    let best: { action: string; score: number } | null = null;
+    for (const c of COMMAND_CATALOG) {
+      const score = fuzzyScore(text, `${c.label} ${c.action}`);
+      if (!best || score > best.score) best = { action: c.action, score };
+    }
+    if (best && best.score >= 0.35) {
+      const cmd = COMMAND_CATALOG.find((c) => c.action === best!.action);
+      return { ok: true, intent: best.action, route: cmd?.route ?? routes[best.action], label: cmd?.label };
+    }
+    return { ok: false };
+  },
+};

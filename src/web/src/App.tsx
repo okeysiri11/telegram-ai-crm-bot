@@ -32,6 +32,7 @@ import {
   WorkspacesPage,
 } from "../workspace/pages";
 import { NavigationDashboardPage } from "../navigation/pages";
+import { CommandCenterPage } from "../command-center/pages";
 
 export function App() {
   return (
@@ -121,6 +122,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <NavigationDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/command-center"
+        element={
+          <ProtectedRoute>
+            <CommandCenterPage />
           </ProtectedRoute>
         }
       />

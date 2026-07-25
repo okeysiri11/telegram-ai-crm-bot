@@ -1,0 +1,43 @@
+import type { CommandItem } from "../types";
+
+export const COMMAND_CATALOG: CommandItem[] = [
+  { id: "cmd_ws", kind: "navigate", action: "open_workspace", label: "Open Workspace", route: "/workspace", keywords: ["workspace", "home"] },
+  { id: "cmd_cc", kind: "navigate", action: "open_command_center", label: "Open Command Center", route: "/command-center", keywords: ["command", "productivity"] },
+  { id: "cmd_id", kind: "open_module", action: "open_identity", label: "Open Identity Center", route: "/identity", keywords: ["identity", "rbac"] },
+  { id: "cmd_nav", kind: "open_module", action: "open_navigation", label: "Open Navigation", route: "/navigation", keywords: ["navigation"] },
+  { id: "act_create_client", kind: "create", action: "create_client", label: "Create Client", route: "/workspace/crm?action=create_client", keywords: ["create", "client"] },
+  { id: "act_create_lead", kind: "create", action: "create_lead", label: "Create Lead", route: "/workspace/crm?action=create_lead", keywords: ["create", "lead"] },
+  { id: "act_create_company", kind: "create", action: "create_company", label: "Create Company", route: "/workspace/crm?action=create_company", keywords: ["create", "company"] },
+  { id: "act_create_project", kind: "create", action: "create_project", label: "Create Project", route: "/workspace/list?action=create_project", keywords: ["create", "project"] },
+  { id: "act_create_task", kind: "create", action: "create_task", label: "Create Task", route: "/workspace?action=create_task", keywords: ["create", "task"] },
+  { id: "act_create_workflow", kind: "create", action: "create_workflow", label: "Create Workflow", route: "/workspace?action=create_workflow", keywords: ["create", "workflow"] },
+  { id: "act_create_automation", kind: "create", action: "create_automation", label: "Create Automation", route: "/workspace?action=create_automation", keywords: ["create", "automation"] },
+  { id: "act_create_ai_agent", kind: "create", action: "create_ai_agent", label: "Create AI Agent", route: "/workspace/ai?action=create", keywords: ["create", "agent"] },
+  { id: "act_create_dashboard", kind: "create", action: "create_dashboard", label: "Create Dashboard", route: "/workspace/dashboards?action=create", keywords: ["create", "dashboard"] },
+  { id: "act_create_document", kind: "create", action: "create_document", label: "Create Document", route: "/workspace/docs?action=create", keywords: ["create", "document"] },
+  { id: "act_open_crm", kind: "open", action: "open_crm", label: "Open CRM", route: "/workspace/crm", keywords: ["crm"] },
+  { id: "act_open_erp", kind: "open", action: "open_erp", label: "Open ERP", route: "/workspace/erp", keywords: ["erp"] },
+  { id: "act_open_marketplace", kind: "open", action: "open_marketplace", label: "Open Marketplace", route: "/workspace/marketplace", keywords: ["marketplace"] },
+  { id: "act_open_ai_studio", kind: "open", action: "open_ai_studio", label: "Open AI Studio", route: "/workspace/ai", keywords: ["ai", "studio"] },
+  { id: "act_open_knowledge", kind: "open", action: "open_knowledge", label: "Open Knowledge", route: "/workspace/docs/security", keywords: ["knowledge"] },
+  { id: "act_open_reports", kind: "open_report", action: "open_reports", label: "Open Reports", route: "/workspace/reports/weekly", keywords: ["reports"] },
+  { id: "act_open_analytics", kind: "open", action: "open_analytics", label: "Open Analytics", route: "/workspace/analytics", keywords: ["analytics"] },
+  { id: "act_open_settings", kind: "open_settings", action: "open_settings", label: "Open Settings", route: "/settings", keywords: ["settings"] },
+  { id: "ai_open_beauty", kind: "ai_execute", action: "open_beauty", label: "AI: Open Beauty", route: "/workspace/beauty", keywords: ["ai", "beauty"] },
+  { id: "ai_open_auto", kind: "ai_execute", action: "open_auto", label: "AI: Open Auto", route: "/workspace/auto", keywords: ["ai", "auto"] },
+  { id: "ai_open_agro", kind: "ai_execute", action: "open_agro", label: "AI: Open Agro", route: "/workspace/agro", keywords: ["ai", "agro"] },
+  { id: "ai_weekly", kind: "ai_execute", action: "generate_weekly_report", label: "AI: Generate Weekly Report", route: "/workspace/reports/weekly", keywords: ["ai", "weekly", "report"] },
+  { id: "ai_summarize", kind: "ai_execute", action: "summarize_workspace", label: "AI: Summarize Workspace", route: "/workspace", keywords: ["ai", "summarize"] },
+  { id: "ai_invoice", kind: "ai_execute", action: "create_invoice", label: "AI: Create Invoice", route: "/workspace?action=create_invoice", keywords: ["ai", "invoice"] },
+  { id: "wf_run", kind: "run_workflow", action: "launch_workflow", label: "Launch Workflow", route: "/workspace/workflows/invoice", keywords: ["workflow", "launch"] },
+  { id: "auto_run", kind: "run_automation", action: "run_automation", label: "Run Automation", route: "/workspace?action=run_automation", keywords: ["automation"] },
+];
+
+export const quickActionsEngine = {
+  list(): CommandItem[] {
+    return [...COMMAND_CATALOG];
+  },
+  byAction(action: string): CommandItem | undefined {
+    return COMMAND_CATALOG.find((c) => c.action === action || c.id === action);
+  },
+};

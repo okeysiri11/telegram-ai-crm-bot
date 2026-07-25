@@ -6,6 +6,7 @@ import { useThemeStore } from "@/theme/themeStore";
 import { useAuthStore } from "@/auth/authStore";
 import { LoadingScreen } from "./LoadingScreen";
 import { NavigationProvider } from "../../navigation/components/NavigationProvider";
+import { CommandCenterProvider } from "../../command-center/components/CommandCenterProvider";
 
 const queryClient = new QueryClient();
 
@@ -25,7 +26,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <NavigationProvider>{children}</NavigationProvider>
+        <CommandCenterProvider>
+          <NavigationProvider>{children}</NavigationProvider>
+        </CommandCenterProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );
