@@ -113,6 +113,13 @@ class PlatformBuilderStore:
         self.theme_registries: EntityStore = EntityStore()
         self.brand_profiles: EntityStore = EntityStore()
         self.active_theme_state: EntityStore = EntityStore()
+        # Sprint 29.6 — Visual Asset Registry
+        self.asset_wizard_sessions: EntityStore = EntityStore()
+        self.visual_assets: EntityStore = EntityStore()
+        self.asset_revisions: EntityStore = EntityStore()
+        self.asset_registries: EntityStore = EntityStore()
+        self.version_registries: EntityStore = EntityStore()
+        self.optimization_engines: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

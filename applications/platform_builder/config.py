@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 29.5 Visual Theme Engine."""
+"""Platform Builder — Sprint 29.6 Visual Asset Registry."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.12.0"
-    sprint: str = "29.5"
-    release_status: str = "Visual Theme Engine"
+    application_version: str = "1.13.0"
+    sprint: str = "29.6"
+    release_status: str = "Visual Asset Registry"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"
@@ -47,6 +47,9 @@ class PlatformBuilderConfig:
     theme_engine: str = "1.0"
     theme_registry: str = "1.0"
     branding_engine: str = "1.0"
+    visual_asset_registry: str = "1.0"
+    version_registry: str = "1.0"
+    optimization_engine: str = "1.0"
     platform_owner_role: str = "platform_owner"
     academy_modes: list[str] = field(
         default_factory=lambda: ["quick_start", "guided_learning", "expert"]

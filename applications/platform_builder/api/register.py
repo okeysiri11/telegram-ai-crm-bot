@@ -419,3 +419,31 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/themes/sessions/{{session_id}}/create",
         handlers.theme_create_handler,
     )
+
+    # Sprint 29.6 — Visual Asset Registry / Resource Management
+    app.router.add_get(f"{prefix}/assets/catalog", handlers.asset_catalog_handler)
+    app.router.add_get(f"{prefix}/assets/status", handlers.asset_status_handler)
+    app.router.add_get(f"{prefix}/assets/registry", handlers.asset_registry_handler)
+    app.router.add_get(f"{prefix}/assets/categories", handlers.asset_categories_handler)
+    app.router.add_get(f"{prefix}/assets/versions", handlers.asset_versions_handler)
+    app.router.add_post(f"{prefix}/assets/replace", handlers.asset_replace_handler)
+    app.router.add_post(f"{prefix}/assets/rollback", handlers.asset_rollback_handler)
+    app.router.add_get(f"{prefix}/assets/optimization", handlers.asset_optimization_handler)
+    app.router.add_get(f"{prefix}/assets/avatars", handlers.asset_avatars_handler)
+    app.router.add_get(f"{prefix}/assets/branding", handlers.asset_branding_handler)
+    app.router.add_get(f"{prefix}/assets/ai-city", handlers.asset_city_handler)
+    app.router.add_get(f"{prefix}/assets/search", handlers.asset_search_handler)
+    app.router.add_get(f"{prefix}/assets/performance", handlers.asset_performance_handler)
+    app.router.add_get(f"{prefix}/assets/browser", handlers.asset_browser_handler)
+    app.router.add_get(f"{prefix}/assets/preview/{{asset_id}}", handlers.asset_preview_handler)
+    app.router.add_post(f"{prefix}/assets/sessions", handlers.asset_session_handler)
+    app.router.add_get(f"{prefix}/assets/sessions/{{session_id}}", handlers.asset_session_handler)
+    app.router.add_patch(f"{prefix}/assets/sessions/{{session_id}}", handlers.asset_session_handler)
+    app.router.add_get(
+        f"{prefix}/assets/sessions/{{session_id}}/summary",
+        handlers.asset_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/assets/sessions/{{session_id}}/create",
+        handlers.asset_create_handler,
+    )

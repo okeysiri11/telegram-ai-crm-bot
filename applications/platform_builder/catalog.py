@@ -291,6 +291,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Enterprise visual identity, branding, and live theme switching — appearance only.",
     },
     {
+        "id": "assets",
+        "name": "Visual Asset Registry",
+        "route": "/platform-builder/assets",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Store, version, optimize, and browse visual assets — separated from business logic.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

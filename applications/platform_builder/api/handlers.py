@@ -1712,3 +1712,174 @@ async def theme_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.6 — Visual Asset Registry / Resource Management ---
+
+
+async def asset_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_registry_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.registry_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_categories_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.categories())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_versions_handler(request: web.Request) -> web.Response:
+    try:
+        asset_id = request.rel_url.query.get("asset_id")
+        return json_response(platform_builder.assets.version_management(asset_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_replace_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        asset_id = body.get("asset_id") or request.match_info.get("asset_id")
+        if not asset_id:
+            raise ValidationError("asset_id is required")
+        return json_response(platform_builder.assets.replace_asset(asset_id, body))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_rollback_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        asset_id = body.get("asset_id")
+        if not asset_id:
+            raise ValidationError("asset_id is required")
+        revision = body.get("revision")
+        return json_response(
+            platform_builder.assets.rollback_asset(
+                asset_id, int(revision) if revision is not None else None
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_optimization_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.resource_optimization())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_avatars_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.avatar_library())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_branding_handler(request: web.Request) -> web.Response:
+    try:
+        org = request.rel_url.query.get("organization_id")
+        return json_response(platform_builder.assets.organization_branding(org))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_city_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.ai_city_foundation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_search_handler(request: web.Request) -> web.Response:
+    try:
+        q = request.rel_url.query
+        filters = {
+            k: q.get(k)
+            for k in (
+                "category",
+                "organization_id",
+                "department_id",
+                "asset_type",
+                "type",
+                "theme_id",
+                "theme",
+                "tags",
+                "q",
+            )
+            if q.get(k)
+        }
+        return json_response(platform_builder.assets.search(filters))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_performance_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_browser_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.browser())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_preview_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.preview(request.match_info["asset_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.assets.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.assets.update_session(session_id, body))
+        return json_response(platform_builder.assets.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.assets.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def asset_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.assets.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

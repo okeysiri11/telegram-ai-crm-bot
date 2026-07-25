@@ -53,6 +53,7 @@ import {
   VisualBehaviorPage,
   RenderingEnginePage,
   ThemeEnginePage,
+  AssetRegistryPage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -271,6 +272,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <ThemeEnginePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/assets"
+        element={
+          <ProtectedRoute>
+            <AssetRegistryPage />
           </ProtectedRoute>
         }
       />

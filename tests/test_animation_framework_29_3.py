@@ -44,8 +44,8 @@ def reset_store():
 
 def test_animation_framework_and_performance():
     health = platform_builder.health()
-    assert health["application_version"] == "1.12.0"
-    assert health["sprint"] == "29.5"
+    assert health["application_version"] == "1.13.0"
+    assert health["sprint"] == "29.6"
     assert health["animation_framework_ready"] is True
     assert health["engines"]["animation_framework"] == "1.0"
 
