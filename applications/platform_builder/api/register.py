@@ -475,3 +475,32 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/simulation/sessions/{{session_id}}/create",
         handlers.sim_create_handler,
     )
+
+    # Sprint 29.8 — Visual Director Engine / Scene Orchestration
+    app.router.add_get(f"{prefix}/director/catalog", handlers.dir_catalog_handler)
+    app.router.add_get(f"{prefix}/director/status", handlers.dir_status_handler)
+    app.router.add_get(f"{prefix}/director/engine", handlers.dir_engine_handler)
+    app.router.add_get(f"{prefix}/director/scenes", handlers.dir_scenes_handler)
+    app.router.add_post(f"{prefix}/director/scenes", handlers.dir_scenes_handler)
+    app.router.add_post(f"{prefix}/director/scenes/switch", handlers.dir_scene_switch_handler)
+    app.router.add_post(f"{prefix}/director/scenes/sync", handlers.dir_scene_sync_handler)
+    app.router.add_get(f"{prefix}/director/focus", handlers.dir_focus_handler)
+    app.router.add_get(f"{prefix}/director/attention", handlers.dir_attention_handler)
+    app.router.add_get(f"{prefix}/director/coordination", handlers.dir_coordination_handler)
+    app.router.add_get(f"{prefix}/director/live-organization", handlers.dir_live_org_handler)
+    app.router.add_get(f"{prefix}/director/camera", handlers.dir_camera_handler)
+    app.router.add_post(f"{prefix}/director/camera", handlers.dir_camera_handler)
+    app.router.add_get(f"{prefix}/director/conflicts", handlers.dir_conflicts_handler)
+    app.router.add_get(f"{prefix}/director/performance", handlers.dir_performance_handler)
+    app.router.add_get(f"{prefix}/director/ui", handlers.dir_ui_handler)
+    app.router.add_post(f"{prefix}/director/sessions", handlers.dir_session_handler)
+    app.router.add_get(f"{prefix}/director/sessions/{{session_id}}", handlers.dir_session_handler)
+    app.router.add_patch(f"{prefix}/director/sessions/{{session_id}}", handlers.dir_session_handler)
+    app.router.add_get(
+        f"{prefix}/director/sessions/{{session_id}}/summary",
+        handlers.dir_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/director/sessions/{{session_id}}/create",
+        handlers.dir_create_handler,
+    )

@@ -127,6 +127,13 @@ class PlatformBuilderStore:
         self.simulation_registries: EntityStore = EntityStore()
         self.timeline_engines: EntityStore = EntityStore()
         self.simulation_apis: EntityStore = EntityStore()
+        # Sprint 29.8 — Visual Director Engine
+        self.director_wizard_sessions: EntityStore = EntityStore()
+        self.director_scenes: EntityStore = EntityStore()
+        self.director_engines: EntityStore = EntityStore()
+        self.scene_managers: EntityStore = EntityStore()
+        self.focus_managers: EntityStore = EntityStore()
+        self.priority_managers: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

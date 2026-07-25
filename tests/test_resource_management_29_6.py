@@ -41,7 +41,7 @@ def test_version_and_optimization():
     health = platform_builder.health()
     assert health["version_management_ready"] is True
     assert health["optimization_engine_ready"] is True
-    assert health["application_version"] == "1.14.0"
+    assert health["application_version"] == "1.15.0"
 
     eng = platform_builder.assets
     versions = eng.version_management("asset_org_logo")

@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 29.7 Visual Simulation Engine."""
+"""Platform Builder — Sprint 29.8 Visual Director Engine."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.14.0"
-    sprint: str = "29.7"
-    release_status: str = "Visual Simulation Engine"
+    application_version: str = "1.15.0"
+    sprint: str = "29.8"
+    release_status: str = "Visual Director Engine"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"
@@ -54,6 +54,10 @@ class PlatformBuilderConfig:
     simulation_registry: str = "1.0"
     timeline_engine: str = "1.0"
     simulation_api: str = "1.0"
+    director_engine: str = "1.0"
+    scene_manager: str = "1.0"
+    focus_manager: str = "1.0"
+    priority_manager: str = "1.0"
     platform_owner_role: str = "platform_owner"
     academy_modes: list[str] = field(
         default_factory=lambda: ["quick_start", "guided_learning", "expert"]

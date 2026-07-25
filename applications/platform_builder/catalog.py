@@ -311,6 +311,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Live enterprise simulation from Visual Event Bus only — never creates fake events.",
     },
     {
+        "id": "director",
+        "name": "Visual Director Engine",
+        "route": "/platform-builder/director",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Scene orchestration and focus/attention direction — presentation only, no business events.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

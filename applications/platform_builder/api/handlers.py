@@ -2032,3 +2032,162 @@ async def sim_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.8 — Visual Director Engine / Scene Orchestration ---
+
+
+async def dir_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.director_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_scenes_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            name = body.get("name") or "Untitled Scene"
+            kind = body.get("kind") or "live_organization"
+            scene = platform_builder.director.scenes.create_scene(name, kind=kind)
+            return json_response(scene, status=201)
+        return json_response(platform_builder.director.scene_management())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_scene_switch_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        scene_id = body.get("scene_id")
+        if not scene_id:
+            raise ValidationError("scene_id is required")
+        return json_response(platform_builder.director.scenes.switch_scene(scene_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_scene_sync_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        scene_id = body.get("scene_id")
+        if not scene_id:
+            raise ValidationError("scene_id is required")
+        return json_response(
+            platform_builder.director.scenes.synchronize(scene_id, body.get("engines"))
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_focus_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.focus_engine())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_attention_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.attention_management())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_coordination_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.simulation_coordination())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_live_org_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.live_organization())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_camera_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.director.camera_api(
+                    position=body.get("position"),
+                    tracking=body.get("tracking"),
+                    zoom=body.get("zoom"),
+                    focus_target=body.get("focus_target"),
+                )
+            )
+        return json_response(platform_builder.director.camera_api())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_conflicts_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.conflict_resolution())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_performance_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.director.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.director.update_session(session_id, body))
+        return json_response(platform_builder.director.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.director.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def dir_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.director.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
