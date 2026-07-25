@@ -49,6 +49,7 @@ from applications.enterprise_hub.test_infrastructure.facade import TestInfrastru
 from applications.enterprise_hub.performance_testing.facade import PerformanceTestingSuite
 from applications.enterprise_hub.chaos_engineering.facade import ChaosEngineeringSuite
 from applications.enterprise_hub.migration.facade import MigrationSuite
+from applications.enterprise_hub.security_verification.facade import SecurityVerificationSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -132,6 +133,7 @@ class EnterpriseHubApplication:
         performance_testing_svc: PerformanceTestingSuite | None = None,
         chaos_engineering_svc: ChaosEngineeringSuite | None = None,
         migration_svc: MigrationSuite | None = None,
+        security_verification_svc: SecurityVerificationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -198,6 +200,7 @@ class EnterpriseHubApplication:
         self.performance_testing = performance_testing_svc or PerformanceTestingSuite(self.store)
         self.chaos_engineering = chaos_engineering_svc or ChaosEngineeringSuite(self.store)
         self.migration = migration_svc or MigrationSuite(self.store)
+        self.security_verification = security_verification_svc or SecurityVerificationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -586,6 +589,10 @@ class EnterpriseHubApplication:
             "backup_manager_ready": True,
             "rollback_ready": True,
             "disaster_recovery_ready": True,
+            "security_verification_ready": True,
+            "vulnerability_scanner_ready": True,
+            "secret_scanner_ready": True,
+            "compliance_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -648,6 +655,7 @@ class EnterpriseHubApplication:
                 "performance_testing": self.config.performance_testing,
                 "chaos_engineering": self.config.chaos_engineering,
                 "migration": self.config.migration,
+                "security_verification": self.config.security_verification,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -714,6 +722,7 @@ class EnterpriseHubApplication:
             "performance_testing": self.performance_testing.status(),
             "chaos_engineering": self.chaos_engineering.status(),
             "migration": self.migration.status(),
+            "security_verification": self.security_verification.status(),
         }
 
 

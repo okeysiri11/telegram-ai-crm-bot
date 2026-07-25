@@ -37,3 +37,4 @@ Import paths avoid Python stdlib/`platform` collisions.
 - Performance Testing (v8 load gate): [`../platform_enterprise_performance_testing/`](../platform_enterprise_performance_testing/)
 - Chaos Engineering: [`../platform_chaos/`](../platform_chaos/)
 - Migration & DR: [`../platform_migration/`](../platform_migration/)
+- Security Verification (v8 gate): [`../platform_enterprise_security_verification/`](../platform_enterprise_security_verification/)

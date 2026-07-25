@@ -55,6 +55,7 @@ from applications.enterprise_hub.test_infrastructure import api as eti_api
 from applications.enterprise_hub.performance_testing import api as epl_api
 from applications.enterprise_hub.chaos_engineering import api as ece_api
 from applications.enterprise_hub.migration import api as emr_api
+from applications.enterprise_hub.security_verification import api as esv_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1049,4 +1050,11 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{emr}/disaster", emr_api.emr_disaster_handler)
     app.router.add_get(f"{emr}/versions", emr_api.emr_versions_handler)
     app.router.add_get(f"{emr}/dashboard", emr_api.emr_dashboard_handler)
+
+    # Sprint 25.5 — Security Verification (additive; ESH/ISAM routes unchanged)
+    esv = DEFAULT_CONFIG.security_verification_api_prefix
+    app.router.add_get(f"{esv}/health", esv_api.esv_health_handler)
+    app.router.add_post(f"{esv}/bootstrap", esv_api.esv_bootstrap_handler)
+    app.router.add_post(f"{esv}/gate", esv_api.esv_gate_handler)
+    app.router.add_get(f"{esv}/dashboard", esv_api.esv_dashboard_handler)
 

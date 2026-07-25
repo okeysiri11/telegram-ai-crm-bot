@@ -1,4 +1,4 @@
-"""Tests — Enterprise Migration & Disaster Recovery (Sprint 25.4 / v8.4.0)."""
+"""Tests — Enterprise Migration & Disaster Recovery (Sprint 25.5 / v8.5.0)."""
 
 from __future__ import annotations
 
@@ -105,8 +105,8 @@ def reset_store():
 
 def test_version_emr_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "8.4.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v8.3.0"
+    assert health["application_version"] == "8.5.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v8.4.0"
     assert health["migration_platform_ready"] is True
     assert health["backup_manager_ready"] is True
     assert health["rollback_ready"] is True
@@ -126,7 +126,7 @@ def test_migration_backup_restore_rollback_dr():
     mig = suite.create_migration(
         migration_id="mig_demo",
         version_from="8.3.0",
-        version_to="8.4.0",
+        version_to="8.5.0",
         module="enterprise_hub",
         author="qa",
     )
@@ -137,7 +137,7 @@ def test_migration_backup_restore_rollback_dr():
         suite.create_migration(
             migration_id="mig_unsafe",
             version_from="8.3.0",
-            version_to="8.4.0",
+            version_to="8.5.0",
             module="x",
             rollback_support=False,
         )
@@ -178,19 +178,19 @@ def test_migration_backup_restore_rollback_dr():
     assert all_dr["count"] == len(DR_SCENARIOS)
 
     versions = suite.version_status()
-    assert versions["current_version"] == "8.4.0"
+    assert versions["current_version"] == "8.5.0"
     assert versions["rollback_availability"] is True
 
     dash = suite.dashboard()
     assert dash["ci_cd_required"] is True
-    assert dash["current_version"] == "8.4.0"
+    assert dash["current_version"] == "8.5.0"
 
 
 def test_bootstrap_emr():
     suite = enterprise_hub.migration
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "8.4.0"
+    assert boot["version"] == "8.5.0"
     assert boot["migration_platform_ready"] is True
     assert boot["backup_manager_ready"] is True
     assert boot["rollback_ready"] is True
@@ -207,7 +207,7 @@ def test_bootstrap_emr():
 async def test_api_emr(client):
     health = await client.get(f"{EMR}/health")
     body = await health.json()
-    assert body["application_version"] == "8.4.0"
+    assert body["application_version"] == "8.5.0"
     assert body["migration_platform_ready"] is True
 
     boot = await client.post(f"{EMR}/bootstrap", json={})
@@ -219,7 +219,7 @@ async def test_api_emr(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "8.4.0"
+        assert version == "8.5.0"
 
 
 def test_docs_and_regression_25_4():
@@ -254,5 +254,5 @@ def test_docs_and_regression_25_4():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "8.4.0"' in manifest
-    assert "25.4" in manifest
+    assert '"application_version": "8.5.0"' in manifest
+    assert "25.5" in manifest

@@ -1,4 +1,4 @@
-"""Tests — Enterprise Performance & Load Testing (Sprint 25.4 / v8.4.0)."""
+"""Tests — Enterprise Performance & Load Testing (Sprint 25.5 / v8.5.0)."""
 
 from __future__ import annotations
 
@@ -102,8 +102,8 @@ def reset_store():
 
 def test_version_epl_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "8.4.0"
-    assert health["enterprise_foundation"] == "Enterprise Platform v8.3.0"
+    assert health["application_version"] == "8.5.0"
+    assert health["enterprise_foundation"] == "Enterprise Platform v8.4.0"
     assert health["performance_testing_ready"] is True
     assert health["load_testing_ready"] is True
     assert health["stress_testing_ready"] is True
@@ -170,7 +170,7 @@ def test_bootstrap_epl():
     suite = enterprise_hub.performance_testing
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "8.4.0"
+    assert boot["version"] == "8.5.0"
     assert boot["performance_testing_ready"] is True
     assert boot["load_testing_ready"] is True
     assert boot["stress_testing_ready"] is True
@@ -186,7 +186,7 @@ def test_bootstrap_epl():
 async def test_api_epl(client):
     health = await client.get(f"{EPL}/health")
     body = await health.json()
-    assert body["application_version"] == "8.4.0"
+    assert body["application_version"] == "8.5.0"
     assert body["performance_testing_ready"] is True
 
     boot = await client.post(f"{EPL}/bootstrap", json={})
@@ -197,14 +197,14 @@ async def test_api_epl(client):
     assert epf.status == 200
     epf_body = await epf.json()
     epf_version = epf_body.get("application_version") or epf_body.get("data", {}).get("application_version")
-    assert epf_version == "8.4.0"
+    assert epf_version == "8.5.0"
 
     for prefix in PREFIXES:
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "8.4.0"
+        assert version == "8.5.0"
 
 
 def test_docs_and_regression_25_2():
@@ -240,5 +240,5 @@ def test_docs_and_regression_25_2():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "8.4.0"' in manifest
-    assert "25.4" in manifest
+    assert '"application_version": "8.5.0"' in manifest
+    assert "25.5" in manifest

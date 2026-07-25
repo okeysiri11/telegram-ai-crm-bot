@@ -793,6 +793,17 @@ class EnterpriseHubStore:
         self.emr_rollbacks: EntityStore = EntityStore()
         self.emr_reports: EntityStore = EntityStore()
         self.emr_dashboards: EntityStore = EntityStore()
+        # Sprint 25.5 — Security Verification
+        self.esv_bootstraps: EntityStore = EntityStore()
+        self.esv_runs: EntityStore = EntityStore()
+        self.esv_authn: EntityStore = EntityStore()
+        self.esv_authz: EntityStore = EntityStore()
+        self.esv_vulns: EntityStore = EntityStore()
+        self.esv_secrets: EntityStore = EntityStore()
+        self.esv_deps: EntityStore = EntityStore()
+        self.esv_compliance: EntityStore = EntityStore()
+        self.esv_reports: EntityStore = EntityStore()
+        self.esv_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

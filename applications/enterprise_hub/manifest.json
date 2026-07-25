@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "8.4.0",
-  "release_status": "Enterprise Migration & Disaster Recovery",
+  "application_version": "8.5.0",
+  "release_status": "Enterprise Security Verification",
   "platform_dependency": "AI Platform Core v3",
-  "enterprise_foundation": "Enterprise Platform v8.3.0",
+  "enterprise_foundation": "Enterprise Platform v8.4.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "25.4",
+  "sprint": "25.5",
   "phase": "enterprise_extensions_v8",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -213,7 +213,10 @@
     "circuit_breaker": "1.0",
     "migration": "1.0",
     "backup_manager": "1.0",
-    "rollback": "1.0"
+    "rollback": "1.0",
+    "security_verification": "1.0",
+    "vulnerability_scanner": "1.0",
+    "secret_scanner": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -259,5 +262,6 @@
   "test_infrastructure": "1.0",
   "performance_testing": "1.0",
   "chaos_engineering": "1.0",
-  "migration": "1.0"
+  "migration": "1.0",
+  "security_verification": "1.0"
 }
