@@ -3,30 +3,72 @@ import { Link } from "react-router-dom";
 import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { Badge, Button, Card, Input } from "@/ui";
 import { buildNavigationDashboard } from "../dashboard/navigationDashboard";
-import { favoritesManager, menuEngine, searchProvider, shortcutManager } from "../managers";
+import {
+  applicationRegistry,
+  favoritesManager,
+  menuEngine,
+  searchProvider,
+  shortcutManager,
+  workspaceFederation,
+} from "../managers";
 import { navigationPerformance } from "../performance";
 import { useNavigationUi } from "../components/NavigationProvider";
+import { navigationAnalytics } from "../managers/navigationAnalytics";
 
 export function NavigationDashboardPage() {
   const dash = buildNavigationDashboard();
   const [q, setQ] = useState("");
-  const hits = useMemo(() => searchProvider.search(q), [q]);
-  const { openPalette } = useNavigationUi();
+  const hits = useMemo(() => {
+    const result = searchProvider.search(q);
+    navigationAnalytics.trackSearch(q, result.length);
+    return result;
+  }, [q]);
+  const { openPalette, openQuickSwitcher } = useNavigationUi();
 
   return (
     <WorkspaceLayout>
       <div className="space-y-6 eds-anim-fade">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <h1 className="eds-type-h1">Navigation Platform</h1>
+            <h1 className="eds-type-h1">Enterprise Navigation</h1>
             <p className="eds-type-small text-[var(--eds-text-muted)]">
-              Command Palette · Global Search · Dynamic Menu · Shortcuts
+              Federation · Global Search · Smart Favorites · Quick Switcher · Analytics
             </p>
           </div>
-          <Button onClick={openPalette}>Open Command Palette (⌘/Ctrl+K)</Button>
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={openPalette}>Command Palette (⌘K)</Button>
+            <Button variant="secondary" onClick={openQuickSwitcher}>
+              Quick Switcher (Ctrl+Tab)
+            </Button>
+          </div>
         </div>
 
         <div className="eds-grid eds-grid--dashboard">
+          <Card title="Workspace federation">
+            <p className="eds-type-caption mb-2">Current: {dash.currentWorkspace.name}</p>
+            <ul className="space-y-1 eds-type-small">
+              {dash.workspaces.map((w) => (
+                <li key={w.id}>
+                  <button
+                    type="button"
+                    className="text-[var(--eds-primary)]"
+                    onClick={() => workspaceFederation.switchTo(w.kind)}
+                  >
+                    {w.name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </Card>
+          <Card title="Application registry">
+            <ul className="max-h-48 space-y-1 overflow-auto eds-type-small">
+              {applicationRegistry.list().map((a) => (
+                <li key={a.id}>
+                  <Badge>{a.icon}</Badge> {a.name} · v{a.version} · {a.health}
+                </li>
+              ))}
+            </ul>
+          </Card>
           <Card title="Active navigation">
             <ul className="space-y-1 eds-type-small">
               {dash.activeNavigation.map((n) => (
@@ -39,29 +81,16 @@ export function NavigationDashboardPage() {
               ))}
             </ul>
           </Card>
-          <Card title="Search analytics">
-            <p className="eds-type-small">Categories: {dash.searchAnalytics.categories}</p>
-            <p className="eds-type-caption mt-1">Recent: {dash.searchAnalytics.recent.join(", ")}</p>
-          </Card>
-          <Card title="Most used pages">
+          <Card title="Smart favorites">
             <ul className="space-y-1 eds-type-small">
-              {dash.mostUsedPages.map((p) => (
-                <li key={p.id}>{p.label}</li>
-              ))}
-            </ul>
-          </Card>
-          <Card title="Favorite modules">
-            <ul className="space-y-1 eds-type-small">
-              {dash.favoriteModules.map((f) => (
+              {favoritesManager.list().map((f) => (
                 <li key={f.id}>
-                  <Link className="text-[var(--eds-primary)]" to={f.path}>
-                    {f.label}
-                  </Link>
+                  {f.kind}: {f.label}
                 </li>
               ))}
             </ul>
           </Card>
-          <Card title="Recent activity">
+          <Card title="Recent history">
             <ul className="space-y-1 eds-type-small">
               {dash.recentActivity.map((a) => (
                 <li key={a.id}>
@@ -70,35 +99,18 @@ export function NavigationDashboardPage() {
               ))}
             </ul>
           </Card>
-          <Card title="Shortcut usage">
-            <ul className="space-y-1 eds-type-small">
-              {dash.shortcutUsage.map((s) => (
-                <li key={s.id}>
-                  {s.keys} → {s.action} <Badge>{s.scope}</Badge>
-                </li>
-              ))}
-            </ul>
-          </Card>
-          <Card title="Command usage">
-            <ul className="space-y-1 eds-type-small">
-              {dash.commandUsage.map((c) => (
-                <li key={c.id}>{c.label}</li>
-              ))}
-            </ul>
-          </Card>
-          <Card title="Performance">
-            <p className="eds-type-small">{navigationPerformance.features.join(" · ")}</p>
-            <p className="eds-type-caption mt-1">
-              Prefetch: {navigationPerformance.prefetchRoutes.join(", ")}
-            </p>
+          <Card title="Navigation analytics">
+            <p className="eds-type-small">Searches: {dash.analytics.search_statistics.total}</p>
+            <p className="eds-type-caption">Abandoned: {dash.analytics.abandoned_searches}</p>
+            <p className="eds-type-caption mt-1">{dash.analytics.ai_recommendations.join(" · ")}</p>
           </Card>
         </div>
 
         <div className="eds-grid eds-grid--dashboard">
-          <Card title="Global search (realtime)">
+          <Card title="Global search">
             <Input
               className="eds-focus-ring mb-3"
-              placeholder="Search modules, CRM, AI, workflows…"
+              placeholder="Search CRM, ERP, Knowledge, Agents, Apps…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />
@@ -118,32 +130,19 @@ export function NavigationDashboardPage() {
           <Card title="Menu engine">
             <p className="eds-type-small">Groups: {menuEngine.groups().join(", ")}</p>
             <p className="eds-type-caption mt-1">Nested menus: {menuEngine.nested().length}</p>
-            <p className="eds-type-caption">Mega groups: {menuEngine.megaGroups().length}</p>
-          </Card>
-          <Card title="Favorites">
-            <ul className="space-y-1 eds-type-small">
-              {favoritesManager.list().map((f) => (
-                <li key={f.id}>
-                  {f.kind}: {f.label}
-                </li>
-              ))}
-            </ul>
           </Card>
           <Card title="Shortcuts">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => shortcutManager.update("sc_search", "Meta+Shift+/")}
-            >
-              Customize search shortcut
-            </Button>
-            <ul className="mt-2 space-y-1 eds-type-small">
+            <ul className="space-y-1 eds-type-small">
               {shortcutManager.list().map((s) => (
                 <li key={s.id}>
                   {s.keys} · {s.scope}
                 </li>
               ))}
+              <li>Ctrl+Tab · quick switcher</li>
             </ul>
+          </Card>
+          <Card title="Performance">
+            <p className="eds-type-small">{navigationPerformance.features.join(" · ")}</p>
           </Card>
         </div>
       </div>

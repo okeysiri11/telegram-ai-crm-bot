@@ -58,6 +58,7 @@ from applications.enterprise_hub.identity_center.facade import IdentityCenterSui
 from applications.enterprise_hub.workspace_platform.facade import WorkspacePlatformSuite
 from applications.enterprise_hub.navigation_platform.facade import NavigationPlatformSuite
 from applications.enterprise_hub.command_center_platform.facade import CommandCenterPlatformSuite
+from applications.enterprise_hub.navigation.facade import EnterpriseNavigationSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -150,6 +151,7 @@ class EnterpriseHubApplication:
         workspace_platform_svc: WorkspacePlatformSuite | None = None,
         navigation_platform_svc: NavigationPlatformSuite | None = None,
         command_center_platform_svc: CommandCenterPlatformSuite | None = None,
+        enterprise_navigation_svc: EnterpriseNavigationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -225,6 +227,7 @@ class EnterpriseHubApplication:
         self.workspace_platform = workspace_platform_svc or WorkspacePlatformSuite(self.store)
         self.navigation_platform = navigation_platform_svc or NavigationPlatformSuite(self.store)
         self.command_center_platform = command_center_platform_svc or CommandCenterPlatformSuite(self.store)
+        self.enterprise_navigation = enterprise_navigation_svc or EnterpriseNavigationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -670,6 +673,14 @@ class EnterpriseHubApplication:
             "keyboard_productivity_ready": True,
             "command_analytics_ready": True,
             "enterprise_navigation_index_ready": True,
+            "enterprise_navigation_ready": True,
+            "workspace_federation_ready": True,
+            "application_registry_ready": True,
+            "smart_favorites_ready": True,
+            "recent_history_ready": True,
+            "enterprise_breadcrumbs_ready": True,
+            "quick_switcher_ready": True,
+            "navigation_analytics_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -741,6 +752,7 @@ class EnterpriseHubApplication:
                 "workspace_platform": self.config.workspace_platform,
                 "navigation_platform": self.config.navigation_platform,
                 "enterprise_command_center": self.config.enterprise_command_center,
+                "enterprise_navigation": self.config.enterprise_navigation,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -816,6 +828,7 @@ class EnterpriseHubApplication:
             "workspace_platform": self.workspace_platform.status(),
             "navigation_platform": self.navigation_platform.status(),
             "command_center_platform": self.command_center_platform.status(),
+            "enterprise_navigation": self.enterprise_navigation.status(),
         }
 
 

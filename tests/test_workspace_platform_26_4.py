@@ -111,7 +111,7 @@ def reset_store():
 
 def test_version_ews_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.0.5"
+    assert health["application_version"] == "9.0.6"
     assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
     assert health["workspace_ready"] is True
     assert health["dashboard_engine_ready"] is True
@@ -134,8 +134,8 @@ def test_bootstrap_inventory_dashboard():
     suite = enterprise_hub.workspace_platform
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["hub_version"] == "9.0.5"
-    assert boot["version"] == "9.0.5"
+    assert boot["hub_version"] == "9.0.6"
+    assert boot["version"] == "9.0.6"
     assert boot["workspace_ready"] is True
     assert boot["dashboard_engine_ready"] is True
     assert boot["widget_library_ready"] is True
@@ -163,7 +163,7 @@ def test_bootstrap_inventory_dashboard():
 async def test_api_ews(client):
     health = await client.get(f"{EWS}/health")
     body = await health.json()
-    assert body["application_version"] == "9.0.5"
+    assert body["application_version"] == "9.0.6"
     assert body["workspace_ready"] is True
     assert body["realtime_ready"] is True
 
@@ -185,7 +185,7 @@ async def test_api_ews(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.0.5"
+        assert version == "9.0.6"
 
 
 def test_docs_and_regression_26_4():
@@ -225,5 +225,5 @@ def test_docs_and_regression_26_4():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.0.5"' in manifest
-    assert "26.6" in manifest
+    assert '"application_version": "9.0.6"' in manifest
+    assert "26.7" in manifest

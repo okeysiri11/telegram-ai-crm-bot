@@ -8,3 +8,7 @@ export { navigationHistory } from "./navigationHistory";
 export { shortcutManager } from "./shortcutManager";
 export { breadcrumbEngine } from "./breadcrumbEngine";
 export { recentManager } from "./recentManager";
+export { workspaceFederation } from "./workspaceFederation";
+export { applicationRegistry } from "./applicationRegistry";
+export { quickSwitcher } from "./quickSwitcher";
+export { navigationAnalytics } from "./navigationAnalytics";

@@ -1,5 +1,6 @@
-"""Enterprise Navigation Platform — Sprint 26.5 / path src/web/navigation."""
+"""Enterprise Navigation — Sprint 26.7."""
 
 from platform_enterprise_navigation.facade import NavigationLibrary, navigation_library
+from platform_enterprise_navigation.models import API_PREFIX, NAV_PATH, VERSION
 
-__all__ = ["NavigationLibrary", "navigation_library"]
+__all__ = ["API_PREFIX", "NAV_PATH", "VERSION", "NavigationLibrary", "navigation_library"]

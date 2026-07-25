@@ -4,8 +4,10 @@ export * from "./types";
 export { buildNavigationDashboard } from "./dashboard/navigationDashboard";
 export { navigationPerformance } from "./performance";
 export { CommandPalette } from "./components/CommandPalette";
+export { QuickSwitcher } from "./components/QuickSwitcher";
 export { NavigationProvider, useNavigationUi } from "./components/NavigationProvider";
 export * from "./pages";
 
-export const NAVIGATION_VERSION = "9.0.5";
+export const NAVIGATION_VERSION = "9.0.6";
 export const NAVIGATION_PATH = "src/web/navigation";
+export const NAVIGATION_API = "/api/enterprise-navigation/v1";

@@ -1,12 +1,16 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { searchIndex } from "../managers/searchIndex";
 import { useCommandCenterUi } from "../../command-center/components/CommandCenterProvider";
+import { QuickSwitcher } from "./QuickSwitcher";
+import { navigationAnalytics } from "../managers/navigationAnalytics";
 
 type NavUiState = {
   openPalette: () => void;
   closePalette: () => void;
   paletteOpen: boolean;
+  openQuickSwitcher: () => void;
+  quickSwitcherOpen: boolean;
 };
 
 const Ctx = createContext<NavUiState | null>(null);
@@ -17,13 +21,25 @@ export function useNavigationUi() {
   return ctx;
 }
 
-/** Bridges navigation chrome to Enterprise Command Center palette (Sprint 26.6). */
+/** Bridges navigation chrome to Command Center + Quick Switcher (Sprint 26.7). */
 export function NavigationProvider({ children }: { children: ReactNode }) {
   const cc = useCommandCenterUi();
+  const [quickOpen, setQuickOpen] = useState(false);
 
   useEffect(() => {
     const id = window.setInterval(() => searchIndex.refresh(), 60_000);
-    return () => window.clearInterval(id);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "Tab") {
+        e.preventDefault();
+        setQuickOpen(true);
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    navigationAnalytics.trackPath(window.location.pathname);
+    return () => {
+      window.clearInterval(id);
+      window.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   return (
@@ -32,9 +48,12 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         paletteOpen: cc.paletteOpen,
         openPalette: cc.openPalette,
         closePalette: cc.close,
+        quickSwitcherOpen: quickOpen,
+        openQuickSwitcher: () => setQuickOpen(true),
       }}
     >
       {children}
+      <QuickSwitcher open={quickOpen} onClose={() => setQuickOpen(false)} />
     </Ctx.Provider>
   );
 }

@@ -1,6 +1,6 @@
 export const webConfig = {
   application: "enterprise_web_platform",
-  version: "9.0.5",
+  version: "9.0.6",
   sprint: "26.5",
   apiBase: import.meta.env.VITE_API_BASE || "/api",
   hubPrefix: "/api/enterprise-hub/v1",

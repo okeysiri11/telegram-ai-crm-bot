@@ -64,6 +64,7 @@ from applications.enterprise_hub.identity_center import api as eic_api
 from applications.enterprise_hub.workspace_platform import api as ews_api
 from applications.enterprise_hub.navigation_platform import api as enp_api
 from applications.enterprise_hub.command_center_platform import api as ecc2_api
+from applications.enterprise_hub.navigation import api as env_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1133,3 +1134,23 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{ecc2}/analytics", ecc2_api.ecc2_analytics_handler)
     app.router.add_get(f"{ecc2}/navigation-index", ecc2_api.ecc2_nav_index_handler)
     app.router.add_post(f"{ecc2}/permissions", ecc2_api.ecc2_permissions_handler)
+
+    # Sprint 26.7 — Enterprise Navigation, Global Search & Workspace Federation
+    env = DEFAULT_CONFIG.enterprise_navigation_api_prefix
+    app.router.add_get(f"{env}/health", env_api.env_health_handler)
+    app.router.add_post(f"{env}/bootstrap", env_api.env_bootstrap_handler)
+    app.router.add_get(f"{env}/inventory", env_api.env_inventory_handler)
+    app.router.add_get(f"{env}/dashboard", env_api.env_dashboard_handler)
+    app.router.add_get(f"{env}/global", env_api.env_global_nav_handler)
+    app.router.add_get(f"{env}/workspaces", env_api.env_workspaces_handler)
+    app.router.add_post(f"{env}/workspaces/switch", env_api.env_switch_workspace_handler)
+    app.router.add_get(f"{env}/registry", env_api.env_registry_handler)
+    app.router.add_get(f"{env}/search", env_api.env_search_handler)
+    app.router.add_post(f"{env}/search", env_api.env_search_handler)
+    app.router.add_get(f"{env}/favorites", env_api.env_favorites_handler)
+    app.router.add_post(f"{env}/favorites", env_api.env_favorites_handler)
+    app.router.add_get(f"{env}/history", env_api.env_history_handler)
+    app.router.add_get(f"{env}/breadcrumbs", env_api.env_breadcrumbs_handler)
+    app.router.add_post(f"{env}/quick-switch", env_api.env_quick_switch_handler)
+    app.router.add_get(f"{env}/analytics", env_api.env_analytics_handler)
+    app.router.add_post(f"{env}/permissions", env_api.env_permissions_handler)

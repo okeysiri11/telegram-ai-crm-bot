@@ -5,6 +5,8 @@ let history: HistoryEntry[] = [
   { id: "h2", kind: "command", label: "Open AI Agent", path: "/workspace/dashboards/dash_ai", at: new Date(Date.now() - 60000).toISOString() },
   { id: "h3", kind: "search", label: "invoice", at: new Date(Date.now() - 120000).toISOString() },
   { id: "h4", kind: "document", label: "Security Policy", path: "/workspace/docs/security", at: new Date(Date.now() - 180000).toISOString() },
+  { id: "h5", kind: "report", label: "Weekly KPI", path: "/workspace/reports/weekly", at: new Date(Date.now() - 240000).toISOString() },
+  { id: "h6", kind: "ai_chat", label: "Ops Copilot", path: "/workspace/ai", at: new Date(Date.now() - 300000).toISOString() },
 ];
 
 export const navigationHistory = {
@@ -31,5 +33,11 @@ export const navigationHistory = {
   },
   recentDocuments() {
     return this.list("document").slice(0, 8);
+  },
+  recentReports() {
+    return this.list("report").slice(0, 8);
+  },
+  recentAiChats() {
+    return this.list("ai_chat").slice(0, 8);
   },
 };

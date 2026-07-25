@@ -55,7 +55,11 @@ export type SearchCategory =
   | "workflows"
   | "reports"
   | "tasks"
-  | "marketplace";
+  | "marketplace"
+  | "applications"
+  | "dashboards"
+  | "widgets"
+  | "knowledge";
 
 export type SearchDocument = {
   id: string;
@@ -75,6 +79,9 @@ export type FavoriteKind =
   | "page"
   | "dashboard"
   | "report"
+  | "customer"
+  | "project"
+  | "command"
   | "ai_agent"
   | "document"
   | "search";
@@ -86,7 +93,7 @@ export type FavoriteEntry = {
   path: string;
 };
 
-export type HistoryKind = "page" | "command" | "search" | "document";
+export type HistoryKind = "page" | "command" | "search" | "document" | "report" | "ai_chat";
 
 export type HistoryEntry = {
   id: string;
@@ -108,4 +115,34 @@ export type BreadcrumbPart = {
   label: string;
   path: string;
   level: "workspace" | "module" | "section" | "page" | "entity";
+};
+
+export type WorkspaceKind =
+  | "personal"
+  | "organization"
+  | "department"
+  | "project"
+  | "customer"
+  | "ai"
+  | "temporary";
+
+export type FederatedWorkspace = {
+  id: string;
+  kind: WorkspaceKind;
+  name: string;
+  route: string;
+};
+
+export type RegisteredApplication = {
+  id: string;
+  code: string;
+  icon: string;
+  name: string;
+  status: string;
+  owner: string;
+  permissions: string[];
+  version: string;
+  health: string;
+  lastUpdate: string;
+  route: string;
 };
