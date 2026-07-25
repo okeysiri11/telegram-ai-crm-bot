@@ -5,5 +5,5 @@ export { buildWorkspaceDashboard } from "./dashboard/workspaceDashboard";
 export { liveUpdates } from "./realtime/liveUpdates";
 export * from "./pages";
 
-export const WORKSPACE_VERSION = "9.2.0";
+export const WORKSPACE_VERSION = "9.3.0";
 export const WORKSPACE_PATH = "src/web/workspace";

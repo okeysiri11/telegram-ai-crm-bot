@@ -902,6 +902,18 @@ class EnterpriseHubStore:
         self.maos_memory: EntityStore = EntityStore()
         self.maos_executions: EntityStore = EntityStore()
         self.maos_orchestrations: EntityStore = EntityStore()
+        # Sprint 27.2 — Organization Brain
+        self.obr_bootstraps: EntityStore = EntityStore()
+        self.obr_inventory: EntityStore = EntityStore()
+        self.obr_dashboards: EntityStore = EntityStore()
+        self.obr_organization: EntityStore = EntityStore()
+        self.obr_board: EntityStore = EntityStore()
+        self.obr_departments: EntityStore = EntityStore()
+        self.obr_knowledge: EntityStore = EntityStore()
+        self.obr_integrations: EntityStore = EntityStore()
+        self.obr_orchestrations: EntityStore = EntityStore()
+        self.obr_decisions: EntityStore = EntityStore()
+        self.obr_meetings: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

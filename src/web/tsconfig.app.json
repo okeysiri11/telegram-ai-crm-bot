@@ -21,5 +21,5 @@
     "baseUrl": ".",
     "paths": { "@/*": ["src/*"] }
   },
-  "include": ["src", "design-system", "auth", "workspace", "navigation", "command-center", "release", "ai-os"]
+  "include": ["src", "design-system", "auth", "workspace", "navigation", "command-center", "release", "ai-os", "organization-brain"]
 }

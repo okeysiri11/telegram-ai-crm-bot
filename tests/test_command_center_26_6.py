@@ -1,4 +1,4 @@
-"""Tests — Enterprise Command Center & Productivity Platform (Sprint 26.6 / v9.2.0)."""
+"""Tests — Enterprise Command Center & Productivity Platform (Sprint 26.6 / v9.3.0)."""
 
 from __future__ import annotations
 
@@ -118,7 +118,7 @@ def reset_store():
 
 def test_version_command_center_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.2.0"
+    assert health["application_version"] == "9.3.0"
     assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
     assert health["enterprise_command_center_ready"] is True
     assert health["universal_command_palette_ready"] is True
@@ -146,8 +146,8 @@ def test_search_actions_ai_permissions_analytics():
     suite = enterprise_hub.command_center_platform
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["hub_version"] == "9.2.0"
-    assert boot["version"] == "9.2.0"
+    assert boot["hub_version"] == "9.3.0"
+    assert boot["version"] == "9.3.0"
     assert boot["command_center_ready"] is True
     assert boot["command_palette_ready"] is True
     assert boot["omnibox_ready"] is True
@@ -223,7 +223,7 @@ def test_search_actions_ai_permissions_analytics():
 async def test_api_enterprise_command(client):
     health = await client.get(f"{ECC2}/health")
     body = await health.json()
-    assert body["application_version"] == "9.2.0"
+    assert body["application_version"] == "9.3.0"
     assert body["command_center_ready"] is True
     assert body["omnibox_ready"] is True
 
@@ -271,7 +271,7 @@ async def test_api_enterprise_command(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.2.0"
+        assert version == "9.3.0"
 
 
 def test_docs_and_regression_26_6():
@@ -310,5 +310,5 @@ def test_docs_and_regression_26_6():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.2.0"' in manifest
-    assert "27.1" in manifest
+    assert '"application_version": "9.3.0"' in manifest
+    assert "27.2" in manifest

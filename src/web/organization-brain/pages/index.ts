@@ -1,0 +1,1 @@
+export { OrganizationBrainPage } from "./OrganizationBrainPage";

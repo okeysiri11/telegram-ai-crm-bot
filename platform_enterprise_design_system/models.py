@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 DESIGN_PATH = "src/web/design-system"
-VERSION = "9.2.0"
+VERSION = "9.3.0"
 
 TOKEN_GROUPS = (
     "colors",

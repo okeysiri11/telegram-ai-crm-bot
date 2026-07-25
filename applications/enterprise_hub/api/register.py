@@ -67,6 +67,7 @@ from applications.enterprise_hub.command_center_platform import api as ecc2_api
 from applications.enterprise_hub.navigation import api as env_api
 from applications.enterprise_hub.release_candidate import api as rc_api
 from applications.enterprise_hub.enterprise_ai_os import api as maos_api
+from applications.enterprise_hub.organization_brain import api as obr_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1187,3 +1188,20 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{maos}/memory-layers", maos_api.maos_memory_handler)
     app.router.add_post(f"{maos}/collaborate", maos_api.maos_collaborate_handler)
     app.router.add_get(f"{maos}/exec-dashboard", maos_api.maos_dashboard_handler)
+
+    # Sprint 27.2 — Enterprise Organization Brain
+    obr = DEFAULT_CONFIG.organization_brain_api_prefix
+    app.router.add_get(f"{obr}/health", obr_api.obr_health_handler)
+    app.router.add_post(f"{obr}/bootstrap", obr_api.obr_bootstrap_handler)
+    app.router.add_get(f"{obr}/inventory", obr_api.obr_inventory_handler)
+    app.router.add_get(f"{obr}/dashboard", obr_api.obr_dashboard_handler)
+    app.router.add_get(f"{obr}/organization", obr_api.obr_organization_handler)
+    app.router.add_get(f"{obr}/board", obr_api.obr_board_handler)
+    app.router.add_get(f"{obr}/departments", obr_api.obr_departments_handler)
+    app.router.add_post(f"{obr}/departments/orchestrate", obr_api.obr_orchestrate_handler)
+    app.router.add_post(f"{obr}/decisions", obr_api.obr_decisions_handler)
+    app.router.add_get(f"{obr}/meetings", obr_api.obr_meetings_handler)
+    app.router.add_post(f"{obr}/meetings", obr_api.obr_meetings_handler)
+    app.router.add_get(f"{obr}/knowledge", obr_api.obr_knowledge_handler)
+    app.router.add_post(f"{obr}/knowledge", obr_api.obr_knowledge_handler)
+    app.router.add_get(f"{obr}/exec-dashboard", obr_api.obr_dashboard_handler)

@@ -61,6 +61,7 @@ from applications.enterprise_hub.command_center_platform.facade import CommandCe
 from applications.enterprise_hub.navigation.facade import EnterpriseNavigationSuite
 from applications.enterprise_hub.release_candidate.facade import ReleaseCandidateSuite
 from applications.enterprise_hub.enterprise_ai_os.facade import EnterpriseAIOSSuite
+from applications.enterprise_hub.organization_brain.facade import OrganizationBrainSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -156,6 +157,7 @@ class EnterpriseHubApplication:
         enterprise_navigation_svc: EnterpriseNavigationSuite | None = None,
         release_candidate_svc: ReleaseCandidateSuite | None = None,
         enterprise_ai_os_svc: EnterpriseAIOSSuite | None = None,
+        organization_brain_svc: OrganizationBrainSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -234,6 +236,7 @@ class EnterpriseHubApplication:
         self.enterprise_navigation = enterprise_navigation_svc or EnterpriseNavigationSuite(self.store)
         self.release_candidate = release_candidate_svc or ReleaseCandidateSuite(self.store)
         self.enterprise_ai_os = enterprise_ai_os_svc or EnterpriseAIOSSuite(self.store)
+        self.organization_brain = organization_brain_svc or OrganizationBrainSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -698,6 +701,13 @@ class EnterpriseHubApplication:
             "ai_memory_manager_ready": True,
             "ai_collaboration_ready": True,
             "ai_executive_dashboard_ready": True,
+            "organization_brain_ready": True,
+            "executive_board_ready": True,
+            "department_orchestration_ready": True,
+            "decision_engine_ready": True,
+            "executive_meetings_ready": True,
+            "organization_knowledge_ready": True,
+            "org_executive_dashboard_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -772,6 +782,7 @@ class EnterpriseHubApplication:
                 "enterprise_navigation": self.config.enterprise_navigation,
                 "release_candidate": self.config.release_candidate,
                 "enterprise_ai_os": self.config.enterprise_ai_os,
+                "organization_brain": self.config.organization_brain,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -850,6 +861,7 @@ class EnterpriseHubApplication:
             "enterprise_navigation": self.enterprise_navigation.status(),
             "release_candidate": self.release_candidate.status(),
             "enterprise_ai_os": self.enterprise_ai_os.status(),
+            "organization_brain": self.organization_brain.status(),
         }
 
 

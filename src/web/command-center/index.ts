@@ -5,5 +5,5 @@ export { UniversalCommandPalette } from "./components/UniversalCommandPalette";
 export { Omnibox } from "./components/Omnibox";
 export { CommandCenterProvider, useCommandCenterUi } from "./components/CommandCenterProvider";
 export * from "./pages";
-export const COMMAND_CENTER_MODULE_VERSION = "9.2.0";
+export const COMMAND_CENTER_MODULE_VERSION = "9.3.0";
 export const COMMAND_CENTER_MODULE_PATH = "src/web/command-center";

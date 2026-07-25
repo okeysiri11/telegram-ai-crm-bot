@@ -35,6 +35,7 @@ import { NavigationDashboardPage } from "../navigation/pages";
 import { CommandCenterPage } from "../command-center/pages";
 import { ReleaseCandidatePage } from "../release/pages";
 import { AIOSPage } from "../ai-os/pages";
+import { OrganizationBrainPage } from "../organization-brain/pages";
 
 export function App() {
   return (
@@ -148,6 +149,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <AIOSPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/organization-brain"
+        element={
+          <ProtectedRoute>
+            <OrganizationBrainPage />
           </ProtectedRoute>
         }
       />

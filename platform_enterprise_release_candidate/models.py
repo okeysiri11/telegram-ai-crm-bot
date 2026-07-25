@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-VERSION = "9.2.0"
+VERSION = "9.3.0"
 API_PREFIX = "/api/release/v1"
 RELEASE_CODE = "RC1"
 SPRINT = "26.8"
