@@ -747,6 +747,15 @@ class EnterpriseHubStore:
         self.ees_marketplace: EntityStore = EntityStore()
         self.ees_installs: EntityStore = EntityStore()
         self.ees_permissions: EntityStore = EntityStore()
+        # Sprint 25.1 — Test Infrastructure
+        self.eti_bootstraps: EntityStore = EntityStore()
+        self.eti_tests: EntityStore = EntityStore()
+        self.eti_runs: EntityStore = EntityStore()
+        self.eti_reports: EntityStore = EntityStore()
+        self.eti_analytics: EntityStore = EntityStore()
+        self.eti_dashboards: EntityStore = EntityStore()
+        self.eti_coverage: EntityStore = EntityStore()
+        self.eti_data: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

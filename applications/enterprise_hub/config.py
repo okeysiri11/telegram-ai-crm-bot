@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 25.0 Enterprise Extension SDK & Marketplace Foundation."""
+"""Enterprise Hub — Sprint 25.1 Enterprise Test Infrastructure Foundation."""
 
 from __future__ import annotations
 
@@ -9,10 +9,10 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "8.0.0"
-    release_status: str = "Enterprise Extension SDK & Marketplace Foundation"
+    application_version: str = "8.1.0"
+    release_status: str = "Enterprise Test Infrastructure Foundation"
     platform_dependency: str = "AI Platform Core v3"
-    enterprise_foundation: str = "Enterprise Platform v7.9.0"
+    enterprise_foundation: str = "Enterprise Platform v8.0.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
     api_version: str = "v1"
     api_prefix: str = "/api/enterprise-hub/v1"
@@ -68,6 +68,7 @@ class EnterpriseHubConfig:
     learning_engine_api_prefix: str = "/api/enterprise-ele/v1"
     ai_provider_hub_api_prefix: str = "/api/enterprise-aph/v1"
     extension_sdk_api_prefix: str = "/api/enterprise-ees/v1"
+    test_infrastructure_api_prefix: str = "/api/enterprise-eti/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -126,6 +127,7 @@ class EnterpriseHubConfig:
     learning_engine: str = "1.0"
     ai_provider_hub: str = "1.0"
     extension_sdk: str = "1.0"
+    test_infrastructure: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

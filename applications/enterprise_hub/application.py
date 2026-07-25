@@ -45,6 +45,7 @@ from applications.enterprise_hub.strategy_intelligence.facade import StrategyInt
 from applications.enterprise_hub.learning_engine.facade import LearningEngineSuite
 from applications.enterprise_hub.ai_provider_hub.facade import AIProviderHubSuite
 from applications.enterprise_hub.extension_sdk.facade import ExtensionSDKSuite
+from applications.enterprise_hub.test_infrastructure.facade import TestInfrastructureSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -124,6 +125,7 @@ class EnterpriseHubApplication:
         learning_engine_svc: LearningEngineSuite | None = None,
         ai_provider_hub_svc: AIProviderHubSuite | None = None,
         extension_sdk_svc: ExtensionSDKSuite | None = None,
+        test_infrastructure_svc: TestInfrastructureSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -186,6 +188,7 @@ class EnterpriseHubApplication:
         self.learning_engine = learning_engine_svc or LearningEngineSuite(self.store)
         self.ai_provider_hub = ai_provider_hub_svc or AIProviderHubSuite(self.store)
         self.extension_sdk = extension_sdk_svc or ExtensionSDKSuite(self.store)
+        self.test_infrastructure = test_infrastructure_svc or TestInfrastructureSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -558,6 +561,10 @@ class EnterpriseHubApplication:
             "marketplace_foundation_ready": True,
             "extension_permissions_ready": True,
             "extension_lifecycle_ready": True,
+            "test_infrastructure_ready": True,
+            "test_registry_ready": True,
+            "test_runner_ready": True,
+            "test_dashboard_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -616,6 +623,7 @@ class EnterpriseHubApplication:
                 "learning_engine": self.config.learning_engine,
                 "ai_provider_hub": self.config.ai_provider_hub,
                 "extension_sdk": self.config.extension_sdk,
+                "test_infrastructure": self.config.test_infrastructure,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -678,6 +686,7 @@ class EnterpriseHubApplication:
             "learning_engine": self.learning_engine.status(),
             "ai_provider_hub": self.ai_provider_hub.status(),
             "extension_sdk": self.extension_sdk.status(),
+            "test_infrastructure": self.test_infrastructure.status(),
         }
 
 

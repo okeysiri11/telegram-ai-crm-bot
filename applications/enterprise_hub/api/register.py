@@ -51,6 +51,7 @@ from applications.enterprise_hub.strategy_intelligence import api as est_api
 from applications.enterprise_hub.learning_engine import api as ele_api
 from applications.enterprise_hub.ai_provider_hub import api as aph_api
 from applications.enterprise_hub.extension_sdk import api as ees_api
+from applications.enterprise_hub.test_infrastructure import api as eti_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -982,4 +983,21 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ees}/marketplace/list", ees_api.ees_marketplace_list_handler)
     app.router.add_get(f"{ees}/marketplace", ees_api.ees_marketplace_catalog_handler)
     app.router.add_post(f"{ees}/public-api", ees_api.ees_public_api_handler)
+
+    # Sprint 25.1 — Test Infrastructure (additive; EQA quality-assurance routes unchanged)
+    eti = DEFAULT_CONFIG.test_infrastructure_api_prefix
+    app.router.add_get(f"{eti}/health", eti_api.eti_health_handler)
+    app.router.add_post(f"{eti}/bootstrap", eti_api.eti_bootstrap_handler)
+    app.router.add_post(f"{eti}/register", eti_api.eti_register_handler)
+    app.router.add_get(f"{eti}/tests", eti_api.eti_tests_handler)
+    app.router.add_post(f"{eti}/run", eti_api.eti_run_handler)
+    app.router.add_post(f"{eti}/smoke", eti_api.eti_smoke_handler)
+    app.router.add_post(f"{eti}/integration", eti_api.eti_integration_handler)
+    app.router.add_post(f"{eti}/regression", eti_api.eti_regression_handler)
+    app.router.add_post(f"{eti}/contracts", eti_api.eti_contracts_handler)
+    app.router.add_post(f"{eti}/coverage", eti_api.eti_coverage_handler)
+    app.router.add_post(f"{eti}/data", eti_api.eti_data_handler)
+    app.router.add_post(f"{eti}/environment", eti_api.eti_env_handler)
+    app.router.add_get(f"{eti}/dashboard", eti_api.eti_dashboard_handler)
+    app.router.add_get(f"{eti}/analytics", eti_api.eti_analytics_handler)
 
