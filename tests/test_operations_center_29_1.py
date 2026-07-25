@@ -1,4 +1,4 @@
-"""Tests — Enterprise AI Operations Center (Sprint 29.2)."""
+"""Tests — Enterprise AI Operations Center (Sprint 29.3)."""
 
 from __future__ import annotations
 
@@ -43,8 +43,8 @@ def reset_store():
 
 def test_operations_center_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.9.0"
-    assert health["sprint"] == "29.2"
+    assert health["application_version"] == "1.10.0"
+    assert health["sprint"] == "29.3"
     assert health["operations_center_ready"] is True
     assert health["live_status_engine_ready"] is True
     assert health["visual_layer_ready"] is True
@@ -112,7 +112,7 @@ def test_dashboard_live_wait_create_flow():
 async def test_api_operations_center(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.9.0"
+    assert body["application_version"] == "1.10.0"
     assert body["operations_center_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/operations/catalog")
@@ -143,5 +143,5 @@ def test_docs_operations_center_29_1():
     for key in ("Live Status Engine", "Wait Experience Engine", "Does not execute business logic"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.9.0"' in manifest
-    assert "29.2" in manifest
+    assert '"application_version": "1.10.0"' in manifest
+    assert "29.3" in manifest

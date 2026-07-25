@@ -261,6 +261,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Live Organization Map with Visual Event Bus and relationship engine.",
     },
     {
+        "id": "visual_behavior",
+        "name": "Visual Behavior Engine",
+        "route": "/platform-builder/visual-behavior",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Event-bus-driven visual behaviors and animations — no business logic.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

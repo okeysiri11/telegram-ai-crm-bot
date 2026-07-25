@@ -1,4 +1,4 @@
-"""Tests — Platform Control Center (Sprint 29.2)."""
+"""Tests — Platform Control Center (Sprint 29.3)."""
 
 from __future__ import annotations
 
@@ -49,8 +49,8 @@ def reset_store():
 
 def test_platform_control_catalog_coverage():
     health = platform_builder.health()
-    assert health["application_version"] == "1.9.0"
-    assert health["sprint"] == "29.2"
+    assert health["application_version"] == "1.10.0"
+    assert health["sprint"] == "29.3"
     assert health["platform_control_center_ready"] is True
     assert health["control_center"]["owner_gated"] is True
 
@@ -101,7 +101,7 @@ def test_architecture_explorer_and_rollback():
 async def test_api_platform_control_endpoints(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.9.0"
+    assert body["application_version"] == "1.10.0"
     assert body["platform_control_center_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/god-mode/control/catalog", headers=OWNER)

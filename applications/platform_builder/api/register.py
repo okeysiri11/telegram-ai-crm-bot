@@ -329,3 +329,41 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/team-map/sessions/{{session_id}}/create",
         handlers.team_map_create_handler,
     )
+
+    # Sprint 29.3 — Visual Behavior Engine / Animation Framework
+    app.router.add_get(f"{prefix}/visual-behavior/catalog", handlers.vb_catalog_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/status", handlers.vb_status_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/overview", handlers.vb_overview_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/behaviors", handlers.vb_behaviors_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/transitions", handlers.vb_transitions_handler)
+    app.router.add_post(f"{prefix}/visual-behavior/transitions/run", handlers.vb_transition_run_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/animations", handlers.vb_animations_handler)
+    app.router.add_post(f"{prefix}/visual-behavior/animations/play", handlers.vb_play_animation_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/object-types", handlers.vb_object_types_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/objects", handlers.vb_objects_handler)
+    app.router.add_get(
+        f"{prefix}/visual-behavior/objects/{{logical_id}}",
+        handlers.vb_objects_handler,
+    )
+    app.router.add_post(f"{prefix}/visual-behavior/events/subscribe", handlers.vb_subscribe_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/events/poll", handlers.vb_poll_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/wait-experience", handlers.vb_wait_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/performance", handlers.vb_performance_handler)
+    app.router.add_get(f"{prefix}/visual-behavior/ai-city-apis", handlers.vb_city_apis_handler)
+    app.router.add_post(f"{prefix}/visual-behavior/sessions", handlers.vb_session_handler)
+    app.router.add_get(
+        f"{prefix}/visual-behavior/sessions/{{session_id}}",
+        handlers.vb_session_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/visual-behavior/sessions/{{session_id}}",
+        handlers.vb_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/visual-behavior/sessions/{{session_id}}/summary",
+        handlers.vb_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/visual-behavior/sessions/{{session_id}}/create",
+        handlers.vb_create_handler,
+    )

@@ -1277,3 +1277,171 @@ async def team_map_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.3 — Visual Behavior Engine / Animation Framework ---
+
+
+async def vb_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.visual_behavior.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.visual_behavior.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_overview_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.visual_behavior.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_behaviors_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.visual_behavior.list_behaviors())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_transitions_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.visual_behavior.transition_catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_transition_run_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        logical_id = body.get("logical_id") or request.match_info.get("logical_id")
+        to_behavior = body.get("to") or body.get("to_behavior")
+        if not logical_id or not to_behavior:
+            raise ValidationError("logical_id and to_behavior are required")
+        return json_response(platform_builder.visual_behavior.run_transition(logical_id, to_behavior))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_animations_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.visual_behavior.animation_framework())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_play_animation_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        animation = body.get("animation")
+        if not animation:
+            raise ValidationError("animation is required")
+        return json_response(
+            platform_builder.visual_behavior.play_animation(
+                animation, target_id=body.get("target_id")
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_object_types_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.visual_behavior.object_types())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_objects_handler(request: web.Request) -> web.Response:
+    try:
+        object_id = request.match_info.get("logical_id")
+        if object_id:
+            return json_response(platform_builder.visual_behavior.get_object(object_id))
+        return json_response(platform_builder.visual_behavior.list_objects())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_subscribe_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json() if request.can_read_body else {}
+        channels = body.get("channels") if isinstance(body, dict) else None
+        return json_response(platform_builder.visual_behavior.subscribe_events(channels), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_poll_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.visual_behavior.poll_events(request.rel_url.query.get("since"))
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_wait_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.visual_behavior.wait_experience(
+                request.rel_url.query.get("process_id")
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_performance_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.visual_behavior.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_city_apis_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.visual_behavior.ai_city_apis(request.rel_url.query.get("logical_id"))
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.visual_behavior.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.visual_behavior.update_session(session_id, body))
+        return json_response(platform_builder.visual_behavior.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.visual_behavior.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def vb_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.visual_behavior.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

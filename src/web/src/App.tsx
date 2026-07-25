@@ -50,6 +50,7 @@ import {
   TeamMapPage,
   UniversalFrameworkPage,
   VerticalBuilderPage,
+  VisualBehaviorPage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -244,6 +245,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <TeamMapPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/visual-behavior"
+        element={
+          <ProtectedRoute>
+            <VisualBehaviorPage />
           </ProtectedRoute>
         }
       />

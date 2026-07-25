@@ -5,6 +5,7 @@ export { AITeamCenterPage } from "../ai-team/AITeamCenterPage";
 export { CollaborativeAIPage } from "./CollaborativeAIPage";
 export { OperationsCenterPage } from "./OperationsCenterPage";
 export { TeamMapPage } from "./TeamMapPage";
+export { VisualBehaviorPage } from "./VisualBehaviorPage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
 export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";
