@@ -30,3 +30,28 @@ def register_platform_builder_routes(app: web.Application) -> None:
     app.router.add_get(f"{prefix}/roles", handlers.roles_handler)
     app.router.add_get(f"{prefix}/god-mode", handlers.god_mode_handler)
     app.router.add_post(f"{prefix}/god-mode/action", handlers.god_mode_action_handler)
+
+    # Sprint 28.2 — Enterprise AI Builder
+    app.router.add_get(f"{prefix}/ai-builder/catalog", handlers.ai_catalog_handler)
+    app.router.add_post(f"{prefix}/ai-builder/sessions", handlers.ai_session_handler)
+    app.router.add_get(f"{prefix}/ai-builder/sessions/{{session_id}}", handlers.ai_session_handler)
+    app.router.add_patch(f"{prefix}/ai-builder/sessions/{{session_id}}", handlers.ai_session_handler)
+    app.router.add_get(f"{prefix}/ai-builder/names", handlers.ai_names_handler)
+    app.router.add_get(
+        f"{prefix}/ai-builder/specializations/{{profession_id}}",
+        handlers.ai_specializations_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/ai-builder/personality-preview",
+        handlers.ai_personality_preview_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/ai-builder/sessions/{{session_id}}/summary",
+        handlers.ai_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/ai-builder/sessions/{{session_id}}/create",
+        handlers.ai_create_handler,
+    )
+    app.router.add_get(f"{prefix}/ai-builder/registry", handlers.ai_registry_handler)
+    app.router.add_get(f"{prefix}/ai-builder/group-chat", handlers.ai_group_chat_handler)

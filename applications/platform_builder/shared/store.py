@@ -36,6 +36,10 @@ class PlatformBuilderStore:
         self.academy_sessions: EntityStore = EntityStore()
         self.god_actions: EntityStore = EntityStore()
         self.versions: EntityStore = EntityStore()
+        # Sprint 28.2 — AI Builder
+        self.ai_sessions: EntityStore = EntityStore()
+        self.ai_registry: EntityStore = EntityStore()
+        self.group_chat_sessions: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

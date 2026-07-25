@@ -163,3 +163,91 @@ async def god_mode_action_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+async def ai_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.ai_builder.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.ai_builder.start_session(
+                    agent_count=body.get("agent_count", 1),
+                    custom_count=body.get("custom_count"),
+                ),
+                status=201,
+            )
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.ai_builder.update_session(session_id, body))
+        return json_response(platform_builder.ai_builder.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_names_handler(request: web.Request) -> web.Response:
+    try:
+        gender = request.rel_url.query.get("gender") or "neutral"
+        return json_response(platform_builder.ai_builder.suggest_names(gender))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_specializations_handler(request: web.Request) -> web.Response:
+    try:
+        profession_id = request.match_info["profession_id"]
+        return json_response(platform_builder.ai_builder.specializations(profession_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_personality_preview_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        return json_response(
+            platform_builder.ai_builder.personality_preview(
+                body.get("personality") or {},
+                name=body.get("name") or "Alex",
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_summary_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.ai_builder.summary(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_create_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.ai_builder.create(session_id), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_registry_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.ai_builder.registry.list_agents())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_group_chat_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.ai_builder.registry.group_chat_foundation())
+    except Exception as exc:
+        return _handle_error(exc)

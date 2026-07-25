@@ -15,14 +15,14 @@ FRAMEWORK_PHASES = (
 
 AI_BUILDER_STEPS = (
     "Number of AI Agents",
-    "Agent Names",
+    "AI Agent Name",
     "Profession",
     "Specialization",
     "Knowledge",
     "Skills",
     "Permissions",
     "Personality",
-    "Preview",
+    "Summary",
     "Create",
 )
 
@@ -72,9 +72,9 @@ BUILDERS: list[dict[str, Any]] = [
         "name": "AI Builder",
         "route": "/platform-builder/ai",
         "kind": "builder",
-        "status": "frame",
+        "status": "operational",
         "learning_supported": True,
-        "frame_only": True,
+        "frame_only": False,
         "steps": list(AI_BUILDER_STEPS),
         "purpose": "Compose AI agent teams with clear roles and personalities.",
     },

@@ -1,14 +1,15 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.0.0",
-  "sprint": "28.1",
-  "release_status": "Platform Builder Core",
+  "application_version": "1.1.0",
+  "sprint": "28.2",
+  "release_status": "Enterprise AI Builder",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "1.0",
   "god_mode": "1.0",
   "help_system": "1.0",
+  "ai_builder": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }

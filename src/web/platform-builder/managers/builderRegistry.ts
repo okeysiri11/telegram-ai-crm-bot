@@ -8,7 +8,7 @@ import {
 export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "dashboard", name: "Dashboard", route: "/platform-builder", kind: "hub", status: "operational" },
   { id: "vertical", name: "Vertical Builder", route: "/platform-builder/vertical", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true, purpose: "Prepare industry vertical blueprints for future activation." },
-  { id: "ai", name: "AI Builder", route: "/platform-builder/ai", kind: "builder", status: "frame", steps: AI_BUILDER_STEPS, frameOnly: true, purpose: "Compose AI agent teams with clear roles and personalities." },
+  { id: "ai", name: "AI Builder", route: "/platform-builder/ai", kind: "builder", status: "operational", steps: AI_BUILDER_STEPS, frameOnly: false, purpose: "Compose AI agent teams with clear roles and personalities." },
   { id: "concierge", name: "Concierge Builder", route: "/platform-builder/concierge", kind: "builder", status: "frame", steps: CONCIERGE_STEPS, frameOnly: true, purpose: "Configure the single organizational Concierge assistant.", constraints: { onePerOrganization: true, separateFromAiAgents: true } },
   { id: "crm", name: "CRM Builder", route: "/platform-builder/crm", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "erp", name: "ERP Builder", route: "/platform-builder/erp", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },

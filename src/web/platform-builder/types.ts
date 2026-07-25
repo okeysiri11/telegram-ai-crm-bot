@@ -1,5 +1,5 @@
-export const PLATFORM_BUILDER_VERSION = "1.0.0";
-export const PLATFORM_BUILDER_SPRINT = "28.1";
+export const PLATFORM_BUILDER_VERSION = "1.1.0";
+export const PLATFORM_BUILDER_SPRINT = "28.2";
 export const PLATFORM_BUILDER_API = "/api/platform-builder/v1";
 
 export const FRAMEWORK_PHASES = [
@@ -13,14 +13,14 @@ export const FRAMEWORK_PHASES = [
 
 export const AI_BUILDER_STEPS = [
   "Number of AI Agents",
-  "Agent Names",
+  "AI Agent Name",
   "Profession",
   "Specialization",
   "Knowledge",
   "Skills",
   "Permissions",
   "Personality",
-  "Preview",
+  "Summary",
   "Create",
 ] as const;
 
