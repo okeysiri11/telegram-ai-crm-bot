@@ -53,6 +53,7 @@ from applications.enterprise_hub.ai_provider_hub import api as aph_api
 from applications.enterprise_hub.extension_sdk import api as ees_api
 from applications.enterprise_hub.test_infrastructure import api as eti_api
 from applications.enterprise_hub.performance_testing import api as epl_api
+from applications.enterprise_hub.chaos_engineering import api as ece_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1017,4 +1018,19 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{epl}/monitor", epl_api.epl_monitor_handler)
     app.router.add_post(f"{epl}/analyze", epl_api.epl_analyze_handler)
     app.router.add_get(f"{epl}/dashboard", epl_api.epl_dashboard_handler)
+
+    # Sprint 25.3 — Chaos Engineering (additive)
+    ece = DEFAULT_CONFIG.chaos_engineering_api_prefix
+    app.router.add_get(f"{ece}/health", ece_api.ece_health_handler)
+    app.router.add_post(f"{ece}/bootstrap", ece_api.ece_bootstrap_handler)
+    app.router.add_post(f"{ece}/scenario", ece_api.ece_scenario_handler)
+    app.router.add_get(f"{ece}/scenarios", ece_api.ece_scenarios_handler)
+    app.router.add_post(f"{ece}/run", ece_api.ece_run_handler)
+    app.router.add_post(f"{ece}/circuit", ece_api.ece_circuit_handler)
+    app.router.add_post(f"{ece}/retry", ece_api.ece_retry_handler)
+    app.router.add_post(f"{ece}/fallback", ece_api.ece_fallback_handler)
+    app.router.add_post(f"{ece}/health-monitor", ece_api.ece_health_monitor_handler)
+    app.router.add_post(f"{ece}/dependencies", ece_api.ece_dependencies_handler)
+    app.router.add_get(f"{ece}/incidents", ece_api.ece_incidents_handler)
+    app.router.add_get(f"{ece}/dashboard", ece_api.ece_dashboard_handler)
 

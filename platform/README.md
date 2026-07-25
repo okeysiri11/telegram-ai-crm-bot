@@ -35,3 +35,4 @@ Import paths avoid Python stdlib/`platform` collisions.
 - Extension SDK: [`../platform_enterprise_extension_sdk/`](../platform_enterprise_extension_sdk/)
 - Testing: [`../platform_testing/`](../platform_testing/)
 - Performance Testing (v8 load gate): [`../platform_enterprise_performance_testing/`](../platform_enterprise_performance_testing/)
+- Chaos Engineering: [`../platform_chaos/`](../platform_chaos/)

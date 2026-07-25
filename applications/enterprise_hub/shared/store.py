@@ -767,6 +767,18 @@ class EnterpriseHubStore:
         self.epl_bottlenecks: EntityStore = EntityStore()
         self.epl_advice: EntityStore = EntityStore()
         self.epl_dashboards: EntityStore = EntityStore()
+        # Sprint 25.3 — Chaos Engineering
+        self.ece_bootstraps: EntityStore = EntityStore()
+        self.ece_scenarios: EntityStore = EntityStore()
+        self.ece_injections: EntityStore = EntityStore()
+        self.ece_recoveries: EntityStore = EntityStore()
+        self.ece_circuits: EntityStore = EntityStore()
+        self.ece_retries: EntityStore = EntityStore()
+        self.ece_fallbacks: EntityStore = EntityStore()
+        self.ece_runs: EntityStore = EntityStore()
+        self.ece_incidents: EntityStore = EntityStore()
+        self.ece_reports: EntityStore = EntityStore()
+        self.ece_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

@@ -47,6 +47,7 @@ from applications.enterprise_hub.ai_provider_hub.facade import AIProviderHubSuit
 from applications.enterprise_hub.extension_sdk.facade import ExtensionSDKSuite
 from applications.enterprise_hub.test_infrastructure.facade import TestInfrastructureSuite
 from applications.enterprise_hub.performance_testing.facade import PerformanceTestingSuite
+from applications.enterprise_hub.chaos_engineering.facade import ChaosEngineeringSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -128,6 +129,7 @@ class EnterpriseHubApplication:
         extension_sdk_svc: ExtensionSDKSuite | None = None,
         test_infrastructure_svc: TestInfrastructureSuite | None = None,
         performance_testing_svc: PerformanceTestingSuite | None = None,
+        chaos_engineering_svc: ChaosEngineeringSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -192,6 +194,7 @@ class EnterpriseHubApplication:
         self.extension_sdk = extension_sdk_svc or ExtensionSDKSuite(self.store)
         self.test_infrastructure = test_infrastructure_svc or TestInfrastructureSuite(self.store)
         self.performance_testing = performance_testing_svc or PerformanceTestingSuite(self.store)
+        self.chaos_engineering = chaos_engineering_svc or ChaosEngineeringSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -572,6 +575,10 @@ class EnterpriseHubApplication:
             "load_testing_ready": True,
             "stress_testing_ready": True,
             "bottleneck_advisor_ready": True,
+            "chaos_engineering_ready": True,
+            "failure_injection_ready": True,
+            "recovery_engine_ready": True,
+            "circuit_breaker_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -632,6 +639,7 @@ class EnterpriseHubApplication:
                 "extension_sdk": self.config.extension_sdk,
                 "test_infrastructure": self.config.test_infrastructure,
                 "performance_testing": self.config.performance_testing,
+                "chaos_engineering": self.config.chaos_engineering,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -696,6 +704,7 @@ class EnterpriseHubApplication:
             "extension_sdk": self.extension_sdk.status(),
             "test_infrastructure": self.test_infrastructure.status(),
             "performance_testing": self.performance_testing.status(),
+            "chaos_engineering": self.chaos_engineering.status(),
         }
 
 
