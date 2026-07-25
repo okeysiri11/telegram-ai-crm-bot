@@ -166,3 +166,43 @@ def register_platform_builder_routes(app: web.Application) -> None:
     app.router.add_get(f"{prefix}/academy/v2/learning", handlers.academy_v2_learning_handler)
     app.router.add_get(f"{prefix}/academy/v2/progress", handlers.academy_v2_progress_handler)
 
+
+    # Sprint 28.7 — God Mode Expansion / Platform Control Center
+    app.router.add_get(f"{prefix}/god-mode/control/catalog", handlers.control_catalog_handler)
+    app.router.add_get(f"{prefix}/god-mode/control/status", handlers.control_status_handler)
+    app.router.add_get(f"{prefix}/god-mode/control/overview", handlers.control_overview_handler)
+    app.router.add_get(f"{prefix}/god-mode/control/search", handlers.control_search_handler)
+    app.router.add_get(
+        f"{prefix}/god-mode/control/objects/{{object_id}}",
+        handlers.control_inspect_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/god-mode/control/objects/{{object_id}}",
+        handlers.control_edit_handler,
+    )
+    app.router.add_get(f"{prefix}/god-mode/control/registries", handlers.control_registries_handler)
+    app.router.add_post(f"{prefix}/god-mode/control/registries", handlers.control_registries_handler)
+    app.router.add_get(f"{prefix}/god-mode/control/health", handlers.control_health_handler)
+    app.router.add_get(f"{prefix}/god-mode/control/diagnostics", handlers.control_diagnostics_handler)
+    app.router.add_get(f"{prefix}/god-mode/control/architecture", handlers.control_architecture_handler)
+    app.router.add_get(f"{prefix}/god-mode/control/audit", handlers.control_audit_handler)
+    app.router.add_post(f"{prefix}/god-mode/control/rollback", handlers.control_rollback_handler)
+    app.router.add_get(f"{prefix}/god-mode/control/explain", handlers.control_explain_handler)
+    app.router.add_post(f"{prefix}/god-mode/control/explain", handlers.control_explain_handler)
+    app.router.add_post(f"{prefix}/god-mode/control/sessions", handlers.control_session_handler)
+    app.router.add_get(
+        f"{prefix}/god-mode/control/sessions/{{session_id}}",
+        handlers.control_session_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/god-mode/control/sessions/{{session_id}}",
+        handlers.control_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/god-mode/control/sessions/{{session_id}}/summary",
+        handlers.control_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/god-mode/control/sessions/{{session_id}}/create",
+        handlers.control_create_handler,
+    )

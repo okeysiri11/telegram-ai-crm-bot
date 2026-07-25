@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 28.6."""
+"""Platform Builder application facade — Sprint 28.7."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from typing import Any
 
 from applications.platform_builder.academy import BuilderAcademy
 from applications.platform_builder.academy_v2.engine import AcademyV2
+from applications.platform_builder.control_center.control_center import PlatformControlCenter
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -46,6 +47,7 @@ class PlatformBuilderApplication:
         vertical: VerticalWizard | None = None,
         ubf: UniversalBuilderFramework | None = None,
         academy_v2: AcademyV2 | None = None,
+        control_center: PlatformControlCenter | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -58,6 +60,7 @@ class PlatformBuilderApplication:
         self.vertical = vertical or VerticalWizard(self.store)
         self.ubf = ubf or UniversalBuilderFramework(self.store)
         self.academy_v2 = academy_v2 or AcademyV2(self.store)
+        self.control_center = control_center or PlatformControlCenter(self.store, self.god_mode)
 
     def reset(self) -> None:
         self.store.reset()
@@ -70,6 +73,7 @@ class PlatformBuilderApplication:
         self.vertical = VerticalWizard(self.store)
         self.ubf = UniversalBuilderFramework(self.store)
         self.academy_v2 = AcademyV2(self.store)
+        self.control_center = PlatformControlCenter(self.store, self.god_mode)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -109,6 +113,12 @@ class PlatformBuilderApplication:
             "interactive_learning_ready": True,
             "recommendation_engine_ready": True,
             "progress_tracking_ready": True,
+            "god_mode_expansion_ready": True,
+            "platform_control_center_ready": True,
+            "architecture_explorer_ready": True,
+            "audit_center_ready": True,
+            "platform_diagnostics_ready": True,
+            "system_health_center_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -173,6 +183,12 @@ class PlatformBuilderApplication:
             "recommendation_engine_ready": True,
             "progress_tracking_ready": True,
             "live_builder_analysis_ready": True,
+            "god_mode_expansion_ready": True,
+            "platform_control_center_ready": True,
+            "architecture_explorer_ready": True,
+            "audit_center_ready": True,
+            "platform_diagnostics_ready": True,
+            "system_health_center_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -185,6 +201,7 @@ class PlatformBuilderApplication:
                 "universal_builder_framework": self.config.universal_builder_framework,
                 "builder_sdk": self.config.builder_sdk,
                 "ai_guide": self.config.ai_guide,
+                "platform_control_center": self.config.platform_control_center,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -192,6 +209,12 @@ class PlatformBuilderApplication:
             "vertical": self.vertical.status(),
             "ubf": self.ubf.status(),
             "academy_v2": self.academy_v2.status(),
+            "control_center": {
+                "status": "online",
+                "owner_gated": True,
+                "version": self.config.god_mode,
+                "sprint": self.config.sprint,
+            },
         }
 
     def inventory(self) -> dict[str, Any]:

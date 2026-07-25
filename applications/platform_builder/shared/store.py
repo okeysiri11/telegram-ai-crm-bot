@@ -67,6 +67,14 @@ class PlatformBuilderStore:
         self.builder_extensions: EntityStore = EntityStore()
         self.builder_components: EntityStore = EntityStore()
         self.builder_schemas: EntityStore = EntityStore()
+        # Sprint 28.7 — God Mode / Control Center
+        self.god_control_sessions: EntityStore = EntityStore()
+        self.god_object_edits: EntityStore = EntityStore()
+        self.god_registry_ops: EntityStore = EntityStore()
+        self.god_diagnostics: EntityStore = EntityStore()
+        self.god_audit: EntityStore = EntityStore()
+        self.god_architecture: EntityStore = EntityStore()
+        self.god_health: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

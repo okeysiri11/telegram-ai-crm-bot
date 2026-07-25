@@ -17,3 +17,21 @@ export const GOD_CAPABILITIES = [
   "version_history",
   "rollback_manager",
 ] as const;
+
+export const CONTROL_CENTER_SURFACES = [
+  "platform_control_center",
+  "global_search",
+  "object_inspector",
+  "live_object_editor",
+  "global_registry",
+  "system_health",
+  "platform_diagnostics",
+  "architecture_explorer",
+  "audit_center",
+  "explain_mode",
+] as const;
+
+export const OWNER_HEADERS = {
+  "Content-Type": "application/json",
+  "X-Platform-Role": "platform_owner",
+} as const;

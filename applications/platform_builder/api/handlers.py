@@ -673,3 +673,165 @@ async def academy_v2_progress_handler(request: web.Request) -> web.Response:
         return json_response(platform_builder.academy_v2.progress.snapshot(user_id))
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 28.7 — God Mode / Platform Control Center ---
+
+
+async def control_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.control_center.catalog(_role(request)))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.control_center.status(_role(request)))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_overview_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.control_center.overview(_role(request)))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_search_handler(request: web.Request) -> web.Response:
+    try:
+        q = request.rel_url.query.get("q") or request.rel_url.query.get("query") or ""
+        scope = request.rel_url.query.get("scope")
+        return json_response(platform_builder.control_center.search(_role(request), q, scope))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_inspect_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.control_center.inspect(_role(request), request.match_info["object_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_edit_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        return json_response(
+            platform_builder.control_center.edit(
+                _role(request),
+                request.match_info["object_id"],
+                body.get("patch") or body,
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_registries_handler(request: web.Request) -> web.Response:
+    try:
+        action = request.rel_url.query.get("action")
+        query = request.rel_url.query.get("q") or request.rel_url.query.get("query")
+        if request.method == "POST":
+            body = await request.json()
+            action = body.get("action") or action
+            query = body.get("query") or query
+        return json_response(
+            platform_builder.control_center.registries(
+                _role(request), action=action, query=query
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_health_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.control_center.health(_role(request)))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_diagnostics_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.control_center.diagnostics(_role(request)))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_architecture_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.control_center.architecture(_role(request)))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_audit_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.control_center.audit_center(_role(request)))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_rollback_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        version_id = body.get("version_id") or request.match_info.get("version_id") or "latest"
+        return json_response(platform_builder.control_center.rollback(_role(request), version_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_explain_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json() if request.method == "POST" else {}
+        recommendation = (
+            body.get("recommendation")
+            or request.rel_url.query.get("recommendation")
+            or "Synchronize registries"
+        )
+        return json_response(platform_builder.control_center.explain(_role(request), recommendation))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(
+                platform_builder.control_center.start_session(_role(request)),
+                status=201,
+            )
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(
+                platform_builder.control_center.update_session(_role(request), session_id, body)
+            )
+        return json_response(platform_builder.control_center.get_session(_role(request), session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.control_center.summary(_role(request), request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def control_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.control_center.create(_role(request), request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
