@@ -48,6 +48,7 @@ from applications.enterprise_hub.extension_sdk.facade import ExtensionSDKSuite
 from applications.enterprise_hub.test_infrastructure.facade import TestInfrastructureSuite
 from applications.enterprise_hub.performance_testing.facade import PerformanceTestingSuite
 from applications.enterprise_hub.chaos_engineering.facade import ChaosEngineeringSuite
+from applications.enterprise_hub.migration.facade import MigrationSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -130,6 +131,7 @@ class EnterpriseHubApplication:
         test_infrastructure_svc: TestInfrastructureSuite | None = None,
         performance_testing_svc: PerformanceTestingSuite | None = None,
         chaos_engineering_svc: ChaosEngineeringSuite | None = None,
+        migration_svc: MigrationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -195,6 +197,7 @@ class EnterpriseHubApplication:
         self.test_infrastructure = test_infrastructure_svc or TestInfrastructureSuite(self.store)
         self.performance_testing = performance_testing_svc or PerformanceTestingSuite(self.store)
         self.chaos_engineering = chaos_engineering_svc or ChaosEngineeringSuite(self.store)
+        self.migration = migration_svc or MigrationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -579,6 +582,10 @@ class EnterpriseHubApplication:
             "failure_injection_ready": True,
             "recovery_engine_ready": True,
             "circuit_breaker_ready": True,
+            "migration_platform_ready": True,
+            "backup_manager_ready": True,
+            "rollback_ready": True,
+            "disaster_recovery_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -640,6 +647,7 @@ class EnterpriseHubApplication:
                 "test_infrastructure": self.config.test_infrastructure,
                 "performance_testing": self.config.performance_testing,
                 "chaos_engineering": self.config.chaos_engineering,
+                "migration": self.config.migration,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -705,6 +713,7 @@ class EnterpriseHubApplication:
             "test_infrastructure": self.test_infrastructure.status(),
             "performance_testing": self.performance_testing.status(),
             "chaos_engineering": self.chaos_engineering.status(),
+            "migration": self.migration.status(),
         }
 
 

@@ -54,6 +54,7 @@ from applications.enterprise_hub.extension_sdk import api as ees_api
 from applications.enterprise_hub.test_infrastructure import api as eti_api
 from applications.enterprise_hub.performance_testing import api as epl_api
 from applications.enterprise_hub.chaos_engineering import api as ece_api
+from applications.enterprise_hub.migration import api as emr_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1033,4 +1034,19 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ece}/dependencies", ece_api.ece_dependencies_handler)
     app.router.add_get(f"{ece}/incidents", ece_api.ece_incidents_handler)
     app.router.add_get(f"{ece}/dashboard", ece_api.ece_dashboard_handler)
+
+    # Sprint 25.4 — Migration & Disaster Recovery (additive)
+    emr = DEFAULT_CONFIG.migration_api_prefix
+    app.router.add_get(f"{emr}/health", emr_api.emr_health_handler)
+    app.router.add_post(f"{emr}/bootstrap", emr_api.emr_bootstrap_handler)
+    app.router.add_post(f"{emr}/migration", emr_api.emr_migration_handler)
+    app.router.add_get(f"{emr}/migrations", emr_api.emr_migrations_handler)
+    app.router.add_post(f"{emr}/run", emr_api.emr_run_handler)
+    app.router.add_post(f"{emr}/backup", emr_api.emr_backup_handler)
+    app.router.add_post(f"{emr}/restore", emr_api.emr_restore_handler)
+    app.router.add_post(f"{emr}/rollback", emr_api.emr_rollback_handler)
+    app.router.add_post(f"{emr}/validate", emr_api.emr_validate_handler)
+    app.router.add_post(f"{emr}/disaster", emr_api.emr_disaster_handler)
+    app.router.add_get(f"{emr}/versions", emr_api.emr_versions_handler)
+    app.router.add_get(f"{emr}/dashboard", emr_api.emr_dashboard_handler)
 

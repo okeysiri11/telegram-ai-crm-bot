@@ -779,6 +779,20 @@ class EnterpriseHubStore:
         self.ece_incidents: EntityStore = EntityStore()
         self.ece_reports: EntityStore = EntityStore()
         self.ece_dashboards: EntityStore = EntityStore()
+        # Sprint 25.4 — Migration & Disaster Recovery
+        self.emr_bootstraps: EntityStore = EntityStore()
+        self.emr_migrations: EntityStore = EntityStore()
+        self.emr_backups: EntityStore = EntityStore()
+        self.emr_schemas: EntityStore = EntityStore()
+        self.emr_data: EntityStore = EntityStore()
+        self.emr_versions: EntityStore = EntityStore()
+        self.emr_validations: EntityStore = EntityStore()
+        self.emr_disaster: EntityStore = EntityStore()
+        self.emr_runs: EntityStore = EntityStore()
+        self.emr_restores: EntityStore = EntityStore()
+        self.emr_rollbacks: EntityStore = EntityStore()
+        self.emr_reports: EntityStore = EntityStore()
+        self.emr_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
