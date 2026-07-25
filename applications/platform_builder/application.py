@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 28.8."""
+"""Platform Builder application facade — Sprint 29.1."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from applications.platform_builder.academy import BuilderAcademy
 from applications.platform_builder.academy_v2.engine import AcademyV2
 from applications.platform_builder.control_center.control_center import PlatformControlCenter
 from applications.platform_builder.collaborative_ai.engine import CollaborativeAIEngine
+from applications.platform_builder.operations_center.engine import OperationsCenter
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -50,6 +51,7 @@ class PlatformBuilderApplication:
         academy_v2: AcademyV2 | None = None,
         control_center: PlatformControlCenter | None = None,
         collaborative_ai: CollaborativeAIEngine | None = None,
+        operations_center: OperationsCenter | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -64,6 +66,7 @@ class PlatformBuilderApplication:
         self.academy_v2 = academy_v2 or AcademyV2(self.store)
         self.control_center = control_center or PlatformControlCenter(self.store, self.god_mode)
         self.collaborative_ai = collaborative_ai or CollaborativeAIEngine(self.store)
+        self.operations_center = operations_center or OperationsCenter(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -78,6 +81,7 @@ class PlatformBuilderApplication:
         self.academy_v2 = AcademyV2(self.store)
         self.control_center = PlatformControlCenter(self.store, self.god_mode)
         self.collaborative_ai = CollaborativeAIEngine(self.store)
+        self.operations_center = OperationsCenter(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -128,6 +132,10 @@ class PlatformBuilderApplication:
             "decision_engine_ready": True,
             "knowledge_exchange_ready": True,
             "ai_ops_foundation_ready": True,
+            "operations_center_ready": True,
+            "live_status_engine_ready": True,
+            "visual_layer_ready": True,
+            "status_dashboard_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -138,6 +146,7 @@ class PlatformBuilderApplication:
             "concierge_page_exists": (web / "pages" / "ConciergeBuilderPage.tsx").exists(),
             "vertical_page_exists": (web / "pages" / "VerticalBuilderPage.tsx").exists(),
             "collaborative_page_exists": (web / "pages" / "CollaborativeAIPage.tsx").exists(),
+            "operations_page_exists": (web / "pages" / "OperationsCenterPage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -204,6 +213,9 @@ class PlatformBuilderApplication:
             "decision_engine_ready": True,
             "knowledge_exchange_ready": True,
             "ai_ops_foundation_ready": True,
+            "operations_center_ready": True,
+            "live_status_engine_ready": True,
+            "status_dashboard_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -219,6 +231,9 @@ class PlatformBuilderApplication:
                 "platform_control_center": self.config.platform_control_center,
                 "collaborative_ai": self.config.collaborative_ai,
                 "collective_intelligence": self.config.collective_intelligence,
+                "operations_center": self.config.operations_center,
+                "visual_layer": self.config.visual_layer,
+                "live_status_engine": self.config.live_status_engine,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -233,6 +248,7 @@ class PlatformBuilderApplication:
                 "sprint": self.config.sprint,
             },
             "collaborative_ai": self.collaborative_ai.status(),
+            "operations_center": self.operations_center.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

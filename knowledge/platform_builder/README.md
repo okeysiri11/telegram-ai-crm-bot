@@ -1,13 +1,13 @@
 # Platform Builder
 
-Sprint 28.1–28.8 — Platform Builder Core through Collaborative AI (v1.7.0).
+Sprint 28.1–29.1 — Platform Builder Core through AI Operations Center (v1.8.0).
 
 Visual operating system for building verticals, AI, Concierge, CRM/ERP, workflows, knowledge, automation, dashboards, templates, and marketplace assets.
 
 - API: `/api/platform-builder/v1`
 - App: `applications/platform_builder/`
 - Web: `src/web/platform-builder/`
-- Docs: `docs/PLATFORM_BUILDER_CORE.md` · `docs/GOD_MODE.md` · `docs/COLLABORATIVE_AI.md`
+- Docs: `docs/PLATFORM_BUILDER_CORE.md` · `docs/GOD_MODE.md` · `docs/COLLABORATIVE_AI.md · docs/AI_OPERATIONS_CENTER.md`
 
 ## Roles
 

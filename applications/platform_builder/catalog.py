@@ -241,6 +241,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Coordinate AI Specialists via Concierge for collective intelligence.",
     },
     {
+        "id": "operations_center",
+        "name": "AI Operations Center",
+        "route": "/platform-builder/operations",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Real-time visual control room for the AI Organization.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

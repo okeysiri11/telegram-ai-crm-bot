@@ -3,6 +3,7 @@ export { AIBuilderPage } from "./AIBuilderPage";
 export { ConciergeBuilderPage } from "./ConciergeBuilderPage";
 export { AITeamCenterPage } from "../ai-team/AITeamCenterPage";
 export { CollaborativeAIPage } from "./CollaborativeAIPage";
+export { OperationsCenterPage } from "./OperationsCenterPage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
 export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";

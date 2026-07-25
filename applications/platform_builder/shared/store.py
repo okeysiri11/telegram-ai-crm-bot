@@ -81,6 +81,11 @@ class PlatformBuilderStore:
         self.collaborative_decisions: EntityStore = EntityStore()
         self.collaborative_knowledge: EntityStore = EntityStore()
         self.collab_wizard_sessions: EntityStore = EntityStore()
+        # Sprint 29.1 — AI Operations Center
+        self.ops_wizard_sessions: EntityStore = EntityStore()
+        self.ops_centers: EntityStore = EntityStore()
+        self.ops_visual_layers: EntityStore = EntityStore()
+        self.ops_status_engines: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

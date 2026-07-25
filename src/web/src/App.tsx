@@ -45,6 +45,7 @@ import {
   ConciergeBuilderPage,
   FrameBuilderPage,
   GodModePage,
+  OperationsCenterPage,
   PlatformBuilderDashboard,
   UniversalFrameworkPage,
   VerticalBuilderPage,
@@ -226,6 +227,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <CollaborativeAIPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/operations"
+        element={
+          <ProtectedRoute>
+            <OperationsCenterPage />
           </ProtectedRoute>
         }
       />

@@ -271,3 +271,32 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/collaborative-ai/wizard/sessions/{{session_id}}/create",
         handlers.collab_wizard_create_handler,
     )
+
+    # Sprint 29.1 — Enterprise AI Operations Center
+    app.router.add_get(f"{prefix}/operations/catalog", handlers.ops_catalog_handler)
+    app.router.add_get(f"{prefix}/operations/status", handlers.ops_status_handler)
+    app.router.add_get(f"{prefix}/operations/dashboard", handlers.ops_dashboard_handler)
+    app.router.add_get(f"{prefix}/operations/live-status", handlers.ops_live_status_handler)
+    app.router.add_get(f"{prefix}/operations/activity", handlers.ops_activity_handler)
+    app.router.add_get(f"{prefix}/operations/visual-ids", handlers.ops_visual_ids_handler)
+    app.router.add_get(
+        f"{prefix}/operations/visual-ids/{{object_id}}",
+        handlers.ops_visual_ids_handler,
+    )
+    app.router.add_get(f"{prefix}/operations/wait-experience", handlers.ops_wait_handler)
+    app.router.add_get(f"{prefix}/operations/teams", handlers.ops_teams_handler)
+    app.router.add_get(f"{prefix}/operations/health", handlers.ops_health_handler)
+    app.router.add_get(f"{prefix}/operations/ai-city", handlers.ops_city_handler)
+    app.router.add_get(f"{prefix}/operations/summary-view", handlers.ops_summary_view_handler)
+    app.router.add_get(f"{prefix}/operations/visual-layer", handlers.ops_visual_layer_handler)
+    app.router.add_post(f"{prefix}/operations/sessions", handlers.ops_session_handler)
+    app.router.add_get(f"{prefix}/operations/sessions/{{session_id}}", handlers.ops_session_handler)
+    app.router.add_patch(f"{prefix}/operations/sessions/{{session_id}}", handlers.ops_session_handler)
+    app.router.add_get(
+        f"{prefix}/operations/sessions/{{session_id}}/summary",
+        handlers.ops_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/operations/sessions/{{session_id}}/create",
+        handlers.ops_create_handler,
+    )

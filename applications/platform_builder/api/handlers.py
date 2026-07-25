@@ -1020,3 +1020,126 @@ async def collab_wizard_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.1 — Enterprise AI Operations Center ---
+
+
+async def ops_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_dashboard_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_live_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.live_status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_activity_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.realtime_activity())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_visual_ids_handler(request: web.Request) -> web.Response:
+    try:
+        object_id = request.rel_url.query.get("object_id") or request.match_info.get("object_id")
+        return json_response(platform_builder.operations_center.visual_ids(object_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_wait_handler(request: web.Request) -> web.Response:
+    try:
+        process_id = request.rel_url.query.get("process_id")
+        return json_response(platform_builder.operations_center.wait_experience(process_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_teams_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.team_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_health_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.system_health())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_city_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.ai_city_foundation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_summary_view_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.ops_summary())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_visual_layer_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.operations_center.visual.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.operations_center.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.operations_center.update_session(session_id, body))
+        return json_response(platform_builder.operations_center.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.operations_center.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ops_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.operations_center.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

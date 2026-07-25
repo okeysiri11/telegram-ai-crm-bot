@@ -1,4 +1,4 @@
-"""Tests — Enterprise Collective Intelligence (Sprint 28.8)."""
+"""Tests — Enterprise Collective Intelligence (Sprint 29.1)."""
 
 from __future__ import annotations
 
@@ -45,8 +45,8 @@ def reset_store():
 
 def test_collective_intelligence_surfaces():
     health = platform_builder.health()
-    assert health["application_version"] == "1.7.0"
-    assert health["sprint"] == "28.8"
+    assert health["application_version"] == "1.8.0"
+    assert health["sprint"] == "29.1"
     assert health["collective_intelligence_ready"] is True
 
     catalog = platform_builder.collaborative_ai.catalog()
