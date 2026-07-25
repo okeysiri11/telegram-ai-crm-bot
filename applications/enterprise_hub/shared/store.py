@@ -843,6 +843,16 @@ class EnterpriseHubStore:
         self.eds_themes: EntityStore = EntityStore()
         self.eds_docs: EntityStore = EntityStore()
         self.eds_dashboards: EntityStore = EntityStore()
+        # Sprint 26.3 — Identity Center
+        self.eic_bootstraps: EntityStore = EntityStore()
+        self.eic_inventory: EntityStore = EntityStore()
+        self.eic_dashboards: EntityStore = EntityStore()
+        self.eic_integrations: EntityStore = EntityStore()
+        # Sprint 26.4 — Workspace Platform
+        self.ews_bootstraps: EntityStore = EntityStore()
+        self.ews_inventory: EntityStore = EntityStore()
+        self.ews_dashboards: EntityStore = EntityStore()
+        self.ews_integrations: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

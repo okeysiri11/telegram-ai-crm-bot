@@ -91,7 +91,7 @@ def reset_store():
 
 def test_version_wfi_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.0.1"
+    assert health["application_version"] == "9.0.3"
     assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
     assert health["workflow_intelligence_ready"] is True
     assert health["visual_designer_ready"] is True
@@ -150,7 +150,7 @@ def test_bootstrap_wfi():
     suite = enterprise_hub.workflow_intelligence
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "9.0.1"
+    assert boot["version"] == "9.0.3"
     assert boot["workflow_intelligence_ready"] is True
     assert boot["visual_designer_ready"] is True
     assert boot["blocked_without_owner"] is True
@@ -165,7 +165,7 @@ def test_bootstrap_wfi():
 async def test_api_wfi(client):
     health = await client.get(f"{WFI}/health")
     body = await health.json()
-    assert body["application_version"] == "9.0.1"
+    assert body["application_version"] == "9.0.3"
     assert body["workflow_intelligence_ready"] is True
 
     boot = await client.post(f"{WFI}/bootstrap", json={})
@@ -177,7 +177,7 @@ async def test_api_wfi(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.0.1"
+        assert version == "9.0.3"
 
 
 def test_docs_and_regression_24_1():
@@ -212,5 +212,5 @@ def test_docs_and_regression_24_1():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.0.1"' in manifest
-    assert "26.2" in manifest
+    assert '"application_version": "9.0.3"' in manifest
+    assert "26.4" in manifest

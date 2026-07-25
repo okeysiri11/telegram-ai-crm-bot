@@ -11,6 +11,8 @@ export const hubIntegrations = {
   marketplace: "/api/enterprise-ees/v1",
   webFoundation: webConfig.ewfPrefix,
   designSystem: webConfig.edsPrefix,
+  identityCenter: webConfig.eicPrefix,
+  workspacePlatform: webConfig.ewsPrefix,
 } as const;
 
 export async function fetchWebFoundationHealth(): Promise<Record<string, unknown>> {
@@ -22,5 +24,17 @@ export async function fetchWebFoundationHealth(): Promise<Record<string, unknown
 export async function fetchDesignSystemHealth(): Promise<Record<string, unknown>> {
   const res = await fetch(`${webConfig.edsPrefix}/health`);
   if (!res.ok) throw new Error("eds health failed");
+  return res.json() as Promise<Record<string, unknown>>;
+}
+
+export async function fetchIdentityCenterHealth(): Promise<Record<string, unknown>> {
+  const res = await fetch(`${webConfig.eicPrefix}/health`);
+  if (!res.ok) throw new Error("eic health failed");
+  return res.json() as Promise<Record<string, unknown>>;
+}
+
+export async function fetchWorkspacePlatformHealth(): Promise<Record<string, unknown>> {
+  const res = await fetch(`${webConfig.ewsPrefix}/health`);
+  if (!res.ok) throw new Error("ews health failed");
   return res.json() as Promise<Record<string, unknown>>;
 }

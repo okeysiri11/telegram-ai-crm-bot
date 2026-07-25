@@ -4,7 +4,9 @@ import { useWorkspaceStore } from "@/workspace/workspaceStore";
 import { cn } from "@/utils/cn";
 
 const links = [
-  { to: "/", key: "nav.dashboard" },
+  { to: "/workspace", key: "nav.workspace" },
+  { to: "/dashboard", key: "nav.dashboard" },
+  { to: "/identity", key: "nav.identity" },
   { to: "/settings", key: "nav.settings" },
 ];
 
@@ -19,7 +21,7 @@ export function Sidebar() {
           <NavLink
             key={l.to}
             to={l.to}
-            end={l.to === "/"}
+            end={l.to === "/workspace"}
             className={({ isActive }) =>
               cn(
                 "block rounded-md px-3 py-2 text-sm",

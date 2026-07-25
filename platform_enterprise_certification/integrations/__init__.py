@@ -20,5 +20,5 @@ class CertificationIntegrations:
             "ci_cd_required": True,
             "phase3_ready": True,
             "next_phase": "enterprise_web_platform",
-            "next_version": "9.0.1",
+            "next_version": "9.0.3",
         }

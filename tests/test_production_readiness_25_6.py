@@ -106,7 +106,7 @@ def reset_store():
 
 def test_version_epd_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.0.1"
+    assert health["application_version"] == "9.0.3"
     assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
     assert health["production_platform_ready"] is True
     assert health["continuous_health_ready"] is True
@@ -124,7 +124,7 @@ def test_version_epd_ready():
 
 def test_production_gate_blocks_when_not_ready():
     suite = enterprise_hub.production_readiness
-    clean = suite.run_gate(release="9.0.1")
+    clean = suite.run_gate(release="9.0.3")
     assert clean["release_blocked"] is False
     assert clean["production_allowed"] is True
     assert clean["production_ready"] is True
@@ -134,7 +134,7 @@ def test_production_gate_blocks_when_not_ready():
     assert clean["deployment"]["passed"] is True
 
     blocked = suite.run_gate(
-        release="9.0.1",
+        release="9.0.3",
         failed_health=["redis"],
         active_alerts=["service_failure"],
         failed_deployment=["security"],
@@ -157,7 +157,7 @@ def test_bootstrap_epd():
     suite = enterprise_hub.production_readiness
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "9.0.1"
+    assert boot["version"] == "9.0.3"
     assert boot["production_platform_ready"] is True
     assert boot["continuous_health_ready"] is True
     assert boot["centralized_logging_ready"] is True
@@ -175,7 +175,7 @@ def test_bootstrap_epd():
 async def test_api_epd(client):
     health = await client.get(f"{EPD}/health")
     body = await health.json()
-    assert body["application_version"] == "9.0.1"
+    assert body["application_version"] == "9.0.3"
     assert body["production_platform_ready"] is True
 
     boot = await client.post(f"{EPD}/bootstrap", json={})
@@ -189,14 +189,14 @@ async def test_api_epd(client):
     assert epr.status == 200
     epr_body = await epr.json()
     epr_version = epr_body.get("application_version") or epr_body.get("data", {}).get("application_version")
-    assert epr_version == "9.0.1"
+    assert epr_version == "9.0.3"
 
     for prefix in PREFIXES:
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.0.1"
+        assert version == "9.0.3"
 
 
 def test_docs_and_regression_25_6():
@@ -231,5 +231,5 @@ def test_docs_and_regression_25_6():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.0.1"' in manifest
-    assert "26.2" in manifest
+    assert '"application_version": "9.0.3"' in manifest
+    assert "26.4" in manifest

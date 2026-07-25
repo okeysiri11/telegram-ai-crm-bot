@@ -1,7 +1,7 @@
 # Enterprise Web Platform
 
-**Version:** `9.0.1`  
-**Sprint:** 26.2 — Enterprise Design System  
+**Version:** `9.0.3`  
+**Sprint:** 26.4 — Enterprise Workspace Framework  
 **Design path:** `src/web`
 
 React 19 · TypeScript · Vite · Tailwind · TanStack Query · React Router · Zustand · RHF · Zod · Chart.js · Socket.IO

@@ -1,0 +1,11 @@
+export { workspaceManager } from "./workspaceManager";
+export { dashboardEngine } from "./dashboardEngine";
+export { widgetManager } from "./widgetManager";
+export { layoutManager } from "./layoutManager";
+export { navigationHub } from "./navigationHub";
+export { quickActions } from "./quickActions";
+export { favoritesManager } from "./favoritesManager";
+export { recentActivity } from "./recentActivity";
+export { searchCenter } from "./searchCenter";
+export { personalizationEngine } from "./personalizationEngine";
+export { workspaceSettings } from "./workspaceSettings";

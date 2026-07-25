@@ -54,6 +54,8 @@ from applications.enterprise_hub.production_readiness.facade import ProductionRe
 from applications.enterprise_hub.certification.facade import CertificationSuite
 from applications.enterprise_hub.web_foundation.facade import WebFoundationSuite
 from applications.enterprise_hub.design_system.facade import DesignSystemSuite
+from applications.enterprise_hub.identity_center.facade import IdentityCenterSuite
+from applications.enterprise_hub.workspace_platform.facade import WorkspacePlatformSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -142,6 +144,8 @@ class EnterpriseHubApplication:
         certification_svc: CertificationSuite | None = None,
         web_foundation_svc: WebFoundationSuite | None = None,
         design_system_svc: DesignSystemSuite | None = None,
+        identity_center_svc: IdentityCenterSuite | None = None,
+        workspace_platform_svc: WorkspacePlatformSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -213,6 +217,8 @@ class EnterpriseHubApplication:
         self.certification = certification_svc or CertificationSuite(self.store)
         self.web_foundation = web_foundation_svc or WebFoundationSuite(self.store)
         self.design_system = design_system_svc or DesignSystemSuite(self.store)
+        self.identity_center = identity_center_svc or IdentityCenterSuite(self.store)
+        self.workspace_platform = workspace_platform_svc or WorkspacePlatformSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -631,6 +637,18 @@ class EnterpriseHubApplication:
             "accessibility_ready": True,
             "design_themes_ready": True,
             "design_documentation_ready": True,
+            "authentication_ui_ready": True,
+            "identity_center_ready": True,
+            "identity_mfa_ready": True,
+            "session_management_ready": True,
+            "identity_security_center_ready": True,
+            "identity_profile_center_ready": True,
+            "workspace_ready": True,
+            "dashboard_engine_ready": True,
+            "widget_library_ready": True,
+            "layout_manager_ready": True,
+            "search_center_ready": True,
+            "workspace_realtime_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -698,6 +716,8 @@ class EnterpriseHubApplication:
                 "certification": self.config.certification,
                 "web_foundation": self.config.web_foundation,
                 "design_system": self.config.design_system,
+                "identity_center": self.config.identity_center,
+                "workspace_platform": self.config.workspace_platform,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -769,6 +789,8 @@ class EnterpriseHubApplication:
             "certification": self.certification.status(),
             "web_foundation": self.web_foundation.status(),
             "design_system": self.design_system.status(),
+            "identity_center": self.identity_center.status(),
+            "workspace_platform": self.workspace_platform.status(),
         }
 
 

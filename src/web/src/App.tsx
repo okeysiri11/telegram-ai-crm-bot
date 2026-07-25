@@ -1,19 +1,117 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/shell/ProtectedRoute";
-import { LoginPage } from "@/pages/LoginPage";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
+import {
+  AccessDeniedPage,
+  AccountLockedPage,
+  ActivityCenterPage,
+  ChangePasswordPage,
+  ForgotPasswordPage,
+  IdentityCenterPage,
+  LoginPage,
+  LogoutPage,
+  MfaCenterPage,
+  MfaChallengePage,
+  OrganizationsPage,
+  PermissionsPage,
+  ProfileCenterPage,
+  ResetPasswordPage,
+  RolesPage,
+  SecurityCenterPage,
+  SessionExpiredPage,
+  SessionsPage,
+  UsersPage,
+} from "../auth/pages";
+import {
+  DashboardsPage,
+  LayoutEditorPage,
+  WorkspaceHomePage,
+  WorkspaceSettingsPage,
+  WorkspacesPage,
+} from "../workspace/pages";
 
 export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/logout" element={<LogoutPage />} />
+      <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/auth/locked" element={<AccountLockedPage />} />
+      <Route path="/auth/session-expired" element={<SessionExpiredPage />} />
+      <Route path="/auth/access-denied" element={<AccessDeniedPage />} />
+      <Route path="/auth/mfa" element={<MfaChallengePage />} />
+      <Route
+        path="/auth/change-password"
+        element={
+          <ProtectedRoute>
+            <ChangePasswordPage />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/"
         element={
           <ProtectedRoute>
+            <Navigate to="/workspace" replace />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace"
+        element={
+          <ProtectedRoute>
+            <WorkspaceHomePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/list"
+        element={
+          <ProtectedRoute>
+            <WorkspacesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/dashboards"
+        element={
+          <ProtectedRoute>
+            <DashboardsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/dashboards/:dashboardId"
+        element={
+          <ProtectedRoute>
+            <DashboardsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/layout"
+        element={
+          <ProtectedRoute>
+            <LayoutEditorPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/settings"
+        element={
+          <ProtectedRoute>
+            <WorkspaceSettingsPage />
           </ProtectedRoute>
         }
       />
@@ -26,10 +124,90 @@ export function App() {
         }
       />
       <Route
+        path="/identity"
+        element={
+          <ProtectedRoute>
+            <IdentityCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity/users"
+        element={
+          <ProtectedRoute>
+            <UsersPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity/organizations"
+        element={
+          <ProtectedRoute>
+            <OrganizationsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity/roles"
+        element={
+          <ProtectedRoute>
+            <RolesPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity/permissions"
+        element={
+          <ProtectedRoute>
+            <PermissionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity/sessions"
+        element={
+          <ProtectedRoute>
+            <SessionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity/security"
+        element={
+          <ProtectedRoute>
+            <SecurityCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity/profile"
+        element={
+          <ProtectedRoute>
+            <ProfileCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity/activity"
+        element={
+          <ProtectedRoute>
+            <ActivityCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/identity/mfa"
+        element={
+          <ProtectedRoute>
+            <MfaCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="*"
         element={
           <EmptyLayout>
-            <Navigate to="/" replace />
+            <Navigate to="/workspace" replace />
           </EmptyLayout>
         }
       />

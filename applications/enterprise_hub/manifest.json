@@ -1,12 +1,12 @@
 {
   "application_name": "Enterprise Integration Hub",
   "application": "enterprise_hub",
-  "application_version": "9.0.1",
-  "release_status": "Enterprise Design System",
+  "application_version": "9.0.3",
+  "release_status": "Enterprise Workspace & Dashboard Framework",
   "platform_dependency": "AI Platform Core v3",
   "enterprise_foundation": "Enterprise Platform v8.7.0",
   "ecosystem_dependency": "AI Ecosystem v1.5",
-  "sprint": "26.2",
+  "sprint": "26.4",
   "phase": "enterprise_web_platform_v9",
   "enterprise_registry": "1.0",
   "integration_layer": "1.0",
@@ -231,7 +231,13 @@
     "web_dashboard": "1.0",
     "design_system": "1.0",
     "design_tokens": "1.0",
-    "component_catalog": "1.0"
+    "component_catalog": "1.0",
+    "identity_center": "1.0",
+    "authentication_ui": "1.0",
+    "mfa_center": "1.0",
+    "workspace_platform": "1.0",
+    "dashboard_engine": "1.0",
+    "widget_library": "1.0"
   },
   "does_not_modify": [
     "platform_core",
@@ -285,8 +291,10 @@
   "enterprise_ready": true,
   "ready_for_enterprise_web_platform": true,
   "next_phase": "enterprise_web_platform",
-  "next_version": "9.0.1",
+  "next_version": "9.0.3",
   "web_foundation": "1.0",
-  "enterprise_web_platform": "9.0.1",
-  "design_system": "1.0"
+  "enterprise_web_platform": "9.0.3",
+  "design_system": "1.0",
+  "identity_center": "1.0",
+  "workspace_platform": "1.0"
 }

@@ -5,14 +5,15 @@ import { hubIntegrations } from "@/integrations/hub";
 
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
-    expect(webConfig.version).toBe("9.0.1");
-    expect(webConfig.sprint).toBe("26.2");
+    expect(webConfig.version).toBe("9.0.3");
+    expect(webConfig.sprint).toBe("26.4");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.supportedLocales).toEqual(["en", "ru", "uk"]);
   });
 
   it("has localized strings", () => {
+    expect(messages.en["nav.workspace"]).toBeTruthy();
     expect(messages.en["nav.dashboard"]).toBeTruthy();
     expect(messages.ru["nav.dashboard"]).toBeTruthy();
     expect(messages.uk["nav.dashboard"]).toBeTruthy();
@@ -22,5 +23,7 @@ describe("Enterprise Web Foundation", () => {
     expect(hubIntegrations.enterpriseHub).toContain("enterprise-hub");
     expect(hubIntegrations.webFoundation).toContain("enterprise-ewf");
     expect(hubIntegrations.designSystem).toContain("enterprise-eds");
+    expect(hubIntegrations.identityCenter).toContain("enterprise-eic");
+    expect(hubIntegrations.workspacePlatform).toContain("enterprise-ews");
   });
 });

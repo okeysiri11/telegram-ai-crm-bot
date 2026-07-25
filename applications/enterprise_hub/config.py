@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 26.2 Enterprise Design System."""
+"""Enterprise Hub — Sprint 26.4 Enterprise Workspace & Dashboard Framework."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "9.0.1"
-    release_status: str = "Enterprise Design System"
+    application_version: str = "9.0.3"
+    release_status: str = "Enterprise Workspace & Dashboard Framework"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
@@ -77,6 +77,8 @@ class EnterpriseHubConfig:
     certification_api_prefix: str = "/api/enterprise-ecf/v1"
     web_foundation_api_prefix: str = "/api/enterprise-ewf/v1"
     design_system_api_prefix: str = "/api/enterprise-eds/v1"
+    identity_center_api_prefix: str = "/api/enterprise-eic/v1"
+    workspace_platform_api_prefix: str = "/api/enterprise-ews/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -144,6 +146,8 @@ class EnterpriseHubConfig:
     certification: str = "1.0"
     web_foundation: str = "1.0"
     design_system: str = "1.0"
+    identity_center: str = "1.0"
+    workspace_platform: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

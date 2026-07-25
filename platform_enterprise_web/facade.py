@@ -27,7 +27,7 @@ class WebFoundationLibrary:
 
     def bootstrap(self) -> dict[str, Any]:
         self.__init__()
-        plan = self.manager.plan(release="9.0.1")
+        plan = self.manager.plan(release="9.0.3")
         shell = self.shell.status()
         auth = self.auth.status()
         catalog = self.catalog.inventory()

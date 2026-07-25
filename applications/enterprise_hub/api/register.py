@@ -60,6 +60,8 @@ from applications.enterprise_hub.production_readiness import api as epd_api
 from applications.enterprise_hub.certification import api as ecf_api
 from applications.enterprise_hub.web_foundation import api as ewf_api
 from applications.enterprise_hub.design_system import api as eds_api
+from applications.enterprise_hub.identity_center import api as eic_api
+from applications.enterprise_hub.workspace_platform import api as ews_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1090,3 +1092,17 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{eds}/inventory", eds_api.eds_inventory_handler)
     app.router.add_get(f"{eds}/documentation", eds_api.eds_documentation_handler)
     app.router.add_get(f"{eds}/dashboard", eds_api.eds_dashboard_handler)
+
+    # Sprint 26.3 — Identity Center
+    eic = DEFAULT_CONFIG.identity_center_api_prefix
+    app.router.add_get(f"{eic}/health", eic_api.eic_health_handler)
+    app.router.add_post(f"{eic}/bootstrap", eic_api.eic_bootstrap_handler)
+    app.router.add_get(f"{eic}/inventory", eic_api.eic_inventory_handler)
+    app.router.add_get(f"{eic}/dashboard", eic_api.eic_dashboard_handler)
+
+    # Sprint 26.4 — Workspace Platform
+    ews = DEFAULT_CONFIG.workspace_platform_api_prefix
+    app.router.add_get(f"{ews}/health", ews_api.ews_health_handler)
+    app.router.add_post(f"{ews}/bootstrap", ews_api.ews_bootstrap_handler)
+    app.router.add_get(f"{ews}/inventory", ews_api.ews_inventory_handler)
+    app.router.add_get(f"{ews}/dashboard", ews_api.ews_dashboard_handler)

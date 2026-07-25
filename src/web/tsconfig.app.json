@@ -20,5 +20,5 @@
     "baseUrl": ".",
     "paths": { "@/*": ["src/*"] }
   },
-  "include": ["src", "design-system"]
+  "include": ["src", "design-system", "auth", "workspace"]
 }

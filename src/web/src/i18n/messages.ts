@@ -3,7 +3,9 @@ export type Locale = "en" | "ru" | "uk";
 export const messages: Record<Locale, Record<string, string>> = {
   en: {
     "app.title": "Enterprise Web Platform",
+    "nav.workspace": "Workspace",
     "nav.dashboard": "Dashboard",
+    "nav.identity": "Identity",
     "nav.settings": "Settings",
     "auth.login": "Sign in",
     "auth.logout": "Sign out",
@@ -23,7 +25,9 @@ export const messages: Record<Locale, Record<string, string>> = {
   },
   ru: {
     "app.title": "Enterprise Web Platform",
+    "nav.workspace": "Рабочее пространство",
     "nav.dashboard": "Панель",
+    "nav.identity": "Идентичность",
     "nav.settings": "Настройки",
     "auth.login": "Войти",
     "auth.logout": "Выйти",
@@ -43,7 +47,9 @@ export const messages: Record<Locale, Record<string, string>> = {
   },
   uk: {
     "app.title": "Enterprise Web Platform",
+    "nav.workspace": "Робочий простір",
     "nav.dashboard": "Панель",
+    "nav.identity": "Ідентичність",
     "nav.settings": "Налаштування",
     "auth.login": "Увійти",
     "auth.logout": "Вийти",

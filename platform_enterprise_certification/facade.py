@@ -104,7 +104,7 @@ class CertificationLibrary:
             "duplicates_erl_logic": False,
             "phase3_ready": True,
             "next_phase": "enterprise_web_platform",
-            "next_version": "9.0.1",
+            "next_version": "9.0.3",
             "status": "ENTERPRISE READY" if release["passed"] else "NOT READY",
             "integrations": links,
             "full": {

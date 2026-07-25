@@ -15,5 +15,5 @@ export { generateDesignDocumentation } from "./docs";
 export { Icon, iconLibrary } from "./icons";
 export type { IconName } from "./icons";
 
-export const DESIGN_SYSTEM_VERSION = "9.0.1";
+export const DESIGN_SYSTEM_VERSION = "9.0.3";
 export const DESIGN_SYSTEM_PATH = "src/web/design-system";
