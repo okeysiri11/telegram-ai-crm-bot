@@ -4,6 +4,7 @@ export const messages: Record<Locale, Record<string, string>> = {
   en: {
     "app.title": "Enterprise Web Platform",
     "nav.workspace": "Workspace",
+    "nav.navigation": "Navigation",
     "nav.dashboard": "Dashboard",
     "nav.identity": "Identity",
     "nav.settings": "Settings",
@@ -26,6 +27,7 @@ export const messages: Record<Locale, Record<string, string>> = {
   ru: {
     "app.title": "Enterprise Web Platform",
     "nav.workspace": "Рабочее пространство",
+    "nav.navigation": "Навигация",
     "nav.dashboard": "Панель",
     "nav.identity": "Идентичность",
     "nav.settings": "Настройки",
@@ -48,6 +50,7 @@ export const messages: Record<Locale, Record<string, string>> = {
   uk: {
     "app.title": "Enterprise Web Platform",
     "nav.workspace": "Робочий простір",
+    "nav.navigation": "Навігація",
     "nav.dashboard": "Панель",
     "nav.identity": "Ідентичність",
     "nav.settings": "Налаштування",

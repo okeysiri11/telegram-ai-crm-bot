@@ -16,7 +16,7 @@ class DesignSystemDashboard:
             "themes_ready": kwargs.get("themes_ready", False),
             "documentation_ready": kwargs.get("documentation_ready", False),
             "path": kwargs.get("path", "src/web/design-system"),
-            "version": kwargs.get("version", "9.0.3"),
+            "version": kwargs.get("version", "9.0.4"),
             "catalog_count": kwargs.get("catalog_count", 0),
             "token_groups": kwargs.get("token_groups", 0),
             "themes": kwargs.get("themes", []),

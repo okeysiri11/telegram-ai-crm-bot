@@ -56,6 +56,7 @@ from applications.enterprise_hub.web_foundation.facade import WebFoundationSuite
 from applications.enterprise_hub.design_system.facade import DesignSystemSuite
 from applications.enterprise_hub.identity_center.facade import IdentityCenterSuite
 from applications.enterprise_hub.workspace_platform.facade import WorkspacePlatformSuite
+from applications.enterprise_hub.navigation_platform.facade import NavigationPlatformSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -146,6 +147,7 @@ class EnterpriseHubApplication:
         design_system_svc: DesignSystemSuite | None = None,
         identity_center_svc: IdentityCenterSuite | None = None,
         workspace_platform_svc: WorkspacePlatformSuite | None = None,
+        navigation_platform_svc: NavigationPlatformSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -219,6 +221,7 @@ class EnterpriseHubApplication:
         self.design_system = design_system_svc or DesignSystemSuite(self.store)
         self.identity_center = identity_center_svc or IdentityCenterSuite(self.store)
         self.workspace_platform = workspace_platform_svc or WorkspacePlatformSuite(self.store)
+        self.navigation_platform = navigation_platform_svc or NavigationPlatformSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -649,6 +652,11 @@ class EnterpriseHubApplication:
             "layout_manager_ready": True,
             "search_center_ready": True,
             "workspace_realtime_ready": True,
+            "navigation_platform_ready": True,
+            "command_palette_ready": True,
+            "global_search_ready": True,
+            "menu_engine_ready": True,
+            "search_index_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -718,6 +726,7 @@ class EnterpriseHubApplication:
                 "design_system": self.config.design_system,
                 "identity_center": self.config.identity_center,
                 "workspace_platform": self.config.workspace_platform,
+                "navigation_platform": self.config.navigation_platform,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -791,6 +800,7 @@ class EnterpriseHubApplication:
             "design_system": self.design_system.status(),
             "identity_center": self.identity_center.status(),
             "workspace_platform": self.workspace_platform.status(),
+            "navigation_platform": self.navigation_platform.status(),
         }
 
 

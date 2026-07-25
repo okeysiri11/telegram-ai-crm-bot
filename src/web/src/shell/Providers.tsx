@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useThemeStore } from "@/theme/themeStore";
 import { useAuthStore } from "@/auth/authStore";
 import { LoadingScreen } from "./LoadingScreen";
+import { NavigationProvider } from "../../navigation/components/NavigationProvider";
 
 const queryClient = new QueryClient();
 
@@ -23,7 +24,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{children}</BrowserRouter>
+      <BrowserRouter>
+        <NavigationProvider>{children}</NavigationProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 }

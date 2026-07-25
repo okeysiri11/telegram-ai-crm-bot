@@ -2,35 +2,55 @@ import { NavLink } from "react-router-dom";
 import { useI18n } from "@/i18n";
 import { useWorkspaceStore } from "@/workspace/workspaceStore";
 import { cn } from "@/utils/cn";
-
-const links = [
-  { to: "/workspace", key: "nav.workspace" },
-  { to: "/dashboard", key: "nav.dashboard" },
-  { to: "/identity", key: "nav.identity" },
-  { to: "/settings", key: "nav.settings" },
-];
+import { navigationManager } from "../../navigation/managers/navigationManager";
+import { Badge } from "@/ui";
 
 export function Sidebar() {
   const t = useI18n((s) => s.t);
   const modules = useWorkspaceStore((s) => s.workspace.activeModules);
+  const items = navigationManager.get("sidebar");
+
   return (
     <aside className="hidden w-60 shrink-0 border-r border-[var(--ew-border)] bg-[var(--ew-surface)] p-4 md:block">
       <div className="mb-6 text-lg font-semibold tracking-tight">{t("app.title")}</div>
       <nav className="space-y-1">
-        {links.map((l) => (
-          <NavLink
-            key={l.to}
-            to={l.to}
-            end={l.to === "/workspace"}
-            className={({ isActive }) =>
-              cn(
-                "block rounded-md px-3 py-2 text-sm",
-                isActive ? "bg-[var(--ew-brand-soft)] font-semibold text-[var(--ew-brand)]" : "text-[var(--ew-muted)]",
-              )
-            }
-          >
-            {t(l.key)}
-          </NavLink>
+        {items.map((item) => (
+          <div key={item.id}>
+            <NavLink
+              to={item.route}
+              end={item.route === "/workspace"}
+              className={({ isActive }) =>
+                cn(
+                  "flex items-center justify-between rounded-md px-3 py-2 text-sm",
+                  isActive
+                    ? "bg-[var(--ew-brand-soft)] font-semibold text-[var(--ew-brand)]"
+                    : "text-[var(--ew-muted)]",
+                )
+              }
+            >
+              <span>{item.name}</span>
+              {item.badge ? <Badge>{item.badge}</Badge> : null}
+            </NavLink>
+            {item.children?.length ? (
+              <ul className="ml-3 space-y-1 border-l border-[var(--ew-border)] pl-2">
+                {item.children.map((child) => (
+                  <li key={child.id}>
+                    <NavLink
+                      to={child.route}
+                      className={({ isActive }) =>
+                        cn(
+                          "block rounded-md px-2 py-1 text-xs",
+                          isActive ? "text-[var(--ew-brand)] font-medium" : "text-[var(--ew-muted)]",
+                        )
+                      }
+                    >
+                      {child.name}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+          </div>
         ))}
       </nav>
       <div className="mt-8">

@@ -62,6 +62,7 @@ from applications.enterprise_hub.web_foundation import api as ewf_api
 from applications.enterprise_hub.design_system import api as eds_api
 from applications.enterprise_hub.identity_center import api as eic_api
 from applications.enterprise_hub.workspace_platform import api as ews_api
+from applications.enterprise_hub.navigation_platform import api as enp_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1106,3 +1107,10 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ews}/bootstrap", ews_api.ews_bootstrap_handler)
     app.router.add_get(f"{ews}/inventory", ews_api.ews_inventory_handler)
     app.router.add_get(f"{ews}/dashboard", ews_api.ews_dashboard_handler)
+
+    # Sprint 26.5 — Navigation Platform
+    enp = DEFAULT_CONFIG.navigation_platform_api_prefix
+    app.router.add_get(f"{enp}/health", enp_api.enp_health_handler)
+    app.router.add_post(f"{enp}/bootstrap", enp_api.enp_bootstrap_handler)
+    app.router.add_get(f"{enp}/inventory", enp_api.enp_inventory_handler)
+    app.router.add_get(f"{enp}/dashboard", enp_api.enp_dashboard_handler)

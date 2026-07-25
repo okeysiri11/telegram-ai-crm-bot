@@ -1,18 +1,28 @@
 import { Link, useLocation } from "react-router-dom";
+import { breadcrumbEngine } from "../../navigation/managers/breadcrumbEngine";
+import { navigationHistory } from "../../navigation/managers/navigationHistory";
+import { useEffect } from "react";
 
 export function Breadcrumbs() {
   const loc = useLocation();
-  const parts = loc.pathname.split("/").filter(Boolean);
-  const crumbs = [{ path: "/", label: "Home" }, ...parts.map((p, i) => ({
-    path: "/" + parts.slice(0, i + 1).join("/"),
-    label: p,
-  }))];
+  const crumbs = breadcrumbEngine.fromPath(loc.pathname);
+
+  useEffect(() => {
+    const parts = breadcrumbEngine.fromPath(loc.pathname);
+    const last = parts[parts.length - 1];
+    if (last) {
+      navigationHistory.push({ kind: "page", label: last.label, path: last.path });
+    }
+  }, [loc.pathname]);
+
   return (
-    <nav className="flex flex-wrap gap-2 text-xs text-[var(--ew-muted)]">
+    <nav className="flex flex-wrap gap-2 text-xs text-[var(--ew-muted)]" aria-label="Breadcrumb">
       {crumbs.map((c, i) => (
-        <span key={c.path} className="inline-flex items-center gap-2">
+        <span key={`${c.path}-${c.level}`} className="inline-flex items-center gap-2">
           {i > 0 ? <span>/</span> : null}
-          <Link to={c.path} className="hover:text-[var(--ew-brand)]">{c.label}</Link>
+          <Link to={c.path} className="hover:text-[var(--ew-brand)]" title={c.level}>
+            {c.label}
+          </Link>
         </span>
       ))}
     </nav>

@@ -87,7 +87,7 @@ def reset_store():
 
 def test_version_eon_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.0.3"
+    assert health["application_version"] == "9.0.4"
     assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
     assert health["onboarding_ready"] is True
     assert health["data_migration_ready"] is True
@@ -172,7 +172,7 @@ def test_bootstrap_onboarding():
     suite = enterprise_hub.onboarding
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "9.0.3"
+    assert boot["version"] == "9.0.4"
     assert boot["onboarding_ready"] is True
     assert boot["setup_under_30_min"] is True
     assert boot["ai_may_act"] is False
@@ -187,7 +187,7 @@ def test_bootstrap_onboarding():
 async def test_api_eon(client):
     health = await client.get(f"{EON}/health")
     body = await health.json()
-    assert body["application_version"] == "9.0.3"
+    assert body["application_version"] == "9.0.4"
     assert body["onboarding_ready"] is True
 
     boot = await client.post(f"{EON}/bootstrap", json={})
@@ -199,7 +199,7 @@ async def test_api_eon(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.0.3"
+        assert version == "9.0.4"
 
 
 def test_docs_and_regression_22_9():
@@ -234,5 +234,5 @@ def test_docs_and_regression_22_9():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.0.3"' in manifest
-    assert "26.4" in manifest
+    assert '"application_version": "9.0.4"' in manifest
+    assert "26.5" in manifest

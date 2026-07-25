@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 WORKSPACE_PATH = "src/web/workspace"
-VERSION = "9.0.3"
+VERSION = "9.0.4"
 
 ARCHITECTURE = (
     "workspace_manager",

@@ -106,7 +106,7 @@ def reset_store():
 
 def test_version_ecf_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.0.3"
+    assert health["application_version"] == "9.0.4"
     assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
     assert health["certification_ready"] is True
     assert health["quality_gates_ready"] is True
@@ -126,7 +126,7 @@ def test_version_ecf_ready():
 
 def test_certification_gate_blocks_on_failures():
     suite = enterprise_hub.certification
-    clean = suite.run_gate(release="9.0.3")
+    clean = suite.run_gate(release="9.0.4")
     assert clean["release_blocked"] is False
     assert clean["enterprise_certified"] is True
     assert clean["production_ready"] is True
@@ -139,7 +139,7 @@ def test_certification_gate_blocks_on_failures():
     assert clean["versions"]["full_history"] is True
 
     blocked = suite.run_gate(
-        release="9.0.3",
+        release="9.0.4",
         failed_gates=["chaos_tests", "security_verification"],
         missing_architecture=["event_bus"],
         missing_docs=["deployment_guide"],
@@ -161,7 +161,7 @@ def test_bootstrap_ecf():
     suite = enterprise_hub.certification
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "9.0.3"
+    assert boot["version"] == "9.0.4"
     assert boot["certification_ready"] is True
     assert boot["quality_gates_ready"] is True
     assert boot["release_builder_ready"] is True
@@ -170,7 +170,7 @@ def test_bootstrap_ecf():
     assert boot["status"] == "ENTERPRISE READY"
     assert boot["phase3_ready"] is True
     assert boot["next_phase"] == "enterprise_web_platform"
-    assert boot["next_version"] == "9.0.3"
+    assert boot["next_version"] == "9.0.4"
     assert boot["duplicates_core_logic"] is False
     assert boot["duplicates_erl_logic"] is False
     assert boot["integrations"]["linked"] is True
@@ -181,7 +181,7 @@ def test_bootstrap_ecf():
 async def test_api_ecf(client):
     health = await client.get(f"{ECF}/health")
     body = await health.json()
-    assert body["application_version"] == "9.0.3"
+    assert body["application_version"] == "9.0.4"
     assert body["certification_ready"] is True
     assert body["enterprise_ready"] is True
 
@@ -202,7 +202,7 @@ async def test_api_ecf(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.0.3"
+        assert version == "9.0.4"
 
 
 def test_docs_and_regression_25_7():
@@ -237,6 +237,6 @@ def test_docs_and_regression_25_7():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.0.3"' in manifest
-    assert "26.4" in manifest
+    assert '"application_version": "9.0.4"' in manifest
+    assert "26.5" in manifest
     assert '"enterprise_ready": true' in manifest or '"enterprise_certified": true' in manifest

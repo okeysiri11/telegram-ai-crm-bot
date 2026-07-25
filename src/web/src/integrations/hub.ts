@@ -13,6 +13,7 @@ export const hubIntegrations = {
   designSystem: webConfig.edsPrefix,
   identityCenter: webConfig.eicPrefix,
   workspacePlatform: webConfig.ewsPrefix,
+  navigationPlatform: webConfig.enpPrefix,
 } as const;
 
 export async function fetchWebFoundationHealth(): Promise<Record<string, unknown>> {
@@ -36,5 +37,11 @@ export async function fetchIdentityCenterHealth(): Promise<Record<string, unknow
 export async function fetchWorkspacePlatformHealth(): Promise<Record<string, unknown>> {
   const res = await fetch(`${webConfig.ewsPrefix}/health`);
   if (!res.ok) throw new Error("ews health failed");
+  return res.json() as Promise<Record<string, unknown>>;
+}
+
+export async function fetchNavigationPlatformHealth(): Promise<Record<string, unknown>> {
+  const res = await fetch(`${webConfig.enpPrefix}/health`);
+  if (!res.ok) throw new Error("enp health failed");
   return res.json() as Promise<Record<string, unknown>>;
 }
