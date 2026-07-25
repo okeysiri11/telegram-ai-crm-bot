@@ -6,6 +6,7 @@ export type UserProfile = {
   email: string;
   name: string;
   tenantId: string;
+  roleId?: string;
 };
 
 type AuthState = {
@@ -28,11 +29,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   login: async (email, _password, tenantId) => {
     const accessToken = `jwt.${btoa(email)}.demo`;
     const refreshToken = `refresh.${btoa(tenantId)}.demo`;
+    const lower = email.toLowerCase();
+    const roleId =
+      lower.startsWith("owner@") || lower.includes("+owner@")
+        ? "platform_owner"
+        : "role_org_owner";
     const user: UserProfile = {
       id: "usr_demo",
       email,
       name: email.split("@")[0] || "user",
       tenantId,
+      roleId,
     };
     const payload = { user, accessToken, refreshToken };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));

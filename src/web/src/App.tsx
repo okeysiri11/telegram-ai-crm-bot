@@ -37,6 +37,14 @@ import { ReleaseCandidatePage } from "../release/pages";
 import { AIOSPage } from "../ai-os/pages";
 import { OrganizationBrainPage } from "../organization-brain/pages";
 import { VerticalFederationPage } from "../vertical-federation/pages";
+import {
+  AIBuilderPage,
+  BuilderAcademyPage,
+  ConciergeBuilderPage,
+  FrameBuilderPage,
+  GodModePage,
+  PlatformBuilderDashboard,
+} from "../platform-builder/pages";
 
 export function App() {
   return (
@@ -166,6 +174,118 @@ export function App() {
         element={
           <ProtectedRoute>
             <VerticalFederationPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder"
+        element={
+          <ProtectedRoute>
+            <PlatformBuilderDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/ai"
+        element={
+          <ProtectedRoute>
+            <AIBuilderPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/concierge"
+        element={
+          <ProtectedRoute>
+            <ConciergeBuilderPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/vertical"
+        element={
+          <ProtectedRoute>
+            <FrameBuilderPage builderId="vertical" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/crm"
+        element={
+          <ProtectedRoute>
+            <FrameBuilderPage builderId="crm" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/erp"
+        element={
+          <ProtectedRoute>
+            <FrameBuilderPage builderId="erp" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/workflow"
+        element={
+          <ProtectedRoute>
+            <FrameBuilderPage builderId="workflow" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/knowledge"
+        element={
+          <ProtectedRoute>
+            <FrameBuilderPage builderId="knowledge" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/automation"
+        element={
+          <ProtectedRoute>
+            <FrameBuilderPage builderId="automation" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/dashboard-builder"
+        element={
+          <ProtectedRoute>
+            <FrameBuilderPage builderId="dashboard_builder" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/template"
+        element={
+          <ProtectedRoute>
+            <FrameBuilderPage builderId="template" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/marketplace"
+        element={
+          <ProtectedRoute>
+            <FrameBuilderPage builderId="marketplace" />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/academy"
+        element={
+          <ProtectedRoute>
+            <BuilderAcademyPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/god-mode"
+        element={
+          <ProtectedRoute>
+            <GodModePage />
           </ProtectedRoute>
         }
       />

@@ -101,6 +101,33 @@ const menu: MenuItem[] = [
     group: "platform",
   },
   {
+    id: "nav_platform_builder",
+    name: "Platform Builder",
+    icon: "workflow",
+    route: "/platform-builder",
+    module: "platform_builder",
+    permissions: ["read", "builder"],
+    badge: "new",
+    status: "active",
+    group: "platform",
+    children: [
+      { id: "nav_pb_dash", name: "Dashboard", icon: "analytics", route: "/platform-builder", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_pb_vertical", name: "Vertical Builder", icon: "erp", route: "/platform-builder/vertical", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_ai", name: "AI Builder", icon: "ai", route: "/platform-builder/ai", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_concierge", name: "Concierge Builder", icon: "ai", route: "/platform-builder/concierge", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_crm", name: "CRM Builder", icon: "crm", route: "/platform-builder/crm", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_erp", name: "ERP Builder", icon: "erp", route: "/platform-builder/erp", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_workflow", name: "Workflow Builder", icon: "workflow", route: "/platform-builder/workflow", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_knowledge", name: "Knowledge Builder", icon: "analytics", route: "/platform-builder/knowledge", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_automation", name: "Automation Builder", icon: "workflow", route: "/platform-builder/automation", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_dash_builder", name: "Dashboard Builder", icon: "analytics", route: "/platform-builder/dashboard-builder", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_template", name: "Template Builder", icon: "workflow", route: "/platform-builder/template", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_marketplace", name: "Marketplace Builder", icon: "workflow", route: "/platform-builder/marketplace", module: "platform_builder", permissions: ["read"], status: "beta" },
+      { id: "nav_pb_academy", name: "Builder Academy", icon: "analytics", route: "/platform-builder/academy", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_pb_god", name: "God Mode", icon: "security", route: "/platform-builder/god-mode", module: "platform_builder", permissions: ["platform_owner"], status: "active" },
+    ],
+  },
+  {
     id: "nav_settings",
     name: "Settings",
     icon: "settings",
@@ -113,7 +140,7 @@ const menu: MenuItem[] = [
 ];
 
 function permitted(item: MenuItem, permissions: string[]): boolean {
-  if (permissions.includes("admin")) return true;
+  if (permissions.includes("admin") || permissions.includes("platform_owner")) return true;
   return item.permissions.some((p) => permissions.includes(p));
 }
 

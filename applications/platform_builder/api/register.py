@@ -1,0 +1,32 @@
+"""Register Platform Builder routes — Sprint 28.1."""
+
+from __future__ import annotations
+
+from aiohttp import web
+
+from applications.platform_builder.api import handlers
+from applications.platform_builder.api.middleware import auth_middleware
+from applications.platform_builder.config import DEFAULT_CONFIG
+
+
+def register_platform_builder_routes(app: web.Application) -> None:
+    prefix = DEFAULT_CONFIG.api_prefix
+    if auth_middleware not in app.middlewares:
+        app.middlewares.append(auth_middleware)
+
+    app.router.add_get(f"{prefix}/health", handlers.health_handler)
+    app.router.add_post(f"{prefix}/bootstrap", handlers.bootstrap_handler)
+    app.router.add_get(f"{prefix}/inventory", handlers.inventory_handler)
+    app.router.add_get(f"{prefix}/dashboard", handlers.dashboard_handler)
+    app.router.add_get(f"{prefix}/builders", handlers.builders_handler)
+    app.router.add_get(f"{prefix}/builders/{{builder_id}}", handlers.builder_detail_handler)
+    app.router.add_post(f"{prefix}/builders/{{builder_id}}/preview", handlers.builder_preview_handler)
+    app.router.add_post(f"{prefix}/builders/{{builder_id}}/create", handlers.builder_create_handler)
+    app.router.add_get(f"{prefix}/academy", handlers.academy_handler)
+    app.router.add_post(f"{prefix}/academy", handlers.academy_handler)
+    app.router.add_get(f"{prefix}/academy/{{builder_id}}/guide", handlers.academy_guide_handler)
+    app.router.add_get(f"{prefix}/help/{{builder_id}}", handlers.help_handler)
+    app.router.add_get(f"{prefix}/menu", handlers.menu_handler)
+    app.router.add_get(f"{prefix}/roles", handlers.roles_handler)
+    app.router.add_get(f"{prefix}/god-mode", handlers.god_mode_handler)
+    app.router.add_post(f"{prefix}/god-mode/action", handlers.god_mode_action_handler)

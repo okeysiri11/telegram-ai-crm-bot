@@ -76,6 +76,10 @@ def create_app() -> web.Application:
 
     register_ai_os_routes(app)
 
+    from applications.platform_builder.api.register import register_platform_builder_routes
+
+    register_platform_builder_routes(app)
+
     from applications.enterprise.api.register import register_enterprise_routes
 
     register_enterprise_routes(app)
