@@ -206,3 +206,68 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/god-mode/control/sessions/{{session_id}}/create",
         handlers.control_create_handler,
     )
+
+    # Sprint 28.8 — Collaborative AI / Collective Intelligence
+    app.router.add_get(f"{prefix}/collaborative-ai/catalog", handlers.collab_catalog_handler)
+    app.router.add_get(f"{prefix}/collaborative-ai/status", handlers.collab_status_handler)
+    app.router.add_get(f"{prefix}/collaborative-ai/teams", handlers.collab_teams_handler)
+    app.router.add_post(f"{prefix}/collaborative-ai/teams", handlers.collab_teams_handler)
+    app.router.add_get(f"{prefix}/collaborative-ai/teams/{{team_id}}", handlers.collab_team_handler)
+    app.router.add_post(
+        f"{prefix}/collaborative-ai/teams/{{team_id}}/roles",
+        handlers.collab_roles_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/collaborative-ai/teams/{{team_id}}/sessions",
+        handlers.collab_team_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/collaborative-ai/sessions/{{session_id}}/workspace",
+        handlers.collab_workspace_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/collaborative-ai/sessions/{{session_id}}/tasks",
+        handlers.collab_tasks_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/collaborative-ai/sessions/{{session_id}}/knowledge",
+        handlers.collab_knowledge_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/collaborative-ai/sessions/{{session_id}}/decide",
+        handlers.collab_decide_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/collaborative-ai/sessions/{{session_id}}/report",
+        handlers.collab_report_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/collaborative-ai/sessions/{{session_id}}/performance",
+        handlers.collab_performance_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/collaborative-ai/sessions/{{session_id}}/explain",
+        handlers.collab_explain_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/collaborative-ai/sessions/{{session_id}}/explain",
+        handlers.collab_explain_handler,
+    )
+    app.router.add_get(f"{prefix}/collaborative-ai/ops-foundation", handlers.collab_ops_handler)
+    app.router.add_post(f"{prefix}/collaborative-ai/wizard/sessions", handlers.collab_wizard_handler)
+    app.router.add_get(
+        f"{prefix}/collaborative-ai/wizard/sessions/{{session_id}}",
+        handlers.collab_wizard_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/collaborative-ai/wizard/sessions/{{session_id}}",
+        handlers.collab_wizard_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/collaborative-ai/wizard/sessions/{{session_id}}/summary",
+        handlers.collab_wizard_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/collaborative-ai/wizard/sessions/{{session_id}}/create",
+        handlers.collab_wizard_create_handler,
+    )

@@ -16,7 +16,7 @@ GROUP_AI_INVITE_ROLES = (
 )
 
 GROUP_AI_CHAT_FOUNDATION: dict[str, Any] = {
-    "status": "architecture_only",
+    "status": "operational",
     "description": "Owner can start a conversation and invite specialists to discuss together.",
     "invite_roles": list(GROUP_AI_INVITE_ROLES),
     "model": {
@@ -28,13 +28,17 @@ GROUP_AI_CHAT_FOUNDATION: dict[str, Any] = {
         "ai_summary": "string",
         "decision_summary": "string",
     },
-    "apis_planned": [
-        "POST /group-ai-chat/sessions",
-        "POST /group-ai-chat/sessions/{id}/invite",
-        "GET /group-ai-chat/sessions/{id}/history",
-        "POST /group-ai-chat/sessions/{id}/summarize",
+    "apis": [
+        "POST /collaborative-ai/sessions",
+        "POST /collaborative-ai/teams/{id}/sessions",
+        "GET /collaborative-ai/sessions/{id}/workspace",
+        "POST /collaborative-ai/sessions/{id}/tasks",
+        "POST /collaborative-ai/sessions/{id}/knowledge",
+        "POST /collaborative-ai/sessions/{id}/decide",
+        "GET /collaborative-ai/sessions/{id}/summary-report",
     ],
-    "note": "No live collaborative chat runtime in this sprint — architecture only.",
+    "runtime": "applications/platform_builder/collaborative_ai",
+    "note": "Collaborative AI Engine runtime — Sprint 28.8 Collective Intelligence.",
 }
 
 TEAM_OWNER_ACTIONS = (

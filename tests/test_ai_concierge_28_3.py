@@ -1,4 +1,4 @@
-"""Tests — Enterprise AI Concierge (Sprint 28.7)."""
+"""Tests — Enterprise AI Concierge (Sprint 28.8)."""
 
 from __future__ import annotations
 
@@ -45,8 +45,8 @@ def reset_store():
 
 def test_concierge_ready_and_catalog():
     health = platform_builder.health()
-    assert health["application_version"] == "1.6.0"
-    assert health["sprint"] == "28.7"
+    assert health["application_version"] == "1.7.0"
+    assert health["sprint"] == "28.8"
     assert health["concierge_builder_ready"] is True
     assert health["concierge_registry_ready"] is True
     assert health["organization_link_ready"] is True
@@ -69,7 +69,7 @@ def test_concierge_ready_and_catalog():
     assert "purpose" in ORG_ACCESS[0]["help"]
     assert "Possible errors" not in ORG_ACCESS[0]["help"]["purpose"]
     assert len(WIZARD_STEPS) == 11
-    assert GROUP_AI_CHAT_FOUNDATION["status"] == "architecture_only"
+    assert GROUP_AI_CHAT_FOUNDATION["status"] == "operational"
 
 
 def test_wizard_create_one_per_org_and_registry():
@@ -96,7 +96,7 @@ def test_wizard_create_one_per_org_and_registry():
     assert summary["card"]["identity"]["name"] == "Nova"
     assert "organization_overview" in summary
     assert "ai_team_overview" in summary
-    assert summary["group_ai_chat"]["status"] == "architecture_only"
+    assert summary["group_ai_chat"]["status"] == "operational"
 
     preview = platform_builder.concierge.conversation_preview(draft)
     assert preview["preview"][1]["role"] == "concierge"
@@ -110,7 +110,7 @@ def test_wizard_create_one_per_org_and_registry():
     assert created["registry"]["count"] == 1
     assert created["ai_team_center"]["organization_id"] == "org_alpha"
     assert created["ai_team_center"]["concierge_id"] == created["concierge"]["concierge_id"]
-    assert created["group_ai_chat"]["status"] == "architecture_only"
+    assert created["group_ai_chat"]["status"] == "operational"
 
     # Exactly one Concierge per organization
     again = platform_builder.concierge.start_session(organization_id="org_alpha")
@@ -134,7 +134,7 @@ async def test_api_concierge(client):
     body = await health.json()
     assert body["concierge_builder_ready"] is True
     assert body["ai_team_center_ready"] is True
-    assert body["application_version"] == "1.6.0"
+    assert body["application_version"] == "1.7.0"
 
     catalog = await client.get(f"{PREFIX}/concierge/catalog")
     assert catalog.status == 200
@@ -218,5 +218,5 @@ def test_docs_and_frontend_28_3():
     for key in ("one Concierge", "not", "AI Agent", "Orchestration", "Concierge Registry", "AI Team Center"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.6.0"' in manifest
-    assert "28.7" in manifest
+    assert '"application_version": "1.7.0"' in manifest
+    assert "28.8" in manifest

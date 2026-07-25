@@ -75,6 +75,12 @@ class PlatformBuilderStore:
         self.god_audit: EntityStore = EntityStore()
         self.god_architecture: EntityStore = EntityStore()
         self.god_health: EntityStore = EntityStore()
+        # Sprint 28.8 — Collaborative AI
+        self.collaborative_teams: EntityStore = EntityStore()
+        self.collaborative_sessions: EntityStore = EntityStore()
+        self.collaborative_decisions: EntityStore = EntityStore()
+        self.collaborative_knowledge: EntityStore = EntityStore()
+        self.collab_wizard_sessions: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

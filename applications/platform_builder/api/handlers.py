@@ -835,3 +835,188 @@ async def control_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 28.8 — Collaborative AI / Collective Intelligence ---
+
+
+async def collab_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.collaborative_ai.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.collaborative_ai.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_teams_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(platform_builder.collaborative_ai.create_team(body), status=201)
+        return json_response(platform_builder.collaborative_ai.list_teams())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_team_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.collaborative_ai.get_team(request.match_info["team_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_roles_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json() if request.can_read_body else {}
+        assignments = body.get("assignments") if isinstance(body, dict) else None
+        return json_response(
+            platform_builder.collaborative_ai.assign_roles(
+                request.match_info["team_id"], assignments
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_team_session_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json() if request.can_read_body else {}
+        topic = body.get("topic") if isinstance(body, dict) else None
+        return json_response(
+            platform_builder.collaborative_ai.start_collab_session(
+                request.match_info["team_id"], topic=topic
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_workspace_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.collaborative_ai.session_workspace(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_tasks_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.collaborative_ai.distribute_tasks(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_knowledge_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json() if request.can_read_body else {}
+        entries = body.get("entries") if isinstance(body, dict) else None
+        return json_response(
+            platform_builder.collaborative_ai.share_knowledge(
+                request.match_info["session_id"], entries
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_decide_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.collaborative_ai.decide(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_report_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.collaborative_ai.executive_summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_performance_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.collaborative_ai.performance(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_explain_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json() if request.method == "POST" and request.can_read_body else {}
+        recommendation = body.get("recommendation") if isinstance(body, dict) else None
+        if not recommendation:
+            recommendation = request.rel_url.query.get("recommendation")
+        return json_response(
+            platform_builder.collaborative_ai.explain_decision(
+                request.match_info["session_id"], recommendation
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_ops_handler(request: web.Request) -> web.Response:
+    try:
+        team_id = request.rel_url.query.get("team_id")
+        session_id = request.rel_url.query.get("session_id")
+        return json_response(
+            platform_builder.collaborative_ai.ops_foundation(team_id=team_id, session_id=session_id)
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_wizard_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.collaborative_ai.start_wizard(owner_id=body.get("owner_id")),
+                status=201,
+            )
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(
+                platform_builder.collaborative_ai.update_wizard(session_id, body)
+            )
+        return json_response(platform_builder.collaborative_ai.get_wizard(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.collaborative_ai.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def collab_wizard_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.collaborative_ai.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

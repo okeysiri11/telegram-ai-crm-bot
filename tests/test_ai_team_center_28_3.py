@@ -74,7 +74,7 @@ def test_ai_team_center_dashboard_and_actions():
     assert assigned["member"]["current_task"] == "Prepare board pack"
 
     foundation = platform_builder.ai_team.group_chat_foundation()
-    assert foundation["status"] == "architecture_only"
+    assert foundation["status"] == "operational"
     assert "Lawyer" in foundation["invite_roles"]
     assert "conversation_history" in foundation["model"]
     assert "decision_summary" in foundation["model"]
@@ -117,7 +117,7 @@ async def test_api_ai_team(client):
 
     group = await client.get(f"{PREFIX}/ai-team/group-chat")
     assert group.status == 200
-    assert (await group.json())["status"] == "architecture_only"
+    assert (await group.json())["status"] == "operational"
 
     st = await client.get(f"{PREFIX}/ai-team/status")
     assert st.status == 200

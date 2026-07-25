@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+from applications.platform_builder.config import DEFAULT_CONFIG
 from applications.platform_builder.control_center.catalogs import (
     ARCHITECTURE_GRAPHS,
     DIAGNOSTIC_CHECKS,
@@ -48,7 +49,7 @@ class PlatformControlCenter:
         return {
             "ready": True,
             "version": "2.0.0",
-            "sprint": "28.7",
+            "sprint": DEFAULT_CONFIG.sprint,
             "operational": True,
             "god_mode_expansion": True,
             "platform_control_center_ready": True,

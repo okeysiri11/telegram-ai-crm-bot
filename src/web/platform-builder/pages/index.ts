@@ -2,6 +2,7 @@ export { PlatformBuilderDashboard } from "./PlatformBuilderDashboard";
 export { AIBuilderPage } from "./AIBuilderPage";
 export { ConciergeBuilderPage } from "./ConciergeBuilderPage";
 export { AITeamCenterPage } from "../ai-team/AITeamCenterPage";
+export { CollaborativeAIPage } from "./CollaborativeAIPage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
 export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";

@@ -41,6 +41,7 @@ import {
   AIBuilderPage,
   AITeamCenterPage,
   BuilderAcademyPage,
+  CollaborativeAIPage,
   ConciergeBuilderPage,
   FrameBuilderPage,
   GodModePage,
@@ -217,6 +218,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <AITeamCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/collaborative-ai"
+        element={
+          <ProtectedRoute>
+            <CollaborativeAIPage />
           </ProtectedRoute>
         }
       />

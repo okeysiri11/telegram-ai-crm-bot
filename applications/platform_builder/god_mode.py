@@ -6,6 +6,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+from applications.platform_builder.config import DEFAULT_CONFIG
 from applications.platform_builder.shared.exceptions import ForbiddenError, ValidationError
 from applications.platform_builder.shared.store import PlatformBuilderStore, platform_builder_store
 
@@ -70,7 +71,7 @@ class GodMode:
             "isolated": True,
             "visible_to": PLATFORM_OWNER_ROLE,
             "version": "2.0.0",
-            "sprint": "28.7",
+            "sprint": DEFAULT_CONFIG.sprint,
             "expansion_ready": True,
             "platform_control_center_ready": True,
             "capabilities": list(GOD_CAPABILITIES),

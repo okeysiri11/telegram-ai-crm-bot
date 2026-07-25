@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.6.0",
-  "sprint": "28.7",
-  "release_status": "God Mode Expansion",
+  "application_version": "1.7.0",
+  "sprint": "28.8",
+  "release_status": "Collaborative AI",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -17,6 +17,8 @@
   "builder_sdk": "0.1",
   "ai_guide": "1.0",
   "platform_control_center": "1.0",
+  "collaborative_ai": "1.0",
+  "collective_intelligence": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }

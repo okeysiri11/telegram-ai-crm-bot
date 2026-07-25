@@ -231,6 +231,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Interactive learning, AI Guide, and adaptive builder guidance.",
     },
     {
+        "id": "collaborative_ai",
+        "name": "Collaborative AI",
+        "route": "/platform-builder/collaborative-ai",
+        "kind": "builder",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Coordinate AI Specialists via Concierge for collective intelligence.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",
