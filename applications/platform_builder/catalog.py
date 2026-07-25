@@ -53,6 +53,19 @@ VERTICAL_STEPS = (
     "Create",
 )
 
+UNIVERSAL_FRAMEWORK_STEPS = (
+    "Universal Builder Template",
+    "Universal UI Components",
+    "Validation Framework",
+    "Live Preview Engine",
+    "Builder Registry",
+    "Template Engine",
+    "Extension System",
+    "Builder SDK",
+    "Summary",
+    "Create",
+)
+
 GENERIC_STEPS = (
     "Define Scope",
     "Configure Structure",
@@ -71,6 +84,17 @@ BUILDERS: list[dict[str, Any]] = [
         "status": "operational",
         "learning_supported": True,
         "frame_only": False,
+    },
+    {
+        "id": "universal_framework",
+        "name": "Universal Builder Framework",
+        "route": "/platform-builder/framework",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "steps": list(UNIVERSAL_FRAMEWORK_STEPS),
+        "purpose": "One common architecture for every Platform Builder.",
     },
     {
         "id": "vertical",

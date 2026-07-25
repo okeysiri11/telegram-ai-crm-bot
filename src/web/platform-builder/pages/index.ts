@@ -3,6 +3,7 @@ export { AIBuilderPage } from "./AIBuilderPage";
 export { ConciergeBuilderPage } from "./ConciergeBuilderPage";
 export { AITeamCenterPage } from "../ai-team/AITeamCenterPage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
+export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";
 export { BuilderAcademyPage } from "./BuilderAcademyPage";
 export { GodModePage } from "./GodModePage";

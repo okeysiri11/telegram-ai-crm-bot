@@ -1,5 +1,5 @@
-export const PLATFORM_BUILDER_VERSION = "1.3.0";
-export const PLATFORM_BUILDER_SPRINT = "28.4";
+export const PLATFORM_BUILDER_VERSION = "1.4.0";
+export const PLATFORM_BUILDER_SPRINT = "28.5";
 export const PLATFORM_BUILDER_API = "/api/platform-builder/v1";
 
 export const FRAMEWORK_PHASES = [
@@ -47,6 +47,19 @@ export const VERTICAL_STEPS = [
   "Dashboard",
   "Workspace",
   "Live Organization Preview",
+  "Summary",
+  "Create",
+] as const;
+
+export const UNIVERSAL_FRAMEWORK_STEPS = [
+  "Universal Builder Template",
+  "Universal UI Components",
+  "Validation Framework",
+  "Live Preview Engine",
+  "Builder Registry",
+  "Template Engine",
+  "Extension System",
+  "Builder SDK",
   "Summary",
   "Create",
 ] as const;

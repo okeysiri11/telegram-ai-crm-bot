@@ -107,3 +107,35 @@ def register_platform_builder_routes(app: web.Application) -> None:
         handlers.vertical_create_handler,
     )
     app.router.add_get(f"{prefix}/vertical/registry", handlers.vertical_registry_handler)
+
+    # Sprint 28.5 — Universal Builder Framework
+    app.router.add_get(f"{prefix}/ubf/catalog", handlers.ubf_catalog_handler)
+    app.router.add_post(f"{prefix}/ubf/bootstrap", handlers.ubf_bootstrap_handler)
+    app.router.add_post(f"{prefix}/ubf/sessions", handlers.ubf_session_handler)
+    app.router.add_get(f"{prefix}/ubf/sessions/{{session_id}}", handlers.ubf_session_handler)
+    app.router.add_patch(f"{prefix}/ubf/sessions/{{session_id}}", handlers.ubf_session_handler)
+    app.router.add_post(
+        f"{prefix}/ubf/sessions/{{session_id}}/validate",
+        handlers.ubf_validate_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/ubf/sessions/{{session_id}}/preview",
+        handlers.ubf_preview_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/ubf/sessions/{{session_id}}/summary",
+        handlers.ubf_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/ubf/sessions/{{session_id}}/create",
+        handlers.ubf_create_handler,
+    )
+    app.router.add_get(f"{prefix}/ubf/registry", handlers.ubf_registry_handler)
+    app.router.add_get(f"{prefix}/ubf/templates", handlers.ubf_templates_handler)
+    app.router.add_post(f"{prefix}/ubf/templates", handlers.ubf_templates_handler)
+    app.router.add_post(
+        f"{prefix}/ubf/templates/{{template_id}}/clone",
+        handlers.ubf_template_clone_handler,
+    )
+    app.router.add_get(f"{prefix}/ubf/sdk", handlers.ubf_sdk_handler)
+    app.router.add_post(f"{prefix}/ubf/sdk/define", handlers.ubf_sdk_define_handler)

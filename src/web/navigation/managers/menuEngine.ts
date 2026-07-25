@@ -112,6 +112,7 @@ const menu: MenuItem[] = [
     group: "platform",
     children: [
       { id: "nav_pb_dash", name: "Dashboard", icon: "analytics", route: "/platform-builder", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_pb_framework", name: "Universal Framework", icon: "workflow", route: "/platform-builder/framework", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_vertical", name: "Vertical Builder", icon: "erp", route: "/platform-builder/vertical", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_ai", name: "AI Builder", icon: "ai", route: "/platform-builder/ai", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_concierge", name: "Concierge Builder", icon: "ai", route: "/platform-builder/concierge", module: "platform_builder", permissions: ["read"], status: "beta" },

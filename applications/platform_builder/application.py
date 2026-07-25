@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 28.4."""
+"""Platform Builder application facade — Sprint 28.5."""
 
 from __future__ import annotations
 
@@ -14,6 +14,7 @@ from applications.platform_builder.builder_engine import BuilderEngine
 from applications.platform_builder.catalog import BUILDERS, menu_for_role
 from applications.platform_builder.concierge.wizard import ConciergeWizard
 from applications.platform_builder.config import DEFAULT_CONFIG, PlatformBuilderConfig
+from applications.platform_builder.framework.engine import UniversalBuilderFramework
 from applications.platform_builder.god_mode import PLATFORM_OWNER_ROLE, GodMode, is_platform_owner
 from applications.platform_builder.shared.store import PlatformBuilderStore, platform_builder_store
 from applications.platform_builder.vertical.wizard import VerticalWizard
@@ -42,6 +43,7 @@ class PlatformBuilderApplication:
         concierge: ConciergeWizard | None = None,
         ai_team: AITeamCenter | None = None,
         vertical: VerticalWizard | None = None,
+        ubf: UniversalBuilderFramework | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -52,6 +54,7 @@ class PlatformBuilderApplication:
         self.concierge = concierge or ConciergeWizard(self.store)
         self.ai_team = ai_team or AITeamCenter(self.store)
         self.vertical = vertical or VerticalWizard(self.store)
+        self.ubf = ubf or UniversalBuilderFramework(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -62,9 +65,11 @@ class PlatformBuilderApplication:
         self.concierge = ConciergeWizard(self.store)
         self.ai_team = AITeamCenter(self.store)
         self.vertical = VerticalWizard(self.store)
+        self.ubf = UniversalBuilderFramework(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
+        ubf_boot = self.ubf.bootstrap()
         bid = _id("pb_boot")
         record = {
             "bootstrap_id": bid,
@@ -91,14 +96,20 @@ class PlatformBuilderApplication:
             "platform_registry_ready": True,
             "visual_layer_ready": True,
             "organization_preview_ready": True,
+            "universal_builder_framework_ready": True,
+            "builder_registry_ready": True,
+            "template_engine_ready": True,
+            "builder_sdk_foundation_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
             "dashboard_page_exists": (web / "pages" / "PlatformBuilderDashboard.tsx").exists(),
             "framework_exists": (web / "framework" / "BuilderFramework.tsx").exists(),
+            "ubf_page_exists": (web / "pages" / "UniversalFrameworkPage.tsx").exists(),
             "ai_builder_page_exists": (web / "pages" / "AIBuilderPage.tsx").exists(),
             "concierge_page_exists": (web / "pages" / "ConciergeBuilderPage.tsx").exists(),
             "vertical_page_exists": (web / "pages" / "VerticalBuilderPage.tsx").exists(),
+            "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
         self.store.bootstraps.save(bid, record)
@@ -140,6 +151,13 @@ class PlatformBuilderApplication:
             "platform_registry_ready": True,
             "visual_layer_ready": True,
             "organization_preview_ready": True,
+            "universal_builder_framework_ready": True,
+            "builder_registry_ready": True,
+            "template_engine_ready": True,
+            "builder_sdk_foundation_ready": True,
+            "live_preview_engine_ready": True,
+            "validation_framework_ready": True,
+            "extension_system_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -149,11 +167,14 @@ class PlatformBuilderApplication:
                 "concierge_builder": self.config.concierge_builder,
                 "ai_team_center": self.config.ai_team_center,
                 "vertical_builder": self.config.vertical_builder,
+                "universal_builder_framework": self.config.universal_builder_framework,
+                "builder_sdk": self.config.builder_sdk,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
             "ai_team": self.ai_team.status(),
             "vertical": self.vertical.status(),
+            "ubf": self.ubf.status(),
         }
 
     def inventory(self) -> dict[str, Any]:
@@ -162,12 +183,14 @@ class PlatformBuilderApplication:
             "version": self.config.application_version,
             "sprint": self.config.sprint,
             "framework_phases": list(self.config.framework_phases),
+            "universal_lifecycle": list(self.config.universal_lifecycle),
             "academy_modes": list(self.config.academy_modes),
             "builders": self.engine.list_builders(),
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "ai_builder": self.ai_builder.catalog(),
             "concierge": self.concierge.catalog(),
             "vertical": self.vertical.catalog(),
+            "ubf": self.ubf.catalog(),
         }
 
     def dashboard(self) -> dict[str, Any]:
@@ -187,11 +210,16 @@ class PlatformBuilderApplication:
                 if b["id"] != "god_mode"
             ],
             "academy": self.academy.status(),
-            "framework": {"phases": list(self.config.framework_phases), "ready": True},
+            "framework": {
+                "phases": list(self.config.framework_phases),
+                "lifecycle": list(self.config.universal_lifecycle),
+                "ready": True,
+            },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
             "ai_team": self.ai_team.status(),
             "vertical": self.vertical.status(),
+            "ubf": self.ubf.status(),
             "stats": {
                 "builders": len([b for b in BUILDERS if b["kind"] == "builder"]),
                 "frame_only": len([b for b in BUILDERS if b.get("frame_only")]),

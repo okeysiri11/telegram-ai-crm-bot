@@ -53,6 +53,13 @@ class PlatformBuilderStore:
         self.vertical_organizations: EntityStore = EntityStore()
         self.platform_registry: EntityStore = EntityStore()
         self.visual_layers: EntityStore = EntityStore()
+        # Sprint 28.5 — Universal Builder Framework
+        self.framework_sessions: EntityStore = EntityStore()
+        self.builder_type_registry: EntityStore = EntityStore()
+        self.builder_templates: EntityStore = EntityStore()
+        self.builder_extensions: EntityStore = EntityStore()
+        self.builder_components: EntityStore = EntityStore()
+        self.builder_schemas: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

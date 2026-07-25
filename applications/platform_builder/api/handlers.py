@@ -424,3 +424,108 @@ async def vertical_registry_handler(request: web.Request) -> web.Response:
         return json_response(platform_builder.vertical.registry.list_all())
     except Exception as exc:
         return _handle_error(exc)
+
+
+async def ubf_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.ubf.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_bootstrap_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.ubf.bootstrap(), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.ubf.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.ubf.update_session(session_id, body))
+        return json_response(platform_builder.ubf.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_validate_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.ubf.validate_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_preview_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.ubf.preview(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_summary_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.ubf.summary(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_create_handler(request: web.Request) -> web.Response:
+    try:
+        session_id = request.match_info["session_id"]
+        return json_response(platform_builder.ubf.create(session_id), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_registry_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.ubf.registry.list_all())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_templates_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(platform_builder.ubf.templates.save_template(body), status=201)
+        return json_response(platform_builder.ubf.templates.list_all())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_template_clone_handler(request: web.Request) -> web.Response:
+    try:
+        template_id = request.match_info["template_id"]
+        body = await request.json() if request.body_exists else {}
+        return json_response(
+            platform_builder.ubf.templates.clone(template_id, new_name=body.get("name")),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_sdk_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.ubf.sdk.foundation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ubf_sdk_define_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        return json_response(platform_builder.ubf.sdk.define_builder(body), status=201)
+    except Exception as exc:
+        return _handle_error(exc)

@@ -3,11 +3,13 @@ import {
   AI_BUILDER_STEPS,
   CONCIERGE_STEPS,
   GENERIC_STEPS,
+  UNIVERSAL_FRAMEWORK_STEPS,
   VERTICAL_STEPS,
 } from "../types";
 
 export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "dashboard", name: "Dashboard", route: "/platform-builder", kind: "hub", status: "operational" },
+  { id: "universal_framework", name: "Universal Builder Framework", route: "/platform-builder/framework", kind: "hub", status: "operational", steps: UNIVERSAL_FRAMEWORK_STEPS, purpose: "One common architecture for every Platform Builder." },
   { id: "vertical", name: "Vertical Builder", route: "/platform-builder/vertical", kind: "builder", status: "operational", steps: VERTICAL_STEPS, frameOnly: false, purpose: "Visually create complete Enterprise Verticals without programming." },
   { id: "ai", name: "AI Builder", route: "/platform-builder/ai", kind: "builder", status: "operational", steps: AI_BUILDER_STEPS, frameOnly: false, purpose: "Compose AI agent teams with clear roles and personalities." },
   { id: "concierge", name: "Concierge Builder", route: "/platform-builder/concierge", kind: "builder", status: "operational", steps: CONCIERGE_STEPS, frameOnly: false, purpose: "Configure the single organizational Concierge assistant.", constraints: { onePerOrganization: true, separateFromAiAgents: true } },

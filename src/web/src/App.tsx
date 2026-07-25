@@ -45,6 +45,7 @@ import {
   FrameBuilderPage,
   GodModePage,
   PlatformBuilderDashboard,
+  UniversalFrameworkPage,
   VerticalBuilderPage,
 } from "../platform-builder/pages";
 
@@ -184,6 +185,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <PlatformBuilderDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/framework"
+        element={
+          <ProtectedRoute>
+            <UniversalFrameworkPage />
           </ProtectedRoute>
         }
       />

@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.3.0",
-  "sprint": "28.4",
-  "release_status": "Enterprise Vertical Builder",
+  "application_version": "1.4.0",
+  "sprint": "28.5",
+  "release_status": "Universal Builder Framework",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "1.0",
@@ -13,6 +13,8 @@
   "concierge_builder": "1.0",
   "ai_team_center": "1.0",
   "vertical_builder": "1.0",
+  "universal_builder_framework": "1.0",
+  "builder_sdk": "0.1",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }
