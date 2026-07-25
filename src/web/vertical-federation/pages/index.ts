@@ -1,0 +1,1 @@
+export { VerticalFederationPage } from "./VerticalFederationPage";

@@ -1,4 +1,4 @@
-"""Tests — Enterprise Multi-Agent Operating System (Sprint 27.2 / v9.3.0)."""
+"""Tests — Enterprise Multi-Agent Operating System (Sprint 27.2 / v9.4.0)."""
 
 from __future__ import annotations
 
@@ -119,14 +119,14 @@ def reset_store():
 
 def test_version_enterprise_ai_os_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.3.0"
+    assert health["application_version"] == "9.4.0"
     assert health["enterprise_ai_os_ready"] is True
     assert health["executive_ai_ready"] is True
     assert health["agent_registry_v2_ready"] is True
     assert health["task_orchestrator_ready"] is True
     assert health["ai_collaboration_ready"] is True
     assert health["engines"]["enterprise_ai_os"] == "1.0"
-    assert VERSION == "9.3.0"
+    assert VERSION == "9.4.0"
     assert "executive_ai_director" in ARCHITECTURE
     assert "request" in BUS_MESSAGE_TYPES
     assert "parallel" in ORCHESTRATOR_MODES
@@ -140,7 +140,7 @@ def test_executive_registry_bus_orchestrator_memory_collaboration():
     suite = enterprise_hub.enterprise_ai_os
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["hub_version"] == "9.3.0"
+    assert boot["hub_version"] == "9.4.0"
     assert boot["executive_ai_ready"] is True
     assert boot["agent_registry_ready"] is True
     assert boot["communication_bus_ready"] is True
@@ -200,7 +200,7 @@ def test_executive_registry_bus_orchestrator_memory_collaboration():
 async def test_api_enterprise_ai_os(client):
     health = await client.get(f"{MAOS}/health")
     body = await health.json()
-    assert body["application_version"] == "9.3.0"
+    assert body["application_version"] == "9.4.0"
     assert body["enterprise_ai_os_ready"] is True
 
     boot = await client.post(f"{MAOS}/bootstrap", json={})
@@ -250,14 +250,14 @@ async def test_api_enterprise_ai_os(client):
     for prefix in ("/api/release/v1", "/api/enterprise-navigation/v1", "/api/enterprise-command/v1", "/api/enterprise-aios/v1"):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "9.3.0"
+        assert (await resp.json())["application_version"] == "9.4.0"
 
     for prefix in PREFIXES:
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         data = await resp.json()
         version = data.get("application_version") or data.get("data", {}).get("application_version")
-        assert version == "9.3.0"
+        assert version == "9.4.0"
 
 
 def test_docs_and_regression_27_1():
@@ -280,5 +280,5 @@ def test_docs_and_regression_27_1():
     assert ENT.application_version == "4.0.0-enterprise"
     assert AUTO.application_version == "4.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.3.0"' in manifest
-    assert "27.2" in manifest
+    assert '"application_version": "9.4.0"' in manifest
+    assert "27.3" in manifest

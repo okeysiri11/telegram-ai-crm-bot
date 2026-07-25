@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-VERSION = "9.3.0"
+VERSION = "9.4.0"
 API_PREFIX = "/api/organization-brain/v1"
 WEB_PATH = "src/web/organization-brain"
 SPRINT = "27.2"

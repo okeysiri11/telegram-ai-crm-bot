@@ -1,4 +1,4 @@
-"""Tests — Enterprise Organization Brain (Sprint 27.2 / v9.3.0)."""
+"""Tests — Enterprise Organization Brain (Sprint 27.2 / v9.4.0)."""
 
 from __future__ import annotations
 
@@ -119,7 +119,7 @@ def reset_store():
 
 def test_version_organization_brain_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.3.0"
+    assert health["application_version"] == "9.4.0"
     assert health["organization_brain_ready"] is True
     assert health["executive_board_ready"] is True
     assert health["department_orchestration_ready"] is True
@@ -128,7 +128,7 @@ def test_version_organization_brain_ready():
     assert health["organization_knowledge_ready"] is True
     assert health["org_executive_dashboard_ready"] is True
     assert health["engines"]["organization_brain"] == "1.0"
-    assert VERSION == "9.3.0"
+    assert VERSION == "9.4.0"
     assert "organization_model" in ARCHITECTURE
     assert "CEO" in EXECUTIVE_BOARD
     assert "Sales" in DEPARTMENTS
@@ -142,7 +142,7 @@ def test_org_board_departments_decisions_meetings_knowledge():
     suite = enterprise_hub.organization_brain
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["hub_version"] == "9.3.0"
+    assert boot["hub_version"] == "9.4.0"
     assert boot["organization_model_ready"] is True
     assert boot["executive_board_ready"] is True
     assert boot["decision_engine_ready"] is True
@@ -206,7 +206,7 @@ def test_org_board_departments_decisions_meetings_knowledge():
 async def test_api_organization_brain(client):
     health = await client.get(f"{OBR}/health")
     body = await health.json()
-    assert body["application_version"] == "9.3.0"
+    assert body["application_version"] == "9.4.0"
     assert body["organization_brain_ready"] is True
 
     boot = await client.post(f"{OBR}/bootstrap", json={})
@@ -257,14 +257,14 @@ async def test_api_organization_brain(client):
     ):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "9.3.0"
+        assert (await resp.json())["application_version"] == "9.4.0"
 
     for prefix in PREFIXES:
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         data = await resp.json()
         version = data.get("application_version") or data.get("data", {}).get("application_version")
-        assert version == "9.3.0"
+        assert version == "9.4.0"
 
 
 def test_docs_and_regression_27_2():
@@ -286,5 +286,5 @@ def test_docs_and_regression_27_2():
     assert ENT.application_version == "4.0.0-enterprise"
     assert AUTO.application_version == "4.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.3.0"' in manifest
-    assert "27.2" in manifest
+    assert '"application_version": "9.4.0"' in manifest
+    assert "27.3" in manifest

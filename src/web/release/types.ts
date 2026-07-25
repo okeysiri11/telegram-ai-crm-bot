@@ -1,4 +1,4 @@
-export const RELEASE_VERSION = "9.3.0";
+export const RELEASE_VERSION = "9.4.0";
 export const RELEASE_CODE = "RC1";
 export const RELEASE_API = "/api/release/v1";
 export const RELEASE_PATH = "src/web/release";

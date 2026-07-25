@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 NAV_PATH = "src/web/navigation"
-VERSION = "9.3.0"
+VERSION = "9.4.0"
 API_PREFIX = "/api/enterprise-navigation/v1"
 
 ARCHITECTURE = (

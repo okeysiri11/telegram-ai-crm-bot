@@ -1,4 +1,4 @@
-export const ORGANIZATION_BRAIN_VERSION = "9.3.0";
+export const ORGANIZATION_BRAIN_VERSION = "9.4.0";
 export const ORGANIZATION_BRAIN_SPRINT = "27.2";
 export const ORGANIZATION_BRAIN_API = "/api/organization-brain/v1";
 

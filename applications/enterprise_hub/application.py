@@ -62,6 +62,7 @@ from applications.enterprise_hub.navigation.facade import EnterpriseNavigationSu
 from applications.enterprise_hub.release_candidate.facade import ReleaseCandidateSuite
 from applications.enterprise_hub.enterprise_ai_os.facade import EnterpriseAIOSSuite
 from applications.enterprise_hub.organization_brain.facade import OrganizationBrainSuite
+from applications.enterprise_hub.vertical_federation.facade import VerticalFederationSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -158,6 +159,7 @@ class EnterpriseHubApplication:
         release_candidate_svc: ReleaseCandidateSuite | None = None,
         enterprise_ai_os_svc: EnterpriseAIOSSuite | None = None,
         organization_brain_svc: OrganizationBrainSuite | None = None,
+        vertical_federation_svc: VerticalFederationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -237,6 +239,7 @@ class EnterpriseHubApplication:
         self.release_candidate = release_candidate_svc or ReleaseCandidateSuite(self.store)
         self.enterprise_ai_os = enterprise_ai_os_svc or EnterpriseAIOSSuite(self.store)
         self.organization_brain = organization_brain_svc or OrganizationBrainSuite(self.store)
+        self.vertical_federation = vertical_federation_svc or VerticalFederationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -708,6 +711,13 @@ class EnterpriseHubApplication:
             "executive_meetings_ready": True,
             "organization_knowledge_ready": True,
             "org_executive_dashboard_ready": True,
+            "vertical_federation_ready": True,
+            "vertical_registry_ready": True,
+            "vertical_executive_ai_ready": True,
+            "cross_vertical_communication_ready": True,
+            "unified_vertical_dashboard_ready": True,
+            "vertical_marketplace_ready": True,
+            "knowledge_federation_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -783,6 +793,7 @@ class EnterpriseHubApplication:
                 "release_candidate": self.config.release_candidate,
                 "enterprise_ai_os": self.config.enterprise_ai_os,
                 "organization_brain": self.config.organization_brain,
+                "vertical_federation": self.config.vertical_federation,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -862,6 +873,7 @@ class EnterpriseHubApplication:
             "release_candidate": self.release_candidate.status(),
             "enterprise_ai_os": self.enterprise_ai_os.status(),
             "organization_brain": self.organization_brain.status(),
+            "vertical_federation": self.vertical_federation.status(),
         }
 
 

@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 27.2 Enterprise Organization Brain."""
+"""Enterprise Hub — Sprint 27.3 Enterprise Vertical Federation."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "9.3.0"
-    release_status: str = "Enterprise Organization Brain"
+    application_version: str = "9.4.0"
+    release_status: str = "Enterprise Vertical Federation"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
@@ -85,6 +85,7 @@ class EnterpriseHubConfig:
     release_candidate_api_prefix: str = "/api/release/v1"
     enterprise_ai_os_api_prefix: str = "/api/ai-os/v1"
     organization_brain_api_prefix: str = "/api/organization-brain/v1"
+    vertical_federation_api_prefix: str = "/api/verticals/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -160,6 +161,7 @@ class EnterpriseHubConfig:
     release_candidate: str = "1.0"
     enterprise_ai_os: str = "1.0"
     organization_brain: str = "1.0"
+    vertical_federation: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

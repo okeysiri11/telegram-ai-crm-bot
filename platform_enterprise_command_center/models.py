@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 CC_PATH = "src/web/command-center"
-VERSION = "9.3.0"
+VERSION = "9.4.0"
 API_PREFIX = "/api/enterprise-command/v1"
 
 ARCHITECTURE = (

@@ -914,6 +914,18 @@ class EnterpriseHubStore:
         self.obr_orchestrations: EntityStore = EntityStore()
         self.obr_decisions: EntityStore = EntityStore()
         self.obr_meetings: EntityStore = EntityStore()
+        # Sprint 27.3 — Vertical Federation
+        self.vf_bootstraps: EntityStore = EntityStore()
+        self.vf_inventory: EntityStore = EntityStore()
+        self.vf_dashboards: EntityStore = EntityStore()
+        self.vf_registry: EntityStore = EntityStore()
+        self.vf_directors: EntityStore = EntityStore()
+        self.vf_director_actions: EntityStore = EntityStore()
+        self.vf_links: EntityStore = EntityStore()
+        self.vf_messages: EntityStore = EntityStore()
+        self.vf_marketplace: EntityStore = EntityStore()
+        self.vf_knowledge: EntityStore = EntityStore()
+        self.vf_integrations: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

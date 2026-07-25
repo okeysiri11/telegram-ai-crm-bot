@@ -5,5 +5,5 @@ export * from "./types";
 export { buildAuthenticationDashboard } from "./dashboard/authDashboard";
 export * from "./pages";
 
-export const AUTH_UI_VERSION = "9.3.0";
+export const AUTH_UI_VERSION = "9.4.0";
 export const AUTH_UI_PATH = "src/web/auth";

@@ -68,6 +68,7 @@ from applications.enterprise_hub.navigation import api as env_api
 from applications.enterprise_hub.release_candidate import api as rc_api
 from applications.enterprise_hub.enterprise_ai_os import api as maos_api
 from applications.enterprise_hub.organization_brain import api as obr_api
+from applications.enterprise_hub.vertical_federation import api as vf_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1205,3 +1206,23 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{obr}/knowledge", obr_api.obr_knowledge_handler)
     app.router.add_post(f"{obr}/knowledge", obr_api.obr_knowledge_handler)
     app.router.add_get(f"{obr}/exec-dashboard", obr_api.obr_dashboard_handler)
+
+    # Sprint 27.3 — Enterprise Vertical Federation
+    vf = DEFAULT_CONFIG.vertical_federation_api_prefix
+    app.router.add_get(f"{vf}/health", vf_api.vf_health_handler)
+    app.router.add_post(f"{vf}/bootstrap", vf_api.vf_bootstrap_handler)
+    app.router.add_get(f"{vf}/inventory", vf_api.vf_inventory_handler)
+    app.router.add_get(f"{vf}/dashboard", vf_api.vf_dashboard_handler)
+    app.router.add_get(f"{vf}/registry", vf_api.vf_registry_handler)
+    app.router.add_post(f"{vf}/registry", vf_api.vf_registry_handler)
+    app.router.add_get(f"{vf}/directors", vf_api.vf_directors_handler)
+    app.router.add_post(f"{vf}/directors/act", vf_api.vf_director_act_handler)
+    app.router.add_get(f"{vf}/links", vf_api.vf_links_handler)
+    app.router.add_get(f"{vf}/communicate", vf_api.vf_communicate_handler)
+    app.router.add_post(f"{vf}/communicate", vf_api.vf_communicate_handler)
+    app.router.add_get(f"{vf}/marketplace", vf_api.vf_marketplace_handler)
+    app.router.add_post(f"{vf}/marketplace", vf_api.vf_marketplace_handler)
+    app.router.add_get(f"{vf}/knowledge", vf_api.vf_knowledge_handler)
+    app.router.add_post(f"{vf}/knowledge", vf_api.vf_knowledge_handler)
+    app.router.add_post(f"{vf}/search", vf_api.vf_search_handler)
+    app.router.add_get(f"{vf}/exec-dashboard", vf_api.vf_dashboard_handler)

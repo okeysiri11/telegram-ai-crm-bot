@@ -36,6 +36,7 @@ import { CommandCenterPage } from "../command-center/pages";
 import { ReleaseCandidatePage } from "../release/pages";
 import { AIOSPage } from "../ai-os/pages";
 import { OrganizationBrainPage } from "../organization-brain/pages";
+import { VerticalFederationPage } from "../vertical-federation/pages";
 
 export function App() {
   return (
@@ -157,6 +158,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <OrganizationBrainPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/vertical-federation"
+        element={
+          <ProtectedRoute>
+            <VerticalFederationPage />
           </ProtectedRoute>
         }
       />

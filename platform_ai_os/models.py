@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-VERSION = "9.3.0"
+VERSION = "9.4.0"
 API_PREFIX = "/api/ai-os/v1"
 MAOS_PREFIX = "/api/ai-os/v1/maos"
 WEB_PATH = "src/web/ai-os"

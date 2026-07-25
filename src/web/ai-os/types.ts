@@ -1,4 +1,4 @@
-export const AI_OS_VERSION = "9.3.0";
+export const AI_OS_VERSION = "9.4.0";
 export const AI_OS_API = "/api/ai-os/v1";
 export const AI_OS_PATH = "src/web/ai-os";
 
