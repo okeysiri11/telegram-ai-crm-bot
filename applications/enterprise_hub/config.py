@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 26.1 Enterprise Web Foundation."""
+"""Enterprise Hub — Sprint 26.2 Enterprise Design System."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "9.0.0"
-    release_status: str = "Enterprise Web Foundation"
+    application_version: str = "9.0.1"
+    release_status: str = "Enterprise Design System"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
@@ -76,6 +76,7 @@ class EnterpriseHubConfig:
     production_readiness_api_prefix: str = "/api/enterprise-epd/v1"
     certification_api_prefix: str = "/api/enterprise-ecf/v1"
     web_foundation_api_prefix: str = "/api/enterprise-ewf/v1"
+    design_system_api_prefix: str = "/api/enterprise-eds/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -142,6 +143,7 @@ class EnterpriseHubConfig:
     production_readiness: str = "1.0"
     certification: str = "1.0"
     web_foundation: str = "1.0"
+    design_system: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

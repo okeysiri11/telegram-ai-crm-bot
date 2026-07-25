@@ -59,6 +59,7 @@ from applications.enterprise_hub.security_verification import api as esv_api
 from applications.enterprise_hub.production_readiness import api as epd_api
 from applications.enterprise_hub.certification import api as ecf_api
 from applications.enterprise_hub.web_foundation import api as ewf_api
+from applications.enterprise_hub.design_system import api as eds_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1081,3 +1082,11 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{ewf}/bootstrap", ewf_api.ewf_bootstrap_handler)
     app.router.add_get(f"{ewf}/inventory", ewf_api.ewf_inventory_handler)
     app.router.add_get(f"{ewf}/dashboard", ewf_api.ewf_dashboard_handler)
+
+    # Sprint 26.2 — Design System
+    eds = DEFAULT_CONFIG.design_system_api_prefix
+    app.router.add_get(f"{eds}/health", eds_api.eds_health_handler)
+    app.router.add_post(f"{eds}/bootstrap", eds_api.eds_bootstrap_handler)
+    app.router.add_get(f"{eds}/inventory", eds_api.eds_inventory_handler)
+    app.router.add_get(f"{eds}/documentation", eds_api.eds_documentation_handler)
+    app.router.add_get(f"{eds}/dashboard", eds_api.eds_dashboard_handler)

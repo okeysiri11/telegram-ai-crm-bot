@@ -5,8 +5,8 @@ import { hubIntegrations } from "@/integrations/hub";
 
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
-    expect(webConfig.version).toBe("9.0.0");
-    expect(webConfig.sprint).toBe("26.1");
+    expect(webConfig.version).toBe("9.0.1");
+    expect(webConfig.sprint).toBe("26.2");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.supportedLocales).toEqual(["en", "ru", "uk"]);
@@ -21,5 +21,6 @@ describe("Enterprise Web Foundation", () => {
   it("links enterprise integrations", () => {
     expect(hubIntegrations.enterpriseHub).toContain("enterprise-hub");
     expect(hubIntegrations.webFoundation).toContain("enterprise-ewf");
+    expect(hubIntegrations.designSystem).toContain("enterprise-eds");
   });
 });

@@ -1,35 +1,11 @@
 @import "tailwindcss";
-
-:root {
-  --ew-bg: #f4f6f8;
-  --ew-surface: #ffffff;
-  --ew-text: #142033;
-  --ew-muted: #5b6b7c;
-  --ew-border: #d7dee7;
-  --ew-brand: #0f6a5a;
-  --ew-brand-soft: #d8efe9;
-  --ew-danger: #b42318;
-  --ew-warning: #b54708;
-  --ew-success: #027a48;
-  --ew-font: "IBM Plex Sans", "Segoe UI", sans-serif;
-  --ew-display: "IBM Plex Sans", "Segoe UI", sans-serif;
-}
-
-[data-theme="dark"] {
-  --ew-bg: #0b1220;
-  --ew-surface: #121a2a;
-  --ew-text: #e8eef7;
-  --ew-muted: #9aa8b8;
-  --ew-border: #243247;
-  --ew-brand: #3ecfad;
-  --ew-brand-soft: #14352e;
-}
+@import "../design-system/styles/tokens.css";
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
 body {
   margin: 0;
-  font-family: var(--ew-font);
-  background: var(--ew-bg);
-  color: var(--ew-text);
+  font-family: var(--eds-font-sans);
+  background: var(--eds-bg);
+  color: var(--eds-text);
 }

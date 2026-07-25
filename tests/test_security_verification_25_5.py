@@ -106,7 +106,7 @@ def reset_store():
 
 def test_version_esv_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.0.0"
+    assert health["application_version"] == "9.0.1"
     assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
     assert health["security_verification_ready"] is True
     assert health["vulnerability_scanner_ready"] is True
@@ -125,7 +125,7 @@ def test_version_esv_ready():
 
 def test_security_gate_blocks_critical():
     suite = enterprise_hub.security_verification
-    clean = suite.run_gate(release="9.0.0")
+    clean = suite.run_gate(release="9.0.1")
     assert clean["release_blocked"] is False
     assert clean["production_allowed"] is True
     assert clean["reports"]["unified_security_report"] is True
@@ -136,7 +136,7 @@ def test_security_gate_blocks_critical():
     assert clean["compliance"]["passed"] is True
 
     blocked = suite.run_gate(
-        release="9.0.0",
+        release="9.0.1",
         vuln_findings=[{"check": "sql_injection", "severity": "critical"}],
         cves=[{"cve": "CVE-TEST-1", "package": "demo", "severity": "critical", "available_fix": "1.2.3"}],
     )
@@ -162,7 +162,7 @@ def test_bootstrap_esv():
     suite = enterprise_hub.security_verification
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "9.0.0"
+    assert boot["version"] == "9.0.1"
     assert boot["security_verification_ready"] is True
     assert boot["vulnerability_scanner_ready"] is True
     assert boot["secret_scanner_ready"] is True
@@ -179,7 +179,7 @@ def test_bootstrap_esv():
 async def test_api_esv(client):
     health = await client.get(f"{ESV}/health")
     body = await health.json()
-    assert body["application_version"] == "9.0.0"
+    assert body["application_version"] == "9.0.1"
     assert body["security_verification_ready"] is True
 
     boot = await client.post(f"{ESV}/bootstrap", json={})
@@ -191,14 +191,14 @@ async def test_api_esv(client):
     assert esh.status == 200
     esh_body = await esh.json()
     esh_version = esh_body.get("application_version") or esh_body.get("data", {}).get("application_version")
-    assert esh_version == "9.0.0"
+    assert esh_version == "9.0.1"
 
     for prefix in PREFIXES:
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.0.0"
+        assert version == "9.0.1"
 
 
 def test_docs_and_regression_25_5():
@@ -234,5 +234,5 @@ def test_docs_and_regression_25_5():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.0.0"' in manifest
-    assert "26.1" in manifest
+    assert '"application_version": "9.0.1"' in manifest
+    assert "26.2" in manifest

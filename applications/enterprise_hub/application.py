@@ -53,6 +53,7 @@ from applications.enterprise_hub.security_verification.facade import SecurityVer
 from applications.enterprise_hub.production_readiness.facade import ProductionReadinessSuite
 from applications.enterprise_hub.certification.facade import CertificationSuite
 from applications.enterprise_hub.web_foundation.facade import WebFoundationSuite
+from applications.enterprise_hub.design_system.facade import DesignSystemSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -140,6 +141,7 @@ class EnterpriseHubApplication:
         production_readiness_svc: ProductionReadinessSuite | None = None,
         certification_svc: CertificationSuite | None = None,
         web_foundation_svc: WebFoundationSuite | None = None,
+        design_system_svc: DesignSystemSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -210,6 +212,7 @@ class EnterpriseHubApplication:
         self.production_readiness = production_readiness_svc or ProductionReadinessSuite(self.store)
         self.certification = certification_svc or CertificationSuite(self.store)
         self.web_foundation = web_foundation_svc or WebFoundationSuite(self.store)
+        self.design_system = design_system_svc or DesignSystemSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -621,6 +624,13 @@ class EnterpriseHubApplication:
             "web_multi_tenant_ready": True,
             "themes_localization_ready": True,
             "web_dashboard_ready": True,
+            "design_system_ready": True,
+            "design_tokens_ready": True,
+            "component_catalog_ready": True,
+            "adaptive_grid_ready": True,
+            "accessibility_ready": True,
+            "design_themes_ready": True,
+            "design_documentation_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -687,6 +697,7 @@ class EnterpriseHubApplication:
                 "production_readiness": self.config.production_readiness,
                 "certification": self.config.certification,
                 "web_foundation": self.config.web_foundation,
+                "design_system": self.config.design_system,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -757,6 +768,7 @@ class EnterpriseHubApplication:
             "production_readiness": self.production_readiness.status(),
             "certification": self.certification.status(),
             "web_foundation": self.web_foundation.status(),
+            "design_system": self.design_system.status(),
         }
 
 

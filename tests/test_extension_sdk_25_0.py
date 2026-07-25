@@ -101,7 +101,7 @@ def reset_store():
 
 def test_version_ees_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.0.0"
+    assert health["application_version"] == "9.0.1"
     assert health["enterprise_foundation"] == "Enterprise Platform v8.7.0"
     assert health["extension_sdk_ready"] is True
     assert health["marketplace_foundation_ready"] is True
@@ -183,7 +183,7 @@ def test_bootstrap_ees():
     suite = enterprise_hub.extension_sdk
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["version"] == "9.0.0"
+    assert boot["version"] == "9.0.1"
     assert boot["extension_sdk_ready"] is True
     assert boot["marketplace_foundation_ready"] is True
     assert boot["extension_permissions_ready"] is True
@@ -200,7 +200,7 @@ def test_bootstrap_ees():
 async def test_api_ees(client):
     health = await client.get(f"{EES}/health")
     body = await health.json()
-    assert body["application_version"] == "9.0.0"
+    assert body["application_version"] == "9.0.1"
     assert body["extension_sdk_ready"] is True
 
     boot = await client.post(f"{EES}/bootstrap", json={})
@@ -212,7 +212,7 @@ async def test_api_ees(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.0.0"
+        assert version == "9.0.1"
 
 
 def test_docs_and_regression_25_0():
@@ -247,5 +247,5 @@ def test_docs_and_regression_25_0():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.0.0"' in manifest
-    assert "26.1" in manifest
+    assert '"application_version": "9.0.1"' in manifest
+    assert "26.2" in manifest

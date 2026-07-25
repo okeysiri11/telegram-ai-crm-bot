@@ -10,14 +10,15 @@ export function Button({ variant = "primary", size = "md", className, ...rest }:
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center rounded-md font-medium transition disabled:opacity-50",
-        size === "sm" && "h-8 px-3 text-sm",
-        size === "md" && "h-10 px-4 text-sm",
+        "eds-focus-ring eds-type-button inline-flex items-center justify-center transition disabled:opacity-[var(--eds-opacity-disabled)]",
+        "rounded-[var(--eds-radius-md)]",
+        size === "sm" && "h-8 px-3",
+        size === "md" && "h-10 px-4",
         size === "lg" && "h-11 px-5 text-base",
-        variant === "primary" && "bg-[var(--ew-brand)] text-white",
-        variant === "secondary" && "border border-[var(--ew-border)] bg-[var(--ew-surface)]",
-        variant === "ghost" && "bg-transparent hover:bg-[var(--ew-brand-soft)]",
-        variant === "danger" && "bg-[var(--ew-danger)] text-white",
+        variant === "primary" && "bg-[var(--eds-primary)] text-white hover:bg-[var(--eds-primary-hover)] active:bg-[var(--eds-primary-active)]",
+        variant === "secondary" && "border border-[var(--eds-border)] bg-[var(--eds-surface)]",
+        variant === "ghost" && "bg-transparent hover:bg-[var(--eds-primary-soft)]",
+        variant === "danger" && "bg-[var(--eds-danger)] text-white",
         className,
       )}
       {...rest}
