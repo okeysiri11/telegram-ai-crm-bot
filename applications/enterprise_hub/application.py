@@ -51,6 +51,8 @@ from applications.enterprise_hub.chaos_engineering.facade import ChaosEngineerin
 from applications.enterprise_hub.migration.facade import MigrationSuite
 from applications.enterprise_hub.security_verification.facade import SecurityVerificationSuite
 from applications.enterprise_hub.production_readiness.facade import ProductionReadinessSuite
+from applications.enterprise_hub.certification.facade import CertificationSuite
+from applications.enterprise_hub.web_foundation.facade import WebFoundationSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -136,6 +138,8 @@ class EnterpriseHubApplication:
         migration_svc: MigrationSuite | None = None,
         security_verification_svc: SecurityVerificationSuite | None = None,
         production_readiness_svc: ProductionReadinessSuite | None = None,
+        certification_svc: CertificationSuite | None = None,
+        web_foundation_svc: WebFoundationSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -204,6 +208,8 @@ class EnterpriseHubApplication:
         self.migration = migration_svc or MigrationSuite(self.store)
         self.security_verification = security_verification_svc or SecurityVerificationSuite(self.store)
         self.production_readiness = production_readiness_svc or ProductionReadinessSuite(self.store)
+        self.certification = certification_svc or CertificationSuite(self.store)
+        self.web_foundation = web_foundation_svc or WebFoundationSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -600,6 +606,21 @@ class EnterpriseHubApplication:
             "continuous_health_ready": True,
             "centralized_logging_ready": True,
             "production_scaling_ready": True,
+            "certification_ready": True,
+            "quality_gates_ready": True,
+            "release_builder_ready": True,
+            "enterprise_certified": True,
+            "enterprise_ready": True,
+            "release_approved": True,
+            "ready_for_enterprise_web_platform": True,
+            "web_foundation_ready": True,
+            "web_shell_ready": True,
+            "navigation_ready": True,
+            "ui_library_ready": True,
+            "web_auth_ready": True,
+            "web_multi_tenant_ready": True,
+            "themes_localization_ready": True,
+            "web_dashboard_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -664,6 +685,8 @@ class EnterpriseHubApplication:
                 "migration": self.config.migration,
                 "security_verification": self.config.security_verification,
                 "production_readiness": self.config.production_readiness,
+                "certification": self.config.certification,
+                "web_foundation": self.config.web_foundation,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -732,6 +755,8 @@ class EnterpriseHubApplication:
             "migration": self.migration.status(),
             "security_verification": self.security_verification.status(),
             "production_readiness": self.production_readiness.status(),
+            "certification": self.certification.status(),
+            "web_foundation": self.web_foundation.status(),
         }
 
 

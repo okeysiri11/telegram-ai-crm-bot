@@ -57,6 +57,8 @@ from applications.enterprise_hub.chaos_engineering import api as ece_api
 from applications.enterprise_hub.migration import api as emr_api
 from applications.enterprise_hub.security_verification import api as esv_api
 from applications.enterprise_hub.production_readiness import api as epd_api
+from applications.enterprise_hub.certification import api as ecf_api
+from applications.enterprise_hub.web_foundation import api as ewf_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1065,3 +1067,17 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{epd}/bootstrap", epd_api.epd_bootstrap_handler)
     app.router.add_post(f"{epd}/gate", epd_api.epd_gate_handler)
     app.router.add_get(f"{epd}/dashboard", epd_api.epd_dashboard_handler)
+
+    # Sprint 25.7 — Certification (additive; ERL/EPD/EQA routes unchanged)
+    ecf = DEFAULT_CONFIG.certification_api_prefix
+    app.router.add_get(f"{ecf}/health", ecf_api.ecf_health_handler)
+    app.router.add_post(f"{ecf}/bootstrap", ecf_api.ecf_bootstrap_handler)
+    app.router.add_post(f"{ecf}/gate", ecf_api.ecf_gate_handler)
+    app.router.add_get(f"{ecf}/dashboard", ecf_api.ecf_dashboard_handler)
+
+    # Sprint 26.1 — Web Foundation (Phase 3)
+    ewf = DEFAULT_CONFIG.web_foundation_api_prefix
+    app.router.add_get(f"{ewf}/health", ewf_api.ewf_health_handler)
+    app.router.add_post(f"{ewf}/bootstrap", ewf_api.ewf_bootstrap_handler)
+    app.router.add_get(f"{ewf}/inventory", ewf_api.ewf_inventory_handler)
+    app.router.add_get(f"{ewf}/dashboard", ewf_api.ewf_dashboard_handler)

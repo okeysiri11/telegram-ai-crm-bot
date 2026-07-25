@@ -817,6 +817,25 @@ class EnterpriseHubStore:
         self.epd_deployments: EntityStore = EntityStore()
         self.epd_reports: EntityStore = EntityStore()
         self.epd_dashboards: EntityStore = EntityStore()
+        # Sprint 25.7 — Certification
+        self.ecf_bootstraps: EntityStore = EntityStore()
+        self.ecf_runs: EntityStore = EntityStore()
+        self.ecf_certifications: EntityStore = EntityStore()
+        self.ecf_quality: EntityStore = EntityStore()
+        self.ecf_architecture: EntityStore = EntityStore()
+        self.ecf_documentation: EntityStore = EntityStore()
+        self.ecf_readiness: EntityStore = EntityStore()
+        self.ecf_packages: EntityStore = EntityStore()
+        self.ecf_versions: EntityStore = EntityStore()
+        self.ecf_releases: EntityStore = EntityStore()
+        self.ecf_reports: EntityStore = EntityStore()
+        self.ecf_dashboards: EntityStore = EntityStore()
+        # Sprint 26.1 — Web Foundation
+        self.ewf_bootstraps: EntityStore = EntityStore()
+        self.ewf_shell: EntityStore = EntityStore()
+        self.ewf_auth: EntityStore = EntityStore()
+        self.ewf_catalog: EntityStore = EntityStore()
+        self.ewf_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

@@ -39,3 +39,5 @@ Import paths avoid Python stdlib/`platform` collisions.
 - Migration & DR: [`../platform_migration/`](../platform_migration/)
 - Security Verification (v8 gate): [`../platform_enterprise_security_verification/`](../platform_enterprise_security_verification/)
 - Production Readiness (v8 ops gate): [`../platform_enterprise_production/`](../platform_enterprise_production/)
+- Certification (v8 final gate): [`../platform_enterprise_certification/`](../platform_enterprise_certification/)
+- Web Foundation (v9): [`../platform_enterprise_web/`](../platform_enterprise_web/) · app [`../src/web/`](../src/web/)
