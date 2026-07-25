@@ -2355,3 +2355,129 @@ async def story_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.10 — Visual Intelligence Engine / Enterprise Visual Analytics ---
+
+
+async def intel_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_patterns_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.pattern_detection())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_anomalies_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.anomaly_detection())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_recommendations_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.attention_recommendations())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_executive_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.executive_insights())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_heatmaps_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.visual_heatmaps())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_trends_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.trend_engine())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_health_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.visual_health_index())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_predictive_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.predictive_foundation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_analyze_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.analyze_snapshot(), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.intelligence.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.intelligence.update_session(session_id, body))
+        return json_response(platform_builder.intelligence.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.intelligence.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def intel_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.intelligence.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

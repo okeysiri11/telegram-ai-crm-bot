@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.9."""
+"""Platform Builder application facade — Sprint 29.10."""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ from applications.platform_builder.assets.engine import VisualAssetRegistry
 from applications.platform_builder.simulation.engine import VisualSimulationEngine
 from applications.platform_builder.director.engine import VisualDirectorEngine
 from applications.platform_builder.story.engine import VisualStoryEngine
+from applications.platform_builder.intelligence.engine import VisualIntelligenceEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -68,6 +69,7 @@ class PlatformBuilderApplication:
         simulation: VisualSimulationEngine | None = None,
         director: VisualDirectorEngine | None = None,
         story: VisualStoryEngine | None = None,
+        intelligence: VisualIntelligenceEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -91,6 +93,7 @@ class PlatformBuilderApplication:
         self.simulation = simulation or VisualSimulationEngine(self.store)
         self.director = director or VisualDirectorEngine(self.store)
         self.story = story or VisualStoryEngine(self.store)
+        self.intelligence = intelligence or VisualIntelligenceEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -114,6 +117,7 @@ class PlatformBuilderApplication:
         self.simulation = VisualSimulationEngine(self.store)
         self.director = VisualDirectorEngine(self.store)
         self.story = VisualStoryEngine(self.store)
+        self.intelligence = VisualIntelligenceEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -202,6 +206,11 @@ class PlatformBuilderApplication:
             "story_timeline_ready": True,
             "executive_story_ready": True,
             "milestone_viewer_ready": True,
+            "visual_intelligence_engine_ready": True,
+            "insight_engine_ready": True,
+            "analytics_ready": True,
+            "recommendation_engine_ready": True,
+            "health_index_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -221,6 +230,7 @@ class PlatformBuilderApplication:
             "simulation_page_exists": (web / "pages" / "SimulationEnginePage.tsx").exists(),
             "director_page_exists": (web / "pages" / "DirectorEnginePage.tsx").exists(),
             "story_page_exists": (web / "pages" / "StoryEnginePage.tsx").exists(),
+            "intelligence_page_exists": (web / "pages" / "IntelligenceEnginePage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -324,6 +334,11 @@ class PlatformBuilderApplication:
             "story_timeline_ready": True,
             "executive_story_ready": True,
             "milestone_viewer_ready": True,
+            "visual_intelligence_engine_ready": True,
+            "insight_engine_ready": True,
+            "analytics_ready": True,
+            "recommendation_engine_ready": True,
+            "health_index_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -371,6 +386,10 @@ class PlatformBuilderApplication:
                 "story_builder": self.config.story_builder,
                 "story_timeline": self.config.story_timeline,
                 "executive_story_api": self.config.executive_story_api,
+                "visual_intelligence_engine": self.config.visual_intelligence_engine,
+                "insight_engine": self.config.insight_engine,
+                "recommendation_engine": self.config.recommendation_engine,
+                "analytics_registry": self.config.analytics_registry,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -394,6 +413,7 @@ class PlatformBuilderApplication:
             "simulation": self.simulation.status(),
             "director": self.director.status(),
             "story": self.story.status(),
+            "intelligence": self.intelligence.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

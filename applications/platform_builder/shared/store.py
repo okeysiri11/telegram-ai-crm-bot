@@ -142,6 +142,13 @@ class PlatformBuilderStore:
         self.story_builders: EntityStore = EntityStore()
         self.story_timelines: EntityStore = EntityStore()
         self.executive_story_apis: EntityStore = EntityStore()
+        # Sprint 29.10 — Visual Intelligence Engine
+        self.intelligence_wizard_sessions: EntityStore = EntityStore()
+        self.analytics_snapshots: EntityStore = EntityStore()
+        self.intelligence_engines: EntityStore = EntityStore()
+        self.insight_registries: EntityStore = EntityStore()
+        self.analytics_registries: EntityStore = EntityStore()
+        self.recommendation_registries: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

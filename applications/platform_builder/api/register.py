@@ -533,3 +533,29 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/story/sessions/{{session_id}}/create",
         handlers.story_create_handler,
     )
+
+    # Sprint 29.10 — Visual Intelligence Engine / Enterprise Visual Analytics
+    app.router.add_get(f"{prefix}/intelligence/catalog", handlers.intel_catalog_handler)
+    app.router.add_get(f"{prefix}/intelligence/status", handlers.intel_status_handler)
+    app.router.add_get(f"{prefix}/intelligence/engine", handlers.intel_engine_handler)
+    app.router.add_get(f"{prefix}/intelligence/patterns", handlers.intel_patterns_handler)
+    app.router.add_get(f"{prefix}/intelligence/anomalies", handlers.intel_anomalies_handler)
+    app.router.add_get(f"{prefix}/intelligence/recommendations", handlers.intel_recommendations_handler)
+    app.router.add_get(f"{prefix}/intelligence/executive", handlers.intel_executive_handler)
+    app.router.add_get(f"{prefix}/intelligence/heatmaps", handlers.intel_heatmaps_handler)
+    app.router.add_get(f"{prefix}/intelligence/trends", handlers.intel_trends_handler)
+    app.router.add_get(f"{prefix}/intelligence/health", handlers.intel_health_handler)
+    app.router.add_get(f"{prefix}/intelligence/predictive", handlers.intel_predictive_handler)
+    app.router.add_post(f"{prefix}/intelligence/analyze", handlers.intel_analyze_handler)
+    app.router.add_get(f"{prefix}/intelligence/ui", handlers.intel_ui_handler)
+    app.router.add_post(f"{prefix}/intelligence/sessions", handlers.intel_session_handler)
+    app.router.add_get(f"{prefix}/intelligence/sessions/{{session_id}}", handlers.intel_session_handler)
+    app.router.add_patch(f"{prefix}/intelligence/sessions/{{session_id}}", handlers.intel_session_handler)
+    app.router.add_get(
+        f"{prefix}/intelligence/sessions/{{session_id}}/summary",
+        handlers.intel_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/intelligence/sessions/{{session_id}}/create",
+        handlers.intel_create_handler,
+    )

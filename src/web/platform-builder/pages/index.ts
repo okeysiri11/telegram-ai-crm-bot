@@ -12,6 +12,7 @@ export { AssetRegistryPage } from "./AssetRegistryPage";
 export { SimulationEnginePage } from "./SimulationEnginePage";
 export { DirectorEnginePage } from "./DirectorEnginePage";
 export { StoryEnginePage } from "./StoryEnginePage";
+export { IntelligenceEnginePage } from "./IntelligenceEnginePage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
 export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";

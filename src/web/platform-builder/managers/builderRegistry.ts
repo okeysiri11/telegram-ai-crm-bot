@@ -24,6 +24,7 @@ export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "simulation", name: "Visual Simulation Engine", route: "/platform-builder/simulation", kind: "hub", status: "operational", purpose: "Live enterprise simulation from Visual Event Bus only — never creates fake events." },
   { id: "director", name: "Visual Director Engine", route: "/platform-builder/director", kind: "hub", status: "operational", purpose: "Scene orchestration and focus/attention direction — presentation only, no business events." },
   { id: "story", name: "Visual Story Engine", route: "/platform-builder/story", kind: "hub", status: "operational", purpose: "Enterprise storytelling from verified Visual Event Bus events — never creates or reorders business events." },
+  { id: "intelligence", name: "Visual Intelligence Engine", route: "/platform-builder/intelligence", kind: "hub", status: "operational", purpose: "Visual analytics and recommendations from verified events — no business logic changes or business events." },
   { id: "crm", name: "CRM Builder", route: "/platform-builder/crm", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "erp", name: "ERP Builder", route: "/platform-builder/erp", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "workflow", name: "Workflow Builder", route: "/platform-builder/workflow", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },

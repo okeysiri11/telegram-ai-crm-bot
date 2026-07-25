@@ -331,6 +331,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Enterprise storytelling from verified Visual Event Bus events — never creates or reorders business events.",
     },
     {
+        "id": "intelligence",
+        "name": "Visual Intelligence Engine",
+        "route": "/platform-builder/intelligence",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Visual analytics and recommendations from verified events — no business logic changes or business events.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",
