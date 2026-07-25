@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.8.0",
-  "sprint": "29.1",
-  "release_status": "AI Operations Center",
+  "application_version": "1.9.0",
+  "sprint": "29.2",
+  "release_status": "AI Team Map",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -22,6 +22,9 @@
   "operations_center": "1.0",
   "visual_layer": "1.0",
   "live_status_engine": "1.0",
+  "team_map": "1.0",
+  "live_organization": "1.0",
+  "visual_event_bus": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }

@@ -1,4 +1,4 @@
-"""Tests — Builder Academy 2.0 (Sprint 29.1)."""
+"""Tests — Builder Academy 2.0 (Sprint 29.2)."""
 
 from __future__ import annotations
 
@@ -39,8 +39,8 @@ def reset_store():
 
 def test_academy_v2_ready_and_levels():
     health = platform_builder.health()
-    assert health["application_version"] == "1.8.0"
-    assert health["sprint"] == "29.1"
+    assert health["application_version"] == "1.9.0"
+    assert health["sprint"] == "29.2"
     assert health["academy_2_ready"] is True
     assert health["ai_guide_ready"] is True
     assert health["recommendation_engine_ready"] is True
@@ -135,7 +135,7 @@ async def test_api_academy_v2(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
     assert body["academy_2_ready"] is True
-    assert body["application_version"] == "1.8.0"
+    assert body["application_version"] == "1.9.0"
 
     catalog = await client.get(f"{PREFIX}/academy/v2/catalog")
     assert catalog.status == 200
@@ -169,5 +169,5 @@ def test_docs_academy_28_6():
     for key in ("Experience levels", "AI Guide", "Smart recommendations", "Progress tracking"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.8.0"' in manifest
-    assert "29.1" in manifest
+    assert '"application_version": "1.9.0"' in manifest
+    assert "29.2" in manifest

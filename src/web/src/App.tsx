@@ -47,6 +47,7 @@ import {
   GodModePage,
   OperationsCenterPage,
   PlatformBuilderDashboard,
+  TeamMapPage,
   UniversalFrameworkPage,
   VerticalBuilderPage,
 } from "../platform-builder/pages";
@@ -235,6 +236,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <OperationsCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/team-map"
+        element={
+          <ProtectedRoute>
+            <TeamMapPage />
           </ProtectedRoute>
         }
       />

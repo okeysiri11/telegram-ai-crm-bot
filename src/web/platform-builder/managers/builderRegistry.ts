@@ -16,6 +16,7 @@ export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "ai_team", name: "AI Team Center", route: "/platform-builder/ai-team", kind: "hub", status: "operational", purpose: "Monitor and manage all AI Specialists for the organization." },
   { id: "collaborative_ai", name: "Collaborative AI", route: "/platform-builder/collaborative-ai", kind: "builder", status: "operational", purpose: "Coordinate AI Specialists via Concierge for collective intelligence." },
   { id: "operations_center", name: "AI Operations Center", route: "/platform-builder/operations", kind: "hub", status: "operational", purpose: "Real-time visual control room for the AI Organization." },
+  { id: "team_map", name: "AI Team Map", route: "/platform-builder/team-map", kind: "hub", status: "operational", purpose: "Live Organization Map with Visual Event Bus and relationship engine." },
   { id: "crm", name: "CRM Builder", route: "/platform-builder/crm", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "erp", name: "ERP Builder", route: "/platform-builder/erp", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "workflow", name: "Workflow Builder", route: "/platform-builder/workflow", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },

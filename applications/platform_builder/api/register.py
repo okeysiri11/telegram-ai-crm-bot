@@ -300,3 +300,32 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/operations/sessions/{{session_id}}/create",
         handlers.ops_create_handler,
     )
+
+    # Sprint 29.2 — AI Team Map / Live Organization
+    app.router.add_get(f"{prefix}/team-map/catalog", handlers.team_map_catalog_handler)
+    app.router.add_get(f"{prefix}/team-map/status", handlers.team_map_status_handler)
+    app.router.add_get(f"{prefix}/team-map/map", handlers.team_map_view_handler)
+    app.router.add_get(f"{prefix}/team-map/cards", handlers.team_map_cards_handler)
+    app.router.add_get(f"{prefix}/team-map/live-status", handlers.team_map_live_status_handler)
+    app.router.add_get(f"{prefix}/team-map/workload", handlers.team_map_workload_handler)
+    app.router.add_get(f"{prefix}/team-map/relationships", handlers.team_map_relationships_handler)
+    app.router.add_get(f"{prefix}/team-map/activity", handlers.team_map_activity_handler)
+    app.router.add_post(f"{prefix}/team-map/events/subscribe", handlers.team_map_bus_subscribe_handler)
+    app.router.add_get(f"{prefix}/team-map/events/poll", handlers.team_map_bus_poll_handler)
+    app.router.add_get(f"{prefix}/team-map/visual-objects", handlers.team_map_visual_objects_handler)
+    app.router.add_get(
+        f"{prefix}/team-map/visual-objects/{{object_id}}",
+        handlers.team_map_visual_objects_handler,
+    )
+    app.router.add_get(f"{prefix}/team-map/ai-city-apis", handlers.team_map_city_apis_handler)
+    app.router.add_post(f"{prefix}/team-map/sessions", handlers.team_map_session_handler)
+    app.router.add_get(f"{prefix}/team-map/sessions/{{session_id}}", handlers.team_map_session_handler)
+    app.router.add_patch(f"{prefix}/team-map/sessions/{{session_id}}", handlers.team_map_session_handler)
+    app.router.add_get(
+        f"{prefix}/team-map/sessions/{{session_id}}/summary",
+        handlers.team_map_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/team-map/sessions/{{session_id}}/create",
+        handlers.team_map_create_handler,
+    )

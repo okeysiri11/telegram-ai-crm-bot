@@ -119,6 +119,7 @@ const menu: MenuItem[] = [
       { id: "nav_pb_ai_team", name: "AI Team Center", icon: "ai", route: "/platform-builder/ai-team", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_collab", name: "Collaborative AI", icon: "ai", route: "/platform-builder/collaborative-ai", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_ops", name: "AI Operations Center", icon: "analytics", route: "/platform-builder/operations", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_pb_team_map", name: "AI Team Map", icon: "ai", route: "/platform-builder/team-map", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_crm", name: "CRM Builder", icon: "crm", route: "/platform-builder/crm", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_erp", name: "ERP Builder", icon: "erp", route: "/platform-builder/erp", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_workflow", name: "Workflow Builder", icon: "workflow", route: "/platform-builder/workflow", module: "platform_builder", permissions: ["read"], status: "beta" },

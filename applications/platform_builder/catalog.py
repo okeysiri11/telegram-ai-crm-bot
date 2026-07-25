@@ -251,6 +251,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Real-time visual control room for the AI Organization.",
     },
     {
+        "id": "team_map",
+        "name": "AI Team Map",
+        "route": "/platform-builder/team-map",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Live Organization Map with Visual Event Bus and relationship engine.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

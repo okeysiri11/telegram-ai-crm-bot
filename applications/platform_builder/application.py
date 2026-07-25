@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.1."""
+"""Platform Builder application facade — Sprint 29.2."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from applications.platform_builder.academy_v2.engine import AcademyV2
 from applications.platform_builder.control_center.control_center import PlatformControlCenter
 from applications.platform_builder.collaborative_ai.engine import CollaborativeAIEngine
 from applications.platform_builder.operations_center.engine import OperationsCenter
+from applications.platform_builder.team_map.engine import LiveOrganizationMap
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -52,6 +53,7 @@ class PlatformBuilderApplication:
         control_center: PlatformControlCenter | None = None,
         collaborative_ai: CollaborativeAIEngine | None = None,
         operations_center: OperationsCenter | None = None,
+        team_map: LiveOrganizationMap | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -67,6 +69,7 @@ class PlatformBuilderApplication:
         self.control_center = control_center or PlatformControlCenter(self.store, self.god_mode)
         self.collaborative_ai = collaborative_ai or CollaborativeAIEngine(self.store)
         self.operations_center = operations_center or OperationsCenter(self.store)
+        self.team_map = team_map or LiveOrganizationMap(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -82,6 +85,7 @@ class PlatformBuilderApplication:
         self.control_center = PlatformControlCenter(self.store, self.god_mode)
         self.collaborative_ai = CollaborativeAIEngine(self.store)
         self.operations_center = OperationsCenter(self.store)
+        self.team_map = LiveOrganizationMap(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -136,6 +140,11 @@ class PlatformBuilderApplication:
             "live_status_engine_ready": True,
             "visual_layer_ready": True,
             "status_dashboard_ready": True,
+            "team_map_ready": True,
+            "live_organization_ready": True,
+            "relationship_engine_ready": True,
+            "visual_event_bus_connected": True,
+            "animation_layer_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -147,6 +156,7 @@ class PlatformBuilderApplication:
             "vertical_page_exists": (web / "pages" / "VerticalBuilderPage.tsx").exists(),
             "collaborative_page_exists": (web / "pages" / "CollaborativeAIPage.tsx").exists(),
             "operations_page_exists": (web / "pages" / "OperationsCenterPage.tsx").exists(),
+            "team_map_page_exists": (web / "pages" / "TeamMapPage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -216,6 +226,11 @@ class PlatformBuilderApplication:
             "operations_center_ready": True,
             "live_status_engine_ready": True,
             "status_dashboard_ready": True,
+            "team_map_ready": True,
+            "live_organization_ready": True,
+            "relationship_engine_ready": True,
+            "visual_event_bus_connected": True,
+            "animation_layer_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -234,6 +249,9 @@ class PlatformBuilderApplication:
                 "operations_center": self.config.operations_center,
                 "visual_layer": self.config.visual_layer,
                 "live_status_engine": self.config.live_status_engine,
+                "team_map": self.config.team_map,
+                "live_organization": self.config.live_organization,
+                "visual_event_bus": self.config.visual_event_bus,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -249,6 +267,7 @@ class PlatformBuilderApplication:
             },
             "collaborative_ai": self.collaborative_ai.status(),
             "operations_center": self.operations_center.status(),
+            "team_map": self.team_map.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

@@ -86,6 +86,14 @@ class PlatformBuilderStore:
         self.ops_centers: EntityStore = EntityStore()
         self.ops_visual_layers: EntityStore = EntityStore()
         self.ops_status_engines: EntityStore = EntityStore()
+        # Sprint 29.2 — AI Team Map / Live Organization
+        self.team_map_sessions: EntityStore = EntityStore()
+        self.visual_events: EntityStore = EntityStore()
+        self.visual_subscriptions: EntityStore = EntityStore()
+        self.org_maps: EntityStore = EntityStore()
+        self.relationship_engines: EntityStore = EntityStore()
+        self.workload_engines: EntityStore = EntityStore()
+        self.animation_layers: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

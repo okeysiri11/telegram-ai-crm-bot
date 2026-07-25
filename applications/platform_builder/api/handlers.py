@@ -1143,3 +1143,137 @@ async def ops_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.2 — AI Team Map / Live Organization ---
+
+
+async def team_map_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.team_map.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.team_map.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_view_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.team_map.map_view(
+                department=request.rel_url.query.get("department"),
+                search=request.rel_url.query.get("search") or request.rel_url.query.get("q"),
+                status=request.rel_url.query.get("status"),
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_cards_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.team_map.ai_cards(request.rel_url.query.get("department"))
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_live_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.team_map.live_status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_workload_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.team_map.workload_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_relationships_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.team_map.relationship_map())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_activity_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.team_map.live_activity())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_bus_subscribe_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json() if request.can_read_body else {}
+        channels = body.get("channels") if isinstance(body, dict) else None
+        return json_response(platform_builder.team_map.bus_subscribe(channels), status=201)
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_bus_poll_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.team_map.bus_poll(request.rel_url.query.get("since"))
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_visual_objects_handler(request: web.Request) -> web.Response:
+    try:
+        object_id = request.match_info.get("object_id") or request.rel_url.query.get("object_id")
+        return json_response(platform_builder.team_map.visual_objects(object_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_city_apis_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.team_map.ai_city_apis(request.rel_url.query.get("logical_id"))
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.team_map.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.team_map.update_session(session_id, body))
+        return json_response(platform_builder.team_map.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.team_map.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def team_map_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.team_map.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
