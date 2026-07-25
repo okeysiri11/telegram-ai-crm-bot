@@ -5,7 +5,7 @@ import { hubIntegrations } from "@/integrations/hub";
 
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
-    expect(webConfig.version).toBe("9.1.0-rc1");
+    expect(webConfig.version).toBe("9.2.0");
     expect(webConfig.sprint).toBe("26.5");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);

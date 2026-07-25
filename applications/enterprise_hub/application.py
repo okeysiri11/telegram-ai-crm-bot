@@ -60,6 +60,7 @@ from applications.enterprise_hub.navigation_platform.facade import NavigationPla
 from applications.enterprise_hub.command_center_platform.facade import CommandCenterPlatformSuite
 from applications.enterprise_hub.navigation.facade import EnterpriseNavigationSuite
 from applications.enterprise_hub.release_candidate.facade import ReleaseCandidateSuite
+from applications.enterprise_hub.enterprise_ai_os.facade import EnterpriseAIOSSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -154,6 +155,7 @@ class EnterpriseHubApplication:
         command_center_platform_svc: CommandCenterPlatformSuite | None = None,
         enterprise_navigation_svc: EnterpriseNavigationSuite | None = None,
         release_candidate_svc: ReleaseCandidateSuite | None = None,
+        enterprise_ai_os_svc: EnterpriseAIOSSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -231,6 +233,7 @@ class EnterpriseHubApplication:
         self.command_center_platform = command_center_platform_svc or CommandCenterPlatformSuite(self.store)
         self.enterprise_navigation = enterprise_navigation_svc or EnterpriseNavigationSuite(self.store)
         self.release_candidate = release_candidate_svc or ReleaseCandidateSuite(self.store)
+        self.enterprise_ai_os = enterprise_ai_os_svc or EnterpriseAIOSSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -687,6 +690,14 @@ class EnterpriseHubApplication:
             "release_candidate_ready": True,
             "platform_integrated": True,
             "platform_health_report_ready": True,
+            "enterprise_ai_os_ready": True,
+            "executive_ai_ready": True,
+            "agent_registry_v2_ready": True,
+            "agent_communication_bus_ready": True,
+            "task_orchestrator_ready": True,
+            "ai_memory_manager_ready": True,
+            "ai_collaboration_ready": True,
+            "ai_executive_dashboard_ready": True,
             "engines": {
                 "enterprise_registry": self.config.enterprise_registry,
                 "integration_layer": self.config.integration_layer,
@@ -760,6 +771,7 @@ class EnterpriseHubApplication:
                 "enterprise_command_center": self.config.enterprise_command_center,
                 "enterprise_navigation": self.config.enterprise_navigation,
                 "release_candidate": self.config.release_candidate,
+                "enterprise_ai_os": self.config.enterprise_ai_os,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -837,6 +849,7 @@ class EnterpriseHubApplication:
             "command_center_platform": self.command_center_platform.status(),
             "enterprise_navigation": self.enterprise_navigation.status(),
             "release_candidate": self.release_candidate.status(),
+            "enterprise_ai_os": self.enterprise_ai_os.status(),
         }
 
 

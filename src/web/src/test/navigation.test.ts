@@ -13,7 +13,7 @@ import {
 
 describe("Enterprise Navigation Platform", () => {
   it("exposes version and palette hotkeys", () => {
-    expect(NAVIGATION_VERSION).toBe("9.1.0-rc1");
+    expect(NAVIGATION_VERSION).toBe("9.2.0");
     expect(commandPalette.hotkeys).toContain("Ctrl+K");
     expect(commandPalette.search("ai").length).toBeGreaterThan(0);
   });

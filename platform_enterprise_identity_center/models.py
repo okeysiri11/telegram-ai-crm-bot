@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 AUTH_PATH = "src/web/auth"
-VERSION = "9.1.0-rc1"
+VERSION = "9.2.0"
 
 ARCHITECTURE = (
     "authentication_ui",

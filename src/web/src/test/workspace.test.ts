@@ -13,7 +13,7 @@ import {
 
 describe("Enterprise Workspace Framework", () => {
   it("exposes version and workspace kinds", () => {
-    expect(WORKSPACE_VERSION).toBe("9.1.0-rc1");
+    expect(WORKSPACE_VERSION).toBe("9.2.0");
     expect(workspaceManager.kinds()).toContain("personal");
     expect(workspaceManager.list().length).toBeGreaterThanOrEqual(5);
   });

@@ -1,4 +1,4 @@
-"""Tests — Enterprise Navigation Federation (Sprint 26.7 / v9.1.0-rc1)."""
+"""Tests — Enterprise Navigation Federation (Sprint 26.7 / v9.2.0)."""
 
 from __future__ import annotations
 
@@ -120,7 +120,7 @@ def reset_store():
 
 def test_version_navigation_federation_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.1.0-rc1"
+    assert health["application_version"] == "9.2.0"
     assert health["enterprise_navigation_ready"] is True
     assert health["workspace_federation_ready"] is True
     assert health["application_registry_ready"] is True
@@ -146,8 +146,8 @@ def test_navigation_search_federation_favorites_history_analytics():
     suite = enterprise_hub.enterprise_navigation
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["hub_version"] == "9.1.0-rc1"
-    assert boot["version"] == "9.1.0-rc1"
+    assert boot["hub_version"] == "9.2.0"
+    assert boot["version"] == "9.2.0"
     assert boot["workspace_federation_ready"] is True
     assert boot["application_registry_ready"] is True
     assert boot["quick_switcher_ready"] is True
@@ -218,7 +218,7 @@ def test_navigation_search_federation_favorites_history_analytics():
 async def test_api_enterprise_navigation(client):
     health = await client.get(f"{ENV}/health")
     body = await health.json()
-    assert body["application_version"] == "9.1.0-rc1"
+    assert body["application_version"] == "9.2.0"
     assert body["workspace_federation_ready"] is True
 
     boot = await client.post(f"{ENV}/bootstrap", json={})
@@ -264,7 +264,7 @@ async def test_api_enterprise_navigation(client):
         assert resp.status == 200
         payload = await resp.json()
         version = payload.get("application_version") or payload.get("data", {}).get("application_version")
-        assert version == "9.1.0-rc1"
+        assert version == "9.2.0"
 
 
 def test_docs_and_regression_26_7():
@@ -301,5 +301,5 @@ def test_docs_and_regression_26_7():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.1.0-rc1"' in manifest
-    assert "26.8" in manifest
+    assert '"application_version": "9.2.0"' in manifest
+    assert "27.1" in manifest

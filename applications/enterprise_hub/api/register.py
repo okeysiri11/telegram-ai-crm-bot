@@ -66,6 +66,7 @@ from applications.enterprise_hub.navigation_platform import api as enp_api
 from applications.enterprise_hub.command_center_platform import api as ecc2_api
 from applications.enterprise_hub.navigation import api as env_api
 from applications.enterprise_hub.release_candidate import api as rc_api
+from applications.enterprise_hub.enterprise_ai_os import api as maos_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -1169,3 +1170,20 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{rc}/security", rc_api.rc_security_handler)
     app.router.add_get(f"{rc}/performance", rc_api.rc_performance_handler)
     app.router.add_get(f"{rc}/documentation", rc_api.rc_documentation_handler)
+
+    # Sprint 27.1 — Enterprise Multi-Agent Operating System
+    # Mounted under /api/ai-os/v1 without colliding with applications/ai_os kernel routes.
+    maos = DEFAULT_CONFIG.enterprise_ai_os_api_prefix
+    app.router.add_get(f"{maos}/maos/health", maos_api.maos_health_handler)
+    app.router.add_post(f"{maos}/maos/bootstrap", maos_api.maos_bootstrap_handler)
+    app.router.add_get(f"{maos}/maos/inventory", maos_api.maos_inventory_handler)
+    app.router.add_get(f"{maos}/maos/dashboard", maos_api.maos_dashboard_handler)
+    app.router.add_post(f"{maos}/executive", maos_api.maos_executive_handler)
+    app.router.add_get(f"{maos}/agents", maos_api.maos_agents_handler)
+    app.router.add_get(f"{maos}/agent-bus", maos_api.maos_bus_handler)
+    app.router.add_post(f"{maos}/agent-bus", maos_api.maos_bus_handler)
+    app.router.add_post(f"{maos}/tasks", maos_api.maos_tasks_handler)
+    app.router.add_get(f"{maos}/memory-layers", maos_api.maos_memory_handler)
+    app.router.add_post(f"{maos}/memory-layers", maos_api.maos_memory_handler)
+    app.router.add_post(f"{maos}/collaborate", maos_api.maos_collaborate_handler)
+    app.router.add_get(f"{maos}/exec-dashboard", maos_api.maos_dashboard_handler)

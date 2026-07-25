@@ -12,7 +12,7 @@ import {
 
 describe("Enterprise Design System", () => {
   it("exposes version and core tokens", () => {
-    expect(DESIGN_SYSTEM_VERSION).toBe("9.1.0-rc1");
+    expect(DESIGN_SYSTEM_VERSION).toBe("9.2.0");
     expect(tokens.colors.primary.DEFAULT).toBeTruthy();
     expect(tokens.breakpoints.desktop).toBe(1280);
     expect(typography.displayXl.size).toBeTruthy();

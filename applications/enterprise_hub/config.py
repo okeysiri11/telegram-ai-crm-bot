@@ -1,4 +1,4 @@
-"""Enterprise Hub — Sprint 26.8 Enterprise Platform Release Candidate (RC1)."""
+"""Enterprise Hub — Sprint 27.1 Enterprise Multi-Agent Operating System."""
 
 from __future__ import annotations
 
@@ -9,8 +9,8 @@ from dataclasses import dataclass, field
 class EnterpriseHubConfig:
     application_name: str = "Enterprise Integration Hub"
     application: str = "enterprise_hub"
-    application_version: str = "9.1.0-rc1"
-    release_status: str = "Enterprise Platform Release Candidate RC1"
+    application_version: str = "9.2.0"
+    release_status: str = "Enterprise Multi-Agent Operating System"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     ecosystem_dependency: str = "AI Ecosystem v1.5"
@@ -83,6 +83,7 @@ class EnterpriseHubConfig:
     enterprise_command_api_prefix: str = "/api/enterprise-command/v1"
     enterprise_navigation_api_prefix: str = "/api/enterprise-navigation/v1"
     release_candidate_api_prefix: str = "/api/release/v1"
+    enterprise_ai_os_api_prefix: str = "/api/ai-os/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -156,6 +157,7 @@ class EnterpriseHubConfig:
     enterprise_command_center: str = "1.0"
     enterprise_navigation: str = "1.0"
     release_candidate: str = "1.0"
+    enterprise_ai_os: str = "1.0"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

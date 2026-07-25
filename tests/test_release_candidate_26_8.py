@@ -1,4 +1,4 @@
-"""Tests — Enterprise Platform Release Candidate RC1 (Sprint 26.8 / v9.1.0-rc1)."""
+"""Tests — Enterprise Platform Release Candidate RC1 (Sprint 26.8 / v9.2.0)."""
 
 from __future__ import annotations
 
@@ -115,12 +115,12 @@ def reset_store():
 
 def test_version_release_candidate_ready():
     health = enterprise_hub.health()
-    assert health["application_version"] == "9.1.0-rc1"
+    assert health["application_version"] == "9.2.0"
     assert health["release_candidate_ready"] is True
     assert health["platform_integrated"] is True
     assert health["platform_health_report_ready"] is True
     assert health["engines"]["release_candidate"] == "1.0"
-    assert VERSION == "9.1.0-rc1"
+    assert VERSION == "9.2.0"
     assert RELEASE_CODE == "RC1"
     assert len(INTEGRATION_MODULES) >= 30
     assert "platform_integration_auditor" in ARCHITECTURE
@@ -132,8 +132,8 @@ def test_integration_registry_routes_security_performance_docs_health():
     suite = enterprise_hub.release_candidate
     boot = suite.bootstrap()
     assert boot["bootstrap"] is True
-    assert boot["hub_version"] == "9.1.0-rc1"
-    assert boot["version"] == "9.1.0-rc1"
+    assert boot["hub_version"] == "9.2.0"
+    assert boot["version"] == "9.2.0"
     assert boot["release_code"] == "RC1"
     assert boot["release_candidate_ready"] is True
     assert boot["platform_integrated"] is True
@@ -191,7 +191,7 @@ def test_integration_registry_routes_security_performance_docs_health():
 async def test_api_release_candidate(client):
     health = await client.get(f"{RC}/health")
     body = await health.json()
-    assert body["application_version"] == "9.1.0-rc1"
+    assert body["application_version"] == "9.2.0"
     assert body["release_candidate_ready"] is True
 
     boot = await client.post(f"{RC}/bootstrap", json={})
@@ -222,14 +222,14 @@ async def test_api_release_candidate(client):
     ):
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
-        assert (await resp.json())["application_version"] == "9.1.0-rc1"
+        assert (await resp.json())["application_version"] == "9.2.0"
 
     for prefix in PREFIXES:
         resp = await client.get(f"{prefix}/health")
         assert resp.status == 200
         data = await resp.json()
         version = data.get("application_version") or data.get("data", {}).get("application_version")
-        assert version == "9.1.0-rc1"
+        assert version == "9.2.0"
 
 
 def test_docs_and_regression_26_8():
@@ -264,5 +264,5 @@ def test_docs_and_regression_26_8():
     assert LEGAL.application_version == "5.0.0-enterprise"
     assert FINANCE.application_version == "5.2.0-enterprise"
     manifest = (ROOT / "applications" / "enterprise_hub" / "manifest.json").read_text()
-    assert '"application_version": "9.1.0-rc1"' in manifest
-    assert "26.8" in manifest
+    assert '"application_version": "9.2.0"' in manifest
+    assert "27.1" in manifest

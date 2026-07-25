@@ -892,6 +892,16 @@ class EnterpriseHubStore:
         self.rc_security: EntityStore = EntityStore()
         self.rc_performance: EntityStore = EntityStore()
         self.rc_documentation: EntityStore = EntityStore()
+        # Sprint 27.1 — Enterprise Multi-Agent OS
+        self.maos_bootstraps: EntityStore = EntityStore()
+        self.maos_inventory: EntityStore = EntityStore()
+        self.maos_dashboards: EntityStore = EntityStore()
+        self.maos_integrations: EntityStore = EntityStore()
+        self.maos_registry: EntityStore = EntityStore()
+        self.maos_bus: EntityStore = EntityStore()
+        self.maos_memory: EntityStore = EntityStore()
+        self.maos_executions: EntityStore = EntityStore()
+        self.maos_orchestrations: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
