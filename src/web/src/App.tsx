@@ -54,6 +54,7 @@ import {
   RenderingEnginePage,
   ThemeEnginePage,
   AssetRegistryPage,
+  SimulationEnginePage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -280,6 +281,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <AssetRegistryPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/simulation"
+        element={
+          <ProtectedRoute>
+            <SimulationEnginePage />
           </ProtectedRoute>
         }
       />

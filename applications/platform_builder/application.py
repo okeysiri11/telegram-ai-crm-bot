@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.6."""
+"""Platform Builder application facade — Sprint 29.7."""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from applications.platform_builder.visual_behavior.engine import VisualBehaviorE
 from applications.platform_builder.rendering.engine import VisualRenderingEngine
 from applications.platform_builder.themes.engine import VisualThemeEngine
 from applications.platform_builder.assets.engine import VisualAssetRegistry
+from applications.platform_builder.simulation.engine import VisualSimulationEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -62,6 +63,7 @@ class PlatformBuilderApplication:
         rendering: VisualRenderingEngine | None = None,
         themes: VisualThemeEngine | None = None,
         assets: VisualAssetRegistry | None = None,
+        simulation: VisualSimulationEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -82,6 +84,7 @@ class PlatformBuilderApplication:
         self.rendering = rendering or VisualRenderingEngine(self.store, behavior=self.visual_behavior)
         self.themes = themes or VisualThemeEngine(self.store)
         self.assets = assets or VisualAssetRegistry(self.store)
+        self.simulation = simulation or VisualSimulationEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -102,6 +105,7 @@ class PlatformBuilderApplication:
         self.rendering = VisualRenderingEngine(self.store, behavior=self.visual_behavior)
         self.themes = VisualThemeEngine(self.store)
         self.assets = VisualAssetRegistry(self.store)
+        self.simulation = VisualSimulationEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -178,6 +182,10 @@ class PlatformBuilderApplication:
             "version_management_ready": True,
             "optimization_engine_ready": True,
             "asset_browser_ready": True,
+            "simulation_engine_ready": True,
+            "timeline_ready": True,
+            "live_simulation_ready": True,
+            "simulation_performance_optimized": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -194,6 +202,7 @@ class PlatformBuilderApplication:
             "rendering_page_exists": (web / "pages" / "RenderingEnginePage.tsx").exists(),
             "themes_page_exists": (web / "pages" / "ThemeEnginePage.tsx").exists(),
             "assets_page_exists": (web / "pages" / "AssetRegistryPage.tsx").exists(),
+            "simulation_page_exists": (web / "pages" / "SimulationEnginePage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -285,6 +294,10 @@ class PlatformBuilderApplication:
             "version_management_ready": True,
             "optimization_engine_ready": True,
             "asset_browser_ready": True,
+            "simulation_engine_ready": True,
+            "timeline_ready": True,
+            "live_simulation_ready": True,
+            "simulation_performance_optimized": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -319,6 +332,10 @@ class PlatformBuilderApplication:
                 "visual_asset_registry": self.config.visual_asset_registry,
                 "version_registry": self.config.version_registry,
                 "optimization_engine": self.config.optimization_engine,
+                "simulation_engine": self.config.simulation_engine,
+                "simulation_registry": self.config.simulation_registry,
+                "timeline_engine": self.config.timeline_engine,
+                "simulation_api": self.config.simulation_api,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -339,6 +356,7 @@ class PlatformBuilderApplication:
             "rendering": self.rendering.status(),
             "themes": self.themes.status(),
             "assets": self.assets.status(),
+            "simulation": self.simulation.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

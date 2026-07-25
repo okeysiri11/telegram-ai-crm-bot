@@ -1883,3 +1883,152 @@ async def asset_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.7 — Visual Simulation Engine / Live Enterprise Simulation ---
+
+
+async def sim_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_supported_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.supported_simulations())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_live_org_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.live_organization_simulation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_collab_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.ai_collaboration())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_workflow_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.workflow_simulation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_knowledge_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.knowledge_flow())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_document_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.document_flow())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_timeline_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response(platform_builder.simulation.timeline.status())
+        body = await request.json()
+        action = body.get("action") or "pause"
+        speed = body.get("speed")
+        return json_response(
+            platform_builder.simulation.timeline_control(
+                action, speed=float(speed) if speed is not None else None
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_performance_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_ingest_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.ingest_from_bus())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_emit_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        name = body.get("simulation") or body.get("name")
+        if not name:
+            raise ValidationError("simulation is required")
+        return json_response(
+            platform_builder.simulation.emit_and_simulate(name, body.get("payload")),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.simulation.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.simulation.update_session(session_id, body))
+        return json_response(platform_builder.simulation.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.simulation.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def sim_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.simulation.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

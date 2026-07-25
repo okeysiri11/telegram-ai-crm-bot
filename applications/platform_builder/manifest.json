@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.13.0",
-  "sprint": "29.6",
-  "release_status": "Visual Asset Registry",
+  "application_version": "1.14.0",
+  "sprint": "29.7",
+  "release_status": "Visual Simulation Engine",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -38,6 +38,10 @@
   "visual_asset_registry": "1.0",
   "version_registry": "1.0",
   "optimization_engine": "1.0",
+  "simulation_engine": "1.0",
+  "simulation_registry": "1.0",
+  "timeline_engine": "1.0",
+  "simulation_api": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }

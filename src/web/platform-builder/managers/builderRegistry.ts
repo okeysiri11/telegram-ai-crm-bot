@@ -21,6 +21,7 @@ export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "rendering", name: "Visual Rendering Engine", route: "/platform-builder/rendering", kind: "hub", status: "operational", purpose: "GPU-friendly rendering with LOD, viewport culling, and layer system." },
   { id: "themes", name: "Visual Theme Engine", route: "/platform-builder/themes", kind: "hub", status: "operational", purpose: "Enterprise visual identity, branding, and live theme switching — appearance only." },
   { id: "assets", name: "Visual Asset Registry", route: "/platform-builder/assets", kind: "hub", status: "operational", purpose: "Store, version, optimize, and browse visual assets — separated from business logic." },
+  { id: "simulation", name: "Visual Simulation Engine", route: "/platform-builder/simulation", kind: "hub", status: "operational", purpose: "Live enterprise simulation from Visual Event Bus only — never creates fake events." },
   { id: "crm", name: "CRM Builder", route: "/platform-builder/crm", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "erp", name: "ERP Builder", route: "/platform-builder/erp", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "workflow", name: "Workflow Builder", route: "/platform-builder/workflow", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },

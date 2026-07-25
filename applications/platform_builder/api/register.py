@@ -447,3 +447,31 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/assets/sessions/{{session_id}}/create",
         handlers.asset_create_handler,
     )
+
+    # Sprint 29.7 — Visual Simulation Engine / Live Enterprise Simulation
+    app.router.add_get(f"{prefix}/simulation/catalog", handlers.sim_catalog_handler)
+    app.router.add_get(f"{prefix}/simulation/status", handlers.sim_status_handler)
+    app.router.add_get(f"{prefix}/simulation/engine", handlers.sim_engine_handler)
+    app.router.add_get(f"{prefix}/simulation/supported", handlers.sim_supported_handler)
+    app.router.add_get(f"{prefix}/simulation/live-organization", handlers.sim_live_org_handler)
+    app.router.add_get(f"{prefix}/simulation/collaboration", handlers.sim_collab_handler)
+    app.router.add_get(f"{prefix}/simulation/workflow", handlers.sim_workflow_handler)
+    app.router.add_get(f"{prefix}/simulation/knowledge", handlers.sim_knowledge_handler)
+    app.router.add_get(f"{prefix}/simulation/document", handlers.sim_document_handler)
+    app.router.add_get(f"{prefix}/simulation/timeline", handlers.sim_timeline_handler)
+    app.router.add_post(f"{prefix}/simulation/timeline", handlers.sim_timeline_handler)
+    app.router.add_get(f"{prefix}/simulation/performance", handlers.sim_performance_handler)
+    app.router.add_get(f"{prefix}/simulation/ui", handlers.sim_ui_handler)
+    app.router.add_post(f"{prefix}/simulation/ingest", handlers.sim_ingest_handler)
+    app.router.add_post(f"{prefix}/simulation/emit", handlers.sim_emit_handler)
+    app.router.add_post(f"{prefix}/simulation/sessions", handlers.sim_session_handler)
+    app.router.add_get(f"{prefix}/simulation/sessions/{{session_id}}", handlers.sim_session_handler)
+    app.router.add_patch(f"{prefix}/simulation/sessions/{{session_id}}", handlers.sim_session_handler)
+    app.router.add_get(
+        f"{prefix}/simulation/sessions/{{session_id}}/summary",
+        handlers.sim_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/simulation/sessions/{{session_id}}/create",
+        handlers.sim_create_handler,
+    )

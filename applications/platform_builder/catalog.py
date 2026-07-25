@@ -301,6 +301,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Store, version, optimize, and browse visual assets — separated from business logic.",
     },
     {
+        "id": "simulation",
+        "name": "Visual Simulation Engine",
+        "route": "/platform-builder/simulation",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Live enterprise simulation from Visual Event Bus only — never creates fake events.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

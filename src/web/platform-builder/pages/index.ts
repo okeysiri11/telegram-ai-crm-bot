@@ -9,6 +9,7 @@ export { VisualBehaviorPage } from "./VisualBehaviorPage";
 export { RenderingEnginePage } from "./RenderingEnginePage";
 export { ThemeEnginePage } from "./ThemeEnginePage";
 export { AssetRegistryPage } from "./AssetRegistryPage";
+export { SimulationEnginePage } from "./SimulationEnginePage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
 export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";

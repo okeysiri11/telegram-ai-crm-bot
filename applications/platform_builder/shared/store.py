@@ -120,6 +120,13 @@ class PlatformBuilderStore:
         self.asset_registries: EntityStore = EntityStore()
         self.version_registries: EntityStore = EntityStore()
         self.optimization_engines: EntityStore = EntityStore()
+        # Sprint 29.7 — Visual Simulation Engine
+        self.simulation_wizard_sessions: EntityStore = EntityStore()
+        self.simulation_definitions: EntityStore = EntityStore()
+        self.simulation_engines: EntityStore = EntityStore()
+        self.simulation_registries: EntityStore = EntityStore()
+        self.timeline_engines: EntityStore = EntityStore()
+        self.simulation_apis: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
