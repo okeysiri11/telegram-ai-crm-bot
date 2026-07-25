@@ -281,6 +281,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "GPU-friendly rendering with LOD, viewport culling, and layer system.",
     },
     {
+        "id": "themes",
+        "name": "Visual Theme Engine",
+        "route": "/platform-builder/themes",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Enterprise visual identity, branding, and live theme switching — appearance only.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

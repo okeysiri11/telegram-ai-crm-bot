@@ -52,6 +52,7 @@ import {
   VerticalBuilderPage,
   VisualBehaviorPage,
   RenderingEnginePage,
+  ThemeEnginePage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -262,6 +263,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <RenderingEnginePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/themes"
+        element={
+          <ProtectedRoute>
+            <ThemeEnginePage />
           </ProtectedRoute>
         }
       />

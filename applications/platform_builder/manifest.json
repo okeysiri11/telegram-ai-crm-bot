@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.11.0",
-  "sprint": "29.4",
-  "release_status": "Visual Rendering Engine",
+  "application_version": "1.12.0",
+  "sprint": "29.5",
+  "release_status": "Visual Theme Engine",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -32,6 +32,9 @@
   "visual_lod_engine": "1.0",
   "viewport_engine": "1.0",
   "layer_system": "1.0",
+  "theme_engine": "1.0",
+  "theme_registry": "1.0",
+  "branding_engine": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }

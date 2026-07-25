@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.4."""
+"""Platform Builder application facade — Sprint 29.5."""
 
 from __future__ import annotations
 
@@ -15,6 +15,7 @@ from applications.platform_builder.operations_center.engine import OperationsCen
 from applications.platform_builder.team_map.engine import LiveOrganizationMap
 from applications.platform_builder.visual_behavior.engine import VisualBehaviorEngine
 from applications.platform_builder.rendering.engine import VisualRenderingEngine
+from applications.platform_builder.themes.engine import VisualThemeEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -58,6 +59,7 @@ class PlatformBuilderApplication:
         team_map: LiveOrganizationMap | None = None,
         visual_behavior: VisualBehaviorEngine | None = None,
         rendering: VisualRenderingEngine | None = None,
+        themes: VisualThemeEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -76,6 +78,7 @@ class PlatformBuilderApplication:
         self.team_map = team_map or LiveOrganizationMap(self.store)
         self.visual_behavior = visual_behavior or VisualBehaviorEngine(self.store)
         self.rendering = rendering or VisualRenderingEngine(self.store, behavior=self.visual_behavior)
+        self.themes = themes or VisualThemeEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -94,6 +97,7 @@ class PlatformBuilderApplication:
         self.team_map = LiveOrganizationMap(self.store)
         self.visual_behavior = VisualBehaviorEngine(self.store)
         self.rendering = VisualRenderingEngine(self.store, behavior=self.visual_behavior)
+        self.themes = VisualThemeEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -162,6 +166,10 @@ class PlatformBuilderApplication:
             "viewport_engine_ready": True,
             "layer_system_ready": True,
             "render_performance_monitor_ready": True,
+            "theme_engine_ready": True,
+            "branding_engine_ready": True,
+            "theme_registry_ready": True,
+            "live_theme_switching_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -176,6 +184,7 @@ class PlatformBuilderApplication:
             "team_map_page_exists": (web / "pages" / "TeamMapPage.tsx").exists(),
             "visual_behavior_page_exists": (web / "pages" / "VisualBehaviorPage.tsx").exists(),
             "rendering_page_exists": (web / "pages" / "RenderingEnginePage.tsx").exists(),
+            "themes_page_exists": (web / "pages" / "ThemeEnginePage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -259,6 +268,10 @@ class PlatformBuilderApplication:
             "viewport_engine_ready": True,
             "layer_system_ready": True,
             "render_performance_monitor_ready": True,
+            "theme_engine_ready": True,
+            "branding_engine_ready": True,
+            "theme_registry_ready": True,
+            "live_theme_switching_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -287,6 +300,9 @@ class PlatformBuilderApplication:
                 "visual_lod_engine": self.config.visual_lod_engine,
                 "viewport_engine": self.config.viewport_engine,
                 "layer_system": self.config.layer_system,
+                "theme_engine": self.config.theme_engine,
+                "theme_registry": self.config.theme_registry,
+                "branding_engine": self.config.branding_engine,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -305,6 +321,7 @@ class PlatformBuilderApplication:
             "team_map": self.team_map.status(),
             "visual_behavior": self.visual_behavior.status(),
             "rendering": self.rendering.status(),
+            "themes": self.themes.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

@@ -1576,3 +1576,139 @@ async def render_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.5 — Visual Theme Engine / Branding ---
+
+
+async def theme_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.theme_engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_colors_handler(request: web.Request) -> web.Response:
+    try:
+        mode = request.rel_url.query.get("mode") or "dark"
+        return json_response(platform_builder.themes.color_system(mode))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_branding_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(platform_builder.themes.upsert_brand_profile(body), status=201)
+        org = request.rel_url.query.get("organization_id")
+        return json_response(platform_builder.themes.branding(org))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_components_handler(request: web.Request) -> web.Response:
+    try:
+        theme_id = request.rel_url.query.get("theme_id")
+        return json_response(platform_builder.themes.component_theming(theme_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_ai_style_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.ai_visual_style())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_animation_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.animation_themes())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_a11y_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.accessibility())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_active_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.active_theme())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_switch_handler(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+        theme_id = body.get("theme_id")
+        if not theme_id:
+            raise ValidationError("theme_id is required")
+        return json_response(platform_builder.themes.live_switch(theme_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_registry_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.registry.list_themes())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_city_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.ai_city_foundation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.themes.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.themes.update_session(session_id, body))
+        return json_response(platform_builder.themes.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.themes.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def theme_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.themes.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

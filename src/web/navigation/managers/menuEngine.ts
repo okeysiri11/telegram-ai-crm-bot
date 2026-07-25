@@ -122,6 +122,7 @@ const menu: MenuItem[] = [
       { id: "nav_pb_team_map", name: "AI Team Map", icon: "ai", route: "/platform-builder/team-map", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_visual_behavior", name: "Visual Behavior", icon: "analytics", route: "/platform-builder/visual-behavior", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_rendering", name: "Visual Rendering", icon: "analytics", route: "/platform-builder/rendering", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_pb_themes", name: "Visual Themes", icon: "analytics", route: "/platform-builder/themes", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_crm", name: "CRM Builder", icon: "crm", route: "/platform-builder/crm", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_erp", name: "ERP Builder", icon: "erp", route: "/platform-builder/erp", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_workflow", name: "Workflow Builder", icon: "workflow", route: "/platform-builder/workflow", module: "platform_builder", permissions: ["read"], status: "beta" },

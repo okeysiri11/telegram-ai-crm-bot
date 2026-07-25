@@ -392,3 +392,30 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/rendering/sessions/{{session_id}}/create",
         handlers.render_create_handler,
     )
+
+    # Sprint 29.5 — Visual Theme Engine / Branding
+    app.router.add_get(f"{prefix}/themes/catalog", handlers.theme_catalog_handler)
+    app.router.add_get(f"{prefix}/themes/status", handlers.theme_status_handler)
+    app.router.add_get(f"{prefix}/themes/engine", handlers.theme_engine_handler)
+    app.router.add_get(f"{prefix}/themes/colors", handlers.theme_colors_handler)
+    app.router.add_get(f"{prefix}/themes/branding", handlers.theme_branding_handler)
+    app.router.add_post(f"{prefix}/themes/branding", handlers.theme_branding_handler)
+    app.router.add_get(f"{prefix}/themes/components", handlers.theme_components_handler)
+    app.router.add_get(f"{prefix}/themes/ai-style", handlers.theme_ai_style_handler)
+    app.router.add_get(f"{prefix}/themes/animation", handlers.theme_animation_handler)
+    app.router.add_get(f"{prefix}/themes/accessibility", handlers.theme_a11y_handler)
+    app.router.add_get(f"{prefix}/themes/active", handlers.theme_active_handler)
+    app.router.add_post(f"{prefix}/themes/switch", handlers.theme_switch_handler)
+    app.router.add_get(f"{prefix}/themes/registry", handlers.theme_registry_handler)
+    app.router.add_get(f"{prefix}/themes/ai-city", handlers.theme_city_handler)
+    app.router.add_post(f"{prefix}/themes/sessions", handlers.theme_session_handler)
+    app.router.add_get(f"{prefix}/themes/sessions/{{session_id}}", handlers.theme_session_handler)
+    app.router.add_patch(f"{prefix}/themes/sessions/{{session_id}}", handlers.theme_session_handler)
+    app.router.add_get(
+        f"{prefix}/themes/sessions/{{session_id}}/summary",
+        handlers.theme_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/themes/sessions/{{session_id}}/create",
+        handlers.theme_create_handler,
+    )

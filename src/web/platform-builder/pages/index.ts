@@ -7,6 +7,7 @@ export { OperationsCenterPage } from "./OperationsCenterPage";
 export { TeamMapPage } from "./TeamMapPage";
 export { VisualBehaviorPage } from "./VisualBehaviorPage";
 export { RenderingEnginePage } from "./RenderingEnginePage";
+export { ThemeEnginePage } from "./ThemeEnginePage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
 export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";
