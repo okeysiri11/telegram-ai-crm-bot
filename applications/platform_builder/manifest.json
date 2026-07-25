@@ -11,6 +11,7 @@
   "help_system": "1.0",
   "ai_builder": "1.0",
   "concierge_builder": "1.0",
+  "ai_team_center": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }

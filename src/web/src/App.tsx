@@ -39,6 +39,7 @@ import { OrganizationBrainPage } from "../organization-brain/pages";
 import { VerticalFederationPage } from "../vertical-federation/pages";
 import {
   AIBuilderPage,
+  AITeamCenterPage,
   BuilderAcademyPage,
   ConciergeBuilderPage,
   FrameBuilderPage,
@@ -198,6 +199,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <ConciergeBuilderPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/ai-team"
+        element={
+          <ProtectedRoute>
+            <AITeamCenterPage />
           </ProtectedRoute>
         }
       />

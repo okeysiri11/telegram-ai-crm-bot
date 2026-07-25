@@ -4,6 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.platform_builder.shared.group_ai import (
+    GROUP_AI_CHAT_FOUNDATION,
+    GROUP_AI_INVITE_ROLES,
+    TEAM_OWNER_ACTIONS,
+)
+
 
 def _help(purpose: str, benefits: str, example: str, what: str = "") -> dict[str, str]:
     return {
@@ -21,12 +27,14 @@ WIZARD_STEPS = [
     {"id": "identity", "title": "Concierge Identity", "index": 1},
     {"id": "role", "title": "Concierge Role", "index": 2},
     {"id": "access", "title": "Organization Access", "index": 3},
-    {"id": "orchestration", "title": "AI Orchestration", "index": 4},
-    {"id": "proactive", "title": "Proactive Assistance", "index": 5},
-    {"id": "owner", "title": "Owner Relationship", "index": 6},
-    {"id": "recommendations", "title": "Smart Recommendations", "index": 7},
-    {"id": "summary", "title": "Summary", "index": 8},
-    {"id": "create", "title": "Create", "index": 9},
+    {"id": "ai_team_center", "title": "AI Team Center", "index": 4},
+    {"id": "orchestration", "title": "AI Orchestration", "index": 5},
+    {"id": "proactive", "title": "Proactive Assistance", "index": 6},
+    {"id": "owner", "title": "Owner Relationship", "index": 7},
+    {"id": "recommendations", "title": "Smart Recommendation Engine", "index": 8},
+    {"id": "group_ai_chat", "title": "Group AI Chat Foundation", "index": 9},
+    {"id": "summary", "title": "Summary", "index": 10},
+    {"id": "create", "title": "Create", "index": 11},
 ]
 
 COMMUNICATION_STYLES = [
@@ -142,30 +150,30 @@ ORG_ACCESS = [
 ]
 
 ORCHESTRATION = [
-    {"id": "delegate_tasks", "name": "Delegate tasks", "help": _help("Hands work to the right specialist.", "Owner stays focused.", "Example: asks Legal AI to review a contract.")},
-    {"id": "call_specialists", "name": "Call Specialists", "help": _help("Brings specialists into the conversation.", "Faster expert answers.", "Example: invites Finance AI for a cash question.")},
-    {"id": "monitor_specialists", "name": "Monitor Specialists", "help": _help("Watches specialist progress.", "Fewer stalled tasks.", "Example: notices a report still pending.")},
+    {"id": "delegate_tasks", "name": "Delegate Tasks", "help": _help("Hands work to the right specialist.", "Owner stays focused.", "Example: asks Legal AI to review a contract.")},
+    {"id": "invite_specialists", "name": "Invite Specialists", "help": _help("Brings specialists into the conversation.", "Faster expert answers.", "Example: invites Finance AI for a cash question.")},
     {"id": "coordinate_team", "name": "Coordinate Team", "help": _help("Aligns several specialists as a team.", "Smoother multi-expert work.", "Example: Sales + Marketing joint brief.")},
     {"id": "summarize_discussions", "name": "Summarize Discussions", "help": _help("Turns long chats into clear takeaways.", "Saves reading time.", "Example: summary of a specialist huddle.")},
     {"id": "recommend_specialists", "name": "Recommend Specialists", "help": _help("Suggests who should help next.", "Right expert, faster.", "Example: recommends Construction AI for permits.")},
-    {"id": "prepare_meetings", "name": "Prepare Meetings", "help": _help("Builds agendas and prep packs.", "Meetings start ready.", "Example: CEO briefing before standup.")},
     {"id": "create_executive_reports", "name": "Create Executive Reports", "help": _help("Produces leadership-ready reports.", "Better visibility.", "Example: weekly organization digest.")},
+    {"id": "prepare_meetings", "name": "Prepare Meetings", "help": _help("Builds agendas and prep packs.", "Meetings start ready.", "Example: CEO briefing before standup.")},
+    {"id": "monitor_ai_team", "name": "Monitor AI Team", "help": _help("Watches the full specialist team.", "Fewer stalled tasks across agents.", "Example: notices a report still pending.")},
 ]
 
 PROACTIVE = [
     {"id": "morning_briefing", "name": "Morning Briefing", "help": _help("Starts the day with a clear overview.", "Owner begins informed.", "Example: top 3 priorities at 8:00.")},
     {"id": "evening_summary", "name": "Evening Summary", "help": _help("Closes the day with progress notes.", "Easy end-of-day clarity.", "Example: what moved and what waits.")},
+    {"id": "business_insights", "name": "Business Insights", "help": _help("Shares meaningful business patterns.", "Better situational awareness.", "Example: margin trend this week.")},
     {"id": "important_reminders", "name": "Important Reminders", "help": _help("Surfaces time-sensitive items.", "Fewer missed moments.", "Example: contract renewal reminder.")},
     {"id": "upcoming_meetings", "name": "Upcoming Meetings", "help": _help("Highlights meetings ahead.", "Better preparation.", "Example: agenda for the next call.")},
-    {"id": "task_suggestions", "name": "Task Suggestions", "help": _help("Suggests useful next actions.", "Steady momentum.", "Example: follow up with hot leads.")},
-    {"id": "business_opportunities", "name": "Business Opportunities", "help": _help("Points to promising openings.", "Growth awareness.", "Example: marketplace demand spike.")},
-    {"id": "organization_insights", "name": "Organization Insights", "help": _help("Shares patterns across the company.", "Better situational awareness.", "Example: logistics capacity trend.")},
-    {"id": "performance_highlights", "name": "Performance Highlights", "help": _help("Celebrates and surfaces results.", "Motivation and focus.", "Example: record week for Sales.")},
+    {"id": "organization_highlights", "name": "Organization Highlights", "help": _help("Shows notable company moments.", "Keeps leadership connected.", "Example: team milestone update.")},
+    {"id": "performance_overview", "name": "Performance Overview", "help": _help("Summarizes results clearly.", "Motivation and focus.", "Example: record week for Sales.")},
     {"id": "daily_digest", "name": "Daily Digest", "help": _help("One daily package of essentials.", "Less noise, more signal.", "Example: compact noon digest.")},
+    {"id": "opportunity_detection", "name": "Opportunity Detection", "help": _help("Points to promising openings.", "Growth awareness.", "Example: marketplace demand spike.")},
 ]
 
 OWNER_RELATIONSHIPS = [
-    {"id": "only_when_requested", "name": "Only when requested", "help": _help("Speaks when asked.", "Quiet and respectful.", "Example: waits for owner prompts.")},
+    {"id": "only_when_asked", "name": "Only When Asked", "help": _help("Speaks when asked.", "Quiet and respectful.", "Example: waits for owner prompts.")},
     {"id": "balanced", "name": "Balanced", "help": _help("Helpful without overwhelming.", "Comfortable everyday support.", "Example: a few timely nudges.")},
     {"id": "highly_proactive", "name": "Highly Proactive", "help": _help("Actively brings useful updates.", "Owner stays ahead.", "Example: morning and evening outreach.")},
     {"id": "executive_assistant", "name": "Executive Assistant", "help": _help("Protects the owner’s time and priorities.", "Executive-grade support.", "Example: filters noise before it reaches the owner.")},
@@ -176,17 +184,18 @@ OWNER_RELATIONSHIPS = [
 RECOMMENDATIONS = [
     {"id": "recommend_specialists", "name": "Recommend Specialists", "architecture_only": True},
     {"id": "recommend_workflows", "name": "Recommend Workflows", "architecture_only": True},
-    {"id": "recommend_automations", "name": "Recommend Automations", "architecture_only": True},
     {"id": "recommend_dashboards", "name": "Recommend Dashboards", "architecture_only": True},
-    {"id": "recommend_reports", "name": "Recommend Reports", "architecture_only": True},
     {"id": "recommend_knowledge", "name": "Recommend Knowledge", "architecture_only": True},
+    {"id": "recommend_automations", "name": "Recommend Automations", "architecture_only": True},
+    {"id": "recommend_marketplace_apps", "name": "Recommend Marketplace Apps", "architecture_only": True},
     {"id": "recommend_vertical_expansion", "name": "Recommend Vertical Expansion", "architecture_only": True},
 ]
 
 RULES = {
     "one_per_organization": True,
+    "unlimited_ai_specialists": True,
     "independent_from_ai_agents": True,
-    "coordinates_specialists": True,
+    "concierge_manages_specialists": True,
     "specialists_execute_work": True,
 }
 
@@ -203,9 +212,7 @@ def full_catalog() -> dict[str, Any]:
         "proactive": PROACTIVE,
         "owner_relationships": OWNER_RELATIONSHIPS,
         "recommendations": RECOMMENDATIONS,
+        "group_ai_chat": GROUP_AI_CHAT_FOUNDATION,
+        "team_owner_actions": list(TEAM_OWNER_ACTIONS),
         "rules": RULES,
-        "group_ai_chat": {
-            "status": "supported_architecture",
-            "description": "Concierge orchestration is ready to coordinate future Group AI Chat sessions.",
-        },
     }

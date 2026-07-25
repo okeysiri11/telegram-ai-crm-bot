@@ -28,10 +28,12 @@ export const CONCIERGE_STEPS = [
   "Concierge Identity",
   "Concierge Role",
   "Organization Access",
+  "AI Team Center",
   "AI Orchestration",
   "Proactive Assistance",
   "Owner Relationship",
-  "Smart Recommendations",
+  "Smart Recommendation Engine",
+  "Group AI Chat Foundation",
   "Summary",
   "Create",
 ] as const;

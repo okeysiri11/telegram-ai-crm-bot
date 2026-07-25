@@ -9,6 +9,7 @@ from typing import Any
 
 from applications.platform_builder.academy import BuilderAcademy
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
+from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
 from applications.platform_builder.catalog import BUILDERS, menu_for_role
 from applications.platform_builder.concierge.wizard import ConciergeWizard
@@ -38,6 +39,7 @@ class PlatformBuilderApplication:
         god_mode: GodMode | None = None,
         ai_builder: AIBuilderWizard | None = None,
         concierge: ConciergeWizard | None = None,
+        ai_team: AITeamCenter | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -46,6 +48,7 @@ class PlatformBuilderApplication:
         self.god_mode = god_mode or GodMode(self.store)
         self.ai_builder = ai_builder or AIBuilderWizard(self.store)
         self.concierge = concierge or ConciergeWizard(self.store)
+        self.ai_team = ai_team or AITeamCenter(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -54,6 +57,7 @@ class PlatformBuilderApplication:
         self.engine = BuilderEngine(self.store)
         self.ai_builder = AIBuilderWizard(self.store)
         self.concierge = ConciergeWizard(self.store)
+        self.ai_team = AITeamCenter(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -76,6 +80,8 @@ class PlatformBuilderApplication:
             "ai_registry_ready": True,
             "concierge_builder_ready": True,
             "concierge_registry_ready": True,
+            "ai_team_center_ready": True,
+            "group_ai_foundation_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -116,6 +122,9 @@ class PlatformBuilderApplication:
             "organization_link_ready": True,
             "concierge_orchestration_ready": True,
             "concierge_preview_ready": True,
+            "ai_team_center_ready": True,
+            "ai_dashboard_ready": True,
+            "group_ai_foundation_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -123,9 +132,11 @@ class PlatformBuilderApplication:
                 "help_system": self.config.help_system,
                 "ai_builder": self.config.ai_builder,
                 "concierge_builder": self.config.concierge_builder,
+                "ai_team_center": "1.0",
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
+            "ai_team": self.ai_team.status(),
         }
 
     def inventory(self) -> dict[str, Any]:
@@ -161,6 +172,7 @@ class PlatformBuilderApplication:
             "framework": {"phases": list(self.config.framework_phases), "ready": True},
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
+            "ai_team": self.ai_team.status(),
             "stats": {
                 "builders": len([b for b in BUILDERS if b["kind"] == "builder"]),
                 "frame_only": len([b for b in BUILDERS if b.get("frame_only")]),

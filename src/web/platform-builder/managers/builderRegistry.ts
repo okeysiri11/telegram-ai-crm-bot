@@ -10,6 +10,7 @@ export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "vertical", name: "Vertical Builder", route: "/platform-builder/vertical", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true, purpose: "Prepare industry vertical blueprints for future activation." },
   { id: "ai", name: "AI Builder", route: "/platform-builder/ai", kind: "builder", status: "operational", steps: AI_BUILDER_STEPS, frameOnly: false, purpose: "Compose AI agent teams with clear roles and personalities." },
   { id: "concierge", name: "Concierge Builder", route: "/platform-builder/concierge", kind: "builder", status: "operational", steps: CONCIERGE_STEPS, frameOnly: false, purpose: "Configure the single organizational Concierge assistant.", constraints: { onePerOrganization: true, separateFromAiAgents: true } },
+  { id: "ai_team", name: "AI Team Center", route: "/platform-builder/ai-team", kind: "hub", status: "operational", purpose: "Monitor and manage all AI Specialists for the organization." },
   { id: "crm", name: "CRM Builder", route: "/platform-builder/crm", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "erp", name: "ERP Builder", route: "/platform-builder/erp", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "workflow", name: "Workflow Builder", route: "/platform-builder/workflow", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },

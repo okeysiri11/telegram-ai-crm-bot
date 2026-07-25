@@ -75,3 +75,16 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/concierge/organizations/{{organization_id}}",
         handlers.concierge_org_handler,
     )
+
+    # Sprint 28.3 — AI Team Center
+    app.router.add_get(f"{prefix}/ai-team/status", handlers.ai_team_status_handler)
+    app.router.add_get(f"{prefix}/ai-team/dashboard", handlers.ai_team_dashboard_handler)
+    app.router.add_get(
+        f"{prefix}/ai-team/organizations/{{organization_id}}/dashboard",
+        handlers.ai_team_dashboard_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/ai-team/organizations/{{organization_id}}/actions",
+        handlers.ai_team_action_handler,
+    )
+    app.router.add_get(f"{prefix}/ai-team/group-chat", handlers.ai_team_group_chat_handler)

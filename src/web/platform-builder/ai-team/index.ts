@@ -1,0 +1,1 @@
+export { AITeamCenterPage } from "./AITeamCenterPage";

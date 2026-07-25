@@ -321,3 +321,47 @@ async def concierge_org_handler(request: web.Request) -> web.Response:
         return json_response({"organization_id": organization_id, "concierge": item})
     except Exception as exc:
         return _handle_error(exc)
+
+
+async def ai_team_dashboard_handler(request: web.Request) -> web.Response:
+    try:
+        organization_id = request.match_info.get("organization_id") or request.rel_url.query.get(
+            "organization_id", "org_demo"
+        )
+        return json_response(platform_builder.ai_team.dashboard(organization_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_team_action_handler(request: web.Request) -> web.Response:
+    try:
+        organization_id = request.match_info["organization_id"]
+        body = await request.json()
+        agent_id = body.get("agent_id")
+        action = body.get("action")
+        if not agent_id or not action:
+            raise ValidationError("agent_id and action are required")
+        return json_response(
+            platform_builder.ai_team.action(
+                organization_id,
+                agent_id,
+                action,
+                body.get("payload") or {},
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_team_group_chat_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.ai_team.group_chat_foundation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def ai_team_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.ai_team.status())
+    except Exception as exc:
+        return _handle_error(exc)

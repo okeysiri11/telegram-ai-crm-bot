@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Badge, Button, Card, Checkbox, Input, Switch, Tooltip } from "@/ui";
 import { PlatformBuilderLayout } from "../layouts/PlatformBuilderLayout";
 import { ProgressIndicator } from "../framework/ProgressIndicator";
@@ -10,12 +11,14 @@ import {
   AVATARS,
   COMMUNICATION_STYLES,
   CONCIERGE_WIZARD_STEPS,
+  GROUP_AI_INVITE_ROLES,
   ORCHESTRATION,
   ORG_ACCESS,
   OWNER_RELATIONSHIPS,
   PROACTIVE,
   RECOMMENDATIONS,
   ROLES,
+  TEAM_OWNER_ACTIONS,
   VOICE_PROFILES,
   emptyDraft,
   type ConciergeDraft,
@@ -52,6 +55,19 @@ function toggleList(list: string[], id: string): string[] {
   return list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
 }
 
+type TeamMember = {
+  agent_id: string;
+  name: string;
+  avatar: string;
+  profession: string;
+  specialization: string;
+  status: string;
+  current_task?: string | null;
+  memory_usage?: number;
+  last_activity?: string;
+  capabilities?: string[];
+};
+
 export function ConciergeWizard() {
   const [step, setStep] = useState(0);
   const [orgId, setOrgId] = useState("org_demo");
@@ -60,6 +76,7 @@ export function ConciergeWizard() {
   const [created, setCreated] = useState<Record<string, unknown> | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [teamPreview, setTeamPreview] = useState<TeamMember[]>([]);
 
   const mode = useAcademyStore((s) => s.mode);
   const learning = useAcademyStore((s) => s.isLearningEnabled("concierge"));
@@ -70,6 +87,21 @@ export function ConciergeWizard() {
     COMMUNICATION_STYLES.find((s) => s.id === draft.communicationStyle)?.sample ||
     COMMUNICATION_STYLES[1].sample;
   const avatar = AVATARS.find((a) => a.id === draft.avatar) || AVATARS[0];
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const res = await fetch(
+          `${PLATFORM_BUILDER_API}/ai-team/organizations/${encodeURIComponent(orgId)}/dashboard`,
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setTeamPreview((data.members || []) as TeamMember[]);
+      } catch {
+        /* preview optional while API boots */
+      }
+    })();
+  }, [orgId]);
 
   const help = useMemo(() => {
     const title = CONCIERGE_WIZARD_STEPS[step];
@@ -111,7 +143,7 @@ export function ConciergeWizard() {
     try {
       const sid = await ensureSession();
       const payload = {
-        step: 9,
+        step: 11,
         organization_id: orgId,
         draft: {
           name: draft.name,
@@ -126,6 +158,8 @@ export function ConciergeWizard() {
           proactive: draft.proactive,
           owner_relationship: draft.ownerRelationship,
           recommendations: draft.recommendations,
+          group_ai_invite_roles: draft.groupAiInviteRoles,
+          enable_ai_team_center: draft.enableAiTeamCenter,
         },
       };
       const patchRes = await fetch(`${PLATFORM_BUILDER_API}/concierge/sessions/${sid}`, {
@@ -159,12 +193,16 @@ export function ConciergeWizard() {
       <div className="flex flex-wrap items-center gap-3">
         <Badge>Operational</Badge>
         <Badge>Not an AI Agent</Badge>
+        <Badge>AI Team Center</Badge>
         <Badge>Academy · {mode}</Badge>
         <Switch
           checked={learning}
           onChange={(v) => toggleLearning("concierge", v)}
           label="Learning mode"
         />
+        <Link className="eds-type-small text-[var(--eds-primary)]" to="/platform-builder/ai-team">
+          Open AI Team Center →
+        </Link>
       </div>
 
       <ProgressIndicator current={step} total={CONCIERGE_WIZARD_STEPS.length} />
@@ -305,6 +343,43 @@ export function ConciergeWizard() {
           ) : null}
 
           {step === 3 ? (
+            <div className="space-y-3">
+              <p className="eds-type-small text-[var(--eds-text-muted)]">
+                AI Team Center shows all AI Specialists. Unlimited specialists. Concierge manages; specialists execute.
+              </p>
+              <label className="flex items-center gap-2 eds-type-small">
+                <Checkbox
+                  checked={draft.enableAiTeamCenter}
+                  onChange={() => patch({ enableAiTeamCenter: !draft.enableAiTeamCenter })}
+                />
+                Enable AI Team Center on create
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {TEAM_OWNER_ACTIONS.map((a) => (
+                  <Badge key={a}>{a}</Badge>
+                ))}
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {teamPreview.slice(0, 4).map((m) => (
+                  <div key={m.agent_id} className="rounded-md border border-[var(--eds-border)] p-3 eds-type-small">
+                    <strong>
+                      {m.avatar} {m.name}
+                    </strong>
+                    <p className="text-[var(--eds-text-muted)]">
+                      {m.profession} · {m.specialization}
+                    </p>
+                    <p>Status: {m.status}</p>
+                    <p>Task: {m.current_task || "—"}</p>
+                  </div>
+                ))}
+              </div>
+              <Link className="eds-type-small text-[var(--eds-primary)]" to="/platform-builder/ai-team">
+                Open full AI Team dashboard →
+              </Link>
+            </div>
+          ) : null}
+
+          {step === 4 ? (
             <div className="grid gap-2 sm:grid-cols-2">
               {ORCHESTRATION.map((item) => (
                 <label key={item.id} className="rounded-md border border-[var(--eds-border)] p-3 eds-type-small">
@@ -321,12 +396,12 @@ export function ConciergeWizard() {
                 </label>
               ))}
               <p className="sm:col-span-2 eds-type-caption text-[var(--eds-text-muted)]">
-                Architecture supports future Group AI Chat — Concierge coordinates, Specialists execute.
+                Architecture supports future Collaborative AI — Concierge coordinates, Specialists execute.
               </p>
             </div>
           ) : null}
 
-          {step === 4 ? (
+          {step === 5 ? (
             <div className="grid gap-2 sm:grid-cols-2">
               {PROACTIVE.map((item) => (
                 <label key={item.id} className="rounded-md border border-[var(--eds-border)] p-3 eds-type-small">
@@ -337,12 +412,15 @@ export function ConciergeWizard() {
                     />
                     {item.name}
                   </span>
+                  {"help" in item && item.help ? (
+                    <p className="mt-1 text-[var(--eds-text-muted)]">{item.help.purpose}</p>
+                  ) : null}
                 </label>
               ))}
             </div>
           ) : null}
 
-          {step === 5 ? (
+          {step === 6 ? (
             <div className="grid gap-2 sm:grid-cols-2">
               {OWNER_RELATIONSHIPS.map((item) => (
                 <button
@@ -362,11 +440,12 @@ export function ConciergeWizard() {
             </div>
           ) : null}
 
-          {step === 6 ? (
+          {step === 7 ? (
             <div className="space-y-3">
               <Badge>Architecture only</Badge>
               <p className="eds-type-small text-[var(--eds-text-muted)]">
-                Prepare the Recommendation Engine. Runtime recommendations arrive later.
+                Smart Recommendation Engine prepares specialist, workflow, dashboard, knowledge, automation,
+                marketplace, and vertical recommendations.
               </p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {RECOMMENDATIONS.map((item) => (
@@ -386,40 +465,84 @@ export function ConciergeWizard() {
             </div>
           ) : null}
 
-          {step === 7 ? (
-            <Card title={`Concierge Card · ${draft.name || "Unnamed"}`}>
-              <ul className="space-y-1 eds-type-small">
-                <li>
-                  Identity: {avatar.emoji} {draft.name || "—"} · {draft.gender} · voice {draft.voiceProfile}
-                </li>
-                <li>
-                  Role:{" "}
-                  {draft.role === "custom"
-                    ? draft.roleCustom || "Custom"
-                    : ROLES.find((r) => r.id === draft.role)?.name || "—"}
-                </li>
-                <li>Organization access: {draft.organizationAccess.join(", ") || "—"}</li>
-                <li>Permissions / access areas: {draft.organizationAccess.length}</li>
-                <li>Proactive functions: {draft.proactive.join(", ") || "—"}</li>
-                <li>Communication style: {draft.communicationStyle}</li>
-                <li>Owner relationship: {draft.ownerRelationship}</li>
-                <li>Organization: {orgId}</li>
-              </ul>
-            </Card>
-          ) : null}
-
           {step === 8 ? (
             <div className="space-y-3">
+              <Badge>Architecture only</Badge>
+              <p className="eds-type-small text-[var(--eds-text-muted)]">
+                Owner starts a conversation and invites specialists. All invited AI discuss together.
+                Foundation includes conversation history, participant list, speaking order, AI summary, and
+                decision summary.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {GROUP_AI_INVITE_ROLES.map((role) => (
+                  <label key={role} className="rounded-md border border-[var(--eds-border)] px-3 py-2 eds-type-small">
+                    <span className="inline-flex items-center gap-2">
+                      <Checkbox
+                        checked={draft.groupAiInviteRoles.includes(role)}
+                        onChange={() =>
+                          patch({ groupAiInviteRoles: toggleList(draft.groupAiInviteRoles, role) })
+                        }
+                      />
+                      {role}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {step === 9 ? (
+            <div className="space-y-3">
+              <Card title={`Concierge Card · ${draft.name || "Unnamed"}`}>
+                <ul className="space-y-1 eds-type-small">
+                  <li>
+                    Identity: {avatar.emoji} {draft.name || "—"} · {draft.gender} · voice {draft.voiceProfile}
+                  </li>
+                  <li>
+                    Role:{" "}
+                    {draft.role === "custom"
+                      ? draft.roleCustom || "Custom"
+                      : ROLES.find((r) => r.id === draft.role)?.name || "—"}
+                  </li>
+                  <li>Organization access: {draft.organizationAccess.join(", ") || "—"}</li>
+                  <li>Proactive: {draft.proactive.join(", ") || "—"}</li>
+                  <li>Orchestration: {draft.orchestration.join(", ") || "—"}</li>
+                  <li>Owner relationship: {draft.ownerRelationship}</li>
+                  <li>AI Team Center: {draft.enableAiTeamCenter ? "Yes" : "No"}</li>
+                </ul>
+              </Card>
+              <Card title="Organization Overview">
+                <p className="eds-type-small">Organization: {orgId}</p>
+                <p className="eds-type-small">Access areas: {draft.organizationAccess.length}</p>
+              </Card>
+              <Card title="AI Team Overview">
+                <p className="eds-type-small">Specialists preview: {teamPreview.length}</p>
+                <p className="eds-type-caption text-[var(--eds-text-muted)]">
+                  Unlimited AI Specialists. Concierge manages; specialists execute.
+                </p>
+              </Card>
+            </div>
+          ) : null}
+
+          {step === 10 ? (
+            <div className="space-y-3">
               <p className="eds-type-small">
-                Create registers the Concierge, links it to the organization, and stores it in the Concierge Registry.
-                Exactly one Concierge is allowed per organization.
+                Create registers the Concierge, AI Team Center, and Organization Connection in the Concierge
+                Registry. Exactly one Concierge is allowed per organization.
               </p>
               {error ? <p className="eds-type-small text-[var(--eds-danger)]">{error}</p> : null}
               {created ? (
                 <Card title="Created">
-                  <p className="eds-type-small">Concierge registered and linked.</p>
+                  <p className="eds-type-small">Concierge, AI Team Center, and organization linked.</p>
                   <pre className="mt-2 max-h-48 overflow-auto eds-type-caption">
-                    {JSON.stringify(created.concierge, null, 2)}
+                    {JSON.stringify(
+                      {
+                        concierge: created.concierge,
+                        ai_team_center: created.ai_team_center,
+                      },
+                      null,
+                      2,
+                    )}
                   </pre>
                 </Card>
               ) : (
@@ -460,6 +583,7 @@ export function ConciergeWizard() {
           <p className="eds-type-small">Access areas: {draft.organizationAccess.length}</p>
           <p className="eds-type-small">Orchestration: {draft.orchestration.length}</p>
           <p className="eds-type-small">Proactive: {draft.proactive.length}</p>
+          <p className="eds-type-small">AI Team specialists: {teamPreview.length}</p>
           <p className="eds-type-caption text-[var(--eds-text-muted)]">
             Concierge coordinates Specialists. Specialists execute work.
           </p>

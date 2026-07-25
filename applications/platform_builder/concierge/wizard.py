@@ -6,8 +6,10 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.concierge.catalogs import (
     COMMUNICATION_STYLES,
+    GROUP_AI_CHAT_FOUNDATION,
     WIZARD_STEPS,
     full_catalog,
 )
@@ -30,6 +32,7 @@ class ConciergeWizard:
     def __init__(self, store: PlatformBuilderStore | None = None) -> None:
         self.store = store or platform_builder_store
         self.registry = ConciergeRegistry(self.store)
+        self.team_center = AITeamCenter(self.store)
 
     def catalog(self) -> dict[str, Any]:
         return {
@@ -39,6 +42,7 @@ class ConciergeWizard:
             "sprint": "28.3",
             "operational": True,
             "not_an_ai_agent": True,
+            "ai_team_center_ready": True,
             **full_catalog(),
         }
 
@@ -65,6 +69,8 @@ class ConciergeWizard:
                 "proactive": [],
                 "owner_relationship": "balanced",
                 "recommendations": [],
+                "group_ai_invite_roles": list(GROUP_AI_CHAT_FOUNDATION["invite_roles"]),
+                "enable_ai_team_center": True,
             },
             "created_at": _now(),
             "updated_at": _now(),
@@ -82,8 +88,8 @@ class ConciergeWizard:
         session = self.get_session(session_id)
         if "step" in patch:
             step = int(patch["step"])
-            if step < 1 or step > 9:
-                raise ValidationError("step must be between 1 and 9")
+            if step < 1 or step > 11:
+                raise ValidationError("step must be between 1 and 11")
             session["step"] = step
         if "draft" in patch and isinstance(patch["draft"], dict):
             session["draft"] = {**session["draft"], **patch["draft"]}
@@ -114,6 +120,7 @@ class ConciergeWizard:
     def summary(self, session_id: str) -> dict[str, Any]:
         session = self.get_session(session_id)
         draft = session["draft"]
+        team = self.team_center.dashboard(session["organization_id"])
         return {
             "session_id": session_id,
             "organization_id": session["organization_id"],
@@ -135,8 +142,21 @@ class ConciergeWizard:
                 "recommendations": draft.get("recommendations") or [],
                 "communication_style": draft.get("communication_style"),
             },
+            "organization_overview": {
+                "organization_id": session["organization_id"],
+                "access_areas": len(draft.get("organization_access") or []),
+                "proactive": len(draft.get("proactive") or []),
+                "orchestration": len(draft.get("orchestration") or []),
+            },
+            "ai_team_overview": {
+                "specialists": team["count"],
+                "active": team["active"],
+                "members": [{"name": m["name"], "profession": m["profession"], "status": m["status"]} for m in team["members"]],
+            },
+            "group_ai_chat": GROUP_AI_CHAT_FOUNDATION,
             "rules": {
                 "one_per_organization": True,
+                "unlimited_ai_specialists": True,
                 "not_an_ai_agent": True,
             },
         }
@@ -169,21 +189,33 @@ class ConciergeWizard:
                 "owner_relationship": draft.get("owner_relationship") or "balanced",
                 "recommendations": draft.get("recommendations") or [],
                 "recommendations_architecture_only": True,
+                "group_ai_chat_foundation": True,
+                "ai_team_center_enabled": True,
                 "configuration_saved": True,
                 "session_id": session_id,
             }
         )
+        team = self.team_center.register_center(
+            organization_id=session["organization_id"],
+            concierge_id=record["concierge_id"],
+        )
         session["status"] = "created"
         session["created_concierge_id"] = record["concierge_id"]
+        session["team_center_id"] = team["team_center_id"]
         session["updated_at"] = _now()
         self.store.concierge_sessions.save(session_id, session)
         return {
             "ok": True,
             "session_id": session_id,
             "concierge": record,
+            "ai_team_center": team,
             "registry": self.registry.list_all(),
             "organization_link": self.store.organization_links.get(session["organization_id"]),
-            "message": "Concierge created, linked to the organization, and registered in the Concierge Registry.",
+            "group_ai_chat": GROUP_AI_CHAT_FOUNDATION,
+            "message": (
+                "Concierge created, AI Team Center registered, organization connected, "
+                "and Concierge Registry updated."
+            ),
         }
 
     def status(self) -> dict[str, Any]:
@@ -195,4 +227,6 @@ class ConciergeWizard:
             "registered": len(self.store.concierge_registry.list_all()),
             "one_per_organization": True,
             "not_an_ai_agent": True,
+            "ai_team_center": self.team_center.status(),
+            "group_ai_chat_foundation": True,
         }

@@ -23,6 +23,7 @@ class PlatformBuilderConfig:
     help_system: str = "1.0"
     ai_builder: str = "1.0"
     concierge_builder: str = "1.0"
+    ai_team_center: str = "1.0"
     platform_owner_role: str = "platform_owner"
     academy_modes: list[str] = field(
         default_factory=lambda: ["quick_start", "guided_learning", "expert"]

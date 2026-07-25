@@ -24,10 +24,12 @@ export const CONCIERGE_WIZARD_STEPS = [
   "Concierge Identity",
   "Concierge Role",
   "Organization Access",
+  "AI Team Center",
   "AI Orchestration",
   "Proactive Assistance",
   "Owner Relationship",
-  "Smart Recommendations",
+  "Smart Recommendation Engine",
+  "Group AI Chat Foundation",
   "Summary",
   "Create",
 ] as const;
@@ -89,30 +91,30 @@ export const ORG_ACCESS = [
 ];
 
 export const ORCHESTRATION = [
-  { id: "delegate_tasks", name: "Delegate tasks", help: help("Hands work to the right specialist.", "Owner stays focused.", "Example: asks Legal AI to review a contract.") },
-  { id: "call_specialists", name: "Call Specialists", help: help("Brings specialists into the conversation.", "Faster expert answers.", "Example: invites Finance AI for a cash question.") },
-  { id: "monitor_specialists", name: "Monitor Specialists", help: help("Watches specialist progress.", "Fewer stalled tasks.", "Example: notices a report still pending.") },
+  { id: "delegate_tasks", name: "Delegate Tasks", help: help("Hands work to the right specialist.", "Owner stays focused.", "Example: asks Legal AI to review a contract.") },
+  { id: "invite_specialists", name: "Invite Specialists", help: help("Brings specialists into the conversation.", "Faster expert answers.", "Example: invites Finance AI for a cash question.") },
   { id: "coordinate_team", name: "Coordinate Team", help: help("Aligns several specialists as a team.", "Smoother multi-expert work.", "Example: Sales + Marketing joint brief.") },
   { id: "summarize_discussions", name: "Summarize Discussions", help: help("Turns long chats into clear takeaways.", "Saves reading time.", "Example: summary of a specialist huddle.") },
   { id: "recommend_specialists", name: "Recommend Specialists", help: help("Suggests who should help next.", "Right expert, faster.", "Example: recommends Construction AI for permits.") },
-  { id: "prepare_meetings", name: "Prepare Meetings", help: help("Builds agendas and prep packs.", "Meetings start ready.", "Example: CEO briefing before standup.") },
   { id: "create_executive_reports", name: "Create Executive Reports", help: help("Produces leadership-ready reports.", "Better visibility.", "Example: weekly organization digest.") },
+  { id: "prepare_meetings", name: "Prepare Meetings", help: help("Builds agendas and prep packs.", "Meetings start ready.", "Example: CEO briefing before standup.") },
+  { id: "monitor_ai_team", name: "Monitor AI Team", help: help("Watches the full specialist team.", "Fewer stalled tasks across agents.", "Example: notices a report still pending.") },
 ];
 
 export const PROACTIVE = [
-  { id: "morning_briefing", name: "Morning Briefing" },
-  { id: "evening_summary", name: "Evening Summary" },
-  { id: "important_reminders", name: "Important Reminders" },
-  { id: "upcoming_meetings", name: "Upcoming Meetings" },
-  { id: "task_suggestions", name: "Task Suggestions" },
-  { id: "business_opportunities", name: "Business Opportunities" },
-  { id: "organization_insights", name: "Organization Insights" },
-  { id: "performance_highlights", name: "Performance Highlights" },
-  { id: "daily_digest", name: "Daily Digest" },
+  { id: "morning_briefing", name: "Morning Briefing", help: help("Starts the day with a clear overview.", "Owner begins informed.", "Example: top 3 priorities at 8:00.") },
+  { id: "evening_summary", name: "Evening Summary", help: help("Closes the day with progress notes.", "Easy end-of-day clarity.", "Example: what moved and what waits.") },
+  { id: "business_insights", name: "Business Insights", help: help("Shares meaningful business patterns.", "Better situational awareness.", "Example: margin trend this week.") },
+  { id: "important_reminders", name: "Important Reminders", help: help("Surfaces time-sensitive items.", "Fewer missed moments.", "Example: contract renewal reminder.") },
+  { id: "upcoming_meetings", name: "Upcoming Meetings", help: help("Highlights meetings ahead.", "Better preparation.", "Example: agenda for the next call.") },
+  { id: "organization_highlights", name: "Organization Highlights", help: help("Shows notable company moments.", "Keeps leadership connected.", "Example: team milestone update.") },
+  { id: "performance_overview", name: "Performance Overview", help: help("Summarizes results clearly.", "Motivation and focus.", "Example: record week for Sales.") },
+  { id: "daily_digest", name: "Daily Digest", help: help("One daily package of essentials.", "Less noise, more signal.", "Example: compact noon digest.") },
+  { id: "opportunity_detection", name: "Opportunity Detection", help: help("Points to promising openings.", "Growth awareness.", "Example: marketplace demand spike.") },
 ];
 
 export const OWNER_RELATIONSHIPS = [
-  { id: "only_when_requested", name: "Only when requested", help: help("Speaks when asked.", "Quiet and respectful.", "Example: waits for owner prompts.") },
+  { id: "only_when_asked", name: "Only When Asked", help: help("Speaks when asked.", "Quiet and respectful.", "Example: waits for owner prompts.") },
   { id: "balanced", name: "Balanced", help: help("Helpful without overwhelming.", "Comfortable everyday support.", "Example: a few timely nudges.") },
   { id: "highly_proactive", name: "Highly Proactive", help: help("Actively brings useful updates.", "Owner stays ahead.", "Example: morning and evening outreach.") },
   { id: "executive_assistant", name: "Executive Assistant", help: help("Protects the owner’s time and priorities.", "Executive-grade support.", "Example: filters noise before it reaches the owner.") },
@@ -123,12 +125,35 @@ export const OWNER_RELATIONSHIPS = [
 export const RECOMMENDATIONS = [
   { id: "recommend_specialists", name: "Recommend Specialists" },
   { id: "recommend_workflows", name: "Recommend Workflows" },
-  { id: "recommend_automations", name: "Recommend Automations" },
   { id: "recommend_dashboards", name: "Recommend Dashboards" },
-  { id: "recommend_reports", name: "Recommend Reports" },
   { id: "recommend_knowledge", name: "Recommend Knowledge" },
+  { id: "recommend_automations", name: "Recommend Automations" },
+  { id: "recommend_marketplace_apps", name: "Recommend Marketplace Apps" },
   { id: "recommend_vertical_expansion", name: "Recommend Vertical Expansion" },
 ];
+
+export const GROUP_AI_INVITE_ROLES = [
+  "Lawyer",
+  "Accountant",
+  "Marketing",
+  "HR",
+  "Medical",
+  "Finance",
+  "Analytics",
+  "Custom Specialists",
+] as const;
+
+export const TEAM_OWNER_ACTIONS = [
+  "Open Chat",
+  "Assign Task",
+  "View Knowledge",
+  "View Memory",
+  "Pause Agent",
+  "Resume Agent",
+  "Edit Agent",
+  "Replace Agent",
+  "Remove Agent",
+] as const;
 
 export type ConciergeDraft = {
   name: string;
@@ -143,6 +168,8 @@ export type ConciergeDraft = {
   proactive: string[];
   ownerRelationship: string;
   recommendations: string[];
+  groupAiInviteRoles: string[];
+  enableAiTeamCenter: boolean;
 };
 
 export function emptyDraft(): ConciergeDraft {
@@ -159,5 +186,7 @@ export function emptyDraft(): ConciergeDraft {
     proactive: [],
     ownerRelationship: "balanced",
     recommendations: [],
+    groupAiInviteRoles: [...GROUP_AI_INVITE_ROLES],
+    enableAiTeamCenter: true,
   };
 }

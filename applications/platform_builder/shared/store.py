@@ -44,6 +44,9 @@ class PlatformBuilderStore:
         self.concierge_sessions: EntityStore = EntityStore()
         self.concierge_registry: EntityStore = EntityStore()
         self.organization_links: EntityStore = EntityStore()
+        # Sprint 28.3 — AI Team Center
+        self.ai_team_centers: EntityStore = EntityStore()
+        self.ai_team_actions: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
