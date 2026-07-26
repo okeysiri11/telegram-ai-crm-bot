@@ -2804,3 +2804,169 @@ async def workspace_os_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.13 — Enterprise Command Center OS / Universal Command Platform ---
+
+
+async def command_center_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.command_center_os.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.command_center_os.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.command_center_os.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_palette_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.command_center_os.command_palette(body.get("query")),
+                status=201,
+            )
+        query = request.rel_url.query.get("q") or request.rel_url.query.get("query")
+        return json_response(platform_builder.command_center_os.command_palette(query))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_execute_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.command_center_os.execute_command(body.get("command_id")),
+                status=201,
+            )
+        return json_response(platform_builder.command_center_os.execute_command())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_categories_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.command_center_os.categories())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_voice_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.command_center_os.voice_foundation(body))
+        return json_response(platform_builder.command_center_os.voice_foundation())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_hotkeys_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.command_center_os.hotkey_engine(body))
+        return json_response(platform_builder.command_center_os.hotkey_engine())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_history_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.command_center_os.command_history(
+                    action=body.get("action"),
+                    command_id=body.get("command_id"),
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.command_center_os.command_history())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_assistant_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.command_center_os.ai_assistant(
+                    utterance=body.get("utterance") or body.get("query"),
+                    context=body.get("context"),
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.command_center_os.ai_assistant())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_performance_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.command_center_os.performance(action=body.get("action")),
+                status=201,
+            )
+        return json_response(platform_builder.command_center_os.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.command_center_os.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_wizard_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.command_center_os.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(
+                platform_builder.command_center_os.update_session(session_id, body)
+            )
+        return json_response(platform_builder.command_center_os.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.command_center_os.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def command_center_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.command_center_os.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

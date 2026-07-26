@@ -162,6 +162,13 @@ class PlatformBuilderStore:
         self.layout_engines: EntityStore = EntityStore()
         self.context_engines: EntityStore = EntityStore()
         self.session_managers: EntityStore = EntityStore()
+        # Sprint 29.13 — Enterprise Command Center OS
+        self.command_center_wizard_sessions: EntityStore = EntityStore()
+        self.command_centers: EntityStore = EntityStore()
+        self.command_registries: EntityStore = EntityStore()
+        self.command_apis: EntityStore = EntityStore()
+        self.shortcut_engines: EntityStore = EntityStore()
+        self.voice_apis: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

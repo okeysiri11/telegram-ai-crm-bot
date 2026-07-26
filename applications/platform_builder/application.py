@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.12."""
+"""Platform Builder application facade — Sprint 29.13."""
 
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ from applications.platform_builder.story.engine import VisualStoryEngine
 from applications.platform_builder.intelligence.engine import VisualIntelligenceEngine
 from applications.platform_builder.experience.engine import VisualExperienceEngine
 from applications.platform_builder.workspace_os.engine import EnterpriseWorkspaceOS
+from applications.platform_builder.command_center.engine import EnterpriseCommandCenter
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -74,6 +75,7 @@ class PlatformBuilderApplication:
         intelligence: VisualIntelligenceEngine | None = None,
         experience: VisualExperienceEngine | None = None,
         workspace_os: EnterpriseWorkspaceOS | None = None,
+        command_center_os: EnterpriseCommandCenter | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -100,6 +102,7 @@ class PlatformBuilderApplication:
         self.intelligence = intelligence or VisualIntelligenceEngine(self.store)
         self.experience = experience or VisualExperienceEngine(self.store)
         self.workspace_os = workspace_os or EnterpriseWorkspaceOS(self.store)
+        self.command_center_os = command_center_os or EnterpriseCommandCenter(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -126,6 +129,7 @@ class PlatformBuilderApplication:
         self.intelligence = VisualIntelligenceEngine(self.store)
         self.experience = VisualExperienceEngine(self.store)
         self.workspace_os = EnterpriseWorkspaceOS(self.store)
+        self.command_center_os = EnterpriseCommandCenter(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -229,6 +233,11 @@ class PlatformBuilderApplication:
             "session_manager_ready": True,
             "context_engine_ready": True,
             "unified_workspace_platform_ready": True,
+            "command_center_ready": True,
+            "universal_command_platform_ready": True,
+            "voice_foundation_ready": True,
+            "ai_command_assistant_ready": True,
+            "shortcut_engine_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -251,6 +260,7 @@ class PlatformBuilderApplication:
             "intelligence_page_exists": (web / "pages" / "IntelligenceEnginePage.tsx").exists(),
             "experience_page_exists": (web / "pages" / "ExperienceEnginePage.tsx").exists(),
             "workspace_os_page_exists": (web / "pages" / "WorkspaceOSPage.tsx").exists(),
+            "command_center_page_exists": (web / "pages" / "CommandCenterOSPage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -369,6 +379,11 @@ class PlatformBuilderApplication:
             "session_manager_ready": True,
             "context_engine_ready": True,
             "unified_workspace_platform_ready": True,
+            "command_center_ready": True,
+            "universal_command_platform_ready": True,
+            "voice_foundation_ready": True,
+            "ai_command_assistant_ready": True,
+            "shortcut_engine_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -429,6 +444,11 @@ class PlatformBuilderApplication:
                 "layout_engine": self.config.layout_engine,
                 "context_engine": self.config.context_engine,
                 "session_manager": self.config.session_manager,
+                "command_center": self.config.command_center,
+                "command_registry": self.config.command_registry,
+                "command_api": self.config.command_api,
+                "shortcut_engine": self.config.shortcut_engine,
+                "voice_api": self.config.voice_api,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -455,6 +475,7 @@ class PlatformBuilderApplication:
             "intelligence": self.intelligence.status(),
             "experience": self.experience.status(),
             "workspace_os": self.workspace_os.status(),
+            "command_center_os": self.command_center_os.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

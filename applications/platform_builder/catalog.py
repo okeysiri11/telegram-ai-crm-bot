@@ -361,6 +361,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Unified operating environment for every module with multi-workspace contexts — role aware.",
     },
     {
+        "id": "command_center",
+        "name": "Enterprise Command Center",
+        "route": "/platform-builder/command-center",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Universal command interface for modules, AI, workspaces and services — interaction orchestration only.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

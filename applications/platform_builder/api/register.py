@@ -631,3 +631,50 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/workspace-os/sessions/{{session_id}}/create",
         handlers.workspace_os_create_handler,
     )
+
+    # Sprint 29.13 — Enterprise Command Center OS / Universal Command Platform
+    app.router.add_get(f"{prefix}/command-center/catalog", handlers.command_center_catalog_handler)
+    app.router.add_get(f"{prefix}/command-center/status", handlers.command_center_status_handler)
+    app.router.add_get(f"{prefix}/command-center/engine", handlers.command_center_engine_handler)
+    app.router.add_get(f"{prefix}/command-center/palette", handlers.command_center_palette_handler)
+    app.router.add_post(f"{prefix}/command-center/palette", handlers.command_center_palette_handler)
+    app.router.add_get(f"{prefix}/command-center/execute", handlers.command_center_execute_handler)
+    app.router.add_post(f"{prefix}/command-center/execute", handlers.command_center_execute_handler)
+    app.router.add_get(f"{prefix}/command-center/categories", handlers.command_center_categories_handler)
+    app.router.add_get(f"{prefix}/command-center/voice", handlers.command_center_voice_handler)
+    app.router.add_patch(f"{prefix}/command-center/voice", handlers.command_center_voice_handler)
+    app.router.add_get(f"{prefix}/command-center/hotkeys", handlers.command_center_hotkeys_handler)
+    app.router.add_patch(f"{prefix}/command-center/hotkeys", handlers.command_center_hotkeys_handler)
+    app.router.add_get(f"{prefix}/command-center/history", handlers.command_center_history_handler)
+    app.router.add_post(f"{prefix}/command-center/history", handlers.command_center_history_handler)
+    app.router.add_get(f"{prefix}/command-center/assistant", handlers.command_center_assistant_handler)
+    app.router.add_post(f"{prefix}/command-center/assistant", handlers.command_center_assistant_handler)
+    app.router.add_get(
+        f"{prefix}/command-center/performance",
+        handlers.command_center_performance_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/command-center/performance",
+        handlers.command_center_performance_handler,
+    )
+    app.router.add_get(f"{prefix}/command-center/ui", handlers.command_center_ui_handler)
+    app.router.add_post(
+        f"{prefix}/command-center/sessions",
+        handlers.command_center_wizard_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/command-center/sessions/{{session_id}}",
+        handlers.command_center_wizard_session_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/command-center/sessions/{{session_id}}",
+        handlers.command_center_wizard_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/command-center/sessions/{{session_id}}/summary",
+        handlers.command_center_wizard_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/command-center/sessions/{{session_id}}/create",
+        handlers.command_center_create_handler,
+    )
