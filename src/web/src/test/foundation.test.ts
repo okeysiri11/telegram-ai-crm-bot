@@ -347,16 +347,14 @@ describe("Sprint 32.3.2 Enterprise Command Center", () => {
       toggleCommandSection,
     } = await import("../dashboard/commandCenterCatalog");
     expect(DEFAULT_COMMAND_LAYOUT).toContain("mission_control");
+    expect(DEFAULT_COMMAND_LAYOUT).toContain("activity_feed");
     expect(QUICK_ACTIONS.length).toBeGreaterThanOrEqual(6);
     expect(BUSINESS_MODULES.some((m) => m.id === "crm")).toBe(true);
     expect(KPI_CARDS).toHaveLength(6);
-    saveCommandLayout([...DEFAULT_COMMAND_LAYOUT]);
-    const without = toggleCommandSection("ai_activity");
-    expect(without).not.toContain("ai_activity");
-    const restored = toggleCommandSection("ai_activity");
-    expect(restored).toContain("ai_activity");
-    const loaded = loadCommandLayout();
-    expect(loaded).toContain("activity_feed");
+    const saved = saveCommandLayout(["mission_control", "quick_actions"]);
+    expect(loadCommandLayout()).toEqual(saved);
+    const toggled = toggleCommandSection("ai_activity");
+    expect(toggled).toContain("ai_activity");
     saveCommandLayout([...DEFAULT_COMMAND_LAYOUT]);
   });
 });

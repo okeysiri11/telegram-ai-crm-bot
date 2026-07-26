@@ -393,7 +393,7 @@ export function DashboardPage() {
                   Сейчас используется `personalizationEngine` + `commandCenterCatalog` layout.
                 </p>
                 <ul className="mb-4 eds-type-small space-y-1 text-[var(--eds-text-muted)]">
-                  <li>· Layout key: ewp_command_center_layout_v1</li>
+                  <li>· Layout key: ewp_command_center_layout_v2</li>
                   <li>· Home: {personal.homePage}</li>
                   <li>· Виджеты engine: {personal.widgets.join(", ")}</li>
                   <li>· Видимые секции: {layout.join(" · ")}</li>

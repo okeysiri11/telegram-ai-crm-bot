@@ -125,18 +125,12 @@ export const AI_ACTIVITY = {
   completed: ["Автоматизация follow-up · 12", "Классификация feedback · 8"],
 };
 
-const LAYOUT_KEY = "ewp_command_center_layout_v1";
+const LAYOUT_KEY = "ewp_command_center_layout_v2";
 
 export function loadCommandLayout(): CommandWidgetId[] {
   try {
     const raw = JSON.parse(localStorage.getItem(LAYOUT_KEY) || "null") as CommandWidgetId[] | null;
-    if (Array.isArray(raw) && raw.length) {
-      const merged = [...raw];
-      for (const id of DEFAULT_COMMAND_LAYOUT) {
-        if (!merged.includes(id)) merged.push(id);
-      }
-      return merged;
-    }
+    if (Array.isArray(raw) && raw.length) return raw;
   } catch {
     /* ignore */
   }

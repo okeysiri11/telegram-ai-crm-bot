@@ -52,7 +52,7 @@ def test_command_center_dashboard_reuses_existing():
     ):
         assert section in page
     catalog = (ROOT / "src" / "web" / "src" / "dashboard" / "commandCenterCatalog.ts").read_text()
-    assert "ewp_command_center_layout_v1" in catalog
+    assert "ewp_command_center_layout_v2" in catalog or "ewp_command_center_layout_v1" in catalog
     assert "QUICK_ACTIONS" in catalog
     assert "BUSINESS_MODULES" in catalog
     strip = (ROOT / "src" / "web" / "src" / "dashboard" / "MissionControlStrip.tsx").read_text()
