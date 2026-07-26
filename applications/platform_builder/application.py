@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.10."""
+"""Platform Builder application facade — Sprint 29.11."""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ from applications.platform_builder.simulation.engine import VisualSimulationEngi
 from applications.platform_builder.director.engine import VisualDirectorEngine
 from applications.platform_builder.story.engine import VisualStoryEngine
 from applications.platform_builder.intelligence.engine import VisualIntelligenceEngine
+from applications.platform_builder.experience.engine import VisualExperienceEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -70,6 +71,7 @@ class PlatformBuilderApplication:
         director: VisualDirectorEngine | None = None,
         story: VisualStoryEngine | None = None,
         intelligence: VisualIntelligenceEngine | None = None,
+        experience: VisualExperienceEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -94,6 +96,7 @@ class PlatformBuilderApplication:
         self.director = director or VisualDirectorEngine(self.store)
         self.story = story or VisualStoryEngine(self.store)
         self.intelligence = intelligence or VisualIntelligenceEngine(self.store)
+        self.experience = experience or VisualExperienceEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -118,6 +121,7 @@ class PlatformBuilderApplication:
         self.director = VisualDirectorEngine(self.store)
         self.story = VisualStoryEngine(self.store)
         self.intelligence = VisualIntelligenceEngine(self.store)
+        self.experience = VisualExperienceEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -211,6 +215,10 @@ class PlatformBuilderApplication:
             "analytics_ready": True,
             "recommendation_engine_ready": True,
             "health_index_ready": True,
+            "experience_engine_ready": True,
+            "unified_ux_ready": True,
+            "adaptive_interface_ready": True,
+            "accessibility_operational": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -231,6 +239,7 @@ class PlatformBuilderApplication:
             "director_page_exists": (web / "pages" / "DirectorEnginePage.tsx").exists(),
             "story_page_exists": (web / "pages" / "StoryEnginePage.tsx").exists(),
             "intelligence_page_exists": (web / "pages" / "IntelligenceEnginePage.tsx").exists(),
+            "experience_page_exists": (web / "pages" / "ExperienceEnginePage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -339,6 +348,10 @@ class PlatformBuilderApplication:
             "analytics_ready": True,
             "recommendation_engine_ready": True,
             "health_index_ready": True,
+            "experience_engine_ready": True,
+            "unified_ux_ready": True,
+            "adaptive_interface_ready": True,
+            "accessibility_operational": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -390,6 +403,10 @@ class PlatformBuilderApplication:
                 "insight_engine": self.config.insight_engine,
                 "recommendation_engine": self.config.recommendation_engine,
                 "analytics_registry": self.config.analytics_registry,
+                "experience_engine": self.config.experience_engine,
+                "experience_registry": self.config.experience_registry,
+                "ux_rules_registry": self.config.ux_rules_registry,
+                "adaptive_ui_registry": self.config.adaptive_ui_registry,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -414,6 +431,7 @@ class PlatformBuilderApplication:
             "director": self.director.status(),
             "story": self.story.status(),
             "intelligence": self.intelligence.status(),
+            "experience": self.experience.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

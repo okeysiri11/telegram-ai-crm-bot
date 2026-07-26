@@ -149,6 +149,12 @@ class PlatformBuilderStore:
         self.insight_registries: EntityStore = EntityStore()
         self.analytics_registries: EntityStore = EntityStore()
         self.recommendation_registries: EntityStore = EntityStore()
+        # Sprint 29.11 — Visual Experience Engine
+        self.experience_wizard_sessions: EntityStore = EntityStore()
+        self.experience_engines: EntityStore = EntityStore()
+        self.experience_registries: EntityStore = EntityStore()
+        self.ux_rules_registries: EntityStore = EntityStore()
+        self.adaptive_ui_registries: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

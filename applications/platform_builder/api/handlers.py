@@ -2481,3 +2481,155 @@ async def intel_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.11 — Visual Experience Engine / Unified Enterprise UX ---
+
+
+async def experience_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.experience.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.experience.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.experience.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_unified_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.experience.unified_experience())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_context_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.experience.user_context(body.get("context")),
+                status=201,
+            )
+        context = request.rel_url.query.get("context")
+        return json_response(platform_builder.experience.user_context(context))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_adaptive_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.experience.adaptive_interface(body))
+        return json_response(platform_builder.experience.adaptive_interface())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_transitions_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.experience.transitions(
+                    body.get("type"),
+                    body.get("target"),
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.experience.transitions())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_rules_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.experience.global_rules())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_cognitive_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.experience.cognitive_load_control())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_workspaces_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.experience.multi_workspace(
+                    action=body.get("action"),
+                    workspace_id=body.get("workspace_id"),
+                    name=body.get("name"),
+                    memory=body.get("memory"),
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.experience.multi_workspace())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_accessibility_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.experience.accessibility(body))
+        return json_response(platform_builder.experience.accessibility())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.experience.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.experience.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.experience.update_session(session_id, body))
+        return json_response(platform_builder.experience.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_session_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.experience.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def experience_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.experience.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

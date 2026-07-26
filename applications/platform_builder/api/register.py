@@ -559,3 +559,36 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/intelligence/sessions/{{session_id}}/create",
         handlers.intel_create_handler,
     )
+
+    # Sprint 29.11 — Visual Experience Engine / Unified Enterprise UX
+    app.router.add_get(f"{prefix}/experience/catalog", handlers.experience_catalog_handler)
+    app.router.add_get(f"{prefix}/experience/status", handlers.experience_status_handler)
+    app.router.add_get(f"{prefix}/experience/engine", handlers.experience_engine_handler)
+    app.router.add_get(f"{prefix}/experience/unified", handlers.experience_unified_handler)
+    app.router.add_get(f"{prefix}/experience/context", handlers.experience_context_handler)
+    app.router.add_post(f"{prefix}/experience/context", handlers.experience_context_handler)
+    app.router.add_get(f"{prefix}/experience/adaptive", handlers.experience_adaptive_handler)
+    app.router.add_patch(f"{prefix}/experience/adaptive", handlers.experience_adaptive_handler)
+    app.router.add_get(f"{prefix}/experience/transitions", handlers.experience_transitions_handler)
+    app.router.add_post(f"{prefix}/experience/transitions", handlers.experience_transitions_handler)
+    app.router.add_get(f"{prefix}/experience/rules", handlers.experience_rules_handler)
+    app.router.add_get(f"{prefix}/experience/cognitive", handlers.experience_cognitive_handler)
+    app.router.add_get(f"{prefix}/experience/workspaces", handlers.experience_workspaces_handler)
+    app.router.add_post(f"{prefix}/experience/workspaces", handlers.experience_workspaces_handler)
+    app.router.add_get(f"{prefix}/experience/accessibility", handlers.experience_accessibility_handler)
+    app.router.add_patch(f"{prefix}/experience/accessibility", handlers.experience_accessibility_handler)
+    app.router.add_get(f"{prefix}/experience/ui", handlers.experience_ui_handler)
+    app.router.add_post(f"{prefix}/experience/sessions", handlers.experience_session_handler)
+    app.router.add_get(f"{prefix}/experience/sessions/{{session_id}}", handlers.experience_session_handler)
+    app.router.add_patch(
+        f"{prefix}/experience/sessions/{{session_id}}",
+        handlers.experience_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/experience/sessions/{{session_id}}/summary",
+        handlers.experience_session_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/experience/sessions/{{session_id}}/create",
+        handlers.experience_create_handler,
+    )

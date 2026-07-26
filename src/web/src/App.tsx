@@ -58,6 +58,7 @@ import {
   DirectorEnginePage,
   StoryEnginePage,
   IntelligenceEnginePage,
+  ExperienceEnginePage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -316,6 +317,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <IntelligenceEnginePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/experience"
+        element={
+          <ProtectedRoute>
+            <ExperienceEnginePage />
           </ProtectedRoute>
         }
       />

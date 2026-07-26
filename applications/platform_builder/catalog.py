@@ -341,6 +341,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Visual analytics and recommendations from verified events — no business logic changes or business events.",
     },
     {
+        "id": "experience",
+        "name": "Visual Experience Engine",
+        "route": "/platform-builder/experience",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Unified enterprise UX coordinating all visual subsystems — presentation only, no business logic.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.17.0",
-  "sprint": "29.10",
-  "release_status": "Visual Intelligence Engine",
+  "application_version": "1.18.0",
+  "sprint": "29.11",
+  "release_status": "Visual Experience Engine",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -55,6 +55,10 @@
   "insight_engine": "1.0",
   "recommendation_engine": "1.0",
   "analytics_registry": "1.0",
+  "experience_engine": "1.0",
+  "experience_registry": "1.0",
+  "ux_rules_registry": "1.0",
+  "adaptive_ui_registry": "1.0",
   "platform_owner_role": "platform_owner",
   "web_module": "src/web/platform-builder"
 }
