@@ -40,7 +40,7 @@ const routes: Record<string, string> = {
   open_beauty: "/workspace/beauty",
   open_auto: "/workspace/auto",
   open_agro: "/workspace/agro",
-  open_marketplace: "/workspace/marketplace",
+  open_marketplace: "/platform-builder/solution-hub",
   open_dashboard: "/dashboard?mode=executive",
   open_mission_control: "/platform-builder/mission-control",
   open_enterprise_city: "/enterprise-city",

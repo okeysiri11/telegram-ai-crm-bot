@@ -83,7 +83,7 @@ const menu: MenuItem[] = [
     id: "nav_market",
     name: "Marketplace",
     icon: "workflow",
-    route: "/workspace/marketplace",
+    route: "/platform-builder/solution-hub",
     module: "marketplace",
     permissions: ["read"],
     badge: "new",

@@ -44,6 +44,7 @@ export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "dashboard_builder", name: "Dashboard Builder", route: "/platform-builder/dashboard-builder", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "template", name: "Template Builder", route: "/platform-builder/template", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "marketplace", name: "Marketplace Builder", route: "/platform-builder/marketplace", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
+  { id: "solution_hub", name: "Enterprise Marketplace", route: "/platform-builder/solution-hub", kind: "hub", status: "operational", purpose: "One-click solutions over Builder Studio catalogs — no new Marketplace Engine." },
   { id: "academy", name: "Builder Academy 2.0", route: "/platform-builder/academy", kind: "academy", status: "operational", purpose: "Interactive learning, AI Guide, and adaptive builder guidance." },
   { id: "god_mode", name: "God Mode", route: "/platform-builder/god-mode", kind: "god_mode", status: "operational", requiresRole: "platform_owner" },
 ];

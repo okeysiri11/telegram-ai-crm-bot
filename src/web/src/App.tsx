@@ -12,6 +12,7 @@ import { SettingsPage } from "@/pages/SettingsPage";
 import { EnterpriseCityPage } from "@/enterprise-city";
 import { WorkflowCenterPage } from "@/enterprise-workflow";
 import { AIBuilderStudioPage } from "@/ai-builder-studio";
+import { EnterpriseMarketplacePage } from "@/enterprise-marketplace";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -159,6 +160,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <AIBuilderStudioPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/solution-hub"
+        element={
+          <ProtectedRoute>
+            <EnterpriseMarketplacePage />
           </ProtectedRoute>
         }
       />

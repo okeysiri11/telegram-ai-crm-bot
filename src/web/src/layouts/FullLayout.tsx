@@ -9,6 +9,7 @@ import { EnterpriseIntelligenceLayer } from "@/enterprise-intelligence";
 import { AITeamCollaborationWorkspace } from "@/ai-team-collaboration";
 import { WorkflowAutomationWorkspace } from "@/enterprise-workflow";
 import { AIBuilderStudioStrip } from "@/ai-builder-studio";
+import { MarketplaceStrip } from "@/enterprise-marketplace";
 
 /** Shared application shell — sidebar + top nav + unified workspace + AI OS chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
@@ -32,6 +33,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
             <AITeamCollaborationWorkspace compact />
             <WorkflowAutomationWorkspace compact />
             <AIBuilderStudioStrip />
+            <MarketplaceStrip />
             <UnifiedToastStrip />
             {children}
           </div>

@@ -77,4 +77,12 @@ export function registerUnifiedWorkspaceSearch() {
     tokens: ["builder", "studio", "ai", "constructor", "skills", "prompts"],
     rankBoost: 12,
   });
+  searchIndex.upsert({
+    id: "uws_solution_hub",
+    category: "marketplace",
+    title: "Enterprise Marketplace / Solution Hub",
+    path: "/platform-builder/solution-hub",
+    tokens: ["marketplace", "solutions", "hub", "install", "packs"],
+    rankBoost: 12,
+  });
 }

@@ -133,6 +133,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [AI_BUILDER_STUDIO_32_8.md](./AI_BUILDER_STUDIO_32_8.md) — Unified constructor for Team, Workflow, Skills, Prompts, Templates. Platform Builder **v1.54.0**.
 
+## Enterprise Marketplace & Solution Hub (Sprint 32.9)
+
+[ENTERPRISE_MARKETPLACE_32_9.md](./ENTERPRISE_MARKETPLACE_32_9.md) — One-click solutions & Enterprise Packs. Platform Builder **v1.55.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

@@ -41,8 +41,8 @@ def reset_store():
 
 def test_god_mode_expansion_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.54.0"
-    assert health["sprint"] == "32.8"
+    assert health["application_version"] == "1.55.0"
+    assert health["sprint"] == "32.9"
     assert health["god_mode_ready"] is True
     assert health["god_mode_expansion_ready"] is True
     assert health["platform_control_center_ready"] is True
@@ -182,5 +182,5 @@ def test_docs_god_mode_28_7():
     for key in ("Platform Owner", "Object Inspector", "Architecture View", "Explain Mode"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.54.0"' in manifest
+    assert '"application_version": "1.55.0"' in manifest
     assert "32.8" in manifest

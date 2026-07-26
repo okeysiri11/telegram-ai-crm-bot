@@ -17,7 +17,7 @@ export const COMMAND_CATALOG: CommandItem[] = [
   { id: "act_create_document", kind: "create", action: "create_document", label: "Create Document", route: "/workspace/docs?action=create", keywords: ["create", "document"] },
   { id: "act_open_crm", kind: "open", action: "open_crm", label: "Open CRM", route: "/workspace/crm", keywords: ["crm"] },
   { id: "act_open_erp", kind: "open", action: "open_erp", label: "Open ERP", route: "/workspace/erp", keywords: ["erp"] },
-  { id: "act_open_marketplace", kind: "open", action: "open_marketplace", label: "Open Marketplace", route: "/workspace/marketplace", keywords: ["marketplace"] },
+  { id: "act_open_marketplace", kind: "open", action: "open_marketplace", label: "Open Marketplace", route: "/platform-builder/solution-hub", keywords: ["marketplace", "solutions", "hub"] },
   { id: "act_open_ai_studio", kind: "open", action: "open_ai_studio", label: "Open AI Studio", route: "/workspace/ai", keywords: ["ai", "studio"] },
   { id: "act_open_knowledge", kind: "open", action: "open_knowledge", label: "Open Knowledge", route: "/platform-builder/knowledge", keywords: ["knowledge"] },
   { id: "act_open_reports", kind: "open_report", action: "open_reports", label: "Open Reports", route: "/workspace/reports/weekly", keywords: ["reports"] },

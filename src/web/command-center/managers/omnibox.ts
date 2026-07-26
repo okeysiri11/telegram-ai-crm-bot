@@ -17,7 +17,7 @@ const INDEX: IndexEntry[] = [
   { id: "mod_crm", type: "modules", title: "CRM", route: "/workspace/crm", keywords: ["crm", "leads"] },
   { id: "mod_erp", type: "modules", title: "ERP", route: "/workspace/erp", keywords: ["erp", "inventory"] },
   { id: "mod_ai", type: "modules", title: "AI Studio", route: "/workspace/ai", keywords: ["ai", "studio"] },
-  { id: "mod_mkt", type: "marketplace", title: "Marketplace", route: "/workspace/marketplace", keywords: ["marketplace"] },
+  { id: "mod_mkt", type: "marketplace", title: "Marketplace", route: "/platform-builder/solution-hub", keywords: ["marketplace"] },
   { id: "mod_beauty", type: "modules", title: "Beauty OS", route: "/workspace/beauty", keywords: ["beauty"] },
   { id: "vert_auto", type: "verticals", title: "Auto Vertical", route: "/workspace/auto", keywords: ["auto"] },
   { id: "vert_agro", type: "verticals", title: "Agro Vertical", route: "/workspace/agro", keywords: ["agro"] },

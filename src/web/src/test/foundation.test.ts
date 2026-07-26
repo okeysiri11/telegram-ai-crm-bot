@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.8");
+    expect(webConfig.sprint).toBe("32.9");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -623,5 +623,46 @@ describe("Sprint 32.8 AI Builder Studio", () => {
     expect(stats.templates).toBe(7);
     const { AIBuilderStudioPage } = await import("../ai-builder-studio");
     expect(typeof AIBuilderStudioPage).toBe("function");
+  });
+});
+
+describe("Sprint 32.9 Enterprise Marketplace", () => {
+  it("lists solutions, packs, and compatibility checks", async () => {
+    const {
+      MARKETPLACE_SOLUTIONS,
+      MARKETPLACE_CATEGORIES,
+      getMarketplaceSolution,
+    } = await import("../enterprise-marketplace/solutionCatalog");
+    const { checkCompatibility, installSolution, resolveStatus } = await import(
+      "../enterprise-marketplace/installState"
+    );
+    expect(MARKETPLACE_CATEGORIES.some((c) => c.id === "ai_teams")).toBe(true);
+    expect(MARKETPLACE_CATEGORIES.some((c) => c.id === "enterprise_hub")).toBe(true);
+    const packs = MARKETPLACE_SOLUTIONS.filter((s) => s.enterprisePack);
+    expect(packs).toHaveLength(7);
+    expect(packs.map((p) => p.title)).toEqual(
+      expect.arrayContaining([
+        "Beauty Enterprise Pack",
+        "Legal Enterprise Pack",
+        "Cafe Enterprise Pack",
+        "Agriculture Enterprise Pack",
+        "Automotive Enterprise Pack",
+        "Drone Enterprise Pack",
+        "Bidex Enterprise Pack",
+      ]),
+    );
+    const sol = getMarketplaceSolution("team_sales_ops");
+    expect(sol).toBeTruthy();
+    const report = checkCompatibility(sol!, {
+      workspaceId: "ws_demo",
+      ecosystem: "platform",
+      roleId: "owner",
+      hasAccess: true,
+      platformVersion: "9.4.0",
+    });
+    expect(report.ok).toBe(true);
+    const rec = installSolution(sol!);
+    expect(rec.imported.team).toBe(true);
+    expect(resolveStatus(sol!)).toBe("installed");
   });
 });

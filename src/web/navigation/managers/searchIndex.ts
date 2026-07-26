@@ -14,7 +14,7 @@ let documents: SearchDocument[] = [
   { id: "idx_wf", category: "workflows", title: "Invoice Approval", path: "/workspace/workflows/invoice", tokens: ["workflow", "invoice"], rankBoost: 7 },
   { id: "idx_rep", category: "reports", title: "Weekly KPI", path: "/workspace/reports/weekly", tokens: ["report", "kpi", "weekly"], rankBoost: 5 },
   { id: "idx_task", category: "tasks", title: "Review Migration", path: "/workspace?task=migration", tokens: ["task", "migration"], rankBoost: 4 },
-  { id: "idx_mkt", category: "marketplace", title: "Extension Catalog", path: "/workspace/marketplace", tokens: ["marketplace", "extensions"], rankBoost: 5 },
+  { id: "idx_mkt", category: "marketplace", title: "Enterprise Marketplace", path: "/platform-builder/solution-hub", tokens: ["marketplace", "solutions", "hub", "packs"], rankBoost: 8 },
   { id: "idx_app", category: "applications", title: "Enterprise Hub", path: "/workspace", tokens: ["hub", "application"], rankBoost: 9 },
   { id: "idx_dash", category: "dashboards", title: "Personal Dashboard", path: "/workspace/dashboards", tokens: ["dashboard"], rankBoost: 7 },
   { id: "idx_wdg", category: "widgets", title: "Recent Activity Widget", path: "/command-center#recent_activity", tokens: ["widget", "activity"], rankBoost: 4 },
