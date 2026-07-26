@@ -948,3 +948,48 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/twin-intelligence/sessions/{{session_id}}/create",
         handlers.twin_intelligence_create_handler,
     )
+
+    # Sprint 29.18 — Enterprise Strategy Engine / Executive Decision Intelligence
+    app.router.add_get(f"{prefix}/strategy/catalog", handlers.strategy_catalog_handler)
+    app.router.add_get(f"{prefix}/strategy/status", handlers.strategy_status_handler)
+    app.router.add_get(f"{prefix}/strategy/engine", handlers.strategy_engine_handler)
+    app.router.add_get(f"{prefix}/strategy/sources", handlers.strategy_sources_handler)
+    app.router.add_post(f"{prefix}/strategy/sources", handlers.strategy_sources_handler)
+    app.router.add_get(f"{prefix}/strategy/overview", handlers.strategy_overview_handler)
+    app.router.add_post(f"{prefix}/strategy/overview", handlers.strategy_overview_handler)
+    app.router.add_get(f"{prefix}/strategy/priorities", handlers.strategy_priorities_handler)
+    app.router.add_post(f"{prefix}/strategy/priorities", handlers.strategy_priorities_handler)
+    app.router.add_get(
+        f"{prefix}/strategy/recommendations",
+        handlers.strategy_recommendations_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/strategy/recommendations",
+        handlers.strategy_recommendations_handler,
+    )
+    app.router.add_get(f"{prefix}/strategy/scorecard", handlers.strategy_scorecard_handler)
+    app.router.add_post(f"{prefix}/strategy/scorecard", handlers.strategy_scorecard_handler)
+    app.router.add_get(f"{prefix}/strategy/timeline", handlers.strategy_timeline_handler)
+    app.router.add_post(f"{prefix}/strategy/timeline", handlers.strategy_timeline_handler)
+    app.router.add_get(f"{prefix}/strategy/decisions", handlers.strategy_decisions_handler)
+    app.router.add_post(f"{prefix}/strategy/decisions", handlers.strategy_decisions_handler)
+    app.router.add_get(f"{prefix}/strategy/performance", handlers.strategy_performance_handler)
+    app.router.add_post(f"{prefix}/strategy/performance", handlers.strategy_performance_handler)
+    app.router.add_get(f"{prefix}/strategy/ui", handlers.strategy_ui_handler)
+    app.router.add_post(f"{prefix}/strategy/sessions", handlers.strategy_wizard_session_handler)
+    app.router.add_get(
+        f"{prefix}/strategy/sessions/{{session_id}}",
+        handlers.strategy_wizard_session_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/strategy/sessions/{{session_id}}",
+        handlers.strategy_wizard_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/strategy/sessions/{{session_id}}/summary",
+        handlers.strategy_wizard_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/strategy/sessions/{{session_id}}/create",
+        handlers.strategy_create_handler,
+    )

@@ -411,6 +411,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Analyzes verified Digital Twin data — never changes state or executes workflows.",
     },
     {
+        "id": "strategy_engine",
+        "name": "Enterprise Strategy Engine",
+        "route": "/platform-builder/strategy",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Strategic analysis and executive recommendations — never executes business logic.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

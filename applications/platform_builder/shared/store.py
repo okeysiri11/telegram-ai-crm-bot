@@ -196,6 +196,13 @@ class PlatformBuilderStore:
         self.impact_engines: EntityStore = EntityStore()
         self.risk_engines: EntityStore = EntityStore()
         self.twin_recommendation_engines: EntityStore = EntityStore()
+        # Sprint 29.18 — Enterprise Strategy Engine
+        self.strategy_wizard_sessions: EntityStore = EntityStore()
+        self.strategy_engines: EntityStore = EntityStore()
+        self.executive_registries: EntityStore = EntityStore()
+        self.strategy_recommendation_registries: EntityStore = EntityStore()
+        self.scorecard_engines: EntityStore = EntityStore()
+        self.decision_support_apis: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

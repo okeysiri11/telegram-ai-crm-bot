@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 29.17 Digital Twin Intelligence."""
+"""Platform Builder — Sprint 29.18 Enterprise Strategy Engine."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.24.0"
-    sprint: str = "29.17"
-    release_status: str = "Digital Twin Intelligence"
+    application_version: str = "1.25.0"
+    sprint: str = "29.18"
+    release_status: str = "Enterprise Strategy Engine"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"
@@ -100,6 +100,11 @@ class PlatformBuilderConfig:
     impact_engine: str = "1.0"
     risk_engine: str = "1.0"
     twin_recommendation_engine: str = "1.0"
+    strategy_engine: str = "1.0"
+    executive_registry: str = "1.0"
+    recommendation_registry: str = "1.0"
+    scorecard_engine: str = "1.0"
+    decision_support_api: str = "1.0"
     platform_owner_role: str = "platform_owner"
     academy_modes: list[str] = field(
         default_factory=lambda: ["quick_start", "guided_learning", "expert"]

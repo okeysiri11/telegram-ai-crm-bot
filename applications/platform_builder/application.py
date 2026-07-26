@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.17."""
+"""Platform Builder application facade — Sprint 29.18."""
 
 from __future__ import annotations
 
@@ -28,6 +28,7 @@ from applications.platform_builder.navigation_intelligence.engine import Navigat
 from applications.platform_builder.workflow_intelligence.engine import WorkflowIntelligenceEngine
 from applications.platform_builder.digital_twin.engine import DigitalTwinEngine
 from applications.platform_builder.twin_intelligence.engine import TwinIntelligenceEngine
+from applications.platform_builder.strategy_engine.engine import StrategyEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -84,6 +85,7 @@ class PlatformBuilderApplication:
         workflow_intelligence: WorkflowIntelligenceEngine | None = None,
         digital_twin: DigitalTwinEngine | None = None,
         twin_intelligence: TwinIntelligenceEngine | None = None,
+        strategy: StrategyEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -115,6 +117,7 @@ class PlatformBuilderApplication:
         self.workflow_intelligence = workflow_intelligence or WorkflowIntelligenceEngine(self.store)
         self.digital_twin = digital_twin or DigitalTwinEngine(self.store)
         self.twin_intelligence = twin_intelligence or TwinIntelligenceEngine(self.store)
+        self.strategy = strategy or StrategyEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -146,6 +149,7 @@ class PlatformBuilderApplication:
         self.workflow_intelligence = WorkflowIntelligenceEngine(self.store)
         self.digital_twin = DigitalTwinEngine(self.store)
         self.twin_intelligence = TwinIntelligenceEngine(self.store)
+        self.strategy = StrategyEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -270,6 +274,10 @@ class PlatformBuilderApplication:
             "impact_analysis_ready": True,
             "risk_analysis_ready": True,
             "twin_recommendation_engine_ready": True,
+            "strategy_engine_ready": True,
+            "executive_decision_ready": True,
+            "enterprise_scorecard_ready": True,
+            "decision_support_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -303,6 +311,7 @@ class PlatformBuilderApplication:
             "twin_intelligence_page_exists": (
                 web / "pages" / "TwinIntelligencePage.tsx"
             ).exists(),
+            "strategy_page_exists": (web / "pages" / "StrategyEnginePage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -442,6 +451,10 @@ class PlatformBuilderApplication:
             "impact_analysis_ready": True,
             "risk_analysis_ready": True,
             "twin_recommendation_engine_ready": True,
+            "strategy_engine_ready": True,
+            "executive_decision_ready": True,
+            "enterprise_scorecard_ready": True,
+            "decision_support_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -526,6 +539,11 @@ class PlatformBuilderApplication:
                 "impact_engine": self.config.impact_engine,
                 "risk_engine": self.config.risk_engine,
                 "twin_recommendation_engine": self.config.twin_recommendation_engine,
+                "strategy_engine": self.config.strategy_engine,
+                "executive_registry": self.config.executive_registry,
+                "recommendation_registry": self.config.recommendation_registry,
+                "scorecard_engine": self.config.scorecard_engine,
+                "decision_support_api": self.config.decision_support_api,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -557,6 +575,7 @@ class PlatformBuilderApplication:
             "workflow_intelligence": self.workflow_intelligence.status(),
             "digital_twin": self.digital_twin.status(),
             "twin_intelligence": self.twin_intelligence.status(),
+            "strategy": self.strategy.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

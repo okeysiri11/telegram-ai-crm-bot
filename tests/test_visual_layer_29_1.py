@@ -43,8 +43,8 @@ def reset_store():
 
 def test_visual_layer_projection_contract():
     health = platform_builder.health()
-    assert health["application_version"] == "1.24.0"
-    assert health["sprint"] == "29.17"
+    assert health["application_version"] == "1.25.0"
+    assert health["sprint"] == "29.18"
     assert health["visual_layer_ready"] is True
     assert health["engines"]["visual_layer"] == "1.0"
 

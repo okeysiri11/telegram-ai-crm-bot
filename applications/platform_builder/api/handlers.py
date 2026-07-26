@@ -3638,3 +3638,182 @@ async def twin_intelligence_create_handler(request: web.Request) -> web.Response
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.18 — Enterprise Strategy Engine / Executive Decision Intelligence ---
+
+
+async def strategy_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.strategy.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.strategy.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.strategy.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_sources_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.strategy.data_sources(action=body.get("action") or "aggregate"),
+                status=201,
+            )
+        return json_response(platform_builder.strategy.data_sources())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_overview_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.strategy.strategic_overview(surface=body.get("surface")),
+                status=201,
+            )
+        surface = request.rel_url.query.get("surface")
+        return json_response(platform_builder.strategy.strategic_overview(surface=surface))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_priorities_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.strategy.strategic_priorities(category=body.get("category")),
+                status=201,
+            )
+        category = request.rel_url.query.get("category")
+        return json_response(platform_builder.strategy.strategic_priorities(category=category))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_recommendations_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.strategy.executive_recommendations(
+                    recommendation_type=body.get("type") or body.get("recommendation_type")
+                ),
+                status=201,
+            )
+        recommendation_type = request.rel_url.query.get("type")
+        return json_response(
+            platform_builder.strategy.executive_recommendations(
+                recommendation_type=recommendation_type
+            )
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_scorecard_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.strategy.enterprise_scorecard(metric=body.get("metric")),
+                status=201,
+            )
+        metric = request.rel_url.query.get("metric")
+        return json_response(platform_builder.strategy.enterprise_scorecard(metric=metric))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_timeline_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.strategy.executive_timeline(segment=body.get("segment")),
+                status=201,
+            )
+        segment = request.rel_url.query.get("segment")
+        return json_response(platform_builder.strategy.executive_timeline(segment=segment))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_decisions_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.strategy.decision_support(feature=body.get("feature")),
+                status=201,
+            )
+        feature = request.rel_url.query.get("feature")
+        return json_response(platform_builder.strategy.decision_support(feature=feature))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_performance_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.strategy.performance(action=body.get("action")),
+                status=201,
+            )
+        return json_response(platform_builder.strategy.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.strategy.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_wizard_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.strategy.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.strategy.update_session(session_id, body))
+        return json_response(platform_builder.strategy.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.strategy.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def strategy_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.strategy.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

@@ -32,6 +32,7 @@ export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "workflow_intelligence", name: "Workflow Intelligence OS", route: "/platform-builder/workflow-intelligence", kind: "hub", status: "operational", purpose: "Workflow visibility, dependency analysis and recommendations — never executes business logic." },
   { id: "digital_twin", name: "Enterprise Digital Twin", route: "/platform-builder/digital-twin", kind: "hub", status: "operational", purpose: "Read-only realtime mirror of verified platform state — never owns business logic." },
   { id: "twin_intelligence", name: "Digital Twin Intelligence", route: "/platform-builder/twin-intelligence", kind: "hub", status: "operational", purpose: "Analyzes verified Digital Twin data — never changes state or executes workflows." },
+  { id: "strategy_engine", name: "Enterprise Strategy Engine", route: "/platform-builder/strategy", kind: "hub", status: "operational", purpose: "Strategic analysis and executive recommendations — never executes business logic." },
   { id: "crm", name: "CRM Builder", route: "/platform-builder/crm", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "erp", name: "ERP Builder", route: "/platform-builder/erp", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "workflow", name: "Workflow Builder", route: "/platform-builder/workflow", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
