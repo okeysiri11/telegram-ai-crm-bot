@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("31.0");
+    expect(webConfig.sprint).toBe("31.1");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -161,5 +161,23 @@ describe("Sprint 31.0 Cafe Pilot Execution", () => {
     expect(CROSS_ECOSYSTEM_PATTERNS.length).toBeGreaterThan(3);
     expect(moduleRegistry.get("cafe")?.apiHint).toContain("enterprise-cos");
     expect(applicationRegistry.get("cafe_enterprise")?.route).toBe("/workspace/cafe");
+  });
+});
+
+describe("Sprint 31.1 Agriculture Pilot Execution", () => {
+  it("wires agro prefixes and four-ecosystem reuse", async () => {
+    expect(webConfig.agroPrefix).toContain("/api/agro/v1");
+    expect(webConfig.agroSupplyChainPrefix).toContain("agro-supply-chain");
+    expect(hubIntegrations.agro).toContain("/api/agro/v1");
+    expect(hubIntegrations.aiAgronomist).toContain("ai-agronomist");
+    const { computeReusePercentage, CROSS_ECOSYSTEM_PATTERNS } = await import(
+      "../../workspace/ecosystem-template"
+    );
+    const audit = computeReusePercentage();
+    expect(audit.reusePercent).toBe(100);
+    expect(audit.dimensions.every((d) => "agriculture" in d)).toBe(true);
+    expect(CROSS_ECOSYSTEM_PATTERNS.some((p) => /Agriculture/i.test(p))).toBe(true);
+    expect(moduleRegistry.get("agro")?.apiHint).toContain("/api/agro/v1");
+    expect(applicationRegistry.get("agro_enterprise")?.route).toBe("/workspace/agro");
   });
 });

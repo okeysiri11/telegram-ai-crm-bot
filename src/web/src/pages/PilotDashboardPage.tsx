@@ -147,17 +147,17 @@ export function PilotDashboardPage() {
   return (
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge tone="success">Cafe Pilot Execution</Badge>
-        <Badge>Sprint 31.0</Badge>
+        <Badge tone="success">Agriculture Pilot Execution</Badge>
+        <Badge>Sprint 31.1</Badge>
         <Badge>PB {PLATFORM_BUILDER_VERSION}</Badge>
         <Badge>{webConfig.sprint}</Badge>
         {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge>{authMode || "ISAM"}</Badge>}
         {core.ecosystemsReady ? <Badge tone="success">7 ecosystems</Badge> : null}
       </div>
 
-      <h1 className="eds-type-title text-[var(--eds-text)]">Pilot Operations — Auto · Beauty · Cafe</h1>
+      <h1 className="eds-type-title text-[var(--eds-text)]">Pilot Operations — Auto · Beauty · Cafe · Agriculture</h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        Triple internal pilots on one Enterprise Platform. Shared auth, Mission Control, AI Team, feedback,
+        Four internal pilots on one Enterprise Platform. Shared auth, Mission Control, AI Team, feedback,
         and observability. No duplicated stacks.
       </p>
 
@@ -180,6 +180,11 @@ export function PilotDashboardPage() {
             Cafe
           </Button>
         </Link>
+        <Link to="/workspace/agro">
+          <Button size="sm" variant="secondary">
+            Agriculture
+          </Button>
+        </Link>
         <Link to="/platform-builder/mission-control">
           <Button size="sm" variant="secondary">
             Mission Control
@@ -189,7 +194,12 @@ export function PilotDashboardPage() {
 
       {error ? (
         <div className="mt-4">
-          <EmptyState title="Telemetry warning" description={error} actionLabel="Open Cafe" actionTo="/workspace/cafe" />
+          <EmptyState
+            title="Telemetry warning"
+            description={error}
+            actionLabel="Open Agriculture"
+            actionTo="/workspace/agro"
+          />
         </div>
       ) : null}
 

@@ -163,12 +163,23 @@ const MODULES: Record<string, RegisteredModule> = {
   }),
   agro: entry("agro", {
     title: "Agriculture",
-    purpose: "Agriculture industry module shell — grain/trade/port capabilities via agro APIs.",
+    purpose:
+      "Agriculture operational pilot — farm CRM, harvest, warehouse, grain marketplace, export contracts, sea freight via agro + supply-chain APIs; shared Concierge/MC/OBS.",
     builderRoute: "/platform-builder/business-ecosystem",
-    apiHint: "/api/agro/v1 · /api/agro-enterprise/v1",
+    portalHint: "/portals/customer",
+    apiHint:
+      "/api/agro/v1 · /api/agro-supply-chain/v1 · /api/agro-enterprise/v1 · /api/ai-agronomist/v1",
     ecosystem: "agriculture",
-    version: "4.4.0-enterprise",
-    dependencies: ["enterprise_web_platform", "agro_enterprise", "platform_builder"],
+    version: "1.0.0-pilot",
+    dependencies: [
+      "enterprise_web_platform",
+      "agro_marketplace",
+      "agro_enterprise",
+      "platform_builder",
+      "enterprise_hub",
+    ],
+    widgets: ["widget_agro_harvest", "widget_agro_shipments"],
+    dashboards: ["dash_agro_owner", "dash_agro_export"],
   }),
   drone: entry("drone", {
     title: "Drone",
@@ -226,7 +237,7 @@ const PLATFORM_MODULES: RegisteredModule[] = [
     name: "Mission Control",
     title: "Mission Control",
     purpose: "Unified executive operating center — aggregates existing services.",
-    version: "1.35.0",
+    version: "1.36.0",
     routes: ["/platform-builder/mission-control", "/portals/mission-control"],
     permissions: ["read"],
     navigation: [
@@ -244,7 +255,7 @@ const PLATFORM_MODULES: RegisteredModule[] = [
     name: "Pilot Dashboard",
     title: "Pilot Dashboard",
     purpose: "First internal pilot readiness surface — status, modules, telemetry.",
-    version: "1.35.0",
+    version: "1.36.0",
     routes: ["/pilot"],
     permissions: ["read", "admin"],
     navigation: [{ id: "nav_pilot", label: "Pilot Dashboard", route: "/pilot" }],

@@ -53,7 +53,7 @@ def test_lod_levels_by_zoom():
 def test_lod_filters_scene():
     health = platform_builder.health()
     assert health["visual_lod_engine_ready"] is True
-    assert health["application_version"] == "1.35.0"
+    assert health["application_version"] == "1.36.0"
 
     view_l0 = platform_builder.rendering.lod_view(0.1)
     assert view_l0["lod"]["id"] == "L0"

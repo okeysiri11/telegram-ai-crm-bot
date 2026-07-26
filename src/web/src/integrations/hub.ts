@@ -20,6 +20,11 @@ export const hubIntegrations = {
   beautyWorkspace: webConfig.beautyWorkspacePrefix,
   beautyClientJourney: webConfig.beautyClientJourneyPrefix,
   cafeOs: webConfig.cafeOsPrefix,
+  agro: webConfig.agroPrefix,
+  agroSupplyChain: webConfig.agroSupplyChainPrefix,
+  agroEnterprise: webConfig.agroEnterprisePrefix,
+  agroFinance: webConfig.agroFinancePrefix,
+  aiAgronomist: webConfig.aiAgronomistPrefix,
   aiMarketingOs: webConfig.aiMarketingOsPrefix,
   commerceCore: webConfig.commerceCorePrefix,
 } as const;

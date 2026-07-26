@@ -51,6 +51,10 @@
 
 [CAFE_PILOT_EXECUTION_31_0.md](./CAFE_PILOT_EXECUTION_31_0.md) — Third operational pilot + cross-ecosystem validation. Platform Builder **v1.35.0**.
 
+## Agriculture Pilot Execution (Sprint 31.1)
+
+[AGRICULTURE_PILOT_EXECUTION_31_1.md](./AGRICULTURE_PILOT_EXECUTION_31_1.md) — Fourth operational pilot + trade/logistics validation. Platform Builder **v1.36.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  
