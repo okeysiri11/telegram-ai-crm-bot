@@ -1,8 +1,11 @@
 /**
  * Live Enterprise UI panels — Sprint 32.3.4.
  * Presentational only; data from useLiveEnterprise.
+ * Sprint 33.8 — Concierge recommendations show goal alignment via OKR derive.
  */
 
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { Badge, Card } from "@/ui";
 import type {
   AiOpsSnapshot,
@@ -12,6 +15,9 @@ import type {
   TimelineBucket,
 } from "./fetchLiveEnterprise";
 import type { LiveActivityItem } from "./liveEnterpriseCatalog";
+import { useLiveEnterprise } from "./useLiveEnterprise";
+import { useNotificationStore } from "@/notifications/notificationStore";
+import { alignRecommendation, deriveOkr } from "@/enterprise-okr/deriveOkr";
 
 function relTime(iso: string) {
   const diff = Date.now() - Date.parse(iso);
@@ -151,6 +157,9 @@ export function EnterpriseHealthPanel({ health }: { health: HealthStatus[] }) {
 }
 
 export function AiRecommendationsPanel({ items }: { items: RecommendationItem[] }) {
+  const { snapshot } = useLiveEnterprise(true);
+  const notifications = useNotificationStore((s) => s.items);
+  const goals = useMemo(() => deriveOkr(snapshot, notifications).goals, [snapshot, notifications]);
   const toneLabel: Record<RecommendationItem["tone"], string> = {
     suggest: "AI рекомендует",
     today: "Сегодня желательно",
@@ -160,13 +169,25 @@ export function AiRecommendationsPanel({ items }: { items: RecommendationItem[] 
   return (
     <Card title="AI Recommendations">
       <ul className="space-y-2">
-        {items.map((r) => (
-          <li key={r.id} className="lo-rec">
-            <Badge>{toneLabel[r.tone]}</Badge>
-            <span className="eds-type-small">{r.title}</span>
-          </li>
-        ))}
+        {items.map((r) => {
+          const align = alignRecommendation(r, goals);
+          return (
+            <li key={r.id} className="lo-rec">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge>{toneLabel[r.tone]}</Badge>
+                <Badge tone="success">{align.goalLabel}</Badge>
+              </div>
+              <span className="eds-type-small">{r.title}</span>
+              <p className="eds-type-small text-[var(--eds-muted)]">
+                Цель: {align.goalLabel} · KPI: {align.kpi} · {align.expectedEffect}
+              </p>
+            </li>
+          );
+        })}
       </ul>
+      <Link to="/platform-builder/okr" className="eds-type-small text-[var(--eds-primary)] mt-2 inline-block">
+        OKR alignment →
+      </Link>
     </Card>
   );
 }

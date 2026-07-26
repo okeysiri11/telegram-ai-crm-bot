@@ -8,6 +8,7 @@
 @import "./autonomous-enterprise/autonomous-enterprise.css";
 @import "./enterprise-control-tower/enterprise-control-tower.css";
 @import "./self-learning-enterprise/self-learning-enterprise.css";
+@import "./enterprise-okr/enterprise-okr.css";
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -1225,6 +1226,8 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Sprint 33.8 — Enterprise Strategy & OKR Intelligence (styles in ./enterprise-okr/enterprise-okr.css) */
 
 /* Sprint 33.7 — Self-Learning Enterprise (styles in ./self-learning-enterprise/self-learning-enterprise.css) */
 

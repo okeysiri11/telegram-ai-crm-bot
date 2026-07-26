@@ -15,6 +15,7 @@ import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
 import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
 import { LearningWidgetCompact } from "@/self-learning-enterprise";
+import { EnterpriseGoalsWidgetCompact } from "@/enterprise-okr";
 
 type Dict = Record<string, unknown>;
 
@@ -78,6 +79,7 @@ export function MissionControlStrip() {
         <PredictiveWidgetCompact />
         <AutonomousWidgetCompact />
         <LearningWidgetCompact />
+        <EnterpriseGoalsWidgetCompact />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="cc-stat">

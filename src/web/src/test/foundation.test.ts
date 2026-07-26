@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("33.7");
+    expect(webConfig.sprint).toBe("33.8");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -1033,5 +1033,67 @@ describe("Sprint 33.7 Self-Learning Enterprise", () => {
     expect(bundle.recommendations.some((r) => r.category === "knowledge")).toBe(true);
     expect(bundle.executive.learned.length).toBeGreaterThan(0);
     expect(bundle.timeSavedMin).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe("Sprint 33.8 Enterprise Strategy & OKR Intelligence", () => {
+  it("derives goals, OKR cards, alignments, executive, timeline, scenario impacts", async () => {
+    const { deriveOkr, alignRecommendation, ENTERPRISE_GOALS } = await import("../enterprise-okr");
+    expect(ENTERPRISE_GOALS.map((g) => g.domain)).toEqual(
+      expect.arrayContaining([
+        "revenue",
+        "profit",
+        "sales",
+        "marketing",
+        "production",
+        "customer_success",
+        "hr",
+        "operations",
+      ]),
+    );
+    const bundle = deriveOkr({
+      updatedAt: new Date().toISOString(),
+      activity: [
+        { id: "1", kind: "crm", title: "Deal close", detail: "", at: new Date().toISOString(), source: "seed" },
+      ],
+      aiOps: {
+        running: ["Sales Specialist"],
+        queue: ["Q1"],
+        recent: ["Concierge"],
+        status: "ok",
+        errors: [],
+        completed: ["Lead"],
+      },
+      timeline: [],
+      health: [
+        { id: "crm" as const, label: "CRM", ok: true, detail: "ok" },
+        { id: "mission_control" as const, label: "MC", ok: true, detail: "ok" },
+      ],
+      recommendations: [
+        { id: "r1", title: "Accelerate CRM follow-up", tone: "improve" },
+        { id: "r2", title: "Reduce Runtime queue", tone: "risk" },
+      ],
+      mcOk: true,
+      activeModules: ["crm", "ai"],
+    });
+    expect(bundle.goals.length).toBe(8);
+    expect(bundle.okrCards.length).toBe(8);
+    expect(bundle.goals.every((g) => g.kpi && g.owner && g.deadline)).toBe(true);
+    expect(bundle.alignments.length).toBeGreaterThan(0);
+    expect(bundle.alignments[0]!.goalLabel).toBeTruthy();
+    expect(bundle.alignments[0]!.kpi).toBeTruthy();
+    expect(bundle.scenarioImpacts[0]!.ifDone).toBeTruthy();
+    expect(bundle.scenarioImpacts[0]!.ifSkipped).toBeTruthy();
+    expect(bundle.executive.today.length).toBeGreaterThan(0);
+    expect(bundle.timeline.map((t) => t.status)).toEqual(
+      expect.arrayContaining(["in_progress"]),
+    );
+    expect(bundle.mc.progressAvg).toBeGreaterThanOrEqual(0);
+    const aligned = alignRecommendation(
+      { id: "x", title: "Fix sales pipeline bottleneck" },
+      bundle.goals,
+    );
+    expect(aligned.goalLabel).toBeTruthy();
+    expect(aligned.expectedEffect).toContain("%");
   });
 });

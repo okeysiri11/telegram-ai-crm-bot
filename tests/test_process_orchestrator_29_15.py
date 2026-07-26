@@ -45,7 +45,7 @@ def reset_store():
 def test_process_orchestrator_surfaces():
     health = platform_builder.health()
     assert health["global_process_orchestrator_ready"] is True
-    assert health["application_version"] == "1.63.0"
+    assert health["application_version"] == "1.64.0"
 
     eng = platform_builder.workflow_intelligence
     critical = eng.critical_path()

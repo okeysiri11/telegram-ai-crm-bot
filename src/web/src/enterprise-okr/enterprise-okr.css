@@ -1,0 +1,213 @@
+/* Enterprise Strategy & OKR Intelligence — Sprint 33.8 */
+
+.okr-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 10px;
+  background: linear-gradient(90deg, color-mix(in srgb, #2563eb 8%, transparent), transparent);
+  border: 1px solid color-mix(in srgb, #2563eb 20%, var(--eds-border));
+}
+
+.okr-strip-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--eds-muted);
+}
+
+.okr-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.okr-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, color-mix(in srgb, #2563eb 14%, transparent), transparent),
+    linear-gradient(180deg, color-mix(in srgb, var(--eds-surface) 92%, #1e3a8a), var(--eds-surface));
+  border: 1px solid var(--eds-border);
+}
+
+.okr-title {
+  margin: 0.25rem 0;
+  font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+  font-weight: 700;
+}
+
+.okr-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.okr-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.okr-section-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.okr-goals-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.okr-goal {
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--eds-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  background: var(--eds-surface);
+}
+
+.okr-goal-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.okr-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--eds-border) 80%, transparent);
+  overflow: hidden;
+}
+
+.okr-bar > span {
+  display: block;
+  height: 100%;
+  background: #2563eb;
+}
+
+.okr-bar.is-risk > span {
+  background: #dc2626;
+}
+
+.okr-bar.is-delayed > span {
+  background: #d97706;
+}
+
+.okr-bar.is-done > span {
+  background: #059669;
+}
+
+.okr-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.okr-card {
+  padding: 0.85rem;
+  border-radius: 12px;
+  border: 1px solid var(--eds-border);
+  background: color-mix(in srgb, var(--eds-surface) 96%, #2563eb);
+}
+
+.okr-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.okr-flow-step {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.45rem 0.55rem;
+  border-left: 3px solid color-mix(in srgb, #2563eb 50%, var(--eds-border));
+  background: color-mix(in srgb, var(--eds-bg) 70%, transparent);
+}
+
+.okr-align-grid,
+.okr-scenario-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.okr-align,
+.okr-scenario {
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid var(--eds-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.okr-exec {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+}
+
+.okr-exec-block ul {
+  margin: 0.35rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.okr-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.okr-tl-item {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.55rem 0.65rem;
+  border-radius: 10px;
+  border: 1px solid var(--eds-border);
+}
+
+.okr-mc-compact ul {
+  margin: 0 0 0.5rem;
+  padding-left: 1.1rem;
+}
+
+.okr-mc-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .okr-goals-grid,
+  .okr-align-grid,
+  .okr-scenario-grid,
+  .okr-exec {
+    grid-template-columns: 1fr;
+  }
+
+  .okr-tl-item {
+    grid-template-columns: 1fr;
+  }
+}

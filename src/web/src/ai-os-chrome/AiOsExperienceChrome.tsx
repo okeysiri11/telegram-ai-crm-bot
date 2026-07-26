@@ -16,6 +16,7 @@ import { useLiveEnterprise, type LiveEnterpriseSnapshot } from "@/live-ops";
 import { detectActiveEcosystem } from "@/workspace-chrome/workspaceContext";
 import { telemetry } from "@/integrations/telemetry";
 import { suggestionsForPath, sectionKeyFromPath, type SmartSuggestion } from "./smartSuggestions";
+import { alignRecommendation } from "@/enterprise-okr/deriveOkr";
 
 export function AiOsExperienceChrome() {
   const loc = useLocation();
@@ -235,13 +236,32 @@ function ExecutiveSnapshot({
         <div>
           <p className="mb-1 font-medium eds-type-small">AI рекомендует</p>
           <ul className="eds-type-small space-y-1 text-[var(--eds-text-muted)]">
-            {suggestions.map((s) => (
-              <li key={s.id}>· {s.title}</li>
-            ))}
-            {snapshot.recommendations.slice(0, 2).map((r) => (
-              <li key={r.id}>· {r.title}</li>
-            ))}
+            {suggestions.map((s) => {
+              const a = alignRecommendation({ id: s.id, title: s.title });
+              return (
+                <li key={s.id}>
+                  · {s.title}
+                  <span className="block text-[var(--eds-muted)]">
+                    → {a.goalLabel} · {a.kpi} · {a.expectedEffect}
+                  </span>
+                </li>
+              );
+            })}
+            {snapshot.recommendations.slice(0, 2).map((r) => {
+              const a = alignRecommendation(r);
+              return (
+                <li key={r.id}>
+                  · {r.title}
+                  <span className="block text-[var(--eds-muted)]">
+                    → {a.goalLabel} · {a.kpi} · {a.expectedEffect}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
+          <Link to="/platform-builder/okr" className="eds-type-small text-[var(--eds-primary)]">
+            OKR →
+          </Link>
         </div>
       </div>
       <div className="mt-3 flex flex-wrap gap-2">

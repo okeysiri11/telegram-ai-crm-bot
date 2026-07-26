@@ -18,6 +18,7 @@ import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
 import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
 import { LearningWidgetCompact } from "@/self-learning-enterprise";
+import { EnterpriseGoalsWidgetCompact } from "@/enterprise-okr";
 
 type Dict = Record<string, unknown>;
 
@@ -158,6 +159,11 @@ export function MissionControlLivePanel() {
             Learning
           </Button>
         </Link>
+        <Link to="/platform-builder/okr">
+          <Button size="sm" variant="secondary">
+            Enterprise Goals
+          </Button>
+        </Link>
       </div>
 
       {error ? (
@@ -174,6 +180,7 @@ export function MissionControlLivePanel() {
       <PredictiveWidgetCompact />
       <AutonomousWidgetCompact />
       <LearningWidgetCompact />
+      <EnterpriseGoalsWidgetCompact />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="System overview">

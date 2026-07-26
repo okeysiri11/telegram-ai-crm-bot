@@ -21,6 +21,7 @@ import { PredictiveIntelligencePage } from "@/predictive-intelligence";
 import { AutonomousEnterprisePage } from "@/autonomous-enterprise";
 import { EnterpriseControlTowerPage } from "@/enterprise-control-tower";
 import { SelfLearningEnterprisePage } from "@/self-learning-enterprise";
+import { EnterpriseOkrPage } from "@/enterprise-okr";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -240,6 +241,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <SelfLearningEnterprisePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/okr"
+        element={
+          <ProtectedRoute>
+            <EnterpriseOkrPage />
           </ProtectedRoute>
         }
       />
