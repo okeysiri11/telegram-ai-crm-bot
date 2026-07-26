@@ -592,3 +592,42 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/experience/sessions/{{session_id}}/create",
         handlers.experience_create_handler,
     )
+
+    # Sprint 29.12 — Enterprise Workspace OS / Unified Workspace Platform
+    app.router.add_get(f"{prefix}/workspace-os/catalog", handlers.workspace_os_catalog_handler)
+    app.router.add_get(f"{prefix}/workspace-os/status", handlers.workspace_os_status_handler)
+    app.router.add_get(f"{prefix}/workspace-os/engine", handlers.workspace_os_engine_handler)
+    app.router.add_get(f"{prefix}/workspace-os/types", handlers.workspace_os_types_handler)
+    app.router.add_post(f"{prefix}/workspace-os/types", handlers.workspace_os_types_handler)
+    app.router.add_get(f"{prefix}/workspace-os/layout", handlers.workspace_os_layout_handler)
+    app.router.add_patch(f"{prefix}/workspace-os/layout", handlers.workspace_os_layout_handler)
+    app.router.add_get(f"{prefix}/workspace-os/session", handlers.workspace_os_session_mgmt_handler)
+    app.router.add_patch(f"{prefix}/workspace-os/session", handlers.workspace_os_session_mgmt_handler)
+    app.router.add_get(f"{prefix}/workspace-os/modules", handlers.workspace_os_modules_handler)
+    app.router.add_post(f"{prefix}/workspace-os/modules", handlers.workspace_os_modules_handler)
+    app.router.add_get(f"{prefix}/workspace-os/context", handlers.workspace_os_context_handler)
+    app.router.add_patch(f"{prefix}/workspace-os/context", handlers.workspace_os_context_handler)
+    app.router.add_get(f"{prefix}/workspace-os/multitasking", handlers.workspace_os_multitasking_handler)
+    app.router.add_post(f"{prefix}/workspace-os/multitasking", handlers.workspace_os_multitasking_handler)
+    app.router.add_get(f"{prefix}/workspace-os/search", handlers.workspace_os_search_handler)
+    app.router.add_post(f"{prefix}/workspace-os/search", handlers.workspace_os_search_handler)
+    app.router.add_get(f"{prefix}/workspace-os/performance", handlers.workspace_os_performance_handler)
+    app.router.add_post(f"{prefix}/workspace-os/performance", handlers.workspace_os_performance_handler)
+    app.router.add_get(f"{prefix}/workspace-os/ui", handlers.workspace_os_ui_handler)
+    app.router.add_post(f"{prefix}/workspace-os/sessions", handlers.workspace_os_wizard_session_handler)
+    app.router.add_get(
+        f"{prefix}/workspace-os/sessions/{{session_id}}",
+        handlers.workspace_os_wizard_session_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/workspace-os/sessions/{{session_id}}",
+        handlers.workspace_os_wizard_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/workspace-os/sessions/{{session_id}}/summary",
+        handlers.workspace_os_wizard_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/workspace-os/sessions/{{session_id}}/create",
+        handlers.workspace_os_create_handler,
+    )

@@ -351,6 +351,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Unified enterprise UX coordinating all visual subsystems — presentation only, no business logic.",
     },
     {
+        "id": "workspace_os",
+        "name": "Enterprise Workspace OS",
+        "route": "/platform-builder/workspace-os",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Unified operating environment for every module with multi-workspace contexts — role aware.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

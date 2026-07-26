@@ -14,6 +14,7 @@ export { DirectorEnginePage } from "./DirectorEnginePage";
 export { StoryEnginePage } from "./StoryEnginePage";
 export { IntelligenceEnginePage } from "./IntelligenceEnginePage";
 export { ExperienceEnginePage } from "./ExperienceEnginePage";
+export { WorkspaceOSPage } from "./WorkspaceOSPage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
 export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";

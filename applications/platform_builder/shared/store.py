@@ -155,6 +155,13 @@ class PlatformBuilderStore:
         self.experience_registries: EntityStore = EntityStore()
         self.ux_rules_registries: EntityStore = EntityStore()
         self.adaptive_ui_registries: EntityStore = EntityStore()
+        # Sprint 29.12 — Enterprise Workspace OS
+        self.workspace_os_wizard_sessions: EntityStore = EntityStore()
+        self.workspace_os_instances: EntityStore = EntityStore()
+        self.workspace_registries: EntityStore = EntityStore()
+        self.layout_engines: EntityStore = EntityStore()
+        self.context_engines: EntityStore = EntityStore()
+        self.session_managers: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

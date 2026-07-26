@@ -26,6 +26,7 @@ export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "story", name: "Visual Story Engine", route: "/platform-builder/story", kind: "hub", status: "operational", purpose: "Enterprise storytelling from verified Visual Event Bus events — never creates or reorders business events." },
   { id: "intelligence", name: "Visual Intelligence Engine", route: "/platform-builder/intelligence", kind: "hub", status: "operational", purpose: "Visual analytics and recommendations from verified events — no business logic changes or business events." },
   { id: "experience", name: "Visual Experience Engine", route: "/platform-builder/experience", kind: "hub", status: "operational", purpose: "Unified enterprise UX coordinating all visual subsystems — presentation only, no business logic." },
+  { id: "workspace_os", name: "Enterprise Workspace OS", route: "/platform-builder/workspace-os", kind: "hub", status: "operational", purpose: "Unified operating environment for every module with multi-workspace contexts — role aware." },
   { id: "crm", name: "CRM Builder", route: "/platform-builder/crm", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "erp", name: "ERP Builder", route: "/platform-builder/erp", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "workflow", name: "Workflow Builder", route: "/platform-builder/workflow", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },

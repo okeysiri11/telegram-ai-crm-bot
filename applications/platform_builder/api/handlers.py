@@ -2633,3 +2633,174 @@ async def experience_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.12 — Enterprise Workspace OS / Unified Workspace Platform ---
+
+
+async def workspace_os_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workspace_os.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workspace_os.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workspace_os.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_types_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.workspace_os.workspace_types(body.get("type")),
+                status=201,
+            )
+        wtype = request.rel_url.query.get("type")
+        return json_response(platform_builder.workspace_os.workspace_types(wtype))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_layout_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.workspace_os.layout_engine(body))
+        return json_response(platform_builder.workspace_os.layout_engine())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_session_mgmt_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.workspace_os.session_management(body))
+        return json_response(platform_builder.workspace_os.session_management())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_modules_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.workspace_os.module_integration(body.get("module")),
+                status=201,
+            )
+        return json_response(platform_builder.workspace_os.module_integration())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_context_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.workspace_os.context_engine(body))
+        return json_response(platform_builder.workspace_os.context_engine())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_multitasking_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.workspace_os.multitasking(
+                    action=body.get("action"),
+                    workspace_id=body.get("workspace_id"),
+                    name=body.get("name"),
+                    workspace_type=body.get("type") or body.get("workspace_type"),
+                    clipboard_item=body.get("clipboard_item"),
+                    task=body.get("task"),
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.workspace_os.multitasking())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_search_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.workspace_os.workspace_search(
+                    body.get("query"),
+                    body.get("scope"),
+                ),
+                status=201,
+            )
+        query = request.rel_url.query.get("q") or request.rel_url.query.get("query")
+        scope = request.rel_url.query.get("scope")
+        return json_response(platform_builder.workspace_os.workspace_search(query, scope))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_performance_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.workspace_os.performance(action=body.get("action")),
+                status=201,
+            )
+        return json_response(platform_builder.workspace_os.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workspace_os.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_wizard_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.workspace_os.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.workspace_os.update_session(session_id, body))
+        return json_response(platform_builder.workspace_os.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workspace_os.summary(request.match_info["session_id"]))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workspace_os_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.workspace_os.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

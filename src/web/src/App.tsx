@@ -59,6 +59,7 @@ import {
   StoryEnginePage,
   IntelligenceEnginePage,
   ExperienceEnginePage,
+  WorkspaceOSPage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -325,6 +326,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <ExperienceEnginePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/workspace-os"
+        element={
+          <ProtectedRoute>
+            <WorkspaceOSPage />
           </ProtectedRoute>
         }
       />
