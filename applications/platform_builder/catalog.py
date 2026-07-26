@@ -401,6 +401,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Read-only realtime mirror of verified platform state — never owns business logic.",
     },
     {
+        "id": "twin_intelligence",
+        "name": "Digital Twin Intelligence",
+        "route": "/platform-builder/twin-intelligence",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Analyzes verified Digital Twin data — never changes state or executes workflows.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

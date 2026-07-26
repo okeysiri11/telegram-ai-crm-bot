@@ -64,6 +64,7 @@ import {
   NavigationIntelligencePage,
   WorkflowIntelligencePage,
   DigitalTwinPage,
+  TwinIntelligencePage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -370,6 +371,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <DigitalTwinPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/twin-intelligence"
+        element={
+          <ProtectedRoute>
+            <TwinIntelligencePage />
           </ProtectedRoute>
         }
       />

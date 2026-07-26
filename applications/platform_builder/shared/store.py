@@ -189,6 +189,13 @@ class PlatformBuilderStore:
         self.synchronization_engines: EntityStore = EntityStore()
         self.snapshot_engines: EntityStore = EntityStore()
         self.twin_apis: EntityStore = EntityStore()
+        # Sprint 29.17 — Digital Twin Intelligence
+        self.twin_intelligence_wizard_sessions: EntityStore = EntityStore()
+        self.twin_intelligence_engines: EntityStore = EntityStore()
+        self.scenario_engines: EntityStore = EntityStore()
+        self.impact_engines: EntityStore = EntityStore()
+        self.risk_engines: EntityStore = EntityStore()
+        self.twin_recommendation_engines: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

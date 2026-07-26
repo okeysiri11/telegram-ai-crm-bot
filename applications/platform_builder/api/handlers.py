@@ -3447,3 +3447,194 @@ async def digital_twin_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.17 — Digital Twin Intelligence / Scenario Analysis ---
+
+
+async def twin_intelligence_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.twin_intelligence.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.twin_intelligence.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.twin_intelligence.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_scenarios_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.twin_intelligence.scenario_analysis(
+                    action=body.get("action") or "prepare",
+                    scenario_type=body.get("type"),
+                    label=body.get("label"),
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.twin_intelligence.scenario_analysis())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_what_if_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.twin_intelligence.what_if_engine(
+                    action=body.get("action"),
+                    input_payload=body.get("input") or body.get("payload"),
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.twin_intelligence.what_if_engine())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_impact_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.twin_intelligence.impact_analysis(dimension=body.get("dimension")),
+                status=201,
+            )
+        dimension = request.rel_url.query.get("dimension")
+        return json_response(platform_builder.twin_intelligence.impact_analysis(dimension=dimension))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_risk_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.twin_intelligence.risk_analysis(category=body.get("category")),
+                status=201,
+            )
+        category = request.rel_url.query.get("category")
+        return json_response(platform_builder.twin_intelligence.risk_analysis(category=category))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_capacity_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.twin_intelligence.capacity_analysis(dimension=body.get("dimension")),
+                status=201,
+            )
+        dimension = request.rel_url.query.get("dimension")
+        return json_response(
+            platform_builder.twin_intelligence.capacity_analysis(dimension=dimension)
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_recommendations_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.twin_intelligence.recommendations(
+                    suggestion_type=body.get("type") or body.get("suggestion_type")
+                ),
+                status=201,
+            )
+        suggestion_type = request.rel_url.query.get("type")
+        return json_response(
+            platform_builder.twin_intelligence.recommendations(suggestion_type=suggestion_type)
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_comparison_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.twin_intelligence.scenario_comparison(
+                    mode=body.get("mode"),
+                    scenario_a=body.get("scenario_a"),
+                    scenario_b=body.get("scenario_b"),
+                ),
+                status=201,
+            )
+        mode = request.rel_url.query.get("mode")
+        return json_response(platform_builder.twin_intelligence.scenario_comparison(mode=mode))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_performance_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.twin_intelligence.performance(action=body.get("action")),
+                status=201,
+            )
+        return json_response(platform_builder.twin_intelligence.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.twin_intelligence.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_wizard_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.twin_intelligence.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.twin_intelligence.update_session(session_id, body))
+        return json_response(platform_builder.twin_intelligence.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.twin_intelligence.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def twin_intelligence_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.twin_intelligence.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

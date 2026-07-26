@@ -19,6 +19,7 @@ export { CommandCenterOSPage } from "./CommandCenterOSPage";
 export { NavigationIntelligencePage } from "./NavigationIntelligencePage";
 export { WorkflowIntelligencePage } from "./WorkflowIntelligencePage";
 export { DigitalTwinPage } from "./DigitalTwinPage";
+export { TwinIntelligencePage } from "./TwinIntelligencePage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
 export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";
