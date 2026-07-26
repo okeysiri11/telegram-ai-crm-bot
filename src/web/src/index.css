@@ -1228,6 +1228,31 @@ textarea:focus-visible {
   }
 }
 
+/* Sprint 34.0 RC — collapsed platform ops chrome */
+.eds-ops-chrome {
+  margin: 0.35rem 0 0.5rem;
+}
+
+.eds-ops-chrome-toggle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--eds-primary);
+  background: transparent;
+  border: 1px dashed color-mix(in srgb, var(--eds-primary) 35%, var(--eds-border));
+  border-radius: 8px;
+  padding: 0.35rem 0.65rem;
+  cursor: pointer;
+}
+
+.eds-ops-chrome-toggle:hover {
+  background: color-mix(in srgb, var(--eds-primary) 8%, transparent);
+}
+
+.eds-ops-chrome-body {
+  margin-top: 0.35rem;
+}
+
 /* Sprint 33.9 — Enterprise Governance (styles in ./enterprise-governance/enterprise-governance.css) */
 
 /* Sprint 33.8 — Enterprise Strategy & OKR Intelligence (styles in ./enterprise-okr/enterprise-okr.css) */

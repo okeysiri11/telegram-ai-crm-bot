@@ -65,9 +65,9 @@ def test_legal_docs_exist():
 
 def test_platform_legal_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.65.0"
-    assert health["sprint"] == "33.9"
-    assert health["release_status"] == "Enterprise Governance, Compliance & Security"
+    assert health["application_version"] == "1.66.0"
+    assert health["sprint"] == "34.0"
+    assert health["release_status"] == "Enterprise Platform v1.0 Release Candidate"
 
 
 @pytest.mark.asyncio
@@ -302,7 +302,7 @@ def test_legal_web_and_reuse_matrix():
     ):
         assert needle in wf, needle
     cfg = (web / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "33.9"' in cfg
+    assert 'sprint: "34.0"' in cfg
     assert "legalEnterprisePrefix" in cfg
     assert "legalCasePrefix" in cfg
     tmpl = (web / "workspace" / "ecosystem-template" / "index.ts").read_text()
@@ -321,8 +321,8 @@ def test_reuse_docs_and_manifest():
     report = (ROOT / "docs" / "SPRINT_REPORT_31_2.md").read_text()
     assert "Drone" in report
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.65.0"' in manifest
+    assert '"application_version": "1.66.0"' in manifest
     assert "33.6" in manifest
-    assert "Governance" in manifest
+    assert "Release Candidate" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "LEGAL_PILOT_EXECUTION_31_2" in index

@@ -21,13 +21,34 @@ import { LearningStrip } from "@/self-learning-enterprise";
 import { OkrStrip } from "@/enterprise-okr";
 import { GovernanceStrip } from "@/enterprise-governance";
 
+const OPS_KEY = "ewp_ops_strips_open_v1";
+
 /** Shared application shell — sidebar + top nav + unified workspace + AI OS chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [opsOpen, setOpsOpen] = useState(() => {
+    try {
+      return localStorage.getItem(OPS_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
 
   useEffect(() => {
     registerUnifiedWorkspaceSearch();
   }, []);
+
+  function toggleOps() {
+    setOpsOpen((v) => {
+      const next = !v;
+      try {
+        localStorage.setItem(OPS_KEY, next ? "1" : "0");
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }
 
   return (
     <div className="flex min-h-full eds-shell">
@@ -42,18 +63,28 @@ export function FullLayout({ children }: { children: ReactNode }) {
             <EnterpriseIntelligenceLayer compact />
             <AITeamCollaborationWorkspace compact />
             <WorkflowAutomationWorkspace compact />
-            <AIBuilderStudioStrip />
-            <MarketplaceStrip />
-            <EnterpriseTwinStrip />
-            <IntegrationHubStrip />
-            <AIRuntimeStrip />
-            <DataFabricStrip />
-            <PredictiveStrip />
-            <AutonomyStrip />
+            {/* Sprint 34.0 RC — priority strips always on; secondary collapsed for render budget */}
             <ControlTowerStrip />
-            <LearningStrip />
-            <OkrStrip />
             <GovernanceStrip />
+            <LearningStrip />
+            <div className="eds-ops-chrome">
+              <button type="button" className="eds-ops-chrome-toggle" onClick={toggleOps}>
+                {opsOpen ? "Hide platform strips" : "Show platform strips"}
+              </button>
+              {opsOpen ? (
+                <div className="eds-ops-chrome-body">
+                  <AIBuilderStudioStrip />
+                  <MarketplaceStrip />
+                  <EnterpriseTwinStrip />
+                  <IntegrationHubStrip />
+                  <AIRuntimeStrip />
+                  <DataFabricStrip />
+                  <PredictiveStrip />
+                  <AutonomyStrip />
+                  <OkrStrip />
+                </div>
+              ) : null}
+            </div>
             <UnifiedToastStrip />
             {children}
           </div>

@@ -46,7 +46,7 @@ def reset_store():
 def test_live_enterprise_surfaces():
     health = platform_builder.health()
     assert health["live_simulation_ready"] is True
-    assert health["application_version"] == "1.65.0"
+    assert health["application_version"] == "1.66.0"
 
     eng = platform_builder.simulation
     # Seed real bus events for each domain

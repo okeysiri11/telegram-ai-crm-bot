@@ -25,8 +25,8 @@ def test_32_3_1_docs_exist():
 
 def test_platform_version_pin_after_32_3_1():
     health = platform_builder.health()
-    assert health["application_version"] == "1.65.0"
-    assert health["sprint"] == "33.9"
+    assert health["application_version"] == "1.66.0"
+    assert health["sprint"] == "34.0"
 
 
 def test_first_entry_page_and_route():
@@ -51,8 +51,8 @@ def test_first_entry_page_and_route():
 
 def test_config_manifest_current_after_32_3_1():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
-    assert 'application_version: str = "1.65.0"' in cfg
-    assert 'sprint: str = "33.9"' in cfg
+    assert 'application_version: str = "1.66.0"' in cfg
+    assert 'sprint: str = "34.0"' in cfg
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.65.0"' in manifest
-    assert '"sprint": "33.9"' in manifest
+    assert '"application_version": "1.66.0"' in manifest
+    assert '"sprint": "34.0"' in manifest

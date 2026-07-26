@@ -177,6 +177,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_GOVERNANCE_33_9.md](./ENTERPRISE_GOVERNANCE_33_9.md) — Policies, compliance, audit, AI control over Autonomy / RBAC. Platform Builder **v1.65.0**.
 
+## Enterprise Platform v1.0 Release Candidate (Sprint 34.0)
+
+[ENTERPRISE_PLATFORM_1_0.md](./ENTERPRISE_PLATFORM_1_0.md) — Production RC audit, stabilizations, demo, limitations, roadmap. Platform Builder **v1.66.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

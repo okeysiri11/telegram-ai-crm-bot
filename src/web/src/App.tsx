@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { ProtectedRoute } from "@/shell/ProtectedRoute";
+import { LoadingScreen } from "@/shell/LoadingScreen";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { PilotDashboardPage } from "@/pages/PilotDashboardPage";
 import { ProductionReadinessPage } from "@/pages/ProductionReadinessPage";
@@ -9,23 +11,53 @@ import { InviteAcceptPage } from "@/pages/InviteAcceptPage";
 import { PilotExecutionPage } from "@/pages/PilotExecutionPage";
 import { FirstEntryPage } from "@/onboarding/FirstEntryPage";
 import { SettingsPage } from "@/pages/SettingsPage";
-import { EnterpriseCityPage } from "@/enterprise-city";
-import { WorkflowCenterPage } from "@/enterprise-workflow";
-import { AIBuilderStudioPage } from "@/ai-builder-studio";
-import { EnterpriseMarketplacePage } from "@/enterprise-marketplace";
-import { EnterpriseTwinPage } from "@/enterprise-twin";
-import { EnterpriseIntegrationHubPage } from "@/enterprise-integrations";
-import { AIRuntimePage } from "@/ai-runtime";
-import { EnterpriseDataFabricPage } from "@/enterprise-data-fabric";
-import { PredictiveIntelligencePage } from "@/predictive-intelligence";
-import { AutonomousEnterprisePage } from "@/autonomous-enterprise";
-import { EnterpriseControlTowerPage } from "@/enterprise-control-tower";
-import { SelfLearningEnterprisePage } from "@/self-learning-enterprise";
-import { EnterpriseOkrPage } from "@/enterprise-okr";
-import { EnterpriseGovernancePage } from "@/enterprise-governance";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
+
+/** Sprint 34.0 RC — lazy-load heavy composition surfaces for production bundle split. */
+const EnterpriseCityPage = lazy(() =>
+  import("@/enterprise-city").then((m) => ({ default: m.EnterpriseCityPage })),
+);
+const WorkflowCenterPage = lazy(() =>
+  import("@/enterprise-workflow").then((m) => ({ default: m.WorkflowCenterPage })),
+);
+const AIBuilderStudioPage = lazy(() =>
+  import("@/ai-builder-studio").then((m) => ({ default: m.AIBuilderStudioPage })),
+);
+const EnterpriseMarketplacePage = lazy(() =>
+  import("@/enterprise-marketplace").then((m) => ({ default: m.EnterpriseMarketplacePage })),
+);
+const EnterpriseTwinPage = lazy(() =>
+  import("@/enterprise-twin").then((m) => ({ default: m.EnterpriseTwinPage })),
+);
+const EnterpriseIntegrationHubPage = lazy(() =>
+  import("@/enterprise-integrations").then((m) => ({ default: m.EnterpriseIntegrationHubPage })),
+);
+const AIRuntimePage = lazy(() =>
+  import("@/ai-runtime").then((m) => ({ default: m.AIRuntimePage })),
+);
+const EnterpriseDataFabricPage = lazy(() =>
+  import("@/enterprise-data-fabric").then((m) => ({ default: m.EnterpriseDataFabricPage })),
+);
+const PredictiveIntelligencePage = lazy(() =>
+  import("@/predictive-intelligence").then((m) => ({ default: m.PredictiveIntelligencePage })),
+);
+const AutonomousEnterprisePage = lazy(() =>
+  import("@/autonomous-enterprise").then((m) => ({ default: m.AutonomousEnterprisePage })),
+);
+const EnterpriseControlTowerPage = lazy(() =>
+  import("@/enterprise-control-tower").then((m) => ({ default: m.EnterpriseControlTowerPage })),
+);
+const SelfLearningEnterprisePage = lazy(() =>
+  import("@/self-learning-enterprise").then((m) => ({ default: m.SelfLearningEnterprisePage })),
+);
+const EnterpriseOkrPage = lazy(() =>
+  import("@/enterprise-okr").then((m) => ({ default: m.EnterpriseOkrPage })),
+);
+const EnterpriseGovernancePage = lazy(() =>
+  import("@/enterprise-governance").then((m) => ({ default: m.EnterpriseGovernancePage })),
+);
 import {
   AccessDeniedPage,
   AccountLockedPage,
@@ -108,6 +140,7 @@ import {
 
 export function App() {
   return (
+    <Suspense fallback={<LoadingScreen />}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/auth/logout" element={<LogoutPage />} />
@@ -970,5 +1003,6 @@ export function App() {
         }
       />
     </Routes>
+    </Suspense>
   );
 }
