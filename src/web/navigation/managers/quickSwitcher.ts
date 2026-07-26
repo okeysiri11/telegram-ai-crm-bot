@@ -32,7 +32,7 @@ function pool(t: QuickSwitchTarget): SwitchItem[] {
   if (t === "ai_chats") {
     return [{ id: "ai_ops", label: "Ops Copilot", route: "/workspace/ai" }];
   }
-  return [{ id: "doc_sec", label: "Security Policy", route: "/workspace/docs/security" }];
+  return [{ id: "doc_main", label: "Documents", route: "/workspace/docs" }];
 }
 
 export const quickSwitcher = {

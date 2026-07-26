@@ -4,7 +4,7 @@ const index: SearchHit[] = [
   { id: "s1", category: "modules", label: "CRM Platform", path: "/workspace/crm" },
   { id: "s2", category: "users", label: "Alex Owner", path: "/identity/users" },
   { id: "s3", category: "organizations", label: "Demo Corp", path: "/identity/organizations" },
-  { id: "s4", category: "documents", label: "Security policy", path: "/workspace/docs/security" },
+  { id: "s4", category: "documents", label: "Workspace documents", path: "/workspace/docs" },
   { id: "s5", category: "workflows", label: "Invoice approval", path: "/workspace/workflows/invoice" },
   { id: "s6", category: "ai_agents", label: "Ops Copilot", path: "/workspace/ai/ops-copilot" },
   { id: "s7", category: "reports", label: "Weekly KPI", path: "/workspace/reports/weekly" },

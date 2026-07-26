@@ -70,7 +70,7 @@ export const BUSINESS_MODULES: BusinessModule[] = [
   { id: "analytics", label: "Analytics", route: "/platform-builder/intelligence", description: "Метрики и отчёты" },
   { id: "documents", label: "Documents", route: "/workspace/docs", description: "Документы и знания" },
   { id: "finance", label: "Finance", route: "/workspace/finance", description: "Финансы и казначейство" },
-  { id: "marketing", label: "Marketing", route: "/workspace", description: "Кампании и рост" },
+  { id: "marketing", label: "Marketing", route: "/workspace", description: "Кампании (hub)" },
   { id: "sales", label: "Sales", route: "/workspace/crm", description: "Воронка продаж" },
   { id: "production", label: "Production", route: "/workspace/drone", description: "Производство / флот" },
   { id: "ai_team", label: "AI Team", route: "/platform-builder/ai-team", description: "Команда AI" },

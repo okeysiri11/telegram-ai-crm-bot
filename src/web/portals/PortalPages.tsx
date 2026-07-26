@@ -28,7 +28,8 @@ export function CustomerPortalPage() {
         title="Universal modules"
         links={[
           { label: "CRM workspace module", to: "/workspace/crm" },
-          { label: "Knowledge / docs", to: "/workspace/docs/security" },
+          { label: "Documents", to: "/workspace/docs" },
+          { label: "Knowledge Base", to: "/platform-builder/knowledge" },
           { label: "Automotive workspace", to: "/workspace/auto" },
           ...SHARED,
         ]}

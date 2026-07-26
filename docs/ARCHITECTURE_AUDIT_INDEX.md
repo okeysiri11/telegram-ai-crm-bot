@@ -109,6 +109,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [UNIFIED_WORKSPACE_32_3_6.md](./UNIFIED_WORKSPACE_32_3_6.md) — Global context, Quick Switch, breadcrumbs, search. Platform Builder **v1.48.0**.
 
+## Production Readiness & Launch Validation (Sprint 32.3.7)
+
+[PRODUCTION_READINESS_32_3_7.md](./PRODUCTION_READINESS_32_3_7.md) — Demo path validation, link fixes, launch score. Platform Builder **v1.49.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

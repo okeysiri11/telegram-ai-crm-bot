@@ -39,8 +39,8 @@ def reset_store():
 
 def test_rendering_engine_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.48.0"
-    assert health["sprint"] == "32.3.6"
+    assert health["application_version"] == "1.49.0"
+    assert health["sprint"] == "32.3.7"
     assert health["rendering_engine_ready"] is True
     assert health["visual_lod_engine_ready"] is True
     assert health["viewport_engine_ready"] is True
@@ -114,7 +114,7 @@ def test_renderer_layers_priority_perf_create():
 async def test_api_rendering(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.48.0"
+    assert body["application_version"] == "1.49.0"
     assert body["rendering_engine_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/rendering/catalog")
@@ -144,5 +144,5 @@ async def test_api_rendering(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.48.0"' in manifest
-    assert "32.3.6" in manifest
+    assert '"application_version": "1.49.0"' in manifest
+    assert "32.3.7" in manifest

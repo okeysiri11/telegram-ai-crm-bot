@@ -12,6 +12,7 @@ import { SettingsPage } from "@/pages/SettingsPage";
 import { EnterpriseCityPage } from "@/enterprise-city";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
+import { EmptyState } from "@/ui";
 import {
   AccessDeniedPage,
   AccountLockedPage,
@@ -839,7 +840,15 @@ export function App() {
         path="*"
         element={
           <EmptyLayout>
-            <Navigate to="/workspace" replace />
+            <div className="mx-auto max-w-lg p-8">
+              <EmptyState
+                title="Страница не найдена"
+                description="Маршрут недоступен или устарел. Вернитесь в Workspace или Dashboard."
+                actionLabel="Открыть Dashboard"
+                actionTo="/dashboard"
+                illustration="?"
+              />
+            </div>
           </EmptyLayout>
         }
       />

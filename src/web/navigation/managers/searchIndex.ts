@@ -5,7 +5,7 @@ let documents: SearchDocument[] = [
   { id: "idx_user", category: "users", title: "Alex Owner", path: "/identity/users", tokens: ["alex", "owner", "user"], rankBoost: 5 },
   { id: "idx_org", category: "organizations", title: "Demo Corp", path: "/identity/organizations", tokens: ["demo", "corp", "org"], rankBoost: 5 },
   { id: "idx_proj", category: "projects", title: "Enterprise Web", path: "/workspace/list", tokens: ["project", "web"], rankBoost: 4 },
-  { id: "idx_doc", category: "documents", title: "Security Policy", path: "/workspace/docs/security", tokens: ["security", "policy", "doc"], rankBoost: 3 },
+  { id: "idx_doc", category: "documents", title: "Security Policy", path: "/workspace/docs", tokens: ["security", "policy", "doc", "documents"], rankBoost: 3 },
   { id: "idx_crm", category: "crm", title: "CRM Pipeline", path: "/workspace/crm", tokens: ["crm", "pipeline", "leads"], rankBoost: 6 },
   { id: "idx_erp", category: "erp", title: "ERP Inventory", path: "/workspace/erp", tokens: ["erp", "inventory"], rankBoost: 6 },
   { id: "idx_fin", category: "finance", title: "Finance Summary", path: "/workspace/finance", tokens: ["finance", "billing"], rankBoost: 6 },
@@ -18,7 +18,7 @@ let documents: SearchDocument[] = [
   { id: "idx_app", category: "applications", title: "Enterprise Hub", path: "/workspace", tokens: ["hub", "application"], rankBoost: 9 },
   { id: "idx_dash", category: "dashboards", title: "Personal Dashboard", path: "/workspace/dashboards", tokens: ["dashboard"], rankBoost: 7 },
   { id: "idx_wdg", category: "widgets", title: "Recent Activity Widget", path: "/command-center#recent_activity", tokens: ["widget", "activity"], rankBoost: 4 },
-  { id: "idx_kb", category: "knowledge", title: "Knowledge Base", path: "/workspace/docs/security", tokens: ["knowledge", "base"], rankBoost: 6 },
+  { id: "idx_kb", category: "knowledge", title: "Knowledge Base", path: "/platform-builder/knowledge", tokens: ["knowledge", "base"], rankBoost: 6 },
 ];
 
 export const searchIndex = {

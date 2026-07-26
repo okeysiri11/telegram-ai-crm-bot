@@ -24,6 +24,7 @@ import {
   productionReadinessScore,
   webCompletionSummary,
 } from "../pilot/webCompletionAudit";
+import { LAUNCH_DEMO_STEPS, LAUNCH_READINESS } from "@/launch";
 
 type ProbeRow = {
   id: string;
@@ -337,6 +338,23 @@ export function ProductionReadinessPage() {
               </li>
             ))}
           </ul>
+        </Card>
+
+        <Card title="Launch demo path (32.3.7)">
+          <p className="mb-2 eds-type-small text-[var(--eds-text-muted)]">
+            Readiness score {LAUNCH_READINESS.score}% · ecosystems {LAUNCH_READINESS.modules.businessEcosystems}
+          </p>
+          <ol className="eds-type-small space-y-1">
+            {LAUNCH_DEMO_STEPS.map((s, i) => (
+              <li key={s.id}>
+                {i + 1}.{" "}
+                <Link className="underline" to={s.route}>
+                  {s.title}
+                </Link>{" "}
+                <span className="text-[var(--eds-text-muted)]">{s.route}</span>
+              </li>
+            ))}
+          </ol>
         </Card>
       </div>
 

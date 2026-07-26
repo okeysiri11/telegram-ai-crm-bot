@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.3.6");
+    expect(webConfig.sprint).toBe("32.3.7");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -415,5 +415,17 @@ describe("Sprint 32.3.6 Unified Workspace", () => {
     const crumbs = breadcrumbEngine.fromPath("/workspace/beauty/crm");
     expect(crumbs[0]?.label).toBe("Enterprise");
     expect(crumbs.some((c) => c.label === "Beauty")).toBe(true);
+  });
+});
+
+describe("Sprint 32.3.7 Launch Validation", () => {
+  it("exposes demo steps and readiness score", async () => {
+    const { LAUNCH_DEMO_STEPS, LAUNCH_CRITICAL_ROUTES, LAUNCH_READINESS } = await import("../launch/launchCatalog");
+    expect(LAUNCH_DEMO_STEPS.length).toBeGreaterThanOrEqual(10);
+    expect(LAUNCH_DEMO_STEPS.some((s) => s.route === "/dashboard")).toBe(true);
+    expect(LAUNCH_CRITICAL_ROUTES).toContain("/enterprise-city");
+    expect(LAUNCH_CRITICAL_ROUTES).toContain("/platform-builder/knowledge");
+    expect(LAUNCH_READINESS.score).toBeGreaterThanOrEqual(90);
+    expect(LAUNCH_READINESS.modules.businessEcosystems).toBe(7);
   });
 });

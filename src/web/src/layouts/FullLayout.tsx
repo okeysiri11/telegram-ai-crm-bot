@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Sidebar } from "@/navigation/Sidebar";
 import { TopNavigation } from "@/navigation/TopNavigation";
 import { GlobalWorkspaceBar, UnifiedToastStrip, registerUnifiedWorkspaceSearch } from "@/workspace-chrome";
+import { OfflineBanner } from "@/launch";
 
 /** Shared application shell — sidebar + top nav + unified workspace chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
@@ -19,6 +20,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
         <TopNavigation onMenuToggle={() => setMobileOpen((v) => !v)} />
         <main className="eds-main flex-1 p-4 md:p-6 xl:p-8">
           <div className="eds-page eds-anim-page">
+            <OfflineBanner />
             <GlobalWorkspaceBar />
             <UnifiedToastStrip />
             {children}

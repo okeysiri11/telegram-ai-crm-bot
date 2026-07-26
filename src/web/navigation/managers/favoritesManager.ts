@@ -8,7 +8,7 @@ let favorites: FavoriteEntry[] = [
   { id: "fav_prj", kind: "project", label: "Enterprise Web", path: "/workspace/list" },
   { id: "fav_cmd", kind: "command", label: "Open CRM", path: "/workspace/crm" },
   { id: "fav_ai", kind: "ai_agent", label: "Ops Copilot", path: "/workspace/ai" },
-  { id: "fav_doc", kind: "document", label: "Security Policy", path: "/workspace/docs/security" },
+  { id: "fav_doc", kind: "document", label: "Documents", path: "/workspace/docs" },
 ];
 
 export const favoritesManager = {

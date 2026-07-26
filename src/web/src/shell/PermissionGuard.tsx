@@ -11,7 +11,7 @@ import { useWorkspaceStore } from "@/workspace/workspaceStore";
 export function PermissionGuard({
   children,
   require,
-  fallback = "/workspace",
+  fallback = "/auth/access-denied",
 }: {
   children: ReactNode;
   require: string[];

@@ -4,7 +4,7 @@ let history: HistoryEntry[] = [
   { id: "h1", kind: "page", label: "Workspace", path: "/workspace", at: new Date().toISOString() },
   { id: "h2", kind: "command", label: "Open AI Agent", path: "/workspace/dashboards/dash_ai", at: new Date(Date.now() - 60000).toISOString() },
   { id: "h3", kind: "search", label: "invoice", at: new Date(Date.now() - 120000).toISOString() },
-  { id: "h4", kind: "document", label: "Security Policy", path: "/workspace/docs/security", at: new Date(Date.now() - 180000).toISOString() },
+  { id: "h4", kind: "document", label: "Documents", path: "/workspace/docs", at: new Date(Date.now() - 180000).toISOString() },
   { id: "h5", kind: "report", label: "Weekly KPI", path: "/workspace/reports/weekly", at: new Date(Date.now() - 240000).toISOString() },
   { id: "h6", kind: "ai_chat", label: "Ops Copilot", path: "/workspace/ai", at: new Date(Date.now() - 300000).toISOString() },
 ];
