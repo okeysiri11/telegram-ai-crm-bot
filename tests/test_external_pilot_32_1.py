@@ -71,9 +71,9 @@ def test_32_1_docs_exist():
 
 def test_platform_version_32_1():
     health = platform_builder.health()
-    assert health["application_version"] == "1.43.0"
-    assert health["sprint"] == "32.3.1"
-    assert "First User Experience" in health["release_status"]
+    assert health["application_version"] == "1.44.0"
+    assert health["sprint"] == "32.3.2"
+    assert "Enterprise Dashboard" in health["release_status"]
 
 
 def test_onboard_invite_pages_and_routes():
@@ -171,11 +171,11 @@ async def test_tenancy_eon_and_invite_accept(client):
 
 def test_config_manifest_32_1():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
-    assert 'application_version: str = "1.43.0"' in cfg
-    assert 'sprint: str = "32.3.1"' in cfg
+    assert 'application_version: str = "1.44.0"' in cfg
+    assert 'sprint: str = "32.3.2"' in cfg
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.43.0"' in manifest
-    assert '"sprint": "32.3.1"' in manifest
+    assert '"application_version": "1.44.0"' in manifest
+    assert '"sprint": "32.3.2"' in manifest
     assert "invitations/accept" in (ROOT / "ecosystem" / "api" / "register.py").read_text()
 
 

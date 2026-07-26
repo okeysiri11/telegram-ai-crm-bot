@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.3.1");
+    expect(webConfig.sprint).toBe("32.3.2");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -332,5 +332,28 @@ describe("Sprint 32.3.1 First User Experience", () => {
     markFirstEntryComplete();
     expect(isFirstEntryComplete()).toBe(true);
     resetFirstEntry();
+  });
+});
+
+describe("Sprint 32.3.2 Enterprise Command Center", () => {
+  it("exposes layout catalog and default sections", async () => {
+    const {
+      DEFAULT_COMMAND_LAYOUT,
+      QUICK_ACTIONS,
+      BUSINESS_MODULES,
+      KPI_CARDS,
+      loadCommandLayout,
+      saveCommandLayout,
+      toggleCommandSection,
+    } = await import("../dashboard/commandCenterCatalog");
+    expect(DEFAULT_COMMAND_LAYOUT).toContain("mission_control");
+    expect(QUICK_ACTIONS.length).toBeGreaterThanOrEqual(6);
+    expect(BUSINESS_MODULES.some((m) => m.id === "crm")).toBe(true);
+    expect(KPI_CARDS).toHaveLength(6);
+    const saved = saveCommandLayout(["mission_control", "quick_actions"]);
+    expect(loadCommandLayout()).toEqual(saved);
+    const toggled = toggleCommandSection("ai_activity");
+    expect(toggled).toContain("ai_activity");
+    saveCommandLayout([...DEFAULT_COMMAND_LAYOUT]);
   });
 });

@@ -1,0 +1,92 @@
+/**
+ * Mission Control strip for Command Center — Sprint 32.3.2.
+ * Probes existing MC + OBS APIs; does not fork Mission Control engine.
+ */
+
+import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { Badge, Button, Card } from "@/ui";
+import { apiFetch } from "@/integrations/apiClient";
+import { hubIntegrations } from "@/integrations/hub";
+import { PLATFORM_BUILDER_API } from "../../platform-builder/types";
+
+type Dict = Record<string, unknown>;
+
+export function MissionControlStrip() {
+  const [mc, setMc] = useState<Dict | null>(null);
+  const [obs, setObs] = useState<Dict | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      const [mcRes, obsRes] = await Promise.all([
+        apiFetch(`${PLATFORM_BUILDER_API}/mission-control/status`),
+        apiFetch(`${hubIntegrations.monitoring}/health`),
+      ]);
+      setMc(mcRes.ok ? ((await mcRes.json()) as Dict) : null);
+      setObs(obsRes.ok ? ((await obsRes.json()) as Dict) : null);
+      if (!mcRes.ok && !obsRes.ok) setError("Mission Control / OBS temporarily unavailable");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Probe failed");
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const obsReady =
+    obs?.enterprise_observability_ready === true || obs?.status === "ok";
+
+  return (
+    <Card title="Mission Control">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Badge tone={mc ? "success" : "warning"}>{mc ? "Workspace linked" : "Partial"}</Badge>
+        <Badge tone={obsReady ? "success" : "warning"}>
+          AI / OBS {obsReady ? "active" : "check"}
+        </Badge>
+        <Button size="sm" variant="secondary" disabled={busy} onClick={() => void refresh()}>
+          Refresh
+        </Button>
+        <Link to="/platform-builder/mission-control">
+          <Button size="sm" variant="secondary">
+            Open Mission Control
+          </Button>
+        </Link>
+      </div>
+      {error ? <p className="mb-3 eds-type-small text-[var(--eds-danger)]">{error}</p> : null}
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="cc-stat">
+          <p className="cc-stat-label">Workspace</p>
+          <p className="cc-stat-value">{mc ? "Operational" : "…"}</p>
+        </div>
+        <div className="cc-stat">
+          <p className="cc-stat-label">System activity</p>
+          <p className="cc-stat-value">{obsReady ? "Live" : "Idle"}</p>
+        </div>
+        <div className="cc-stat">
+          <p className="cc-stat-label">AI status</p>
+          <p className="cc-stat-value">Platform AI layers</p>
+        </div>
+        <div className="cc-stat">
+          <p className="cc-stat-label">Recommendation</p>
+          <p className="cc-stat-value eds-type-small">
+            Проверьте экосистемы в{" "}
+            <Link className="underline" to="/platform-builder/mission-control">
+              MC Live
+            </Link>
+          </p>
+        </div>
+      </div>
+      <p className="mt-4 eds-type-small text-[var(--eds-text-muted)]">
+        Последние события и полная телеметрия — в существующем Mission Control Studio. Этот блок —
+        командный обзор без дублирования движка.
+      </p>
+    </Card>
+  );
+}

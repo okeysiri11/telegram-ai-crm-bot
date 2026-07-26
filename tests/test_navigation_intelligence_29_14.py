@@ -42,8 +42,8 @@ def reset_store():
 
 def test_navigation_intelligence_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.43.0"
-    assert health["sprint"] == "32.3.1"
+    assert health["application_version"] == "1.44.0"
+    assert health["sprint"] == "32.3.2"
     assert health["navigation_intelligence_engine_ready"] is True
     assert health["context_navigation_ready"] is True
     assert health["smart_navigation_ready"] is True
@@ -107,7 +107,7 @@ def test_navigation_intelligence_flow_and_create():
 async def test_api_navigation_intelligence(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.43.0"
+    assert body["application_version"] == "1.44.0"
     assert body["navigation_intelligence_engine_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/navigation-intelligence/catalog")
@@ -140,5 +140,5 @@ async def test_api_navigation_intelligence(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.43.0"' in manifest
-    assert "32.3.1" in manifest
+    assert '"application_version": "1.44.0"' in manifest
+    assert "32.3.2" in manifest

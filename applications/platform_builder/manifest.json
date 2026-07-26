@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.43.0",
-  "sprint": "32.3.1",
-  "release_status": "First User Experience (Platform Entry)",
+  "application_version": "1.44.0",
+  "sprint": "32.3.2",
+  "release_status": "Enterprise Dashboard & Mission Control",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

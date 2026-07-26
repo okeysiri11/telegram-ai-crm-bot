@@ -110,3 +110,153 @@ body {
     font-size: 1.02rem;
   }
 }
+
+/* Sprint 32.3.2 — Enterprise Command Center */
+.command-center {
+  max-width: 1800px;
+  margin: 0 auto;
+}
+.cc-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--ew-border);
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--ew-surface) 92%, #0f766e), var(--ew-surface));
+}
+.cc-logo {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, #0f766e 18%, var(--ew-surface));
+  color: #0f766e;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.cc-lead {
+  margin-bottom: 1.5rem;
+  max-width: 56rem;
+  color: var(--eds-text-muted, var(--ew-muted));
+  font-size: 0.975rem;
+  line-height: 1.55;
+}
+.cc-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+.cc-span-5 { grid-column: span 12; }
+.cc-span-6 { grid-column: span 12; }
+.cc-span-7 { grid-column: span 12; }
+.cc-span-12 { grid-column: span 12; }
+.cc-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+.cc-section-head h2 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.cc-stat {
+  padding: 0.85rem 1rem;
+  border-radius: 0.9rem;
+  background: color-mix(in oklab, var(--ew-surface) 80%, #0f766e 8%);
+  border: 1px solid var(--ew-border);
+}
+.cc-stat-label {
+  font-size: 0.75rem;
+  color: var(--ew-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.cc-stat-value {
+  margin-top: 0.35rem;
+  font-weight: 600;
+}
+.cc-kpi {
+  padding: 1.1rem 1.15rem;
+  border-radius: 1rem;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+  transition: transform 180ms ease, border-color 180ms ease;
+}
+.cc-kpi:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, #0f766e 45%, var(--ew-border));
+}
+.cc-kpi-label {
+  font-size: 0.8rem;
+  color: var(--ew-muted);
+}
+.cc-kpi-value {
+  margin: 0.35rem 0 0.55rem;
+  font-size: 1.55rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+.cc-action {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--ew-border);
+  background: color-mix(in oklab, var(--ew-surface) 90%, transparent);
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.cc-action:hover {
+  border-color: color-mix(in oklab, #0f766e 40%, var(--ew-border));
+  background: color-mix(in oklab, #0f766e 10%, var(--ew-surface));
+}
+.cc-action-hint {
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ew-muted);
+}
+.cc-module {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-height: 5.5rem;
+  padding: 1rem 1.05rem;
+  border-radius: 1rem;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.cc-module:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px color-mix(in oklab, #0b1220 12%, transparent);
+}
+@media (min-width: 1024px) {
+  .cc-span-5 { grid-column: span 5; }
+  .cc-span-6 { grid-column: span 6; }
+  .cc-span-7 { grid-column: span 7; }
+}
+@media (min-width: 1536px) {
+  .command-center {
+    padding-inline: 0.5rem;
+  }
+  .cc-header {
+    padding: 1.75rem 2rem;
+  }
+  .cc-grid {
+    gap: 1.75rem;
+  }
+  .cc-kpi-value {
+    font-size: 1.85rem;
+  }
+}

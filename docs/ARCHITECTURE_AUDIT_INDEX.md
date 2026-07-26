@@ -89,6 +89,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [FIRST_ENTRY_32_3_1.md](./FIRST_ENTRY_32_3_1.md) — Welcome → role → workspace → AI Team → Concierge → Dashboard. Platform Builder **v1.43.0**.
 
+## Enterprise Dashboard & Mission Control (Sprint 32.3.2)
+
+[ENTERPRISE_COMMAND_CENTER_32_3_2.md](./ENTERPRISE_COMMAND_CENTER_32_3_2.md) — Command Center on existing `/dashboard`. Platform Builder **v1.44.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

@@ -67,9 +67,9 @@ def test_agriculture_docs_exist():
 
 def test_platform_agriculture_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.43.0"
-    assert health["sprint"] == "32.3.1"
-    assert health["release_status"] == "First User Experience (Platform Entry)"
+    assert health["application_version"] == "1.44.0"
+    assert health["sprint"] == "32.3.2"
+    assert health["release_status"] == "Enterprise Dashboard & Mission Control"
 
 
 @pytest.mark.asyncio
@@ -310,7 +310,7 @@ def test_agriculture_web_and_reuse_matrix():
     ):
         assert needle in wf, needle
     cfg = (web / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "32.3.1"' in cfg
+    assert 'sprint: "32.3.2"' in cfg
     assert "agroPrefix" in cfg
     assert "agroSupplyChainPrefix" in cfg
     tmpl = (web / "workspace" / "ecosystem-template" / "index.ts").read_text()
@@ -330,8 +330,8 @@ def test_reuse_docs_and_manifest():
     report = (ROOT / "docs" / "SPRINT_REPORT_31_1.md").read_text()
     assert "Legal" in report
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.43.0"' in manifest
-    assert "32.3.1" in manifest
-    assert "First User Experience (Platform Entry)" in manifest
+    assert '"application_version": "1.44.0"' in manifest
+    assert "32.3.2" in manifest
+    assert "Enterprise Dashboard & Mission Control" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "AGRICULTURE_PILOT_EXECUTION_31_1" in index
