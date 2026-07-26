@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 29.13 Enterprise Command Center OS."""
+"""Platform Builder — Sprint 29.14 Navigation Intelligence Engine."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.20.0"
-    sprint: str = "29.13"
-    release_status: str = "Enterprise Command Center OS"
+    application_version: str = "1.21.0"
+    sprint: str = "29.14"
+    release_status: str = "Navigation Intelligence Engine"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"
@@ -81,6 +81,10 @@ class PlatformBuilderConfig:
     command_api: str = "1.0"
     shortcut_engine: str = "1.0"
     voice_api: str = "1.0"
+    navigation_intelligence_engine: str = "1.0"
+    navigation_registry: str = "1.0"
+    recommendation_api: str = "1.0"
+    context_api: str = "1.0"
     platform_owner_role: str = "platform_owner"
     academy_modes: list[str] = field(
         default_factory=lambda: ["quick_start", "guided_learning", "expert"]

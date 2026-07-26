@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.13."""
+"""Platform Builder application facade — Sprint 29.14."""
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ from applications.platform_builder.intelligence.engine import VisualIntelligence
 from applications.platform_builder.experience.engine import VisualExperienceEngine
 from applications.platform_builder.workspace_os.engine import EnterpriseWorkspaceOS
 from applications.platform_builder.command_center.engine import EnterpriseCommandCenter
+from applications.platform_builder.navigation_intelligence.engine import NavigationIntelligenceEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -76,6 +77,7 @@ class PlatformBuilderApplication:
         experience: VisualExperienceEngine | None = None,
         workspace_os: EnterpriseWorkspaceOS | None = None,
         command_center_os: EnterpriseCommandCenter | None = None,
+        navigation_intelligence: NavigationIntelligenceEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -103,6 +105,7 @@ class PlatformBuilderApplication:
         self.experience = experience or VisualExperienceEngine(self.store)
         self.workspace_os = workspace_os or EnterpriseWorkspaceOS(self.store)
         self.command_center_os = command_center_os or EnterpriseCommandCenter(self.store)
+        self.navigation_intelligence = navigation_intelligence or NavigationIntelligenceEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -130,6 +133,7 @@ class PlatformBuilderApplication:
         self.experience = VisualExperienceEngine(self.store)
         self.workspace_os = EnterpriseWorkspaceOS(self.store)
         self.command_center_os = EnterpriseCommandCenter(self.store)
+        self.navigation_intelligence = NavigationIntelligenceEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -238,6 +242,9 @@ class PlatformBuilderApplication:
             "voice_foundation_ready": True,
             "ai_command_assistant_ready": True,
             "shortcut_engine_ready": True,
+            "navigation_intelligence_engine_ready": True,
+            "context_navigation_ready": True,
+            "smart_navigation_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -261,6 +268,9 @@ class PlatformBuilderApplication:
             "experience_page_exists": (web / "pages" / "ExperienceEnginePage.tsx").exists(),
             "workspace_os_page_exists": (web / "pages" / "WorkspaceOSPage.tsx").exists(),
             "command_center_page_exists": (web / "pages" / "CommandCenterOSPage.tsx").exists(),
+            "navigation_intelligence_page_exists": (
+                web / "pages" / "NavigationIntelligencePage.tsx"
+            ).exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -384,6 +394,9 @@ class PlatformBuilderApplication:
             "voice_foundation_ready": True,
             "ai_command_assistant_ready": True,
             "shortcut_engine_ready": True,
+            "navigation_intelligence_engine_ready": True,
+            "context_navigation_ready": True,
+            "smart_navigation_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -449,6 +462,10 @@ class PlatformBuilderApplication:
                 "command_api": self.config.command_api,
                 "shortcut_engine": self.config.shortcut_engine,
                 "voice_api": self.config.voice_api,
+                "navigation_intelligence_engine": self.config.navigation_intelligence_engine,
+                "navigation_registry": self.config.navigation_registry,
+                "recommendation_api": self.config.recommendation_api,
+                "context_api": self.config.context_api,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -476,6 +493,7 @@ class PlatformBuilderApplication:
             "experience": self.experience.status(),
             "workspace_os": self.workspace_os.status(),
             "command_center_os": self.command_center_os.status(),
+            "navigation_intelligence": self.navigation_intelligence.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

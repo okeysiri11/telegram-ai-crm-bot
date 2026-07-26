@@ -16,6 +16,7 @@ export { IntelligenceEnginePage } from "./IntelligenceEnginePage";
 export { ExperienceEnginePage } from "./ExperienceEnginePage";
 export { WorkspaceOSPage } from "./WorkspaceOSPage";
 export { CommandCenterOSPage } from "./CommandCenterOSPage";
+export { NavigationIntelligencePage } from "./NavigationIntelligencePage";
 export { VerticalBuilderPage } from "./VerticalBuilderPage";
 export { UniversalFrameworkPage } from "./UniversalFrameworkPage";
 export { FrameBuilderPage } from "./FrameBuilderPage";

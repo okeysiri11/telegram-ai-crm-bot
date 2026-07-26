@@ -371,6 +371,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Universal command interface for modules, AI, workspaces and services — interaction orchestration only.",
     },
     {
+        "id": "navigation_intelligence",
+        "name": "Navigation Intelligence Engine",
+        "route": "/platform-builder/navigation-intelligence",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Predicts and simplifies navigation from verified context — never executes business logic.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

@@ -678,3 +678,71 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/command-center/sessions/{{session_id}}/create",
         handlers.command_center_create_handler,
     )
+
+    # Sprint 29.14 — Navigation Intelligence Engine / Context Navigation Platform
+    app.router.add_get(f"{prefix}/navigation-intelligence/catalog", handlers.nav_intel_catalog_handler)
+    app.router.add_get(f"{prefix}/navigation-intelligence/status", handlers.nav_intel_status_handler)
+    app.router.add_get(f"{prefix}/navigation-intelligence/engine", handlers.nav_intel_engine_handler)
+    app.router.add_get(f"{prefix}/navigation-intelligence/graph", handlers.nav_intel_graph_handler)
+    app.router.add_post(f"{prefix}/navigation-intelligence/graph", handlers.nav_intel_graph_handler)
+    app.router.add_get(f"{prefix}/navigation-intelligence/context", handlers.nav_intel_context_handler)
+    app.router.add_patch(f"{prefix}/navigation-intelligence/context", handlers.nav_intel_context_handler)
+    app.router.add_get(
+        f"{prefix}/navigation-intelligence/recommendations",
+        handlers.nav_intel_recommendations_handler,
+    )
+    app.router.add_get(f"{prefix}/navigation-intelligence/history", handlers.nav_intel_history_handler)
+    app.router.add_post(f"{prefix}/navigation-intelligence/history", handlers.nav_intel_history_handler)
+    app.router.add_get(
+        f"{prefix}/navigation-intelligence/quick-access",
+        handlers.nav_intel_quick_access_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/navigation-intelligence/quick-access",
+        handlers.nav_intel_quick_access_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/navigation-intelligence/cross-platform",
+        handlers.nav_intel_cross_platform_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/navigation-intelligence/cross-platform",
+        handlers.nav_intel_cross_platform_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/navigation-intelligence/search-routing",
+        handlers.nav_intel_search_routing_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/navigation-intelligence/search-routing",
+        handlers.nav_intel_search_routing_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/navigation-intelligence/performance",
+        handlers.nav_intel_performance_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/navigation-intelligence/performance",
+        handlers.nav_intel_performance_handler,
+    )
+    app.router.add_get(f"{prefix}/navigation-intelligence/ui", handlers.nav_intel_ui_handler)
+    app.router.add_post(
+        f"{prefix}/navigation-intelligence/sessions",
+        handlers.nav_intel_wizard_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/navigation-intelligence/sessions/{{session_id}}",
+        handlers.nav_intel_wizard_session_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/navigation-intelligence/sessions/{{session_id}}",
+        handlers.nav_intel_wizard_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/navigation-intelligence/sessions/{{session_id}}/summary",
+        handlers.nav_intel_wizard_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/navigation-intelligence/sessions/{{session_id}}/create",
+        handlers.nav_intel_create_handler,
+    )

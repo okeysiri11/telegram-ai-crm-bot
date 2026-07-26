@@ -2970,3 +2970,172 @@ async def command_center_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.14 — Navigation Intelligence Engine / Context Navigation Platform ---
+
+
+async def nav_intel_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.navigation_intelligence.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.navigation_intelligence.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.navigation_intelligence.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_graph_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.navigation_intelligence.navigation_graph(body.get("graph")),
+                status=201,
+            )
+        graph = request.rel_url.query.get("graph")
+        return json_response(platform_builder.navigation_intelligence.navigation_graph(graph))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_context_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.navigation_intelligence.context_aware(body))
+        return json_response(platform_builder.navigation_intelligence.context_aware())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_recommendations_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.navigation_intelligence.smart_recommendations())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_history_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.navigation_intelligence.navigation_history(
+                    action=body.get("action"),
+                    location=body.get("location"),
+                    project=body.get("project"),
+                    organization=body.get("organization"),
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.navigation_intelligence.navigation_history())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_quick_access_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.navigation_intelligence.quick_access(body))
+        return json_response(platform_builder.navigation_intelligence.quick_access())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_cross_platform_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.navigation_intelligence.cross_platform(body.get("target")),
+                status=201,
+            )
+        return json_response(platform_builder.navigation_intelligence.cross_platform())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_search_routing_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.navigation_intelligence.search_routing(body.get("query")),
+                status=201,
+            )
+        query = request.rel_url.query.get("q") or request.rel_url.query.get("query")
+        return json_response(platform_builder.navigation_intelligence.search_routing(query))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_performance_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.navigation_intelligence.performance(action=body.get("action")),
+                status=201,
+            )
+        return json_response(platform_builder.navigation_intelligence.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.navigation_intelligence.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_wizard_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(
+                platform_builder.navigation_intelligence.start_session(),
+                status=201,
+            )
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(
+                platform_builder.navigation_intelligence.update_session(session_id, body)
+            )
+        return json_response(platform_builder.navigation_intelligence.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.navigation_intelligence.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def nav_intel_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.navigation_intelligence.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

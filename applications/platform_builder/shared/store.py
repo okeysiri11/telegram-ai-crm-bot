@@ -169,6 +169,12 @@ class PlatformBuilderStore:
         self.command_apis: EntityStore = EntityStore()
         self.shortcut_engines: EntityStore = EntityStore()
         self.voice_apis: EntityStore = EntityStore()
+        # Sprint 29.14 — Navigation Intelligence Engine
+        self.navigation_intelligence_wizard_sessions: EntityStore = EntityStore()
+        self.navigation_intelligence_engines: EntityStore = EntityStore()
+        self.navigation_registries: EntityStore = EntityStore()
+        self.recommendation_apis: EntityStore = EntityStore()
+        self.context_apis: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

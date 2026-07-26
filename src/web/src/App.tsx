@@ -61,6 +61,7 @@ import {
   ExperienceEnginePage,
   WorkspaceOSPage,
   CommandCenterOSPage,
+  NavigationIntelligencePage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -343,6 +344,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <CommandCenterOSPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/navigation-intelligence"
+        element={
+          <ProtectedRoute>
+            <NavigationIntelligencePage />
           </ProtectedRoute>
         }
       />
