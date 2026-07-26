@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("31.4");
+    expect(webConfig.sprint).toBe("32.0");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -37,6 +37,8 @@ describe("Enterprise Web Foundation", () => {
     expect(hubIntegrations.workspacePlatform).toContain("enterprise-ews");
     expect(hubIntegrations.navigationPlatform).toContain("enterprise-enp");
     expect(hubIntegrations.monitoring).toContain("enterprise-obs");
+    expect(hubIntegrations.pilotReadiness).toContain("enterprise-epr");
+    expect(hubIntegrations.productionReadiness).toContain("enterprise-epd");
   });
 });
 
@@ -62,6 +64,7 @@ describe("Sprint 30.5 Web Core Integration", () => {
       "/platform-builder/mission-control",
     );
     expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot");
+    expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot/production");
   });
 
   it("derives application registry from module registry", () => {
@@ -234,5 +237,32 @@ describe("Sprint 31.4 Drone Ecosystem Completion", () => {
     expect(CROSS_ECOSYSTEM_PATTERNS.some((p) => /Drone/i.test(p))).toBe(true);
     expect(moduleRegistry.get("drone")?.apiHint).toContain("/api/drone/v1");
     expect(applicationRegistry.get("drone_enterprise")?.route).toBe("/workspace/drone");
+  });
+});
+
+describe("Sprint 32.0 Enterprise Web Completion", () => {
+  it("exposes production readiness audit and score", async () => {
+    const {
+      WORKSPACE_HEALTH_PROBES,
+      PLATFORM_HEALTH_PROBES,
+      PRODUCTION_CHECKLIST,
+      productionReadinessScore,
+      webCompletionSummary,
+    } = await import("../pilot/webCompletionAudit");
+    expect(WORKSPACE_HEALTH_PROBES).toHaveLength(7);
+    expect(WORKSPACE_HEALTH_PROBES.map((w) => w.route)).toEqual([
+      "/workspace/auto",
+      "/workspace/beauty",
+      "/workspace/cafe",
+      "/workspace/agro",
+      "/workspace/legal",
+      "/workspace/crypto",
+      "/workspace/drone",
+    ]);
+    expect(PLATFORM_HEALTH_PROBES.length).toBeGreaterThanOrEqual(5);
+    expect(PRODUCTION_CHECKLIST.some((c) => c.id === "auth" && c.status === "ready")).toBe(true);
+    expect(productionReadinessScore()).toBeGreaterThanOrEqual(75);
+    expect(webCompletionSummary().ecosystems).toBe(7);
+    expect(applicationRegistry.get("production_readiness")?.route).toBe("/pilot/production");
   });
 });

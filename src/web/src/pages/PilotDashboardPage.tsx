@@ -33,6 +33,11 @@ import {
 } from "@/integrations/pilotFeedback";
 import { pilotMetrics, type PilotMetricsSnapshot } from "@/integrations/pilotMetrics";
 import { validateJourneys } from "../pilot/roleJourneys";
+import {
+  WORKSPACE_HEALTH_PROBES,
+  productionReadinessScore,
+  webCompletionSummary,
+} from "../pilot/webCompletionAudit";
 import { PLATFORM_BUILDER_API, PLATFORM_BUILDER_VERSION } from "../../platform-builder/types";
 import { webConfig } from "@/config/webConfig";
 import { isJwtToken } from "@/auth/identityApi";
@@ -50,10 +55,14 @@ export function PilotDashboardPage() {
   const [metrics, setMetrics] = useState<Dict | null>(null);
   const [logs, setLogs] = useState<Dict | null>(null);
   const [mcStatus, setMcStatus] = useState<Dict | null>(null);
+  const [epdHealth, setEpdHealth] = useState<Dict | null>(null);
+  const [eprHealth, setEprHealth] = useState<Dict | null>(null);
   const [pilotSnap, setPilotSnap] = useState<PilotMetricsSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [apiCalls, setApiCalls] = useState(0);
+  const readinessScore = productionReadinessScore();
+  const webSummary = webCompletionSummary();
 
   const [fbCategory, setFbCategory] = useState<FeedbackCategory>("suggestion");
   const [fbMessage, setFbMessage] = useState("");
@@ -75,18 +84,22 @@ export function PilotDashboardPage() {
     setBusy(true);
     setError(null);
     try {
-      const [obsRes, metRes, logRes, mcRes, snap] = await Promise.all([
+      const [obsRes, metRes, logRes, mcRes, epdRes, eprRes, snap] = await Promise.all([
         apiFetch(`${hubIntegrations.monitoring}/health`),
         apiFetch(`${hubIntegrations.monitoring}/metrics`),
         apiFetch(`${hubIntegrations.monitoring}/logs`),
         apiFetch(`${PLATFORM_BUILDER_API}/mission-control/status`),
+        apiFetch(`${hubIntegrations.productionReadiness}/health`),
+        apiFetch(`${hubIntegrations.pilotReadiness}/health`),
         pilotMetrics.snapshot(),
       ]);
-      setApiCalls(6);
+      setApiCalls(8);
       setObsHealth(obsRes.ok ? ((await obsRes.json()) as Dict) : null);
       setMetrics(metRes.ok ? ((await metRes.json()) as Dict) : null);
       setLogs(logRes.ok ? ((await logRes.json()) as Dict) : null);
       setMcStatus(mcRes.ok ? ((await mcRes.json()) as Dict) : null);
+      setEpdHealth(epdRes.ok ? ((await epdRes.json()) as Dict) : null);
+      setEprHealth(eprRes.ok ? ((await eprRes.json()) as Dict) : null);
       setPilotSnap(snap);
       setFeedbackItems(listLocalFeedback());
       if (!obsRes.ok && !mcRes.ok) {
@@ -147,10 +160,11 @@ export function PilotDashboardPage() {
   return (
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge tone="success">Drone Ecosystem Completion</Badge>
-        <Badge>Sprint 31.4</Badge>
+        <Badge tone="success">Enterprise Web Completion</Badge>
+        <Badge>Sprint 32.0</Badge>
         <Badge>PB {PLATFORM_BUILDER_VERSION}</Badge>
         <Badge>{webConfig.sprint}</Badge>
+        <Badge tone={readinessScore >= 80 ? "success" : "warning"}>Ready {readinessScore}%</Badge>
         {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge>{authMode || "ISAM"}</Badge>}
         {core.ecosystemsReady ? <Badge tone="success">7 ecosystems</Badge> : null}
       </div>
@@ -159,8 +173,8 @@ export function PilotDashboardPage() {
         Pilot Operations — Auto · Beauty · Cafe · Agriculture · Legal · Bidex · Drone
       </h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        Seven internal pilots on one Enterprise Platform. Shared auth, Mission Control, AI Team, feedback,
-        and observability. No duplicated stacks.
+        Unified pilot operations across seven ecosystems on one Enterprise Platform. Production readiness
+        probes EPD/EPR/OBS — no new ecosystems, no duplicated stacks.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -207,6 +221,11 @@ export function PilotDashboardPage() {
             Mission Control
           </Button>
         </Link>
+        <Link to="/pilot/production">
+          <Button size="sm" variant="secondary">
+            Production Readiness
+          </Button>
+        </Link>
       </div>
 
       {error ? (
@@ -243,6 +262,11 @@ export function PilotDashboardPage() {
               OBS:{" "}
               {obsHealth?.status === "ok" || obsHealth?.enterprise_observability_ready ? "ready" : "—"}
             </li>
+            <li>
+              EPD:{" "}
+              {epdHealth?.status === "ok" || epdHealth?.production_platform_ready ? "ready" : "—"}
+            </li>
+            <li>EPR: {eprHealth?.status === "ok" ? "ready" : eprHealth ? "partial" : "—"}</li>
           </ul>
         </Card>
 
@@ -373,6 +397,28 @@ export function PilotDashboardPage() {
           ) : (
             <p className="mt-3 eds-type-small text-[var(--eds-text-muted)]">No feedback submitted yet.</p>
           )}
+        </Card>
+      </div>
+
+      <div className="mt-6">
+        <Card title="Web completion audit (7 workspaces)">
+          <p className="mb-2 eds-type-small text-[var(--eds-text-muted)]">
+            {webSummary.ecosystems} ecosystems · checklist ready {webSummary.readyCount}/
+            {webSummary.productionItems} · score {readinessScore}%
+          </p>
+          <Table headers={["Workspace", "Route", "UX contract"]}>
+            {WORKSPACE_HEALTH_PROBES.map((w) => (
+              <tr key={w.id} className="border-t border-[var(--ew-border)]">
+                <td className="px-3 py-2">{w.label}</td>
+                <td className="px-3 py-2">
+                  <Link className="underline" to={w.route}>
+                    {w.route}
+                  </Link>
+                </td>
+                <td className="px-3 py-2 eds-type-small">{w.expects.join(" · ")}</td>
+              </tr>
+            ))}
+          </Table>
         </Card>
       </div>
 

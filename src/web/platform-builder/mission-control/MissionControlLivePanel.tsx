@@ -1,24 +1,28 @@
 /**
- * Live platform status panel for Mission Control — Sprint 30.5.
- * Fetches existing MC + OBS APIs and module registry — no parallel cockpit.
+ * Live platform status panel for Mission Control — Sprint 32.0.
+ * Fetches existing MC + OBS APIs, module registry, and per-ecosystem health probes.
  */
 
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge, Button, Card, Table } from "@/ui";
-import { PLATFORM_BUILDER_API } from "../types";
+import { PLATFORM_BUILDER_API, PLATFORM_BUILDER_SPRINT } from "../types";
 import { hubIntegrations } from "@/integrations/hub";
 import { apiFetch } from "@/integrations/apiClient";
 import { moduleRegistry } from "../../workspace/managers/moduleRegistry";
 import { telemetry } from "@/integrations/telemetry";
+import { WORKSPACE_HEALTH_PROBES } from "@/pilot/webCompletionAudit";
 
 type Dict = Record<string, unknown>;
+
+type EcoHealth = { id: string; label: string; ok: boolean | null; detail: string };
 
 export function MissionControlLivePanel() {
   const [mcStatus, setMcStatus] = useState<Dict | null>(null);
   const [obsHealth, setObsHealth] = useState<Dict | null>(null);
   const [metrics, setMetrics] = useState<Dict | null>(null);
   const [logs, setLogs] = useState<Dict | null>(null);
+  const [ecoHealth, setEcoHealth] = useState<EcoHealth[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -29,11 +33,12 @@ export function MissionControlLivePanel() {
     setError(null);
     const started = performance.now();
     try {
-      const [mcRes, obsRes, metRes, logRes] = await Promise.all([
+      const [mcRes, obsRes, metRes, logRes, ...ecoRes] = await Promise.all([
         apiFetch(`${PLATFORM_BUILDER_API}/mission-control/status`),
         apiFetch(`${hubIntegrations.monitoring}/health`),
         apiFetch(`${hubIntegrations.monitoring}/metrics`),
         apiFetch(`${hubIntegrations.monitoring}/logs`),
+        ...WORKSPACE_HEALTH_PROBES.map((w) => apiFetch(w.healthUrl)),
       ]);
       const mc = (await mcRes.json()) as Dict;
       const obs = (await obsRes.json()) as Dict;
@@ -44,6 +49,25 @@ export function MissionControlLivePanel() {
       setObsHealth(obsRes.ok ? obs : null);
       setMetrics(metRes.ok ? met : null);
       setLogs(logRes.ok ? log : null);
+
+      const eco: EcoHealth[] = await Promise.all(
+        WORKSPACE_HEALTH_PROBES.map(async (w, i) => {
+          const res = ecoRes[i];
+          try {
+            const body = (await res.json().catch(() => ({}))) as Dict;
+            return {
+              id: w.id,
+              label: w.label,
+              ok: res.ok,
+              detail: res.ok ? String(body.status ?? body.application_version ?? "ok") : `HTTP ${res.status}`,
+            };
+          } catch {
+            return { id: w.id, label: w.label, ok: false, detail: "probe failed" };
+          }
+        }),
+      );
+      setEcoHealth(eco);
+
       await telemetry.apiCall("mission-control/live", performance.now() - started, true);
       await telemetry.userActivity("mission_control_live_refresh");
     } catch (e) {
@@ -58,18 +82,28 @@ export function MissionControlLivePanel() {
     void refresh();
   }, [refresh]);
 
+  const ecoOk = ecoHealth.filter((e) => e.ok).length;
+
   return (
     <div className="mb-6 space-y-4">
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone="success">Live Modules</Badge>
-        <Badge>Sprint 30.5</Badge>
+        <Badge>Sprint {PLATFORM_BUILDER_SPRINT}</Badge>
         <Badge>OBS Connected</Badge>
+        <Badge tone={ecoOk === WORKSPACE_HEALTH_PROBES.length ? "success" : "warning"}>
+          Ecosystems {ecoOk}/{WORKSPACE_HEALTH_PROBES.length}
+        </Badge>
         <Button size="sm" variant="secondary" disabled={busy} onClick={() => void refresh()}>
           Refresh status
         </Button>
         <Link to="/pilot">
           <Button size="sm" variant="secondary">
             Pilot Dashboard
+          </Button>
+        </Link>
+        <Link to="/pilot/production">
+          <Button size="sm" variant="secondary">
+            Production Readiness
           </Button>
         </Link>
       </div>
@@ -97,6 +131,9 @@ export function MissionControlLivePanel() {
             </li>
             <li>Metrics recorded: {String(metrics?.metrics ?? "—")}</li>
             <li>Logs recorded: {String(logs?.logs ?? "—")}</li>
+            <li>
+              Cross-ecosystem health: {ecoOk}/{WORKSPACE_HEALTH_PROBES.length}
+            </li>
           </ul>
         </Card>
         <Card title="Organization / AI / API">
@@ -116,6 +153,12 @@ export function MissionControlLivePanel() {
             <li>
               Pilot: <Link className="underline" to="/pilot">/pilot</Link>
             </li>
+            <li>
+              Production:{" "}
+              <Link className="underline" to="/pilot/production">
+                /pilot/production
+              </Link>
+            </li>
           </ul>
         </Card>
         <Card title="Connected modules">
@@ -134,6 +177,31 @@ export function MissionControlLivePanel() {
           </ul>
         </Card>
       </div>
+
+      <Card title="Cross-ecosystem API health">
+        <Table headers={["Ecosystem", "Live probe", "Registry", "Route"]}>
+          {WORKSPACE_HEALTH_PROBES.map((w) => {
+            const live = ecoHealth.find((e) => e.id === w.id);
+            const mod = moduleRegistry.get(w.id);
+            return (
+              <tr key={w.id} className="border-t border-[var(--ew-border)]">
+                <td className="px-3 py-2">{w.label}</td>
+                <td className="px-3 py-2">
+                  <Badge tone={live?.ok ? "success" : live?.ok === false ? "warning" : "default"}>
+                    {live?.ok ? "ok" : live?.ok === false ? live.detail : "—"}
+                  </Badge>
+                </td>
+                <td className="px-3 py-2">{mod?.health ?? "—"}</td>
+                <td className="px-3 py-2">
+                  <Link className="underline" to={w.route}>
+                    {w.route}
+                  </Link>
+                </td>
+              </tr>
+            );
+          })}
+        </Table>
+      </Card>
 
       <Card title="Module status">
         <Table headers={["Module", "Health", "Version", "Route"]}>

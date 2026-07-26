@@ -40,9 +40,9 @@ def test_pilot_hardening_docs_exist():
 
 def test_platform_pilot_hardening_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.39.0"
-    assert health["sprint"] == "31.4"
-    assert health["release_status"] == "Drone Ecosystem Completion"
+    assert health["application_version"] == "1.40.0"
+    assert health["sprint"] == "32.0"
+    assert health["release_status"] == "Enterprise Web Completion & Production Readiness"
 
 
 def test_feedback_metrics_journeys_web():
@@ -80,8 +80,8 @@ def test_epr_feedback_api_still_central():
 
 def test_manifest_and_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.39.0"' in manifest
-    assert "31.4" in manifest
-    assert "Drone Ecosystem Completion" in manifest
+    assert '"application_version": "1.40.0"' in manifest
+    assert "32.0" in manifest
+    assert "Enterprise Web Completion & Production Readiness" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "PILOT_HARDENING_30_7" in index

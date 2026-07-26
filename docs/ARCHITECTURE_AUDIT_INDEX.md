@@ -67,9 +67,16 @@
 
 [DRONE_PILOT_EXECUTION_31_4.md](./DRONE_PILOT_EXECUTION_31_4.md) — Seventh operational pilot + enterprise platform validation. Platform Builder **v1.39.0**.
 
+## Enterprise Web Completion & Production Readiness (Sprint 32.0)
+
+[ENTERPRISE_WEB_COMPLETION_32_0.md](./ENTERPRISE_WEB_COMPLETION_32_0.md) — Seven-workspace audit, Mission Control health probes, Production Readiness UI, ops docs. Platform Builder **v1.40.0**.
+
+Related: [PRODUCTION_STATUS_32_0.md](./PRODUCTION_STATUS_32_0.md) · [PRODUCTION_CHECKLIST_32_0.md](./PRODUCTION_CHECKLIST_32_0.md) · [PILOT_HANDBOOK_32_0.md](./PILOT_HANDBOOK_32_0.md) · [ARCHITECTURE_INVENTORY_32_0.md](./ARCHITECTURE_INVENTORY_32_0.md)
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  
 - Existing vertical APIs remain mounted  
 - Existing web shell (auth, workspace, navigation, command-center) remains intact  
 - Audit introduces **documentation and backlog**; consolidation extends Web prep without subsystem replacement  
+- **No new Business Ecosystems** after Sprint 31.4  

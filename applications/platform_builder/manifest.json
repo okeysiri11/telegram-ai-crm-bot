@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.39.0",
-  "sprint": "31.4",
-  "release_status": "Drone Ecosystem Completion",
+  "application_version": "1.40.0",
+  "sprint": "32.0",
+  "release_status": "Enterprise Web Completion & Production Readiness",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

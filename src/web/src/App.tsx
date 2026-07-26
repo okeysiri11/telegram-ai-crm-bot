@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { ProtectedRoute } from "@/shell/ProtectedRoute";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { PilotDashboardPage } from "@/pages/PilotDashboardPage";
+import { ProductionReadinessPage } from "@/pages/ProductionReadinessPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import {
@@ -124,6 +125,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <PilotDashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pilot/production"
+        element={
+          <ProtectedRoute>
+            <ProductionReadinessPage />
           </ProtectedRoute>
         }
       />

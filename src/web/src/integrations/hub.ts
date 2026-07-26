@@ -15,6 +15,7 @@ export const hubIntegrations = {
   workspacePlatform: webConfig.ewsPrefix,
   navigationPlatform: webConfig.enpPrefix,
   pilotReadiness: "/api/enterprise-epr/v1",
+  productionReadiness: "/api/enterprise-epd/v1",
   learningEngine: "/api/enterprise-ele/v1",
   beautyOs: webConfig.beautyOsPrefix,
   beautyWorkspace: webConfig.beautyWorkspacePrefix,
