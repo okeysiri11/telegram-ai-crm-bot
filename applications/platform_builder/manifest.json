@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.32.0",
-  "sprint": "30.7",
-  "release_status": "Pilot Hardening",
+  "application_version": "1.33.0",
+  "sprint": "30.8",
+  "release_status": "Beauty Pilot Foundation",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

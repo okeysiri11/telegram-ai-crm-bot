@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("30.7");
+    expect(webConfig.sprint).toBe("30.8");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -107,5 +107,28 @@ describe("Sprint 30.7 Pilot Hardening", () => {
       roles: ["owner"],
     });
     expect(v.some((j) => j.role === "owner" && j.roleMatch)).toBe(true);
+  });
+});
+
+describe("Sprint 30.8 Beauty Pilot Foundation", () => {
+  it("wires beauty prefixes and ecosystem template", async () => {
+    expect(webConfig.beautyOsPrefix).toContain("enterprise-bos");
+    expect(webConfig.beautyWorkspacePrefix).toContain("enterprise-bws");
+    expect(webConfig.beautyClientJourneyPrefix).toContain("enterprise-bcj");
+    expect(hubIntegrations.beautyOs).toContain("enterprise-bos");
+    const { ECOSYSTEM_REUSE_MATRIX } = await import("../../workspace/ecosystem-template");
+    expect(ECOSYSTEM_REUSE_MATRIX.authentication.beauty).toBe(true);
+    expect(ECOSYSTEM_REUSE_MATRIX.mission_control.automotive).toBe(true);
+    expect(moduleRegistry.get("beauty")?.apiHint).toContain("enterprise-bos");
+    expect(applicationRegistry.get("beauty_enterprise")?.route).toBe("/workspace/beauty");
+  });
+
+  it("routes beauty in role journeys", async () => {
+    const { PILOT_ROLE_JOURNEYS } = await import("../pilot/roleJourneys");
+    expect(PILOT_ROLE_JOURNEYS.every((j) => j.steps.some((s) => s.route.includes("beauty")))).toBe(
+      true,
+    );
+    const { assignModule } = await import("@/integrations/pilotFeedback");
+    expect(assignModule("salon appointment failed", "beauty")).toBe("beauty");
   });
 });

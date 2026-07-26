@@ -43,6 +43,7 @@ const OBS = hubIntegrations.monitoring;
 
 const MODULE_KEYWORDS: Record<string, string[]> = {
   automotive: ["auto", "lead", "crm", "dealer", "vehicle", "automotive"],
+  beauty: ["beauty", "salon", "appointment", "stylist", "bos", "bws", "bcj", "haircut"],
   identity: ["login", "jwt", "auth", "permission", "session", "token"],
   mission_control: ["mission", "executive", "cockpit"],
   concierge: ["concierge", "ai agent", "assistant"],

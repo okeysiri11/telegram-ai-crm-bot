@@ -39,6 +39,10 @@
 
 [PILOT_HARDENING_30_7.md](./PILOT_HARDENING_30_7.md) — Feedback, metrics, triage, stable Automotive pilot. Platform Builder **v1.32.0**.
 
+## Beauty Pilot Foundation (Sprint 30.8)
+
+[BEAUTY_PILOT_30_8.md](./BEAUTY_PILOT_30_8.md) — Ecosystem template + Beauty second pilot. Platform Builder **v1.33.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

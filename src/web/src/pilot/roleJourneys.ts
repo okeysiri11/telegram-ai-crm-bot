@@ -1,6 +1,7 @@
 /**
- * Pilot role journeys — Sprint 30.7.
+ * Pilot role journeys — Sprint 30.8.
  * Validates Owner / Manager / Sales / Employee / Customer paths using existing auth + routes.
+ * Dual pilots: Automotive + Beauty.
  */
 
 export type PilotRole = "owner" | "manager" | "sales" | "employee" | "customer";
@@ -24,25 +25,27 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
   {
     role: "owner",
     title: "Owner",
-    description: "Login → Pilot → Mission Control → Automotive workflow → Analytics",
+    description: "Login → Pilot → Mission Control → Automotive + Beauty workflows → Analytics",
     expectedRoleIds: ["platform_owner", "company_owner", "owner"],
     steps: [
       { id: "login", label: "Login", route: "/login", requiresAuth: false },
       { id: "pilot", label: "Pilot Dashboard", route: "/pilot", requiresAuth: true },
       { id: "mc", label: "Mission Control", route: "/platform-builder/mission-control", requiresAuth: true },
       { id: "auto", label: "Automotive workflow", route: "/workspace/auto", requiresAuth: true },
+      { id: "beauty", label: "Beauty workflow", route: "/workspace/beauty", requiresAuth: true },
       { id: "owner_portal", label: "Owner portal", route: "/portals/owner", requiresAuth: true },
     ],
   },
   {
     role: "manager",
     title: "Manager",
-    description: "Login → Workspace → CRM/Auto → Notifications → Pilot metrics",
+    description: "Login → Workspace → Auto/Beauty → Notifications → Pilot metrics",
     expectedRoleIds: ["role_org_owner", "manager", "company_owner"],
     steps: [
       { id: "login", label: "Login", route: "/login", requiresAuth: false },
       { id: "workspace", label: "Workspace", route: "/workspace", requiresAuth: true },
       { id: "auto", label: "Automotive", route: "/workspace/auto", requiresAuth: true },
+      { id: "beauty", label: "Beauty schedule", route: "/workspace/beauty", requiresAuth: true },
       { id: "employee", label: "Employee portal", route: "/portals/employee", requiresAuth: true },
       { id: "pilot", label: "Pilot Dashboard", route: "/pilot", requiresAuth: true },
     ],
@@ -50,11 +53,12 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
   {
     role: "sales",
     title: "Sales",
-    description: "Login → Automotive lead workflow → Tasks → Notifications",
+    description: "Login → Automotive lead workflow → Beauty CRM → Tasks → Notifications",
     expectedRoleIds: ["role_org_owner", "manager", "employee", "sales_agent"],
     steps: [
       { id: "login", label: "Login", route: "/login", requiresAuth: false },
       { id: "auto", label: "Lead → CRM → Task", route: "/workspace/auto", requiresAuth: true },
+      { id: "beauty", label: "Beauty client journey", route: "/workspace/beauty", requiresAuth: true },
       { id: "crm", label: "CRM module", route: "/workspace/crm", requiresAuth: true },
       { id: "pilot", label: "Feedback", route: "/pilot", requiresAuth: true },
     ],
@@ -62,11 +66,12 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
   {
     role: "employee",
     title: "Employee",
-    description: "Login → Employee portal → Workspace modules → Pilot feedback",
+    description: "Login → Employee portal → Beauty workspace → Pilot feedback",
     expectedRoleIds: ["employee", "role_org_owner", "manager"],
     steps: [
       { id: "login", label: "Login", route: "/login", requiresAuth: false },
       { id: "portal", label: "Employee portal", route: "/portals/employee", requiresAuth: true },
+      { id: "beauty", label: "Beauty calendar", route: "/workspace/beauty", requiresAuth: true },
       { id: "workspace", label: "Workspace", route: "/workspace", requiresAuth: true },
       { id: "pilot", label: "Pilot Dashboard", route: "/pilot", requiresAuth: true },
     ],
@@ -74,10 +79,11 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
   {
     role: "customer",
     title: "Customer",
-    description: "Customer portal auth (via Automotive workflow) → Customer portal shell",
+    description: "Portal auth (Automotive) + Beauty booking path → Customer portal shell",
     expectedRoleIds: ["customer", "role_org_owner", "platform_owner", "manager", "employee"],
     steps: [
       { id: "auto", label: "Portal auth in workflow", route: "/workspace/auto", requiresAuth: true },
+      { id: "beauty", label: "Beauty appointment flow", route: "/workspace/beauty", requiresAuth: true },
       { id: "portal", label: "Customer portal", route: "/portals/customer", requiresAuth: true },
     ],
   },

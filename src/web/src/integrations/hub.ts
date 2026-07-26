@@ -16,6 +16,10 @@ export const hubIntegrations = {
   navigationPlatform: webConfig.enpPrefix,
   pilotReadiness: "/api/enterprise-epr/v1",
   learningEngine: "/api/enterprise-ele/v1",
+  beautyOs: webConfig.beautyOsPrefix,
+  beautyWorkspace: webConfig.beautyWorkspacePrefix,
+  beautyClientJourney: webConfig.beautyClientJourneyPrefix,
+  aiMarketingOs: webConfig.aiMarketingOsPrefix,
 } as const;
 
 export async function fetchWebFoundationHealth(): Promise<Record<string, unknown>> {
