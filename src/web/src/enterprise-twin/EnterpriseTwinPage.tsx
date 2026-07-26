@@ -23,6 +23,7 @@ import {
 import { deriveIntegrationHub } from "@/enterprise-integrations/deriveIntegrations";
 import { deriveRuntime } from "@/ai-runtime/deriveRuntime";
 import { deriveDataFabric } from "@/enterprise-data-fabric/deriveFabric";
+import { derivePredictive } from "@/predictive-intelligence/derivePredictive";
 
 const KIND_LABEL: Record<TwinNodeKind, string> = {
   department: "Подразделение",
@@ -69,6 +70,10 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
   const fabricExec = useMemo(
     () => deriveDataFabric(snapshot, { company, notifications, roleId: user?.roleId || first.roleId }).executive,
     [snapshot, company, notifications, user?.roleId, first.roleId],
+  );
+  const predZones = useMemo(
+    () => derivePredictive(snapshot, notifications).twinZones,
+    [snapshot, notifications],
   );
 
   const nodes = useMemo(
@@ -119,6 +124,9 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
             </Link>
             <Link to="/platform-builder/data-fabric" className="eds-type-small text-[var(--eds-primary)]">
               Data Fabric →
+            </Link>
+            <Link to="/platform-builder/predictive" className="eds-type-small text-[var(--eds-primary)]">
+              Predictive →
             </Link>
           </div>
         </header>
@@ -184,6 +192,28 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
               items={[String(fabricExec.missingData)]}
               tone={fabricExec.missingData ? "risk" : "ok"}
             />
+          </div>
+        </Card>
+
+        {/* Sprint 33.4 — predictive zones on Twin */}
+        <Card className="etwin-impact" aria-label="Predictive zones">
+          <div className="etwin-section-head">
+            <h2>Predictive Zones</h2>
+            <Link to="/platform-builder/predictive" className="eds-type-small text-[var(--eds-primary)]">
+              Forecast →
+            </Link>
+          </div>
+          <div className="etwin-nodes">
+            {predZones.map((z) => (
+              <div
+                key={z.id}
+                className={`etwin-node etwin-node--${z.tone === "risk" || z.tone === "bottleneck" ? "risk" : z.tone === "active" ? "active" : "idle"}`}
+              >
+                <span className="etwin-node-kind">{z.tone}</span>
+                <strong>{z.label}</strong>
+                <span className="eds-type-small">{z.detail}</span>
+              </div>
+            ))}
           </div>
         </Card>
 

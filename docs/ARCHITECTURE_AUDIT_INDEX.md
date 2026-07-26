@@ -153,6 +153,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_DATA_FABRIC_33_3.md](./ENTERPRISE_DATA_FABRIC_33_3.md) — Unified related data model, lineage, impact. Platform Builder **v1.59.0**.
 
+## Predictive Intelligence & Scenario Simulator (Sprint 33.4)
+
+[PREDICTIVE_INTELLIGENCE_33_4.md](./PREDICTIVE_INTELLIGENCE_33_4.md) — Forecasts, What-If scenarios, Twin zones. Platform Builder **v1.60.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

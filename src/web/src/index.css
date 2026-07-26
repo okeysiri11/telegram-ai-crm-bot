@@ -4,6 +4,7 @@
 @import "./enterprise-integrations/enterprise-integrations.css";
 @import "./ai-runtime/ai-runtime.css";
 @import "./enterprise-data-fabric/enterprise-data-fabric.css";
+@import "./predictive-intelligence/predictive-intelligence.css";
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -1221,6 +1222,8 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Sprint 33.4 — Predictive Intelligence (styles in ./predictive-intelligence/predictive-intelligence.css) */
 
 /* Sprint 33.3 — Enterprise Data Fabric (styles in ./enterprise-data-fabric/enterprise-data-fabric.css) */
 

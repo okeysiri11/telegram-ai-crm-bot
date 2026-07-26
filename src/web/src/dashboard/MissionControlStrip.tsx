@@ -12,6 +12,7 @@ import { liveUpdates } from "../../workspace/realtime/liveUpdates";
 import { PLATFORM_BUILDER_API } from "../../platform-builder/types";
 import { RuntimeMonitorCompact } from "@/ai-runtime";
 import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
+import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 
 type Dict = Record<string, unknown>;
 
@@ -72,6 +73,7 @@ export function MissionControlStrip() {
       <div className="mb-4">
         <RuntimeMonitorCompact />
         <DataFabricOverviewCompact />
+        <PredictiveWidgetCompact />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="cc-stat">

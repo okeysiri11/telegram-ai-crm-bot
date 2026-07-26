@@ -17,6 +17,7 @@ import { EnterpriseTwinPage } from "@/enterprise-twin";
 import { EnterpriseIntegrationHubPage } from "@/enterprise-integrations";
 import { AIRuntimePage } from "@/ai-runtime";
 import { EnterpriseDataFabricPage } from "@/enterprise-data-fabric";
+import { PredictiveIntelligencePage } from "@/predictive-intelligence";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -204,6 +205,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <EnterpriseDataFabricPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/predictive"
+        element={
+          <ProtectedRoute>
+            <PredictiveIntelligencePage />
           </ProtectedRoute>
         }
       />

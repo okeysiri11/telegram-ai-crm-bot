@@ -1,4 +1,4 @@
-"""Tests — AI Runtime & Orchestration Center (Sprint 33.2)."""
+"""Tests — Predictive Intelligence & Scenario Simulator (Sprint 33.4)."""
 
 from __future__ import annotations
 
@@ -10,77 +10,81 @@ from applications.platform_builder import platform_builder
 ROOT = Path(__file__).resolve().parents[1]
 
 DOCS = [
-    "AI_RUNTIME_ORCHESTRATION_33_2.md",
-    "RELEASE_NOTES_33_2.md",
+    "PREDICTIVE_INTELLIGENCE_33_4.md",
+    "RELEASE_NOTES_33_4.md",
 ]
 
 
-def test_33_2_docs_exist():
+def test_33_4_docs_exist():
     docs = ROOT / "docs"
     for name in DOCS:
         path = docs / name
         assert path.exists(), name
-        assert "33.2" in path.read_text()
+        assert "33.4" in path.read_text()
     index = (docs / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
-    assert "AI_RUNTIME_ORCHESTRATION_33_2" in index
-    report = (docs / "AI_RUNTIME_ORCHESTRATION_33_2.md").read_text()
-    assert "No new AI Core" in report
-    assert "Runtime Engine" in report
-    assert "Live AI Queue" in report
+    assert "PREDICTIVE_INTELLIGENCE_33_4" in index
+    report = (docs / "PREDICTIVE_INTELLIGENCE_33_4.md").read_text()
+    assert "No new Prediction Engine" in report
+    assert "Scenario Simulator" in report
+    assert "What If" in report
 
 
-def test_platform_version_33_2():
+def test_platform_version_33_4():
     health = platform_builder.health()
     assert health["application_version"] == "1.60.0"
     assert health["sprint"] == "33.4"
     assert "Predictive Intelligence" in health["release_status"]
 
 
-def test_runtime_wired():
+def test_predictive_wired():
     app = (ROOT / "src" / "web" / "src" / "App.tsx").read_text()
-    assert 'path="/platform-builder/runtime"' in app
-    assert "AIRuntimePage" in app
+    assert 'path="/platform-builder/predictive"' in app
+    assert "PredictiveIntelligencePage" in app
     full = (ROOT / "src" / "web" / "src" / "layouts" / "FullLayout.tsx").read_text()
-    assert "AIRuntimeStrip" in full
-    derive = (ROOT / "src" / "web" / "src" / "ai-runtime" / "deriveRuntime.ts").read_text()
+    assert "PredictiveStrip" in full
+    derive = (ROOT / "src" / "web" / "src" / "predictive-intelligence" / "derivePredictive.ts").read_text()
     for token in (
-        "deriveRuntime",
-        "ORCH_CHAIN",
-        "active",
-        "waiting",
-        "completed",
-        "failed",
-        "paused",
-        "RuntimeHealth",
+        "derivePredictive",
+        "WHAT_IF_SCENARIOS",
+        "grow_sales",
+        "change_workflow",
+        "disable_integration",
+        "RiskSignal",
+        "OpportunitySignal",
+        "twinZones",
     ):
         assert token in derive
-    page = (ROOT / "src" / "web" / "src" / "ai-runtime" / "AIRuntimePage.tsx").read_text()
+    page = (
+        ROOT / "src" / "web" / "src" / "predictive-intelligence" / "PredictiveIntelligencePage.tsx"
+    ).read_text()
     for token in (
-        "Runtime Dashboard",
-        "Live AI Queue",
-        "Orchestration Timeline",
-        "Execution Monitor",
-        "Runtime Health",
-        "RuntimeMonitorCompact",
+        "Predictive Dashboard",
+        "Scenario Simulator",
+        "Risk Detection",
+        "Opportunity Detection",
+        "Executive Forecast",
+        "PredictiveWidgetCompact",
     ):
         assert token in page
-    css = (ROOT / "src" / "web" / "src" / "ai-runtime" / "ai-runtime.css").read_text()
-    assert "Sprint 33.2" in css
-    assert "art-" in css
+    css = (
+        ROOT / "src" / "web" / "src" / "predictive-intelligence" / "predictive-intelligence.css"
+    ).read_text()
+    assert "Sprint 33.4" in css
+    assert "pred-" in css
     idx = (ROOT / "src" / "web" / "src" / "index.css").read_text()
-    assert "ai-runtime.css" in idx
+    assert "predictive-intelligence.css" in idx
     mc = (
         ROOT / "src" / "web" / "platform-builder" / "mission-control" / "MissionControlLivePanel.tsx"
     ).read_text()
-    assert "RuntimeMonitorCompact" in mc
+    assert "PredictiveWidgetCompact" in mc
     twin = (ROOT / "src" / "web" / "src" / "enterprise-twin" / "EnterpriseTwinPage.tsx").read_text()
-    assert "deriveRuntime" in twin
-    assert "Live Runtime" in twin
+    assert "derivePredictive" in twin
+    assert "Predictive Zones" in twin
     qa = (ROOT / "src" / "web" / "command-center" / "managers" / "quickActions.ts").read_text()
-    assert "/platform-builder/runtime" in qa
+    assert "/platform-builder/predictive" in qa
 
 
-def test_config_manifest_33_2():
+def test_config_manifest_33_4():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
     assert 'application_version: str = "1.60.0"' in cfg
     assert 'sprint: str = "33.4"' in cfg

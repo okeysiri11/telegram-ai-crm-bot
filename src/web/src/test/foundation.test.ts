@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("33.3");
+    expect(webConfig.sprint).toBe("33.4");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -866,5 +866,41 @@ describe("Sprint 33.3 Enterprise Data Fabric", () => {
     const exp = fabric.explore("knowledge");
     expect(exp.related.length).toBeGreaterThan(0);
     expect(exp.aiUsing.length).toBeGreaterThan(0);
+  });
+});
+
+describe("Sprint 33.4 Predictive Intelligence", () => {
+  it("forecasts metrics, scenarios, risks, twin zones", async () => {
+    const { derivePredictive, WHAT_IF_SCENARIOS } = await import("../predictive-intelligence/derivePredictive");
+    expect(WHAT_IF_SCENARIOS.map((s) => s.id)).toEqual(
+      expect.arrayContaining(["grow_sales", "change_workflow", "disable_integration"]),
+    );
+    const pred = derivePredictive({
+      updatedAt: new Date().toISOString(),
+      activity: [
+        { id: "1", kind: "crm", title: "Deal", detail: "", at: new Date().toISOString(), source: "seed" },
+        { id: "2", kind: "deal", title: "Won", detail: "", at: new Date().toISOString(), source: "seed" },
+      ],
+      aiOps: {
+        running: ["Sales Specialist", "Ops Concierge"],
+        queue: ["A", "B"],
+        recent: ["x"],
+        status: "ok",
+        errors: ["timeout"],
+        completed: ["Lead"],
+      },
+      timeline: [],
+      health: [{ id: "crm" as const, label: "CRM", ok: true, detail: "ok" }],
+      recommendations: [],
+      mcOk: true,
+      activeModules: ["crm", "ai"],
+    });
+    expect(pred.forecasts.length).toBe(5);
+    expect(pred.forecasts.some((f) => f.id === "kpi")).toBe(true);
+    expect(pred.scenarios.length).toBe(3);
+    expect(pred.risks.length).toBeGreaterThan(0);
+    expect(pred.opportunities.length).toBeGreaterThan(0);
+    expect(pred.executive.likelyToday.length).toBeGreaterThan(0);
+    expect(pred.twinZones.length).toBe(4);
   });
 });

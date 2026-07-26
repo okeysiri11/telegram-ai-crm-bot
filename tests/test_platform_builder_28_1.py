@@ -41,8 +41,8 @@ def reset_store():
 
 def test_version_platform_builder_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.59.0"
-    assert health["sprint"] == "33.3"
+    assert health["application_version"] == "1.60.0"
+    assert health["sprint"] == "33.4"
     assert health["platform_builder_ready"] is True
     assert health["builder_framework_ready"] is True
     assert health["builder_academy_ready"] is True
@@ -143,7 +143,7 @@ def test_framework_academy_menu_god_mode():
 async def test_api_platform_builder(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.59.0"
+    assert body["application_version"] == "1.60.0"
     assert body["platform_builder_ready"] is True
 
     boot = await client.post(f"{PREFIX}/bootstrap", json={})
@@ -217,5 +217,5 @@ def test_docs_and_web_module_28_1():
     assert "God Mode" in menu
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.59.0"' in manifest
-    assert "33.3" in manifest
+    assert '"application_version": "1.60.0"' in manifest
+    assert "33.4" in manifest

@@ -15,6 +15,7 @@ import { WORKSPACE_HEALTH_PROBES } from "@/pilot/webCompletionAudit";
 import { pilotMetrics, type PilotMetricsSnapshot } from "@/integrations/pilotMetrics";
 import { RuntimeMonitorCompact } from "@/ai-runtime";
 import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
+import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 
 type Dict = Record<string, unknown>;
 
@@ -158,6 +159,7 @@ export function MissionControlLivePanel() {
 
       <RuntimeMonitorCompact />
       <DataFabricOverviewCompact />
+      <PredictiveWidgetCompact />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="System overview">
