@@ -81,9 +81,9 @@ def test_bidex_docs_exist():
 
 def test_platform_bidex_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.55.0"
-    assert health["sprint"] == "32.9"
-    assert health["release_status"] == "Enterprise Marketplace & Solution Hub"
+    assert health["application_version"] == "1.56.0"
+    assert health["sprint"] == "33.0"
+    assert health["release_status"] == "Enterprise Digital Twin"
 
 
 @pytest.mark.asyncio
@@ -269,7 +269,7 @@ def test_bidex_web_and_reuse_matrix():
     ):
         assert needle in wf, needle
     cfg = (web / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "32.9"' in cfg
+    assert 'sprint: "33.0"' in cfg
     assert "financeDigitalAssetsPrefix" in cfg
     assert "cryptoEnterprisePrefix" in cfg
     tmpl = (web / "workspace" / "ecosystem-template" / "index.ts").read_text()
@@ -287,8 +287,8 @@ def test_reuse_docs_and_manifest():
     report = (ROOT / "docs" / "SPRINT_REPORT_31_3.md").read_text()
     assert "Drone" in report
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.55.0"' in manifest
-    assert "32.9" in manifest
-    assert "Enterprise Marketplace & Solution Hub" in manifest
+    assert '"application_version": "1.56.0"' in manifest
+    assert "33.0" in manifest
+    assert "Enterprise Digital Twin" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "BIDEX_PILOT_EXECUTION_31_3" in index

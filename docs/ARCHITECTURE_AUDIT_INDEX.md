@@ -137,6 +137,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_MARKETPLACE_32_9.md](./ENTERPRISE_MARKETPLACE_32_9.md) — One-click solutions & Enterprise Packs. Platform Builder **v1.55.0**.
 
+## Enterprise Digital Twin (Sprint 33.0)
+
+[ENTERPRISE_DIGITAL_TWIN_33_0.md](./ENTERPRISE_DIGITAL_TWIN_33_0.md) — Living organization mirror (map, graph, heatmap, impact, timeline). Platform Builder **v1.56.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

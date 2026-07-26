@@ -62,7 +62,7 @@ const KB_HINT: SmartSuggestion = {
 export function sectionKeyFromPath(pathname: string): string {
   if (pathname.includes("/crm") || pathname.includes("sales")) return "crm";
   if (pathname.includes("/knowledge") || pathname.includes("/docs")) return "knowledge";
-  if (pathname.includes("enterprise-city") || pathname.includes("digital-twin")) return "city";
+  if (pathname.includes("enterprise-city") || pathname.includes("digital-twin") || pathname.includes("enterprise-twin")) return "city";
   if (pathname.includes("intelligence") || pathname.includes("analytics")) return "analytics";
   if (pathname.includes("/dashboard")) return "dashboard";
   if (pathname.includes("ai-team") || pathname.includes("/concierge") || pathname.includes("/workspace/ai"))

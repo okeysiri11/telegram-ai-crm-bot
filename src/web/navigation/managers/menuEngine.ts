@@ -172,6 +172,7 @@ const menu: MenuItem[] = [
       { id: "nav_pb_nav_intel", name: "Navigation Intelligence", icon: "analytics", route: "/platform-builder/navigation-intelligence", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_workflow_intel", name: "Workflow Intelligence", icon: "workflow", route: "/platform-builder/workflow-intelligence", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_digital_twin", name: "Digital Twin", icon: "analytics", route: "/platform-builder/digital-twin", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_enterprise_twin", name: "Enterprise Twin", icon: "analytics", route: "/enterprise-twin", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_twin_intelligence", name: "Twin Intelligence", icon: "analytics", route: "/platform-builder/twin-intelligence", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_strategy", name: "Strategy Engine", icon: "analytics", route: "/platform-builder/strategy", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_mission_control", name: "Mission Control", icon: "analytics", route: "/platform-builder/mission-control", module: "platform_builder", permissions: ["read"], status: "active" },

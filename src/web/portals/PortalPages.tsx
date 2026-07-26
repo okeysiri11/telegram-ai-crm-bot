@@ -3,7 +3,7 @@ import { PortalLayout, PortalLinksCard } from "./PortalLayout";
 const SHARED = [
   { label: "Workspace home", to: "/workspace" },
   { label: "Mission Control", to: "/platform-builder/mission-control" },
-  { label: "Digital Twin", to: "/platform-builder/digital-twin" },
+  { label: "Digital Twin", to: "/enterprise-twin" },
   { label: "Business Ecosystems", to: "/platform-builder/business-ecosystem" },
 ];
 

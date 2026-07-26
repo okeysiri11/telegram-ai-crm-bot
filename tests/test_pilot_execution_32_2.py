@@ -63,9 +63,9 @@ def test_32_2_docs_exist():
 
 def test_platform_version_32_2():
     health = platform_builder.health()
-    assert health["application_version"] == "1.55.0"
-    assert health["sprint"] == "32.9"
-    assert "Enterprise Marketplace" in health["release_status"]
+    assert health["application_version"] == "1.56.0"
+    assert health["sprint"] == "33.0"
+    assert "Enterprise Digital Twin" in health["release_status"]
 
 
 def test_pilot_execution_page_and_route():
@@ -104,11 +104,11 @@ async def test_tenancy_and_epd_for_release_phase(client):
 
 def test_config_manifest_32_2():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
-    assert 'application_version: str = "1.55.0"' in cfg
-    assert 'sprint: str = "32.9"' in cfg
+    assert 'application_version: str = "1.56.0"' in cfg
+    assert 'sprint: str = "33.0"' in cfg
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.55.0"' in manifest
-    assert '"sprint": "32.9"' in manifest
+    assert '"application_version": "1.56.0"' in manifest
+    assert '"sprint": "33.0"' in manifest
 
 
 def test_architecture_index_lists_32_2():

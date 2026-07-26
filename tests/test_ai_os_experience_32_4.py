@@ -30,9 +30,9 @@ def test_32_4_docs_exist():
 
 def test_platform_version_32_4():
     health = platform_builder.health()
-    assert health["application_version"] == "1.55.0"
-    assert health["sprint"] == "32.9"
-    assert health["release_status"] == "Enterprise Marketplace & Solution Hub"
+    assert health["application_version"] == "1.56.0"
+    assert health["sprint"] == "33.0"
+    assert health["release_status"] == "Enterprise Digital Twin"
 
 
 def test_ai_os_chrome_wired():
@@ -74,15 +74,15 @@ def test_ai_os_chrome_wired():
 
 def test_config_manifest_32_4():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
-    assert 'application_version: str = "1.55.0"' in cfg
-    assert 'sprint: str = "32.9"' in cfg
-    assert "Enterprise Marketplace & Solution Hub" in cfg
+    assert 'application_version: str = "1.56.0"' in cfg
+    assert 'sprint: str = "33.0"' in cfg
+    assert "Enterprise Digital Twin" in cfg
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.55.0"' in manifest
-    assert '"sprint": "32.9"' in manifest
-    assert "Enterprise Marketplace & Solution Hub" in manifest
+    assert '"application_version": "1.56.0"' in manifest
+    assert '"sprint": "33.0"' in manifest
+    assert "Enterprise Digital Twin" in manifest
     web = (ROOT / "src" / "web" / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "32.9"' in web
+    assert 'sprint: "33.0"' in web
     types = (ROOT / "src" / "web" / "platform-builder" / "types.ts").read_text()
-    assert 'PLATFORM_BUILDER_VERSION = "1.55.0"' in types
-    assert 'PLATFORM_BUILDER_SPRINT = "32.9"' in types
+    assert 'PLATFORM_BUILDER_VERSION = "1.56.0"' in types
+    assert 'PLATFORM_BUILDER_SPRINT = "33.0"' in types

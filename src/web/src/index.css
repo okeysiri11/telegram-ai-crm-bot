@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../design-system/styles/tokens.css";
+@import "./enterprise-twin/enterprise-twin.css";
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -1217,6 +1218,8 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Sprint 33.0 — Enterprise Digital Twin (styles in ./enterprise-twin/enterprise-twin.css) */
 
 /* Sprint 32.9 — Enterprise Marketplace & Solution Hub */
 .mkt-strip {

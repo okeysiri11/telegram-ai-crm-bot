@@ -115,7 +115,7 @@ export function EnterpriseCityPage() {
                 Command Center
               </Button>
             </Link>
-            <Link to="/platform-builder/digital-twin">
+            <Link to="/enterprise-twin">
               <Button size="sm" variant="secondary">
                 Digital Twin
               </Button>

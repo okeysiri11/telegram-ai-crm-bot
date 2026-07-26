@@ -13,6 +13,7 @@ import { EnterpriseCityPage } from "@/enterprise-city";
 import { WorkflowCenterPage } from "@/enterprise-workflow";
 import { AIBuilderStudioPage } from "@/ai-builder-studio";
 import { EnterpriseMarketplacePage } from "@/enterprise-marketplace";
+import { EnterpriseTwinPage } from "@/enterprise-twin";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -168,6 +169,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <EnterpriseMarketplacePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/enterprise-twin"
+        element={
+          <ProtectedRoute>
+            <EnterpriseTwinPage />
           </ProtectedRoute>
         }
       />

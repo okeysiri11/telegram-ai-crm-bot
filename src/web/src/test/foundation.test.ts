@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.9");
+    expect(webConfig.sprint).toBe("33.0");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -664,5 +664,54 @@ describe("Sprint 32.9 Enterprise Marketplace", () => {
     const rec = installSolution(sol!);
     expect(rec.imported.team).toBe(true);
     expect(resolveStatus(sol!)).toBe("installed");
+  });
+});
+
+describe("Sprint 33.0 Enterprise Digital Twin", () => {
+  it("derives org map, graph, heatmap, impact, timeline", async () => {
+    const { deriveEnterpriseTwin, RELATIONSHIP_CHAIN } = await import("../enterprise-twin/deriveTwin");
+    const { SEED_ACTIVITY } = await import("../live-ops/liveEnterpriseCatalog");
+    const snapshot = {
+      updatedAt: new Date().toISOString(),
+      activity: SEED_ACTIVITY,
+      aiOps: {
+        running: ["Sales Ops"],
+        queue: ["Queue A"],
+        recent: ["Brief ready"],
+        status: "ok",
+        errors: [],
+        completed: ["Lead intake"],
+      },
+      timeline: [],
+      health: [
+        { id: "crm" as const, label: "CRM", ok: true, detail: "ok" },
+        { id: "knowledge" as const, label: "Knowledge", ok: true, detail: "ok" },
+        { id: "mission_control" as const, label: "MC", ok: true, detail: "ok" },
+      ],
+      recommendations: [],
+      mcOk: true,
+      activeModules: ["crm", "ai", "beauty"],
+    };
+    const twin = deriveEnterpriseTwin(snapshot, {
+      company: "Demo Corp",
+      notifications: [{ id: "1", kind: "task" as const, title: "T", body: "b", createdAt: "", read: false }],
+      roleId: "owner",
+    });
+    expect(RELATIONSHIP_CHAIN.map((s) => s.id)).toEqual([
+      "clients",
+      "crm",
+      "sales",
+      "documents",
+      "finance",
+      "knowledge",
+      "ai_team",
+    ]);
+    expect(twin.nodes.length).toBeGreaterThan(10);
+    expect(twin.nodes.some((n) => n.kind === "ecosystem")).toBe(true);
+    expect(twin.heatmap.length).toBeGreaterThan(0);
+    expect(twin.executive.happening.length).toBeGreaterThan(0);
+    expect(twin.timeline.length).toBeGreaterThan(0);
+    expect(twin.impacts.ai_team?.effects.length).toBeGreaterThan(0);
+    expect(twin.graph.length).toBe(RELATIONSHIP_CHAIN.length - 1);
   });
 });
