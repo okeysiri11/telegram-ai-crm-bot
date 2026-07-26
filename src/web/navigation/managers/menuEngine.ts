@@ -136,6 +136,7 @@ const menu: MenuItem[] = [
       { id: "nav_pb_digital_twin", name: "Digital Twin", icon: "analytics", route: "/platform-builder/digital-twin", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_twin_intelligence", name: "Twin Intelligence", icon: "analytics", route: "/platform-builder/twin-intelligence", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_strategy", name: "Strategy Engine", icon: "analytics", route: "/platform-builder/strategy", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_pb_mission_control", name: "Mission Control", icon: "analytics", route: "/platform-builder/mission-control", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_crm", name: "CRM Builder", icon: "crm", route: "/platform-builder/crm", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_erp", name: "ERP Builder", icon: "erp", route: "/platform-builder/erp", module: "platform_builder", permissions: ["read"], status: "beta" },
       { id: "nav_pb_workflow", name: "Workflow Builder", icon: "workflow", route: "/platform-builder/workflow", module: "platform_builder", permissions: ["read"], status: "beta" },

@@ -39,8 +39,8 @@ def reset_store():
 
 def test_visual_behavior_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.25.0"
-    assert health["sprint"] == "29.18"
+    assert health["application_version"] == "1.26.0"
+    assert health["sprint"] == "29.19"
     assert health["visual_behavior_engine_ready"] is True
     assert health["animation_framework_ready"] is True
     assert health["transition_engine_ready"] is True
@@ -104,7 +104,7 @@ def test_transitions_events_wait_create():
 async def test_api_visual_behavior(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.25.0"
+    assert body["application_version"] == "1.26.0"
     assert body["visual_behavior_engine_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/visual-behavior/catalog")
@@ -132,5 +132,5 @@ def test_docs_visual_behavior_29_3():
     for key in ("Business logic is NOT allowed", "Searching", "Transition"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.25.0"' in manifest
-    assert "29.18" in manifest
+    assert '"application_version": "1.26.0"' in manifest
+    assert "29.19" in manifest

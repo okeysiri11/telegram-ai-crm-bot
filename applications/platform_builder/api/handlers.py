@@ -3817,3 +3817,184 @@ async def strategy_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.19 — Enterprise Mission Control / Executive Operations Center ---
+
+
+async def mission_control_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.mission_control.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.mission_control.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.mission_control.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_operations_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.mission_control.unified_operations(
+                    action=body.get("action") or "aggregate"
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.mission_control.unified_operations())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_overview_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.mission_control.executive_overview(
+                    dimension=body.get("dimension")
+                ),
+                status=201,
+            )
+        dimension = request.rel_url.query.get("dimension")
+        return json_response(
+            platform_builder.mission_control.executive_overview(dimension=dimension)
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_activity_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.mission_control.global_activity(stream=body.get("stream")),
+                status=201,
+            )
+        stream = request.rel_url.query.get("stream")
+        return json_response(platform_builder.mission_control.global_activity(stream=stream))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_panels_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.mission_control.mission_panels(panel=body.get("panel")),
+                status=201,
+            )
+        panel = request.rel_url.query.get("panel")
+        return json_response(platform_builder.mission_control.mission_panels(panel=panel))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_decisions_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.mission_control.decision_center(feature=body.get("feature")),
+                status=201,
+            )
+        feature = request.rel_url.query.get("feature")
+        return json_response(platform_builder.mission_control.decision_center(feature=feature))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_resources_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.mission_control.resource_command(view=body.get("view")),
+                status=201,
+            )
+        view = request.rel_url.query.get("view")
+        return json_response(platform_builder.mission_control.resource_command(view=view))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_timeline_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.mission_control.mission_timeline(segment=body.get("segment")),
+                status=201,
+            )
+        segment = request.rel_url.query.get("segment")
+        return json_response(platform_builder.mission_control.mission_timeline(segment=segment))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_performance_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.mission_control.performance(action=body.get("action")),
+                status=201,
+            )
+        return json_response(platform_builder.mission_control.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.mission_control.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_wizard_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.mission_control.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.mission_control.update_session(session_id, body))
+        return json_response(platform_builder.mission_control.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.mission_control.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def mission_control_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.mission_control.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

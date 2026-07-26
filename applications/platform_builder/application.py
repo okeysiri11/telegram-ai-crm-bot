@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.18."""
+"""Platform Builder application facade — Sprint 29.19."""
 
 from __future__ import annotations
 
@@ -29,6 +29,7 @@ from applications.platform_builder.workflow_intelligence.engine import WorkflowI
 from applications.platform_builder.digital_twin.engine import DigitalTwinEngine
 from applications.platform_builder.twin_intelligence.engine import TwinIntelligenceEngine
 from applications.platform_builder.strategy_engine.engine import StrategyEngine
+from applications.platform_builder.mission_control.engine import MissionControlEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -86,6 +87,7 @@ class PlatformBuilderApplication:
         digital_twin: DigitalTwinEngine | None = None,
         twin_intelligence: TwinIntelligenceEngine | None = None,
         strategy: StrategyEngine | None = None,
+        mission_control: MissionControlEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -118,6 +120,7 @@ class PlatformBuilderApplication:
         self.digital_twin = digital_twin or DigitalTwinEngine(self.store)
         self.twin_intelligence = twin_intelligence or TwinIntelligenceEngine(self.store)
         self.strategy = strategy or StrategyEngine(self.store)
+        self.mission_control = mission_control or MissionControlEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -150,6 +153,7 @@ class PlatformBuilderApplication:
         self.digital_twin = DigitalTwinEngine(self.store)
         self.twin_intelligence = TwinIntelligenceEngine(self.store)
         self.strategy = StrategyEngine(self.store)
+        self.mission_control = MissionControlEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -278,6 +282,10 @@ class PlatformBuilderApplication:
             "executive_decision_ready": True,
             "enterprise_scorecard_ready": True,
             "decision_support_ready": True,
+            "mission_control_ready": True,
+            "executive_operations_ready": True,
+            "mission_dashboard_ready": True,
+            "executive_cockpit_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -312,6 +320,9 @@ class PlatformBuilderApplication:
                 web / "pages" / "TwinIntelligencePage.tsx"
             ).exists(),
             "strategy_page_exists": (web / "pages" / "StrategyEnginePage.tsx").exists(),
+            "mission_control_page_exists": (
+                web / "pages" / "MissionControlPage.tsx"
+            ).exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -455,6 +466,10 @@ class PlatformBuilderApplication:
             "executive_decision_ready": True,
             "enterprise_scorecard_ready": True,
             "decision_support_ready": True,
+            "mission_control_ready": True,
+            "executive_operations_ready": True,
+            "mission_dashboard_ready": True,
+            "executive_cockpit_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -544,6 +559,11 @@ class PlatformBuilderApplication:
                 "recommendation_registry": self.config.recommendation_registry,
                 "scorecard_engine": self.config.scorecard_engine,
                 "decision_support_api": self.config.decision_support_api,
+                "mission_control": self.config.mission_control,
+                "executive_operations_center": self.config.executive_operations_center,
+                "mission_registry": self.config.mission_registry,
+                "executive_api": self.config.executive_api,
+                "mission_dashboard": self.config.mission_dashboard,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -576,6 +596,7 @@ class PlatformBuilderApplication:
             "digital_twin": self.digital_twin.status(),
             "twin_intelligence": self.twin_intelligence.status(),
             "strategy": self.strategy.status(),
+            "mission_control": self.mission_control.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

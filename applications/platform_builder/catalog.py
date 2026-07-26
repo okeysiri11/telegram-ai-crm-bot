@@ -421,6 +421,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Strategic analysis and executive recommendations — never executes business logic.",
     },
     {
+        "id": "mission_control",
+        "name": "Enterprise Mission Control",
+        "route": "/platform-builder/mission-control",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Unified executive operating center — aggregates existing services, never replaces modules.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

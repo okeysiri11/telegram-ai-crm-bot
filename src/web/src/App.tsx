@@ -66,6 +66,7 @@ import {
   DigitalTwinPage,
   TwinIntelligencePage,
   StrategyEnginePage,
+  MissionControlPage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -388,6 +389,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <StrategyEnginePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/mission-control"
+        element={
+          <ProtectedRoute>
+            <MissionControlPage />
           </ProtectedRoute>
         }
       />

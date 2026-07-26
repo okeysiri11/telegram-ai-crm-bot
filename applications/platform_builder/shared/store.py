@@ -203,6 +203,13 @@ class PlatformBuilderStore:
         self.strategy_recommendation_registries: EntityStore = EntityStore()
         self.scorecard_engines: EntityStore = EntityStore()
         self.decision_support_apis: EntityStore = EntityStore()
+        # Sprint 29.19 — Enterprise Mission Control
+        self.mission_control_wizard_sessions: EntityStore = EntityStore()
+        self.mission_controls: EntityStore = EntityStore()
+        self.executive_operations_centers: EntityStore = EntityStore()
+        self.mission_registries: EntityStore = EntityStore()
+        self.executive_apis: EntityStore = EntityStore()
+        self.mission_dashboards: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

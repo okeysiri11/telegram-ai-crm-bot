@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.25.0",
-  "sprint": "29.18",
-  "release_status": "Enterprise Strategy Engine",
+  "application_version": "1.26.0",
+  "sprint": "29.19",
+  "release_status": "Enterprise Mission Control",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -94,5 +94,10 @@
   "executive_registry": "1.0",
   "recommendation_registry": "1.0",
   "scorecard_engine": "1.0",
-  "decision_support_api": "1.0"
+  "decision_support_api": "1.0",
+  "mission_control": "1.0",
+  "executive_operations_center": "1.0",
+  "mission_registry": "1.0",
+  "executive_api": "1.0",
+  "mission_dashboard": "1.0"
 }
