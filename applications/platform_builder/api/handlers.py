@@ -3139,3 +3139,150 @@ async def nav_intel_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.15 — Workflow Intelligence OS / Global Process Orchestrator ---
+
+
+async def workflow_intel_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workflow_intelligence.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workflow_intelligence.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workflow_intelligence.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_graph_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.workflow_intelligence.workflow_graph(body.get("type")),
+                status=201,
+            )
+        graph_type = request.rel_url.query.get("type")
+        return json_response(platform_builder.workflow_intelligence.workflow_graph(graph_type))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_dependencies_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workflow_intelligence.dependency_analysis())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_bottlenecks_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workflow_intelligence.bottleneck_detection())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_critical_path_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workflow_intelligence.critical_path())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_resources_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workflow_intelligence.resource_coordination())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_recommendations_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workflow_intelligence.workflow_recommendations())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_orchestration_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.workflow_intelligence.enterprise_orchestration(
+                    body.get("target")
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.workflow_intelligence.enterprise_orchestration())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_performance_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.workflow_intelligence.performance(action=body.get("action")),
+                status=201,
+            )
+        return json_response(platform_builder.workflow_intelligence.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.workflow_intelligence.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_wizard_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(
+                platform_builder.workflow_intelligence.start_session(),
+                status=201,
+            )
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(
+                platform_builder.workflow_intelligence.update_session(session_id, body)
+            )
+        return json_response(platform_builder.workflow_intelligence.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.workflow_intelligence.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def workflow_intel_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.workflow_intelligence.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

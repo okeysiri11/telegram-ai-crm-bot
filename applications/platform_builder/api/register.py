@@ -746,3 +746,67 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/navigation-intelligence/sessions/{{session_id}}/create",
         handlers.nav_intel_create_handler,
     )
+
+    # Sprint 29.15 — Workflow Intelligence OS / Global Process Orchestrator
+    app.router.add_get(f"{prefix}/workflow-intelligence/catalog", handlers.workflow_intel_catalog_handler)
+    app.router.add_get(f"{prefix}/workflow-intelligence/status", handlers.workflow_intel_status_handler)
+    app.router.add_get(f"{prefix}/workflow-intelligence/engine", handlers.workflow_intel_engine_handler)
+    app.router.add_get(f"{prefix}/workflow-intelligence/graph", handlers.workflow_intel_graph_handler)
+    app.router.add_post(f"{prefix}/workflow-intelligence/graph", handlers.workflow_intel_graph_handler)
+    app.router.add_get(
+        f"{prefix}/workflow-intelligence/dependencies",
+        handlers.workflow_intel_dependencies_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/workflow-intelligence/bottlenecks",
+        handlers.workflow_intel_bottlenecks_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/workflow-intelligence/critical-path",
+        handlers.workflow_intel_critical_path_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/workflow-intelligence/resources",
+        handlers.workflow_intel_resources_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/workflow-intelligence/recommendations",
+        handlers.workflow_intel_recommendations_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/workflow-intelligence/orchestration",
+        handlers.workflow_intel_orchestration_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/workflow-intelligence/orchestration",
+        handlers.workflow_intel_orchestration_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/workflow-intelligence/performance",
+        handlers.workflow_intel_performance_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/workflow-intelligence/performance",
+        handlers.workflow_intel_performance_handler,
+    )
+    app.router.add_get(f"{prefix}/workflow-intelligence/ui", handlers.workflow_intel_ui_handler)
+    app.router.add_post(
+        f"{prefix}/workflow-intelligence/sessions",
+        handlers.workflow_intel_wizard_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/workflow-intelligence/sessions/{{session_id}}",
+        handlers.workflow_intel_wizard_session_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/workflow-intelligence/sessions/{{session_id}}",
+        handlers.workflow_intel_wizard_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/workflow-intelligence/sessions/{{session_id}}/summary",
+        handlers.workflow_intel_wizard_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/workflow-intelligence/sessions/{{session_id}}/create",
+        handlers.workflow_intel_create_handler,
+    )

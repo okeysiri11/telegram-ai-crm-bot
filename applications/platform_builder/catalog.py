@@ -381,6 +381,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Predicts and simplifies navigation from verified context — never executes business logic.",
     },
     {
+        "id": "workflow_intelligence",
+        "name": "Workflow Intelligence OS",
+        "route": "/platform-builder/workflow-intelligence",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Workflow visibility, dependency analysis and recommendations — never executes business logic.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

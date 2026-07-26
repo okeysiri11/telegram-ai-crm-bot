@@ -175,6 +175,13 @@ class PlatformBuilderStore:
         self.navigation_registries: EntityStore = EntityStore()
         self.recommendation_apis: EntityStore = EntityStore()
         self.context_apis: EntityStore = EntityStore()
+        # Sprint 29.15 — Workflow Intelligence OS
+        self.workflow_intelligence_wizard_sessions: EntityStore = EntityStore()
+        self.workflow_intelligence_engines: EntityStore = EntityStore()
+        self.dependency_engines: EntityStore = EntityStore()
+        self.critical_path_engines: EntityStore = EntityStore()
+        self.workflow_recommendation_engines: EntityStore = EntityStore()
+        self.workflow_analytics_apis: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

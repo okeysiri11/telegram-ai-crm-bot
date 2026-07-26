@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.14."""
+"""Platform Builder application facade — Sprint 29.15."""
 
 from __future__ import annotations
 
@@ -25,6 +25,7 @@ from applications.platform_builder.experience.engine import VisualExperienceEngi
 from applications.platform_builder.workspace_os.engine import EnterpriseWorkspaceOS
 from applications.platform_builder.command_center.engine import EnterpriseCommandCenter
 from applications.platform_builder.navigation_intelligence.engine import NavigationIntelligenceEngine
+from applications.platform_builder.workflow_intelligence.engine import WorkflowIntelligenceEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -78,6 +79,7 @@ class PlatformBuilderApplication:
         workspace_os: EnterpriseWorkspaceOS | None = None,
         command_center_os: EnterpriseCommandCenter | None = None,
         navigation_intelligence: NavigationIntelligenceEngine | None = None,
+        workflow_intelligence: WorkflowIntelligenceEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -106,6 +108,7 @@ class PlatformBuilderApplication:
         self.workspace_os = workspace_os or EnterpriseWorkspaceOS(self.store)
         self.command_center_os = command_center_os or EnterpriseCommandCenter(self.store)
         self.navigation_intelligence = navigation_intelligence or NavigationIntelligenceEngine(self.store)
+        self.workflow_intelligence = workflow_intelligence or WorkflowIntelligenceEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -134,6 +137,7 @@ class PlatformBuilderApplication:
         self.workspace_os = EnterpriseWorkspaceOS(self.store)
         self.command_center_os = EnterpriseCommandCenter(self.store)
         self.navigation_intelligence = NavigationIntelligenceEngine(self.store)
+        self.workflow_intelligence = WorkflowIntelligenceEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -245,6 +249,10 @@ class PlatformBuilderApplication:
             "navigation_intelligence_engine_ready": True,
             "context_navigation_ready": True,
             "smart_navigation_ready": True,
+            "workflow_intelligence_ready": True,
+            "dependency_engine_ready": True,
+            "critical_path_ready": True,
+            "global_process_orchestrator_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -270,6 +278,9 @@ class PlatformBuilderApplication:
             "command_center_page_exists": (web / "pages" / "CommandCenterOSPage.tsx").exists(),
             "navigation_intelligence_page_exists": (
                 web / "pages" / "NavigationIntelligencePage.tsx"
+            ).exists(),
+            "workflow_intelligence_page_exists": (
+                web / "pages" / "WorkflowIntelligencePage.tsx"
             ).exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
@@ -397,6 +408,10 @@ class PlatformBuilderApplication:
             "navigation_intelligence_engine_ready": True,
             "context_navigation_ready": True,
             "smart_navigation_ready": True,
+            "workflow_intelligence_ready": True,
+            "dependency_engine_ready": True,
+            "critical_path_ready": True,
+            "global_process_orchestrator_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -466,6 +481,11 @@ class PlatformBuilderApplication:
                 "navigation_registry": self.config.navigation_registry,
                 "recommendation_api": self.config.recommendation_api,
                 "context_api": self.config.context_api,
+                "workflow_intelligence_engine": self.config.workflow_intelligence_engine,
+                "dependency_engine": self.config.dependency_engine,
+                "critical_path_engine": self.config.critical_path_engine,
+                "workflow_recommendation_engine": self.config.workflow_recommendation_engine,
+                "workflow_analytics_api": self.config.workflow_analytics_api,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -494,6 +514,7 @@ class PlatformBuilderApplication:
             "workspace_os": self.workspace_os.status(),
             "command_center_os": self.command_center_os.status(),
             "navigation_intelligence": self.navigation_intelligence.status(),
+            "workflow_intelligence": self.workflow_intelligence.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

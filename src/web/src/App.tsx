@@ -62,6 +62,7 @@ import {
   WorkspaceOSPage,
   CommandCenterOSPage,
   NavigationIntelligencePage,
+  WorkflowIntelligencePage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -352,6 +353,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <NavigationIntelligencePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/workflow-intelligence"
+        element={
+          <ProtectedRoute>
+            <WorkflowIntelligencePage />
           </ProtectedRoute>
         }
       />
