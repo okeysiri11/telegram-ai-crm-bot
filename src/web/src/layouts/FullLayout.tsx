@@ -12,6 +12,7 @@ import { AIBuilderStudioStrip } from "@/ai-builder-studio";
 import { MarketplaceStrip } from "@/enterprise-marketplace";
 import { EnterpriseTwinStrip } from "@/enterprise-twin";
 import { IntegrationHubStrip } from "@/enterprise-integrations";
+import { AIRuntimeStrip } from "@/ai-runtime";
 
 /** Shared application shell — sidebar + top nav + unified workspace + AI OS chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
@@ -38,6 +39,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
             <MarketplaceStrip />
             <EnterpriseTwinStrip />
             <IntegrationHubStrip />
+            <AIRuntimeStrip />
             <UnifiedToastStrip />
             {children}
           </div>

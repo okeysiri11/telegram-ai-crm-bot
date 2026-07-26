@@ -15,6 +15,7 @@ import { AIBuilderStudioPage } from "@/ai-builder-studio";
 import { EnterpriseMarketplacePage } from "@/enterprise-marketplace";
 import { EnterpriseTwinPage } from "@/enterprise-twin";
 import { EnterpriseIntegrationHubPage } from "@/enterprise-integrations";
+import { AIRuntimePage } from "@/ai-runtime";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -186,6 +187,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <EnterpriseIntegrationHubPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/runtime"
+        element={
+          <ProtectedRoute>
+            <AIRuntimePage />
           </ProtectedRoute>
         }
       />

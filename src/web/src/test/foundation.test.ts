@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("33.1");
+    expect(webConfig.sprint).toBe("33.2");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -756,5 +756,50 @@ describe("Sprint 33.1 Enterprise Integration Hub", () => {
 
     connectIntegration("whatsapp");
     expect(resolveStatus("whatsapp")).toBe("active");
+  });
+});
+
+describe("Sprint 33.2 AI Runtime & Orchestration", () => {
+  it("derives jobs, queue, orchestration, health from aiOps", async () => {
+    const { deriveRuntime, ORCH_CHAIN } = await import("../ai-runtime/deriveRuntime");
+    const snapshot = {
+      updatedAt: new Date().toISOString(),
+      activity: [],
+      aiOps: {
+        running: ["Sales Specialist", "Ops Concierge"],
+        queue: ["Review CRM brief", "Classify feedback"],
+        recent: ["Brief ready"],
+        status: "ok",
+        errors: ["Sync timeout"],
+        completed: ["Lead intake"],
+      },
+      timeline: [],
+      health: [],
+      recommendations: [],
+      mcOk: true,
+      activeModules: ["ai", "crm"],
+    };
+    const rt = deriveRuntime(snapshot, [
+      { id: "n1", kind: "workflow" as const, title: "Approve invoice", body: "x", createdAt: "", read: false },
+    ]);
+    expect(ORCH_CHAIN.map((s) => s.id)).toEqual([
+      "user",
+      "concierge",
+      "ai_team",
+      "workflow",
+      "integrations",
+      "knowledge",
+      "completed",
+    ]);
+    expect(rt.counts.active).toBe(2);
+    expect(rt.counts.waiting).toBe(2);
+    expect(rt.counts.completed).toBe(1);
+    expect(rt.counts.failed).toBe(1);
+    expect(rt.counts.paused).toBeGreaterThanOrEqual(1);
+    expect(rt.queue.length).toBeGreaterThan(0);
+    expect(rt.orchestration.some((s) => s.active)).toBe(true);
+    expect(rt.health.queueSize).toBeGreaterThan(0);
+    expect(rt.health.needsIntervention).toBe(true);
+    expect(rt.twin.aiInvolved.length).toBeGreaterThan(0);
   });
 });

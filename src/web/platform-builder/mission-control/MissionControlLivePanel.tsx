@@ -13,6 +13,7 @@ import { moduleRegistry } from "../../workspace/managers/moduleRegistry";
 import { telemetry } from "@/integrations/telemetry";
 import { WORKSPACE_HEALTH_PROBES } from "@/pilot/webCompletionAudit";
 import { pilotMetrics, type PilotMetricsSnapshot } from "@/integrations/pilotMetrics";
+import { RuntimeMonitorCompact } from "@/ai-runtime";
 
 type Dict = Record<string, unknown>;
 
@@ -153,6 +154,8 @@ export function MissionControlLivePanel() {
           </p>
         </Card>
       ) : null}
+
+      <RuntimeMonitorCompact />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="System overview">

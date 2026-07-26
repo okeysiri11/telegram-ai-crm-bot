@@ -2,6 +2,7 @@
 @import "../design-system/styles/tokens.css";
 @import "./enterprise-twin/enterprise-twin.css";
 @import "./enterprise-integrations/enterprise-integrations.css";
+@import "./ai-runtime/ai-runtime.css";
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -1219,6 +1220,8 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Sprint 33.2 — AI Runtime (styles in ./ai-runtime/ai-runtime.css) */
 
 /* Sprint 33.1 — Enterprise Integration Hub (styles in ./enterprise-integrations/enterprise-integrations.css) */
 

@@ -145,6 +145,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_INTEGRATION_HUB_33_1.md](./ENTERPRISE_INTEGRATION_HUB_33_1.md) — Unified external integrations control. Platform Builder **v1.57.0**.
 
+## AI Runtime & Orchestration Center (Sprint 33.2)
+
+[AI_RUNTIME_ORCHESTRATION_33_2.md](./AI_RUNTIME_ORCHESTRATION_33_2.md) — Live AI jobs, queue, orchestration timeline. Platform Builder **v1.58.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

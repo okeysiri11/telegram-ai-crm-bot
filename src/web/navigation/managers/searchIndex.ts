@@ -17,6 +17,7 @@ let documents: SearchDocument[] = [
   { id: "idx_mkt", category: "marketplace", title: "Enterprise Marketplace", path: "/platform-builder/solution-hub", tokens: ["marketplace", "solutions", "hub", "packs"], rankBoost: 8 },
   { id: "idx_twin", category: "applications", title: "Enterprise Twin", path: "/enterprise-twin", tokens: ["twin", "digital", "organization", "mirror", "heatmap"], rankBoost: 9 },
   { id: "idx_integrations", category: "applications", title: "Integration Hub", path: "/platform-builder/integrations", tokens: ["integrations", "telegram", "webhook", "oauth", "api"], rankBoost: 8 },
+  { id: "idx_runtime", category: "ai_agents", title: "AI Runtime Center", path: "/platform-builder/runtime", tokens: ["runtime", "queue", "orchestration", "jobs"], rankBoost: 9 },
   { id: "idx_app", category: "applications", title: "Enterprise Hub", path: "/workspace", tokens: ["hub", "application"], rankBoost: 9 },
   { id: "idx_dash", category: "dashboards", title: "Personal Dashboard", path: "/workspace/dashboards", tokens: ["dashboard"], rankBoost: 7 },
   { id: "idx_wdg", category: "widgets", title: "Recent Activity Widget", path: "/command-center#recent_activity", tokens: ["widget", "activity"], rankBoost: 4 },

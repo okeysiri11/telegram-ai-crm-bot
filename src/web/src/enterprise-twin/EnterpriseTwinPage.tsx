@@ -21,6 +21,7 @@ import {
   type TwinNodeKind,
 } from "./deriveTwin";
 import { deriveIntegrationHub } from "@/enterprise-integrations/deriveIntegrations";
+import { deriveRuntime } from "@/ai-runtime/deriveRuntime";
 
 const KIND_LABEL: Record<TwinNodeKind, string> = {
   department: "Подразделение",
@@ -63,6 +64,7 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
   );
 
   const intTwin = useMemo(() => deriveIntegrationHub(snapshot).twin, [snapshot]);
+  const rtTwin = useMemo(() => deriveRuntime(snapshot, notifications).twin, [snapshot, notifications]);
 
   const nodes = useMemo(
     () => (filter === "all" ? twin.nodes : twin.nodes.filter((n) => n.kind === filter)),
@@ -107,6 +109,9 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
             <Link to="/platform-builder/integrations" className="eds-type-small text-[var(--eds-primary)]">
               Integrations →
             </Link>
+            <Link to="/platform-builder/runtime" className="eds-type-small text-[var(--eds-primary)]">
+              Runtime →
+            </Link>
           </div>
         </header>
 
@@ -122,6 +127,32 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
             <ExecCol title="Подключены" items={intTwin.connectedSystems.slice(0, 6)} tone="ok" />
             <ExecCol title="Процессы" items={intTwin.processesUsing.slice(0, 6)} />
             <ExecCol title="AI" items={intTwin.aiUsing.slice(0, 6)} tone="ai" />
+          </div>
+        </Card>
+
+        {/* Sprint 33.2 — live runtime in Twin */}
+        <Card className="etwin-impact" aria-label="Live runtime">
+          <div className="etwin-section-head">
+            <h2>Live Runtime</h2>
+            <Link to="/platform-builder/runtime" className="eds-type-small text-[var(--eds-primary)]">
+              Runtime Center →
+            </Link>
+          </div>
+          <div className="etwin-exec-grid">
+            <ExecCol
+              title="Процессы выполняются"
+              items={rtTwin.processesRunning.length ? rtTwin.processesRunning : ["Idle"]}
+              tone="ok"
+            />
+            <ExecCol
+              title="AI задействованы"
+              items={rtTwin.aiInvolved.length ? rtTwin.aiInvolved : ["—"]}
+              tone="ai"
+            />
+            <ExecCol
+              title="Интеграции"
+              items={rtTwin.integrationsUsed.length ? rtTwin.integrationsUsed : ["—"]}
+            />
           </div>
         </Card>
 
