@@ -108,4 +108,5 @@ Business Ecosystem Framework · Business Template Registry · Reusable Module Re
 - Frontend: `src/web/platform-builder/business-ecosystem/`
 - Knowledge: `knowledge/business_ecosystem/`
 - Related: [BUSINESS_ECOSYSTEM_CAPABILITIES.md](./BUSINESS_ECOSYSTEM_CAPABILITIES.md)
+- Audit: [ARCHITECTURE_AUDIT_INDEX.md](./ARCHITECTURE_AUDIT_INDEX.md)
 - Tests: `tests/test_business_ecosystem_30_2.py`
