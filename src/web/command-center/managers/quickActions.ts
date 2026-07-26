@@ -31,6 +31,7 @@ export const COMMAND_CATALOG: CommandItem[] = [
   { id: "act_open_data_fabric", kind: "open", action: "open_data_fabric", label: "Open Data Fabric", route: "/platform-builder/data-fabric", keywords: ["data", "fabric", "graph", "lineage"] },
   { id: "act_open_predictive", kind: "open", action: "open_predictive", label: "Open Predictive Intelligence", route: "/platform-builder/predictive", keywords: ["predictive", "forecast", "scenario"] },
   { id: "act_open_autonomy", kind: "open", action: "open_autonomy", label: "Open Autonomy Center", route: "/platform-builder/autonomy", keywords: ["autonomy", "approval", "hitl"] },
+  { id: "act_open_control_tower", kind: "open", action: "open_control_tower", label: "Open Control Tower", route: "/platform-builder/control-tower", keywords: ["control", "tower", "executive"] },
   { id: "act_open_workflow_center", kind: "open", action: "open_workflow_center", label: "Open Workflow Center", route: "/platform-builder/workflow-center", keywords: ["workflow", "automation"] },
   { id: "act_open_builder_studio", kind: "open", action: "open_builder_studio", label: "Open AI Builder Studio", route: "/platform-builder/builder-studio", keywords: ["builder", "studio", "ai"] },
   { id: "act_open_concierge", kind: "open", action: "open_concierge", label: "Open AI Concierge", route: "/platform-builder/concierge", keywords: ["concierge", "ai"] },

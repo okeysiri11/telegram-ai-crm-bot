@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("33.5");
+    expect(webConfig.sprint).toBe("33.6");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -950,5 +950,49 @@ describe("Sprint 33.5 Autonomous Enterprise", () => {
     decideApproval(pending!.id, "approved", "tester");
     expect(listApprovals().find((a) => a.id === pending!.id)?.status).toBe("approved");
     expect(bundle.governance.timeSavedMin).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe("Sprint 33.6 Enterprise Control Tower", () => {
+  it("composes overview, cockpit, ecosystems, incidents, commands", async () => {
+    const { deriveControlTower, CONTROL_TOWER_COMMANDS } = await import(
+      "../enterprise-control-tower/deriveControlTower"
+    );
+    expect(CONTROL_TOWER_COMMANDS.map((c) => c.id)).toEqual(
+      expect.arrayContaining(["cmd_ws", "cmd_twin", "cmd_runtime", "cmd_approval", "cmd_builder", "cmd_mkt"]),
+    );
+    const tower = deriveControlTower(
+      {
+        updatedAt: new Date().toISOString(),
+        activity: [
+          { id: "1", kind: "crm", title: "Deal", detail: "", at: new Date().toISOString(), source: "seed" },
+        ],
+        aiOps: {
+          running: ["Sales Specialist"],
+          queue: ["Q1"],
+          recent: [],
+          status: "ok",
+          errors: [],
+          completed: ["Lead"],
+        },
+        timeline: [],
+        health: [
+          { id: "crm" as const, label: "CRM", ok: true, detail: "ok" },
+          { id: "mission_control" as const, label: "MC", ok: true, detail: "ok" },
+        ],
+        recommendations: [],
+        mcOk: true,
+        activeModules: ["crm", "beauty", "ai"],
+      },
+      { company: "Demo Corp", roleId: "owner" },
+    );
+    expect(tower.overview.length).toBeGreaterThanOrEqual(7);
+    expect(tower.cockpit.some((k) => k.id === "revenue")).toBe(true);
+    expect(tower.ecosystems.map((e) => e.id)).toEqual(
+      expect.arrayContaining(["beauty", "legal", "cafe", "agro", "auto", "drone", "crypto"]),
+    );
+    expect(tower.operations.length).toBeGreaterThan(0);
+    expect(tower.incidents.length).toBeGreaterThan(0);
+    expect(tower.commands.length).toBe(6);
   });
 });

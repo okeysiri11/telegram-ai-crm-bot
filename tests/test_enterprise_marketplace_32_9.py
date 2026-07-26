@@ -30,9 +30,9 @@ def test_32_9_docs_exist():
 
 def test_platform_version_32_9():
     health = platform_builder.health()
-    assert health["application_version"] == "1.61.0"
-    assert health["sprint"] == "33.5"
-    assert "Autonomous Enterprise & Human-in-the-Loop" in health["release_status"]
+    assert health["application_version"] == "1.62.0"
+    assert health["sprint"] == "33.6"
+    assert "Enterprise Control Tower" in health["release_status"]
 
 
 def test_marketplace_wired():
@@ -78,14 +78,14 @@ def test_marketplace_wired():
 
 def test_config_manifest_32_9():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
-    assert 'application_version: str = "1.61.0"' in cfg
-    assert 'sprint: str = "33.5"' in cfg
-    assert "Autonomous Enterprise & Human-in-the-Loop" in cfg
+    assert 'application_version: str = "1.62.0"' in cfg
+    assert 'sprint: str = "33.6"' in cfg
+    assert "Enterprise Control Tower" in cfg
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.61.0"' in manifest
-    assert '"sprint": "33.5"' in manifest
+    assert '"application_version": "1.62.0"' in manifest
+    assert '"sprint": "33.6"' in manifest
     web = (ROOT / "src" / "web" / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "33.5"' in web
+    assert 'sprint: "33.6"' in web
     types = (ROOT / "src" / "web" / "platform-builder" / "types.ts").read_text()
-    assert 'PLATFORM_BUILDER_VERSION = "1.61.0"' in types
-    assert 'PLATFORM_BUILDER_SPRINT = "33.5"' in types
+    assert 'PLATFORM_BUILDER_VERSION = "1.62.0"' in types
+    assert 'PLATFORM_BUILDER_SPRINT = "33.6"' in types

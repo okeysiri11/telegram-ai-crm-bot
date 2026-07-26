@@ -6,6 +6,7 @@
 @import "./enterprise-data-fabric/enterprise-data-fabric.css";
 @import "./predictive-intelligence/predictive-intelligence.css";
 @import "./autonomous-enterprise/autonomous-enterprise.css";
+@import "./enterprise-control-tower/enterprise-control-tower.css";
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -1223,6 +1224,8 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Sprint 33.6 — Enterprise Control Tower (styles in ./enterprise-control-tower/enterprise-control-tower.css) */
 
 /* Sprint 33.5 — Autonomous Enterprise (styles in ./autonomous-enterprise/autonomous-enterprise.css) */
 

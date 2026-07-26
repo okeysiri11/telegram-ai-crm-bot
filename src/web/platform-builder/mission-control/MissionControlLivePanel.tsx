@@ -147,6 +147,11 @@ export function MissionControlLivePanel() {
             Pilot Execution
           </Button>
         </Link>
+        <Link to="/platform-builder/control-tower">
+          <Button size="sm" variant="secondary">
+            Control Tower
+          </Button>
+        </Link>
       </div>
 
       {error ? (

@@ -19,6 +19,7 @@ import { AIRuntimePage } from "@/ai-runtime";
 import { EnterpriseDataFabricPage } from "@/enterprise-data-fabric";
 import { PredictiveIntelligencePage } from "@/predictive-intelligence";
 import { AutonomousEnterprisePage } from "@/autonomous-enterprise";
+import { EnterpriseControlTowerPage } from "@/enterprise-control-tower";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -222,6 +223,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <AutonomousEnterprisePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/control-tower"
+        element={
+          <ProtectedRoute>
+            <EnterpriseControlTowerPage />
           </ProtectedRoute>
         }
       />

@@ -161,6 +161,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [AUTONOMOUS_ENTERPRISE_33_5.md](./AUTONOMOUS_ENTERPRISE_33_5.md) — Managed autonomy, approvals, governance. Platform Builder **v1.61.0**.
 
+## Enterprise Control Tower (Sprint 33.6)
+
+[ENTERPRISE_CONTROL_TOWER_33_6.md](./ENTERPRISE_CONTROL_TOWER_33_6.md) — Executive home composing all control surfaces. Platform Builder **v1.62.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  
