@@ -24,6 +24,7 @@ let documents: SearchDocument[] = [
   { id: "idx_control_tower", category: "dashboards", title: "Enterprise Control Tower", path: "/platform-builder/control-tower", tokens: ["control", "tower", "executive", "overview", "ops"], rankBoost: 10 },
   { id: "idx_learning", category: "dashboards", title: "Self-Learning Enterprise", path: "/platform-builder/learning", tokens: ["learning", "optimize", "recommendations", "self-learning", "continuous"], rankBoost: 10 },
   { id: "idx_okr", category: "dashboards", title: "OKR Intelligence", path: "/platform-builder/okr", tokens: ["okr", "goals", "strategy", "kpi", "objectives"], rankBoost: 10 },
+  { id: "idx_governance", category: "dashboards", title: "Enterprise Governance", path: "/platform-builder/governance", tokens: ["governance", "compliance", "policy", "audit", "security"], rankBoost: 10 },
   { id: "idx_user_ops", category: "users", title: "Ops Manager", path: "/identity/users", tokens: ["ops", "manager", "user", "people"], rankBoost: 4 },
   { id: "idx_ai_concierge", category: "ai_agents", title: "AI Concierge", path: "/platform-builder/concierge", tokens: ["concierge", "ai", "assistant"], rankBoost: 7 },
   { id: "idx_ai_team", category: "ai_agents", title: "AI Team Center", path: "/platform-builder/ai-team", tokens: ["ai", "team", "specialists"], rankBoost: 8 },

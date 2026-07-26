@@ -19,6 +19,7 @@ import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
 import { LearningWidgetCompact } from "@/self-learning-enterprise";
 import { EnterpriseGoalsWidgetCompact } from "@/enterprise-okr";
+import { GovernanceWidgetCompact } from "@/enterprise-governance";
 
 type Dict = Record<string, unknown>;
 
@@ -164,6 +165,11 @@ export function MissionControlLivePanel() {
             Enterprise Goals
           </Button>
         </Link>
+        <Link to="/platform-builder/governance">
+          <Button size="sm" variant="secondary">
+            Governance
+          </Button>
+        </Link>
       </div>
 
       {error ? (
@@ -181,6 +187,7 @@ export function MissionControlLivePanel() {
       <AutonomousWidgetCompact />
       <LearningWidgetCompact />
       <EnterpriseGoalsWidgetCompact />
+      <GovernanceWidgetCompact />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="System overview">

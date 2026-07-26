@@ -142,6 +142,9 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
             <Link to="/platform-builder/okr" className="eds-type-small text-[var(--eds-primary)]">
               OKR →
             </Link>
+            <Link to="/platform-builder/governance" className="eds-type-small text-[var(--eds-primary)]">
+              Governance →
+            </Link>
           </div>
         </header>
 

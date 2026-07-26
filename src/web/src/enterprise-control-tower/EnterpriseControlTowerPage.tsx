@@ -22,6 +22,7 @@ import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
 import { LearningWidgetCompact } from "@/self-learning-enterprise";
 import { EnterpriseGoalsWidgetCompact } from "@/enterprise-okr";
+import { GovernanceWidgetCompact } from "@/enterprise-governance";
 import { deriveControlTower } from "./deriveControlTower";
 
 const INC_TONE = {
@@ -239,6 +240,7 @@ export function EnterpriseControlTowerPage() {
           <DataFabricOverviewCompact />
           <LearningWidgetCompact />
           <EnterpriseGoalsWidgetCompact />
+          <GovernanceWidgetCompact />
         </div>
       </div>
     </WorkspaceLayout>

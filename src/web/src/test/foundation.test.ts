@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("33.8");
+    expect(webConfig.sprint).toBe("33.9");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -1095,5 +1095,64 @@ describe("Sprint 33.8 Enterprise Strategy & OKR Intelligence", () => {
     );
     expect(aligned.goalLabel).toBeTruthy();
     expect(aligned.expectedEffect).toContain("%");
+  });
+});
+
+describe("Sprint 33.9 Enterprise Governance", () => {
+  it("derives policies, validation pipeline, approvals, audit, risks, AI governance, compliance", async () => {
+    const { deriveGovernance, ENTERPRISE_POLICIES } = await import("../enterprise-governance");
+    expect(ENTERPRISE_POLICIES.map((p) => p.domain)).toEqual(
+      expect.arrayContaining([
+        "financial",
+        "security",
+        "legal",
+        "privacy",
+        "hr",
+        "operations",
+        "ai_usage",
+        "automation",
+      ]),
+    );
+    const bundle = deriveGovernance(
+      {
+        updatedAt: new Date().toISOString(),
+        activity: [
+          { id: "1", kind: "ai", title: "Concierge decision", detail: "ok", at: new Date().toISOString(), source: "seed" },
+        ],
+        aiOps: {
+          running: ["Concierge"],
+          queue: ["Q1"],
+          recent: ["Ops Copilot"],
+          status: "ok",
+          errors: [],
+          completed: ["Doc draft"],
+        },
+        timeline: [],
+        health: [
+          { id: "crm" as const, label: "CRM", ok: true, detail: "ok" },
+          { id: "mission_control" as const, label: "MC", ok: true, detail: "ok" },
+        ],
+        recommendations: [],
+        mcOk: true,
+        activeModules: ["crm", "ai"],
+      },
+      { roleId: "owner", permissions: ["read", "write", "admin"] },
+    );
+    expect(bundle.policies.length).toBe(8);
+    expect(bundle.validations.length).toBeGreaterThan(0);
+    expect(bundle.validations[0]!.steps.map((s) => s.id)).toEqual([
+      "policy",
+      "permission",
+      "approval",
+      "execution",
+    ]);
+    expect(bundle.approvalQueue.length).toBeGreaterThan(0);
+    expect(bundle.auditTimeline.length).toBeGreaterThan(0);
+    expect(bundle.risks.map((r) => r.kind)).toEqual(
+      expect.arrayContaining(["security", "compliance", "operational", "ai", "integration"]),
+    );
+    expect(bundle.aiGovernance.length).toBeGreaterThan(0);
+    expect(bundle.compliance.compliancePct).toBeGreaterThanOrEqual(0);
+    expect(bundle.compliance.auditScore).toBeGreaterThanOrEqual(0);
   });
 });

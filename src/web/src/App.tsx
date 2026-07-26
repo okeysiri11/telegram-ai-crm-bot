@@ -22,6 +22,7 @@ import { AutonomousEnterprisePage } from "@/autonomous-enterprise";
 import { EnterpriseControlTowerPage } from "@/enterprise-control-tower";
 import { SelfLearningEnterprisePage } from "@/self-learning-enterprise";
 import { EnterpriseOkrPage } from "@/enterprise-okr";
+import { EnterpriseGovernancePage } from "@/enterprise-governance";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -249,6 +250,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <EnterpriseOkrPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/governance"
+        element={
+          <ProtectedRoute>
+            <EnterpriseGovernancePage />
           </ProtectedRoute>
         }
       />

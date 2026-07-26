@@ -43,9 +43,9 @@ def test_beauty_pilot_docs_exist():
 
 def test_platform_beauty_pilot_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.64.0"
-    assert health["sprint"] == "33.8"
-    assert health["release_status"] == "Enterprise Strategy & OKR Intelligence"
+    assert health["application_version"] == "1.65.0"
+    assert health["sprint"] == "33.9"
+    assert health["release_status"] == "Enterprise Governance, Compliance & Security"
 
 
 def test_beauty_hub_apis_reusable():
@@ -153,8 +153,8 @@ def test_reuse_matrix_documents_shared_platform():
 
 def test_manifest_and_audit_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.64.0"' in manifest
+    assert '"application_version": "1.65.0"' in manifest
     assert "33.6" in manifest
-    assert "OKR Intelligence" in manifest
+    assert "Governance" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "BEAUTY_PILOT_30_8" in index

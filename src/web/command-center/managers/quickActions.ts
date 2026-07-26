@@ -34,6 +34,7 @@ export const COMMAND_CATALOG: CommandItem[] = [
   { id: "act_open_control_tower", kind: "open", action: "open_control_tower", label: "Open Control Tower", route: "/platform-builder/control-tower", keywords: ["control", "tower", "executive"] },
   { id: "act_open_learning", kind: "open", action: "open_learning", label: "Open Learning Center", route: "/platform-builder/learning", keywords: ["learning", "optimize", "recommendations"] },
   { id: "act_open_okr", kind: "open", action: "open_okr", label: "Open OKR Intelligence", route: "/platform-builder/okr", keywords: ["okr", "goals", "strategy", "kpi"] },
+  { id: "act_open_governance", kind: "open", action: "open_governance", label: "Open Governance Center", route: "/platform-builder/governance", keywords: ["governance", "compliance", "policy", "audit"] },
   { id: "act_open_workflow_center", kind: "open", action: "open_workflow_center", label: "Open Workflow Center", route: "/platform-builder/workflow-center", keywords: ["workflow", "automation"] },
   { id: "act_open_builder_studio", kind: "open", action: "open_builder_studio", label: "Open AI Builder Studio", route: "/platform-builder/builder-studio", keywords: ["builder", "studio", "ai"] },
   { id: "act_open_concierge", kind: "open", action: "open_concierge", label: "Open AI Concierge", route: "/platform-builder/concierge", keywords: ["concierge", "ai"] },

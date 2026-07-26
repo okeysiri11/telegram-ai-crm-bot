@@ -173,6 +173,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_STRATEGY_OKR_33_8.md](./ENTERPRISE_STRATEGY_OKR_33_8.md) — Company goals and OKR alignment over EI / Learning / Predictive. Platform Builder **v1.64.0**.
 
+## Enterprise Governance, Compliance & Security (Sprint 33.9)
+
+[ENTERPRISE_GOVERNANCE_33_9.md](./ENTERPRISE_GOVERNANCE_33_9.md) — Policies, compliance, audit, AI control over Autonomy / RBAC. Platform Builder **v1.65.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

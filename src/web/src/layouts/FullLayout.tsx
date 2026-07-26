@@ -19,6 +19,7 @@ import { AutonomyStrip } from "@/autonomous-enterprise";
 import { ControlTowerStrip } from "@/enterprise-control-tower";
 import { LearningStrip } from "@/self-learning-enterprise";
 import { OkrStrip } from "@/enterprise-okr";
+import { GovernanceStrip } from "@/enterprise-governance";
 
 /** Shared application shell — sidebar + top nav + unified workspace + AI OS chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
@@ -52,6 +53,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
             <ControlTowerStrip />
             <LearningStrip />
             <OkrStrip />
+            <GovernanceStrip />
             <UnifiedToastStrip />
             {children}
           </div>

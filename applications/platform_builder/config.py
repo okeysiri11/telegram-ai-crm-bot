@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 33.8 Enterprise Strategy & OKR Intelligence."""
+"""Platform Builder — Sprint 33.9 Enterprise Governance, Compliance & Security."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.64.0"
-    sprint: str = "33.8"
-    release_status: str = "Enterprise Strategy & OKR Intelligence"
+    application_version: str = "1.65.0"
+    sprint: str = "33.9"
+    release_status: str = "Enterprise Governance, Compliance & Security"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"

@@ -16,6 +16,7 @@ import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
 import { LearningWidgetCompact } from "@/self-learning-enterprise";
 import { EnterpriseGoalsWidgetCompact } from "@/enterprise-okr";
+import { GovernanceWidgetCompact } from "@/enterprise-governance";
 
 type Dict = Record<string, unknown>;
 
@@ -80,6 +81,7 @@ export function MissionControlStrip() {
         <AutonomousWidgetCompact />
         <LearningWidgetCompact />
         <EnterpriseGoalsWidgetCompact />
+        <GovernanceWidgetCompact />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="cc-stat">
