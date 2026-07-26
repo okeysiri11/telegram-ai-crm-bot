@@ -149,6 +149,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [AI_RUNTIME_ORCHESTRATION_33_2.md](./AI_RUNTIME_ORCHESTRATION_33_2.md) — Live AI jobs, queue, orchestration timeline. Platform Builder **v1.58.0**.
 
+## Enterprise Data Fabric & Knowledge Graph (Sprint 33.3)
+
+[ENTERPRISE_DATA_FABRIC_33_3.md](./ENTERPRISE_DATA_FABRIC_33_3.md) — Unified related data model, lineage, impact. Platform Builder **v1.59.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

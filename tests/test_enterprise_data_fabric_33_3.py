@@ -1,4 +1,4 @@
-"""Tests — AI Runtime & Orchestration Center (Sprint 33.2)."""
+"""Tests — Enterprise Data Fabric & Knowledge Graph (Sprint 33.3)."""
 
 from __future__ import annotations
 
@@ -10,77 +10,82 @@ from applications.platform_builder import platform_builder
 ROOT = Path(__file__).resolve().parents[1]
 
 DOCS = [
-    "AI_RUNTIME_ORCHESTRATION_33_2.md",
-    "RELEASE_NOTES_33_2.md",
+    "ENTERPRISE_DATA_FABRIC_33_3.md",
+    "RELEASE_NOTES_33_3.md",
 ]
 
 
-def test_33_2_docs_exist():
+def test_33_3_docs_exist():
     docs = ROOT / "docs"
     for name in DOCS:
         path = docs / name
         assert path.exists(), name
-        assert "33.2" in path.read_text()
+        assert "33.3" in path.read_text()
     index = (docs / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
-    assert "AI_RUNTIME_ORCHESTRATION_33_2" in index
-    report = (docs / "AI_RUNTIME_ORCHESTRATION_33_2.md").read_text()
-    assert "No new AI Core" in report
-    assert "Runtime Engine" in report
-    assert "Live AI Queue" in report
+    assert "ENTERPRISE_DATA_FABRIC_33_3" in index
+    report = (docs / "ENTERPRISE_DATA_FABRIC_33_3.md").read_text()
+    assert "No new Database Engine" in report
+    assert "Relationship Explorer" in report
+    assert "Data Lineage" in report
 
 
-def test_platform_version_33_2():
+def test_platform_version_33_3():
     health = platform_builder.health()
     assert health["application_version"] == "1.59.0"
     assert health["sprint"] == "33.3"
     assert "Data Fabric" in health["release_status"]
 
 
-def test_runtime_wired():
+def test_data_fabric_wired():
     app = (ROOT / "src" / "web" / "src" / "App.tsx").read_text()
-    assert 'path="/platform-builder/runtime"' in app
-    assert "AIRuntimePage" in app
+    assert 'path="/platform-builder/data-fabric"' in app
+    assert "EnterpriseDataFabricPage" in app
     full = (ROOT / "src" / "web" / "src" / "layouts" / "FullLayout.tsx").read_text()
-    assert "AIRuntimeStrip" in full
-    derive = (ROOT / "src" / "web" / "src" / "ai-runtime" / "deriveRuntime.ts").read_text()
+    assert "DataFabricStrip" in full
+    catalog = (ROOT / "src" / "web" / "src" / "enterprise-data-fabric" / "fabricCatalog.ts").read_text()
     for token in (
-        "deriveRuntime",
-        "ORCH_CHAIN",
-        "active",
-        "waiting",
-        "completed",
-        "failed",
-        "paused",
-        "RuntimeHealth",
+        "Companies",
+        "Users",
+        "AI Team",
+        "Clients",
+        "Deals",
+        "Documents",
+        "Workflows",
+        "Knowledge",
+        "Integrations",
+        "KNOWLEDGE_CHAIN",
     ):
-        assert token in derive
-    page = (ROOT / "src" / "web" / "src" / "ai-runtime" / "AIRuntimePage.tsx").read_text()
+        assert token in catalog
+    page = (
+        ROOT / "src" / "web" / "src" / "enterprise-data-fabric" / "EnterpriseDataFabricPage.tsx"
+    ).read_text()
     for token in (
-        "Runtime Dashboard",
-        "Live AI Queue",
-        "Orchestration Timeline",
-        "Execution Monitor",
-        "Runtime Health",
-        "RuntimeMonitorCompact",
+        "Enterprise Graph",
+        "Relationship Explorer",
+        "Data Lineage",
+        "Knowledge Connections",
+        "Impact Analysis",
+        "DataFabricOverviewCompact",
     ):
         assert token in page
-    css = (ROOT / "src" / "web" / "src" / "ai-runtime" / "ai-runtime.css").read_text()
-    assert "Sprint 33.2" in css
-    assert "art-" in css
+    css = (
+        ROOT / "src" / "web" / "src" / "enterprise-data-fabric" / "enterprise-data-fabric.css"
+    ).read_text()
+    assert "Sprint 33.3" in css
+    assert "edf-" in css
     idx = (ROOT / "src" / "web" / "src" / "index.css").read_text()
-    assert "ai-runtime.css" in idx
+    assert "enterprise-data-fabric.css" in idx
     mc = (
         ROOT / "src" / "web" / "platform-builder" / "mission-control" / "MissionControlLivePanel.tsx"
     ).read_text()
-    assert "RuntimeMonitorCompact" in mc
+    assert "DataFabricOverviewCompact" in mc
     twin = (ROOT / "src" / "web" / "src" / "enterprise-twin" / "EnterpriseTwinPage.tsx").read_text()
-    assert "deriveRuntime" in twin
-    assert "Live Runtime" in twin
+    assert "deriveDataFabric" in twin
     qa = (ROOT / "src" / "web" / "command-center" / "managers" / "quickActions.ts").read_text()
-    assert "/platform-builder/runtime" in qa
+    assert "/platform-builder/data-fabric" in qa
 
 
-def test_config_manifest_33_2():
+def test_config_manifest_33_3():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
     assert 'application_version: str = "1.59.0"' in cfg
     assert 'sprint: str = "33.3"' in cfg

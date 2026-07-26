@@ -39,8 +39,8 @@ def reset_store():
 
 def test_digital_twin_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.58.0"
-    assert health["sprint"] == "33.2"
+    assert health["application_version"] == "1.59.0"
+    assert health["sprint"] == "33.3"
     assert health["digital_twin_ready"] is True
     assert health["organization_mirror_ready"] is True
     assert health["twin_synchronization_ready"] is True
@@ -109,7 +109,7 @@ def test_digital_twin_flow_and_create():
 async def test_api_digital_twin(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.58.0"
+    assert body["application_version"] == "1.59.0"
     assert body["digital_twin_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/digital-twin/catalog")
@@ -135,5 +135,5 @@ async def test_api_digital_twin(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.58.0"' in manifest
-    assert "33.2" in manifest
+    assert '"application_version": "1.59.0"' in manifest
+    assert "33.3" in manifest

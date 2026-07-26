@@ -16,6 +16,7 @@ import { EnterpriseMarketplacePage } from "@/enterprise-marketplace";
 import { EnterpriseTwinPage } from "@/enterprise-twin";
 import { EnterpriseIntegrationHubPage } from "@/enterprise-integrations";
 import { AIRuntimePage } from "@/ai-runtime";
+import { EnterpriseDataFabricPage } from "@/enterprise-data-fabric";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -195,6 +196,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <AIRuntimePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/data-fabric"
+        element={
+          <ProtectedRoute>
+            <EnterpriseDataFabricPage />
           </ProtectedRoute>
         }
       />

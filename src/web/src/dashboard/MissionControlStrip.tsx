@@ -11,6 +11,7 @@ import { hubIntegrations } from "@/integrations/hub";
 import { liveUpdates } from "../../workspace/realtime/liveUpdates";
 import { PLATFORM_BUILDER_API } from "../../platform-builder/types";
 import { RuntimeMonitorCompact } from "@/ai-runtime";
+import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
 
 type Dict = Record<string, unknown>;
 
@@ -70,6 +71,7 @@ export function MissionControlStrip() {
       {error ? <p className="mb-3 eds-type-small text-[var(--eds-danger)]">{error}</p> : null}
       <div className="mb-4">
         <RuntimeMonitorCompact />
+        <DataFabricOverviewCompact />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="cc-stat">

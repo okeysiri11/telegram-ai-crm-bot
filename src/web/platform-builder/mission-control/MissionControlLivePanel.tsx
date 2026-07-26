@@ -14,6 +14,7 @@ import { telemetry } from "@/integrations/telemetry";
 import { WORKSPACE_HEALTH_PROBES } from "@/pilot/webCompletionAudit";
 import { pilotMetrics, type PilotMetricsSnapshot } from "@/integrations/pilotMetrics";
 import { RuntimeMonitorCompact } from "@/ai-runtime";
+import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
 
 type Dict = Record<string, unknown>;
 
@@ -156,6 +157,7 @@ export function MissionControlLivePanel() {
       ) : null}
 
       <RuntimeMonitorCompact />
+      <DataFabricOverviewCompact />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="System overview">

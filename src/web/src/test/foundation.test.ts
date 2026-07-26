@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("33.2");
+    expect(webConfig.sprint).toBe("33.3");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -801,5 +801,70 @@ describe("Sprint 33.2 AI Runtime & Orchestration", () => {
     expect(rt.health.queueSize).toBeGreaterThan(0);
     expect(rt.health.needsIntervention).toBe(true);
     expect(rt.twin.aiInvolved.length).toBeGreaterThan(0);
+  });
+});
+
+describe("Sprint 33.3 Enterprise Data Fabric", () => {
+  it("builds graph, lineage, impact, knowledge chain", async () => {
+    const { FABRIC_ENTITIES, KNOWLEDGE_CHAIN } = await import("../enterprise-data-fabric/fabricCatalog");
+    const { deriveDataFabric } = await import("../enterprise-data-fabric/deriveFabric");
+    expect(FABRIC_ENTITIES.map((e) => e.id)).toEqual(
+      expect.arrayContaining([
+        "company",
+        "users",
+        "ai_team",
+        "clients",
+        "deals",
+        "documents",
+        "workflows",
+        "knowledge",
+        "integrations",
+      ]),
+    );
+    expect(KNOWLEDGE_CHAIN.map((s) => s.id)).toEqual([
+      "knowledge",
+      "documents",
+      "clients",
+      "workflows",
+      "ai_team",
+      "twin",
+    ]);
+    const fabric = deriveDataFabric(
+      {
+        updatedAt: new Date().toISOString(),
+        activity: [
+          {
+            id: "a1",
+            kind: "crm",
+            title: "Deal updated",
+            detail: "x",
+            at: new Date().toISOString(),
+            source: "seed",
+          },
+        ],
+        aiOps: {
+          running: ["Sales Specialist"],
+          queue: ["Brief"],
+          recent: ["Done"],
+          status: "ok",
+          errors: [],
+          completed: ["Lead"],
+        },
+        timeline: [],
+        health: [{ id: "knowledge" as const, label: "KB", ok: true, detail: "ok" }],
+        recommendations: [],
+        mcOk: true,
+        activeModules: ["crm", "knowledge"],
+      },
+      { company: "Demo", roleId: "owner" },
+    );
+    expect(fabric.entities.length).toBe(FABRIC_ENTITIES.length);
+    expect(fabric.edges.length).toBeGreaterThan(5);
+    expect(fabric.lineage.knowledge?.source).toBeTruthy();
+    expect(fabric.impact.deals?.dependsOn.length).toBeGreaterThan(0);
+    expect(fabric.executive.linkedObjects).toBeGreaterThan(0);
+    const exp = fabric.explore("knowledge");
+    expect(exp.related.length).toBeGreaterThan(0);
+    expect(exp.aiUsing.length).toBeGreaterThan(0);
   });
 });

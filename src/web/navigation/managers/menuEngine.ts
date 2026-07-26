@@ -175,6 +175,7 @@ const menu: MenuItem[] = [
       { id: "nav_enterprise_twin", name: "Enterprise Twin", icon: "analytics", route: "/enterprise-twin", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_integrations", name: "Integrations", icon: "settings", route: "/platform-builder/integrations", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_runtime", name: "AI Runtime", icon: "ai", route: "/platform-builder/runtime", module: "platform_builder", permissions: ["read"], status: "active" },
+      { id: "nav_pb_data_fabric", name: "Data Fabric", icon: "analytics", route: "/platform-builder/data-fabric", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_twin_intelligence", name: "Twin Intelligence", icon: "analytics", route: "/platform-builder/twin-intelligence", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_strategy", name: "Strategy Engine", icon: "analytics", route: "/platform-builder/strategy", module: "platform_builder", permissions: ["read"], status: "active" },
       { id: "nav_pb_mission_control", name: "Mission Control", icon: "analytics", route: "/platform-builder/mission-control", module: "platform_builder", permissions: ["read"], status: "active" },

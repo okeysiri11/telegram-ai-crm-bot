@@ -22,6 +22,7 @@ import {
 } from "./deriveTwin";
 import { deriveIntegrationHub } from "@/enterprise-integrations/deriveIntegrations";
 import { deriveRuntime } from "@/ai-runtime/deriveRuntime";
+import { deriveDataFabric } from "@/enterprise-data-fabric/deriveFabric";
 
 const KIND_LABEL: Record<TwinNodeKind, string> = {
   department: "Подразделение",
@@ -65,6 +66,10 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
 
   const intTwin = useMemo(() => deriveIntegrationHub(snapshot).twin, [snapshot]);
   const rtTwin = useMemo(() => deriveRuntime(snapshot, notifications).twin, [snapshot, notifications]);
+  const fabricExec = useMemo(
+    () => deriveDataFabric(snapshot, { company, notifications, roleId: user?.roleId || first.roleId }).executive,
+    [snapshot, company, notifications, user?.roleId, first.roleId],
+  );
 
   const nodes = useMemo(
     () => (filter === "all" ? twin.nodes : twin.nodes.filter((n) => n.kind === filter)),
@@ -112,6 +117,9 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
             <Link to="/platform-builder/runtime" className="eds-type-small text-[var(--eds-primary)]">
               Runtime →
             </Link>
+            <Link to="/platform-builder/data-fabric" className="eds-type-small text-[var(--eds-primary)]">
+              Data Fabric →
+            </Link>
           </div>
         </header>
 
@@ -152,6 +160,29 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
             <ExecCol
               title="Интеграции"
               items={rtTwin.integrationsUsed.length ? rtTwin.integrationsUsed : ["—"]}
+            />
+          </div>
+        </Card>
+
+        {/* Sprint 33.3 — data fabric in Twin */}
+        <Card className="etwin-impact" aria-label="Data fabric">
+          <div className="etwin-section-head">
+            <h2>Data Fabric</h2>
+            <Link to="/platform-builder/data-fabric" className="eds-type-small text-[var(--eds-primary)]">
+              Graph →
+            </Link>
+          </div>
+          <div className="etwin-exec-grid">
+            <ExecCol title="Связанные объекты" items={[String(fabricExec.linkedObjects)]} />
+            <ExecCol
+              title="Проблемные связи"
+              items={[String(fabricExec.problemLinks)]}
+              tone={fabricExec.problemLinks ? "risk" : "ok"}
+            />
+            <ExecCol
+              title="Недостающие данные"
+              items={[String(fabricExec.missingData)]}
+              tone={fabricExec.missingData ? "risk" : "ok"}
             />
           </div>
         </Card>

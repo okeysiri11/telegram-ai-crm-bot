@@ -3,6 +3,7 @@
 @import "./enterprise-twin/enterprise-twin.css";
 @import "./enterprise-integrations/enterprise-integrations.css";
 @import "./ai-runtime/ai-runtime.css";
+@import "./enterprise-data-fabric/enterprise-data-fabric.css";
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; }
@@ -1220,6 +1221,8 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Sprint 33.3 — Enterprise Data Fabric (styles in ./enterprise-data-fabric/enterprise-data-fabric.css) */
 
 /* Sprint 33.2 — AI Runtime (styles in ./ai-runtime/ai-runtime.css) */
 
