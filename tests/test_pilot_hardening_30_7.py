@@ -40,9 +40,9 @@ def test_pilot_hardening_docs_exist():
 
 def test_platform_pilot_hardening_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.60.0"
-    assert health["sprint"] == "33.4"
-    assert health["release_status"] == "Predictive Intelligence & Scenario Simulator"
+    assert health["application_version"] == "1.61.0"
+    assert health["sprint"] == "33.5"
+    assert health["release_status"] == "Autonomous Enterprise & Human-in-the-Loop"
 
 
 def test_feedback_metrics_journeys_web():
@@ -80,8 +80,8 @@ def test_epr_feedback_api_still_central():
 
 def test_manifest_and_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.60.0"' in manifest
-    assert "33.4" in manifest
-    assert "Predictive Intelligence & Scenario Simulator" in manifest
+    assert '"application_version": "1.61.0"' in manifest
+    assert "33.5" in manifest
+    assert "Autonomous Enterprise & Human-in-the-Loop" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "PILOT_HARDENING_30_7" in index

@@ -16,6 +16,7 @@ import { pilotMetrics, type PilotMetricsSnapshot } from "@/integrations/pilotMet
 import { RuntimeMonitorCompact } from "@/ai-runtime";
 import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
 import { PredictiveWidgetCompact } from "@/predictive-intelligence";
+import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
 
 type Dict = Record<string, unknown>;
 
@@ -160,6 +161,7 @@ export function MissionControlLivePanel() {
       <RuntimeMonitorCompact />
       <DataFabricOverviewCompact />
       <PredictiveWidgetCompact />
+      <AutonomousWidgetCompact />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="System overview">

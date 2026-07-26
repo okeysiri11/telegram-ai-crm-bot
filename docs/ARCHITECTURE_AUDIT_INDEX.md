@@ -157,6 +157,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [PREDICTIVE_INTELLIGENCE_33_4.md](./PREDICTIVE_INTELLIGENCE_33_4.md) — Forecasts, What-If scenarios, Twin zones. Platform Builder **v1.60.0**.
 
+## Autonomous Enterprise & Human-in-the-Loop (Sprint 33.5)
+
+[AUTONOMOUS_ENTERPRISE_33_5.md](./AUTONOMOUS_ENTERPRISE_33_5.md) — Managed autonomy, approvals, governance. Platform Builder **v1.61.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

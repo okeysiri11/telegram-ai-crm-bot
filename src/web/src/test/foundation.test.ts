@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("33.4");
+    expect(webConfig.sprint).toBe("33.5");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -902,5 +902,53 @@ describe("Sprint 33.4 Predictive Intelligence", () => {
     expect(pred.opportunities.length).toBeGreaterThan(0);
     expect(pred.executive.likelyToday.length).toBeGreaterThan(0);
     expect(pred.twinZones.length).toBe(4);
+  });
+});
+
+describe("Sprint 33.5 Autonomous Enterprise", () => {
+  it("supports levels, approvals, journal, governance", async () => {
+    const { AUTONOMY_LEVELS, CRITICAL_ACTIONS, resolveDefaultLevel } = await import(
+      "../autonomous-enterprise/autonomyCatalog"
+    );
+    const { setAutonomyLevel, decideApproval, listApprovals } = await import(
+      "../autonomous-enterprise/autonomyState"
+    );
+    const { deriveAutonomy } = await import("../autonomous-enterprise/deriveAutonomy");
+
+    expect(AUTONOMY_LEVELS).toHaveLength(5);
+    expect(resolveDefaultLevel("platform_owner")).toBe(3);
+    expect(CRITICAL_ACTIONS.length).toBeGreaterThan(3);
+
+    setAutonomyLevel(3);
+    const bundle = deriveAutonomy(
+      {
+        updatedAt: new Date().toISOString(),
+        activity: [],
+        aiOps: {
+          running: ["Concierge"],
+          queue: ["Q"],
+          recent: [],
+          status: "ok",
+          errors: [],
+          completed: ["Done"],
+        },
+        timeline: [],
+        health: [],
+        recommendations: [],
+        mcOk: true,
+        activeModules: ["crm"],
+      },
+      { roleId: "owner" },
+    );
+    expect(bundle.dashboard.level).toBe(3);
+    expect(bundle.approvals.length).toBeGreaterThanOrEqual(6);
+    expect(bundle.categories.map((c) => c.id)).toEqual(
+      expect.arrayContaining(["crm", "finance", "legal", "documents", "ai_team", "workflow"]),
+    );
+    const pending = listApprovals().find((a) => a.status === "pending");
+    expect(pending).toBeTruthy();
+    decideApproval(pending!.id, "approved", "tester");
+    expect(listApprovals().find((a) => a.id === pending!.id)?.status).toBe("approved");
+    expect(bundle.governance.timeSavedMin).toBeGreaterThanOrEqual(0);
   });
 });

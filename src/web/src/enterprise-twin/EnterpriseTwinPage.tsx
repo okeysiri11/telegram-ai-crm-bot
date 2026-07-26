@@ -24,6 +24,7 @@ import { deriveIntegrationHub } from "@/enterprise-integrations/deriveIntegratio
 import { deriveRuntime } from "@/ai-runtime/deriveRuntime";
 import { deriveDataFabric } from "@/enterprise-data-fabric/deriveFabric";
 import { derivePredictive } from "@/predictive-intelligence/derivePredictive";
+import { deriveAutonomy } from "@/autonomous-enterprise/deriveAutonomy";
 
 const KIND_LABEL: Record<TwinNodeKind, string> = {
   department: "Подразделение",
@@ -74,6 +75,10 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
   const predZones = useMemo(
     () => derivePredictive(snapshot, notifications).twinZones,
     [snapshot, notifications],
+  );
+  const autoTwin = useMemo(
+    () => deriveAutonomy(snapshot, { roleId: user?.roleId || first.roleId, notifications }).twin,
+    [snapshot, user?.roleId, first.roleId, notifications],
   );
 
   const nodes = useMemo(
@@ -127,6 +132,9 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
             </Link>
             <Link to="/platform-builder/predictive" className="eds-type-small text-[var(--eds-primary)]">
               Predictive →
+            </Link>
+            <Link to="/platform-builder/autonomy" className="eds-type-small text-[var(--eds-primary)]">
+              Autonomy →
             </Link>
           </div>
         </header>
@@ -214,6 +222,37 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
                 <span className="eds-type-small">{z.detail}</span>
               </div>
             ))}
+          </div>
+        </Card>
+
+        {/* Sprint 33.5 — autonomy on Twin */}
+        <Card className="etwin-impact" aria-label="Autonomy twin">
+          <div className="etwin-section-head">
+            <h2>Autonomy</h2>
+            <Link to="/platform-builder/autonomy" className="eds-type-small text-[var(--eds-primary)]">
+              Center →
+            </Link>
+          </div>
+          <div className="etwin-exec-grid">
+            <ExecCol
+              title="Автономные процессы"
+              items={autoTwin.autonomousProcesses.slice(0, 4)}
+              tone="ok"
+            />
+            <ExecCol
+              title="Ожидают согласования"
+              items={autoTwin.pendingApprovals.length ? autoTwin.pendingApprovals.slice(0, 4) : ["—"]}
+              tone="risk"
+            />
+            <ExecCol
+              title="Критические решения"
+              items={autoTwin.criticalDecisions.length ? autoTwin.criticalDecisions.slice(0, 4) : ["—"]}
+              tone="risk"
+            />
+            <ExecCol
+              title="Уровень по отделам"
+              items={autoTwin.departmentLevels.slice(0, 4).map((d) => `${d.label}: L${d.level}`)}
+            />
           </div>
         </Card>
 

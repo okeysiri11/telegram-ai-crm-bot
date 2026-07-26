@@ -1,4 +1,4 @@
-"""Tests — Enterprise Data Fabric & Knowledge Graph (Sprint 33.3)."""
+"""Tests — Autonomous Enterprise & Human-in-the-Loop (Sprint 33.5)."""
 
 from __future__ import annotations
 
@@ -10,82 +10,81 @@ from applications.platform_builder import platform_builder
 ROOT = Path(__file__).resolve().parents[1]
 
 DOCS = [
-    "ENTERPRISE_DATA_FABRIC_33_3.md",
-    "RELEASE_NOTES_33_3.md",
+    "AUTONOMOUS_ENTERPRISE_33_5.md",
+    "RELEASE_NOTES_33_5.md",
 ]
 
 
-def test_33_3_docs_exist():
+def test_33_5_docs_exist():
     docs = ROOT / "docs"
     for name in DOCS:
         path = docs / name
         assert path.exists(), name
-        assert "33.3" in path.read_text()
+        assert "33.5" in path.read_text()
     index = (docs / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
-    assert "ENTERPRISE_DATA_FABRIC_33_3" in index
-    report = (docs / "ENTERPRISE_DATA_FABRIC_33_3.md").read_text()
-    assert "No new Database Engine" in report
-    assert "Relationship Explorer" in report
-    assert "Data Lineage" in report
+    assert "AUTONOMOUS_ENTERPRISE_33_5" in index
+    report = (docs / "AUTONOMOUS_ENTERPRISE_33_5.md").read_text()
+    assert "No new AI Core" in report
+    assert "Approval Center" in report
+    assert "Human-in-the-Loop" in report or "Human-in-the-loop" in report
 
 
-def test_platform_version_33_3():
+def test_platform_version_33_5():
     health = platform_builder.health()
     assert health["application_version"] == "1.61.0"
     assert health["sprint"] == "33.5"
     assert "Autonomous Enterprise" in health["release_status"]
 
 
-def test_data_fabric_wired():
+def test_autonomy_wired():
     app = (ROOT / "src" / "web" / "src" / "App.tsx").read_text()
-    assert 'path="/platform-builder/data-fabric"' in app
-    assert "EnterpriseDataFabricPage" in app
+    assert 'path="/platform-builder/autonomy"' in app
+    assert "AutonomousEnterprisePage" in app
     full = (ROOT / "src" / "web" / "src" / "layouts" / "FullLayout.tsx").read_text()
-    assert "DataFabricStrip" in full
-    catalog = (ROOT / "src" / "web" / "src" / "enterprise-data-fabric" / "fabricCatalog.ts").read_text()
+    assert "AutonomyStrip" in full
+    catalog = (ROOT / "src" / "web" / "src" / "autonomous-enterprise" / "autonomyCatalog.ts").read_text()
     for token in (
-        "Companies",
-        "Users",
-        "AI Team",
-        "Clients",
-        "Deals",
-        "Documents",
-        "Workflows",
-        "Knowledge",
-        "Integrations",
-        "KNOWLEDGE_CHAIN",
+        "Manual Only",
+        "AI Suggests",
+        "AI Executes Low Risk",
+        "AI Executes + Approval For Critical",
+        "Enterprise Autonomous",
+        "CRITICAL_ACTIONS",
     ):
         assert token in catalog
     page = (
-        ROOT / "src" / "web" / "src" / "enterprise-data-fabric" / "EnterpriseDataFabricPage.tsx"
+        ROOT / "src" / "web" / "src" / "autonomous-enterprise" / "AutonomousEnterprisePage.tsx"
     ).read_text()
     for token in (
-        "Enterprise Graph",
-        "Relationship Explorer",
-        "Data Lineage",
-        "Knowledge Connections",
-        "Impact Analysis",
-        "DataFabricOverviewCompact",
+        "Autonomy Center",
+        "Approval Center",
+        "Autonomy Levels",
+        "Decision Journal",
+        "Executive Governance",
+        "Approve",
+        "Reject",
+        "Edit",
+        "AutonomousWidgetCompact",
     ):
         assert token in page
     css = (
-        ROOT / "src" / "web" / "src" / "enterprise-data-fabric" / "enterprise-data-fabric.css"
+        ROOT / "src" / "web" / "src" / "autonomous-enterprise" / "autonomous-enterprise.css"
     ).read_text()
-    assert "Sprint 33.3" in css
-    assert "edf-" in css
+    assert "Sprint 33.5" in css
+    assert "auto-" in css
     idx = (ROOT / "src" / "web" / "src" / "index.css").read_text()
-    assert "enterprise-data-fabric.css" in idx
+    assert "autonomous-enterprise.css" in idx
     mc = (
         ROOT / "src" / "web" / "platform-builder" / "mission-control" / "MissionControlLivePanel.tsx"
     ).read_text()
-    assert "DataFabricOverviewCompact" in mc
+    assert "AutonomousWidgetCompact" in mc
     twin = (ROOT / "src" / "web" / "src" / "enterprise-twin" / "EnterpriseTwinPage.tsx").read_text()
-    assert "deriveDataFabric" in twin
+    assert "deriveAutonomy" in twin
     qa = (ROOT / "src" / "web" / "command-center" / "managers" / "quickActions.ts").read_text()
-    assert "/platform-builder/data-fabric" in qa
+    assert "/platform-builder/autonomy" in qa
 
 
-def test_config_manifest_33_3():
+def test_config_manifest_33_5():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
     assert 'application_version: str = "1.61.0"' in cfg
     assert 'sprint: str = "33.5"' in cfg

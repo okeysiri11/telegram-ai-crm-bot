@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.60.0",
-  "sprint": "33.4",
-  "release_status": "Predictive Intelligence & Scenario Simulator",
+  "application_version": "1.61.0",
+  "sprint": "33.5",
+  "release_status": "Autonomous Enterprise & Human-in-the-Loop",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

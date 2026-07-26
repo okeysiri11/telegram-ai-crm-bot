@@ -15,6 +15,7 @@ import { IntegrationHubStrip } from "@/enterprise-integrations";
 import { AIRuntimeStrip } from "@/ai-runtime";
 import { DataFabricStrip } from "@/enterprise-data-fabric";
 import { PredictiveStrip } from "@/predictive-intelligence";
+import { AutonomyStrip } from "@/autonomous-enterprise";
 
 /** Shared application shell — sidebar + top nav + unified workspace + AI OS chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
@@ -44,6 +45,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
             <AIRuntimeStrip />
             <DataFabricStrip />
             <PredictiveStrip />
+            <AutonomyStrip />
             <UnifiedToastStrip />
             {children}
           </div>

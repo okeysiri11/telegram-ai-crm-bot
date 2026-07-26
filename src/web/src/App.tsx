@@ -18,6 +18,7 @@ import { EnterpriseIntegrationHubPage } from "@/enterprise-integrations";
 import { AIRuntimePage } from "@/ai-runtime";
 import { EnterpriseDataFabricPage } from "@/enterprise-data-fabric";
 import { PredictiveIntelligencePage } from "@/predictive-intelligence";
+import { AutonomousEnterprisePage } from "@/autonomous-enterprise";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -213,6 +214,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <PredictiveIntelligencePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/autonomy"
+        element={
+          <ProtectedRoute>
+            <AutonomousEnterprisePage />
           </ProtectedRoute>
         }
       />
