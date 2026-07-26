@@ -39,8 +39,8 @@ def reset_store():
 
 def test_visual_experience_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.45.0"
-    assert health["sprint"] == "32.3.3"
+    assert health["application_version"] == "1.46.0"
+    assert health["sprint"] == "32.3.4"
     assert health["experience_engine_ready"] is True
     assert health["unified_ux_ready"] is True
     assert health["adaptive_interface_ready"] is True
@@ -106,7 +106,7 @@ def test_experience_flow_and_create():
 async def test_api_experience(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.45.0"
+    assert body["application_version"] == "1.46.0"
     assert body["experience_engine_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/experience/catalog")
@@ -134,5 +134,5 @@ async def test_api_experience(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.45.0"' in manifest
-    assert "32.3.3" in manifest
+    assert '"application_version": "1.46.0"' in manifest
+    assert "32.3.4" in manifest

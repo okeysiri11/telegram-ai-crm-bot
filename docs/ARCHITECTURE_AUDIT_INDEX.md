@@ -97,6 +97,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_CITY_32_3_3.md](./ENTERPRISE_CITY_32_3_3.md) — 2D city visual navigation to existing modules. Platform Builder **v1.45.0**.
 
+## Live Enterprise Activity & AI Operations (Sprint 32.3.4)
+
+[LIVE_ENTERPRISE_32_3_4.md](./LIVE_ENTERPRISE_32_3_4.md) — Live feed / AI ops / health on Dashboard & City. Platform Builder **v1.46.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

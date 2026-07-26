@@ -1,7 +1,7 @@
 /**
- * Enterprise Command Center Dashboard — Sprint 32.3.2.
+ * Enterprise Command Center Dashboard — Sprint 32.3.2 + Live Ops 32.3.4.
  * Answers: Where am I? What's happening? What next?
- * Reuses Mission Control, widgets catalog, notifications, RBAC context, AI routes.
+ * Live cards auto-refresh via existing liveUpdates + MC/Ops APIs.
  */
 
 import { useMemo, useState } from "react";
@@ -19,7 +19,6 @@ import { useNavigationUi } from "../../navigation/components/NavigationProvider"
 import { searchProvider } from "../../navigation/managers/searchProvider";
 import { MissionControlStrip } from "@/dashboard/MissionControlStrip";
 import {
-  AI_ACTIVITY,
   BUSINESS_MODULES,
   DEFAULT_COMMAND_LAYOUT,
   KPI_CARDS,
@@ -29,6 +28,15 @@ import {
   saveCommandLayout,
   type CommandWidgetId,
 } from "@/dashboard/commandCenterCatalog";
+import {
+  ActivityFeedPanel,
+  AiOperationsPanel,
+  AiRecommendationsPanel,
+  EnterpriseHealthPanel,
+  LiveMetaBar,
+  MissionTimelinePanel,
+  useLiveEnterprise,
+} from "@/live-ops";
 import { telemetry } from "@/integrations/telemetry";
 
 export function DashboardPage() {
@@ -43,9 +51,27 @@ export function DashboardPage() {
   const [q, setQ] = useState("");
   const widgets = useMemo(() => widgetManager.list().slice(0, 6), []);
   const personal = personalizationEngine.get();
+  const { snapshot, busy, error, refresh } = useLiveEnterprise(true);
 
   const company = first.companyName || ws.company;
   const roleLabel = role?.label || user?.roleId || user?.roles?.[0] || "User";
+
+  const liveKpis = useMemo(() => {
+    const healthy = snapshot.health.filter((h) => h.ok).length;
+    const feedN = snapshot.activity.length;
+    return KPI_CARDS.map((k) => {
+      if (k.id === "automation") {
+        return { ...k, value: `${Math.min(99, 60 + healthy * 4)}%`, delta: snapshot.aiOps.completed[0] || k.delta };
+      }
+      if (k.id === "processes") {
+        return { ...k, value: String(snapshot.aiOps.queue.length + healthy), delta: busy ? "live…" : "stable" };
+      }
+      if (k.id === "deals") {
+        return { ...k, delta: `feed ${feedN}` };
+      }
+      return k;
+    });
+  }, [snapshot, busy]);
 
   function visible(id: CommandWidgetId) {
     return layout.includes(id);
@@ -132,9 +158,10 @@ export function DashboardPage() {
         </header>
 
         <p className="cc-lead">
-          Где я — <strong>{company}</strong>. Что происходит — активность системы и AI ниже. Что делать
-          дальше — Quick Actions и рекомендации Concierge.
+          Где я — <strong>{company}</strong>. Что происходит — live Activity Feed и Mission Control. Что делать
+          дальше — Quick Actions и AI Recommendations.
         </p>
+        <LiveMetaBar snapshot={snapshot} busy={busy} error={error} onRefresh={() => void refresh()} />
 
         <div className="cc-grid">
           {/* SECTION 2 — Mission Control */}
@@ -147,6 +174,45 @@ export function DashboardPage() {
                 </Button>
               </div>
               <MissionControlStrip />
+            </section>
+          ) : null}
+
+          {/* SECTION — Activity Feed (32.3.4) */}
+          {visible("activity_feed") ? (
+            <section className="cc-span-6">
+              <div className="cc-section-head">
+                <h2>Activity Feed</h2>
+                <Button size="sm" variant="ghost" onClick={() => hideSection("activity_feed")}>
+                  Скрыть
+                </Button>
+              </div>
+              <ActivityFeedPanel items={snapshot.activity} />
+            </section>
+          ) : null}
+
+          {/* SECTION — Mission Timeline */}
+          {visible("mission_timeline") ? (
+            <section className="cc-span-6">
+              <div className="cc-section-head">
+                <h2>Mission Timeline</h2>
+                <Button size="sm" variant="ghost" onClick={() => hideSection("mission_timeline")}>
+                  Скрыть
+                </Button>
+              </div>
+              <MissionTimelinePanel buckets={snapshot.timeline} />
+            </section>
+          ) : null}
+
+          {/* SECTION — Enterprise Health */}
+          {visible("enterprise_health") ? (
+            <section className="cc-span-12">
+              <div className="cc-section-head">
+                <h2>Enterprise Health</h2>
+                <Button size="sm" variant="ghost" onClick={() => hideSection("enterprise_health")}>
+                  Скрыть
+                </Button>
+              </div>
+              <EnterpriseHealthPanel health={snapshot.health} />
             </section>
           ) : null}
 
@@ -230,7 +296,7 @@ export function DashboardPage() {
                 </Button>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                {KPI_CARDS.map((k) => (
+                {liveKpis.map((k) => (
                   <article key={k.id} className="cc-kpi" data-widget={k.widgetKind}>
                     <p className="cc-kpi-label">{k.label}</p>
                     <p className="cc-kpi-value">{k.value}</p>
@@ -255,67 +321,39 @@ export function DashboardPage() {
             </section>
           ) : null}
 
-          {/* SECTION 6 — AI Activity */}
+          {/* SECTION 6 — AI Operations (live) */}
           {visible("ai_activity") ? (
             <section className="cc-span-6">
               <div className="cc-section-head">
-                <h2>AI Activity</h2>
+                <h2>AI Operations</h2>
                 <Button size="sm" variant="ghost" onClick={() => hideSection("ai_activity")}>
                   Скрыть
                 </Button>
               </div>
-              <Card title="AI Core · Concierge · Team">
-                <p className="mb-3 eds-type-small text-[var(--eds-text-muted)]">
-                  Concierge: {first.conciergeName || "не настроен"} · режим AI Team:{" "}
-                  {first.aiTeamMode || "—"}
-                </p>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div>
-                    <p className="mb-2 font-medium">Работают</p>
-                    <ul className="space-y-1 eds-type-small">
-                      {AI_ACTIVITY.running.map((x) => (
-                        <li key={x}>
-                          <Badge tone="success">{x}</Badge>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="mb-2 font-medium">Последние действия</p>
-                    <ul className="space-y-1 eds-type-small text-[var(--eds-text-muted)]">
-                      {AI_ACTIVITY.recent.map((x) => (
-                        <li key={x}>· {x}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="mb-2 font-medium">Предложения</p>
-                    <ul className="space-y-1 eds-type-small">
-                      {AI_ACTIVITY.suggestions.map((x) => (
-                        <li key={x}>· {x}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <p className="mb-2 font-medium">Автоматизации</p>
-                    <ul className="space-y-1 eds-type-small text-[var(--eds-text-muted)]">
-                      {AI_ACTIVITY.completed.map((x) => (
-                        <li key={x}>· {x}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Link to="/platform-builder/ai-team">
-                    <Button size="sm">AI Team</Button>
-                  </Link>
-                  <Link to="/platform-builder/concierge">
-                    <Button size="sm" variant="secondary">
-                      Concierge
-                    </Button>
-                  </Link>
-                </div>
-              </Card>
+              <AiOperationsPanel ops={snapshot.aiOps} />
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link to="/platform-builder/ai-team">
+                  <Button size="sm">AI Team</Button>
+                </Link>
+                <Link to="/platform-builder/concierge">
+                  <Button size="sm" variant="secondary">
+                    Concierge
+                  </Button>
+                </Link>
+              </div>
+            </section>
+          ) : null}
+
+          {/* SECTION — AI Recommendations */}
+          {visible("ai_recommendations") ? (
+            <section className="cc-span-6">
+              <div className="cc-section-head">
+                <h2>AI Recommendations</h2>
+                <Button size="sm" variant="ghost" onClick={() => hideSection("ai_recommendations")}>
+                  Скрыть
+                </Button>
+              </div>
+              <AiRecommendationsPanel items={snapshot.recommendations} />
             </section>
           ) : null}
 

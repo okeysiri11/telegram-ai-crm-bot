@@ -89,6 +89,7 @@ export function EnterpriseCityPage() {
           <div className="flex flex-wrap gap-2">
             <Badge tone={mcLinked ? "success" : "warning"}>MC {mcLinked ? "linked" : "check"}</Badge>
             <Badge>{unread} alerts</Badge>
+            <Badge tone="success">Live city</Badge>
             <Button size="sm" variant="secondary" onClick={() => void refreshMc()}>
               Refresh status
             </Button>

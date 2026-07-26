@@ -10,7 +10,11 @@ export type CommandWidgetId =
   | "quick_actions"
   | "ai_activity"
   | "business_modules"
-  | "personal_scaffold";
+  | "personal_scaffold"
+  | "activity_feed"
+  | "mission_timeline"
+  | "enterprise_health"
+  | "ai_recommendations";
 
 export type QuickAction = {
   id: string;
@@ -38,10 +42,14 @@ export type KpiCard = {
 /** Default visible sections — personalization can hide later. */
 export const DEFAULT_COMMAND_LAYOUT: CommandWidgetId[] = [
   "mission_control",
+  "activity_feed",
   "today_overview",
+  "mission_timeline",
+  "enterprise_health",
   "business_kpi",
   "quick_actions",
   "ai_activity",
+  "ai_recommendations",
   "business_modules",
   "personal_scaffold",
 ];
@@ -122,7 +130,13 @@ const LAYOUT_KEY = "ewp_command_center_layout_v1";
 export function loadCommandLayout(): CommandWidgetId[] {
   try {
     const raw = JSON.parse(localStorage.getItem(LAYOUT_KEY) || "null") as CommandWidgetId[] | null;
-    if (Array.isArray(raw) && raw.length) return raw;
+    if (Array.isArray(raw) && raw.length) {
+      const merged = [...raw];
+      for (const id of DEFAULT_COMMAND_LAYOUT) {
+        if (!merged.includes(id)) merged.push(id);
+      }
+      return merged;
+    }
   } catch {
     /* ignore */
   }

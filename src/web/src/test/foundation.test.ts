@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.3.3");
+    expect(webConfig.sprint).toBe("32.3.4");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -350,10 +350,13 @@ describe("Sprint 32.3.2 Enterprise Command Center", () => {
     expect(QUICK_ACTIONS.length).toBeGreaterThanOrEqual(6);
     expect(BUSINESS_MODULES.some((m) => m.id === "crm")).toBe(true);
     expect(KPI_CARDS).toHaveLength(6);
-    const saved = saveCommandLayout(["mission_control", "quick_actions"]);
-    expect(loadCommandLayout()).toEqual(saved);
-    const toggled = toggleCommandSection("ai_activity");
-    expect(toggled).toContain("ai_activity");
+    saveCommandLayout([...DEFAULT_COMMAND_LAYOUT]);
+    const without = toggleCommandSection("ai_activity");
+    expect(without).not.toContain("ai_activity");
+    const restored = toggleCommandSection("ai_activity");
+    expect(restored).toContain("ai_activity");
+    const loaded = loadCommandLayout();
+    expect(loaded).toContain("activity_feed");
     saveCommandLayout([...DEFAULT_COMMAND_LAYOUT]);
   });
 });
@@ -367,5 +370,18 @@ describe("Sprint 32.3.3 Enterprise City", () => {
     expect(getBuilding("dashboard")?.route).toBe("/dashboard");
     expect(searchBuildings("finance").some((b) => b.id === "finance")).toBe(true);
     expect(CITY_BUILDINGS.every((b) => b.route.startsWith("/"))).toBe(true);
+  });
+});
+
+describe("Sprint 32.3.4 Live Enterprise", () => {
+  it("exposes health probes and seed activity catalog", async () => {
+    const { ENTERPRISE_HEALTH_PROBES, SEED_ACTIVITY, LIVE_POLL_MS } = await import("../live-ops/liveEnterpriseCatalog");
+    expect(ENTERPRISE_HEALTH_PROBES.length).toBeGreaterThanOrEqual(6);
+    expect(SEED_ACTIVITY.some((a) => a.kind === "ai")).toBe(true);
+    expect(LIVE_POLL_MS).toBeGreaterThanOrEqual(10_000);
+    const { emptyLiveSnapshot } = await import("../live-ops/fetchLiveEnterprise");
+    const snap = emptyLiveSnapshot();
+    expect(snap.timeline).toHaveLength(4);
+    expect(snap.recommendations.length).toBeGreaterThan(0);
   });
 });

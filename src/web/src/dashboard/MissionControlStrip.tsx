@@ -1,5 +1,5 @@
 /**
- * Mission Control strip for Command Center — Sprint 32.3.2.
+ * Mission Control strip for Command Center — Sprint 32.3.2 + live refresh 32.3.4.
  * Probes existing MC + OBS APIs; does not fork Mission Control engine.
  */
 
@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { Badge, Button, Card } from "@/ui";
 import { apiFetch } from "@/integrations/apiClient";
 import { hubIntegrations } from "@/integrations/hub";
+import { liveUpdates } from "../../workspace/realtime/liveUpdates";
 import { PLATFORM_BUILDER_API } from "../../platform-builder/types";
 
 type Dict = Record<string, unknown>;
@@ -38,6 +39,12 @@ export function MissionControlStrip() {
 
   useEffect(() => {
     void refresh();
+    const unsub = liveUpdates.subscribe(() => {
+      void refresh();
+    });
+    return () => {
+      unsub();
+    };
   }, [refresh]);
 
   const obsReady =
