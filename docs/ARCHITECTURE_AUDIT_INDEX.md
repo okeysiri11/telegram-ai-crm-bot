@@ -1,7 +1,8 @@
 # Architecture Audit Index — Sprint 30.2
 
 **Phase:** Architecture Audit & Production Readiness  
-**Foundation:** Platform Builder **v1.27.0** / Business Ecosystem Foundation (Sprint 30.2)  
+**Foundation at audit time:** Platform Builder **v1.27.0** / Business Ecosystem Foundation  
+**Current platform:** see Sprint **30.3** consolidation  
 **Rule:** Validate, extend, prepare — do **not** redesign or replace completed modules.
 
 ## Deliverables
@@ -16,18 +17,15 @@
 | AI Platform Report | [AI_PLATFORM_AUDIT.md](./AI_PLATFORM_AUDIT.md) |
 | Production Readiness Report | [PRODUCTION_READINESS_AUDIT.md](./PRODUCTION_READINESS_AUDIT.md) |
 | Web Readiness Report | [WEB_READINESS_AUDIT.md](./WEB_READINESS_AUDIT.md) |
-| Prioritized Backlog | [IMPLEMENTATION_BACKLOG_30_2.md](./IMPLEMENTATION_BACKLOG_30_2.md) |
+| Prioritized Backlog (30.2) | [IMPLEMENTATION_BACKLOG_30_2.md](./IMPLEMENTATION_BACKLOG_30_2.md) |
 
-## Related
+## Consolidation follow-up (Sprint 30.3)
 
-- [ENTERPRISE_BUSINESS_ECOSYSTEM.md](./ENTERPRISE_BUSINESS_ECOSYSTEM.md)
-- [ENTERPRISE_PRODUCTION_READINESS.md](./ENTERPRISE_PRODUCTION_READINESS.md)
-- [ENTERPRISE_WEB_FOUNDATION.md](./ENTERPRISE_WEB_FOUNDATION.md)
-- Knowledge: `knowledge/architecture_audit/`
+[ENTERPRISE_CONSOLIDATION_30_3.md](./ENTERPRISE_CONSOLIDATION_30_3.md) — ownership maps, portal shells, soft-route fixes, updated backlog.
 
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  
 - Existing vertical APIs remain mounted  
 - Existing web shell (auth, workspace, navigation, command-center) remains intact  
-- Audit introduces **documentation and backlog only** — no subsystem replacement  
+- Audit introduces **documentation and backlog**; consolidation extends Web prep without subsystem replacement  

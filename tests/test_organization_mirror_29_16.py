@@ -1,4 +1,4 @@
-"""Tests — Organization Mirror (Sprint 30.2)."""
+"""Tests — Organization Mirror (Sprint 30.3)."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ def reset_store():
 def test_organization_mirror_surfaces():
     health = platform_builder.health()
     assert health["organization_mirror_ready"] is True
-    assert health["application_version"] == "1.27.0"
+    assert health["application_version"] == "1.28.0"
 
     eng = platform_builder.digital_twin
     org = eng.organization_mirror()

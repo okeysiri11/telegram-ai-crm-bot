@@ -39,8 +39,8 @@ def reset_store():
 
 def test_team_map_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.27.0"
-    assert health["sprint"] == "30.2"
+    assert health["application_version"] == "1.28.0"
+    assert health["sprint"] == "30.3"
     assert health["team_map_ready"] is True
     assert health["live_organization_ready"] is True
     assert health["relationship_engine_ready"] is True
@@ -111,7 +111,7 @@ def test_map_cards_workload_create():
 async def test_api_team_map(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.27.0"
+    assert body["application_version"] == "1.28.0"
     assert body["team_map_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/team-map/catalog")
@@ -139,5 +139,5 @@ def test_docs_team_map_29_2():
     for key in ("Visual Event Bus", "Workload Engine", "Relationship Map", "Zoom"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.27.0"' in manifest
-    assert "30.2" in manifest
+    assert '"application_version": "1.28.0"' in manifest
+    assert "30.3" in manifest

@@ -28,6 +28,7 @@ import {
   DashboardsPage,
   LayoutEditorPage,
   WorkspaceHomePage,
+  WorkspaceModulePage,
   WorkspaceSettingsPage,
   WorkspacesPage,
 } from "../workspace/pages";
@@ -37,6 +38,11 @@ import { ReleaseCandidatePage } from "../release/pages";
 import { AIOSPage } from "../ai-os/pages";
 import { OrganizationBrainPage } from "../organization-brain/pages";
 import { VerticalFederationPage } from "../vertical-federation/pages";
+import {
+  CustomerPortalPage,
+  EmployeePortalPage,
+  OwnerPortalPage,
+} from "../portals";
 import {
   AIBuilderPage,
   AITeamCenterPage,
@@ -150,6 +156,54 @@ export function App() {
         element={
           <ProtectedRoute>
             <WorkspaceSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/:module"
+        element={
+          <ProtectedRoute>
+            <WorkspaceModulePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/:module/:sub"
+        element={
+          <ProtectedRoute>
+            <WorkspaceModulePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portals/customer"
+        element={
+          <ProtectedRoute>
+            <CustomerPortalPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portals/employee"
+        element={
+          <ProtectedRoute>
+            <EmployeePortalPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portals/owner"
+        element={
+          <ProtectedRoute>
+            <OwnerPortalPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/portals/mission-control"
+        element={
+          <ProtectedRoute>
+            <Navigate to="/platform-builder/mission-control" replace />
           </ProtectedRoute>
         }
       />

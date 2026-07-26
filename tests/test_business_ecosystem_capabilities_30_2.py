@@ -1,4 +1,4 @@
-"""Tests — Business Ecosystem Capability Catalogs (Sprint 30.2)."""
+"""Tests — Business Ecosystem Capability Catalogs (Sprint 30.3)."""
 
 from __future__ import annotations
 

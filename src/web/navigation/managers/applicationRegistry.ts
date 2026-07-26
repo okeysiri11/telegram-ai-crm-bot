@@ -10,6 +10,7 @@ const APPS: RegisteredApplication[] = [
   { id: "app_hub", code: "enterprise_hub", icon: "EH", name: "Enterprise Hub", status: "healthy", owner: "platform", permissions: ["read", "navigate"], version: "9.0.6", health: "ok", lastUpdate: new Date().toISOString(), route: "/workspace" },
   { id: "app_mkt", code: "marketplace", icon: "MK", name: "AI Marketplace", status: "healthy", owner: "marketplace", permissions: ["read", "navigate"], version: "1.0", health: "ok", lastUpdate: new Date().toISOString(), route: "/workspace/marketplace" },
   { id: "app_cc", code: "command_center", icon: "CC", name: "Command Center", status: "healthy", owner: "productivity", permissions: ["read", "navigate"], version: "9.0.6", health: "ok", lastUpdate: new Date().toISOString(), route: "/command-center" },
+  { id: "app_cc_os", code: "command_center_os", icon: "CO", name: "Command Center OS", status: "healthy", owner: "platform_builder", permissions: ["read", "navigate"], version: "1.28.0", health: "ok", lastUpdate: new Date().toISOString(), route: "/platform-builder/command-center" },
   { id: "app_aios", code: "ai_os", icon: "AI", name: "AI OS", status: "healthy", owner: "ai", permissions: ["read", "navigate"], version: "3.4.0-alpha", health: "ok", lastUpdate: new Date().toISOString(), route: "/workspace/ai" },
 ];
 

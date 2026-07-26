@@ -1,4 +1,4 @@
-"""Tests — Context Navigation Platform (Sprint 30.2)."""
+"""Tests — Context Navigation Platform (Sprint 30.3)."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def reset_store():
 def test_context_navigation_surfaces():
     health = platform_builder.health()
     assert health["context_navigation_ready"] is True
-    assert health["application_version"] == "1.27.0"
+    assert health["application_version"] == "1.28.0"
 
     eng = platform_builder.navigation_intelligence
     recs = eng.smart_recommendations()
