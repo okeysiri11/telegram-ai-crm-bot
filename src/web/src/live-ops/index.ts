@@ -1,6 +1,6 @@
 /** Live Enterprise Activity & AI Operations — Sprint 32.3.4. */
 export { useLiveEnterprise, getSharedLiveSnapshot } from "./useLiveEnterprise";
-export { fetchLiveEnterpriseSnapshot, emptyLiveSnapshot } from "./fetchLiveEnterprise";
+export { fetchLiveEnterpriseSnapshot, emptyLiveSnapshot, type LiveEnterpriseSnapshot } from "./fetchLiveEnterprise";
 export {
   ENTERPRISE_HEALTH_PROBES,
   LIVE_POLL_MS,

@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.49.0",
-  "sprint": "32.3.7",
-  "release_status": "Production Readiness & Launch Validation",
+  "application_version": "1.50.0",
+  "sprint": "32.4",
+  "release_status": "AI Operating System Experience",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

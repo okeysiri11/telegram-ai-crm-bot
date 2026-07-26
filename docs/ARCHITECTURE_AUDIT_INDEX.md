@@ -113,6 +113,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [PRODUCTION_READINESS_32_3_7.md](./PRODUCTION_READINESS_32_3_7.md) — Demo path validation, link fixes, launch score. Platform Builder **v1.49.0**.
 
+## AI Operating System Experience (Sprint 32.4)
+
+[AI_OS_EXPERIENCE_32_4.md](./AI_OS_EXPERIENCE_32_4.md) — Global Concierge, Pulse, Snapshot, Ctrl+K AI OS chrome. Platform Builder **v1.50.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

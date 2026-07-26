@@ -9,6 +9,11 @@ import { NavigationProvider } from "../../navigation/components/NavigationProvid
 import { CommandCenterProvider } from "../../command-center/components/CommandCenterProvider";
 import { WebCoreProvider } from "./WebCoreProvider";
 import { telemetry } from "@/integrations/telemetry";
+import { contextEngine } from "../../command-center/managers/contextEngine";
+import { loadFirstEntry } from "@/onboarding/firstEntryStore";
+import { useWorkspaceStore } from "@/workspace/workspaceStore";
+import { detectActiveEcosystem } from "@/workspace-chrome/workspaceContext";
+import { sectionKeyFromPath } from "@/ai-os-chrome/smartSuggestions";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +21,19 @@ function TelemetryRouterBridge() {
   const location = useLocation();
   useEffect(() => {
     void telemetry.pageView(location.pathname);
+    const first = loadFirstEntry();
+    const ws = useWorkspaceStore.getState().workspace;
+    const user = useAuthStore.getState().user;
+    const ecosystem = detectActiveEcosystem(location.pathname) || "platform";
+    contextEngine.pushPage(location.pathname);
+    contextEngine.patch({
+      workspace: ws.project || first.workspaceId || "default",
+      organization: first.companyName || ws.company,
+      role: first.roleId || user?.roleId || ws.userContext || "user",
+      department: ws.department || ecosystem,
+      currentModule: sectionKeyFromPath(location.pathname),
+      currentDashboard: location.pathname.includes("/dashboard") ? "command_center" : null,
+    });
   }, [location.pathname]);
   return null;
 }

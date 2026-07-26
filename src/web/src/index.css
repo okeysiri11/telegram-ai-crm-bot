@@ -783,3 +783,78 @@ textarea:focus-visible {
   outline: 2px solid color-mix(in oklab, #0f766e 70%, transparent);
   outline-offset: 2px;
 }
+
+/* Sprint 32.4 — AI Operating System Experience */
+.aios-chrome {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.aios-pulse {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.75rem;
+  border: 1px dashed var(--ew-border);
+  background: color-mix(in oklab, var(--ew-surface) 94%, #0369a1 5%);
+}
+.aios-pulse-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ew-muted);
+  margin-right: 0.25rem;
+}
+.aios-dock {
+  padding: 0.9rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--ew-border);
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--ew-surface) 90%, #0f766e), var(--ew-surface));
+}
+.aios-dock-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.aios-dock-block {
+  margin: 0.75rem 0;
+}
+.aios-suggest {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  gap: 0.5rem;
+  text-align: left;
+  padding: 0.4rem 0.35rem;
+  border-radius: 0.55rem;
+  transition: background 140ms ease;
+}
+.aios-suggest:hover {
+  background: color-mix(in oklab, #0f766e 10%, transparent);
+}
+.aios-dock-collapsed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+  font-size: 0.85rem;
+}
+.aios-snapshot {
+  border-color: color-mix(in oklab, #0369a1 35%, var(--ew-border));
+}
+@media (prefers-reduced-motion: reduce) {
+  .aios-chrome,
+  .aios-snapshot {
+    animation: none !important;
+  }
+}

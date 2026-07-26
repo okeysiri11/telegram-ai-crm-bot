@@ -46,8 +46,8 @@ def reset_store():
 
 def test_ai_builder_ready_and_catalog():
     health = platform_builder.health()
-    assert health["application_version"] == "1.49.0"
-    assert health["sprint"] == "32.3.7"
+    assert health["application_version"] == "1.50.0"
+    assert health["sprint"] == "32.4"
     assert health["ai_builder_ready"] is True
     assert health["ai_wizard_ready"] is True
     assert health["multi_agent_builder_ready"] is True
@@ -153,7 +153,7 @@ async def test_api_ai_builder(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
     assert body["ai_builder_ready"] is True
-    assert body["application_version"] == "1.49.0"
+    assert body["application_version"] == "1.50.0"
 
     catalog = await client.get(f"{PREFIX}/ai-builder/catalog")
     assert catalog.status == 200
@@ -229,5 +229,5 @@ def test_docs_and_frontend_28_2():
     for key in ("Personality", "Knowledge", "AI Registry", "Group AI Chat"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.49.0"' in manifest
-    assert "32.3.7" in manifest
+    assert '"application_version": "1.50.0"' in manifest
+    assert "32.4" in manifest

@@ -4,8 +4,9 @@ import { Sidebar } from "@/navigation/Sidebar";
 import { TopNavigation } from "@/navigation/TopNavigation";
 import { GlobalWorkspaceBar, UnifiedToastStrip, registerUnifiedWorkspaceSearch } from "@/workspace-chrome";
 import { OfflineBanner } from "@/launch";
+import { AiOsExperienceChrome } from "@/ai-os-chrome";
 
-/** Shared application shell — sidebar + top nav + unified workspace chrome. */
+/** Shared application shell — sidebar + top nav + unified workspace + AI OS chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -22,6 +23,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
           <div className="eds-page eds-anim-page">
             <OfflineBanner />
             <GlobalWorkspaceBar />
+            <AiOsExperienceChrome />
             <UnifiedToastStrip />
             {children}
           </div>

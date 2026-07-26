@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.3.7");
+    expect(webConfig.sprint).toBe("32.4");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -427,5 +427,22 @@ describe("Sprint 32.3.7 Launch Validation", () => {
     expect(LAUNCH_CRITICAL_ROUTES).toContain("/platform-builder/knowledge");
     expect(LAUNCH_READINESS.score).toBeGreaterThanOrEqual(90);
     expect(LAUNCH_READINESS.modules.businessEcosystems).toBe(7);
+  });
+});
+
+describe("Sprint 32.4 AI Operating System", () => {
+  it("provides path-aware suggestions and chrome exports", async () => {
+    const { suggestionsForPath, sectionKeyFromPath } = await import("../ai-os-chrome/smartSuggestions");
+    expect(sectionKeyFromPath("/workspace/crm")).toBe("crm");
+    expect(sectionKeyFromPath("/enterprise-city")).toBe("city");
+    expect(sectionKeyFromPath("/platform-builder/knowledge")).toBe("knowledge");
+    const crm = suggestionsForPath("/workspace/crm", 5);
+    expect(crm.length).toBeGreaterThanOrEqual(2);
+    expect(crm.length).toBeLessThanOrEqual(5);
+    expect(crm.some((s) => s.id === "crm_create")).toBe(true);
+    const finance = suggestionsForPath("/workspace/finance", 5);
+    expect(finance.length).toBeGreaterThanOrEqual(2);
+    const { AiOsExperienceChrome } = await import("../ai-os-chrome");
+    expect(typeof AiOsExperienceChrome).toBe("function");
   });
 });

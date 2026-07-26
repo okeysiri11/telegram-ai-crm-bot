@@ -27,9 +27,9 @@ def test_32_3_5_docs_exist():
 
 def test_platform_version_32_3_5():
     health = platform_builder.health()
-    assert health["application_version"] == "1.49.0"
-    assert health["sprint"] == "32.3.7"
-    assert "Production Readiness" in health["release_status"]
+    assert health["application_version"] == "1.50.0"
+    assert health["sprint"] == "32.4"
+    assert "AI Operating" in health["release_status"]
 
 
 def test_executive_mode_and_demo_scenario():
@@ -65,13 +65,13 @@ def test_executive_mode_and_demo_scenario():
 
 def test_config_manifest_32_3_5():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
-    assert 'application_version: str = "1.49.0"' in cfg
-    assert 'sprint: str = "32.3.7"' in cfg
+    assert 'application_version: str = "1.50.0"' in cfg
+    assert 'sprint: str = "32.4"' in cfg
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.49.0"' in manifest
-    assert '"sprint": "32.3.7"' in manifest
+    assert '"application_version": "1.50.0"' in manifest
+    assert '"sprint": "32.4"' in manifest
     web = (ROOT / "src" / "web" / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "32.3.7"' in web
+    assert 'sprint: "32.4"' in web
     types = (ROOT / "src" / "web" / "platform-builder" / "types.ts").read_text()
-    assert 'PLATFORM_BUILDER_VERSION = "1.49.0"' in types
-    assert 'PLATFORM_BUILDER_SPRINT = "32.3.7"' in types
+    assert 'PLATFORM_BUILDER_VERSION = "1.50.0"' in types
+    assert 'PLATFORM_BUILDER_SPRINT = "32.4"' in types
