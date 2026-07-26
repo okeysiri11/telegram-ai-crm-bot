@@ -43,6 +43,7 @@ import {
   resolveExecutiveMode,
   saveExecutivePref,
 } from "@/demo/executiveMode";
+import { EnterpriseIntelligenceDashboard } from "@/enterprise-intelligence";
 import { telemetry } from "@/integrations/telemetry";
 
 export function DashboardPage() {
@@ -200,6 +201,10 @@ export function DashboardPage() {
             : `Где я — ${company}. Что происходит — live Activity Feed и Mission Control. Что делать дальше — Quick Actions и AI Recommendations.`}
         </p>
         <LiveMetaBar snapshot={snapshot} busy={busy} error={error} onRefresh={() => void refresh()} />
+
+        <section className="mb-4 cc-span-12">
+          <EnterpriseIntelligenceDashboard />
+        </section>
 
         {busy && snapshot.updatedAt === new Date(0).toISOString() ? (
           <Card title="Загрузка Command Center" className="mb-4">

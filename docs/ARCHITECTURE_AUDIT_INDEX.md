@@ -117,6 +117,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [AI_OS_EXPERIENCE_32_4.md](./AI_OS_EXPERIENCE_32_4.md) — Global Concierge, Pulse, Snapshot, Ctrl+K AI OS chrome. Platform Builder **v1.50.0**.
 
+## Enterprise Intelligence Layer (Sprint 32.5)
+
+[ENTERPRISE_INTELLIGENCE_32_5.md](./ENTERPRISE_INTELLIGENCE_32_5.md) — Insights, Daily Brief, Priorities, Decision Panel. Platform Builder **v1.51.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

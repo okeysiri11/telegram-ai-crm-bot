@@ -34,7 +34,7 @@ export function AiOsExperienceChrome() {
   const roleLabel = role?.label || user?.roleId || "User";
   const ecosystem = detectActiveEcosystem(loc.pathname) || "Platform";
   const section = sectionKeyFromPath(loc.pathname);
-  const suggestions = useMemo(() => suggestionsForPath(loc.pathname, 5), [loc.pathname]);
+  const suggestions = useMemo(() => suggestionsForPath(loc.pathname, 5, snapshot), [loc.pathname, snapshot]);
 
   const healthOk = snapshot.health.filter((h) => h.ok).length;
   const healthTotal = snapshot.health.length || 1;

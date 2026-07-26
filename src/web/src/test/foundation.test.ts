@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.4");
+    expect(webConfig.sprint).toBe("32.5");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -444,5 +444,63 @@ describe("Sprint 32.4 AI Operating System", () => {
     expect(finance.length).toBeGreaterThanOrEqual(2);
     const { AiOsExperienceChrome } = await import("../ai-os-chrome");
     expect(typeof AiOsExperienceChrome).toBe("function");
+  });
+});
+
+describe("Sprint 32.5 Enterprise Intelligence", () => {
+  it("derives brief, priorities, and cross-module links from snapshot", async () => {
+    const { deriveIntelligence } = await import("../enterprise-intelligence/deriveIntelligence");
+    const { emptyLiveSnapshot } = await import("../live-ops/fetchLiveEnterprise");
+    const snap = {
+      ...emptyLiveSnapshot(),
+      activity: [
+        {
+          id: "a1",
+          kind: "task" as const,
+          title: "CRM клиент требует внимания",
+          detail: "deal overdue",
+          at: new Date().toISOString(),
+          source: "seed" as const,
+          moduleHint: "crm",
+        },
+      ],
+      recommendations: [
+        { id: "r1", title: "Risk on pipeline", tone: "risk" as const },
+        { id: "r2", title: "Improve knowledge docs", tone: "improve" as const },
+      ],
+      aiOps: {
+        running: [],
+        queue: ["sync leads"],
+        recent: ["auto email"],
+        status: "ok",
+        errors: [],
+        completed: ["auto email", "score leads"],
+      },
+      health: [
+        { id: "knowledge" as const, label: "Knowledge Base", ok: true, detail: "ok" },
+        { id: "crm" as const, label: "CRM", ok: true, detail: "ok" },
+      ],
+      activeModules: ["crm", "knowledge"],
+      mcOk: true,
+    };
+    const intel = deriveIntelligence(snap, [
+      {
+        id: "n1",
+        kind: "ai",
+        title: "AI insight",
+        body: "client attention",
+        createdAt: new Date().toISOString(),
+        read: false,
+      },
+    ]);
+    expect(intel.brief.bullets.length).toBeGreaterThanOrEqual(3);
+    expect(intel.insights.some((i) => i.category === "risk")).toBe(true);
+    expect(intel.priorities.some((p) => p.bucket === "urgent")).toBe(true);
+    expect(intel.crossModule.some((c) => c.from === "crm")).toBe(true);
+    expect(intel.knowledgeAware).toBe(true);
+    expect(intel.decision.decideToday.length).toBeGreaterThanOrEqual(1);
+    const { suggestionsForPath } = await import("../ai-os-chrome/smartSuggestions");
+    const sug = suggestionsForPath("/dashboard", 5, snap);
+    expect(sug.some((s) => s.id === "kb_aware")).toBe(true);
   });
 });

@@ -858,3 +858,64 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Sprint 32.5 — Enterprise Intelligence Layer */
+.ei-layer {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.ei-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+}
+.ei-toolbar-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ew-muted);
+}
+.ei-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .ei-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.ei-grid.is-compact .ei-card {
+  max-height: 22rem;
+  overflow: auto;
+}
+.ei-brief {
+  border-color: color-mix(in oklab, #0f766e 35%, var(--ew-border));
+  background: linear-gradient(135deg, color-mix(in oklab, var(--ew-surface) 88%, #0f766e), var(--ew-surface));
+}
+.ei-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  border-radius: 0.45rem;
+  padding: 0.15rem 0.2rem;
+  transition: background 140ms ease;
+}
+.ei-link:hover {
+  background: color-mix(in oklab, #0f766e 10%, transparent);
+}
+.ei-decision {
+  border-color: color-mix(in oklab, #0369a1 30%, var(--ew-border));
+}
+.ei-dashboard {
+  margin-bottom: 0.5rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ei-layer,
+  .ei-dashboard {
+    animation: none !important;
+  }
+}

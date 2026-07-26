@@ -1,7 +1,9 @@
 /**
- * Path-aware smart suggestions — Sprint 32.4.
+ * Path-aware smart suggestions — Sprint 32.4 / Knowledge awareness 32.5.
  * Uses existing routes / live snapshot hints — no new AI Engine.
  */
+
+import type { LiveEnterpriseSnapshot } from "@/live-ops";
 
 export type SmartSuggestion = {
   id: string;
@@ -49,6 +51,14 @@ const BY_SECTION: Record<string, SmartSuggestion[]> = {
   ],
 };
 
+const KB_HINT: SmartSuggestion = {
+  id: "kb_aware",
+  title: "Учесть новые документы Knowledge",
+  detail: "Knowledge awareness · AI",
+  route: "/platform-builder/knowledge",
+  tone: "insight",
+};
+
 export function sectionKeyFromPath(pathname: string): string {
   if (pathname.includes("/crm") || pathname.includes("sales")) return "crm";
   if (pathname.includes("/knowledge") || pathname.includes("/docs")) return "knowledge";
@@ -61,13 +71,30 @@ export function sectionKeyFromPath(pathname: string): string {
   return "default";
 }
 
-export function suggestionsForPath(pathname: string, limit = 5): SmartSuggestion[] {
+function knowledgeAwareFromSnapshot(snapshot?: LiveEnterpriseSnapshot | null): boolean {
+  if (!snapshot) return false;
+  const kb = snapshot.health.some((h) => (h.id === "knowledge" || h.id === "documents") && h.ok);
+  const hint = snapshot.activeModules.some((m) => /knowledge|doc/i.test(m));
+  const act = snapshot.activity.some((a) =>
+    /knowledge|документ|docs/i.test(`${a.title} ${a.detail} ${a.moduleHint || ""}`),
+  );
+  const rec = snapshot.recommendations.some((r) => /knowledge|document|docs/i.test(r.title));
+  return Boolean(hint || act || rec || kb);
+}
+
+export function suggestionsForPath(
+  pathname: string,
+  limit = 5,
+  snapshot?: LiveEnterpriseSnapshot | null,
+): SmartSuggestion[] {
   const key = sectionKeyFromPath(pathname);
-  const primary = BY_SECTION[key] || BY_SECTION.default;
-  if (primary.length >= Math.min(2, limit)) return primary.slice(0, limit);
-  const seen = new Set(primary.map((s) => s.id));
-  const padded = [...primary];
-  for (const s of BY_SECTION.default) {
+  const primary = [...(BY_SECTION[key] || BY_SECTION.default)];
+  if (knowledgeAwareFromSnapshot(snapshot) && key !== "knowledge") {
+    primary.unshift(KB_HINT);
+  }
+  const seen = new Set<string>();
+  const padded: SmartSuggestion[] = [];
+  for (const s of [...primary, ...BY_SECTION.default]) {
     if (padded.length >= limit) break;
     if (seen.has(s.id)) continue;
     padded.push(s);

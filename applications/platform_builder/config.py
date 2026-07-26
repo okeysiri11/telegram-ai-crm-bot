@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 32.4 AI Operating System Experience."""
+"""Platform Builder — Sprint 32.5 Enterprise Intelligence Layer."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.50.0"
-    sprint: str = "32.4"
-    release_status: str = "AI Operating System Experience"
+    application_version: str = "1.51.0"
+    sprint: str = "32.5"
+    release_status: str = "Enterprise Intelligence Layer"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"
