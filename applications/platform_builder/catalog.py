@@ -391,6 +391,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Workflow visibility, dependency analysis and recommendations — never executes business logic.",
     },
     {
+        "id": "digital_twin",
+        "name": "Enterprise Digital Twin",
+        "route": "/platform-builder/digital-twin",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Read-only realtime mirror of verified platform state — never owns business logic.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

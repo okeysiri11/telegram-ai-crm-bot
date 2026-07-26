@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.22.0",
-  "sprint": "29.15",
-  "release_status": "Workflow Intelligence OS",
+  "application_version": "1.23.0",
+  "sprint": "29.16",
+  "release_status": "Enterprise Digital Twin",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -79,5 +79,10 @@
   "workflow_recommendation_engine": "1.0",
   "workflow_analytics_api": "1.0",
   "platform_owner_role": "platform_owner",
-  "web_module": "src/web/platform-builder"
+  "web_module": "src/web/platform-builder",
+  "digital_twin_engine": "1.0",
+  "twin_registry": "1.0",
+  "synchronization_engine": "1.0",
+  "snapshot_engine": "1.0",
+  "twin_api": "1.0"
 }

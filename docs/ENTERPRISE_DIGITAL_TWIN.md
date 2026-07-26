@@ -1,15 +1,41 @@
-# Enterprise Digital Twin Platform
+# Enterprise Digital Twin
 
-**Version:** `5.4.8-enterprise`  
-**Sprint:** 20.8  
-**API:** `/api/enterprise-edt/v1`  
-**Package:** `applications/enterprise_hub/digital_twin/`  
-**Attr:** `enterprise_hub.digital_twin`
+Sprint **29.16** / Platform Builder **v1.23.0** / Digital Twin **1.0**
 
-Real-time digital twin of the enterprise — registry, state, relationships, Event Bus sync, timeline, snapshots, prediction context, visualization, and analytics.
+Represents the complete realtime state of the Enterprise AI Platform.
 
-> Sync coordinator lives in `synchronization/sync_coordinator.py` (Python cannot host both `synchronization.py` and package `synchronization/`).
+**Never owns business logic.** Mirrors verified platform state and aggregates data from existing platform services as a read-only reflection layer.
 
-## Readiness
+## Module
 
-Digital Twin Ready · Twin Registry Ready · Realtime Sync Ready · Twin Analytics Ready
+Platform Builder → Enterprise Digital Twin (`/platform-builder/digital-twin`)
+
+API: `/api/platform-builder/v1/digital-twin/*`
+
+## Components
+
+Digital Twin Engine · Twin Registry · Twin Synchronization Engine · Twin Snapshot Manager · Twin API
+
+## Mirrors
+
+Organization · AI · Workflow · Knowledge · Resources
+
+## Snapshots & Comparison
+
+Realtime / historical / version / comparison snapshots · restore reference (metadata only) · state comparison across organization, workflow, knowledge, AI and infrastructure
+
+## Create / Register
+
+Digital Twin Engine · Twin Registry · Synchronization Engine · Snapshot Engine · Twin API
+
+## UI
+
+Digital Twin Center · Organization Mirror · AI Mirror · Workflow Mirror · Knowledge Mirror · Infrastructure Mirror · Snapshot Browser · Comparison Viewer
+
+## Layout
+
+- Backend: `applications/platform_builder/digital_twin/`
+- Frontend: `src/web/platform-builder/digital-twin/`
+- Knowledge: `knowledge/digital_twin/`
+- Related: [ORGANIZATION_MIRROR.md](./ORGANIZATION_MIRROR.md)
+- Tests: `tests/test_digital_twin_29_16.py`

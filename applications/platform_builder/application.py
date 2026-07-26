@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.15."""
+"""Platform Builder application facade — Sprint 29.16."""
 
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ from applications.platform_builder.workspace_os.engine import EnterpriseWorkspac
 from applications.platform_builder.command_center.engine import EnterpriseCommandCenter
 from applications.platform_builder.navigation_intelligence.engine import NavigationIntelligenceEngine
 from applications.platform_builder.workflow_intelligence.engine import WorkflowIntelligenceEngine
+from applications.platform_builder.digital_twin.engine import DigitalTwinEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -80,6 +81,7 @@ class PlatformBuilderApplication:
         command_center_os: EnterpriseCommandCenter | None = None,
         navigation_intelligence: NavigationIntelligenceEngine | None = None,
         workflow_intelligence: WorkflowIntelligenceEngine | None = None,
+        digital_twin: DigitalTwinEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -109,6 +111,7 @@ class PlatformBuilderApplication:
         self.command_center_os = command_center_os or EnterpriseCommandCenter(self.store)
         self.navigation_intelligence = navigation_intelligence or NavigationIntelligenceEngine(self.store)
         self.workflow_intelligence = workflow_intelligence or WorkflowIntelligenceEngine(self.store)
+        self.digital_twin = digital_twin or DigitalTwinEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -138,6 +141,7 @@ class PlatformBuilderApplication:
         self.command_center_os = EnterpriseCommandCenter(self.store)
         self.navigation_intelligence = NavigationIntelligenceEngine(self.store)
         self.workflow_intelligence = WorkflowIntelligenceEngine(self.store)
+        self.digital_twin = DigitalTwinEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -253,6 +257,10 @@ class PlatformBuilderApplication:
             "dependency_engine_ready": True,
             "critical_path_ready": True,
             "global_process_orchestrator_ready": True,
+            "digital_twin_ready": True,
+            "organization_mirror_ready": True,
+            "twin_synchronization_ready": True,
+            "snapshot_engine_ready": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -282,6 +290,7 @@ class PlatformBuilderApplication:
             "workflow_intelligence_page_exists": (
                 web / "pages" / "WorkflowIntelligencePage.tsx"
             ).exists(),
+            "digital_twin_page_exists": (web / "pages" / "DigitalTwinPage.tsx").exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
         }
@@ -412,6 +421,10 @@ class PlatformBuilderApplication:
             "dependency_engine_ready": True,
             "critical_path_ready": True,
             "global_process_orchestrator_ready": True,
+            "digital_twin_ready": True,
+            "organization_mirror_ready": True,
+            "twin_synchronization_ready": True,
+            "snapshot_engine_ready": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -486,6 +499,11 @@ class PlatformBuilderApplication:
                 "critical_path_engine": self.config.critical_path_engine,
                 "workflow_recommendation_engine": self.config.workflow_recommendation_engine,
                 "workflow_analytics_api": self.config.workflow_analytics_api,
+                "digital_twin_engine": self.config.digital_twin_engine,
+                "twin_registry": self.config.twin_registry,
+                "synchronization_engine": self.config.synchronization_engine,
+                "snapshot_engine": self.config.snapshot_engine,
+                "twin_api": self.config.twin_api,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -515,6 +533,7 @@ class PlatformBuilderApplication:
             "command_center_os": self.command_center_os.status(),
             "navigation_intelligence": self.navigation_intelligence.status(),
             "workflow_intelligence": self.workflow_intelligence.status(),
+            "digital_twin": self.digital_twin.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

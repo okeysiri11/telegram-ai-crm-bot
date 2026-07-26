@@ -1,4 +1,4 @@
-"""Tests — Global Process Orchestrator (Sprint 29.15)."""
+"""Tests — Global Process Orchestrator (Sprint 29.16)."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def reset_store():
 def test_process_orchestrator_surfaces():
     health = platform_builder.health()
     assert health["global_process_orchestrator_ready"] is True
-    assert health["application_version"] == "1.22.0"
+    assert health["application_version"] == "1.23.0"
 
     eng = platform_builder.workflow_intelligence
     critical = eng.critical_path()

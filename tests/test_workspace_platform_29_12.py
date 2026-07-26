@@ -1,4 +1,4 @@
-"""Tests — Unified Workspace Platform (Sprint 29.15)."""
+"""Tests — Unified Workspace Platform (Sprint 29.16)."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def reset_store():
 def test_workspace_platform_surfaces():
     health = platform_builder.health()
     assert health["unified_workspace_platform_ready"] is True
-    assert health["application_version"] == "1.22.0"
+    assert health["application_version"] == "1.23.0"
 
     eng = platform_builder.workspace_os
     types = eng.workspace_types()

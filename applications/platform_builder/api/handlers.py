@@ -3286,3 +3286,164 @@ async def workflow_intel_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 29.16 — Enterprise Digital Twin Core / Organization Mirror ---
+
+
+async def digital_twin_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.digital_twin.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.digital_twin.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_engine_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.digital_twin.engine_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_organization_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.digital_twin.organization_mirror())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_ai_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.digital_twin.ai_mirror())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_workflow_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.digital_twin.workflow_mirror())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_knowledge_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.digital_twin.knowledge_mirror())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_resources_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.digital_twin.resource_mirror())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_snapshots_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.digital_twin.snapshot_engine(
+                    action=body.get("action") or "capture",
+                    snapshot_type=body.get("type"),
+                    label=body.get("label"),
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.digital_twin.snapshot_engine())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_comparison_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.digital_twin.state_comparison(
+                    dimension=body.get("dimension"),
+                    from_version=body.get("from_version"),
+                    to_version=body.get("to_version"),
+                ),
+                status=201,
+            )
+        dimension = request.rel_url.query.get("dimension")
+        return json_response(platform_builder.digital_twin.state_comparison(dimension=dimension))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_sync_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.digital_twin.sync_engine.sync(mode=body.get("mode")),
+                status=201,
+            )
+        return json_response(platform_builder.digital_twin.sync_engine.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_performance_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.digital_twin.performance(action=body.get("action")),
+                status=201,
+            )
+        return json_response(platform_builder.digital_twin.performance())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.digital_twin.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_wizard_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.digital_twin.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(platform_builder.digital_twin.update_session(session_id, body))
+        return json_response(platform_builder.digital_twin.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.digital_twin.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def digital_twin_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.digital_twin.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

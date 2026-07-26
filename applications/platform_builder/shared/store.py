@@ -182,6 +182,13 @@ class PlatformBuilderStore:
         self.critical_path_engines: EntityStore = EntityStore()
         self.workflow_recommendation_engines: EntityStore = EntityStore()
         self.workflow_analytics_apis: EntityStore = EntityStore()
+        # Sprint 29.16 — Enterprise Digital Twin
+        self.digital_twin_wizard_sessions: EntityStore = EntityStore()
+        self.digital_twin_engines: EntityStore = EntityStore()
+        self.twin_registries: EntityStore = EntityStore()
+        self.synchronization_engines: EntityStore = EntityStore()
+        self.snapshot_engines: EntityStore = EntityStore()
+        self.twin_apis: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():

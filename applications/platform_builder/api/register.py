@@ -810,3 +810,42 @@ def register_platform_builder_routes(app: web.Application) -> None:
         f"{prefix}/workflow-intelligence/sessions/{{session_id}}/create",
         handlers.workflow_intel_create_handler,
     )
+
+    # Sprint 29.16 — Enterprise Digital Twin Core / Organization Mirror
+    app.router.add_get(f"{prefix}/digital-twin/catalog", handlers.digital_twin_catalog_handler)
+    app.router.add_get(f"{prefix}/digital-twin/status", handlers.digital_twin_status_handler)
+    app.router.add_get(f"{prefix}/digital-twin/engine", handlers.digital_twin_engine_handler)
+    app.router.add_get(
+        f"{prefix}/digital-twin/organization",
+        handlers.digital_twin_organization_handler,
+    )
+    app.router.add_get(f"{prefix}/digital-twin/ai", handlers.digital_twin_ai_handler)
+    app.router.add_get(f"{prefix}/digital-twin/workflow", handlers.digital_twin_workflow_handler)
+    app.router.add_get(f"{prefix}/digital-twin/knowledge", handlers.digital_twin_knowledge_handler)
+    app.router.add_get(f"{prefix}/digital-twin/resources", handlers.digital_twin_resources_handler)
+    app.router.add_get(f"{prefix}/digital-twin/snapshots", handlers.digital_twin_snapshots_handler)
+    app.router.add_post(f"{prefix}/digital-twin/snapshots", handlers.digital_twin_snapshots_handler)
+    app.router.add_get(f"{prefix}/digital-twin/comparison", handlers.digital_twin_comparison_handler)
+    app.router.add_post(f"{prefix}/digital-twin/comparison", handlers.digital_twin_comparison_handler)
+    app.router.add_get(f"{prefix}/digital-twin/sync", handlers.digital_twin_sync_handler)
+    app.router.add_post(f"{prefix}/digital-twin/sync", handlers.digital_twin_sync_handler)
+    app.router.add_get(f"{prefix}/digital-twin/performance", handlers.digital_twin_performance_handler)
+    app.router.add_post(f"{prefix}/digital-twin/performance", handlers.digital_twin_performance_handler)
+    app.router.add_get(f"{prefix}/digital-twin/ui", handlers.digital_twin_ui_handler)
+    app.router.add_post(f"{prefix}/digital-twin/sessions", handlers.digital_twin_wizard_session_handler)
+    app.router.add_get(
+        f"{prefix}/digital-twin/sessions/{{session_id}}",
+        handlers.digital_twin_wizard_session_handler,
+    )
+    app.router.add_patch(
+        f"{prefix}/digital-twin/sessions/{{session_id}}",
+        handlers.digital_twin_wizard_session_handler,
+    )
+    app.router.add_get(
+        f"{prefix}/digital-twin/sessions/{{session_id}}/summary",
+        handlers.digital_twin_wizard_summary_handler,
+    )
+    app.router.add_post(
+        f"{prefix}/digital-twin/sessions/{{session_id}}/create",
+        handlers.digital_twin_create_handler,
+    )

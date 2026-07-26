@@ -63,6 +63,7 @@ import {
   CommandCenterOSPage,
   NavigationIntelligencePage,
   WorkflowIntelligencePage,
+  DigitalTwinPage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -361,6 +362,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <WorkflowIntelligencePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/digital-twin"
+        element={
+          <ProtectedRoute>
+            <DigitalTwinPage />
           </ProtectedRoute>
         }
       />

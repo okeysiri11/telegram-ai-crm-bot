@@ -1,4 +1,4 @@
-"""Tests — Enterprise Workspace OS (Sprint 29.15)."""
+"""Tests — Enterprise Workspace OS (Sprint 29.16)."""
 
 from __future__ import annotations
 
@@ -39,8 +39,8 @@ def reset_store():
 
 def test_workspace_os_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.22.0"
-    assert health["sprint"] == "29.15"
+    assert health["application_version"] == "1.23.0"
+    assert health["sprint"] == "29.16"
     assert health["workspace_os_ready"] is True
     assert health["workspace_manager_ready"] is True
     assert health["layout_engine_ready"] is True
@@ -109,7 +109,7 @@ def test_workspace_os_flow_and_create():
 async def test_api_workspace_os(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.22.0"
+    assert body["application_version"] == "1.23.0"
     assert body["workspace_os_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/workspace-os/catalog")
@@ -135,5 +135,5 @@ async def test_api_workspace_os(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.22.0"' in manifest
-    assert "29.15" in manifest
+    assert '"application_version": "1.23.0"' in manifest
+    assert "29.16" in manifest
