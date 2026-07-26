@@ -9,6 +9,7 @@ import { InviteAcceptPage } from "@/pages/InviteAcceptPage";
 import { PilotExecutionPage } from "@/pages/PilotExecutionPage";
 import { FirstEntryPage } from "@/onboarding/FirstEntryPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { EnterpriseCityPage } from "@/enterprise-city";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import {
   AccessDeniedPage,
@@ -130,6 +131,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <DashboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/enterprise-city"
+        element={
+          <ProtectedRoute>
+            <EnterpriseCityPage />
           </ProtectedRoute>
         }
       />

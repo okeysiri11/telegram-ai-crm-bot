@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.3.2");
+    expect(webConfig.sprint).toBe("32.3.3");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -355,5 +355,17 @@ describe("Sprint 32.3.2 Enterprise Command Center", () => {
     const toggled = toggleCommandSection("ai_activity");
     expect(toggled).toContain("ai_activity");
     saveCommandLayout([...DEFAULT_COMMAND_LAYOUT]);
+  });
+});
+
+describe("Sprint 32.3.3 Enterprise City", () => {
+  it("maps buildings to existing routes and supports search", async () => {
+    const { CITY_BUILDINGS, searchBuildings, getBuilding } = await import("../enterprise-city/cityCatalog");
+    expect(CITY_BUILDINGS.length).toBeGreaterThanOrEqual(12);
+    expect(getBuilding("crm")?.route).toBe("/workspace/crm");
+    expect(getBuilding("ai_team")?.route).toBe("/platform-builder/ai-team");
+    expect(getBuilding("dashboard")?.route).toBe("/dashboard");
+    expect(searchBuildings("finance").some((b) => b.id === "finance")).toBe(true);
+    expect(CITY_BUILDINGS.every((b) => b.route.startsWith("/"))).toBe(true);
   });
 });

@@ -93,6 +93,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_COMMAND_CENTER_32_3_2.md](./ENTERPRISE_COMMAND_CENTER_32_3_2.md) — Command Center on existing `/dashboard`. Platform Builder **v1.44.0**.
 
+## Enterprise City Navigation (Sprint 32.3.3)
+
+[ENTERPRISE_CITY_32_3_3.md](./ENTERPRISE_CITY_32_3_3.md) — 2D city visual navigation to existing modules. Platform Builder **v1.45.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

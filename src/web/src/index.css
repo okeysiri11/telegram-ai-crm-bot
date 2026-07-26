@@ -260,3 +260,240 @@ body {
     font-size: 1.85rem;
   }
 }
+
+/* Sprint 32.3.3 — Enterprise City Navigation */
+.enterprise-city {
+  max-width: 1800px;
+  margin: 0 auto;
+}
+.ec-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--ew-border);
+  background:
+    linear-gradient(145deg, color-mix(in oklab, var(--ew-surface) 88%, #0f766e), var(--ew-surface));
+}
+.ec-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.ec-search {
+  position: relative;
+  flex: 1;
+  min-width: 16rem;
+  max-width: 36rem;
+}
+.ec-search-panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  max-height: 16rem;
+  overflow: auto;
+}
+.ec-search-hit {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.4rem 0.25rem;
+  text-align: left;
+  border-radius: 0.4rem;
+}
+.ec-search-hit:hover {
+  background: color-mix(in oklab, #0f766e 10%, transparent);
+}
+.ec-stage {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+.ec-map-shell {
+  position: relative;
+  min-height: 28rem;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  border: 1px solid var(--ew-border);
+  background:
+    radial-gradient(ellipse at 30% 20%, color-mix(in oklab, #0f766e 12%, transparent), transparent 55%),
+    radial-gradient(ellipse at 80% 70%, color-mix(in oklab, #0369a1 10%, transparent), transparent 50%),
+    var(--ew-surface);
+}
+.ec-plane {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  transition: transform 220ms ease;
+  will-change: transform;
+}
+.ec-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--ew-border) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--ew-border) 55%, transparent) 1px, transparent 1px);
+  background-size: 4.5% 4.5%;
+  opacity: 0.35;
+  pointer-events: none;
+}
+.ec-building {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.35rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--ew-border);
+  background: color-mix(in oklab, var(--ew-surface) 92%, #0f766e 6%);
+  box-shadow: 0 6px 18px color-mix(in oklab, #0b1220 8%, transparent);
+  transition: transform 160ms ease, border-color 160ms ease, opacity 160ms ease;
+  cursor: pointer;
+}
+.ec-building:hover,
+.ec-building.is-focused {
+  transform: translateY(-3px) scale(1.03);
+  border-color: color-mix(in oklab, #0f766e 50%, var(--ew-border));
+  z-index: 5;
+}
+.ec-building.is-dimmed {
+  opacity: 0.28;
+}
+.ec-building-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.ec-building-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.ec-badge,
+.ec-tasks {
+  position: absolute;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.25rem;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  color: #fff;
+}
+.ec-badge {
+  top: -0.35rem;
+  right: -0.35rem;
+  background: #b45309;
+}
+.ec-tasks {
+  bottom: -0.3rem;
+  left: -0.2rem;
+  background: #0f766e;
+}
+.ec-ai-dot {
+  position: absolute;
+  top: 0.35rem;
+  left: 0.35rem;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #0ea5e9;
+  box-shadow: 0 0 0 3px color-mix(in oklab, #0ea5e9 25%, transparent);
+  animation: ec-pulse 1.6s ease-in-out infinite;
+}
+.ec-tone-idle { /* default */ }
+.ec-tone-active {
+  border-color: color-mix(in oklab, #0f766e 40%, var(--ew-border));
+}
+.ec-tone-busy {
+  border-color: color-mix(in oklab, #0369a1 55%, var(--ew-border));
+  background: color-mix(in oklab, var(--ew-surface) 85%, #0369a1 10%);
+}
+.ec-tone-alert {
+  border-color: color-mix(in oklab, #b45309 55%, var(--ew-border));
+  background: color-mix(in oklab, var(--ew-surface) 85%, #b45309 12%);
+}
+.ec-side {
+  display: grid;
+  gap: 1rem;
+}
+.ec-minimap {
+  position: relative;
+  height: 9rem;
+  border-radius: 0.75rem;
+  border: 1px dashed var(--ew-border);
+  background: color-mix(in oklab, var(--ew-surface) 90%, #0f766e 5%);
+  overflow: hidden;
+}
+.ec-mini-dot {
+  position: absolute;
+  width: 0.55rem;
+  height: 0.55rem;
+  margin-left: -0.275rem;
+  margin-top: -0.275rem;
+  border-radius: 999px;
+  border: 1px solid var(--ew-border);
+  background: color-mix(in oklab, #0f766e 35%, var(--ew-surface));
+  transition: transform 140ms ease;
+}
+.ec-mini-dot.is-focused,
+.ec-mini-dot:hover {
+  transform: scale(1.5);
+  z-index: 2;
+}
+.ec-mini-dot.ec-tone-busy { background: #0369a1; }
+.ec-mini-dot.ec-tone-alert { background: #b45309; }
+.ec-mini-dot.ec-tone-active { background: #0f766e; }
+@keyframes ec-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@media (min-width: 1024px) {
+  .ec-stage {
+    grid-template-columns: minmax(0, 1fr) 17rem;
+  }
+  .ec-map-shell {
+    min-height: 36rem;
+  }
+}
+@media (min-width: 1280px) {
+  .ec-map-shell {
+    min-height: 40rem;
+  }
+}
+@media (min-width: 1536px) {
+  .ec-header {
+    padding: 1.75rem 2rem;
+  }
+  .ec-map-shell {
+    min-height: 46rem;
+  }
+  .ec-building-label {
+    font-size: 0.8rem;
+  }
+}
+@media (max-width: 767px) {
+  .ec-map-shell {
+    min-height: 22rem;
+  }
+  .ec-building-icon {
+    font-size: 1rem;
+  }
+  .ec-building-label {
+    font-size: 0.62rem;
+  }
+}

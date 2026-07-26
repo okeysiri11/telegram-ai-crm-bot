@@ -49,18 +49,18 @@ export const DEFAULT_COMMAND_LAYOUT: CommandWidgetId[] = [
 export const QUICK_ACTIONS: QuickAction[] = [
   { id: "create_client", label: "Создать клиента", route: "/workspace/crm", hint: "CRM" },
   { id: "create_task", label: "Создать задачу", route: "/workspace", hint: "Tasks" },
-  { id: "create_doc", label: "Создать документ", route: "/workspace/documents", hint: "Documents" },
+  { id: "create_doc", label: "Создать документ", route: "/workspace/docs", hint: "Documents" },
   { id: "open_crm", label: "Открыть CRM", route: "/workspace/crm", hint: "CRM" },
   { id: "ai_team", label: "AI Team", route: "/platform-builder/ai-team", hint: "AI" },
   { id: "analytics", label: "Analytics", route: "/platform-builder/intelligence", hint: "BI" },
-  { id: "enterprise_city", label: "Enterprise City", route: "/platform-builder/digital-twin", hint: "City" },
+  { id: "enterprise_city", label: "Enterprise City", route: "/enterprise-city", hint: "City" },
   { id: "mission_control", label: "Mission Control", route: "/platform-builder/mission-control", hint: "MC" },
 ];
 
 export const BUSINESS_MODULES: BusinessModule[] = [
   { id: "crm", label: "CRM", route: "/workspace/crm", description: "Клиенты и сделки" },
   { id: "analytics", label: "Analytics", route: "/platform-builder/intelligence", description: "Метрики и отчёты" },
-  { id: "documents", label: "Documents", route: "/workspace/documents", description: "Документы и знания" },
+  { id: "documents", label: "Documents", route: "/workspace/docs", description: "Документы и знания" },
   { id: "finance", label: "Finance", route: "/workspace/finance", description: "Финансы и казначейство" },
   { id: "marketing", label: "Marketing", route: "/workspace", description: "Кампании и рост" },
   { id: "sales", label: "Sales", route: "/workspace/crm", description: "Воронка продаж" },
@@ -68,7 +68,7 @@ export const BUSINESS_MODULES: BusinessModule[] = [
   { id: "ai_team", label: "AI Team", route: "/platform-builder/ai-team", description: "Команда AI" },
   { id: "knowledge", label: "Knowledge", route: "/platform-builder/knowledge", description: "База знаний" },
   { id: "settings", label: "Settings", route: "/settings", description: "Настройки" },
-  { id: "enterprise_city", label: "Enterprise City", route: "/platform-builder/digital-twin", description: "Цифровой город" },
+  { id: "enterprise_city", label: "Enterprise City", route: "/enterprise-city", description: "Визуальная навигация" },
   { id: "concierge", label: "AI Concierge", route: "/platform-builder/concierge", description: "Личный Concierge" },
 ];
 

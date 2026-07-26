@@ -62,6 +62,16 @@ export function TopNavigation({
           size="sm"
           variant="secondary"
           onClick={() => {
+            void telemetry.userActivity("open_enterprise_city");
+            navigate("/enterprise-city");
+          }}
+        >
+          City
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
             void telemetry.userActivity("open_mission_control");
             navigate("/platform-builder/mission-control");
           }}

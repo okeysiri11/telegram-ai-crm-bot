@@ -45,8 +45,8 @@ def reset_store():
 
 def test_collective_intelligence_surfaces():
     health = platform_builder.health()
-    assert health["application_version"] == "1.44.0"
-    assert health["sprint"] == "32.3.2"
+    assert health["application_version"] == "1.45.0"
+    assert health["sprint"] == "32.3.3"
     assert health["collective_intelligence_ready"] is True
 
     catalog = platform_builder.collaborative_ai.catalog()
