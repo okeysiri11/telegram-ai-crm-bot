@@ -39,8 +39,8 @@ def reset_store():
 
 def test_vertical_ready_and_catalog():
     health = platform_builder.health()
-    assert health["application_version"] == "1.53.0"
-    assert health["sprint"] == "32.7"
+    assert health["application_version"] == "1.54.0"
+    assert health["sprint"] == "32.8"
     assert health["vertical_builder_ready"] is True
     assert health["vertical_registry_ready"] is True
     assert health["platform_registry_ready"] is True
@@ -120,7 +120,7 @@ async def test_api_vertical(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
     assert body["vertical_builder_ready"] is True
-    assert body["application_version"] == "1.53.0"
+    assert body["application_version"] == "1.54.0"
 
     catalog = await client.get(f"{PREFIX}/vertical/catalog")
     assert catalog.status == 200
@@ -178,5 +178,5 @@ def test_docs_and_frontend_28_4():
     for key in ("Logical Representation", "Visual Representation", "Platform Registry", "Organization Preview"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.53.0"' in manifest
-    assert "32.7" in manifest
+    assert '"application_version": "1.54.0"' in manifest
+    assert "32.8" in manifest

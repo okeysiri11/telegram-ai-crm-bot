@@ -41,8 +41,8 @@ def test_consolidation_docs_exist():
 
 def test_platform_compatible_after_consolidation():
     health = platform_builder.health()
-    assert health["application_version"] == "1.53.0"
-    assert health["sprint"] == "32.7"
+    assert health["application_version"] == "1.54.0"
+    assert health["sprint"] == "32.8"
     assert health["business_ecosystem_foundation_ready"] is True
     assert health["mission_control_ready"] is True
     assert health["digital_twin_ready"] is True

@@ -8,6 +8,7 @@ import { AiOsExperienceChrome } from "@/ai-os-chrome";
 import { EnterpriseIntelligenceLayer } from "@/enterprise-intelligence";
 import { AITeamCollaborationWorkspace } from "@/ai-team-collaboration";
 import { WorkflowAutomationWorkspace } from "@/enterprise-workflow";
+import { AIBuilderStudioStrip } from "@/ai-builder-studio";
 
 /** Shared application shell — sidebar + top nav + unified workspace + AI OS chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
@@ -30,6 +31,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
             <EnterpriseIntelligenceLayer compact />
             <AITeamCollaborationWorkspace compact />
             <WorkflowAutomationWorkspace compact />
+            <AIBuilderStudioStrip />
             <UnifiedToastStrip />
             {children}
           </div>

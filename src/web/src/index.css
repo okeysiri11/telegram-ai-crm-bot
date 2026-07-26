@@ -1102,3 +1102,118 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Sprint 32.8 — AI Builder Studio */
+.abs-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.75rem;
+  border: 1px dashed var(--ew-border);
+  background: color-mix(in oklab, var(--ew-surface) 92%, #0f766e 6%);
+}
+.abs-strip-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ew-muted);
+  margin-right: 0.25rem;
+}
+.abs-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 1rem;
+}
+.abs-tab {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+  font-size: 0.8rem;
+}
+.abs-tab.is-active {
+  border-color: color-mix(in oklab, #0f766e 50%, var(--ew-border));
+  background: color-mix(in oklab, #0f766e 12%, var(--ew-surface));
+  font-weight: 600;
+}
+.abs-dash {
+  border-color: color-mix(in oklab, #0f766e 30%, var(--ew-border));
+}
+.abs-home-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .abs-home-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+@media (min-width: 1280px) {
+  .abs-home-grid {
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+  }
+}
+.abs-home-card {
+  display: block;
+  text-align: left;
+  padding: 0.9rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.abs-home-card:hover,
+.abs-member.is-active,
+.abs-chip.is-active {
+  border-color: color-mix(in oklab, #0f766e 45%, var(--ew-border));
+  background: color-mix(in oklab, #0f766e 8%, var(--ew-surface));
+}
+.abs-home-card.is-static {
+  cursor: default;
+}
+.abs-split {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .abs-split {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.abs-member {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.55rem;
+  border: 1px solid transparent;
+}
+.abs-chip {
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--ew-border);
+  font-size: 0.75rem;
+}
+.abs-chain {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.abs-arrow {
+  display: block;
+  color: var(--ew-muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .abs-studio {
+    animation: none !important;
+  }
+}

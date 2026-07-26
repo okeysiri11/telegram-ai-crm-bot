@@ -69,4 +69,12 @@ export function registerUnifiedWorkspaceSearch() {
     tokens: ["workflow", "automation", "processes", "wf"],
     rankBoost: 11,
   });
+  searchIndex.upsert({
+    id: "uws_builder_studio",
+    category: "applications",
+    title: "AI Builder Studio",
+    path: "/platform-builder/builder-studio",
+    tokens: ["builder", "studio", "ai", "constructor", "skills", "prompts"],
+    rankBoost: 12,
+  });
 }

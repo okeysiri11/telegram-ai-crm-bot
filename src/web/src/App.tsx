@@ -11,6 +11,7 @@ import { FirstEntryPage } from "@/onboarding/FirstEntryPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { EnterpriseCityPage } from "@/enterprise-city";
 import { WorkflowCenterPage } from "@/enterprise-workflow";
+import { AIBuilderStudioPage } from "@/ai-builder-studio";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -150,6 +151,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <WorkflowCenterPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/builder-studio"
+        element={
+          <ProtectedRoute>
+            <AIBuilderStudioPage />
           </ProtectedRoute>
         }
       />

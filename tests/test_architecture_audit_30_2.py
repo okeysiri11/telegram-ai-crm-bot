@@ -56,8 +56,8 @@ def test_architecture_audit_knowledge_exists():
 def test_existing_platform_compatible_after_audit():
     """Audit must not break prior foundation."""
     health = platform_builder.health()
-    assert health["application_version"] == "1.53.0"
-    assert health["sprint"] == "32.7"
+    assert health["application_version"] == "1.54.0"
+    assert health["sprint"] == "32.8"
     assert health["platform_builder_ready"] is True
     assert health["business_ecosystem_foundation_ready"] is True
     assert health["mission_control_ready"] is True

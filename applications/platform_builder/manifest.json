@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.53.0",
-  "sprint": "32.7",
-  "release_status": "Enterprise Workflow Automation",
+  "application_version": "1.54.0",
+  "sprint": "32.8",
+  "release_status": "AI Builder Studio",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

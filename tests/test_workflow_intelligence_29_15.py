@@ -42,8 +42,8 @@ def reset_store():
 
 def test_workflow_intelligence_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.53.0"
-    assert health["sprint"] == "32.7"
+    assert health["application_version"] == "1.54.0"
+    assert health["sprint"] == "32.8"
     assert health["workflow_intelligence_ready"] is True
     assert health["dependency_engine_ready"] is True
     assert health["critical_path_ready"] is True
@@ -110,7 +110,7 @@ def test_workflow_intelligence_flow_and_create():
 async def test_api_workflow_intelligence(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.53.0"
+    assert body["application_version"] == "1.54.0"
     assert body["workflow_intelligence_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/workflow-intelligence/catalog")
@@ -143,5 +143,5 @@ async def test_api_workflow_intelligence(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.53.0"' in manifest
-    assert "32.7" in manifest
+    assert '"application_version": "1.54.0"' in manifest
+    assert "32.8" in manifest

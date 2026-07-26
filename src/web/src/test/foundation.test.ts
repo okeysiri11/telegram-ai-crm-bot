@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.7");
+    expect(webConfig.sprint).toBe("32.8");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -594,5 +594,34 @@ describe("Sprint 32.7 Enterprise Workflow Automation", () => {
     expect(bundle.cityRoute.length).toBeGreaterThanOrEqual(2);
     expect(bundle.metrics.timeSavedMin).toBeGreaterThan(0);
     expect(bundle.templates.length).toBeGreaterThanOrEqual(5);
+  });
+});
+
+describe("Sprint 32.8 AI Builder Studio", () => {
+  it("exposes studio catalogs and home cards", async () => {
+    const {
+      STUDIO_HOME_CARDS,
+      DOMAIN_SKILL_PACKS,
+      PROMPT_LIBRARY,
+      ECOSYSTEM_TEMPLATES,
+      studioCatalogStats,
+    } = await import("../ai-builder-studio/studioCatalog");
+    expect(STUDIO_HOME_CARDS.some((c) => c.title === "AI Team")).toBe(true);
+    expect(STUDIO_HOME_CARDS.some((c) => c.title === "Prompt Library")).toBe(true);
+    expect(DOMAIN_SKILL_PACKS.map((p) => p.title)).toEqual(
+      expect.arrayContaining(["CRM", "Marketing", "Sales", "Legal", "Analytics", "Finance", "Knowledge", "Automation"]),
+    );
+    expect(PROMPT_LIBRARY.some((p) => p.kind === "system")).toBe(true);
+    expect(PROMPT_LIBRARY.some((p) => p.kind === "corporate")).toBe(true);
+    expect(ECOSYSTEM_TEMPLATES).toHaveLength(7);
+    expect(ECOSYSTEM_TEMPLATES.map((t) => t.title)).toEqual(
+      expect.arrayContaining(["Beauty", "Legal", "Cafe", "Automotive", "Agriculture", "Drone", "Bidex"]),
+    );
+    const stats = studioCatalogStats();
+    expect(stats.skills).toBeGreaterThan(5);
+    expect(stats.prompts).toBeGreaterThan(5);
+    expect(stats.templates).toBe(7);
+    const { AIBuilderStudioPage } = await import("../ai-builder-studio");
+    expect(typeof AIBuilderStudioPage).toBe("function");
   });
 });

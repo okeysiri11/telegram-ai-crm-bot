@@ -101,7 +101,7 @@ function SpecTree({
   );
 }
 
-export function AIBuilderWizard() {
+export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {}) {
   const [step, setStep] = useState(0);
   const [countChoice, setCountChoice] = useState<number | "custom">(1);
   const [customCount, setCustomCount] = useState(4);
@@ -229,11 +229,8 @@ export function AIBuilderWizard() {
     COMMUNICATION_STYLES.find((s) => s.id === agent.personality.communicationStyle)?.sample ||
     COMMUNICATION_STYLES[0].sample;
 
-  return (
-    <PlatformBuilderLayout
-      title="AI Builder"
-      subtitle="Create AI specialists with a simple visual wizard — no technical knowledge required."
-    >
+  const body = (
+      <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
         <Badge>Operational</Badge>
         <Badge>Academy · {mode}</Badge>
@@ -562,6 +559,17 @@ export function AIBuilderWizard() {
           <p className="mt-2 eds-type-small">{styleSample}</p>
         </Card>
       </div>
+      </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <PlatformBuilderLayout
+      title="AI Builder"
+      subtitle="Create AI specialists with a simple visual wizard — no technical knowledge required."
+    >
+      {body}
     </PlatformBuilderLayout>
   );
 }
