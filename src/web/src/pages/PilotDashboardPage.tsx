@@ -147,8 +147,8 @@ export function PilotDashboardPage() {
   return (
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge tone="success">Beauty Pilot Foundation</Badge>
-        <Badge>Sprint 30.8</Badge>
+        <Badge tone="success">Beauty Pilot Execution</Badge>
+        <Badge>Sprint 30.9</Badge>
         <Badge>PB {PLATFORM_BUILDER_VERSION}</Badge>
         <Badge>{webConfig.sprint}</Badge>
         {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge>{authMode || "ISAM"}</Badge>}

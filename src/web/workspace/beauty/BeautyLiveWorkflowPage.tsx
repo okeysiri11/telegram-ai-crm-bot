@@ -1,9 +1,9 @@
 /**
- * Beauty live workflow — Sprint 30.8.
- * Client → Auth → Appointment → Calendar → AI Reminder → CRM → Owner Dashboard → MC → Analytics
+ * Beauty operational pilot — Sprint 30.9.
+ * Complete customer journey on shared Enterprise Platform.
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge, Button, Card, Input, Table } from "@/ui";
 import { EmptyState } from "@/ui/EmptyState";
@@ -15,7 +15,7 @@ import { telemetry } from "@/integrations/telemetry";
 import { pilotMetrics } from "@/integrations/pilotMetrics";
 import { runBeautyLiveWorkflow, type WorkflowStepResult } from "./beautyWorkflow";
 import { isJwtToken } from "@/auth/identityApi";
-import { ECOSYSTEM_REUSE_MATRIX } from "../ecosystem-template";
+import { computeReusePercentage } from "../ecosystem-template";
 
 export function BeautyLiveWorkflowPage() {
   const authUser = useAuthStore((s) => s.user);
@@ -29,11 +29,15 @@ export function BeautyLiveWorkflowPage() {
   const [clientEmail, setClientEmail] = useState(
     `pilot.beauty+${Date.now().toString(36)}@demo.corp`,
   );
+  const [serviceName, setServiceName] = useState("Pilot Haircut");
   const [busy, setBusy] = useState(false);
   const [steps, setSteps] = useState<WorkflowStepResult[]>([]);
   const [totalMs, setTotalMs] = useState<number | null>(null);
   const [success, setSuccess] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [reusePercent, setReusePercent] = useState<number | null>(null);
+
+  const reuseAudit = useMemo(() => computeReusePercentage(), []);
 
   async function run() {
     setBusy(true);
@@ -41,26 +45,33 @@ export function BeautyLiveWorkflowPage() {
     setSteps([]);
     setSuccess(null);
     setTotalMs(null);
+    setReusePercent(null);
     try {
       const sessionOk = await validateSession();
       if (!sessionOk || !authUser) {
         throw new Error("Staff session invalid — login with production authentication first.");
       }
       await telemetry.businessEvent("beauty_workflow_start");
-      await telemetry.aiActivity("concierge", "beauty_pilot_workflow_begin");
+      await telemetry.aiActivity("concierge", "beauty_pilot_execution_begin");
+      pilotMetrics.recordSession();
       const result = await runBeautyLiveWorkflow({
         clientName,
         clientEmail,
         organizationId: org || "org_demo",
+        serviceName,
       });
       setSteps(result.steps);
       setTotalMs(result.totalMs);
       setSuccess(result.success);
+      setReusePercent(result.reusePercent ?? reuseAudit.reusePercent);
       pilotMetrics.recordWorkflow(result.success, result.totalMs);
+      pilotMetrics.recordBusinessEvent("beauty_booking");
       for (const s of result.steps) {
         pilotMetrics.recordApiTiming(s.id, s.durationMs, s.ok);
-        if (s.id === "ai_concierge") pilotMetrics.recordAiTiming(s.durationMs);
-        if (!s.ok) pilotMetrics.recordModuleError(s.id.includes("bos") || s.id.includes("crm") ? "beauty" : s.id);
+        if (s.id === "ai_concierge" || s.id === "ai_team" || s.id === "ai_marketing") {
+          pilotMetrics.recordAiTiming(s.durationMs);
+        }
+        if (!s.ok) pilotMetrics.recordModuleError("beauty");
       }
       await telemetry.businessEvent(
         result.success ? "beauty_workflow_success" : "beauty_workflow_partial",
@@ -84,23 +95,22 @@ export function BeautyLiveWorkflowPage() {
     }
   }
 
-  const reuseKeys = Object.keys(ECOSYSTEM_REUSE_MATRIX) as (keyof typeof ECOSYSTEM_REUSE_MATRIX)[];
-
   return (
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap gap-2">
-        <Badge tone="success">Live Workflow</Badge>
-        <Badge>Sprint 30.8</Badge>
-        <Badge>Beauty Pilot</Badge>
+        <Badge tone="success">Operational Pilot</Badge>
+        <Badge>Sprint 30.9</Badge>
+        <Badge>Beauty</Badge>
+        <Badge tone="success">Reuse {reuseAudit.reusePercent}%</Badge>
         <Badge>{authMode || "—"}</Badge>
         {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge tone="warning">ISAM token</Badge>}
       </div>
 
-      <h1 className="eds-type-title text-[var(--eds-text)]">Beauty Business Ecosystem Workflow</h1>
+      <h1 className="eds-type-title text-[var(--eds-text)]">Beauty Pilot Execution</h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        Second internal pilot on the shared Enterprise Platform: Client → Authentication → Appointment →
-        Calendar → AI Reminder → CRM → Owner Dashboard → Mission Control → Analytics. Reuses Automotive
-        template patterns — no duplicated services.
+        Complete customer journey on the shared Enterprise Platform: Login → Service → Specialist →
+        Calendar → Booking → Confirmation → Reminder → Visit → CRM → Analytics → Mission Control. AI
+        Team + Concierge + Marketing reuse Platform Builder — Automotive unchanged.
       </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -110,10 +120,9 @@ export function BeautyLiveWorkflowPage() {
             <li>Role: {authUser?.roleId || "—"}</li>
             <li>Org: {core.organization}</li>
             <li>Permissions: {(authUser?.permissions || core.permissions).join(", ") || "—"}</li>
-            <li>Auth mode: {authMode || "—"}</li>
           </ul>
         </Card>
-        <Card title="Client">
+        <Card title="Customer booking">
           <div className="grid gap-2">
             <Input value={clientName} onChange={(e) => setClientName(e.target.value)} aria-label="Client name" />
             <Input
@@ -121,13 +130,18 @@ export function BeautyLiveWorkflowPage() {
               onChange={(e) => setClientEmail(e.target.value)}
               aria-label="Client email"
             />
+            <Input
+              value={serviceName}
+              onChange={(e) => setServiceName(e.target.value)}
+              aria-label="Service name"
+            />
           </div>
         </Card>
       </div>
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button disabled={busy} onClick={() => void run()}>
-          {busy ? "Running…" : "Execute Beauty workflow"}
+          {busy ? "Running…" : "Execute Beauty pilot"}
         </Button>
         <Link to="/workspace/auto">
           <Button size="sm" variant="secondary">
@@ -139,6 +153,11 @@ export function BeautyLiveWorkflowPage() {
             Mission Control
           </Button>
         </Link>
+        <Link to="/platform-builder/ai-team">
+          <Button size="sm" variant="secondary">
+            AI Team
+          </Button>
+        </Link>
         <Link to="/pilot">
           <Button size="sm" variant="secondary">
             Pilot Dashboard
@@ -147,14 +166,17 @@ export function BeautyLiveWorkflowPage() {
       </div>
 
       <div className="mt-4">
-        <Card title="Platform reuse (shared with Automotive)">
-          <ul className="eds-type-small grid gap-1 sm:grid-cols-2">
-            {reuseKeys.map((k) => (
-              <li key={k}>
-                {k}: {ECOSYSTEM_REUSE_MATRIX[k].source}
-              </li>
+        <Card title={`Platform reuse audit — ${reuseAudit.reusePercent}% (${reuseAudit.sharedCount}/${reuseAudit.totalCount})`}>
+          <Table headers={["Dimension", "Source", "Auto", "Beauty"]}>
+            {reuseAudit.dimensions.map((d) => (
+              <tr key={d.id} className="border-t border-[var(--ew-border)]">
+                <td className="px-3 py-2">{d.id}</td>
+                <td className="px-3 py-2 eds-type-small text-[var(--eds-text-muted)]">{d.source}</td>
+                <td className="px-3 py-2">{d.automotive ? "✓" : "—"}</td>
+                <td className="px-3 py-2">{d.beauty ? "✓" : "—"}</td>
+              </tr>
             ))}
-          </ul>
+          </Table>
         </Card>
       </div>
 
@@ -173,6 +195,7 @@ export function BeautyLiveWorkflowPage() {
           <Badge>
             {steps.filter((s) => s.ok).length}/{steps.length} steps
           </Badge>
+          {reusePercent != null ? <Badge tone="success">Reuse {reusePercent}%</Badge> : null}
         </div>
       ) : null}
 
@@ -198,8 +221,8 @@ export function BeautyLiveWorkflowPage() {
       ) : (
         <div className="mt-6">
           <EmptyState
-            title="Ready to execute"
-            description="Enter client details and run. Staff must be logged in via production authentication. Beauty uses BOS/BWS/BCJ + shared Concierge/Comms/MC/OBS."
+            title="Ready to execute operational Beauty pilot"
+            description="Fill customer/service fields and run. Validates salon CRM, rooms, hours, booking, payments, AI Team, and Mission Control on existing APIs."
           />
         </div>
       )}

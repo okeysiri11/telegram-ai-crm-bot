@@ -42,8 +42,8 @@ def reset_store():
 
 def test_mission_control_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.33.0"
-    assert health["sprint"] == "30.8"
+    assert health["application_version"] == "1.34.0"
+    assert health["sprint"] == "30.9"
     assert health["mission_control_ready"] is True
     assert health["executive_operations_ready"] is True
     assert health["mission_dashboard_ready"] is True
@@ -111,7 +111,7 @@ def test_mission_control_flow_and_create():
 async def test_api_mission_control(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.33.0"
+    assert body["application_version"] == "1.34.0"
     assert body["mission_control_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/mission-control/catalog")
@@ -139,5 +139,5 @@ async def test_api_mission_control(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.33.0"' in manifest
-    assert "30.8" in manifest
+    assert '"application_version": "1.34.0"' in manifest
+    assert "30.9" in manifest

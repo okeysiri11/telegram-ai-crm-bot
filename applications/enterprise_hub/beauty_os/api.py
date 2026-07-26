@@ -166,3 +166,21 @@ async def bos_dashboard_handler(request: web.Request) -> web.Response:
         return json_response(_suite().dashboard())
     except Exception as exc:
         return _handle_error(exc)
+
+
+async def bos_resources_handler(request: web.Request) -> web.Response:
+    """Rooms / chairs / equipment — extends Beauty OS (Sprint 30.9); no parallel resource stack."""
+    try:
+        if request.method == "GET":
+            return json_response(_suite().list_resources())
+        body = await _read_json(request)
+        return json_response(
+            _suite().create_resource(
+                name=body.get("name", ""),
+                kind=body.get("kind", "room"),
+                branch=body.get("branch", ""),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

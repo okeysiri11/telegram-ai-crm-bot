@@ -43,6 +43,10 @@
 
 [BEAUTY_PILOT_30_8.md](./BEAUTY_PILOT_30_8.md) — Ecosystem template + Beauty second pilot. Platform Builder **v1.33.0**.
 
+## Beauty Pilot Execution (Sprint 30.9)
+
+[BEAUTY_PILOT_EXECUTION_30_9.md](./BEAUTY_PILOT_EXECUTION_30_9.md) — Operational Beauty journey + 100% reuse audit. Platform Builder **v1.34.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

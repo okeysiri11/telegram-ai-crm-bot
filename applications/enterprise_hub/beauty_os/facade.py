@@ -50,9 +50,11 @@ class BeautyOSSuite:
         for svc in full["catalog"]:
             sid = _id("bos_svc")
             self.store.bos_services.save(sid, {"service_id": sid, **svc, "created_at": _now()})
+        resource_ids: list[str] = []
         for res in full["resources"]:
             rid = _id("bos_res")
             self.store.bos_resources.save(rid, {"resource_id": rid, **res, "created_at": _now()})
+            resource_ids.append(rid)
         cuid = _id("bos_cu")
         self.store.bos_customers.save(cuid, {"customer_id": cuid, **full["customer"], "created_at": _now()})
         aid = _id("bos_ap")
@@ -62,7 +64,23 @@ class BeautyOSSuite:
         record["company_id"] = cid
         record["dashboard_id"] = did
         record["branch_id"] = brid
+        record["resource_ids"] = resource_ids
+        record["employee_id"] = eid
         self.store.bos_bootstraps.save(bid, record)
+        return record
+
+    def list_resources(self) -> dict[str, Any]:
+        items = self.store.bos_resources.list_all()
+        return {"resources": items, "count": len(items)}
+
+    def create_resource(self, *, name: str, kind: str, branch: str = "") -> dict[str, Any]:
+        try:
+            resource = self.library.resources.create(name=name, kind=kind, branch=branch)
+        except ValueError as exc:
+            raise ValidationError(str(exc)) from exc
+        rid = _id("bos_res")
+        record = {"resource_id": rid, **resource, "created_at": _now()}
+        self.store.bos_resources.save(rid, record)
         return record
 
     def create_company(self, **kwargs: Any) -> dict[str, Any]:
@@ -178,6 +196,7 @@ class BeautyOSSuite:
             "branches": len(self.store.bos_branches.list_all()),
             "employees": len(self.store.bos_employees.list_all()),
             "services": len(self.store.bos_services.list_all()),
+            "resources": len(self.store.bos_resources.list_all()),
             "appointments": len(self.store.bos_appointments.list_all()),
             "dashboards": len(self.store.bos_dashboards.list_all()),
         }

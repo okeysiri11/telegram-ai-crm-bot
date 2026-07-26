@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("30.8");
+    expect(webConfig.sprint).toBe("30.9");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -130,5 +130,20 @@ describe("Sprint 30.8 Beauty Pilot Foundation", () => {
     );
     const { assignModule } = await import("@/integrations/pilotFeedback");
     expect(assignModule("salon appointment failed", "beauty")).toBe("beauty");
+  });
+});
+
+describe("Sprint 30.9 Beauty Pilot Execution", () => {
+  it("computes full platform reuse and wires commerce", async () => {
+    expect(webConfig.commerceCorePrefix).toContain("enterprise-eco");
+    expect(hubIntegrations.commerceCore).toContain("enterprise-eco");
+    const { computeReusePercentage, stepAiTeamConfigure } = await import(
+      "../../workspace/ecosystem-template"
+    );
+    expect(typeof stepAiTeamConfigure).toBe("function");
+    const audit = computeReusePercentage();
+    expect(audit.reusePercent).toBe(100);
+    expect(audit.sharedCount).toBe(audit.totalCount);
+    expect(audit.totalCount).toBeGreaterThanOrEqual(16);
   });
 });

@@ -1,7 +1,7 @@
 /**
- * Business Ecosystem Template — Sprint 30.8.
+ * Business Ecosystem Template — Sprint 30.8 / extended 30.9.
  * Extracted from Automotive reference. Shared types + platform steps.
- * Ecosystems configure domain APIs; they do not fork auth/MC/OBS/comms/concierge.
+ * Ecosystems configure domain APIs; they do not fork auth/MC/OBS/comms/concierge/AI Team.
  */
 
 import { apiFetch } from "@/integrations/apiClient";
@@ -22,6 +22,7 @@ export type WorkflowRunResult = {
   steps: WorkflowStepResult[];
   totalMs: number;
   success: boolean;
+  reusePercent?: number;
 };
 
 export async function timedStep(
@@ -62,8 +63,10 @@ export async function stepAiConcierge(opts: {
   role: string;
   roleCustom: string;
   recommendations: string[];
+  stepId?: string;
+  stepLabel?: string;
 }): Promise<WorkflowStepResult> {
-  return timedStep("ai_concierge", "AI Concierge", async () => {
+  return timedStep(opts.stepId || "ai_concierge", opts.stepLabel || "AI Concierge", async () => {
     const start = await apiFetch(`${PB()}/concierge/sessions`, {
       method: "POST",
       body: JSON.stringify({ organization_id: opts.organizationId || "org_demo" }),
@@ -91,8 +94,62 @@ export async function stepAiConcierge(opts: {
     });
     const previewBody = (await preview.json()) as Record<string, unknown>;
     return {
-      detail: `session=${sessionId}`,
+      detail: `session=${sessionId}; role=${opts.roleCustom || opts.role}`,
       data: { session: patched, preview: previewBody },
+    };
+  });
+}
+
+/**
+ * Configure AI Team Center for an ecosystem — reuses PB /ai-team (no fork).
+ * Assigns Beauty-oriented tasks to existing specialists.
+ */
+export async function stepAiTeamConfigure(opts: {
+  organizationId: string;
+  ecosystem: string;
+  tasks: { label: string; task: string }[];
+}): Promise<WorkflowStepResult> {
+  return timedStep("ai_team", "AI Team configure", async () => {
+    const org = opts.organizationId || "org_demo";
+    const statusRes = await apiFetch(`${PB()}/ai-team/status`);
+    const statusBody = (await statusRes.json()) as Record<string, unknown>;
+    if (!statusRes.ok) throw new Error(String(statusBody.error || "AI Team status failed"));
+
+    const dashRes = await apiFetch(
+      `${PB()}/ai-team/organizations/${encodeURIComponent(org)}/dashboard`,
+    );
+    const dash = (await dashRes.json()) as Record<string, unknown>;
+    if (!dashRes.ok) throw new Error(String(dash.error || "AI Team dashboard failed"));
+
+    const members = Array.isArray(dash.members) ? (dash.members as Record<string, unknown>[]) : [];
+    const assigned: Record<string, unknown>[] = [];
+    for (let i = 0; i < opts.tasks.length; i += 1) {
+      const member = members[i % Math.max(members.length, 1)];
+      if (!member?.agent_id) continue;
+      const actionRes = await apiFetch(
+        `${PB()}/ai-team/organizations/${encodeURIComponent(org)}/actions`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            agent_id: member.agent_id,
+            action: "assign_task",
+            payload: {
+              task: `[${opts.ecosystem}] ${opts.tasks[i].task}`,
+              role_label: opts.tasks[i].label,
+            },
+          }),
+        },
+      );
+      const actionBody = (await actionRes.json()) as Record<string, unknown>;
+      if (!actionRes.ok) throw new Error(String(actionBody.error || "AI Team assign failed"));
+      assigned.push({ label: opts.tasks[i].label, agent_id: member.agent_id, result: actionBody });
+    }
+
+    const chatRes = await apiFetch(`${PB()}/ai-team/group-chat`);
+    const chatBody = chatRes.ok ? ((await chatRes.json()) as Record<string, unknown>) : {};
+    return {
+      detail: `AI Team ready; assigned=${assigned.length}`,
+      data: { status: statusBody, dashboard: dash, assigned, group_chat: chatBody },
     };
   });
 }
@@ -105,8 +162,10 @@ export async function stepNotification(opts: {
   subject: string;
   body: string;
   payload?: Record<string, unknown>;
+  stepId?: string;
+  stepLabel?: string;
 }): Promise<WorkflowStepResult> {
-  return timedStep("notification", "Notification", async () => {
+  return timedStep(opts.stepId || "notification", opts.stepLabel || "Notification", async () => {
     const res = await apiFetch(`${COMMS()}/center`, {
       method: "POST",
       body: JSON.stringify({
@@ -180,7 +239,38 @@ export const ECOSYSTEM_REUSE_MATRIX = {
   workflow_engine: { source: "ecosystem template timed steps", automotive: true, beauty: true },
   notification_system: { source: "enterprise-comms /center", automotive: true, beauty: true },
   telemetry: { source: "OBS + pilotMetrics", automotive: true, beauty: true },
-  ai_platform: { source: "PB Concierge sessions", automotive: true, beauty: true },
+  ai_platform: { source: "PB Concierge + AI Team", automotive: true, beauty: true },
   ui: { source: "EDS Button/Card/Table/Input", automotive: true, beauty: true },
   dashboards: { source: "domain dashboard + Pilot /pilot", automotive: true, beauty: true },
+  layouts: { source: "WorkspaceLayout", automotive: true, beauty: true },
+  shared_apis: { source: "comms / OBS / PB / ISAM", automotive: true, beauty: true },
+  shared_components: { source: "EDS + ecosystem-template", automotive: true, beauty: true },
+  shared_workflows: { source: "timedStep template", automotive: true, beauty: true },
+  shared_ai: { source: "Concierge + AI Team + AMO", automotive: true, beauty: true },
 } as const;
+
+export type ReuseAuditResult = {
+  dimensions: { id: string; source: string; automotive: boolean; beauty: boolean; shared: boolean }[];
+  sharedCount: number;
+  totalCount: number;
+  reusePercent: number;
+};
+
+/** Measure platform reuse across ecosystems (both true = shared). */
+export function computeReusePercentage(): ReuseAuditResult {
+  const dimensions = Object.entries(ECOSYSTEM_REUSE_MATRIX).map(([id, row]) => ({
+    id,
+    source: row.source,
+    automotive: row.automotive,
+    beauty: row.beauty,
+    shared: row.automotive && row.beauty,
+  }));
+  const sharedCount = dimensions.filter((d) => d.shared).length;
+  const totalCount = dimensions.length;
+  return {
+    dimensions,
+    sharedCount,
+    totalCount,
+    reusePercent: totalCount ? Math.round((sharedCount / totalCount) * 1000) / 10 : 0,
+  };
+}

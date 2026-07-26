@@ -45,7 +45,7 @@ def reset_store():
 def test_workspace_platform_surfaces():
     health = platform_builder.health()
     assert health["unified_workspace_platform_ready"] is True
-    assert health["application_version"] == "1.33.0"
+    assert health["application_version"] == "1.34.0"
 
     eng = platform_builder.workspace_os
     types = eng.workspace_types()

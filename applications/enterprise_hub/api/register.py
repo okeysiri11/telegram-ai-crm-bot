@@ -713,6 +713,9 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{bos}/customers", bos_api.bos_customer_handler)
     app.router.add_post(f"{bos}/appointments", bos_api.bos_appointment_handler)
     app.router.add_get(f"{bos}/dashboard", bos_api.bos_dashboard_handler)
+    # Sprint 30.9 — expose resource inventory already seeded by BOS bootstrap
+    app.router.add_get(f"{bos}/resources", bos_api.bos_resources_handler)
+    app.router.add_post(f"{bos}/resources", bos_api.bos_resources_handler)
 
     # Sprint 22.3 — Beauty Workspace (additive; prior routes unchanged)
     bws = DEFAULT_CONFIG.beauty_workspace_api_prefix

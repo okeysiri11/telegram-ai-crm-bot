@@ -20,6 +20,7 @@ export const hubIntegrations = {
   beautyWorkspace: webConfig.beautyWorkspacePrefix,
   beautyClientJourney: webConfig.beautyClientJourneyPrefix,
   aiMarketingOs: webConfig.aiMarketingOsPrefix,
+  commerceCore: webConfig.commerceCorePrefix,
 } as const;
 
 export async function fetchWebFoundationHealth(): Promise<Record<string, unknown>> {

@@ -43,9 +43,9 @@ def test_beauty_pilot_docs_exist():
 
 def test_platform_beauty_pilot_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.33.0"
-    assert health["sprint"] == "30.8"
-    assert health["release_status"] == "Beauty Pilot Foundation"
+    assert health["application_version"] == "1.34.0"
+    assert health["sprint"] == "30.9"
+    assert health["release_status"] == "Beauty Pilot Execution"
 
 
 def test_beauty_hub_apis_reusable():
@@ -153,8 +153,8 @@ def test_reuse_matrix_documents_shared_platform():
 
 def test_manifest_and_audit_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.33.0"' in manifest
-    assert "30.8" in manifest
-    assert "Beauty Pilot Foundation" in manifest
+    assert '"application_version": "1.34.0"' in manifest
+    assert "30.9" in manifest
+    assert "Beauty Pilot Execution" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "BEAUTY_PILOT_30_8" in index

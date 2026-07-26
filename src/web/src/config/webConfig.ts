@@ -1,7 +1,7 @@
 export const webConfig = {
   application: "enterprise_web_platform",
   version: "9.4.0",
-  sprint: "30.8",
+  sprint: "30.9",
   apiBase: import.meta.env.VITE_API_BASE || "/api",
   hubPrefix: "/api/enterprise-hub/v1",
   ewfPrefix: "/api/enterprise-ewf/v1",
@@ -14,6 +14,7 @@ export const webConfig = {
   beautyWorkspacePrefix: "/api/enterprise-bws/v1",
   beautyClientJourneyPrefix: "/api/enterprise-bcj/v1",
   aiMarketingOsPrefix: "/api/enterprise-amo/v1",
+  commerceCorePrefix: "/api/enterprise-eco/v1",
   commsPrefix: "/api/enterprise-comms/v1",
   platformBuilderPrefix: "/api/platform-builder/v1",
   identityLoginPath: "/management/identity/login",
