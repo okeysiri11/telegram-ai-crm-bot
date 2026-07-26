@@ -81,7 +81,7 @@ def test_epr_feedback_api_still_central():
 def test_manifest_and_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
     assert '"application_version": "1.55.0"' in manifest
-    assert "32.8" in manifest
+    assert "32.9" in manifest
     assert "Enterprise Marketplace & Solution Hub" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "PILOT_HARDENING_30_7" in index

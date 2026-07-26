@@ -251,7 +251,7 @@ def test_reuse_docs_and_manifest():
     assert "COMPLETE" in report
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
     assert '"application_version": "1.55.0"' in manifest
-    assert "32.8" in manifest
+    assert "32.9" in manifest
     assert "Enterprise Marketplace & Solution Hub" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "DRONE_PILOT_EXECUTION_31_4" in index

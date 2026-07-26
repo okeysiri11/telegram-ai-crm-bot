@@ -115,7 +115,7 @@ def test_next_ecosystem_readiness_lists_blockers_only():
 def test_manifest_and_audit_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
     assert '"application_version": "1.55.0"' in manifest
-    assert "32.8" in manifest
+    assert "32.9" in manifest
     assert "Enterprise Marketplace & Solution Hub" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "FIRST_LIVE_WORKFLOW_30_6" in index

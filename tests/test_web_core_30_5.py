@@ -104,7 +104,7 @@ def test_shared_ui_and_observability_extensions():
 def test_manifest_and_audit_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
     assert '"application_version": "1.55.0"' in manifest
-    assert "32.8" in manifest
+    assert "32.9" in manifest
     assert "Enterprise Marketplace & Solution Hub" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "WEB_CORE_30_5" in index

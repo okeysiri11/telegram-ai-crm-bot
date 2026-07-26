@@ -141,4 +141,4 @@ async def test_api_navigation_intelligence(client):
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
     assert '"application_version": "1.55.0"' in manifest
-    assert "32.8" in manifest
+    assert "32.9" in manifest

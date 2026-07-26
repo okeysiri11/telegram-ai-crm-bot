@@ -55,7 +55,7 @@ def test_god_mode_expansion_ready():
 
     status = platform_builder.god_mode.status("platform_owner")
     assert status["version"] == "2.0.0"
-    assert status["sprint"] == "32.8"
+    assert status["sprint"] == "32.9"
     assert status["expansion_ready"] is True
     assert status["platform_control_center_ready"] is True
     assert status["diagnostics"]["control_center_online"] is True
@@ -183,4 +183,4 @@ def test_docs_god_mode_28_7():
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
     assert '"application_version": "1.55.0"' in manifest
-    assert "32.8" in manifest
+    assert "32.9" in manifest
