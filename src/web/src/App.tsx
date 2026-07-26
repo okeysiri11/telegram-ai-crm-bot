@@ -38,6 +38,7 @@ import { BeautyLiveWorkflowPage } from "../workspace/beauty/BeautyLiveWorkflowPa
 import { CafeLiveWorkflowPage } from "../workspace/cafe/CafeLiveWorkflowPage";
 import { AgricultureLiveWorkflowPage } from "../workspace/agriculture/AgricultureLiveWorkflowPage";
 import { LegalLiveWorkflowPage } from "../workspace/legal/LegalLiveWorkflowPage";
+import { BidexLiveWorkflowPage } from "../workspace/crypto/BidexLiveWorkflowPage";
 import { NavigationDashboardPage } from "../navigation/pages";
 import { CommandCenterPage } from "../command-center/pages";
 import { ReleaseCandidatePage } from "../release/pages";
@@ -250,6 +251,22 @@ export function App() {
         element={
           <ProtectedRoute>
             <LegalLiveWorkflowPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/crypto"
+        element={
+          <ProtectedRoute>
+            <BidexLiveWorkflowPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/crypto/:sub"
+        element={
+          <ProtectedRoute>
+            <BidexLiveWorkflowPage />
           </ProtectedRoute>
         }
       />

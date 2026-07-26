@@ -31,6 +31,13 @@ export const hubIntegrations = {
   legalCompliance: webConfig.legalCompliancePrefix,
   legalAi: webConfig.legalAiPrefix,
   legalExecutive: webConfig.legalExecutivePrefix,
+  financeDigitalAssets: webConfig.financeDigitalAssetsPrefix,
+  financePayments: webConfig.financePaymentsPrefix,
+  financeTreasury: webConfig.financeTreasuryPrefix,
+  financeIntegration: webConfig.financeIntegrationPrefix,
+  financeCfo: webConfig.financeCfoPrefix,
+  cryptoEnterprise: webConfig.cryptoEnterprisePrefix,
+  cryptoRisk: webConfig.cryptoRiskPrefix,
   aiMarketingOs: webConfig.aiMarketingOsPrefix,
   commerceCore: webConfig.commerceCorePrefix,
 } as const;

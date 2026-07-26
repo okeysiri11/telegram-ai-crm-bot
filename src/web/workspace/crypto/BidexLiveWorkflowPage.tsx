@@ -1,6 +1,6 @@
 /**
- * Legal live pilot UI — Sprint 31.2.
- * Fifth operational Business Ecosystem on the shared Enterprise Platform.
+ * Bidex (Crypto) live pilot UI — Sprint 31.3.
+ * Sixth operational Business Ecosystem on the shared Enterprise Platform.
  */
 
 import { useMemo, useState } from "react";
@@ -13,11 +13,11 @@ import { useWorkspaceStore } from "@/workspace/workspaceStore";
 import { useWebCore } from "@/shell/WebCoreProvider";
 import { telemetry } from "@/integrations/telemetry";
 import { pilotMetrics } from "@/integrations/pilotMetrics";
-import { runLegalLiveWorkflow, type WorkflowStepResult } from "./legalWorkflow";
+import { runBidexLiveWorkflow, type WorkflowStepResult } from "./bidexWorkflow";
 import { isJwtToken } from "@/auth/identityApi";
 import { computeReusePercentage, CROSS_ECOSYSTEM_PATTERNS } from "../ecosystem-template";
 
-export function LegalLiveWorkflowPage() {
+export function BidexLiveWorkflowPage() {
   const authUser = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
   const authMode = useAuthStore((s) => s.authMode);
@@ -25,9 +25,9 @@ export function LegalLiveWorkflowPage() {
   const org = useWorkspaceStore((s) => s.workspace.company);
   const core = useWebCore();
 
-  const [clientName, setClientName] = useState("Alex Client");
-  const [clientEmail, setClientEmail] = useState(
-    `pilot.legal+${Date.now().toString(36)}@demo.corp`,
+  const [customerName, setCustomerName] = useState("Acme OTC Client");
+  const [customerEmail, setCustomerEmail] = useState(
+    `pilot.bidex+${Date.now().toString(36)}@demo.corp`,
   );
   const [busy, setBusy] = useState(false);
   const [steps, setSteps] = useState<WorkflowStepResult[]>([]);
@@ -50,12 +50,12 @@ export function LegalLiveWorkflowPage() {
       if (!sessionOk || !authUser) {
         throw new Error("Staff session invalid — login with production authentication first.");
       }
-      await telemetry.businessEvent("legal_workflow_start");
-      await telemetry.aiActivity("concierge", "legal_pilot_execution_begin");
+      await telemetry.businessEvent("bidex_workflow_start");
+      await telemetry.aiActivity("concierge", "bidex_pilot_execution_begin");
       pilotMetrics.recordSession();
-      const result = await runLegalLiveWorkflow({
-        clientName,
-        clientEmail,
+      const result = await runBidexLiveWorkflow({
+        customerName,
+        customerEmail,
         organizationId: org || "org_demo",
       });
       setSteps(result.steps);
@@ -63,36 +63,36 @@ export function LegalLiveWorkflowPage() {
       setSuccess(result.success);
       setReusePercent(result.reusePercent ?? reuseAudit.reusePercent);
       pilotMetrics.recordWorkflow(result.success, result.totalMs);
-      pilotMetrics.recordBusinessEvent("legal_case");
+      pilotMetrics.recordBusinessEvent("bidex_otc");
       for (const s of result.steps) {
         pilotMetrics.recordApiTiming(s.id, s.durationMs, s.ok);
         if (
           s.id === "ai_concierge" ||
           s.id === "ai_team" ||
-          s.id === "ai_intake" ||
-          s.id === "ai_legal"
+          s.id === "ai_finance" ||
+          s.id === "identity_verification"
         ) {
           pilotMetrics.recordAiTiming(s.durationMs);
         }
-        if (!s.ok) pilotMetrics.recordModuleError("legal");
+        if (!s.ok) pilotMetrics.recordModuleError("crypto");
       }
       await telemetry.businessEvent(
-        result.success ? "legal_workflow_success" : "legal_workflow_partial",
+        result.success ? "bidex_workflow_success" : "bidex_workflow_partial",
         result.totalMs,
       );
-      await telemetry.apiCall("legal/live-workflow", result.totalMs, result.success);
+      await telemetry.apiCall("bidex/live-workflow", result.totalMs, result.success);
       if (!result.success) {
         const failed = result.steps.filter((s) => !s.ok);
         setError(failed.map((f) => `${f.label}: ${f.error}`).join(" · "));
-        await telemetry.error("legal_workflow_step_failed");
+        await telemetry.error("bidex_workflow_step_failed");
       } else {
-        await telemetry.audit("legal_workflow_complete", `ms=${result.totalMs}`);
+        await telemetry.audit("bidex_workflow_complete", `ms=${result.totalMs}`);
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
       setSuccess(false);
-      await telemetry.error("legal_workflow", e instanceof Error ? e : undefined);
+      await telemetry.error("bidex_workflow", e instanceof Error ? e : undefined);
     } finally {
       setBusy(false);
     }
@@ -102,19 +102,19 @@ export function LegalLiveWorkflowPage() {
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap gap-2">
         <Badge tone="success">Operational Pilot</Badge>
-        <Badge>Sprint 31.2</Badge>
-        <Badge>Legal</Badge>
+        <Badge>Sprint 31.3</Badge>
+        <Badge>Bidex</Badge>
         <Badge tone="success">Reuse {reuseAudit.reusePercent}%</Badge>
         <Badge>Cross {reuseAudit.crossEcosystemPercent}%</Badge>
         <Badge>{authMode || "—"}</Badge>
         {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge tone="warning">ISAM token</Badge>}
       </div>
 
-      <h1 className="eds-type-title text-[var(--eds-text)]">Legal Pilot Execution</h1>
+      <h1 className="eds-type-title text-[var(--eds-text)]">Bidex Pilot Execution</h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        Fifth operational Business Ecosystem: Client → Login → CRM → AI Intake → Case → Document
-        Generation (templates, versions, signatures, approvals) → Calendar → Tasks → Mission Control →
-        Analytics. Reuses existing Legal Enterprise APIs. Auto / Beauty / Cafe / Agriculture unchanged.
+        Sixth operational Business Ecosystem: Customer → Login → KYC/AML → Wallet → OTC Deal →
+        Approval → Settlement → Audit → Mission Control → Analytics. Reuses Finance Enterprise +
+        Legal Compliance + Crypto APIs. Prior pilots unchanged.
       </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -126,13 +126,17 @@ export function LegalLiveWorkflowPage() {
             <li>Permissions: {(authUser?.permissions || core.permissions).join(", ") || "—"}</li>
           </ul>
         </Card>
-        <Card title="Client">
+        <Card title="Customer">
           <div className="grid gap-2">
-            <Input value={clientName} onChange={(e) => setClientName(e.target.value)} aria-label="Client name" />
             <Input
-              value={clientEmail}
-              onChange={(e) => setClientEmail(e.target.value)}
-              aria-label="Client email"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              aria-label="Customer name"
+            />
+            <Input
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              aria-label="Customer email"
             />
           </div>
         </Card>
@@ -140,7 +144,7 @@ export function LegalLiveWorkflowPage() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button disabled={busy} onClick={() => void run()}>
-          {busy ? "Running…" : "Execute Legal pilot"}
+          {busy ? "Running…" : "Execute Bidex pilot"}
         </Button>
         <Link to="/workspace/auto">
           <Button size="sm" variant="secondary">
@@ -160,6 +164,11 @@ export function LegalLiveWorkflowPage() {
         <Link to="/workspace/agro">
           <Button size="sm" variant="secondary">
             Agriculture
+          </Button>
+        </Link>
+        <Link to="/workspace/legal">
+          <Button size="sm" variant="secondary">
+            Legal
           </Button>
         </Link>
         <Link to="/platform-builder/mission-control">
@@ -192,7 +201,7 @@ export function LegalLiveWorkflowPage() {
             ))}
           </Table>
         </Card>
-        <Card title="Reusable patterns (5 ecosystems)">
+        <Card title="Reusable patterns (6 ecosystems)">
           <ul className="eds-type-small space-y-1">
             {CROSS_ECOSYSTEM_PATTERNS.map((p) => (
               <li key={p}>• {p}</li>
@@ -242,8 +251,8 @@ export function LegalLiveWorkflowPage() {
       ) : (
         <div className="mt-6">
           <EmptyState
-            title="Ready to execute Legal pilot"
-            description="Validates law-firm CRM, AI intake, case creation, document automation (templates, versions, signatures, approvals), court calendar, tasks, AI Team, and Mission Control on existing legal APIs."
+            title="Ready to execute Bidex pilot"
+            description="Validates KYC/AML, wallets, OTC deals, approvals, settlement, treasury, audit trail, AI Team, and Mission Control on existing finance + compliance + crypto APIs."
           />
         </div>
       )}

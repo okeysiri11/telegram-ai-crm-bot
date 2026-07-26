@@ -147,17 +147,19 @@ export function PilotDashboardPage() {
   return (
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge tone="success">Legal Pilot Execution</Badge>
-        <Badge>Sprint 31.2</Badge>
+        <Badge tone="success">Bidex Pilot Execution</Badge>
+        <Badge>Sprint 31.3</Badge>
         <Badge>PB {PLATFORM_BUILDER_VERSION}</Badge>
         <Badge>{webConfig.sprint}</Badge>
         {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge>{authMode || "ISAM"}</Badge>}
         {core.ecosystemsReady ? <Badge tone="success">7 ecosystems</Badge> : null}
       </div>
 
-      <h1 className="eds-type-title text-[var(--eds-text)]">Pilot Operations — Auto · Beauty · Cafe · Agriculture · Legal</h1>
+      <h1 className="eds-type-title text-[var(--eds-text)]">
+        Pilot Operations — Auto · Beauty · Cafe · Agriculture · Legal · Bidex
+      </h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        Five internal pilots on one Enterprise Platform. Shared auth, Mission Control, AI Team, feedback,
+        Six internal pilots on one Enterprise Platform. Shared auth, Mission Control, AI Team, feedback,
         and observability. No duplicated stacks.
       </p>
 
@@ -190,6 +192,11 @@ export function PilotDashboardPage() {
             Legal
           </Button>
         </Link>
+        <Link to="/workspace/crypto">
+          <Button size="sm" variant="secondary">
+            Bidex
+          </Button>
+        </Link>
         <Link to="/platform-builder/mission-control">
           <Button size="sm" variant="secondary">
             Mission Control
@@ -202,8 +209,8 @@ export function PilotDashboardPage() {
           <EmptyState
             title="Telemetry warning"
             description={error}
-            actionLabel="Open Legal"
-            actionTo="/workspace/legal"
+            actionLabel="Open Bidex"
+            actionTo="/workspace/crypto"
           />
         </div>
       ) : null}

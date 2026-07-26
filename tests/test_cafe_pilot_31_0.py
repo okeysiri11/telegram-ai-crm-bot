@@ -43,9 +43,9 @@ def test_cafe_docs_exist():
 
 def test_platform_cafe_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.37.0"
-    assert health["sprint"] == "31.2"
-    assert health["release_status"] == "Legal Pilot Execution"
+    assert health["application_version"] == "1.38.0"
+    assert health["sprint"] == "31.3"
+    assert health["release_status"] == "Bidex Pilot Execution"
 
 
 def test_cafe_os_journey_and_eco_reuse():
@@ -115,7 +115,7 @@ def test_cafe_web_and_reuse_matrix():
     ):
         assert needle in wf, needle
     cfg = (web / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "31.2"' in cfg
+    assert 'sprint: "31.3"' in cfg
     assert "cafeOsPrefix" in cfg
     tmpl = (web / "workspace" / "ecosystem-template" / "index.ts").read_text()
     assert "cafe: true" in tmpl
@@ -135,8 +135,8 @@ def test_reuse_docs_and_manifest():
     report = (ROOT / "docs" / "SPRINT_REPORT_31_0.md").read_text()
     assert "Agriculture" in report
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.37.0"' in manifest
-    assert "31.2" in manifest
-    assert "Legal Pilot Execution" in manifest
+    assert '"application_version": "1.38.0"' in manifest
+    assert "31.3" in manifest
+    assert "Bidex Pilot Execution" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "CAFE_PILOT_EXECUTION_31_0" in index

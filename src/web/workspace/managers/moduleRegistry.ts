@@ -208,12 +208,24 @@ const MODULES: Record<string, RegisteredModule> = {
   }),
   crypto: entry("crypto", {
     title: "Crypto (Bidex)",
-    purpose: "Crypto / Bidex module shell — reuses crypto_enterprise route ownership.",
+    purpose:
+      "Bidex operational pilot — KYC/AML, wallets, OTC, approvals, settlement via finance-da/pay/tr/int + legal-cp; shared Concierge/MC/OBS.",
     builderRoute: "/platform-builder/business-ecosystem",
-    apiHint: "/api/crypto-enterprise/v1",
+    portalHint: "/portals/customer",
+    apiHint:
+      "/api/finance-da/v1 · /api/finance-pay/v1 · /api/finance-tr/v1 · /api/finance-int/v1 · /api/legal-cp/v1 · /api/crypto-enterprise/v1",
     ecosystem: "crypto",
-    version: "4.8.0-enterprise",
-    dependencies: ["enterprise_web_platform", "crypto_enterprise", "platform_builder"],
+    version: "1.0.0-pilot",
+    dependencies: [
+      "enterprise_web_platform",
+      "finance_enterprise",
+      "crypto_enterprise",
+      "legal_enterprise",
+      "platform_builder",
+      "enterprise_hub",
+    ],
+    widgets: ["widget_bidex_wallets", "widget_bidex_otc"],
+    dashboards: ["dash_bidex_owner", "dash_bidex_treasury"],
   }),
   hr: entry("hr", {
     title: "HR",

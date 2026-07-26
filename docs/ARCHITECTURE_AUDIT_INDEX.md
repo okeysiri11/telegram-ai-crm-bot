@@ -59,6 +59,10 @@
 
 [LEGAL_PILOT_EXECUTION_31_2.md](./LEGAL_PILOT_EXECUTION_31_2.md) — Fifth operational pilot + document automation. Platform Builder **v1.37.0**.
 
+## Bidex Pilot Execution (Sprint 31.3)
+
+[BIDEX_PILOT_EXECUTION_31_3.md](./BIDEX_PILOT_EXECUTION_31_3.md) — Sixth operational pilot + financial/compliance validation. Platform Builder **v1.38.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

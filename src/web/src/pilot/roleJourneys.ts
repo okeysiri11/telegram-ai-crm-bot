@@ -1,7 +1,7 @@
 /**
- * Pilot role journeys — Sprint 31.2.
+ * Pilot role journeys — Sprint 31.3.
  * Validates Owner / Manager / Sales / Employee / Customer paths using existing auth + routes.
- * Five pilots: Automotive + Beauty + Cafe + Agriculture + Legal.
+ * Six pilots: Automotive + Beauty + Cafe + Agriculture + Legal + Bidex.
  */
 
 export type PilotRole = "owner" | "manager" | "sales" | "employee" | "customer";
@@ -26,7 +26,7 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
     role: "owner",
     title: "Owner",
     description:
-      "Login → Pilot → Mission Control → Auto + Beauty + Cafe + Agriculture + Legal → Analytics",
+      "Login → Pilot → Mission Control → Auto + Beauty + Cafe + Agriculture + Legal + Bidex → Analytics",
     expectedRoleIds: ["platform_owner", "company_owner", "owner"],
     steps: [
       { id: "login", label: "Login", route: "/login", requiresAuth: false },
@@ -37,13 +37,14 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
       { id: "cafe", label: "Cafe workflow", route: "/workspace/cafe", requiresAuth: true },
       { id: "agro", label: "Agriculture workflow", route: "/workspace/agro", requiresAuth: true },
       { id: "legal", label: "Legal workflow", route: "/workspace/legal", requiresAuth: true },
+      { id: "crypto", label: "Bidex workflow", route: "/workspace/crypto", requiresAuth: true },
       { id: "owner_portal", label: "Owner portal", route: "/portals/owner", requiresAuth: true },
     ],
   },
   {
     role: "manager",
     title: "Manager",
-    description: "Login → Workspace → Auto/Beauty/Cafe/Agro/Legal → Notifications → Pilot metrics",
+    description: "Login → Workspace → Auto/Beauty/Cafe/Agro/Legal/Bidex → Notifications → Pilot metrics",
     expectedRoleIds: ["role_org_owner", "manager", "company_owner"],
     steps: [
       { id: "login", label: "Login", route: "/login", requiresAuth: false },
@@ -53,6 +54,7 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
       { id: "cafe", label: "Cafe kitchen", route: "/workspace/cafe", requiresAuth: true },
       { id: "agro", label: "Agriculture ops", route: "/workspace/agro", requiresAuth: true },
       { id: "legal", label: "Legal cases", route: "/workspace/legal", requiresAuth: true },
+      { id: "crypto", label: "Bidex OTC", route: "/workspace/crypto", requiresAuth: true },
       { id: "employee", label: "Employee portal", route: "/portals/employee", requiresAuth: true },
       { id: "pilot", label: "Pilot Dashboard", route: "/pilot", requiresAuth: true },
     ],
@@ -60,7 +62,7 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
   {
     role: "sales",
     title: "Sales",
-    description: "Login → Auto → Beauty → Cafe → Agriculture → Legal intake → Tasks",
+    description: "Login → Auto → Beauty → Cafe → Agriculture → Legal → Bidex OTC → Tasks",
     expectedRoleIds: ["role_org_owner", "manager", "employee", "sales_agent"],
     steps: [
       { id: "login", label: "Login", route: "/login", requiresAuth: false },
@@ -69,6 +71,7 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
       { id: "cafe", label: "Cafe reservations", route: "/workspace/cafe", requiresAuth: true },
       { id: "agro", label: "Agriculture trade", route: "/workspace/agro", requiresAuth: true },
       { id: "legal", label: "Legal client intake", route: "/workspace/legal", requiresAuth: true },
+      { id: "crypto", label: "Bidex desk", route: "/workspace/crypto", requiresAuth: true },
       { id: "crm", label: "CRM module", route: "/workspace/crm", requiresAuth: true },
       { id: "pilot", label: "Feedback", route: "/pilot", requiresAuth: true },
     ],
@@ -76,7 +79,7 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
   {
     role: "employee",
     title: "Employee",
-    description: "Login → Employee portal → Beauty/Cafe/Agro/Legal workspace → Pilot feedback",
+    description: "Login → Employee portal → Beauty/Cafe/Agro/Legal/Bidex workspace → Pilot feedback",
     expectedRoleIds: ["employee", "role_org_owner", "manager"],
     steps: [
       { id: "login", label: "Login", route: "/login", requiresAuth: false },
@@ -85,6 +88,7 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
       { id: "cafe", label: "Cafe floor", route: "/workspace/cafe", requiresAuth: true },
       { id: "agro", label: "Agriculture harvest", route: "/workspace/agro", requiresAuth: true },
       { id: "legal", label: "Legal documents", route: "/workspace/legal", requiresAuth: true },
+      { id: "crypto", label: "Bidex wallets", route: "/workspace/crypto", requiresAuth: true },
       { id: "workspace", label: "Workspace", route: "/workspace", requiresAuth: true },
       { id: "pilot", label: "Pilot Dashboard", route: "/pilot", requiresAuth: true },
     ],
@@ -92,7 +96,7 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
   {
     role: "customer",
     title: "Customer",
-    description: "Portal auth + Beauty/Cafe/Agro/Legal paths → Customer portal shell",
+    description: "Portal auth + Beauty/Cafe/Agro/Legal/Bidex paths → Customer portal shell",
     expectedRoleIds: ["customer", "role_org_owner", "platform_owner", "manager", "employee"],
     steps: [
       { id: "auto", label: "Portal auth in workflow", route: "/workspace/auto", requiresAuth: true },
@@ -100,6 +104,7 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
       { id: "cafe", label: "Cafe order flow", route: "/workspace/cafe", requiresAuth: true },
       { id: "agro", label: "Agriculture marketplace", route: "/workspace/agro", requiresAuth: true },
       { id: "legal", label: "Legal matter status", route: "/workspace/legal", requiresAuth: true },
+      { id: "crypto", label: "Bidex OTC status", route: "/workspace/crypto", requiresAuth: true },
       { id: "portal", label: "Customer portal", route: "/portals/customer", requiresAuth: true },
     ],
   },

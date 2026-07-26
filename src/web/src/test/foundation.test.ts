@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("31.2");
+    expect(webConfig.sprint).toBe("31.3");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -198,5 +198,23 @@ describe("Sprint 31.2 Legal Pilot Execution", () => {
     expect(CROSS_ECOSYSTEM_PATTERNS.some((p) => /Legal/i.test(p))).toBe(true);
     expect(moduleRegistry.get("legal")?.apiHint).toContain("legal-cm");
     expect(applicationRegistry.get("legal_enterprise")?.route).toBe("/workspace/legal");
+  });
+});
+
+describe("Sprint 31.3 Bidex Pilot Execution", () => {
+  it("wires bidex finance prefixes and six-ecosystem reuse", async () => {
+    expect(webConfig.financeDigitalAssetsPrefix).toContain("finance-da");
+    expect(webConfig.cryptoEnterprisePrefix).toContain("crypto-enterprise");
+    expect(hubIntegrations.financeDigitalAssets).toContain("finance-da");
+    expect(hubIntegrations.cryptoRisk).toContain("crypto-rm");
+    const { computeReusePercentage, CROSS_ECOSYSTEM_PATTERNS } = await import(
+      "../../workspace/ecosystem-template"
+    );
+    const audit = computeReusePercentage();
+    expect(audit.reusePercent).toBe(100);
+    expect(audit.dimensions.every((d) => "crypto" in d)).toBe(true);
+    expect(CROSS_ECOSYSTEM_PATTERNS.some((p) => /Bidex/i.test(p))).toBe(true);
+    expect(moduleRegistry.get("crypto")?.apiHint).toContain("finance-da");
+    expect(applicationRegistry.get("crypto_enterprise")?.route).toBe("/workspace/crypto");
   });
 });
