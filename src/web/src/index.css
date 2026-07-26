@@ -919,3 +919,90 @@ textarea:focus-visible {
     animation: none !important;
   }
 }
+
+/* Sprint 32.6 — AI Team Collaboration & Multi-Agent Workspace */
+.atc-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.75rem;
+  border: 1px dashed var(--ew-border);
+  background: color-mix(in oklab, var(--ew-surface) 92%, #0f766e 6%);
+}
+.atc-strip-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ew-muted);
+  margin-right: 0.25rem;
+}
+.atc-collab {
+  display: grid;
+  gap: 0.85rem;
+  margin: 0.75rem 0 1.25rem;
+}
+.atc-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .atc-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.atc-overview {
+  border-color: color-mix(in oklab, #0369a1 28%, var(--ew-border));
+  background: linear-gradient(135deg, color-mix(in oklab, var(--ew-surface) 90%, #0369a1), var(--ew-surface));
+}
+.atc-overview-item {
+  padding: 0.35rem 0.45rem;
+  border-radius: 0.5rem;
+  background: color-mix(in oklab, var(--ew-surface) 80%, transparent);
+}
+.atc-member {
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--ew-border) 70%, transparent);
+}
+.atc-member:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.atc-load {
+  margin-top: 0.35rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--ew-border) 80%, transparent);
+  overflow: hidden;
+}
+.atc-load > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: color-mix(in oklab, #0f766e 75%, #0369a1);
+}
+.atc-timeline,
+.atc-convo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+.atc-timeline-arrow {
+  display: block;
+  color: var(--ew-muted);
+  margin: 0.15rem 0;
+}
+.atc-timeline-dot {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .atc-collab {
+    animation: none !important;
+  }
+}

@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.5");
+    expect(webConfig.sprint).toBe("32.6");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -502,5 +502,56 @@ describe("Sprint 32.5 Enterprise Intelligence", () => {
     const { suggestionsForPath } = await import("../ai-os-chrome/smartSuggestions");
     const sug = suggestionsForPath("/dashboard", 5, snap);
     expect(sug.some((s) => s.id === "kb_aware")).toBe(true);
+  });
+});
+
+describe("Sprint 32.6 AI Team Collaboration", () => {
+  it("derives multi-agent workspace from live snapshot", async () => {
+    const { deriveTeamCollaboration } = await import("../ai-team-collaboration/deriveTeamCollaboration");
+    const { emptyLiveSnapshot } = await import("../live-ops/fetchLiveEnterprise");
+    const snap = {
+      ...emptyLiveSnapshot(),
+      aiOps: {
+        running: ["Sales Specialist", "Marketing Specialist"],
+        queue: ["Review CRM brief", "Campaign draft"],
+        recent: ["Подготовлен brief по сделкам"],
+        status: "operational",
+        errors: [],
+        completed: ["Follow-up · 12", "Feedback · 8"],
+      },
+      activity: [
+        {
+          id: "a1",
+          kind: "document" as const,
+          title: "AI создал документ",
+          detail: "Knowledge",
+          at: new Date().toISOString(),
+          source: "seed" as const,
+          moduleHint: "knowledge",
+        },
+      ],
+    };
+    const bundle = deriveTeamCollaboration(snap, {
+      conciergeName: "Nova",
+      notifications: [
+        {
+          id: "n1",
+          kind: "ai",
+          title: "Team update",
+          body: "ready",
+          createdAt: new Date().toISOString(),
+          read: false,
+        },
+      ],
+    });
+    expect(bundle.members.some((m) => m.isConcierge)).toBe(true);
+    expect(bundle.members.length).toBeGreaterThanOrEqual(3);
+    expect(bundle.distribution.length).toBeGreaterThanOrEqual(2);
+    expect(bundle.timeline[0]?.label).toBe("Concierge");
+    expect(bundle.timeline.at(-1)?.label).toBe("Result");
+    expect(bundle.health.activeCount).toBeGreaterThanOrEqual(1);
+    expect(bundle.conversation.length).toBeGreaterThanOrEqual(3);
+    expect(bundle.knowledge.length).toBeGreaterThanOrEqual(1);
+    expect(bundle.overview.summaryLines.length).toBe(4);
   });
 });

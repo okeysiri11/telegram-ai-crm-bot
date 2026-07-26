@@ -121,6 +121,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_INTELLIGENCE_32_5.md](./ENTERPRISE_INTELLIGENCE_32_5.md) — Insights, Daily Brief, Priorities, Decision Panel. Platform Builder **v1.51.0**.
 
+## AI Team Collaboration & Multi-Agent Workspace (Sprint 32.6)
+
+[AI_TEAM_COLLABORATION_32_6.md](./AI_TEAM_COLLABORATION_32_6.md) — Multi-agent workspace, timeline, health, conversation. Platform Builder **v1.52.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

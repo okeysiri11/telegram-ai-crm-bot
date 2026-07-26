@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Badge, Button, Card, Input } from "@/ui";
 import { PlatformBuilderLayout } from "../layouts/PlatformBuilderLayout";
 import { PLATFORM_BUILDER_API } from "../types";
+import { AITeamCollaborationWorkspace } from "@/ai-team-collaboration";
 
 type TeamMember = {
   agent_id: string;
@@ -103,6 +104,7 @@ export function AITeamCenterPage() {
         <Badge>Operational</Badge>
         <Badge>Unlimited Specialists</Badge>
         <Badge>Group AI Foundation</Badge>
+        <Badge tone="success">Multi-Agent Workspace</Badge>
         <Input
           className="max-w-xs"
           value={orgId}
@@ -113,6 +115,8 @@ export function AITeamCenterPage() {
           Refresh
         </Button>
       </div>
+
+      <AITeamCollaborationWorkspace apiMembers={dash?.members} />
 
       {message ? <p className="eds-type-small text-[var(--eds-text-muted)]">{message}</p> : null}
 
