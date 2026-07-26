@@ -39,6 +39,7 @@ import { CafeLiveWorkflowPage } from "../workspace/cafe/CafeLiveWorkflowPage";
 import { AgricultureLiveWorkflowPage } from "../workspace/agriculture/AgricultureLiveWorkflowPage";
 import { LegalLiveWorkflowPage } from "../workspace/legal/LegalLiveWorkflowPage";
 import { BidexLiveWorkflowPage } from "../workspace/crypto/BidexLiveWorkflowPage";
+import { DroneLiveWorkflowPage } from "../workspace/drone/DroneLiveWorkflowPage";
 import { NavigationDashboardPage } from "../navigation/pages";
 import { CommandCenterPage } from "../command-center/pages";
 import { ReleaseCandidatePage } from "../release/pages";
@@ -267,6 +268,22 @@ export function App() {
         element={
           <ProtectedRoute>
             <BidexLiveWorkflowPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/drone"
+        element={
+          <ProtectedRoute>
+            <DroneLiveWorkflowPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/drone/:sub"
+        element={
+          <ProtectedRoute>
+            <DroneLiveWorkflowPage />
           </ProtectedRoute>
         }
       />

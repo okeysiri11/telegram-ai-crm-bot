@@ -40,7 +40,7 @@ def reset_store():
 def test_scene_orchestration():
     health = platform_builder.health()
     assert health["scene_manager_ready"] is True
-    assert health["application_version"] == "1.38.0"
+    assert health["application_version"] == "1.39.0"
 
     eng = platform_builder.director
     scenes = eng.scene_management()

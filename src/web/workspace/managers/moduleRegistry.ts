@@ -183,9 +183,22 @@ const MODULES: Record<string, RegisteredModule> = {
   }),
   drone: entry("drone", {
     title: "Drone",
-    purpose: "Drone industry module shell — connection point via shared Business Ecosystem Foundation.",
+    purpose:
+      "Drone operational pilot — projects, fleet, production, warehouse, testing, missions, telemetry via /api/drone/v1; shared Concierge/MC/OBS.",
     builderRoute: "/platform-builder/business-ecosystem",
+    portalHint: "/portals/customer",
+    apiHint: "/api/drone/v1 · /api/precision-agriculture/v1",
     ecosystem: "drone",
+    version: "1.0.0-pilot",
+    dependencies: [
+      "enterprise_web_platform",
+      "drone_platform",
+      "agro_enterprise",
+      "platform_builder",
+      "enterprise_hub",
+    ],
+    widgets: ["widget_drone_fleet", "widget_drone_missions"],
+    dashboards: ["dash_drone_owner", "dash_drone_executive"],
   }),
   legal: entry("legal", {
     title: "Legal",

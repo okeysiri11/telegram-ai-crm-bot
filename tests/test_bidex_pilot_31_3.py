@@ -81,9 +81,9 @@ def test_bidex_docs_exist():
 
 def test_platform_bidex_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.38.0"
-    assert health["sprint"] == "31.3"
-    assert health["release_status"] == "Bidex Pilot Execution"
+    assert health["application_version"] == "1.39.0"
+    assert health["sprint"] == "31.4"
+    assert health["release_status"] == "Drone Ecosystem Completion"
 
 
 @pytest.mark.asyncio
@@ -269,12 +269,12 @@ def test_bidex_web_and_reuse_matrix():
     ):
         assert needle in wf, needle
     cfg = (web / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "31.3"' in cfg
+    assert 'sprint: "31.4"' in cfg
     assert "financeDigitalAssetsPrefix" in cfg
     assert "cryptoEnterprisePrefix" in cfg
     tmpl = (web / "workspace" / "ecosystem-template" / "index.ts").read_text()
     assert "crypto: true" in tmpl
-    assert "allSix" in tmpl
+    assert "computeReusePercentage" in tmpl
     hub = (web / "src" / "integrations" / "hub.ts").read_text()
     assert "financeDigitalAssets" in hub
     assert "cryptoRisk" in hub
@@ -287,8 +287,8 @@ def test_reuse_docs_and_manifest():
     report = (ROOT / "docs" / "SPRINT_REPORT_31_3.md").read_text()
     assert "Drone" in report
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.38.0"' in manifest
-    assert "31.3" in manifest
-    assert "Bidex Pilot Execution" in manifest
+    assert '"application_version": "1.39.0"' in manifest
+    assert "31.4" in manifest
+    assert "Drone Ecosystem Completion" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "BIDEX_PILOT_EXECUTION_31_3" in index

@@ -38,6 +38,8 @@ export const hubIntegrations = {
   financeCfo: webConfig.financeCfoPrefix,
   cryptoEnterprise: webConfig.cryptoEnterprisePrefix,
   cryptoRisk: webConfig.cryptoRiskPrefix,
+  drone: webConfig.dronePrefix,
+  precisionAgriculture: webConfig.precisionAgriculturePrefix,
   aiMarketingOs: webConfig.aiMarketingOsPrefix,
   commerceCore: webConfig.commerceCorePrefix,
 } as const;

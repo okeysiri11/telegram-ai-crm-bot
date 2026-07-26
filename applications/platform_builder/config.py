@@ -1,4 +1,4 @@
-"""Platform Builder — Sprint 31.3 Bidex Pilot Execution."""
+"""Platform Builder — Sprint 31.4 Drone Ecosystem Completion."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from dataclasses import dataclass, field
 class PlatformBuilderConfig:
     application_name: str = "Platform Builder"
     application: str = "platform_builder"
-    application_version: str = "1.38.0"
-    sprint: str = "31.3"
-    release_status: str = "Bidex Pilot Execution"
+    application_version: str = "1.39.0"
+    sprint: str = "31.4"
+    release_status: str = "Drone Ecosystem Completion"
     platform_dependency: str = "AI Platform Core v3"
     enterprise_foundation: str = "Enterprise Platform v8.7.0"
     api_version: str = "v1"

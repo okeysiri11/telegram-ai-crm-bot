@@ -63,6 +63,10 @@
 
 [BIDEX_PILOT_EXECUTION_31_3.md](./BIDEX_PILOT_EXECUTION_31_3.md) — Sixth operational pilot + financial/compliance validation. Platform Builder **v1.38.0**.
 
+## Drone Ecosystem Completion (Sprint 31.4)
+
+[DRONE_PILOT_EXECUTION_31_4.md](./DRONE_PILOT_EXECUTION_31_4.md) — Seventh operational pilot + enterprise platform validation. Platform Builder **v1.39.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

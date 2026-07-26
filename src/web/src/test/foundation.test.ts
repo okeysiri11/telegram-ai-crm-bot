@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("31.3");
+    expect(webConfig.sprint).toBe("31.4");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -216,5 +216,23 @@ describe("Sprint 31.3 Bidex Pilot Execution", () => {
     expect(CROSS_ECOSYSTEM_PATTERNS.some((p) => /Bidex/i.test(p))).toBe(true);
     expect(moduleRegistry.get("crypto")?.apiHint).toContain("finance-da");
     expect(applicationRegistry.get("crypto_enterprise")?.route).toBe("/workspace/crypto");
+  });
+});
+
+describe("Sprint 31.4 Drone Ecosystem Completion", () => {
+  it("wires drone prefixes and seven-ecosystem reuse", async () => {
+    expect(webConfig.dronePrefix).toContain("/api/drone/v1");
+    expect(webConfig.precisionAgriculturePrefix).toContain("precision-agriculture");
+    expect(hubIntegrations.drone).toContain("/api/drone/v1");
+    expect(hubIntegrations.precisionAgriculture).toContain("precision-agriculture");
+    const { computeReusePercentage, CROSS_ECOSYSTEM_PATTERNS } = await import(
+      "../../workspace/ecosystem-template"
+    );
+    const audit = computeReusePercentage();
+    expect(audit.reusePercent).toBe(100);
+    expect(audit.dimensions.every((d) => "drone" in d)).toBe(true);
+    expect(CROSS_ECOSYSTEM_PATTERNS.some((p) => /Drone/i.test(p))).toBe(true);
+    expect(moduleRegistry.get("drone")?.apiHint).toContain("/api/drone/v1");
+    expect(applicationRegistry.get("drone_enterprise")?.route).toBe("/workspace/drone");
   });
 });

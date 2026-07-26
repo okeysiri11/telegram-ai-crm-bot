@@ -178,7 +178,7 @@ export function LegalLiveWorkflowPage() {
         <Card
           title={`Enterprise reuse — ${reuseAudit.reusePercent}% (${reuseAudit.sharedCount}/${reuseAudit.totalCount})`}
         >
-          <Table headers={["Dimension", "Auto", "Beauty", "Cafe", "Agro", "Legal", "Bidex"]}>
+          <Table headers={["Dimension", "Auto", "Beauty", "Cafe", "Agro", "Legal", "Bidex", "Drone"]}>
             {reuseAudit.dimensions.map((d) => (
               <tr key={d.id} className="border-t border-[var(--ew-border)]">
                 <td className="px-3 py-2 eds-type-small">{d.id}</td>
@@ -188,6 +188,7 @@ export function LegalLiveWorkflowPage() {
                 <td className="px-3 py-2">{d.agriculture ? "✓" : "—"}</td>
                 <td className="px-3 py-2">{d.legal ? "✓" : "—"}</td>
                 <td className="px-3 py-2">{d.crypto ? "✓" : "—"}</td>
+                <td className="px-3 py-2">{d.drone ? "✓" : "—"}</td>
               </tr>
             ))}
           </Table>
