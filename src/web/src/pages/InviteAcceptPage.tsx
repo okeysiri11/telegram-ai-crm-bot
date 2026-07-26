@@ -10,6 +10,7 @@ import { EmptyState } from "@/ui/EmptyState";
 import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { hubIntegrations } from "@/integrations/hub";
 import { telemetry } from "@/integrations/telemetry";
+import { pilotMetrics } from "@/integrations/pilotMetrics";
 
 type Dict = Record<string, unknown>;
 
@@ -87,6 +88,8 @@ export function InviteAcceptPage() {
       if (!acceptRes.ok) throw new Error(String(acceptBody.error || `Accept HTTP ${acceptRes.status}`));
       setMembership(acceptBody);
       setStatus("Invitation accepted");
+      pilotMetrics.recordInvitation("accepted");
+      if (mode === "register") pilotMetrics.recordRegistration();
       await telemetry.audit("pilot_invite_accepted", String(acceptBody.organization_id || "org"));
       await telemetry.userActivity("invite_accept_success");
     } catch (e) {

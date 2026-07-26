@@ -12,10 +12,32 @@ import { apiFetch } from "@/integrations/apiClient";
 import { moduleRegistry } from "../../workspace/managers/moduleRegistry";
 import { telemetry } from "@/integrations/telemetry";
 import { WORKSPACE_HEALTH_PROBES } from "@/pilot/webCompletionAudit";
+import { pilotMetrics, type PilotMetricsSnapshot } from "@/integrations/pilotMetrics";
 
 type Dict = Record<string, unknown>;
 
 type EcoHealth = { id: string; label: string; ok: boolean | null; detail: string };
+
+function tenantRows(tenants: Dict | null): { id: string; name: string; status: string }[] {
+  if (!tenants) return [];
+  const list =
+    (tenants.tenants as Dict[] | undefined) ||
+    (tenants.items as Dict[] | undefined) ||
+    (Array.isArray(tenants) ? (tenants as Dict[]) : null);
+  if (Array.isArray(list)) {
+    return list.slice(0, 12).map((t, i) => ({
+      id: String(t.tenant_id || t.id || i),
+      name: String(t.name || t.slug || "tenant"),
+      status: String(t.status || t.environment || "active"),
+    }));
+  }
+  if (typeof tenants.count === "number" || typeof tenants.tenants === "number") {
+    return [{ id: "summary", name: "tenancy status", status: JSON.stringify(tenants).slice(0, 80) }];
+  }
+  return Object.keys(tenants).length
+    ? [{ id: "payload", name: "tenancy probe", status: "ok" }]
+    : [];
+}
 
 export function MissionControlLivePanel() {
   const [mcStatus, setMcStatus] = useState<Dict | null>(null);
@@ -24,6 +46,7 @@ export function MissionControlLivePanel() {
   const [logs, setLogs] = useState<Dict | null>(null);
   const [ecoHealth, setEcoHealth] = useState<EcoHealth[]>([]);
   const [tenants, setTenants] = useState<Dict | null>(null);
+  const [pilotSnap, setPilotSnap] = useState<PilotMetricsSnapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -52,6 +75,7 @@ export function MissionControlLivePanel() {
       setMetrics(metRes.ok ? met : null);
       setLogs(logRes.ok ? log : null);
       setTenants(tnRes.ok ? ((await tnRes.json()) as Dict) : null);
+      setPilotSnap(await pilotMetrics.snapshot());
 
       const eco: EcoHealth[] = await Promise.all(
         WORKSPACE_HEALTH_PROBES.map(async (w, i) => {
@@ -112,6 +136,11 @@ export function MissionControlLivePanel() {
         <Link to="/pilot/onboard">
           <Button size="sm" variant="secondary">
             Onboard Org
+          </Button>
+        </Link>
+        <Link to="/pilot/execute">
+          <Button size="sm" variant="secondary">
+            Pilot Execution
           </Button>
         </Link>
       </div>
@@ -186,6 +215,46 @@ export function MissionControlLivePanel() {
           </ul>
         </Card>
       </div>
+
+      <Card title="Pilot organizations">
+        <Table headers={["Tenant", "Name", "Status"]}>
+          {tenantRows(tenants).map((t) => (
+            <tr key={t.id} className="border-t border-[var(--ew-border)]">
+              <td className="px-3 py-2 eds-type-small">{t.id}</td>
+              <td className="px-3 py-2">{t.name}</td>
+              <td className="px-3 py-2">{t.status}</td>
+            </tr>
+          ))}
+        </Table>
+        {!tenantRows(tenants).length ? (
+          <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">
+            No tenants yet — run{" "}
+            <Link className="underline" to="/pilot/onboard">
+              /pilot/onboard
+            </Link>
+            .
+          </p>
+        ) : null}
+      </Card>
+
+      <Card title="Pilot KPIs">
+        <ul className="eds-type-small space-y-1">
+          <li>Sessions: {pilotSnap?.sessions ?? "—"}</li>
+          <li>
+            Workflow completion:{" "}
+            {pilotSnap?.workflowCompletionRate != null ? `${pilotSnap.workflowCompletionRate}%` : "—"}
+          </li>
+          <li>AI samples: {pilotSnap?.aiResponseSamples ?? "—"}</li>
+          <li>Registrations: {pilotSnap?.registrations ?? "—"}</li>
+          <li>Feedback: {pilotSnap?.feedbackCount ?? "—"}</li>
+          <li>
+            Health:{" "}
+            <Badge tone={pilotSnap?.systemHealthy ? "success" : "warning"}>
+              {pilotSnap?.systemHealthy ? "healthy" : "check"}
+            </Badge>
+          </li>
+        </ul>
+      </Card>
 
       <Card title="Multi-organization overview">
         <pre className="max-h-40 overflow-auto eds-type-small">{JSON.stringify(tenants ?? {}, null, 2)}</pre>

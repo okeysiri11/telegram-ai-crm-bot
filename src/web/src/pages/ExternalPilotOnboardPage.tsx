@@ -153,9 +153,14 @@ export function ExternalPilotOnboardPage() {
 
       await telemetry.audit("external_pilot_onboard", String(tnBody.tenant_id || companyName));
       await telemetry.apiCall("pilot/onboard", performance.now() - started, true);
+      const { pilotMetrics } = await import("@/integrations/pilotMetrics");
+      pilotMetrics.recordOnboarding(true);
+      pilotMetrics.recordRegistration();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Onboarding failed");
       await telemetry.apiCall("pilot/onboard", performance.now() - started, false);
+      const { pilotMetrics } = await import("@/integrations/pilotMetrics");
+      pilotMetrics.recordOnboarding(false);
     } finally {
       setBusy(false);
     }

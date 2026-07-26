@@ -6,6 +6,7 @@ import { ProductionReadinessPage } from "@/pages/ProductionReadinessPage";
 import { ExternalPilotOnboardPage } from "@/pages/ExternalPilotOnboardPage";
 import { PilotInvitePage } from "@/pages/PilotInvitePage";
 import { InviteAcceptPage } from "@/pages/InviteAcceptPage";
+import { PilotExecutionPage } from "@/pages/PilotExecutionPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import {
@@ -152,6 +153,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <PilotInvitePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pilot/execute"
+        element={
+          <ProtectedRoute>
+            <PilotExecutionPage />
           </ProtectedRoute>
         }
       />

@@ -79,6 +79,12 @@ Related: [PRODUCTION_STATUS_32_0.md](./PRODUCTION_STATUS_32_0.md) · [PRODUCTION
 
 Related: [ORGANIZATION_ONBOARDING_GUIDE_32_1.md](./ORGANIZATION_ONBOARDING_GUIDE_32_1.md) · [SECURITY_CHECKLIST_32_1.md](./SECURITY_CHECKLIST_32_1.md) · [PRODUCTION_STATUS_32_1.md](./PRODUCTION_STATUS_32_1.md) · [BACKUP_DRILL_32_1.md](./BACKUP_DRILL_32_1.md)
 
+## First External Pilot Execution & Product Feedback Loop (Sprint 32.2)
+
+[PILOT_OPS_32_2.md](./PILOT_OPS_32_2.md) — Six-phase execution runner, metrics, feedback backlog. Platform Builder **v1.42.0**.
+
+Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.md](./KNOWN_ISSUES_32_2.md) · [METRICS_DASHBOARD_32_2.md](./METRICS_DASHBOARD_32_2.md) · [ENTERPRISE_READINESS_REPORT_32_2.md](./ENTERPRISE_READINESS_REPORT_32_2.md)
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

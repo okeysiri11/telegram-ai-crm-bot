@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.1");
+    expect(webConfig.sprint).toBe("32.2");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -70,6 +70,7 @@ describe("Sprint 30.5 Web Core Integration", () => {
     expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot/production");
     expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot/onboard");
     expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot/invite");
+    expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot/execute");
   });
 
   it("derives application registry from module registry", () => {
@@ -289,5 +290,24 @@ describe("Sprint 32.1 External Pilot Hardening", () => {
     expect(PILOT_OPS_STEPS.some((s) => s.route === "/pilot/onboard")).toBe(true);
     expect(applicationRegistry.get("external_pilot_onboard")?.route).toBe("/pilot/onboard");
     expect(applicationRegistry.get("pilot_invite")?.route).toBe("/pilot/invite");
+  });
+});
+
+describe("Sprint 32.2 Pilot Execution", () => {
+  it("exposes execution route, metrics, and feedback backlog helpers", async () => {
+    const { PILOT_OPS_STEPS } = await import("../pilot/webCompletionAudit");
+    expect(PILOT_OPS_STEPS.some((s) => s.route === "/pilot/execute")).toBe(true);
+    expect(applicationRegistry.get("pilot_execution")?.route).toBe("/pilot/execute");
+    const { pilotMetrics } = await import("@/integrations/pilotMetrics");
+    expect(typeof pilotMetrics.recordOnboarding).toBe("function");
+    expect(typeof pilotMetrics.recordInvitation).toBe("function");
+    const { FEEDBACK_MODULE_CHECKLIST, feedbackBacklogSummary, assignModule } = await import(
+      "@/integrations/pilotFeedback"
+    );
+    expect(FEEDBACK_MODULE_CHECKLIST.length).toBeGreaterThanOrEqual(7);
+    expect(assignModule("salon appointment failed", "beauty")).toBe("beauty");
+    expect(feedbackBacklogSummary().total).toBeGreaterThanOrEqual(0);
+    const { PILOT_ROLE_JOURNEYS } = await import("../pilot/roleJourneys");
+    expect(PILOT_ROLE_JOURNEYS[0].steps.some((s) => s.route === "/pilot/execute")).toBe(true);
   });
 });

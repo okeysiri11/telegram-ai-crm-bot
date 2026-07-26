@@ -31,6 +31,7 @@ export const PILOT_ROLE_JOURNEYS: RoleJourney[] = [
     steps: [
       { id: "login", label: "Login", route: "/login", requiresAuth: false },
       { id: "pilot", label: "Pilot Dashboard", route: "/pilot", requiresAuth: true },
+      { id: "execute", label: "Pilot Execution", route: "/pilot/execute", requiresAuth: true },
       { id: "mc", label: "Mission Control", route: "/platform-builder/mission-control", requiresAuth: true },
       { id: "auto", label: "Automotive workflow", route: "/workspace/auto", requiresAuth: true },
       { id: "beauty", label: "Beauty workflow", route: "/workspace/beauty", requiresAuth: true },

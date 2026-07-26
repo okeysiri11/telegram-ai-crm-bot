@@ -44,8 +44,8 @@ def reset_store():
 
 def test_live_organization_engines():
     health = platform_builder.health()
-    assert health["application_version"] == "1.41.0"
-    assert health["sprint"] == "32.1"
+    assert health["application_version"] == "1.42.0"
+    assert health["sprint"] == "32.2"
     assert health["live_organization_ready"] is True
     assert health["relationship_engine_ready"] is True
     assert health["visual_event_bus_connected"] is True

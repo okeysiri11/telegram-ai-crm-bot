@@ -238,10 +238,37 @@ export async function submitPilotFeedback(input: {
   return record;
 }
 
+export function listFeedbackModules(): string[] {
+  return Object.keys(MODULE_KEYWORDS);
+}
+
+/** Sprint 32.2 — every feedback item must map to an existing module. */
+export const FEEDBACK_MODULE_CHECKLIST = Object.keys(MODULE_KEYWORDS);
+
 export function listLocalFeedback(): PilotFeedbackRecord[] {
   try {
     return JSON.parse(localStorage.getItem("ewp_pilot_feedback_v1") || "[]") as PilotFeedbackRecord[];
   } catch {
     return [];
   }
+}
+
+export function feedbackBacklogSummary(): {
+  total: number;
+  bySeverity: Record<TriageSeverity, number>;
+  byModule: Record<string, number>;
+} {
+  const items = listLocalFeedback();
+  const bySeverity: Record<TriageSeverity, number> = {
+    Critical: 0,
+    High: 0,
+    Medium: 0,
+    Low: 0,
+  };
+  const byModule: Record<string, number> = {};
+  for (const item of items) {
+    bySeverity[item.severity] += 1;
+    byModule[item.module] = (byModule[item.module] || 0) + 1;
+  }
+  return { total: items.length, bySeverity, byModule };
 }

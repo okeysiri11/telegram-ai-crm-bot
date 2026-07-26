@@ -166,8 +166,8 @@ export function PilotDashboardPage() {
   return (
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge tone="success">External Pilot Hardening</Badge>
-        <Badge>Sprint 32.1</Badge>
+        <Badge tone="success">First External Pilot Execution</Badge>
+        <Badge>Sprint 32.2</Badge>
         <Badge>PB {PLATFORM_BUILDER_VERSION}</Badge>
         <Badge>{webConfig.sprint}</Badge>
         <Badge tone={readinessScore >= 90 ? "success" : "warning"}>Ready {readinessScore}%</Badge>
@@ -179,7 +179,7 @@ export function PilotDashboardPage() {
         Pilot Operations — Auto · Beauty · Cafe · Agriculture · Legal · Bidex · Drone
       </h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        External pilot onboarding, invitations, and multi-tenant ops on one Enterprise Platform. No new
+        Unified pilot execution across seven ecosystems. Metrics and feedback loop active — no new
         ecosystems, no duplicated stacks.
       </p>
 
@@ -242,6 +242,11 @@ export function PilotDashboardPage() {
             Invite Users
           </Button>
         </Link>
+        <Link to="/pilot/execute">
+          <Button size="sm" variant="secondary">
+            Pilot Execution
+          </Button>
+        </Link>
       </div>
 
       {error ? (
@@ -264,6 +269,13 @@ export function PilotDashboardPage() {
               {pilotSnap?.workflowCompletionRate != null ? `${pilotSnap.workflowCompletionRate}%` : "—"}
             </li>
             <li>Avg processing: {pilotSnap?.avgProcessingMs != null ? `${pilotSnap.avgProcessingMs} ms` : "—"}</li>
+            <li>Registrations: {pilotSnap?.registrations ?? 0}</li>
+            <li>
+              Onboarding: {pilotSnap?.onboardingSuccess ?? 0}/{pilotSnap?.onboardingRuns ?? 0}
+            </li>
+            <li>
+              Invites: {pilotSnap?.invitationsSent ?? 0} sent / {pilotSnap?.invitationsAccepted ?? 0} accepted
+            </li>
             <li>API timing samples: {pilotSnap?.apiResponseSamples ?? 0}</li>
             <li>AI timing samples: {pilotSnap?.aiResponseSamples ?? 0}</li>
             <li>Business events: {pilotSnap?.businessEvents ?? 0}</li>

@@ -20,6 +20,15 @@ export type PilotMetricsSnapshot = {
   systemHealthy: boolean;
   platformDash: Record<string, unknown> | null;
   businessDash: Record<string, unknown> | null;
+  /** Sprint 32.2 — extended pilot execution counters */
+  registrations: number;
+  onboardingRuns: number;
+  onboardingSuccess: number;
+  invitationsSent: number;
+  invitationsAccepted: number;
+  avgApiMs: number | null;
+  avgAiMs: number | null;
+  feedbackCount: number;
 };
 
 const STORE_KEY = "ewp_pilot_metrics_v1";
@@ -33,6 +42,11 @@ type LocalMetrics = {
   aiMs: number[];
   errorsByModule: Record<string, number>;
   businessEvents: number;
+  registrations: number;
+  onboardingRuns: number;
+  onboardingSuccess: number;
+  invitationsSent: number;
+  invitationsAccepted: number;
 };
 
 function loadLocal(): LocalMetrics {
@@ -46,6 +60,11 @@ function loadLocal(): LocalMetrics {
       aiMs: [],
       errorsByModule: {},
       businessEvents: 0,
+      registrations: 0,
+      onboardingRuns: 0,
+      onboardingSuccess: 0,
+      invitationsSent: 0,
+      invitationsAccepted: 0,
       ...(JSON.parse(localStorage.getItem(STORE_KEY) || "{}") as Partial<LocalMetrics>),
     };
   } catch {
@@ -58,6 +77,11 @@ function loadLocal(): LocalMetrics {
       aiMs: [],
       errorsByModule: {},
       businessEvents: 0,
+      registrations: 0,
+      onboardingRuns: 0,
+      onboardingSuccess: 0,
+      invitationsSent: 0,
+      invitationsAccepted: 0,
     };
   }
 }
@@ -115,8 +139,37 @@ export const pilotMetrics = {
     void telemetry.businessEvent(name);
   },
 
+  recordRegistration() {
+    const m = loadLocal();
+    m.registrations += 1;
+    saveLocal(m);
+    void telemetry.businessEvent("pilot_registration");
+  },
+
+  recordOnboarding(success: boolean) {
+    const m = loadLocal();
+    m.onboardingRuns += 1;
+    if (success) m.onboardingSuccess += 1;
+    saveLocal(m);
+    void telemetry.businessEvent(success ? "pilot_onboarding_ok" : "pilot_onboarding_fail");
+  },
+
+  recordInvitation(kind: "sent" | "accepted") {
+    const m = loadLocal();
+    if (kind === "sent") m.invitationsSent += 1;
+    else m.invitationsAccepted += 1;
+    saveLocal(m);
+    void telemetry.businessEvent(`pilot_invite_${kind}`);
+  },
+
   local(): LocalMetrics {
     return loadLocal();
+  },
+
+  registrationSuccessRate(): number | null {
+    const m = loadLocal();
+    if (!m.onboardingRuns) return null;
+    return Math.round((m.onboardingSuccess / m.onboardingRuns) * 1000) / 10;
   },
 
   async snapshot(): Promise<PilotMetricsSnapshot> {
@@ -140,6 +193,14 @@ export const pilotMetrics = {
     const platformDash = platformRes.ok ? ((await platformRes.json()) as Record<string, unknown>) : null;
     const businessDash = businessRes.ok ? ((await businessRes.json()) as Record<string, unknown>) : null;
 
+    let feedbackCount = 0;
+    try {
+      feedbackCount = (JSON.parse(localStorage.getItem("ewp_pilot_feedback_v1") || "[]") as unknown[])
+        .length;
+    } catch {
+      feedbackCount = 0;
+    }
+
     return {
       sessions: local.sessions,
       workflowCompletionRate:
@@ -156,6 +217,14 @@ export const pilotMetrics = {
       ),
       platformDash,
       businessDash,
+      registrations: local.registrations,
+      onboardingRuns: local.onboardingRuns,
+      onboardingSuccess: local.onboardingSuccess,
+      invitationsSent: local.invitationsSent,
+      invitationsAccepted: local.invitationsAccepted,
+      avgApiMs: avg(local.apiMs),
+      avgAiMs: avg(local.aiMs),
+      feedbackCount,
     };
   },
 };

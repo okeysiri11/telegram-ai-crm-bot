@@ -11,6 +11,7 @@ import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { hubIntegrations } from "@/integrations/hub";
 import { telemetry } from "@/integrations/telemetry";
 import { PLATFORM_BUILDER_VERSION } from "../../platform-builder/types";
+import { pilotMetrics } from "@/integrations/pilotMetrics";
 
 type Dict = Record<string, unknown>;
 
@@ -106,6 +107,7 @@ export function PilotInvitePage() {
       saveSession(token);
       setSessionToken(token);
       push(`${mode} ok — ecosystem session ready`);
+      if (mode === "register") pilotMetrics.recordRegistration();
       await telemetry.userActivity(`pilot_invite_${mode}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Auth failed");
@@ -158,6 +160,7 @@ export function PilotInvitePage() {
       if (!res.ok) throw new Error(String(body.error || `Invite HTTP ${res.status}`));
       setInvitation(body);
       push(`Invitation created for ${inviteEmail.trim()}`);
+      pilotMetrics.recordInvitation("sent");
       await telemetry.audit("pilot_invite_sent", orgId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Invite failed");

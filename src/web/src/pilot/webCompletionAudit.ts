@@ -114,6 +114,7 @@ export const PILOT_OPS_STEPS: {
   { id: "workspace", label: "Workspace creation", route: "/workspace" },
   { id: "invite", label: "User invitation", route: "/pilot/invite" },
   { id: "accept", label: "Accept invitation", route: "/invite/accept" },
+  { id: "execute", label: "Pilot execution (6 phases)", route: "/pilot/execute" },
   { id: "role", label: "Role assignment", route: "/identity/roles" },
   { id: "login", label: "First login", route: "/login" },
   { id: "business", label: "Business activation", route: "/pilot/onboard" },
