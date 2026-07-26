@@ -3998,3 +3998,152 @@ async def mission_control_create_handler(request: web.Request) -> web.Response:
         )
     except Exception as exc:
         return _handle_error(exc)
+
+
+# --- Sprint 30.2 — Business Ecosystem Foundation ---
+
+
+async def business_ecosystem_catalog_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.business_ecosystem.catalog())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_status_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.business_ecosystem.status())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_framework_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.business_ecosystem.framework_overview())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_modules_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.business_ecosystem.universal_modules(module=body.get("module")),
+                status=201,
+            )
+        module = request.rel_url.query.get("module")
+        return json_response(platform_builder.business_ecosystem.universal_modules(module=module))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_extensions_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.business_ecosystem.extension_model())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_registry_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.business_ecosystem.ecosystem_registry(
+                    ecosystem=body.get("ecosystem")
+                ),
+                status=201,
+            )
+        ecosystem = request.rel_url.query.get("ecosystem")
+        return json_response(
+            platform_builder.business_ecosystem.ecosystem_registry(ecosystem=ecosystem)
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_automotive_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.business_ecosystem.automotive_capabilities())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_agriculture_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.business_ecosystem.agriculture_capabilities())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_beauty_cafe_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.business_ecosystem.beauty_cafe_capabilities())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_crypto_legal_drone_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.business_ecosystem.crypto_legal_drone_capabilities())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_compatibility_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            body = await request.json()
+            return json_response(
+                platform_builder.business_ecosystem.architecture_compatibility(
+                    action=body.get("action") or "scan"
+                ),
+                status=201,
+            )
+        return json_response(platform_builder.business_ecosystem.architecture_compatibility())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_ui_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(platform_builder.business_ecosystem.ui_dashboard())
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_wizard_session_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "POST":
+            return json_response(platform_builder.business_ecosystem.start_session(), status=201)
+        session_id = request.match_info.get("session_id")
+        if not session_id:
+            raise ValidationError("session_id is required")
+        if request.method == "PATCH":
+            body = await request.json()
+            return json_response(
+                platform_builder.business_ecosystem.update_session(session_id, body)
+            )
+        return json_response(platform_builder.business_ecosystem.get_session(session_id))
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_wizard_summary_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.business_ecosystem.summary(request.match_info["session_id"])
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def business_ecosystem_create_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(
+            platform_builder.business_ecosystem.create(request.match_info["session_id"]),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)

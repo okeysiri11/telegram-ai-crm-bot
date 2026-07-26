@@ -1,4 +1,4 @@
-"""Tests — Enterprise Visual Analytics (Sprint 29.19)."""
+"""Tests — Enterprise Visual Analytics (Sprint 30.2)."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def test_visual_analytics_surfaces():
     health = platform_builder.health()
     assert health["analytics_ready"] is True
     assert health["health_index_ready"] is True
-    assert health["application_version"] == "1.26.0"
+    assert health["application_version"] == "1.27.0"
 
     platform_builder.simulation.emit_and_simulate("Organization Creation")
     platform_builder.simulation.emit_and_simulate("Department Creation")

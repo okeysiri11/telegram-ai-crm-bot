@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.26.0",
-  "sprint": "29.19",
-  "release_status": "Enterprise Mission Control",
+  "application_version": "1.27.0",
+  "sprint": "30.2",
+  "release_status": "Business Ecosystem Foundation",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",
@@ -99,5 +99,10 @@
   "executive_operations_center": "1.0",
   "mission_registry": "1.0",
   "executive_api": "1.0",
-  "mission_dashboard": "1.0"
+  "mission_dashboard": "1.0",
+  "business_ecosystem_framework": "1.0",
+  "business_template_registry": "1.0",
+  "reusable_module_registry": "1.0",
+  "industry_extension_engine": "1.0",
+  "industry_capability_registry": "1.0"
 }

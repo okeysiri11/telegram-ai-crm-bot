@@ -1,4 +1,4 @@
-"""Tests — Executive Operations Center (Sprint 29.19)."""
+"""Tests — Executive Operations Center (Sprint 30.2)."""
 
 from __future__ import annotations
 

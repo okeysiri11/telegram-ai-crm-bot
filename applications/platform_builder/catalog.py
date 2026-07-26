@@ -431,6 +431,16 @@ BUILDERS: list[dict[str, Any]] = [
         "purpose": "Unified executive operating center — aggregates existing services, never replaces modules.",
     },
     {
+        "id": "business_ecosystem",
+        "name": "Business Ecosystem Foundation",
+        "route": "/platform-builder/business-ecosystem",
+        "kind": "hub",
+        "status": "operational",
+        "learning_supported": True,
+        "frame_only": False,
+        "purpose": "Reusable industry extension architecture — ecosystems extend platform core, never copy it.",
+    },
+    {
         "id": "god_mode",
         "name": "God Mode",
         "route": "/platform-builder/god-mode",

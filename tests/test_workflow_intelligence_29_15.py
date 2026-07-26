@@ -1,4 +1,4 @@
-"""Tests — Workflow Intelligence OS (Sprint 29.19)."""
+"""Tests — Workflow Intelligence OS (Sprint 30.2)."""
 
 from __future__ import annotations
 
@@ -42,8 +42,8 @@ def reset_store():
 
 def test_workflow_intelligence_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.26.0"
-    assert health["sprint"] == "29.19"
+    assert health["application_version"] == "1.27.0"
+    assert health["sprint"] == "30.2"
     assert health["workflow_intelligence_ready"] is True
     assert health["dependency_engine_ready"] is True
     assert health["critical_path_ready"] is True
@@ -110,7 +110,7 @@ def test_workflow_intelligence_flow_and_create():
 async def test_api_workflow_intelligence(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.26.0"
+    assert body["application_version"] == "1.27.0"
     assert body["workflow_intelligence_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/workflow-intelligence/catalog")
@@ -143,5 +143,5 @@ async def test_api_workflow_intelligence(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.26.0"' in manifest
-    assert "29.19" in manifest
+    assert '"application_version": "1.27.0"' in manifest
+    assert "30.2" in manifest

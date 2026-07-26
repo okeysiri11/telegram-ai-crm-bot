@@ -67,6 +67,7 @@ import {
   TwinIntelligencePage,
   StrategyEnginePage,
   MissionControlPage,
+  BusinessEcosystemPage,
 } from "../platform-builder/pages";
 
 export function App() {
@@ -397,6 +398,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <MissionControlPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/business-ecosystem"
+        element={
+          <ProtectedRoute>
+            <BusinessEcosystemPage />
           </ProtectedRoute>
         }
       />

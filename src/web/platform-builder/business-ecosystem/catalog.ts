@@ -1,0 +1,12 @@
+export const BUSINESS_ECOSYSTEM_STEPS = [
+  "Business Ecosystem Framework",
+  "Universal Modules",
+  "Extension Model",
+  "Business Ecosystem Registry",
+  "Automotive Capabilities",
+  "Agriculture Capabilities",
+  "Beauty & Cafe Capabilities",
+  "Crypto · Legal · Drone",
+  "Architecture Compatibility",
+  "Create",
+] as const;

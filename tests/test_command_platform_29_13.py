@@ -1,4 +1,4 @@
-"""Tests — Universal Command Platform (Sprint 29.19)."""
+"""Tests — Universal Command Platform (Sprint 30.2)."""
 
 from __future__ import annotations
 
@@ -45,7 +45,7 @@ def reset_store():
 def test_command_platform_surfaces():
     health = platform_builder.health()
     assert health["universal_command_platform_ready"] is True
-    assert health["application_version"] == "1.26.0"
+    assert health["application_version"] == "1.27.0"
 
     eng = platform_builder.command_center_os
     execution = eng.execute_command()

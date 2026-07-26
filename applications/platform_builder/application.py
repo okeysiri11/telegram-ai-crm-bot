@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 29.19."""
+"""Platform Builder application facade — Sprint 30.2."""
 
 from __future__ import annotations
 
@@ -30,6 +30,7 @@ from applications.platform_builder.digital_twin.engine import DigitalTwinEngine
 from applications.platform_builder.twin_intelligence.engine import TwinIntelligenceEngine
 from applications.platform_builder.strategy_engine.engine import StrategyEngine
 from applications.platform_builder.mission_control.engine import MissionControlEngine
+from applications.platform_builder.business_ecosystem.engine import BusinessEcosystemEngine
 from applications.platform_builder.ai_builder.wizard import AIBuilderWizard
 from applications.platform_builder.ai_team.team_center import AITeamCenter
 from applications.platform_builder.builder_engine import BuilderEngine
@@ -88,6 +89,7 @@ class PlatformBuilderApplication:
         twin_intelligence: TwinIntelligenceEngine | None = None,
         strategy: StrategyEngine | None = None,
         mission_control: MissionControlEngine | None = None,
+        business_ecosystem: BusinessEcosystemEngine | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or platform_builder_store
@@ -121,6 +123,7 @@ class PlatformBuilderApplication:
         self.twin_intelligence = twin_intelligence or TwinIntelligenceEngine(self.store)
         self.strategy = strategy or StrategyEngine(self.store)
         self.mission_control = mission_control or MissionControlEngine(self.store)
+        self.business_ecosystem = business_ecosystem or BusinessEcosystemEngine(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -154,6 +157,7 @@ class PlatformBuilderApplication:
         self.twin_intelligence = TwinIntelligenceEngine(self.store)
         self.strategy = StrategyEngine(self.store)
         self.mission_control = MissionControlEngine(self.store)
+        self.business_ecosystem = BusinessEcosystemEngine(self.store)
 
     def bootstrap(self) -> dict[str, Any]:
         web = ROOT / "src" / "web" / "platform-builder"
@@ -286,6 +290,10 @@ class PlatformBuilderApplication:
             "executive_operations_ready": True,
             "mission_dashboard_ready": True,
             "executive_cockpit_ready": True,
+            "business_ecosystem_foundation_ready": True,
+            "universal_modules_ready": True,
+            "industry_extension_system_ready": True,
+            "automotive_ecosystem_prepared": True,
             "platform_owner_role": PLATFORM_OWNER_ROLE,
             "builders_count": len(BUILDERS),
             "web_path_exists": web.exists(),
@@ -322,6 +330,9 @@ class PlatformBuilderApplication:
             "strategy_page_exists": (web / "pages" / "StrategyEnginePage.tsx").exists(),
             "mission_control_page_exists": (
                 web / "pages" / "MissionControlPage.tsx"
+            ).exists(),
+            "business_ecosystem_page_exists": (
+                web / "pages" / "BusinessEcosystemPage.tsx"
             ).exists(),
             "ubf_bootstrap": ubf_boot,
             "bootstrapped_at": _now(),
@@ -470,6 +481,10 @@ class PlatformBuilderApplication:
             "executive_operations_ready": True,
             "mission_dashboard_ready": True,
             "executive_cockpit_ready": True,
+            "business_ecosystem_foundation_ready": True,
+            "universal_modules_ready": True,
+            "industry_extension_system_ready": True,
+            "automotive_ecosystem_prepared": True,
             "engines": {
                 "builder_engine": self.config.builder_engine,
                 "builder_academy": self.config.builder_academy,
@@ -564,6 +579,11 @@ class PlatformBuilderApplication:
                 "mission_registry": self.config.mission_registry,
                 "executive_api": self.config.executive_api,
                 "mission_dashboard": self.config.mission_dashboard,
+                "business_ecosystem_framework": self.config.business_ecosystem_framework,
+                "business_template_registry": self.config.business_template_registry,
+                "reusable_module_registry": self.config.reusable_module_registry,
+                "industry_extension_engine": self.config.industry_extension_engine,
+                "industry_capability_registry": self.config.industry_capability_registry,
             },
             "ai_builder": self.ai_builder.status(),
             "concierge": self.concierge.status(),
@@ -597,6 +617,7 @@ class PlatformBuilderApplication:
             "twin_intelligence": self.twin_intelligence.status(),
             "strategy": self.strategy.status(),
             "mission_control": self.mission_control.status(),
+            "business_ecosystem": self.business_ecosystem.status(),
         }
 
     def inventory(self) -> dict[str, Any]:

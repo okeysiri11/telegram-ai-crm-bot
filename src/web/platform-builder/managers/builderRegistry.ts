@@ -34,6 +34,7 @@ export const BUILDER_CATALOG: BuilderDef[] = [
   { id: "twin_intelligence", name: "Digital Twin Intelligence", route: "/platform-builder/twin-intelligence", kind: "hub", status: "operational", purpose: "Analyzes verified Digital Twin data — never changes state or executes workflows." },
   { id: "strategy_engine", name: "Enterprise Strategy Engine", route: "/platform-builder/strategy", kind: "hub", status: "operational", purpose: "Strategic analysis and executive recommendations — never executes business logic." },
   { id: "mission_control", name: "Enterprise Mission Control", route: "/platform-builder/mission-control", kind: "hub", status: "operational", purpose: "Unified executive operating center — aggregates existing services, never replaces modules." },
+  { id: "business_ecosystem", name: "Business Ecosystem Foundation", route: "/platform-builder/business-ecosystem", kind: "hub", status: "operational", purpose: "Reusable industry extension architecture — ecosystems extend platform core, never copy it." },
   { id: "crm", name: "CRM Builder", route: "/platform-builder/crm", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "erp", name: "ERP Builder", route: "/platform-builder/erp", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },
   { id: "workflow", name: "Workflow Builder", route: "/platform-builder/workflow", kind: "builder", status: "frame", steps: GENERIC_STEPS, frameOnly: true },

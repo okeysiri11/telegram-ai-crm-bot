@@ -210,6 +210,13 @@ class PlatformBuilderStore:
         self.mission_registries: EntityStore = EntityStore()
         self.executive_apis: EntityStore = EntityStore()
         self.mission_dashboards: EntityStore = EntityStore()
+        # Sprint 30.2 — Business Ecosystem Foundation
+        self.business_ecosystem_wizard_sessions: EntityStore = EntityStore()
+        self.business_ecosystem_frameworks: EntityStore = EntityStore()
+        self.business_template_registries: EntityStore = EntityStore()
+        self.reusable_module_registries: EntityStore = EntityStore()
+        self.industry_extension_engines: EntityStore = EntityStore()
+        self.industry_capability_registries: EntityStore = EntityStore()
 
     def reset(self) -> None:
         for attr in vars(self).values():
