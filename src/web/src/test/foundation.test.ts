@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.2");
+    expect(webConfig.sprint).toBe("32.3.1");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -309,5 +309,28 @@ describe("Sprint 32.2 Pilot Execution", () => {
     expect(feedbackBacklogSummary().total).toBeGreaterThanOrEqual(0);
     const { PILOT_ROLE_JOURNEYS } = await import("../pilot/roleJourneys");
     expect(PILOT_ROLE_JOURNEYS[0].steps.some((s) => s.route === "/pilot/execute")).toBe(true);
+  });
+});
+
+describe("Sprint 32.3.1 First User Experience", () => {
+  it("exposes extensible role catalog and first-entry progress helpers", async () => {
+    const { firstEntryRoleCatalog, FIRST_ENTRY_STEPS } = await import("../onboarding/firstEntryRoles");
+    expect(FIRST_ENTRY_STEPS).toHaveLength(7);
+    expect(firstEntryRoleCatalog.list().length).toBeGreaterThanOrEqual(8);
+    firstEntryRoleCatalog.register({
+      id: "test_ext_role",
+      label: "Ext Role",
+      description: "Extension point",
+      icon: "XX",
+    });
+    expect(firstEntryRoleCatalog.get("test_ext_role")?.label).toBe("Ext Role");
+    const { isFirstEntryComplete, resetFirstEntry, markFirstEntryComplete, saveFirstEntry } =
+      await import("../onboarding/firstEntryStore");
+    resetFirstEntry();
+    expect(isFirstEntryComplete()).toBe(false);
+    saveFirstEntry({ roleId: "beauty_salon", companyName: "Demo" });
+    markFirstEntryComplete();
+    expect(isFirstEntryComplete()).toBe(true);
+    resetFirstEntry();
   });
 });

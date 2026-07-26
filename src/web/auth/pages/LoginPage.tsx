@@ -10,6 +10,7 @@ import { loginSchema, type LoginForm } from "../schemas";
 import { AuthLink, AuthShell } from "../components/AuthShell";
 import { identityManager } from "../managers";
 import { profileCenter } from "../managers/profileCenter";
+import { isFirstEntryComplete } from "@/onboarding/firstEntryStore";
 
 export function LoginPage() {
   const t = useI18n((s) => s.t);
@@ -19,7 +20,7 @@ export function LoginPage() {
   const updatePrefs = usePreferencesStore((s) => s.update);
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from || "/workspace";
+  const from = (location.state as { from?: string } | null)?.from || "/dashboard";
 
   const { register, handleSubmit, formState } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema) as never,
@@ -62,7 +63,13 @@ export function LoginPage() {
             name: identity?.name || email.split("@")[0] || "user",
           });
           if (values.rememberMe) localStorage.setItem("ewp_remember_tenant", values.tenantId);
-          navigate(from, { replace: true });
+          const next =
+            !isFirstEntryComplete()
+              ? "/onboarding/first-entry"
+              : from.startsWith("/onboarding")
+                ? "/dashboard"
+                : from;
+          navigate(next, { replace: true });
         })}
       >
         <div>

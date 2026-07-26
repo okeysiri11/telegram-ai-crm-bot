@@ -7,6 +7,7 @@ import { ExternalPilotOnboardPage } from "@/pages/ExternalPilotOnboardPage";
 import { PilotInvitePage } from "@/pages/PilotInvitePage";
 import { InviteAcceptPage } from "@/pages/InviteAcceptPage";
 import { PilotExecutionPage } from "@/pages/PilotExecutionPage";
+import { FirstEntryPage } from "@/onboarding/FirstEntryPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import {
@@ -112,7 +113,15 @@ export function App() {
         path="/"
         element={
           <ProtectedRoute>
-            <Navigate to="/workspace" replace />
+            <Navigate to="/dashboard" replace />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/onboarding/first-entry"
+        element={
+          <ProtectedRoute>
+            <FirstEntryPage />
           </ProtectedRoute>
         }
       />

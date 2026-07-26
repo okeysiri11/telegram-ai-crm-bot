@@ -9,3 +9,104 @@ body {
   background: var(--eds-bg);
   color: var(--eds-text);
 }
+
+/* Sprint 32.3.1 — First entry experience */
+.first-entry-shell {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 10% -10%, color-mix(in oklab, #0f766e 28%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 90% 10%, color-mix(in oklab, #1e3a5f 35%, transparent), transparent 55%),
+    linear-gradient(165deg, #0b1220 0%, #121a2b 45%, #0e1624 100%);
+  color: #e8eef7;
+}
+.first-entry-shell h1,
+.first-entry-shell h2 {
+  color: #f3f7fc;
+}
+.first-entry-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -20% auto auto 40%;
+  width: 55vw;
+  height: 55vw;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.14), transparent 70%);
+  filter: blur(8px);
+  animation: first-entry-float 12s ease-in-out infinite alternate;
+}
+@keyframes first-entry-float {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-4%, 6%, 0) scale(1.08); }
+}
+.first-entry-panel {
+  animation: first-entry-in 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes first-entry-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.first-entry-role {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(157, 176, 201, 0.22);
+  background: rgba(255, 255, 255, 0.04);
+  text-align: left;
+  transition: border-color 200ms ease, background 200ms ease, transform 200ms ease;
+}
+.first-entry-role:hover {
+  border-color: rgba(45, 212, 191, 0.55);
+  background: rgba(45, 212, 191, 0.08);
+  transform: translateY(-1px);
+}
+.first-entry-role.is-active {
+  border-color: #2dd4bf;
+  background: rgba(45, 212, 191, 0.14);
+  box-shadow: 0 0 0 1px rgba(45, 212, 191, 0.25);
+}
+.first-entry-role-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.08);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #99f6e4;
+  flex-shrink: 0;
+}
+.first-entry-step-num {
+  display: inline-flex;
+  width: 1.6rem;
+  height: 1.6rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(45, 212, 191, 0.2);
+  color: #99f6e4;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.first-entry-logo {
+  width: 4rem;
+  height: 4rem;
+  border-radius: 1rem;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  font-weight: 700;
+  color: #99f6e4;
+}
+@media (min-width: 1280px) {
+  .first-entry-shell {
+    font-size: 1.02rem;
+  }
+}

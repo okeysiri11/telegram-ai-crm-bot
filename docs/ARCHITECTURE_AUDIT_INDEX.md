@@ -85,6 +85,10 @@ Related: [ORGANIZATION_ONBOARDING_GUIDE_32_1.md](./ORGANIZATION_ONBOARDING_GUIDE
 
 Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.md](./KNOWN_ISSUES_32_2.md) · [METRICS_DASHBOARD_32_2.md](./METRICS_DASHBOARD_32_2.md) · [ENTERPRISE_READINESS_REPORT_32_2.md](./ENTERPRISE_READINESS_REPORT_32_2.md)
 
+## First User Experience / Platform Entry (Sprint 32.3.1)
+
+[FIRST_ENTRY_32_3_1.md](./FIRST_ENTRY_32_3_1.md) — Welcome → role → workspace → AI Team → Concierge → Dashboard. Platform Builder **v1.43.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

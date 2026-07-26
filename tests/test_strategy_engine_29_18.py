@@ -42,8 +42,8 @@ def reset_store():
 
 def test_strategy_engine_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.42.0"
-    assert health["sprint"] == "32.2"
+    assert health["application_version"] == "1.43.0"
+    assert health["sprint"] == "32.3.1"
     assert health["strategy_engine_ready"] is True
     assert health["executive_decision_ready"] is True
     assert health["enterprise_scorecard_ready"] is True
@@ -112,7 +112,7 @@ def test_strategy_engine_flow_and_create():
 async def test_api_strategy_engine(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.42.0"
+    assert body["application_version"] == "1.43.0"
     assert body["strategy_engine_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/strategy/catalog")
@@ -138,5 +138,5 @@ async def test_api_strategy_engine(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.42.0"' in manifest
-    assert "32.2" in manifest
+    assert '"application_version": "1.43.0"' in manifest
+    assert "32.3.1" in manifest

@@ -61,9 +61,9 @@ def test_drone_docs_exist():
 
 def test_platform_drone_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.42.0"
-    assert health["sprint"] == "32.2"
-    assert health["release_status"] == "First External Pilot Execution & Product Feedback Loop"
+    assert health["application_version"] == "1.43.0"
+    assert health["sprint"] == "32.3.1"
+    assert health["release_status"] == "First User Experience (Platform Entry)"
 
 
 @pytest.mark.asyncio
@@ -229,7 +229,7 @@ def test_drone_web_and_reuse_matrix():
     ):
         assert needle in wf, needle
     cfg = (web / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "32.2"' in cfg
+    assert 'sprint: "32.3.1"' in cfg
     assert "dronePrefix" in cfg
     tmpl = (web / "workspace" / "ecosystem-template" / "index.ts").read_text()
     assert "drone: true" in tmpl
@@ -250,8 +250,8 @@ def test_reuse_docs_and_manifest():
     report = (ROOT / "docs" / "SPRINT_REPORT_31_4.md").read_text()
     assert "COMPLETE" in report
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.42.0"' in manifest
-    assert "32.2" in manifest
-    assert "First External Pilot Execution & Product Feedback Loop" in manifest
+    assert '"application_version": "1.43.0"' in manifest
+    assert "32.3.1" in manifest
+    assert "First User Experience (Platform Entry)" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "DRONE_PILOT_EXECUTION_31_4" in index
