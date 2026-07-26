@@ -44,9 +44,9 @@ def test_beauty_execution_docs_exist():
 
 def test_platform_beauty_execution_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.40.0"
-    assert health["sprint"] == "32.0"
-    assert health["release_status"] == "Enterprise Web Completion & Production Readiness"
+    assert health["application_version"] == "1.41.0"
+    assert health["sprint"] == "32.1"
+    assert health["release_status"] == "External Pilot Hardening & Tenant Onboarding"
 
 
 def test_bos_resources_extension_and_full_journey():
@@ -132,7 +132,7 @@ def test_beauty_execution_web_and_reuse():
     assert "stepAiTeamConfigure" in tmpl
     assert "shared_ai" in tmpl
     cfg = (web / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "32.0"' in cfg
+    assert 'sprint: "32.1"' in cfg
     assert "commerceCorePrefix" in cfg
     page = (web / "workspace" / "beauty" / "BeautyLiveWorkflowPage.tsx").read_text()
     assert "Reuse" in page
@@ -156,8 +156,8 @@ def test_reuse_matrix_is_full():
 
 def test_manifest_and_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.40.0"' in manifest
-    assert "32.0" in manifest
-    assert "Enterprise Web Completion & Production Readiness" in manifest
+    assert '"application_version": "1.41.0"' in manifest
+    assert "32.1" in manifest
+    assert "External Pilot Hardening & Tenant Onboarding" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "BEAUTY_PILOT_EXECUTION_30_9" in index

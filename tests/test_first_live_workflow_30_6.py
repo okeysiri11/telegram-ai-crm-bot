@@ -45,9 +45,9 @@ def test_live_workflow_docs_exist():
 
 def test_platform_first_live_workflow_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.40.0"
-    assert health["sprint"] == "32.0"
-    assert health["release_status"] == "Enterprise Web Completion & Production Readiness"
+    assert health["application_version"] == "1.41.0"
+    assert health["sprint"] == "32.1"
+    assert health["release_status"] == "External Pilot Hardening & Tenant Onboarding"
     assert health["mission_control_ready"] is True
 
 
@@ -114,8 +114,8 @@ def test_next_ecosystem_readiness_lists_blockers_only():
 
 def test_manifest_and_audit_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.40.0"' in manifest
-    assert "32.0" in manifest
-    assert "Enterprise Web Completion & Production Readiness" in manifest
+    assert '"application_version": "1.41.0"' in manifest
+    assert "32.1" in manifest
+    assert "External Pilot Hardening & Tenant Onboarding" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "FIRST_LIVE_WORKFLOW_30_6" in index

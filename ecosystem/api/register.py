@@ -40,6 +40,7 @@ def register_ecosystem_routes(app: web.Application) -> None:
     app.router.add_get(org, handlers.list_organizations_handler)
     app.router.add_post(f"{org}/workspaces", handlers.create_workspace_handler)
     app.router.add_post(f"{org}/invitations", handlers.invite_member_handler)
+    app.router.add_post(f"{org}/invitations/accept", handlers.accept_invitation_handler)
     app.router.add_get(f"{prefix}/roles", handlers.list_roles_handler)
 
     # Workspace API

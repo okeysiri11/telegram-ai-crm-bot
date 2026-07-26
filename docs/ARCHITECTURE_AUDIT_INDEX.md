@@ -73,6 +73,12 @@
 
 Related: [PRODUCTION_STATUS_32_0.md](./PRODUCTION_STATUS_32_0.md) · [PRODUCTION_CHECKLIST_32_0.md](./PRODUCTION_CHECKLIST_32_0.md) · [PILOT_HANDBOOK_32_0.md](./PILOT_HANDBOOK_32_0.md) · [ARCHITECTURE_INVENTORY_32_0.md](./ARCHITECTURE_INVENTORY_32_0.md)
 
+## External Pilot Hardening & Tenant Onboarding (Sprint 32.1)
+
+[EXTERNAL_PILOT_GUIDE_32_1.md](./EXTERNAL_PILOT_GUIDE_32_1.md) — Organization onboarding, invitations, multi-tenant ops. Platform Builder **v1.41.0**.
+
+Related: [ORGANIZATION_ONBOARDING_GUIDE_32_1.md](./ORGANIZATION_ONBOARDING_GUIDE_32_1.md) · [SECURITY_CHECKLIST_32_1.md](./SECURITY_CHECKLIST_32_1.md) · [PRODUCTION_STATUS_32_1.md](./PRODUCTION_STATUS_32_1.md) · [BACKUP_DRILL_32_1.md](./BACKUP_DRILL_32_1.md)
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

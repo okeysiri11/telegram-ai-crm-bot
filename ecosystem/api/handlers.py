@@ -153,7 +153,26 @@ async def invite_member_handler(request: web.Request) -> web.Response:
         role_id=data["role_id"],
         invited_by=user.user_id,
     )
-    return json_response(invitation.to_dict(), status=201)
+    # Token returned once for pilot delivery (email service not required for 32.1).
+    payload = invitation.to_dict()
+    payload["token"] = invitation.token
+    payload["invite_url"] = f"/invite/accept?token={invitation.token}"
+    return json_response(payload, status=201)
+
+
+async def accept_invitation_handler(request: web.Request) -> web.Response:
+    user = request["ecosystem_user"]
+    if user is None:
+        return error_response("Authentication required", status=401)
+    data = await request.json()
+    token = str(data.get("token") or "").strip()
+    if not token:
+        return error_response("token is required", status=400)
+    try:
+        membership = ecosystem.engine.organizations.accept_invitation(token=token, user_id=user.user_id)
+    except Exception as exc:
+        return _handle_error(exc)
+    return json_response(membership.to_dict(), status=201)
 
 
 async def list_roles_handler(_request: web.Request) -> web.Response:

@@ -77,9 +77,9 @@ def test_32_0_docs_exist():
 
 def test_platform_version_32_0():
     health = platform_builder.health()
-    assert health["application_version"] == "1.40.0"
-    assert health["sprint"] == "32.0"
-    assert "Production Readiness" in health["release_status"]
+    assert health["application_version"] == "1.41.0"
+    assert health["sprint"] == "32.1"
+    assert "External Pilot" in health["release_status"]
 
 
 def test_seven_live_workflow_pages_exist():
@@ -116,7 +116,7 @@ def test_web_completion_audit_module():
     assert "/workspace/drone" in audit
     assert "productionReadinessScore" in audit
     page = (ROOT / "src" / "web" / "src" / "pages" / "ProductionReadinessPage.tsx").read_text()
-    assert "Enterprise Web Completion" in page
+    assert "Production Readiness" in page
     assert "hubIntegrations.productionReadiness" in page
 
 
@@ -139,16 +139,16 @@ async def test_epd_and_mc_probes(client):
 
 def test_config_and_manifest_32_0():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
-    assert 'application_version: str = "1.40.0"' in cfg
-    assert 'sprint: str = "32.0"' in cfg
+    assert 'application_version: str = "1.41.0"' in cfg
+    assert 'sprint: str = "32.1"' in cfg
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.40.0"' in manifest
-    assert '"sprint": "32.0"' in manifest
+    assert '"application_version": "1.41.0"' in manifest
+    assert '"sprint": "32.1"' in manifest
     web = (ROOT / "src" / "web" / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "32.0"' in web
+    assert 'sprint: "32.1"' in web
     types = (ROOT / "src" / "web" / "platform-builder" / "types.ts").read_text()
-    assert 'PLATFORM_BUILDER_VERSION = "1.40.0"' in types
-    assert 'PLATFORM_BUILDER_SPRINT = "32.0"' in types
+    assert 'PLATFORM_BUILDER_VERSION = "1.41.0"' in types
+    assert 'PLATFORM_BUILDER_SPRINT = "32.1"' in types
 
 
 def test_architecture_index_lists_32_0():

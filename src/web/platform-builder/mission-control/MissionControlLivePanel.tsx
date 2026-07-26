@@ -23,6 +23,7 @@ export function MissionControlLivePanel() {
   const [metrics, setMetrics] = useState<Dict | null>(null);
   const [logs, setLogs] = useState<Dict | null>(null);
   const [ecoHealth, setEcoHealth] = useState<EcoHealth[]>([]);
+  const [tenants, setTenants] = useState<Dict | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -33,11 +34,12 @@ export function MissionControlLivePanel() {
     setError(null);
     const started = performance.now();
     try {
-      const [mcRes, obsRes, metRes, logRes, ...ecoRes] = await Promise.all([
+      const [mcRes, obsRes, metRes, logRes, tnRes, ...ecoRes] = await Promise.all([
         apiFetch(`${PLATFORM_BUILDER_API}/mission-control/status`),
         apiFetch(`${hubIntegrations.monitoring}/health`),
         apiFetch(`${hubIntegrations.monitoring}/metrics`),
         apiFetch(`${hubIntegrations.monitoring}/logs`),
+        apiFetch(`${hubIntegrations.tenancy}/tenants`),
         ...WORKSPACE_HEALTH_PROBES.map((w) => apiFetch(w.healthUrl)),
       ]);
       const mc = (await mcRes.json()) as Dict;
@@ -49,6 +51,7 @@ export function MissionControlLivePanel() {
       setObsHealth(obsRes.ok ? obs : null);
       setMetrics(metRes.ok ? met : null);
       setLogs(logRes.ok ? log : null);
+      setTenants(tnRes.ok ? ((await tnRes.json()) as Dict) : null);
 
       const eco: EcoHealth[] = await Promise.all(
         WORKSPACE_HEALTH_PROBES.map(async (w, i) => {
@@ -106,6 +109,11 @@ export function MissionControlLivePanel() {
             Production Readiness
           </Button>
         </Link>
+        <Link to="/pilot/onboard">
+          <Button size="sm" variant="secondary">
+            Onboard Org
+          </Button>
+        </Link>
       </div>
 
       {error ? (
@@ -134,6 +142,7 @@ export function MissionControlLivePanel() {
             <li>
               Cross-ecosystem health: {ecoOk}/{WORKSPACE_HEALTH_PROBES.length}
             </li>
+            <li>Tenants probe: {tenants ? "ok" : "—"}</li>
           </ul>
         </Card>
         <Card title="Organization / AI / API">
@@ -177,6 +186,10 @@ export function MissionControlLivePanel() {
           </ul>
         </Card>
       </div>
+
+      <Card title="Multi-organization overview">
+        <pre className="max-h-40 overflow-auto eds-type-small">{JSON.stringify(tenants ?? {}, null, 2)}</pre>
+      </Card>
 
       <Card title="Cross-ecosystem API health">
         <Table headers={["Ecosystem", "Live probe", "Registry", "Route"]}>

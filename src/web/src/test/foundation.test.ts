@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.0");
+    expect(webConfig.sprint).toBe("32.1");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -39,6 +39,9 @@ describe("Enterprise Web Foundation", () => {
     expect(hubIntegrations.monitoring).toContain("enterprise-obs");
     expect(hubIntegrations.pilotReadiness).toContain("enterprise-epr");
     expect(hubIntegrations.productionReadiness).toContain("enterprise-epd");
+    expect(hubIntegrations.tenancy).toContain("enterprise-tenancy");
+    expect(hubIntegrations.onboarding).toContain("enterprise-eon");
+    expect(hubIntegrations.ecosystem).toContain("/api/ecosystem/v1");
   });
 });
 
@@ -65,6 +68,8 @@ describe("Sprint 30.5 Web Core Integration", () => {
     );
     expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot");
     expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot/production");
+    expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot/onboard");
+    expect(moduleRegistry.get("pilot")?.routes).toContain("/pilot/invite");
   });
 
   it("derives application registry from module registry", () => {
@@ -264,5 +269,25 @@ describe("Sprint 32.0 Enterprise Web Completion", () => {
     expect(productionReadinessScore()).toBeGreaterThanOrEqual(75);
     expect(webCompletionSummary().ecosystems).toBe(7);
     expect(applicationRegistry.get("production_readiness")?.route).toBe("/pilot/production");
+  });
+});
+
+describe("Sprint 32.1 External Pilot Hardening", () => {
+  it("exposes onboarding, invitations, and elevated readiness score", async () => {
+    const {
+      PRODUCTION_CHECKLIST,
+      IDENTITY_HARDENING_CHECKLIST,
+      PILOT_OPS_STEPS,
+      productionReadinessScore,
+      identityHardeningScore,
+    } = await import("../pilot/webCompletionAudit");
+    expect(PRODUCTION_CHECKLIST.some((c) => c.id === "pilot_invite" && c.status === "ready")).toBe(true);
+    expect(PRODUCTION_CHECKLIST.some((c) => c.id === "tenant_onboard" && c.status === "ready")).toBe(true);
+    expect(productionReadinessScore()).toBeGreaterThanOrEqual(90);
+    expect(identityHardeningScore()).toBeGreaterThanOrEqual(80);
+    expect(IDENTITY_HARDENING_CHECKLIST.some((c) => c.id === "invite_tokens")).toBe(true);
+    expect(PILOT_OPS_STEPS.some((s) => s.route === "/pilot/onboard")).toBe(true);
+    expect(applicationRegistry.get("external_pilot_onboard")?.route).toBe("/pilot/onboard");
+    expect(applicationRegistry.get("pilot_invite")?.route).toBe("/pilot/invite");
   });
 });

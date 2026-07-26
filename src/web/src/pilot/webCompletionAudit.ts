@@ -1,6 +1,6 @@
 /**
- * Enterprise Web Completion audit — Sprint 32.0.
- * Validates seven workspaces + shared platform surfaces without new ecosystems.
+ * External pilot onboarding + invitation audit — Sprint 32.1.
+ * Extends 32.0 web completion without new ecosystems.
  */
 
 export type WorkspaceAuditItem = {
@@ -70,6 +70,11 @@ export const PLATFORM_HEALTH_PROBES = [
   { id: "epr", label: "Pilot Readiness", healthUrl: "/api/enterprise-epr/v1/health" },
   { id: "mc", label: "Mission Control", healthUrl: "/api/platform-builder/v1/mission-control/status" },
   { id: "isam", label: "Authentication", healthUrl: "/api/enterprise-isam/v1/health" },
+  { id: "tenancy", label: "Tenancy", healthUrl: "/api/enterprise-tenancy/v1/health" },
+  { id: "eon", label: "Onboarding", healthUrl: "/api/enterprise-eon/v1/health" },
+  { id: "esh", label: "Secrets (ESH)", healthUrl: "/api/enterprise-esh/v1/health" },
+  { id: "erl", label: "Release / DR (ERL)", healthUrl: "/api/enterprise-erl/v1/health" },
+  { id: "ecosystem", label: "Ecosystem Identity", healthUrl: "/api/ecosystem/v1/health" },
 ] as const;
 
 export const PRODUCTION_CHECKLIST = [
@@ -80,21 +85,49 @@ export const PRODUCTION_CHECKLIST = [
   { id: "logging", label: "Centralized logging (OBS)", status: "ready" as const },
   { id: "audit", label: "Audit trail", status: "ready" as const },
   { id: "monitoring", label: "Monitoring / OBS", status: "ready" as const },
-  { id: "backups", label: "Backups (documented)", status: "partial" as const },
+  { id: "backups", label: "Backups (drill documented)", status: "partial" as const },
   { id: "health", label: "Health checks", status: "ready" as const },
   { id: "rate_limit", label: "Rate limiting", status: "ready" as const },
-  { id: "secrets", label: "Secrets / env config", status: "partial" as const },
-  { id: "pilot_invite", label: "Pilot invitation UI", status: "gap" as const },
+  { id: "secrets", label: "Secrets / env (ESH probed)", status: "ready" as const },
+  { id: "pilot_invite", label: "Pilot invitation UI", status: "ready" as const },
+  { id: "tenant_onboard", label: "External tenant onboarding", status: "ready" as const },
 ] as const;
 
-export const PILOT_OPS_STEPS = [
-  { id: "org", label: "Organization onboarding", route: "/pilot" },
+export const IDENTITY_HARDENING_CHECKLIST = [
+  { id: "invite_tokens", label: "Invitation tokens", status: "ready" as const },
+  { id: "password_reset", label: "Password reset pages", status: "partial" as const },
+  { id: "email_verify", label: "Email verification", status: "partial" as const },
+  { id: "jwt_rotation", label: "JWT refresh / rotation", status: "ready" as const },
+  { id: "session_expiry", label: "Session expiration", status: "ready" as const },
+  { id: "multi_org", label: "Multi-organization access", status: "ready" as const },
+  { id: "permissions", label: "Permission validation", status: "ready" as const },
+  { id: "audit_log", label: "Audit logging", status: "ready" as const },
+] as const;
+
+export const PILOT_OPS_STEPS: {
+  id: string;
+  label: string;
+  route: string;
+  note?: string;
+}[] = [
+  { id: "org", label: "Organization onboarding", route: "/pilot/onboard" },
   { id: "workspace", label: "Workspace creation", route: "/workspace" },
-  { id: "invite", label: "User invitation", route: "/pilot", note: "API exists; web invite UI deferred" },
-  { id: "role", label: "Role assignment", route: "/pilot" },
+  { id: "invite", label: "User invitation", route: "/pilot/invite" },
+  { id: "accept", label: "Accept invitation", route: "/invite/accept" },
+  { id: "role", label: "Role assignment", route: "/identity/roles" },
   { id: "login", label: "First login", route: "/login" },
-  { id: "business", label: "Business activation", route: "/pilot" },
+  { id: "business", label: "Business activation", route: "/pilot/onboard" },
   { id: "ai", label: "AI activation", route: "/platform-builder/ai-team" },
+];
+
+export const ONBOARDING_ECOSYSTEMS = [
+  { id: "auto", label: "Automotive", route: "/workspace/auto" },
+  { id: "beauty", label: "Beauty", route: "/workspace/beauty" },
+  { id: "cafe", label: "Cafe", route: "/workspace/cafe" },
+  { id: "agro", label: "Agriculture", route: "/workspace/agro" },
+  { id: "legal", label: "Legal", route: "/workspace/legal" },
+  { id: "crypto", label: "Bidex", route: "/workspace/crypto" },
+  { id: "drone", label: "Drone", route: "/workspace/drone" },
 ] as const;
 
 export function webCompletionSummary() {
@@ -105,7 +138,7 @@ export function webCompletionSummary() {
     productionItems: PRODUCTION_CHECKLIST.length,
     readyCount: PRODUCTION_CHECKLIST.filter((c) => c.status === "ready").length,
     partialCount: PRODUCTION_CHECKLIST.filter((c) => c.status === "partial").length,
-    gapCount: PRODUCTION_CHECKLIST.filter((c) => c.status === "gap").length,
+    gapCount: PRODUCTION_CHECKLIST.filter((c) => (c.status as string) === "gap").length,
   };
 }
 
@@ -114,5 +147,12 @@ export function productionReadinessScore(): number {
   const weights = { ready: 1, partial: 0.55, gap: 0 };
   const total = PRODUCTION_CHECKLIST.length;
   const sum = PRODUCTION_CHECKLIST.reduce((acc, c) => acc + weights[c.status], 0);
+  return Math.round((sum / total) * 1000) / 10;
+}
+
+export function identityHardeningScore(): number {
+  const weights = { ready: 1, partial: 0.55, gap: 0 };
+  const total = IDENTITY_HARDENING_CHECKLIST.length;
+  const sum = IDENTITY_HARDENING_CHECKLIST.reduce((acc, c) => acc + weights[c.status], 0);
   return Math.round((sum / total) * 1000) / 10;
 }

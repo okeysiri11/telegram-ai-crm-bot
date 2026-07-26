@@ -15,10 +15,12 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 import { PLATFORM_BUILDER_VERSION } from "../../platform-builder/types";
 import { webConfig } from "@/config/webConfig";
 import {
+  IDENTITY_HARDENING_CHECKLIST,
   PILOT_OPS_STEPS,
   PLATFORM_HEALTH_PROBES,
   PRODUCTION_CHECKLIST,
   WORKSPACE_HEALTH_PROBES,
+  identityHardeningScore,
   productionReadinessScore,
   webCompletionSummary,
 } from "../pilot/webCompletionAudit";
@@ -42,6 +44,7 @@ export function ProductionReadinessPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const score = productionReadinessScore();
+  const identityScore = identityHardeningScore();
   const summary = webCompletionSummary();
 
   const refresh = useCallback(async () => {
@@ -151,16 +154,16 @@ export function ProductionReadinessPage() {
   return (
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge tone="success">Enterprise Web Completion</Badge>
-        <Badge>Sprint 32.0</Badge>
+        <Badge tone="success">External Pilot Hardening</Badge>
+        <Badge>Sprint 32.1</Badge>
         <Badge>PB {PLATFORM_BUILDER_VERSION}</Badge>
-        <Badge tone={score >= 80 ? "success" : "warning"}>Score {score}</Badge>
+        <Badge tone={score >= 90 ? "success" : "warning"}>Score {score}</Badge>
       </div>
 
       <h1 className="eds-type-title text-[var(--eds-text)]">Production Readiness</h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        Validates the completed seven-ecosystem Enterprise Platform for external pilot preparation.
-        Reuses EPD, EPR, OBS, and Mission Control — no duplicated stacks.
+        Validates production ops for external pilot organizations — EPD, secrets (ESH), DR (ERL), tenancy, and
+        ecosystem identity probes.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -178,6 +181,11 @@ export function ProductionReadinessPage() {
         <Link to="/platform-builder/mission-control">
           <Button size="sm" variant="secondary">
             Mission Control
+          </Button>
+        </Link>
+        <Link to="/pilot/onboard">
+          <Button size="sm" variant="secondary">
+            Onboard Org
           </Button>
         </Link>
       </div>
@@ -284,6 +292,25 @@ export function ProductionReadinessPage() {
           </Table>
         </Card>
 
+        <Card title={`Identity hardening (${identityScore}%)`}>
+          <Table headers={["Item", "Status"]}>
+            {IDENTITY_HARDENING_CHECKLIST.map((c) => (
+              <tr key={c.id} className="border-t border-[var(--ew-border)]">
+                <td className="px-3 py-2">{c.label}</td>
+                <td className="px-3 py-2">
+                  <Badge
+                    tone={c.status === "ready" ? "success" : c.status === "partial" ? "warning" : "danger"}
+                  >
+                    {c.status}
+                  </Badge>
+                </td>
+              </tr>
+            ))}
+          </Table>
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card title="Pilot operations">
           <Table headers={["Step", "Route", "Note"]}>
             {PILOT_OPS_STEPS.map((s) => (
@@ -295,15 +322,13 @@ export function ProductionReadinessPage() {
                   </Link>
                 </td>
                 <td className="px-3 py-2 eds-type-small text-[var(--eds-text-muted)]">
-                  {"note" in s ? s.note : "—"}
+                  {s.note ?? "—"}
                 </td>
               </tr>
             ))}
           </Table>
         </Card>
-      </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card title="Shared UI inventory">
           <ul className="eds-type-small space-y-1">
             {sharedUiChecklist().map((g) => (
@@ -313,6 +338,9 @@ export function ProductionReadinessPage() {
             ))}
           </ul>
         </Card>
+      </div>
+
+      <div className="mt-6 grid gap-4 lg:grid-cols-2">
         <Card title="EPD gate result">
           {gateResult ? (
             <pre className="max-h-48 overflow-auto eds-type-small">{JSON.stringify(gateResult, null, 2)}</pre>
@@ -321,6 +349,19 @@ export function ProductionReadinessPage() {
               Run the existing EPD gate against release {webConfig.version}.
             </p>
           )}
+        </Card>
+        <Card title="Backup / secrets ops">
+          <ul className="eds-type-small space-y-1">
+            <li>
+              Secrets vault: <Badge>{hubIntegrations.secretsVault}/health</Badge>
+            </li>
+            <li>
+              Release / DR: <Badge>{hubIntegrations.releasePlatform}/health</Badge>
+            </li>
+            <li>
+              Drill checklist: see docs/BACKUP_DRILL_32_1.md
+            </li>
+          </ul>
         </Card>
       </div>
     </WorkspaceLayout>

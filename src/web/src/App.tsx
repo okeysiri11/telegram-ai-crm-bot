@@ -3,6 +3,9 @@ import { ProtectedRoute } from "@/shell/ProtectedRoute";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { PilotDashboardPage } from "@/pages/PilotDashboardPage";
 import { ProductionReadinessPage } from "@/pages/ProductionReadinessPage";
+import { ExternalPilotOnboardPage } from "@/pages/ExternalPilotOnboardPage";
+import { PilotInvitePage } from "@/pages/PilotInvitePage";
+import { InviteAcceptPage } from "@/pages/InviteAcceptPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import {
@@ -135,6 +138,26 @@ export function App() {
             <ProductionReadinessPage />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/pilot/onboard"
+        element={
+          <ProtectedRoute>
+            <ExternalPilotOnboardPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/pilot/invite"
+        element={
+          <ProtectedRoute>
+            <PilotInvitePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/invite/accept"
+        element={<InviteAcceptPage />}
       />
       <Route
         path="/workspace"
