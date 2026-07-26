@@ -33,6 +33,7 @@ import {
   WorkspaceSettingsPage,
   WorkspacesPage,
 } from "../workspace/pages";
+import { AutomotiveLiveWorkflowPage } from "../workspace/automotive/AutomotiveLiveWorkflowPage";
 import { NavigationDashboardPage } from "../navigation/pages";
 import { CommandCenterPage } from "../command-center/pages";
 import { ReleaseCandidatePage } from "../release/pages";
@@ -165,6 +166,22 @@ export function App() {
         element={
           <ProtectedRoute>
             <WorkspaceSettingsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/auto"
+        element={
+          <ProtectedRoute>
+            <AutomotiveLiveWorkflowPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/auto/:sub"
+        element={
+          <ProtectedRoute>
+            <AutomotiveLiveWorkflowPage />
           </ProtectedRoute>
         }
       />

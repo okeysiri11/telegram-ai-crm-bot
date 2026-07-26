@@ -28,8 +28,10 @@ export function Providers({ children }: { children: ReactNode }) {
   useEffect(() => {
     restoreSession();
     apply();
-    void telemetry.sessionStart();
-    setReady(true);
+    void useAuthStore.getState().validateSession().finally(() => {
+      void telemetry.sessionStart();
+      setReady(true);
+    });
   }, [apply, restoreSession]);
 
   if (!ready) return <LoadingScreen />;

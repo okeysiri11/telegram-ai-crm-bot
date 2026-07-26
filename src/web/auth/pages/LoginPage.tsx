@@ -46,10 +46,14 @@ export function LoginPage() {
             : `${values.identifier}@demo.corp`;
           await login(email, values.password, values.tenantId);
           const identity = identityManager.byEmail(email);
+          const authUser = useAuthStore.getState().user;
           setWorkspace({
             company: values.tenantId,
             department: identity?.department || "operations",
             userContext: identity?.username || "user",
+            permissions: authUser?.permissions?.length
+              ? authUser.permissions
+              : ["read", "write", "admin"],
           });
           setLocale(values.language);
           updatePrefs({ language: values.language });
@@ -94,6 +98,10 @@ export function LoginPage() {
         <Button className="w-full eds-type-button" type="submit" disabled={formState.isSubmitting}>
           {t("auth.login")}
         </Button>
+        <p className="eds-type-caption text-[var(--eds-text-muted)]">
+          Production auth: Enterprise ISAM + platform JWT when{" "}
+          <code>VITE_IAM_LOGIN_SECRET</code> is set. Demo tokens are disabled.
+        </p>
       </form>
     </AuthShell>
   );

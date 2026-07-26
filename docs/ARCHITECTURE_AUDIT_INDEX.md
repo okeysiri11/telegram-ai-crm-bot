@@ -31,6 +31,10 @@
 
 [WEB_CORE_30_5.md](./WEB_CORE_30_5.md) — Module Registry, Pilot Dashboard, Mission Control live panel. Platform Builder **v1.30.0**.
 
+## First Live Workflow (Sprint 30.6)
+
+[FIRST_LIVE_WORKFLOW_30_6.md](./FIRST_LIVE_WORKFLOW_30_6.md) — Automotive E2E workflow + production auth. Platform Builder **v1.31.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("30.5");
+    expect(webConfig.sprint).toBe("30.6");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -82,5 +82,15 @@ describe("Sprint 30.5 Web Core Integration", () => {
     expect(typeof telemetry.healthSnapshot).toBe("function");
     expect(typeof telemetry.businessEvent).toBe("function");
     expect(typeof telemetry.audit).toBe("function");
+  });
+});
+
+describe("Sprint 30.6 First Live Workflow", () => {
+  it("uses production sprint tag and rejects demo auth config", async () => {
+    expect(webConfig.sprint).toBe("30.6");
+    expect(webConfig.autoPrefix).toContain("/api/auto/v1");
+    const { isJwtToken } = await import("@/auth/identityApi");
+    expect(isJwtToken("jwt.foo.demo")).toBe(false);
+    expect(isJwtToken("a.b.c")).toBe(true);
   });
 });

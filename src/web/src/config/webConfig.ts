@@ -1,7 +1,7 @@
 export const webConfig = {
   application: "enterprise_web_platform",
   version: "9.4.0",
-  sprint: "30.5",
+  sprint: "30.6",
   apiBase: import.meta.env.VITE_API_BASE || "/api",
   hubPrefix: "/api/enterprise-hub/v1",
   ewfPrefix: "/api/enterprise-ewf/v1",
@@ -9,6 +9,13 @@ export const webConfig = {
   eicPrefix: "/api/enterprise-eic/v1",
   ewsPrefix: "/api/enterprise-ews/v1",
   enpPrefix: "/api/enterprise-enp/v1",
+  autoPrefix: "/api/auto/v1",
+  commsPrefix: "/api/enterprise-comms/v1",
+  platformBuilderPrefix: "/api/platform-builder/v1",
+  identityLoginPath: "/management/identity/login",
+  identityRefreshPath: "/management/identity/refresh",
+  /** Maps owner@* emails to platform IAM telegram id when minting JWT. */
+  defaultTelegramId: Number(import.meta.env.VITE_OWNER_TELEGRAM_ID || 1208044579),
   socketUrl: import.meta.env.VITE_SOCKET_URL || "",
   defaultLocale: "en" as const,
   supportedLocales: ["en", "ru", "uk"] as const,
