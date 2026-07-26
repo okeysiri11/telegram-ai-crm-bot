@@ -47,6 +47,10 @@
 
 [BEAUTY_PILOT_EXECUTION_30_9.md](./BEAUTY_PILOT_EXECUTION_30_9.md) — Operational Beauty journey + 100% reuse audit. Platform Builder **v1.34.0**.
 
+## Cafe Pilot Execution (Sprint 31.0)
+
+[CAFE_PILOT_EXECUTION_31_0.md](./CAFE_PILOT_EXECUTION_31_0.md) — Third operational pilot + cross-ecosystem validation. Platform Builder **v1.35.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

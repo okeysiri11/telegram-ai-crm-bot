@@ -27,6 +27,7 @@ from applications.enterprise_hub.ai_business_advisor.facade import AIBusinessAdv
 from applications.enterprise_hub.beauty_os.facade import BeautyOSSuite
 from applications.enterprise_hub.beauty_workspace.facade import BeautyWorkspaceSuite
 from applications.enterprise_hub.beauty_client_journey.facade import BeautyClientJourneySuite
+from applications.enterprise_hub.cafe_os.facade import CafeOSSuite
 from applications.enterprise_hub.ai_marketing_os.facade import AIMarketingOSSuite
 from applications.enterprise_hub.communications_hub.facade import CommunicationsHubSuite
 from applications.enterprise_hub.commerce_core.facade import CommerceCoreSuite
@@ -124,6 +125,7 @@ class EnterpriseHubApplication:
         beauty_os_svc: BeautyOSSuite | None = None,
         beauty_workspace_svc: BeautyWorkspaceSuite | None = None,
         beauty_client_journey_svc: BeautyClientJourneySuite | None = None,
+        cafe_os_svc: CafeOSSuite | None = None,
         ai_marketing_os_svc: AIMarketingOSSuite | None = None,
         communications_hub_svc: CommunicationsHubSuite | None = None,
         commerce_core_svc: CommerceCoreSuite | None = None,
@@ -204,6 +206,7 @@ class EnterpriseHubApplication:
         self.beauty_os = beauty_os_svc or BeautyOSSuite(self.store)
         self.beauty_workspace = beauty_workspace_svc or BeautyWorkspaceSuite(self.store)
         self.beauty_client_journey = beauty_client_journey_svc or BeautyClientJourneySuite(self.store)
+        self.cafe_os = cafe_os_svc or CafeOSSuite(self.store)
         self.ai_marketing_os = ai_marketing_os_svc or AIMarketingOSSuite(self.store)
         self.communications_hub = communications_hub_svc or CommunicationsHubSuite(self.store)
         self.commerce_core = commerce_core_svc or CommerceCoreSuite(self.store)
@@ -540,6 +543,10 @@ class EnterpriseHubApplication:
             "smart_booking_ready": True,
             "waitlist_ready": True,
             "loyalty_triggers_ready": True,
+            "cafe_os_ready": True,
+            "cafe_kitchen_ready": True,
+            "cafe_dashboard_ready": True,
+            "cafe_reservations_ready": True,
             "ai_marketing_os_ready": True,
             "brand_center_ready": True,
             "campaign_manager_ready": True,
@@ -758,6 +765,7 @@ class EnterpriseHubApplication:
                 "beauty_os": self.config.beauty_os,
                 "beauty_workspace": self.config.beauty_workspace,
                 "beauty_client_journey": self.config.beauty_client_journey,
+                "cafe_os": self.config.cafe_os,
                 "ai_marketing_os": self.config.ai_marketing_os,
                 "communications_hub": self.config.communications_hub,
                 "commerce_core": self.config.commerce_core,
@@ -838,6 +846,7 @@ class EnterpriseHubApplication:
             "beauty_os": self.beauty_os.status(),
             "beauty_workspace": self.beauty_workspace.status(),
             "beauty_client_journey": self.beauty_client_journey.status(),
+            "cafe_os": self.cafe_os.status(),
             "ai_marketing_os": self.ai_marketing_os.status(),
             "communications_hub": self.communications_hub.status(),
             "commerce_core": self.commerce_core.status(),

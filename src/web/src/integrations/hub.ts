@@ -19,6 +19,7 @@ export const hubIntegrations = {
   beautyOs: webConfig.beautyOsPrefix,
   beautyWorkspace: webConfig.beautyWorkspacePrefix,
   beautyClientJourney: webConfig.beautyClientJourneyPrefix,
+  cafeOs: webConfig.cafeOsPrefix,
   aiMarketingOs: webConfig.aiMarketingOsPrefix,
   commerceCore: webConfig.commerceCorePrefix,
 } as const;

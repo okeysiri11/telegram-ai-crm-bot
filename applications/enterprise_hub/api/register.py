@@ -33,6 +33,7 @@ from applications.enterprise_hub.ai_business_advisor import api as aba_api
 from applications.enterprise_hub.beauty_os import api as bos_api
 from applications.enterprise_hub.beauty_workspace import api as bws_api
 from applications.enterprise_hub.beauty_client_journey import api as bcj_api
+from applications.enterprise_hub.cafe_os import api as cos_api
 from applications.enterprise_hub.ai_marketing_os import api as amo_api
 from applications.enterprise_hub.communications_hub import api as ech_api
 from applications.enterprise_hub.commerce_core import api as eco_api
@@ -742,6 +743,26 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{bcj}/waitlist", bcj_api.bcj_waitlist_handler)
     app.router.add_post(f"{bcj}/loyalty", bcj_api.bcj_loyalty_handler)
     app.router.add_post(f"{bcj}/assistant", bcj_api.bcj_assistant_handler)
+
+    # Sprint 31.0 — Cafe OS (additive; Beauty/Auto unchanged)
+    cos = DEFAULT_CONFIG.cafe_os_api_prefix
+    app.router.add_get(f"{cos}/health", cos_api.cos_health_handler)
+    app.router.add_post(f"{cos}/bootstrap", cos_api.cos_bootstrap_handler)
+    app.router.add_get(f"{cos}/tables", cos_api.cos_tables_handler)
+    app.router.add_post(f"{cos}/tables", cos_api.cos_tables_handler)
+    app.router.add_get(f"{cos}/menu", cos_api.cos_menu_handler)
+    app.router.add_post(f"{cos}/menu", cos_api.cos_menu_handler)
+    app.router.add_post(f"{cos}/staff", cos_api.cos_staff_handler)
+    app.router.add_post(f"{cos}/customers", cos_api.cos_customers_handler)
+    app.router.add_post(f"{cos}/reservations", cos_api.cos_reservations_handler)
+    app.router.add_post(f"{cos}/orders", cos_api.cos_orders_handler)
+    app.router.add_get(f"{cos}/kitchen", cos_api.cos_kitchen_handler)
+    app.router.add_post(f"{cos}/kitchen", cos_api.cos_kitchen_handler)
+    app.router.add_get(f"{cos}/qr-menu", cos_api.cos_qr_handler)
+    app.router.add_post(f"{cos}/qr-menu", cos_api.cos_qr_handler)
+    app.router.add_post(f"{cos}/delivery", cos_api.cos_delivery_handler)
+    app.router.add_post(f"{cos}/crm", cos_api.cos_crm_handler)
+    app.router.add_get(f"{cos}/dashboard", cos_api.cos_dashboard_handler)
 
     # Sprint 22.5 — AI Marketing OS (additive; prior routes unchanged)
     amo = DEFAULT_CONFIG.ai_marketing_os_api_prefix

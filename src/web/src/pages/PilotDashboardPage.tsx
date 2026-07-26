@@ -147,18 +147,18 @@ export function PilotDashboardPage() {
   return (
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <Badge tone="success">Beauty Pilot Execution</Badge>
-        <Badge>Sprint 30.9</Badge>
+        <Badge tone="success">Cafe Pilot Execution</Badge>
+        <Badge>Sprint 31.0</Badge>
         <Badge>PB {PLATFORM_BUILDER_VERSION}</Badge>
         <Badge>{webConfig.sprint}</Badge>
         {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge>{authMode || "ISAM"}</Badge>}
         {core.ecosystemsReady ? <Badge tone="success">7 ecosystems</Badge> : null}
       </div>
 
-      <h1 className="eds-type-title text-[var(--eds-text)]">Pilot Operations — Automotive + Beauty</h1>
+      <h1 className="eds-type-title text-[var(--eds-text)]">Pilot Operations — Auto · Beauty · Cafe</h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        Dual internal pilots on one Enterprise Platform: Automotive reference + Beauty foundation. Shared
-        auth, Mission Control, feedback (EPR), metrics, and observability. No duplicated stacks.
+        Triple internal pilots on one Enterprise Platform. Shared auth, Mission Control, AI Team, feedback,
+        and observability. No duplicated stacks.
       </p>
 
       <div className="mt-4 flex flex-wrap gap-2">
@@ -167,12 +167,17 @@ export function PilotDashboardPage() {
         </Button>
         <Link to="/workspace/auto">
           <Button size="sm" variant="secondary">
-            Automotive validation
+            Automotive
           </Button>
         </Link>
         <Link to="/workspace/beauty">
           <Button size="sm" variant="secondary">
-            Beauty workflow
+            Beauty
+          </Button>
+        </Link>
+        <Link to="/workspace/cafe">
+          <Button size="sm" variant="secondary">
+            Cafe
           </Button>
         </Link>
         <Link to="/platform-builder/mission-control">
@@ -184,7 +189,7 @@ export function PilotDashboardPage() {
 
       {error ? (
         <div className="mt-4">
-          <EmptyState title="Telemetry warning" description={error} actionLabel="Open Beauty" actionTo="/workspace/beauty" />
+          <EmptyState title="Telemetry warning" description={error} actionLabel="Open Cafe" actionTo="/workspace/cafe" />
         </div>
       ) : null}
 

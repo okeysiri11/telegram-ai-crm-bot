@@ -231,46 +231,73 @@ export async function stepObservability(opts: {
 
 /** Reuse matrix — platform capabilities every ecosystem must share. */
 export const ECOSYSTEM_REUSE_MATRIX = {
-  authentication: { source: "ISAM + platform JWT", automotive: true, beauty: true },
-  authorization_rbac: { source: "ISAM roles / PermissionGuard", automotive: true, beauty: true },
-  workspace: { source: "WorkspaceLayout + workspaceStore", automotive: true, beauty: true },
-  mission_control: { source: "PB /mission-control", automotive: true, beauty: true },
-  knowledge: { source: "PB knowledge / EKG", automotive: true, beauty: true },
-  workflow_engine: { source: "ecosystem template timed steps", automotive: true, beauty: true },
-  notification_system: { source: "enterprise-comms /center", automotive: true, beauty: true },
-  telemetry: { source: "OBS + pilotMetrics", automotive: true, beauty: true },
-  ai_platform: { source: "PB Concierge + AI Team", automotive: true, beauty: true },
-  ui: { source: "EDS Button/Card/Table/Input", automotive: true, beauty: true },
-  dashboards: { source: "domain dashboard + Pilot /pilot", automotive: true, beauty: true },
-  layouts: { source: "WorkspaceLayout", automotive: true, beauty: true },
-  shared_apis: { source: "comms / OBS / PB / ISAM", automotive: true, beauty: true },
-  shared_components: { source: "EDS + ecosystem-template", automotive: true, beauty: true },
-  shared_workflows: { source: "timedStep template", automotive: true, beauty: true },
-  shared_ai: { source: "Concierge + AI Team + AMO", automotive: true, beauty: true },
+  authentication: { source: "ISAM + platform JWT", automotive: true, beauty: true, cafe: true },
+  authorization_rbac: { source: "ISAM roles / PermissionGuard", automotive: true, beauty: true, cafe: true },
+  workspace: { source: "WorkspaceLayout + workspaceStore", automotive: true, beauty: true, cafe: true },
+  mission_control: { source: "PB /mission-control", automotive: true, beauty: true, cafe: true },
+  knowledge: { source: "PB knowledge / EKG", automotive: true, beauty: true, cafe: true },
+  workflow_engine: { source: "ecosystem template timed steps", automotive: true, beauty: true, cafe: true },
+  notification_system: { source: "enterprise-comms /center", automotive: true, beauty: true, cafe: true },
+  telemetry: { source: "OBS + pilotMetrics", automotive: true, beauty: true, cafe: true },
+  ai_platform: { source: "PB Concierge + AI Team", automotive: true, beauty: true, cafe: true },
+  ui: { source: "EDS Button/Card/Table/Input", automotive: true, beauty: true, cafe: true },
+  dashboards: { source: "domain dashboard + Pilot /pilot", automotive: true, beauty: true, cafe: true },
+  layouts: { source: "WorkspaceLayout", automotive: true, beauty: true, cafe: true },
+  shared_apis: { source: "comms / OBS / PB / ISAM", automotive: true, beauty: true, cafe: true },
+  shared_components: { source: "EDS + ecosystem-template", automotive: true, beauty: true, cafe: true },
+  shared_workflows: { source: "timedStep template", automotive: true, beauty: true, cafe: true },
+  shared_ai: { source: "Concierge + AI Team + AMO", automotive: true, beauty: true, cafe: true },
+  shared_permissions: { source: "ISAM RBAC + PermissionGuard", automotive: true, beauty: true, cafe: true },
+  shared_commerce: { source: "ECO payments/loyalty (Beauty+Cafe)", automotive: false, beauty: true, cafe: true },
 } as const;
 
 export type ReuseAuditResult = {
-  dimensions: { id: string; source: string; automotive: boolean; beauty: boolean; shared: boolean }[];
+  dimensions: {
+    id: string;
+    source: string;
+    automotive: boolean;
+    beauty: boolean;
+    cafe: boolean;
+    shared: boolean;
+  }[];
   sharedCount: number;
   totalCount: number;
   reusePercent: number;
+  crossEcosystemPercent: number;
 };
 
-/** Measure platform reuse across ecosystems (both true = shared). */
+/** Measure platform reuse — shared = all three pilots when cafe is true on the row, else auto+beauty. */
 export function computeReusePercentage(): ReuseAuditResult {
-  const dimensions = Object.entries(ECOSYSTEM_REUSE_MATRIX).map(([id, row]) => ({
-    id,
-    source: row.source,
-    automotive: row.automotive,
-    beauty: row.beauty,
-    shared: row.automotive && row.beauty,
-  }));
+  const dimensions = Object.entries(ECOSYSTEM_REUSE_MATRIX).map(([id, row]) => {
+    const allThree = row.automotive && row.beauty && row.cafe;
+    const beautyCafeCommerce = row.beauty && row.cafe && !row.automotive;
+    return {
+      id,
+      source: row.source,
+      automotive: row.automotive,
+      beauty: row.beauty,
+      cafe: row.cafe,
+      shared: allThree || beautyCafeCommerce,
+    };
+  });
   const sharedCount = dimensions.filter((d) => d.shared).length;
   const totalCount = dimensions.length;
+  const cross = dimensions.filter((d) => d.automotive && d.beauty && d.cafe).length;
   return {
     dimensions,
     sharedCount,
     totalCount,
     reusePercent: totalCount ? Math.round((sharedCount / totalCount) * 1000) / 10 : 0,
+    crossEcosystemPercent: totalCount ? Math.round((cross / totalCount) * 1000) / 10 : 0,
   };
 }
+
+/** Patterns validated across Automotive · Beauty · Cafe. */
+export const CROSS_ECOSYSTEM_PATTERNS = [
+  "Production auth gate (ISAM/JWT) before domain workflow",
+  "Domain bootstrap → customer → primary transaction → notification",
+  "PB Concierge + AI Team assign_task (no vertical AI fork)",
+  "Mission Control + OBS audit/metrics at workflow end",
+  "Owner dashboard + Pilot /pilot dual/triple pilot ops",
+  "Quality gates probe domain health + shared platform health",
+] as const;

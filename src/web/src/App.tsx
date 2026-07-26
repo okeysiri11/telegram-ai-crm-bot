@@ -35,6 +35,7 @@ import {
 } from "../workspace/pages";
 import { AutomotiveLiveWorkflowPage } from "../workspace/automotive/AutomotiveLiveWorkflowPage";
 import { BeautyLiveWorkflowPage } from "../workspace/beauty/BeautyLiveWorkflowPage";
+import { CafeLiveWorkflowPage } from "../workspace/cafe/CafeLiveWorkflowPage";
 import { NavigationDashboardPage } from "../navigation/pages";
 import { CommandCenterPage } from "../command-center/pages";
 import { ReleaseCandidatePage } from "../release/pages";
@@ -199,6 +200,22 @@ export function App() {
         element={
           <ProtectedRoute>
             <BeautyLiveWorkflowPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/cafe"
+        element={
+          <ProtectedRoute>
+            <CafeLiveWorkflowPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/cafe/:sub"
+        element={
+          <ProtectedRoute>
+            <CafeLiveWorkflowPage />
           </ProtectedRoute>
         }
       />

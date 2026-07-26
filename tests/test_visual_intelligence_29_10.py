@@ -39,8 +39,8 @@ def reset_store():
 
 def test_visual_intelligence_ready():
     health = platform_builder.health()
-    assert health["application_version"] == "1.34.0"
-    assert health["sprint"] == "30.9"
+    assert health["application_version"] == "1.35.0"
+    assert health["sprint"] == "31.0"
     assert health["visual_intelligence_engine_ready"] is True
     assert health["insight_engine_ready"] is True
     assert health["analytics_ready"] is True
@@ -104,7 +104,7 @@ async def test_api_intelligence(client):
 
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
-    assert body["application_version"] == "1.34.0"
+    assert body["application_version"] == "1.35.0"
     assert body["visual_intelligence_engine_ready"] is True
 
     catalog = await client.get(f"{PREFIX}/intelligence/catalog")
@@ -135,5 +135,5 @@ async def test_api_intelligence(client):
     assert knowledge.exists()
 
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.34.0"' in manifest
-    assert "30.9" in manifest
+    assert '"application_version": "1.35.0"' in manifest
+    assert "31.0" in manifest

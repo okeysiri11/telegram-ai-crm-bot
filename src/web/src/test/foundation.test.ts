@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("30.9");
+    expect(webConfig.sprint).toBe("31.0");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -145,5 +145,21 @@ describe("Sprint 30.9 Beauty Pilot Execution", () => {
     expect(audit.reusePercent).toBe(100);
     expect(audit.sharedCount).toBe(audit.totalCount);
     expect(audit.totalCount).toBeGreaterThanOrEqual(16);
+  });
+});
+
+describe("Sprint 31.0 Cafe Pilot Execution", () => {
+  it("wires cafe prefix and cross-ecosystem reuse", async () => {
+    expect(webConfig.cafeOsPrefix).toContain("enterprise-cos");
+    expect(hubIntegrations.cafeOs).toContain("enterprise-cos");
+    const { computeReusePercentage, CROSS_ECOSYSTEM_PATTERNS } = await import(
+      "../../workspace/ecosystem-template"
+    );
+    const audit = computeReusePercentage();
+    expect(audit.reusePercent).toBe(100);
+    expect(audit.dimensions.every((d) => "cafe" in d)).toBe(true);
+    expect(CROSS_ECOSYSTEM_PATTERNS.length).toBeGreaterThan(3);
+    expect(moduleRegistry.get("cafe")?.apiHint).toContain("enterprise-cos");
+    expect(applicationRegistry.get("cafe_enterprise")?.route).toBe("/workspace/cafe");
   });
 });
