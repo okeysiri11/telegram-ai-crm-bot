@@ -20,6 +20,7 @@ import {
   type TwinNode,
   type TwinNodeKind,
 } from "./deriveTwin";
+import { deriveIntegrationHub } from "@/enterprise-integrations/deriveIntegrations";
 
 const KIND_LABEL: Record<TwinNodeKind, string> = {
   department: "Подразделение",
@@ -61,6 +62,8 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
     [snapshot, company, notifications, user?.roleId, first.roleId],
   );
 
+  const intTwin = useMemo(() => deriveIntegrationHub(snapshot).twin, [snapshot]);
+
   const nodes = useMemo(
     () => (filter === "all" ? twin.nodes : twin.nodes.filter((n) => n.kind === filter)),
     [twin.nodes, filter],
@@ -101,8 +104,26 @@ export function EnterpriseTwinPage({ showStudioLink = true }: { showStudioLink?:
                 Twin Studio →
               </Link>
             ) : null}
+            <Link to="/platform-builder/integrations" className="eds-type-small text-[var(--eds-primary)]">
+              Integrations →
+            </Link>
           </div>
         </header>
+
+        {/* Sprint 33.1 — external systems in Twin */}
+        <Card className="etwin-impact" aria-label="Connected integrations">
+          <div className="etwin-section-head">
+            <h2>External Systems</h2>
+            <Link to="/platform-builder/integrations" className="eds-type-small text-[var(--eds-primary)]">
+              Integration Hub →
+            </Link>
+          </div>
+          <div className="etwin-exec-grid">
+            <ExecCol title="Подключены" items={intTwin.connectedSystems.slice(0, 6)} tone="ok" />
+            <ExecCol title="Процессы" items={intTwin.processesUsing.slice(0, 6)} />
+            <ExecCol title="AI" items={intTwin.aiUsing.slice(0, 6)} tone="ai" />
+          </div>
+        </Card>
 
         {/* SECTION 6 — Executive View */}
         <Card className="etwin-exec" aria-label="Executive View">

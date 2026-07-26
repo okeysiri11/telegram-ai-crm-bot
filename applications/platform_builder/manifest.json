@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.56.0",
-  "sprint": "33.0",
-  "release_status": "Enterprise Digital Twin",
+  "application_version": "1.57.0",
+  "sprint": "33.1",
+  "release_status": "Enterprise Integration Hub",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

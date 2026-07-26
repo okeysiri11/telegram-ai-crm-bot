@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("33.0");
+    expect(webConfig.sprint).toBe("33.1");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -713,5 +713,48 @@ describe("Sprint 33.0 Enterprise Digital Twin", () => {
     expect(twin.timeline.length).toBeGreaterThan(0);
     expect(twin.impacts.ai_team?.effects.length).toBeGreaterThan(0);
     expect(twin.graph.length).toBe(RELATIONSHIP_CHAIN.length - 1);
+  });
+});
+
+describe("Sprint 33.1 Enterprise Integration Hub", () => {
+  it("lists communication, business, developer integrations and derives dashboard", async () => {
+    const {
+      ALL_INTEGRATIONS,
+      COMMUNICATION_INTEGRATIONS,
+      BUSINESS_INTEGRATIONS,
+      DEVELOPER_INTEGRATIONS,
+    } = await import("../enterprise-integrations/integrationCatalog");
+    const { deriveIntegrationHub } = await import("../enterprise-integrations/deriveIntegrations");
+    const { connectIntegration, resolveStatus } = await import("../enterprise-integrations/connectionState");
+
+    expect(COMMUNICATION_INTEGRATIONS.map((i) => i.id)).toEqual(
+      expect.arrayContaining(["telegram", "whatsapp", "email", "sms", "web_widget", "push"]),
+    );
+    expect(BUSINESS_INTEGRATIONS.map((i) => i.id)).toEqual(
+      expect.arrayContaining(["crm", "erp", "accounting", "payments", "documents", "calendar", "storage"]),
+    );
+    expect(DEVELOPER_INTEGRATIONS.map((i) => i.id)).toEqual(
+      expect.arrayContaining(["rest_api", "webhooks", "oauth", "api_keys", "sdk"]),
+    );
+    expect(ALL_INTEGRATIONS.length).toBe(
+      COMMUNICATION_INTEGRATIONS.length + BUSINESS_INTEGRATIONS.length + DEVELOPER_INTEGRATIONS.length,
+    );
+
+    const bundle = deriveIntegrationHub({
+      updatedAt: new Date().toISOString(),
+      activity: [],
+      aiOps: { running: [], queue: [], recent: [], status: "ok", errors: [], completed: [] },
+      timeline: [],
+      health: [{ id: "crm" as const, label: "CRM", ok: true, detail: "ok" }],
+      recommendations: [],
+      mcOk: true,
+      activeModules: ["crm"],
+    });
+    expect(bundle.dashboard.active).toBeGreaterThan(0);
+    expect(bundle.rows.length).toBe(ALL_INTEGRATIONS.length);
+    expect(bundle.twin.connectedSystems.length).toBeGreaterThan(0);
+
+    connectIntegration("whatsapp");
+    expect(resolveStatus("whatsapp")).toBe("active");
   });
 });

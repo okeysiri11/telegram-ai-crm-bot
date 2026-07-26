@@ -26,6 +26,7 @@ export const COMMAND_CATALOG: CommandItem[] = [
   { id: "act_open_mission_control", kind: "open", action: "open_mission_control", label: "Open Mission Control", route: "/platform-builder/mission-control", keywords: ["mission", "control"] },
   { id: "act_open_enterprise_city", kind: "open", action: "open_enterprise_city", label: "Open Enterprise City", route: "/enterprise-city", keywords: ["city", "enterprise"] },
   { id: "act_open_enterprise_twin", kind: "open", action: "open_enterprise_twin", label: "Open Enterprise Twin", route: "/enterprise-twin", keywords: ["twin", "digital", "organization"] },
+  { id: "act_open_integrations", kind: "open", action: "open_integrations", label: "Open Integration Hub", route: "/platform-builder/integrations", keywords: ["integrations", "telegram", "webhook", "oauth"] },
   { id: "act_open_workflow_center", kind: "open", action: "open_workflow_center", label: "Open Workflow Center", route: "/platform-builder/workflow-center", keywords: ["workflow", "automation"] },
   { id: "act_open_builder_studio", kind: "open", action: "open_builder_studio", label: "Open AI Builder Studio", route: "/platform-builder/builder-studio", keywords: ["builder", "studio", "ai"] },
   { id: "act_open_concierge", kind: "open", action: "open_concierge", label: "Open AI Concierge", route: "/platform-builder/concierge", keywords: ["concierge", "ai"] },

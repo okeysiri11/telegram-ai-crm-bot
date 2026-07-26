@@ -14,6 +14,7 @@ import { WorkflowCenterPage } from "@/enterprise-workflow";
 import { AIBuilderStudioPage } from "@/ai-builder-studio";
 import { EnterpriseMarketplacePage } from "@/enterprise-marketplace";
 import { EnterpriseTwinPage } from "@/enterprise-twin";
+import { EnterpriseIntegrationHubPage } from "@/enterprise-integrations";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -177,6 +178,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <EnterpriseTwinPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/integrations"
+        element={
+          <ProtectedRoute>
+            <EnterpriseIntegrationHubPage />
           </ProtectedRoute>
         }
       />

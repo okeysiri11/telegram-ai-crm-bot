@@ -141,6 +141,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_DIGITAL_TWIN_33_0.md](./ENTERPRISE_DIGITAL_TWIN_33_0.md) — Living organization mirror (map, graph, heatmap, impact, timeline). Platform Builder **v1.56.0**.
 
+## Enterprise Integration Hub (Sprint 33.1)
+
+[ENTERPRISE_INTEGRATION_HUB_33_1.md](./ENTERPRISE_INTEGRATION_HUB_33_1.md) — Unified external integrations control. Platform Builder **v1.57.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

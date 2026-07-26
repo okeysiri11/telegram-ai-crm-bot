@@ -11,6 +11,7 @@ import { WorkflowAutomationWorkspace } from "@/enterprise-workflow";
 import { AIBuilderStudioStrip } from "@/ai-builder-studio";
 import { MarketplaceStrip } from "@/enterprise-marketplace";
 import { EnterpriseTwinStrip } from "@/enterprise-twin";
+import { IntegrationHubStrip } from "@/enterprise-integrations";
 
 /** Shared application shell — sidebar + top nav + unified workspace + AI OS chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
@@ -36,6 +37,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
             <AIBuilderStudioStrip />
             <MarketplaceStrip />
             <EnterpriseTwinStrip />
+            <IntegrationHubStrip />
             <UnifiedToastStrip />
             {children}
           </div>

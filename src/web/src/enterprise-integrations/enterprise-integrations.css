@@ -1,0 +1,223 @@
+/* Enterprise Integration Hub — Sprint 33.1 */
+
+.eih-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 10px;
+  background: linear-gradient(90deg, color-mix(in srgb, #0ea5e9 10%, transparent), transparent);
+  border: 1px solid color-mix(in srgb, #0ea5e9 22%, var(--eds-border));
+}
+
+.eih-strip-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--eds-muted);
+}
+
+.eih-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.eih-hero {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 80% at 100% 0%, color-mix(in srgb, #0ea5e9 14%, transparent), transparent),
+    linear-gradient(180deg, color-mix(in srgb, var(--eds-surface) 92%, #082f49), var(--eds-surface));
+  border: 1px solid var(--eds-border);
+}
+
+.eih-title {
+  margin: 0.2rem 0 0.35rem;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  letter-spacing: -0.02em;
+}
+
+.eih-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.eih-dash {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.65rem;
+}
+
+.eih-dash-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 12px;
+  border: 1px solid var(--eds-border);
+  background: color-mix(in srgb, var(--eds-surface) 90%, transparent);
+}
+
+.eih-dash-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--eds-muted);
+}
+
+.eih-dash-card--ok {
+  border-color: color-mix(in srgb, #22c55e 40%, var(--eds-border));
+}
+.eih-dash-card--warn {
+  border-color: color-mix(in srgb, #f59e0b 45%, var(--eds-border));
+}
+.eih-dash-card--err {
+  border-color: color-mix(in srgb, #ef4444 50%, var(--eds-border));
+}
+
+.eih-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.eih-chip {
+  border: 1px solid var(--eds-border);
+  background: transparent;
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.eih-chip.is-on {
+  border-color: #0ea5e9;
+  background: color-mix(in srgb, #0ea5e9 18%, transparent);
+}
+
+.eih-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.75rem;
+}
+
+.eih-card.is-selected {
+  outline: 1px solid color-mix(in srgb, #0ea5e9 50%, transparent);
+}
+
+.eih-card-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.eih-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.eih-cat {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--eds-muted);
+}
+
+.eih-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.65rem;
+}
+
+.eih-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.eih-section-head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.eih-table-wrap {
+  overflow-x: auto;
+}
+
+.eih-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.eih-table th,
+.eih-table td {
+  text-align: left;
+  padding: 0.45rem 0.55rem;
+  border-bottom: 1px solid var(--eds-border);
+}
+
+.eih-table tbody tr {
+  cursor: pointer;
+}
+
+.eih-table tbody tr.is-selected,
+.eih-table tbody tr:hover {
+  background: color-mix(in srgb, #0ea5e9 10%, transparent);
+}
+
+.eih-wizard-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.85rem;
+}
+
+.eih-twin-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.eih-twin-grid h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--eds-muted);
+}
+
+.eih-twin-grid ul {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.85rem;
+}
+
+.eih-wizard code {
+  font-size: 0.78rem;
+}

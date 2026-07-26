@@ -45,7 +45,7 @@ def reset_store():
 def test_context_navigation_surfaces():
     health = platform_builder.health()
     assert health["context_navigation_ready"] is True
-    assert health["application_version"] == "1.56.0"
+    assert health["application_version"] == "1.57.0"
 
     eng = platform_builder.navigation_intelligence
     recs = eng.smart_recommendations()
