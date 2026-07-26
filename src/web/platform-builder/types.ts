@@ -1,5 +1,5 @@
-export const PLATFORM_BUILDER_VERSION = "1.36.0";
-export const PLATFORM_BUILDER_SPRINT = "31.1";
+export const PLATFORM_BUILDER_VERSION = "1.37.0";
+export const PLATFORM_BUILDER_SPRINT = "31.2";
 export const PLATFORM_BUILDER_API = "/api/platform-builder/v1";
 
 export const FRAMEWORK_PHASES = [

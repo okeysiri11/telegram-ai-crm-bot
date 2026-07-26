@@ -37,6 +37,7 @@ import { AutomotiveLiveWorkflowPage } from "../workspace/automotive/AutomotiveLi
 import { BeautyLiveWorkflowPage } from "../workspace/beauty/BeautyLiveWorkflowPage";
 import { CafeLiveWorkflowPage } from "../workspace/cafe/CafeLiveWorkflowPage";
 import { AgricultureLiveWorkflowPage } from "../workspace/agriculture/AgricultureLiveWorkflowPage";
+import { LegalLiveWorkflowPage } from "../workspace/legal/LegalLiveWorkflowPage";
 import { NavigationDashboardPage } from "../navigation/pages";
 import { CommandCenterPage } from "../command-center/pages";
 import { ReleaseCandidatePage } from "../release/pages";
@@ -233,6 +234,22 @@ export function App() {
         element={
           <ProtectedRoute>
             <AgricultureLiveWorkflowPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/legal"
+        element={
+          <ProtectedRoute>
+            <LegalLiveWorkflowPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/legal/:sub"
+        element={
+          <ProtectedRoute>
+            <LegalLiveWorkflowPage />
           </ProtectedRoute>
         }
       />

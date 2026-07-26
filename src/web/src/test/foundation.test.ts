@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("31.1");
+    expect(webConfig.sprint).toBe("31.2");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -179,5 +179,24 @@ describe("Sprint 31.1 Agriculture Pilot Execution", () => {
     expect(CROSS_ECOSYSTEM_PATTERNS.some((p) => /Agriculture/i.test(p))).toBe(true);
     expect(moduleRegistry.get("agro")?.apiHint).toContain("/api/agro/v1");
     expect(applicationRegistry.get("agro_enterprise")?.route).toBe("/workspace/agro");
+  });
+});
+
+describe("Sprint 31.2 Legal Pilot Execution", () => {
+  it("wires legal prefixes and five-ecosystem reuse", async () => {
+    expect(webConfig.legalEnterprisePrefix).toContain("legal-enterprise");
+    expect(webConfig.legalCasePrefix).toContain("legal-cm");
+    expect(webConfig.legalDocumentsPrefix).toContain("legal-di");
+    expect(hubIntegrations.legalCase).toContain("legal-cm");
+    expect(hubIntegrations.legalAi).toContain("legal-aa");
+    const { computeReusePercentage, CROSS_ECOSYSTEM_PATTERNS } = await import(
+      "../../workspace/ecosystem-template"
+    );
+    const audit = computeReusePercentage();
+    expect(audit.reusePercent).toBe(100);
+    expect(audit.dimensions.every((d) => "legal" in d)).toBe(true);
+    expect(CROSS_ECOSYSTEM_PATTERNS.some((p) => /Legal/i.test(p))).toBe(true);
+    expect(moduleRegistry.get("legal")?.apiHint).toContain("legal-cm");
+    expect(applicationRegistry.get("legal_enterprise")?.route).toBe("/workspace/legal");
   });
 });

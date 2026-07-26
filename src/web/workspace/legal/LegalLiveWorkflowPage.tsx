@@ -1,6 +1,6 @@
 /**
- * Cafe operational pilot — Sprint 31.0.
- * Third Business Ecosystem on the shared Enterprise Platform.
+ * Legal live pilot UI — Sprint 31.2.
+ * Fifth operational Business Ecosystem on the shared Enterprise Platform.
  */
 
 import { useMemo, useState } from "react";
@@ -13,11 +13,11 @@ import { useWorkspaceStore } from "@/workspace/workspaceStore";
 import { useWebCore } from "@/shell/WebCoreProvider";
 import { telemetry } from "@/integrations/telemetry";
 import { pilotMetrics } from "@/integrations/pilotMetrics";
-import { runCafeLiveWorkflow, type WorkflowStepResult } from "./cafeWorkflow";
+import { runLegalLiveWorkflow, type WorkflowStepResult } from "./legalWorkflow";
 import { isJwtToken } from "@/auth/identityApi";
 import { computeReusePercentage, CROSS_ECOSYSTEM_PATTERNS } from "../ecosystem-template";
 
-export function CafeLiveWorkflowPage() {
+export function LegalLiveWorkflowPage() {
   const authUser = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
   const authMode = useAuthStore((s) => s.authMode);
@@ -25,9 +25,9 @@ export function CafeLiveWorkflowPage() {
   const org = useWorkspaceStore((s) => s.workspace.company);
   const core = useWebCore();
 
-  const [customerName, setCustomerName] = useState("Pilot Guest");
-  const [customerEmail, setCustomerEmail] = useState(
-    `pilot.cafe+${Date.now().toString(36)}@demo.corp`,
+  const [clientName, setClientName] = useState("Alex Client");
+  const [clientEmail, setClientEmail] = useState(
+    `pilot.legal+${Date.now().toString(36)}@demo.corp`,
   );
   const [busy, setBusy] = useState(false);
   const [steps, setSteps] = useState<WorkflowStepResult[]>([]);
@@ -50,12 +50,12 @@ export function CafeLiveWorkflowPage() {
       if (!sessionOk || !authUser) {
         throw new Error("Staff session invalid — login with production authentication first.");
       }
-      await telemetry.businessEvent("cafe_workflow_start");
-      await telemetry.aiActivity("concierge", "cafe_pilot_execution_begin");
+      await telemetry.businessEvent("legal_workflow_start");
+      await telemetry.aiActivity("concierge", "legal_pilot_execution_begin");
       pilotMetrics.recordSession();
-      const result = await runCafeLiveWorkflow({
-        customerName,
-        customerEmail,
+      const result = await runLegalLiveWorkflow({
+        clientName,
+        clientEmail,
         organizationId: org || "org_demo",
       });
       setSteps(result.steps);
@@ -63,31 +63,36 @@ export function CafeLiveWorkflowPage() {
       setSuccess(result.success);
       setReusePercent(result.reusePercent ?? reuseAudit.reusePercent);
       pilotMetrics.recordWorkflow(result.success, result.totalMs);
-      pilotMetrics.recordBusinessEvent("cafe_order");
+      pilotMetrics.recordBusinessEvent("legal_case");
       for (const s of result.steps) {
         pilotMetrics.recordApiTiming(s.id, s.durationMs, s.ok);
-        if (s.id === "ai_concierge" || s.id === "ai_team" || s.id === "ai_marketing") {
+        if (
+          s.id === "ai_concierge" ||
+          s.id === "ai_team" ||
+          s.id === "ai_intake" ||
+          s.id === "ai_legal"
+        ) {
           pilotMetrics.recordAiTiming(s.durationMs);
         }
-        if (!s.ok) pilotMetrics.recordModuleError("cafe");
+        if (!s.ok) pilotMetrics.recordModuleError("legal");
       }
       await telemetry.businessEvent(
-        result.success ? "cafe_workflow_success" : "cafe_workflow_partial",
+        result.success ? "legal_workflow_success" : "legal_workflow_partial",
         result.totalMs,
       );
-      await telemetry.apiCall("cafe/live-workflow", result.totalMs, result.success);
+      await telemetry.apiCall("legal/live-workflow", result.totalMs, result.success);
       if (!result.success) {
         const failed = result.steps.filter((s) => !s.ok);
         setError(failed.map((f) => `${f.label}: ${f.error}`).join(" · "));
-        await telemetry.error("cafe_workflow_step_failed");
+        await telemetry.error("legal_workflow_step_failed");
       } else {
-        await telemetry.audit("cafe_workflow_complete", `ms=${result.totalMs}`);
+        await telemetry.audit("legal_workflow_complete", `ms=${result.totalMs}`);
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       setError(msg);
       setSuccess(false);
-      await telemetry.error("cafe_workflow", e instanceof Error ? e : undefined);
+      await telemetry.error("legal_workflow", e instanceof Error ? e : undefined);
     } finally {
       setBusy(false);
     }
@@ -97,19 +102,19 @@ export function CafeLiveWorkflowPage() {
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap gap-2">
         <Badge tone="success">Operational Pilot</Badge>
-        <Badge>Sprint 31.0</Badge>
-        <Badge>Cafe</Badge>
+        <Badge>Sprint 31.2</Badge>
+        <Badge>Legal</Badge>
         <Badge tone="success">Reuse {reuseAudit.reusePercent}%</Badge>
         <Badge>Cross {reuseAudit.crossEcosystemPercent}%</Badge>
         <Badge>{authMode || "—"}</Badge>
         {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge tone="warning">ISAM token</Badge>}
       </div>
 
-      <h1 className="eds-type-title text-[var(--eds-text)]">Cafe Pilot Execution</h1>
+      <h1 className="eds-type-title text-[var(--eds-text)]">Legal Pilot Execution</h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        Third operational Business Ecosystem: Login → Menu → Reserve → Order → Kitchen → Payment →
-        Loyalty → CRM → Mission Control → Analytics. Payments/loyalty reuse Commerce Core; AI Team is
-        shared. Automotive and Beauty unchanged.
+        Fifth operational Business Ecosystem: Client → Login → CRM → AI Intake → Case → Document
+        Generation (templates, versions, signatures, approvals) → Calendar → Tasks → Mission Control →
+        Analytics. Reuses existing Legal Enterprise APIs. Auto / Beauty / Cafe / Agriculture unchanged.
       </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -121,17 +126,13 @@ export function CafeLiveWorkflowPage() {
             <li>Permissions: {(authUser?.permissions || core.permissions).join(", ") || "—"}</li>
           </ul>
         </Card>
-        <Card title="Customer">
+        <Card title="Client">
           <div className="grid gap-2">
+            <Input value={clientName} onChange={(e) => setClientName(e.target.value)} aria-label="Client name" />
             <Input
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
-              aria-label="Customer name"
-            />
-            <Input
-              value={customerEmail}
-              onChange={(e) => setCustomerEmail(e.target.value)}
-              aria-label="Customer email"
+              value={clientEmail}
+              onChange={(e) => setClientEmail(e.target.value)}
+              aria-label="Client email"
             />
           </div>
         </Card>
@@ -139,7 +140,7 @@ export function CafeLiveWorkflowPage() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button disabled={busy} onClick={() => void run()}>
-          {busy ? "Running…" : "Execute Cafe pilot"}
+          {busy ? "Running…" : "Execute Legal pilot"}
         </Button>
         <Link to="/workspace/auto">
           <Button size="sm" variant="secondary">
@@ -149,6 +150,16 @@ export function CafeLiveWorkflowPage() {
         <Link to="/workspace/beauty">
           <Button size="sm" variant="secondary">
             Beauty
+          </Button>
+        </Link>
+        <Link to="/workspace/cafe">
+          <Button size="sm" variant="secondary">
+            Cafe
+          </Button>
+        </Link>
+        <Link to="/workspace/agro">
+          <Button size="sm" variant="secondary">
+            Agriculture
           </Button>
         </Link>
         <Link to="/platform-builder/mission-control">
@@ -165,7 +176,7 @@ export function CafeLiveWorkflowPage() {
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card
-          title={`Cross-ecosystem reuse — ${reuseAudit.reusePercent}% (${reuseAudit.sharedCount}/${reuseAudit.totalCount})`}
+          title={`Enterprise reuse — ${reuseAudit.reusePercent}% (${reuseAudit.sharedCount}/${reuseAudit.totalCount})`}
         >
           <Table headers={["Dimension", "Auto", "Beauty", "Cafe", "Agro", "Legal"]}>
             {reuseAudit.dimensions.map((d) => (
@@ -180,7 +191,7 @@ export function CafeLiveWorkflowPage() {
             ))}
           </Table>
         </Card>
-        <Card title="Reusable patterns (4 ecosystems)">
+        <Card title="Reusable patterns (5 ecosystems)">
           <ul className="eds-type-small space-y-1">
             {CROSS_ECOSYSTEM_PATTERNS.map((p) => (
               <li key={p}>• {p}</li>
@@ -230,8 +241,8 @@ export function CafeLiveWorkflowPage() {
       ) : (
         <div className="mt-6">
           <EmptyState
-            title="Ready to execute Cafe pilot"
-            description="Validates restaurant CRM, tables, menu, reservations, kitchen queue, payments (ECO), loyalty, AI Team, and Mission Control."
+            title="Ready to execute Legal pilot"
+            description="Validates law-firm CRM, AI intake, case creation, document automation (templates, versions, signatures, approvals), court calendar, tasks, AI Team, and Mission Control on existing legal APIs."
           />
         </div>
       )}

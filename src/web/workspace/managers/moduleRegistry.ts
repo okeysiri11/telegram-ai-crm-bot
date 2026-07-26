@@ -189,12 +189,22 @@ const MODULES: Record<string, RegisteredModule> = {
   }),
   legal: entry("legal", {
     title: "Legal",
-    purpose: "Legal industry module shell — binds to legal_enterprise without forking identity.",
+    purpose:
+      "Legal operational pilot — law-firm CRM, cases, hearings, document automation via legal-cm/di/cp/aa; shared Concierge/MC/OBS.",
     builderRoute: "/platform-builder/business-ecosystem",
-    apiHint: "/api/legal-enterprise/v1",
+    portalHint: "/portals/customer",
+    apiHint:
+      "/api/legal-enterprise/v1 · /api/legal-cm/v1 · /api/legal-di/v1 · /api/legal-aa/v1 · /api/legal-ei/v1",
     ecosystem: "legal",
-    version: "5.0.0-enterprise",
-    dependencies: ["enterprise_web_platform", "legal_enterprise", "platform_builder"],
+    version: "1.0.0-pilot",
+    dependencies: [
+      "enterprise_web_platform",
+      "legal_enterprise",
+      "platform_builder",
+      "enterprise_hub",
+    ],
+    widgets: ["widget_legal_cases", "widget_legal_calendar"],
+    dashboards: ["dash_legal_owner", "dash_legal_executive"],
   }),
   crypto: entry("crypto", {
     title: "Crypto (Bidex)",

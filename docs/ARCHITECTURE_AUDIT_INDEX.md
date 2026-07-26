@@ -55,6 +55,10 @@
 
 [AGRICULTURE_PILOT_EXECUTION_31_1.md](./AGRICULTURE_PILOT_EXECUTION_31_1.md) — Fourth operational pilot + trade/logistics validation. Platform Builder **v1.36.0**.
 
+## Legal Pilot Execution (Sprint 31.2)
+
+[LEGAL_PILOT_EXECUTION_31_2.md](./LEGAL_PILOT_EXECUTION_31_2.md) — Fifth operational pilot + document automation. Platform Builder **v1.37.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

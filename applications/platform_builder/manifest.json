@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.36.0",
-  "sprint": "31.1",
-  "release_status": "Agriculture Pilot Execution",
+  "application_version": "1.37.0",
+  "sprint": "31.2",
+  "release_status": "Legal Pilot Execution",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

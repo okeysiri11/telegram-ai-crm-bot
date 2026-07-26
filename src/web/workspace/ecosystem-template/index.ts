@@ -237,6 +237,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   authorization_rbac: {
     source: "ISAM roles / PermissionGuard",
@@ -244,6 +245,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   workspace: {
     source: "WorkspaceLayout + workspaceStore",
@@ -251,6 +253,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   mission_control: {
     source: "PB /mission-control",
@@ -258,6 +261,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   knowledge: {
     source: "PB knowledge / EKG",
@@ -265,6 +269,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   workflow_engine: {
     source: "ecosystem template timed steps",
@@ -272,6 +277,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   notification_system: {
     source: "enterprise-comms /center",
@@ -279,6 +285,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   telemetry: {
     source: "OBS + pilotMetrics",
@@ -286,6 +293,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   ai_platform: {
     source: "PB Concierge + AI Team",
@@ -293,6 +301,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   ui: {
     source: "EDS Button/Card/Table/Input",
@@ -300,6 +309,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   dashboards: {
     source: "domain dashboard + Pilot /pilot",
@@ -307,6 +317,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   layouts: {
     source: "WorkspaceLayout",
@@ -314,6 +325,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   shared_apis: {
     source: "comms / OBS / PB / ISAM",
@@ -321,6 +333,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   shared_components: {
     source: "EDS + ecosystem-template",
@@ -328,6 +341,7 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   shared_workflows: {
     source: "timedStep template",
@@ -335,13 +349,15 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   shared_ai: {
-    source: "Concierge + AI Team + AMO",
+    source: "Concierge + AI Team (+ vertical AI probes)",
     automotive: true,
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
   },
   shared_permissions: {
     source: "ISAM RBAC + PermissionGuard",
@@ -349,13 +365,23 @@ export const ECOSYSTEM_REUSE_MATRIX = {
     beauty: true,
     cafe: true,
     agriculture: true,
+    legal: true,
+  },
+  shared_documents: {
+    source: "Legal CM/DI docs + platform knowledge attachments pattern",
+    automotive: true,
+    beauty: true,
+    cafe: true,
+    agriculture: true,
+    legal: true,
   },
   shared_commerce: {
-    source: "ECO payments/loyalty (Beauty+Cafe); Agro uses grain marketplace",
+    source: "ECO payments/loyalty (Beauty+Cafe); Agro marketplace; Legal matter billing N/A",
     automotive: false,
     beauty: true,
     cafe: true,
     agriculture: false,
+    legal: false,
   },
 } as const;
 
@@ -367,6 +393,7 @@ export type ReuseAuditResult = {
     beauty: boolean;
     cafe: boolean;
     agriculture: boolean;
+    legal: boolean;
     shared: boolean;
   }[];
   sharedCount: number;
@@ -375,11 +402,13 @@ export type ReuseAuditResult = {
   crossEcosystemPercent: number;
 };
 
-/** Measure platform reuse — shared = all four pilots, or Beauty+Cafe commerce exception. */
+/** Measure platform reuse — shared = all five pilots, or Beauty+Cafe commerce exception. */
 export function computeReusePercentage(): ReuseAuditResult {
   const dimensions = Object.entries(ECOSYSTEM_REUSE_MATRIX).map(([id, row]) => {
-    const allFour = row.automotive && row.beauty && row.cafe && row.agriculture;
-    const beautyCafeCommerce = row.beauty && row.cafe && !row.automotive && !row.agriculture;
+    const allFive =
+      row.automotive && row.beauty && row.cafe && row.agriculture && row.legal;
+    const beautyCafeCommerce =
+      row.beauty && row.cafe && !row.automotive && !row.agriculture && !row.legal;
     return {
       id,
       source: row.source,
@@ -387,12 +416,15 @@ export function computeReusePercentage(): ReuseAuditResult {
       beauty: row.beauty,
       cafe: row.cafe,
       agriculture: row.agriculture,
-      shared: allFour || beautyCafeCommerce,
+      legal: row.legal,
+      shared: allFive || beautyCafeCommerce,
     };
   });
   const sharedCount = dimensions.filter((d) => d.shared).length;
   const totalCount = dimensions.length;
-  const cross = dimensions.filter((d) => d.automotive && d.beauty && d.cafe && d.agriculture).length;
+  const cross = dimensions.filter(
+    (d) => d.automotive && d.beauty && d.cafe && d.agriculture && d.legal,
+  ).length;
   return {
     dimensions,
     sharedCount,
@@ -402,13 +434,14 @@ export function computeReusePercentage(): ReuseAuditResult {
   };
 }
 
-/** Patterns validated across Automotive · Beauty · Cafe · Agriculture. */
+/** Patterns validated across Automotive · Beauty · Cafe · Agriculture · Legal. */
 export const CROSS_ECOSYSTEM_PATTERNS = [
   "Production auth gate (ISAM/JWT) before domain workflow",
   "Domain bootstrap → customer → primary transaction → notification",
   "PB Concierge + AI Team assign_task (no vertical AI fork)",
   "Mission Control + OBS audit/metrics at workflow end",
-  "Owner dashboard + Pilot /pilot multi-ecosystem ops (Auto·Beauty·Cafe·Agro)",
+  "Owner dashboard + Pilot /pilot multi-ecosystem ops (Auto·Beauty·Cafe·Agro·Legal)",
   "Quality gates probe domain health + shared platform health",
   "Agriculture trade: harvest → warehouse → marketplace → export contract → sea freight",
+  "Legal matter: CRM → AI intake → case → documents → calendar → tasks",
 ] as const;

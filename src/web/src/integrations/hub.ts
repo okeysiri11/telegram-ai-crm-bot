@@ -25,6 +25,12 @@ export const hubIntegrations = {
   agroEnterprise: webConfig.agroEnterprisePrefix,
   agroFinance: webConfig.agroFinancePrefix,
   aiAgronomist: webConfig.aiAgronomistPrefix,
+  legalEnterprise: webConfig.legalEnterprisePrefix,
+  legalCase: webConfig.legalCasePrefix,
+  legalDocuments: webConfig.legalDocumentsPrefix,
+  legalCompliance: webConfig.legalCompliancePrefix,
+  legalAi: webConfig.legalAiPrefix,
+  legalExecutive: webConfig.legalExecutivePrefix,
   aiMarketingOs: webConfig.aiMarketingOsPrefix,
   commerceCore: webConfig.commerceCorePrefix,
 } as const;
