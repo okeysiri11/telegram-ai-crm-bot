@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.62.0",
-  "sprint": "33.6",
-  "release_status": "Enterprise Control Tower",
+  "application_version": "1.63.0",
+  "sprint": "33.7",
+  "release_status": "Self-Learning Enterprise & Continuous Optimization",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

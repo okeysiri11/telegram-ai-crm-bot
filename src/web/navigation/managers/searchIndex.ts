@@ -22,6 +22,7 @@ let documents: SearchDocument[] = [
   { id: "idx_predictive", category: "dashboards", title: "Predictive Intelligence", path: "/platform-builder/predictive", tokens: ["predictive", "forecast", "scenario", "what-if"], rankBoost: 9 },
   { id: "idx_autonomy", category: "ai_agents", title: "Autonomy Center", path: "/platform-builder/autonomy", tokens: ["autonomy", "approval", "hitl", "governance"], rankBoost: 9 },
   { id: "idx_control_tower", category: "dashboards", title: "Enterprise Control Tower", path: "/platform-builder/control-tower", tokens: ["control", "tower", "executive", "overview", "ops"], rankBoost: 10 },
+  { id: "idx_learning", category: "dashboards", title: "Self-Learning Enterprise", path: "/platform-builder/learning", tokens: ["learning", "optimize", "recommendations", "self-learning", "continuous"], rankBoost: 10 },
   { id: "idx_user_ops", category: "users", title: "Ops Manager", path: "/identity/users", tokens: ["ops", "manager", "user", "people"], rankBoost: 4 },
   { id: "idx_ai_concierge", category: "ai_agents", title: "AI Concierge", path: "/platform-builder/concierge", tokens: ["concierge", "ai", "assistant"], rankBoost: 7 },
   { id: "idx_ai_team", category: "ai_agents", title: "AI Team Center", path: "/platform-builder/ai-team", tokens: ["ai", "team", "specialists"], rankBoost: 8 },

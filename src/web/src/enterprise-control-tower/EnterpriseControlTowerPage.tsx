@@ -20,6 +20,7 @@ import {
 import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
 import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
+import { LearningWidgetCompact } from "@/self-learning-enterprise";
 import { deriveControlTower } from "./deriveControlTower";
 
 const INC_TONE = {
@@ -235,6 +236,7 @@ export function EnterpriseControlTowerPage() {
           <PredictiveWidgetCompact />
           <AutonomousWidgetCompact />
           <DataFabricOverviewCompact />
+          <LearningWidgetCompact />
         </div>
       </div>
     </WorkspaceLayout>

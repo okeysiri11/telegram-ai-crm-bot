@@ -14,6 +14,7 @@ import { RuntimeMonitorCompact } from "@/ai-runtime";
 import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
 import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
+import { LearningWidgetCompact } from "@/self-learning-enterprise";
 
 type Dict = Record<string, unknown>;
 
@@ -76,6 +77,7 @@ export function MissionControlStrip() {
         <DataFabricOverviewCompact />
         <PredictiveWidgetCompact />
         <AutonomousWidgetCompact />
+        <LearningWidgetCompact />
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="cc-stat">

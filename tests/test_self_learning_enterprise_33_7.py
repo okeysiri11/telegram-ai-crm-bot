@@ -1,4 +1,4 @@
-"""Tests — Enterprise Control Tower (Sprint 33.6)."""
+"""Tests — Self-Learning Enterprise (Sprint 33.7)."""
 
 from __future__ import annotations
 
@@ -10,86 +10,85 @@ from applications.platform_builder import platform_builder
 ROOT = Path(__file__).resolve().parents[1]
 
 DOCS = [
-    "ENTERPRISE_CONTROL_TOWER_33_6.md",
-    "RELEASE_NOTES_33_6.md",
+    "SELF_LEARNING_ENTERPRISE_33_7.md",
+    "RELEASE_NOTES_33_7.md",
 ]
 
 
-def test_33_6_docs_exist():
+def test_33_7_docs_exist():
     docs = ROOT / "docs"
     for name in DOCS:
         path = docs / name
         assert path.exists(), name
-        assert "33.6" in path.read_text()
+        assert "33.7" in path.read_text()
     index = (docs / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
-    assert "ENTERPRISE_CONTROL_TOWER_33_6" in index
-    report = (docs / "ENTERPRISE_CONTROL_TOWER_33_6.md").read_text()
-    assert "No new Dashboard Engine" in report
-    assert "Operations Wall" in report
-    assert "Executive Cockpit" in report
+    assert "SELF_LEARNING_ENTERPRISE_33_7" in index
+    report = (docs / "SELF_LEARNING_ENTERPRISE_33_7.md").read_text()
+    assert "No new Learning Engine" in report
+    assert "Learning Dashboard" in report
+    assert "Recommendation Center" in report
+    assert "Executive Learning Report" in report
 
 
-def test_platform_version_33_6():
+def test_platform_version_33_7():
     health = platform_builder.health()
     assert health["application_version"] == "1.63.0"
     assert health["sprint"] == "33.7"
     assert "Self-Learning Enterprise" in health["release_status"]
 
 
-def test_control_tower_wired():
+def test_learning_wired():
     app = (ROOT / "src" / "web" / "src" / "App.tsx").read_text()
-    assert 'path="/platform-builder/control-tower"' in app
-    assert "EnterpriseControlTowerPage" in app
+    assert 'path="/platform-builder/learning"' in app
+    assert "SelfLearningEnterprisePage" in app
     full = (ROOT / "src" / "web" / "src" / "layouts" / "FullLayout.tsx").read_text()
-    assert "ControlTowerStrip" in full
-    derive = (ROOT / "src" / "web" / "src" / "enterprise-control-tower" / "deriveControlTower.ts").read_text()
+    assert "LearningStrip" in full
+    derive = (ROOT / "src" / "web" / "src" / "self-learning-enterprise" / "deriveLearning.ts").read_text()
     for token in (
-        "deriveControlTower",
-        "Beauty",
-        "Legal",
-        "Cafe",
-        "Agriculture",
-        "Automotive",
-        "Drone",
-        "Bidex",
-        "CONTROL_TOWER_COMMANDS",
+        "deriveLearning",
+        "workflowOpts",
+        "aiReview",
+        "KnowledgeEvolution",
+        "recommendations",
+        "ExecutiveLearningReport",
+        "deriveRuntime",
+        "derivePredictive",
+        "deriveIntelligence",
+        "deriveDataFabric",
     ):
         assert token in derive
     page = (
-        ROOT / "src" / "web" / "src" / "enterprise-control-tower" / "EnterpriseControlTowerPage.tsx"
+        ROOT / "src" / "web" / "src" / "self-learning-enterprise" / "SelfLearningEnterprisePage.tsx"
     ).read_text()
     for token in (
-        "Global Overview",
-        "Operations Wall",
-        "Executive Cockpit",
-        "Cross Ecosystem Monitor",
-        "Global Search",
-        "Incident Center",
-        "Command Actions",
-        "RuntimeMonitorCompact",
-        "AutonomousWidgetCompact",
+        "Learning Dashboard",
+        "Workflow Optimization",
+        "AI Performance Review",
+        "Knowledge Evolution",
+        "Recommendation Center",
+        "Executive Learning Report",
+        "LearningWidgetCompact",
     ):
         assert token in page
     css = (
-        ROOT / "src" / "web" / "src" / "enterprise-control-tower" / "enterprise-control-tower.css"
+        ROOT / "src" / "web" / "src" / "self-learning-enterprise" / "self-learning-enterprise.css"
     ).read_text()
-    assert "Sprint 33.6" in css
-    assert "ect-" in css
+    assert "Sprint 33.7" in css
+    assert "sle-" in css
     idx = (ROOT / "src" / "web" / "src" / "index.css").read_text()
-    assert "enterprise-control-tower.css" in idx
+    assert "self-learning-enterprise.css" in idx
     search = (ROOT / "src" / "web" / "navigation" / "managers" / "searchIndex.ts").read_text()
-    assert "idx_control_tower" in search
-    assert "idx_ai_team" in search
-    assert "idx_crm_clients" in search
+    assert "idx_learning" in search
     qa = (ROOT / "src" / "web" / "command-center" / "managers" / "quickActions.ts").read_text()
-    assert "/platform-builder/control-tower" in qa
+    assert "/platform-builder/learning" in qa
     mc = (
         ROOT / "src" / "web" / "platform-builder" / "mission-control" / "MissionControlLivePanel.tsx"
     ).read_text()
-    assert "control-tower" in mc
+    assert "LearningWidgetCompact" in mc
+    assert "learning" in mc
 
 
-def test_config_manifest_33_6():
+def test_config_manifest_33_7():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
     assert 'application_version: str = "1.63.0"' in cfg
     assert 'sprint: str = "33.7"' in cfg

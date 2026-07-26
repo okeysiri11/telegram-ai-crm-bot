@@ -17,6 +17,7 @@ import { RuntimeMonitorCompact } from "@/ai-runtime";
 import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
 import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
+import { LearningWidgetCompact } from "@/self-learning-enterprise";
 
 type Dict = Record<string, unknown>;
 
@@ -152,6 +153,11 @@ export function MissionControlLivePanel() {
             Control Tower
           </Button>
         </Link>
+        <Link to="/platform-builder/learning">
+          <Button size="sm" variant="secondary">
+            Learning
+          </Button>
+        </Link>
       </div>
 
       {error ? (
@@ -167,6 +173,7 @@ export function MissionControlLivePanel() {
       <DataFabricOverviewCompact />
       <PredictiveWidgetCompact />
       <AutonomousWidgetCompact />
+      <LearningWidgetCompact />
 
       <div className="grid gap-4 lg:grid-cols-3">
         <Card title="System overview">

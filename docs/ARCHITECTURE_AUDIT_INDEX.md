@@ -165,6 +165,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_CONTROL_TOWER_33_6.md](./ENTERPRISE_CONTROL_TOWER_33_6.md) — Executive home composing all control surfaces. Platform Builder **v1.62.0**.
 
+## Self-Learning Enterprise & Continuous Optimization (Sprint 33.7)
+
+[SELF_LEARNING_ENTERPRISE_33_7.md](./SELF_LEARNING_ENTERPRISE_33_7.md) — Continuous optimization recommendations over existing layers. Platform Builder **v1.63.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

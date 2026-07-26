@@ -20,6 +20,7 @@ import { EnterpriseDataFabricPage } from "@/enterprise-data-fabric";
 import { PredictiveIntelligencePage } from "@/predictive-intelligence";
 import { AutonomousEnterprisePage } from "@/autonomous-enterprise";
 import { EnterpriseControlTowerPage } from "@/enterprise-control-tower";
+import { SelfLearningEnterprisePage } from "@/self-learning-enterprise";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -231,6 +232,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <EnterpriseControlTowerPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/learning"
+        element={
+          <ProtectedRoute>
+            <SelfLearningEnterprisePage />
           </ProtectedRoute>
         }
       />

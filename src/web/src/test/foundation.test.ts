@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("33.6");
+    expect(webConfig.sprint).toBe("33.7");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -994,5 +994,44 @@ describe("Sprint 33.6 Enterprise Control Tower", () => {
     expect(tower.operations.length).toBeGreaterThan(0);
     expect(tower.incidents.length).toBeGreaterThan(0);
     expect(tower.commands.length).toBe(6);
+  });
+});
+
+describe("Sprint 33.7 Self-Learning Enterprise", () => {
+  it("derives metrics, workflow opts, AI review, knowledge, recommendations, executive", async () => {
+    const { deriveLearning } = await import("../self-learning-enterprise/deriveLearning");
+    const bundle = deriveLearning({
+      updatedAt: new Date().toISOString(),
+      activity: [
+        { id: "1", kind: "crm", title: "Follow-up", detail: "", at: new Date().toISOString(), source: "seed" },
+        { id: "2", kind: "automation", title: "Invoice", detail: "", at: new Date().toISOString(), source: "seed" },
+      ],
+      aiOps: {
+        running: ["Sales Specialist"],
+        queue: ["Q1", "Q2"],
+        recent: ["Ops Copilot"],
+        status: "ok",
+        errors: ["timeout"],
+        completed: ["Lead score", "Doc draft"],
+      },
+      timeline: [],
+      health: [
+        { id: "crm" as const, label: "CRM", ok: true, detail: "ok" },
+        { id: "mission_control" as const, label: "MC", ok: true, detail: "ok" },
+      ],
+      recommendations: [],
+      mcOk: true,
+      activeModules: ["crm", "ai", "knowledge"],
+    });
+    expect(bundle.metrics.map((m) => m.id)).toEqual(
+      expect.arrayContaining(["ai_eff", "wf_eff", "speed", "reco_q", "auto_ok"]),
+    );
+    expect(bundle.workflowOpts.length).toBeGreaterThanOrEqual(4);
+    expect(bundle.aiReview.length).toBeGreaterThan(0);
+    expect(bundle.knowledge.topUsed.length).toBeGreaterThan(0);
+    expect(bundle.recommendations.some((r) => r.category === "workflow")).toBe(true);
+    expect(bundle.recommendations.some((r) => r.category === "knowledge")).toBe(true);
+    expect(bundle.executive.learned.length).toBeGreaterThan(0);
+    expect(bundle.timeSavedMin).toBeGreaterThanOrEqual(0);
   });
 });
