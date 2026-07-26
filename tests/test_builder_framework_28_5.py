@@ -39,8 +39,8 @@ def reset_store():
 
 def test_ubf_ready_catalog_and_lifecycle():
     health = platform_builder.health()
-    assert health["application_version"] == "1.29.0"
-    assert health["sprint"] == "30.4"
+    assert health["application_version"] == "1.30.0"
+    assert health["sprint"] == "30.5"
     assert health["universal_builder_framework_ready"] is True
     assert health["builder_registry_ready"] is True
     assert health["template_engine_ready"] is True
@@ -107,7 +107,7 @@ async def test_api_ubf(client):
     health = await client.get(f"{PREFIX}/health")
     body = await health.json()
     assert body["universal_builder_framework_ready"] is True
-    assert body["application_version"] == "1.29.0"
+    assert body["application_version"] == "1.30.0"
 
     boot = await client.post(f"{PREFIX}/ubf/bootstrap", json={})
     assert boot.status == 201
@@ -167,5 +167,5 @@ def test_docs_and_frontend_28_5():
     for key in ("Lifecycle", "Builder Registry", "Template Engine", "Validation"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.29.0"' in manifest
-    assert "30.4" in manifest
+    assert '"application_version": "1.30.0"' in manifest
+    assert "30.5" in manifest

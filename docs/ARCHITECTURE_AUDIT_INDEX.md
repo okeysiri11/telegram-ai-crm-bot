@@ -27,6 +27,10 @@
 
 [WEB_FOUNDATION_30_4.md](./WEB_FOUNDATION_30_4.md) — shared shell, module loader, telemetry, pilot readiness. Platform Builder **v1.29.0**.
 
+## Web Core Integration (Sprint 30.5)
+
+[WEB_CORE_30_5.md](./WEB_CORE_30_5.md) — Module Registry, Pilot Dashboard, Mission Control live panel. Platform Builder **v1.30.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

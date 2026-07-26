@@ -1,5 +1,5 @@
 /**
- * Production telemetry client — Sprint 30.4.
+ * Production telemetry client — Sprint 30.4 / extended 30.5.
  * Posts to existing Enterprise Observability (/api/enterprise-obs/v1).
  * No parallel observability stack.
  */
@@ -26,6 +26,13 @@ async function postJson(path: string, body: Record<string, unknown>): Promise<vo
     // Fire-and-forget — never block UI on telemetry failure
   }
 }
+
+export type ObservabilitySnapshot = {
+  health: Record<string, unknown> | null;
+  metrics: Record<string, unknown> | null;
+  logs: Record<string, unknown> | null;
+  ok: boolean;
+};
 
 export const telemetry = {
   enabled(): boolean {
@@ -108,5 +115,28 @@ export const telemetry = {
       route,
       status: ok ? "ok" : "error",
     });
+  },
+
+  /** Business metric helper — uses active_users kind with business labels. */
+  async businessEvent(event: string, value = 1): Promise<void> {
+    await this.log({ kind: "application", message: `business_event ${event}` });
+    await this.metric("active_users", value, { event, scope: "business" });
+  },
+
+  /** Pull health snapshot from existing OBS endpoints (central monitoring). */
+  async healthSnapshot(): Promise<ObservabilitySnapshot> {
+    try {
+      const [h, m, l] = await Promise.all([
+        apiFetch(`${OBS}/health`),
+        apiFetch(`${OBS}/metrics`),
+        apiFetch(`${OBS}/logs`),
+      ]);
+      const health = h.ok ? ((await h.json()) as Record<string, unknown>) : null;
+      const metrics = m.ok ? ((await m.json()) as Record<string, unknown>) : null;
+      const logs = l.ok ? ((await l.json()) as Record<string, unknown>) : null;
+      return { health, metrics, logs, ok: Boolean(health) };
+    } catch {
+      return { health: null, metrics: null, logs: null, ok: false };
+    }
   },
 };

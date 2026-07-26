@@ -14,7 +14,7 @@ export function WorkspaceModulePage() {
       <WorkspaceLayout>
         <div className="mb-4 flex flex-wrap gap-2">
           <Badge tone="success">Module Shell</Badge>
-          <Badge>Sprint 30.4</Badge>
+          <Badge>Sprint 30.5</Badge>
           <Badge>Shared Platform Shell</Badge>
           {meta.ecosystem ? <Badge>{meta.ecosystem}</Badge> : null}
           {sub ? <Badge>{sub}</Badge> : null}

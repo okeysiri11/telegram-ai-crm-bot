@@ -18,7 +18,7 @@ export function PortalLayout({
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Badge tone="success">Portal Shell</Badge>
-        <Badge>Sprint 30.4</Badge>
+        <Badge>Sprint 30.5</Badge>
         <Badge>{audience}</Badge>
         <Badge>Extends Workspace · EDS</Badge>
       </div>

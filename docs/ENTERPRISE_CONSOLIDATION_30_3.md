@@ -44,4 +44,4 @@ Transition from architecture design to Production preparation: consolidate inven
 
 ## Next sprint
 
-**Web Foundation 30.4** completed — see [WEB_FOUNDATION_30_4.md](./WEB_FOUNDATION_30_4.md). Next: real Automotive workflows on live APIs (not architecture expansion).
+**Web Core Integration 30.5** completed — see [WEB_CORE_30_5.md](./WEB_CORE_30_5.md). Next: Automotive live data workflows (not architecture expansion).

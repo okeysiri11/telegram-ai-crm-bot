@@ -105,6 +105,7 @@ const menu: MenuItem[] = [
       { id: "nav_portal_employee", name: "Employee Portal", icon: "erp", route: "/portals/employee", module: "portals", permissions: ["read"], status: "active" },
       { id: "nav_portal_owner", name: "Owner Portal", icon: "analytics", route: "/portals/owner", module: "portals", permissions: ["read"], status: "active" },
       { id: "nav_portal_mission", name: "Mission Control", icon: "analytics", route: "/portals/mission-control", module: "portals", permissions: ["read"], status: "active" },
+      { id: "nav_portal_pilot", name: "Pilot Dashboard", icon: "analytics", route: "/pilot", module: "portals", permissions: ["read"], status: "active" },
     ],
   },
   {

@@ -6,6 +6,7 @@ import { BuilderStepNav } from "../framework/BuilderStepNav";
 import { HelpPanel } from "../framework/HelpPanel";
 import { PLATFORM_BUILDER_API } from "../types";
 import { MISSION_CONTROL_STEPS } from "./catalog";
+import { MissionControlLivePanel } from "./MissionControlLivePanel";
 
 type Dict = Record<string, unknown>;
 
@@ -143,9 +144,12 @@ export function MissionControlStudio() {
         <Badge tone="success">Read-Only</Badge>
         <Badge>Executive Cockpit</Badge>
         <Badge>Realtime</Badge>
-        <Badge>Sprint 29.19</Badge>
+        <Badge>Sprint 30.5</Badge>
+        <Badge>Live Modules</Badge>
         {sessionId ? <Badge>session {sessionId}</Badge> : null}
       </div>
+
+      <MissionControlLivePanel />
 
       <ProgressIndicator current={step} total={MISSION_CONTROL_STEPS.length} />
       <BuilderStepNav

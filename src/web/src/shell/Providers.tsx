@@ -7,6 +7,7 @@ import { useAuthStore } from "@/auth/authStore";
 import { LoadingScreen } from "./LoadingScreen";
 import { NavigationProvider } from "../../navigation/components/NavigationProvider";
 import { CommandCenterProvider } from "../../command-center/components/CommandCenterProvider";
+import { WebCoreProvider } from "./WebCoreProvider";
 import { telemetry } from "@/integrations/telemetry";
 
 const queryClient = new QueryClient();
@@ -38,8 +39,10 @@ export function Providers({ children }: { children: ReactNode }) {
       <BrowserRouter>
         <CommandCenterProvider>
           <NavigationProvider>
-            <TelemetryRouterBridge />
-            {children}
+            <WebCoreProvider>
+              <TelemetryRouterBridge />
+              {children}
+            </WebCoreProvider>
           </NavigationProvider>
         </CommandCenterProvider>
       </BrowserRouter>

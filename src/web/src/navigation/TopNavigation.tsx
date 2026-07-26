@@ -68,6 +68,16 @@ export function TopNavigation({
         >
           Mission Control
         </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            void telemetry.userActivity("open_pilot_dashboard");
+            navigate("/pilot");
+          }}
+        >
+          Pilot
+        </Button>
         <Badge tone="warning">{count} alerts</Badge>
         {user?.roleId ? <Badge>{user.roleId}</Badge> : null}
         <Button

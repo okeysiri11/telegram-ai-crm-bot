@@ -10,3 +10,4 @@ export { searchCenter } from "./searchCenter";
 export { personalizationEngine } from "./personalizationEngine";
 export { workspaceSettings } from "./workspaceSettings";
 export { moduleRegistry, WORKSPACE_MODULES, BUSINESS_ECOSYSTEM_KEYS } from "./moduleRegistry";
+export type { RegisteredModule, ModuleMeta, ModuleHealth } from "./moduleRegistry";
