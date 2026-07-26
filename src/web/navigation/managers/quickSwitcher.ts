@@ -1,15 +1,25 @@
 import { applicationRegistry } from "./applicationRegistry";
 import { workspaceFederation } from "./workspaceFederation";
 import { navigationHistory } from "./navigationHistory";
+import { GLOBAL_QUICK_SWITCH } from "../../src/workspace-chrome/workspaceContext";
 
-export type QuickSwitchTarget = "applications" | "dashboards" | "workspaces" | "ai_chats" | "documents";
+export type QuickSwitchTarget =
+  | "applications"
+  | "dashboards"
+  | "workspaces"
+  | "ai_chats"
+  | "documents"
+  | "enterprise";
 
 type SwitchItem = { id: string; label: string; route: string };
 
 let cursor = 0;
-let target: QuickSwitchTarget = "applications";
+let target: QuickSwitchTarget = "enterprise";
 
 function pool(t: QuickSwitchTarget): SwitchItem[] {
+  if (t === "enterprise") {
+    return GLOBAL_QUICK_SWITCH.map((a) => ({ id: a.id, label: a.label, route: a.route }));
+  }
   if (t === "applications") {
     return applicationRegistry.list().slice(0, 8).map((a) => ({ id: a.id, label: a.name, route: a.route }));
   }
@@ -27,7 +37,7 @@ function pool(t: QuickSwitchTarget): SwitchItem[] {
 
 export const quickSwitcher = {
   targets(): QuickSwitchTarget[] {
-    return ["applications", "dashboards", "workspaces", "ai_chats", "documents"];
+    return ["enterprise", "applications", "dashboards", "workspaces", "ai_chats", "documents"];
   },
   setTarget(t: QuickSwitchTarget) {
     target = t;

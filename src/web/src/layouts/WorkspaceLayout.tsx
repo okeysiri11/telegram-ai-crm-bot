@@ -1,18 +1,10 @@
 import type { ReactNode } from "react";
 import { FullLayout } from "./FullLayout";
-import { useWorkspaceStore } from "@/workspace/workspaceStore";
-import { Badge } from "@/ui";
 
+/**
+ * Workspace shell — Sprint 32.3.6.
+ * Chrome (context + quick switch) lives in FullLayout for all pages.
+ */
 export function WorkspaceLayout({ children }: { children: ReactNode }) {
-  const ws = useWorkspaceStore((s) => s.workspace);
-  return (
-    <FullLayout>
-      <div className="mb-4 flex flex-wrap gap-2 text-sm">
-        <Badge>{ws.company}</Badge>
-        <Badge>{ws.department}</Badge>
-        <Badge>{ws.project}</Badge>
-      </div>
-      {children}
-    </FullLayout>
-  );
+  return <FullLayout>{children}</FullLayout>;
 }

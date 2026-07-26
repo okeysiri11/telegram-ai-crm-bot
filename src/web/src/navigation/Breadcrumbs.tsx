@@ -16,10 +16,10 @@ export function Breadcrumbs() {
   }, [loc.pathname]);
 
   return (
-    <nav className="flex flex-wrap gap-2 text-xs text-[var(--ew-muted)]" aria-label="Breadcrumb">
+    <nav className="uws-breadcrumbs flex flex-wrap items-center gap-2 text-xs text-[var(--ew-muted)]" aria-label="Breadcrumb">
       {crumbs.map((c, i) => (
         <span key={`${c.path}-${c.level}`} className="inline-flex items-center gap-2">
-          {i > 0 ? <span>/</span> : null}
+          {i > 0 ? <span className="uws-crumb-sep" aria-hidden>›</span> : null}
           <Link to={c.path} className="hover:text-[var(--ew-brand)]" title={c.level}>
             {c.label}
           </Link>

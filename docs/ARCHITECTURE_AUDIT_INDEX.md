@@ -105,6 +105,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_DEMO_32_3_5.md](./ENTERPRISE_DEMO_32_3_5.md) — Demo polish, Executive Mode, unified states. Platform Builder **v1.47.0**.
 
+## Unified Enterprise Workspace (Sprint 32.3.6)
+
+[UNIFIED_WORKSPACE_32_3_6.md](./UNIFIED_WORKSPACE_32_3_6.md) — Global context, Quick Switch, breadcrumbs, search. Platform Builder **v1.48.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

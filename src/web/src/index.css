@@ -676,3 +676,84 @@ body {
     animation: none !important;
   }
 }
+
+/* Sprint 32.3.6 — Unified Enterprise Workspace */
+.uws-chrome {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.uws-context {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--ew-border);
+  background: color-mix(in oklab, var(--ew-surface) 92%, #0f766e 6%);
+}
+.uws-link {
+  margin-left: 0.25rem;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  color: var(--ew-muted);
+}
+.uws-link:hover {
+  color: var(--ew-brand);
+}
+.uws-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  align-items: center;
+}
+.uws-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+  font-size: 0.8rem;
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+.uws-chip:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in oklab, #0f766e 45%, var(--ew-border));
+}
+.uws-chip.is-active {
+  border-color: color-mix(in oklab, #0f766e 55%, var(--ew-border));
+  background: color-mix(in oklab, #0f766e 12%, var(--ew-surface));
+  font-weight: 600;
+}
+.uws-chip-hint {
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ew-muted);
+}
+.uws-toast {
+  position: sticky;
+  top: 0.5rem;
+  z-index: 30;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 0.85rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--ew-border);
+  background: color-mix(in oklab, var(--ew-surface) 88%, #0369a1 8%);
+  box-shadow: 0 8px 24px color-mix(in oklab, #0b1220 10%, transparent);
+}
+.uws-crumb-sep {
+  opacity: 0.55;
+}
+@media (min-width: 1536px) {
+  .uws-context {
+    padding: 0.85rem 1.1rem;
+  }
+}

@@ -33,6 +33,9 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         e.preventDefault();
         setQuickOpen(true);
       }
+      if (e.key === "Escape") {
+        setQuickOpen(false);
+      }
     };
     window.addEventListener("keydown", onKey);
     navigationAnalytics.trackPath(window.location.pathname);

@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.3.5");
+    expect(webConfig.sprint).toBe("32.3.6");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -398,5 +398,22 @@ describe("Sprint 32.3.5 Enterprise Demo Polish", () => {
     expect(DEMO_SCENARIO_STEPS.some((s) => s.route.includes("/dashboard"))).toBe(true);
     const { SHARED_UI } = await import("../ui/sharedUi");
     expect(SHARED_UI.loaders).toContain("Skeleton");
+  });
+});
+
+describe("Sprint 32.3.6 Unified Workspace", () => {
+  it("exposes quick switch routes and breadcrumb labels", async () => {
+    const { GLOBAL_QUICK_SWITCH, labelForSegment, detectActiveEcosystem } = await import(
+      "../workspace-chrome/workspaceContext"
+    );
+    expect(GLOBAL_QUICK_SWITCH.length).toBeGreaterThanOrEqual(8);
+    expect(GLOBAL_QUICK_SWITCH.some((i) => i.route === "/dashboard")).toBe(true);
+    expect(labelForSegment("crm")).toBe("CRM");
+    expect(labelForSegment("beauty")).toBe("Beauty");
+    expect(detectActiveEcosystem("/workspace/beauty/crm")).toBe("Beauty");
+    const { breadcrumbEngine } = await import("../../navigation/managers/breadcrumbEngine");
+    const crumbs = breadcrumbEngine.fromPath("/workspace/beauty/crm");
+    expect(crumbs[0]?.label).toBe("Enterprise");
+    expect(crumbs.some((c) => c.label === "Beauty")).toBe(true);
   });
 });

@@ -54,6 +54,12 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
       if (meta && key === "/") {
         e.preventDefault();
         setOmniboxOpen(true);
+        setPaletteOpen(false);
+      }
+      if (e.key === "Escape") {
+        setPaletteOpen(false);
+        setOmniboxOpen(false);
+        setAiMode(false);
       }
     };
     window.addEventListener("keydown", onKey);
