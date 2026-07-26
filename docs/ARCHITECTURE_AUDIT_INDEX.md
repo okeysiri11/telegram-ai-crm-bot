@@ -23,6 +23,10 @@
 
 [ENTERPRISE_CONSOLIDATION_30_3.md](./ENTERPRISE_CONSOLIDATION_30_3.md) — ownership maps, portal shells, soft-route fixes, updated backlog.
 
+## Web Foundation (Sprint 30.4)
+
+[WEB_FOUNDATION_30_4.md](./WEB_FOUNDATION_30_4.md) — shared shell, module loader, telemetry, pilot readiness. Platform Builder **v1.29.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

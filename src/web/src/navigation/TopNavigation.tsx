@@ -9,8 +9,13 @@ import { useNavigationUi } from "../../navigation/components/NavigationProvider"
 import { searchProvider } from "../../navigation/managers/searchProvider";
 import { navigationHistory } from "../../navigation/managers/navigationHistory";
 import { useState } from "react";
+import { telemetry } from "@/integrations/telemetry";
 
-export function TopNavigation() {
+export function TopNavigation({
+  onMenuToggle,
+}: {
+  onMenuToggle?: () => void;
+} = {}) {
   const t = useI18n((s) => s.t);
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
@@ -23,6 +28,11 @@ export function TopNavigation() {
   return (
     <header className="border-b border-[var(--ew-border)] bg-[var(--ew-surface)]">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3">
+        {onMenuToggle ? (
+          <Button size="sm" variant="secondary" className="md:hidden" onClick={onMenuToggle} aria-label="Open menu">
+            Menu
+          </Button>
+        ) : null}
         <div className="min-w-48 flex-1">
           <Input
             placeholder={`${t("common.search")} · ⌘/Ctrl+K`}
@@ -35,6 +45,7 @@ export function TopNavigation() {
                 const hit = searchProvider.search(q)[0];
                 if (hit) {
                   navigationHistory.push({ kind: "search", label: q, path: hit.path });
+                  void telemetry.userActivity(`search:${hit.path}`);
                   navigate(hit.path);
                   setQ("");
                 } else {
@@ -47,7 +58,18 @@ export function TopNavigation() {
         <Button size="sm" variant="secondary" onClick={openPalette}>
           ⌘K
         </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={() => {
+            void telemetry.userActivity("open_mission_control");
+            navigate("/platform-builder/mission-control");
+          }}
+        >
+          Mission Control
+        </Button>
         <Badge tone="warning">{count} alerts</Badge>
+        {user?.roleId ? <Badge>{user.roleId}</Badge> : null}
         <Button
           size="sm"
           variant="secondary"

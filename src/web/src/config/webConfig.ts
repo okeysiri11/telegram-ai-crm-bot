@@ -1,7 +1,7 @@
 export const webConfig = {
   application: "enterprise_web_platform",
   version: "9.4.0",
-  sprint: "26.5",
+  sprint: "30.4",
   apiBase: import.meta.env.VITE_API_BASE || "/api",
   hubPrefix: "/api/enterprise-hub/v1",
   ewfPrefix: "/api/enterprise-ewf/v1",
@@ -14,4 +14,6 @@ export const webConfig = {
   supportedLocales: ["en", "ru", "uk"] as const,
   multiTenant: true,
   mfaReady: true,
+  /** Posts to existing Enterprise Observability — disable in offline CI if needed. */
+  telemetryEnabled: import.meta.env.VITE_TELEMETRY_ENABLED !== "false",
 };

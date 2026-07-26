@@ -40,7 +40,7 @@ def reset_store():
 def test_enterprise_branding():
     health = platform_builder.health()
     assert health["branding_engine_ready"] is True
-    assert health["application_version"] == "1.28.0"
+    assert health["application_version"] == "1.29.0"
 
     branding = platform_builder.themes.branding("acme_org")
     assert branding["ready"] is True

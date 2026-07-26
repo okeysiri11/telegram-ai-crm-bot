@@ -44,4 +44,4 @@ Transition from architecture design to Production preparation: consolidate inven
 
 ## Next sprint
 
-**Web implementation** (not architecture expansion) — Automotive portals against live APIs with identity bridge.
+**Web Foundation 30.4** completed — see [WEB_FOUNDATION_30_4.md](./WEB_FOUNDATION_30_4.md). Next: real Automotive workflows on live APIs (not architecture expansion).

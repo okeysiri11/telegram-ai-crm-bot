@@ -7,6 +7,16 @@ const SHARED = [
   { label: "Business Ecosystems", to: "/platform-builder/business-ecosystem" },
 ];
 
+const ECOSYSTEMS = [
+  { label: "Automotive", to: "/workspace/auto" },
+  { label: "Beauty", to: "/workspace/beauty" },
+  { label: "Cafe", to: "/workspace/cafe" },
+  { label: "Agriculture", to: "/workspace/agro" },
+  { label: "Drone", to: "/workspace/drone" },
+  { label: "Legal", to: "/workspace/legal" },
+  { label: "Crypto (Bidex)", to: "/workspace/crypto" },
+];
+
 export function CustomerPortalPage() {
   return (
     <PortalLayout
@@ -23,6 +33,7 @@ export function CustomerPortalPage() {
           ...SHARED,
         ]}
       />
+      <PortalLinksCard title="Business ecosystems" links={ECOSYSTEMS} />
     </PortalLayout>
   );
 }
@@ -45,6 +56,7 @@ export function EmployeePortalPage() {
           ...SHARED,
         ]}
       />
+      <PortalLinksCard title="Business ecosystems" links={ECOSYSTEMS} />
     </PortalLayout>
   );
 }
@@ -67,6 +79,7 @@ export function OwnerPortalPage() {
           ...SHARED,
         ]}
       />
+      <PortalLinksCard title="Business ecosystems" links={ECOSYSTEMS} />
     </PortalLayout>
   );
 }

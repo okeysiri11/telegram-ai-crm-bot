@@ -42,8 +42,8 @@ def test_architecture_audit_docs_exist():
         path = docs / name
         assert path.exists(), f"Missing audit deliverable: {name}"
         text = path.read_text()
-        # Historical 30.2 audit docs remain; index references 30.3 consolidation
-        assert "30.2" in text or "30.3" in text
+        # Historical 30.2 audit docs remain; index references 30.3 consolidation / 30.4 web
+        assert "30.2" in text or "30.3" in text or "30.4" in text
         assert len(text) > 200
 
 
@@ -56,8 +56,8 @@ def test_architecture_audit_knowledge_exists():
 def test_existing_platform_compatible_after_audit():
     """Audit must not break prior foundation."""
     health = platform_builder.health()
-    assert health["application_version"] == "1.28.0"
-    assert health["sprint"] == "30.3"
+    assert health["application_version"] == "1.29.0"
+    assert health["sprint"] == "30.4"
     assert health["platform_builder_ready"] is True
     assert health["business_ecosystem_foundation_ready"] is True
     assert health["mission_control_ready"] is True

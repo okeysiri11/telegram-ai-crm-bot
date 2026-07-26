@@ -45,3 +45,9 @@ export async function fetchNavigationPlatformHealth(): Promise<Record<string, un
   if (!res.ok) throw new Error("enp health failed");
   return res.json() as Promise<Record<string, unknown>>;
 }
+
+export async function fetchObservabilityHealth(): Promise<Record<string, unknown>> {
+  const res = await fetch(`${hubIntegrations.monitoring}/health`);
+  if (!res.ok) throw new Error("obs health failed");
+  return res.json() as Promise<Record<string, unknown>>;
+}
