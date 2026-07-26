@@ -10,6 +10,7 @@ import { PilotExecutionPage } from "@/pages/PilotExecutionPage";
 import { FirstEntryPage } from "@/onboarding/FirstEntryPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { EnterpriseCityPage } from "@/enterprise-city";
+import { WorkflowCenterPage } from "@/enterprise-workflow";
 import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import { EmptyState } from "@/ui";
@@ -141,6 +142,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <EnterpriseCityPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/workflow-center"
+        element={
+          <ProtectedRoute>
+            <WorkflowCenterPage />
           </ProtectedRoute>
         }
       />

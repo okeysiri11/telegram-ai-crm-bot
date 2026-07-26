@@ -125,6 +125,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [AI_TEAM_COLLABORATION_32_6.md](./AI_TEAM_COLLABORATION_32_6.md) — Multi-agent workspace, timeline, health, conversation. Platform Builder **v1.52.0**.
 
+## Enterprise Workflow Automation (Sprint 32.7)
+
+[ENTERPRISE_WORKFLOW_32_7.md](./ENTERPRISE_WORKFLOW_32_7.md) — Workflow Center, templates, City routes. Platform Builder **v1.53.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

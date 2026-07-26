@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.6");
+    expect(webConfig.sprint).toBe("32.7");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -553,5 +553,46 @@ describe("Sprint 32.6 AI Team Collaboration", () => {
     expect(bundle.conversation.length).toBeGreaterThanOrEqual(3);
     expect(bundle.knowledge.length).toBeGreaterThanOrEqual(1);
     expect(bundle.overview.summaryLines.length).toBe(4);
+  });
+});
+
+describe("Sprint 32.7 Enterprise Workflow Automation", () => {
+  it("derives workflow runs and templates with city paths", async () => {
+    const { deriveWorkflowAutomation } = await import("../enterprise-workflow/deriveWorkflowAutomation");
+    const { BUSINESS_WORKFLOW_TEMPLATES } = await import("../enterprise-workflow/workflowTemplates");
+    const { emptyLiveSnapshot } = await import("../live-ops/fetchLiveEnterprise");
+    expect(BUSINESS_WORKFLOW_TEMPLATES.some((t) => t.libraryLabel === "Новый клиент")).toBe(true);
+    expect(BUSINESS_WORKFLOW_TEMPLATES.some((t) => t.id === "contract")).toBe(true);
+    const snap = {
+      ...emptyLiveSnapshot(),
+      aiOps: {
+        running: ["Sales Specialist"],
+        queue: ["Review CRM brief"],
+        recent: ["Подготовлен brief"],
+        status: "operational",
+        errors: ["timeout"],
+        completed: ["Follow-up · 12", "Feedback · 8"],
+      },
+      activity: [
+        {
+          id: "a1",
+          kind: "automation" as const,
+          title: "Новый клиент создан",
+          detail: "CRM",
+          at: new Date().toISOString(),
+          source: "seed" as const,
+          moduleHint: "crm",
+        },
+      ],
+      activeModules: ["crm", "sales"],
+    };
+    const bundle = deriveWorkflowAutomation(snap, [], "new_client");
+    expect(bundle.active.length).toBeGreaterThanOrEqual(1);
+    expect(bundle.completed.length).toBeGreaterThanOrEqual(1);
+    expect(bundle.errors.length).toBeGreaterThanOrEqual(1);
+    expect(bundle.monitor?.steps[0]?.label).toBeTruthy();
+    expect(bundle.cityRoute.length).toBeGreaterThanOrEqual(2);
+    expect(bundle.metrics.timeSavedMin).toBeGreaterThan(0);
+    expect(bundle.templates.length).toBeGreaterThanOrEqual(5);
   });
 });

@@ -61,4 +61,12 @@ export function registerUnifiedWorkspaceSearch() {
     tokens: ["documents", "docs", "files"],
     rankBoost: 8,
   });
+  searchIndex.upsert({
+    id: "uws_workflows",
+    category: "workflows",
+    title: "Workflow Center",
+    path: "/platform-builder/workflow-center",
+    tokens: ["workflow", "automation", "processes", "wf"],
+    rankBoost: 11,
+  });
 }

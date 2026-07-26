@@ -17,6 +17,7 @@ export const GLOBAL_QUICK_SWITCH: QuickSwitchItem[] = [
   { id: "dashboard", label: "Dashboard", route: "/dashboard", hint: "CC" },
   { id: "mission_control", label: "Mission Control", route: "/platform-builder/mission-control", hint: "MC" },
   { id: "city", label: "Enterprise City", route: "/enterprise-city", hint: "City" },
+  { id: "workflows", label: "Workflows", route: "/platform-builder/workflow-center", hint: "WF" },
   { id: "crm", label: "CRM", route: "/workspace/crm", hint: "CRM" },
   { id: "analytics", label: "Analytics", route: "/platform-builder/intelligence", hint: "BI" },
   { id: "documents", label: "Documents", route: "/workspace/docs", hint: "Docs" },

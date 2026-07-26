@@ -7,6 +7,7 @@ import { OfflineBanner } from "@/launch";
 import { AiOsExperienceChrome } from "@/ai-os-chrome";
 import { EnterpriseIntelligenceLayer } from "@/enterprise-intelligence";
 import { AITeamCollaborationWorkspace } from "@/ai-team-collaboration";
+import { WorkflowAutomationWorkspace } from "@/enterprise-workflow";
 
 /** Shared application shell — sidebar + top nav + unified workspace + AI OS chrome. */
 export function FullLayout({ children }: { children: ReactNode }) {
@@ -28,6 +29,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
             <AiOsExperienceChrome />
             <EnterpriseIntelligenceLayer compact />
             <AITeamCollaborationWorkspace compact />
+            <WorkflowAutomationWorkspace compact />
             <UnifiedToastStrip />
             {children}
           </div>

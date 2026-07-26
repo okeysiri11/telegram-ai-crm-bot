@@ -4,12 +4,14 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { Badge, Button, Card, Input } from "@/ui";
 import { searchProvider } from "../../navigation/managers/searchProvider";
 import { searchIndex } from "../../navigation/managers/searchIndex";
 import { telemetry } from "@/integrations/telemetry";
+import { useLiveEnterprise } from "@/live-ops";
+import { deriveWorkflowAutomation, getWorkflowTemplate } from "@/enterprise-workflow";
 import {
   CITY_BUILDINGS,
   searchBuildings,
@@ -42,7 +44,9 @@ function registerCitySearchDocs() {
 
 export function EnterpriseCityPage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { statusById, unread, mcLinked, refreshMc } = useCityLiveStatus();
+  const { snapshot } = useLiveEnterprise(true);
   const [q, setQ] = useState("");
   const [focusId, setFocusId] = useState<CityBuildingId | null>(null);
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
@@ -51,6 +55,13 @@ export function EnterpriseCityPage() {
   useEffect(() => {
     registerCitySearchDocs();
   }, []);
+
+  const wfBundle = useMemo(() => deriveWorkflowAutomation(snapshot, [], params.get("wf")), [snapshot, params]);
+  const cityPath = useMemo(() => {
+    const tpl = params.get("wf") ? getWorkflowTemplate(params.get("wf") || "") : null;
+    return tpl?.cityPath || wfBundle.cityRoute;
+  }, [params, wfBundle.cityRoute]);
+  const pathSet = useMemo(() => new Set(cityPath), [cityPath]);
 
   const filtered = useMemo(() => searchBuildings(q), [q]);
   const globalHits = useMemo(() => (q.trim() ? searchProvider.search(q).slice(0, 6) : []), [q]);
@@ -90,9 +101,15 @@ export function EnterpriseCityPage() {
             <Badge tone={mcLinked ? "success" : "warning"}>MC {mcLinked ? "linked" : "check"}</Badge>
             <Badge>{unread} alerts</Badge>
             <Badge tone="success">Live city</Badge>
+            {cityPath.length ? <Badge tone="warning">WF route</Badge> : null}
             <Button size="sm" variant="secondary" onClick={() => void refreshMc()}>
               Refresh status
             </Button>
+            <Link to="/platform-builder/workflow-center">
+              <Button size="sm" variant="secondary">
+                Workflow Center
+              </Button>
+            </Link>
             <Link to="/dashboard">
               <Button size="sm" variant="secondary">
                 Command Center
@@ -185,13 +202,47 @@ export function EnterpriseCityPage() {
               }}
             >
               <div className="ec-grid" aria-hidden />
+              {cityPath.length >= 2 ? (
+                <svg className="ec-wf-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+                  <polyline
+                    fill="none"
+                    stroke="color-mix(in oklab, #0f766e 75%, #0369a1)"
+                    strokeWidth="0.9"
+                    strokeDasharray="2 1.2"
+                    points={cityPath
+                      .map((id) => {
+                        const b = CITY_BUILDINGS.find((x) => x.id === id);
+                        if (!b) return null;
+                        return `${b.x + b.w / 2},${b.y + b.h / 2}`;
+                      })
+                      .filter(Boolean)
+                      .join(" ")}
+                  />
+                  {cityPath.map((id, i) => {
+                    const b = CITY_BUILDINGS.find((x) => x.id === id);
+                    if (!b) return null;
+                    return (
+                      <circle
+                        key={`${id}_${i}`}
+                        cx={b.x + b.w / 2}
+                        cy={b.y + b.h / 2}
+                        r="1.4"
+                        fill={i === 0 ? "#0f766e" : i === cityPath.length - 1 ? "#0369a1" : "#14857c"}
+                      />
+                    );
+                  })}
+                </svg>
+              ) : null}
               {CITY_BUILDINGS.map((b) => (
                 <CityBuildingTile
                   key={b.id}
                   building={b}
                   status={statusById[b.id]}
-                  focused={focusId === b.id}
-                  dimmed={filtered.length < CITY_BUILDINGS.length && !filtered.some((f) => f.id === b.id)}
+                  focused={focusId === b.id || pathSet.has(b.id)}
+                  dimmed={
+                    (filtered.length < CITY_BUILDINGS.length && !filtered.some((f) => f.id === b.id)) ||
+                    (pathSet.size > 0 && !pathSet.has(b.id) && focusId !== b.id)
+                  }
                   onOpen={() => openBuilding(b)}
                   onFocus={() => setFocusId(b.id)}
                 />
