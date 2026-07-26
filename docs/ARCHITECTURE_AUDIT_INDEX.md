@@ -35,6 +35,10 @@
 
 [FIRST_LIVE_WORKFLOW_30_6.md](./FIRST_LIVE_WORKFLOW_30_6.md) — Automotive E2E workflow + production auth. Platform Builder **v1.31.0**.
 
+## Pilot Hardening (Sprint 30.7)
+
+[PILOT_HARDENING_30_7.md](./PILOT_HARDENING_30_7.md) — Feedback, metrics, triage, stable Automotive pilot. Platform Builder **v1.32.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

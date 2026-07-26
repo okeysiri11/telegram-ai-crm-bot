@@ -12,6 +12,7 @@ import { useAuthStore } from "@/auth/authStore";
 import { useWorkspaceStore } from "@/workspace/workspaceStore";
 import { useWebCore } from "@/shell/WebCoreProvider";
 import { telemetry } from "@/integrations/telemetry";
+import { pilotMetrics } from "@/integrations/pilotMetrics";
 import {
   runAutomotiveLiveWorkflow,
   type WorkflowStepResult,
@@ -61,6 +62,12 @@ export function AutomotiveLiveWorkflowPage() {
       setSteps(result.steps);
       setTotalMs(result.totalMs);
       setSuccess(result.success);
+      pilotMetrics.recordWorkflow(result.success, result.totalMs);
+      for (const s of result.steps) {
+        pilotMetrics.recordApiTiming(s.id, s.durationMs, s.ok);
+        if (s.id === "ai_concierge") pilotMetrics.recordAiTiming(s.durationMs);
+        if (!s.ok) pilotMetrics.recordModuleError(s.id.startsWith("crm") ? "automotive" : s.id);
+      }
       await telemetry.businessEvent(
         result.success ? "automotive_workflow_success" : "automotive_workflow_partial",
         result.totalMs,
@@ -87,7 +94,7 @@ export function AutomotiveLiveWorkflowPage() {
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap gap-2">
         <Badge tone="success">Live Workflow</Badge>
-        <Badge>Sprint 30.6</Badge>
+        <Badge>Sprint 30.7</Badge>
         <Badge>Automotive</Badge>
         <Badge>{authMode || "—"}</Badge>
         {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge tone="warning">ISAM token</Badge>}

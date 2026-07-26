@@ -45,9 +45,9 @@ def test_live_workflow_docs_exist():
 
 def test_platform_first_live_workflow_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.31.0"
-    assert health["sprint"] == "30.6"
-    assert health["release_status"] == "First Live Workflow"
+    assert health["application_version"] == "1.32.0"
+    assert health["sprint"] == "30.7"
+    assert health["release_status"] == "Pilot Hardening"
     assert health["mission_control_ready"] is True
 
 
@@ -67,9 +67,11 @@ def test_production_auth_and_workflow_web_files():
         "/crm/leads",
         "/concierge/sessions",
         "/crm/tasks",
+        "/timeline",
         "/center",
         "mission-control",
         "/crm/pipeline",
+        "quality_gates",
     ):
         assert needle in wf
     app = (web / "src" / "App.tsx").read_text()
@@ -112,8 +114,8 @@ def test_next_ecosystem_readiness_lists_blockers_only():
 
 def test_manifest_and_audit_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.31.0"' in manifest
-    assert "30.6" in manifest
-    assert "First Live Workflow" in manifest
+    assert '"application_version": "1.32.0"' in manifest
+    assert "30.7" in manifest
+    assert "Pilot Hardening" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "FIRST_LIVE_WORKFLOW_30_6" in index

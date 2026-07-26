@@ -14,6 +14,8 @@ export const hubIntegrations = {
   identityCenter: webConfig.eicPrefix,
   workspacePlatform: webConfig.ewsPrefix,
   navigationPlatform: webConfig.enpPrefix,
+  pilotReadiness: "/api/enterprise-epr/v1",
+  learningEngine: "/api/enterprise-ele/v1",
 } as const;
 
 export async function fetchWebFoundationHealth(): Promise<Record<string, unknown>> {

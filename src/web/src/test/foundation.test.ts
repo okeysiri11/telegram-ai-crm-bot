@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("30.6");
+    expect(webConfig.sprint).toBe("30.7");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -87,10 +87,25 @@ describe("Sprint 30.5 Web Core Integration", () => {
 
 describe("Sprint 30.6 First Live Workflow", () => {
   it("uses production sprint tag and rejects demo auth config", async () => {
-    expect(webConfig.sprint).toBe("30.6");
     expect(webConfig.autoPrefix).toContain("/api/auto/v1");
     const { isJwtToken } = await import("@/auth/identityApi");
     expect(isJwtToken("jwt.foo.demo")).toBe(false);
     expect(isJwtToken("a.b.c")).toBe(true);
+  });
+});
+
+describe("Sprint 30.7 Pilot Hardening", () => {
+  it("exposes feedback triage and role journeys", async () => {
+    const { assignModule, classifySeverity } = await import("@/integrations/pilotFeedback");
+    expect(assignModule("lead creation failed in crm")).toBe("automotive");
+    expect(classifySeverity("error", "error", "critical outage")).toBe("Critical");
+    const { PILOT_ROLE_JOURNEYS, validateJourneys } = await import("../pilot/roleJourneys");
+    expect(PILOT_ROLE_JOURNEYS.length).toBe(5);
+    const v = validateJourneys({
+      authenticated: true,
+      roleId: "platform_owner",
+      roles: ["owner"],
+    });
+    expect(v.some((j) => j.role === "owner" && j.roleMatch)).toBe(true);
   });
 });

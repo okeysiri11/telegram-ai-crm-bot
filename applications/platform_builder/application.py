@@ -1,4 +1,4 @@
-"""Platform Builder application facade — Sprint 30.6."""
+"""Platform Builder application facade — Sprint 30.7."""
 
 from __future__ import annotations
 

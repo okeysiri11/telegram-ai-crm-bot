@@ -211,6 +211,16 @@ export async function runAutomotiveLiveWorkflow(opts: {
   );
 
   steps.push(
+    await timed("customer_timeline", "Customer timeline", async () => {
+      if (!customerId) throw new Error("customer_id missing for timeline");
+      const res = await apiFetch(`${AUTO}/crm/customers/${customerId}/timeline`);
+      const body = (await res.json()) as Record<string, unknown>;
+      if (!res.ok) throw new Error(String(body.error || "Customer timeline failed"));
+      return { detail: `timeline for ${customerId}`, data: body };
+    }),
+  );
+
+  steps.push(
     await timed("notification", "Notification", async () => {
       const res = await apiFetch(`${COMMS}/center`, {
         method: "POST",
@@ -260,6 +270,27 @@ export async function runAutomotiveLiveWorkflow(opts: {
         detail: "dashboard + pipeline + bi loaded",
         data: { dashboard: dashBody, pipeline: pipeBody, bi: biBody },
       };
+    }),
+  );
+
+  steps.push(
+    await timed("quality_gates", "Quality gates (API / health)", async () => {
+      const obs = hubIntegrations.monitoring;
+      const probes = await Promise.all([
+        apiFetch(`${AUTO}/health`),
+        apiFetch(`${hubIntegrations.authentication}/health`),
+        apiFetch(`${obs}/health`),
+        apiFetch(`/api/enterprise-epr/v1/health`),
+      ]);
+      const labels = ["auto_api", "isam", "obs_logging", "epr_feedback"];
+      const results: Record<string, boolean> = {};
+      for (let i = 0; i < probes.length; i += 1) {
+        results[labels[i]] = probes[i].ok;
+      }
+      if (!Object.values(results).every(Boolean)) {
+        throw new Error(`Quality gate failures: ${JSON.stringify(results)}`);
+      }
+      return { detail: "API stability · ISAM · OBS · EPR healthy", data: results };
     }),
   );
 

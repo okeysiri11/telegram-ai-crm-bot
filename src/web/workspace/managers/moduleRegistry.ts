@@ -216,7 +216,7 @@ const PLATFORM_MODULES: RegisteredModule[] = [
     name: "Mission Control",
     title: "Mission Control",
     purpose: "Unified executive operating center — aggregates existing services.",
-    version: "1.31.0",
+    version: "1.32.0",
     routes: ["/platform-builder/mission-control", "/portals/mission-control"],
     permissions: ["read"],
     navigation: [
@@ -234,7 +234,7 @@ const PLATFORM_MODULES: RegisteredModule[] = [
     name: "Pilot Dashboard",
     title: "Pilot Dashboard",
     purpose: "First internal pilot readiness surface — status, modules, telemetry.",
-    version: "1.31.0",
+    version: "1.32.0",
     routes: ["/pilot"],
     permissions: ["read", "admin"],
     navigation: [{ id: "nav_pilot", label: "Pilot Dashboard", route: "/pilot" }],
