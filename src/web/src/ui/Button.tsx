@@ -16,7 +16,7 @@ export function Button({ variant = "primary", size = "md", className, ...rest }:
         size === "md" && "h-10 px-4",
         size === "lg" && "h-11 px-5 text-base",
         variant === "primary" && "bg-[var(--eds-primary)] text-white hover:bg-[var(--eds-primary-hover)] active:bg-[var(--eds-primary-active)]",
-        variant === "secondary" && "border border-[var(--eds-border)] bg-[var(--eds-surface)]",
+        variant === "secondary" && "border border-[var(--eds-border)] bg-[var(--eds-surface)] hover:border-[var(--eds-primary)] hover:bg-[var(--eds-primary-soft)]",
         variant === "ghost" && "bg-transparent hover:bg-[var(--eds-primary-soft)]",
         variant === "danger" && "bg-[var(--eds-danger)] text-white",
         className,

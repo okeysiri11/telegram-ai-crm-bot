@@ -28,6 +28,14 @@ const ROLES: FirstEntryRole[] = [
     ecosystemHint: "platform",
   },
   {
+    id: "executive",
+    label: "Executive / Руководитель",
+    description: "KPI, health, AI и критические события на одном экране",
+    icon: "EX",
+    ecosystemHint: "platform",
+    workspaceRoute: "/dashboard?mode=executive",
+  },
+  {
     id: "beauty_salon",
     label: "Салон красоты",
     description: "Beauty ecosystem — записи, клиенты, команда",

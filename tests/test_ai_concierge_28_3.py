@@ -45,8 +45,8 @@ def reset_store():
 
 def test_concierge_ready_and_catalog():
     health = platform_builder.health()
-    assert health["application_version"] == "1.46.0"
-    assert health["sprint"] == "32.3.4"
+    assert health["application_version"] == "1.47.0"
+    assert health["sprint"] == "32.3.5"
     assert health["concierge_builder_ready"] is True
     assert health["concierge_registry_ready"] is True
     assert health["organization_link_ready"] is True
@@ -134,7 +134,7 @@ async def test_api_concierge(client):
     body = await health.json()
     assert body["concierge_builder_ready"] is True
     assert body["ai_team_center_ready"] is True
-    assert body["application_version"] == "1.46.0"
+    assert body["application_version"] == "1.47.0"
 
     catalog = await client.get(f"{PREFIX}/concierge/catalog")
     assert catalog.status == 200
@@ -218,5 +218,5 @@ def test_docs_and_frontend_28_3():
     for key in ("one Concierge", "not", "AI Agent", "Orchestration", "Concierge Registry", "AI Team Center"):
         assert key in docs
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.46.0"' in manifest
-    assert "32.3.4" in manifest
+    assert '"application_version": "1.47.0"' in manifest
+    assert "32.3.5" in manifest

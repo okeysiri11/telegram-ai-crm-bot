@@ -29,10 +29,22 @@ export function TopNavigation({
     <header className="border-b border-[var(--ew-border)] bg-[var(--ew-surface)]">
       <div className="flex flex-wrap items-center gap-3 px-4 py-3">
         {onMenuToggle ? (
-          <Button size="sm" variant="secondary" className="md:hidden" onClick={onMenuToggle} aria-label="Open menu">
+          <Button size="sm" variant="secondary" className="md:hidden eds-anim-micro" onClick={onMenuToggle} aria-label="Open menu">
             Menu
           </Button>
         ) : null}
+        <Button
+          size="sm"
+          variant="ghost"
+          className="eds-anim-micro"
+          onClick={() => {
+            void telemetry.userActivity("nav_back");
+            navigate(-1);
+          }}
+          aria-label="Back"
+        >
+          ←
+        </Button>
         <div className="min-w-48 flex-1">
           <Input
             placeholder={`${t("common.search")} · ⌘/Ctrl+K`}
@@ -55,12 +67,35 @@ export function TopNavigation({
             }}
           />
         </div>
-        <Button size="sm" variant="secondary" onClick={openPalette}>
+        <Button size="sm" variant="secondary" className="eds-anim-micro" onClick={openPalette}>
           ⌘K
         </Button>
         <Button
           size="sm"
           variant="secondary"
+          className="eds-anim-micro"
+          onClick={() => {
+            void telemetry.userActivity("open_dashboard");
+            navigate("/dashboard");
+          }}
+        >
+          Dashboard
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="eds-anim-micro"
+          onClick={() => {
+            void telemetry.userActivity("open_executive");
+            navigate("/dashboard?mode=executive");
+          }}
+        >
+          Executive
+        </Button>
+        <Button
+          size="sm"
+          variant="secondary"
+          className="eds-anim-micro"
           onClick={() => {
             void telemetry.userActivity("open_enterprise_city");
             navigate("/enterprise-city");
@@ -71,6 +106,7 @@ export function TopNavigation({
         <Button
           size="sm"
           variant="secondary"
+          className="eds-anim-micro"
           onClick={() => {
             void telemetry.userActivity("open_mission_control");
             navigate("/platform-builder/mission-control");
@@ -81,12 +117,13 @@ export function TopNavigation({
         <Button
           size="sm"
           variant="secondary"
+          className="eds-anim-micro"
           onClick={() => {
-            void telemetry.userActivity("open_pilot_dashboard");
-            navigate("/pilot");
+            void telemetry.userActivity("open_demo_scenario");
+            navigate("/demo/scenario");
           }}
         >
-          Pilot
+          Demo
         </Button>
         <Badge tone="warning">{count} alerts</Badge>
         {user?.roleId ? <Badge>{user.roleId}</Badge> : null}

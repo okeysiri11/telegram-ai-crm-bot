@@ -12,9 +12,9 @@ export const SHARED_UI = {
   notifications: ["NotificationsPanel"],
   charts: ["Charts"],
   widgets: ["Card", "Badge"],
-  loaders: ["LoadingScreen"],
+  loaders: ["LoadingScreen", "Skeleton", "WidgetLoading"],
   errorPages: ["ErrorBoundary", "AccessDeniedPage", "ErrorPage"],
-  emptyStates: ["EmptyState"],
+  emptyStates: ["EmptyState", "ExperienceState", "SuccessState"],
   permissions: ["PermissionGuard", "ProtectedRoute"],
 } as const;
 

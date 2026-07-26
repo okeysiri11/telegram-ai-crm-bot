@@ -1,13 +1,13 @@
 /**
- * Enterprise Command Center Dashboard — Sprint 32.3.2 + Live Ops 32.3.4.
+ * Enterprise Command Center Dashboard — Sprint 32.3.2 + Live 32.3.4 + Executive 32.3.5.
  * Answers: Where am I? What's happening? What next?
- * Live cards auto-refresh via existing liveUpdates + MC/Ops APIs.
+ * Executive Mode: lean KPI/health/AI/feed on one screen — not a new Dashboard.
  */
 
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
-import { Badge, Button, Card, Charts, Input, NotificationsPanel } from "@/ui";
+import { Badge, Button, Card, Charts, Input, NotificationsPanel, Skeleton } from "@/ui";
 import { useAuthStore } from "@/auth/authStore";
 import { useWorkspaceStore } from "@/workspace/workspaceStore";
 import { useNotificationStore } from "@/notifications/notificationStore";
@@ -37,11 +37,18 @@ import {
   MissionTimelinePanel,
   useLiveEnterprise,
 } from "@/live-ops";
+import {
+  EXECUTIVE_LAYOUT,
+  loadExecutivePref,
+  resolveExecutiveMode,
+  saveExecutivePref,
+} from "@/demo/executiveMode";
 import { telemetry } from "@/integrations/telemetry";
 
 export function DashboardPage() {
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { openPalette } = useNavigationUi();
   const ws = useWorkspaceStore((s) => s.workspace);
   const notifCount = useNotificationStore((s) => s.items.filter((i) => !i.read).length);
@@ -49,12 +56,22 @@ export function DashboardPage() {
   const role = firstEntryRoleCatalog.get(first.roleId);
   const [layout, setLayout] = useState<CommandWidgetId[]>(() => loadCommandLayout());
   const [q, setQ] = useState("");
+  const [execOverride, setExecOverride] = useState<boolean | null>(() => loadExecutivePref());
   const widgets = useMemo(() => widgetManager.list().slice(0, 6), []);
   const personal = personalizationEngine.get();
   const { snapshot, busy, error, refresh } = useLiveEnterprise(true);
 
   const company = first.companyName || ws.company;
   const roleLabel = role?.label || user?.roleId || user?.roles?.[0] || "User";
+
+  const executive = resolveExecutiveMode({
+    queryMode: params.get("mode"),
+    roleId: first.roleId || user?.roleId,
+    roles: user?.roles,
+    storedPref: execOverride,
+  });
+
+  const effectiveLayout = executive ? EXECUTIVE_LAYOUT : layout;
 
   const liveKpis = useMemo(() => {
     const healthy = snapshot.health.filter((h) => h.ok).length;
@@ -73,11 +90,20 @@ export function DashboardPage() {
     });
   }, [snapshot, busy]);
 
+  const critical = useMemo(
+    () =>
+      snapshot.activity
+        .filter((a) => a.kind === "notification" || a.kind === "automation" || a.source === "mission_control")
+        .slice(0, 5),
+    [snapshot.activity],
+  );
+
   function visible(id: CommandWidgetId) {
-    return layout.includes(id);
+    return effectiveLayout.includes(id);
   }
 
   function hideSection(id: CommandWidgetId) {
+    if (executive) return;
     const next = layout.filter((x) => x !== id);
     const saved = saveCommandLayout(next.length ? next : [...DEFAULT_COMMAND_LAYOUT]);
     setLayout(saved);
@@ -92,9 +118,16 @@ export function DashboardPage() {
     setLayout(saved);
   }
 
+  function setExecutive(on: boolean) {
+    setExecOverride(on);
+    saveExecutivePref(on);
+    void telemetry.userActivity(on ? "executive_on" : "executive_off");
+    navigate(on ? "/dashboard?mode=executive" : "/dashboard?mode=full");
+  }
+
   return (
     <WorkspaceLayout>
-      <div className="command-center eds-anim-fade">
+      <div className={`command-center eds-anim-fade${executive ? " is-executive" : ""}`}>
         {/* SECTION 1 — Header */}
         <header className="cc-header">
           <div className="flex min-w-0 items-center gap-4">
@@ -107,7 +140,7 @@ export function DashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="eds-type-caption uppercase tracking-[0.16em] text-[var(--eds-text-muted)]">
-                Enterprise Command Center
+                {executive ? "Executive Mode" : "Enterprise Command Center"}
               </p>
               <h1 className="truncate text-2xl font-semibold tracking-tight lg:text-3xl xl:text-4xl">
                 {company}
@@ -116,6 +149,7 @@ export function DashboardPage() {
                 <Badge>{roleLabel}</Badge>
                 <Badge>{ws.project || first.workspaceId || "workspace"}</Badge>
                 <Badge tone="success">{notifCount} уведомлений</Badge>
+                {executive ? <Badge tone="warning">Executive</Badge> : null}
               </div>
             </div>
           </div>
@@ -140,6 +174,9 @@ export function DashboardPage() {
               }}
             />
             <div className="flex flex-wrap gap-2">
+              <Button size="sm" variant={executive ? "secondary" : "ghost"} onClick={() => setExecutive(!executive)}>
+                {executive ? "Полный Dashboard" : "Executive Mode"}
+              </Button>
               <Button size="sm" variant="secondary" onClick={openPalette}>
                 Уведомления ({notifCount})
               </Button>
@@ -158,10 +195,49 @@ export function DashboardPage() {
         </header>
 
         <p className="cc-lead">
-          Где я — <strong>{company}</strong>. Что происходит — live Activity Feed и Mission Control. Что делать
-          дальше — Quick Actions и AI Recommendations.
+          {executive
+            ? "Один экран руководителя: KPI, состояние компании, AI, критические события и рекомендации."
+            : `Где я — ${company}. Что происходит — live Activity Feed и Mission Control. Что делать дальше — Quick Actions и AI Recommendations.`}
         </p>
         <LiveMetaBar snapshot={snapshot} busy={busy} error={error} onRefresh={() => void refresh()} />
+
+        {busy && snapshot.updatedAt === new Date(0).toISOString() ? (
+          <Card title="Загрузка Command Center" className="mb-4">
+            <Skeleton rows={5} height="1.25rem" />
+          </Card>
+        ) : null}
+
+        {executive ? (
+          <section className="mb-4">
+            <Card title="Критические события">
+              {critical.length ? (
+                <ul className="space-y-2 eds-type-small">
+                  {critical.map((c) => (
+                    <li key={c.id}>
+                      <Badge>{c.kind}</Badge> {c.title}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="eds-anim-scale">
+                  <div className="eds-empty-art" aria-hidden>
+                    ✓
+                  </div>
+                  <p className="eds-type-small text-[var(--eds-text-muted)]">
+                    Нет критических событий — система стабильна.
+                  </p>
+                  <div className="mt-3">
+                    <Link to="/platform-builder/mission-control">
+                      <Button size="sm" variant="secondary">
+                        Mission Control
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </Card>
+          </section>
+        ) : null}
 
         <div className="cc-grid">
           {/* SECTION 2 — Mission Control */}

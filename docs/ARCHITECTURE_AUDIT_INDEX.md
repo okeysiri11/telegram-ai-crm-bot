@@ -101,6 +101,10 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [LIVE_ENTERPRISE_32_3_4.md](./LIVE_ENTERPRISE_32_3_4.md) — Live feed / AI ops / health on Dashboard & City. Platform Builder **v1.46.0**.
 
+## Enterprise Demo Polish & Executive Experience (Sprint 32.3.5)
+
+[ENTERPRISE_DEMO_32_3_5.md](./ENTERPRISE_DEMO_32_3_5.md) — Demo polish, Executive Mode, unified states. Platform Builder **v1.47.0**.
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

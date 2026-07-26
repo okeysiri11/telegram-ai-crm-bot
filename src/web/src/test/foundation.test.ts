@@ -14,7 +14,7 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
     expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("32.3.4");
+    expect(webConfig.sprint).toBe("32.3.5");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -381,5 +381,22 @@ describe("Sprint 32.3.4 Live Enterprise", () => {
     const snap = emptyLiveSnapshot();
     expect(snap.timeline).toHaveLength(4);
     expect(snap.recommendations.length).toBeGreaterThan(0);
+  });
+});
+
+describe("Sprint 32.3.5 Enterprise Demo Polish", () => {
+  it("resolves executive mode and demo scenario steps", async () => {
+    const { resolveExecutiveMode, EXECUTIVE_LAYOUT, isExecutiveRole } = await import("../demo/executiveMode");
+    expect(isExecutiveRole("executive")).toBe(true);
+    expect(isExecutiveRole("client")).toBe(false);
+    expect(resolveExecutiveMode({ queryMode: "executive" })).toBe(true);
+    expect(resolveExecutiveMode({ queryMode: "full", roleId: "executive" })).toBe(false);
+    expect(EXECUTIVE_LAYOUT).toContain("business_kpi");
+    expect(EXECUTIVE_LAYOUT).toContain("ai_recommendations");
+    const { DEMO_SCENARIO_STEPS } = await import("../demo/demoScenarioCatalog");
+    expect(DEMO_SCENARIO_STEPS.length).toBeGreaterThanOrEqual(8);
+    expect(DEMO_SCENARIO_STEPS.some((s) => s.route.includes("/dashboard"))).toBe(true);
+    const { SHARED_UI } = await import("../ui/sharedUi");
+    expect(SHARED_UI.loaders).toContain("Skeleton");
   });
 });

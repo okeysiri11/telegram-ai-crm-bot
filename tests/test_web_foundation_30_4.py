@@ -45,9 +45,9 @@ def test_web_foundation_docs_exist():
 
 def test_platform_web_foundation_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.46.0"
-    assert health["sprint"] == "32.3.4"
-    assert health["release_status"] == "Live Enterprise Activity & AI Operations"
+    assert health["application_version"] == "1.47.0"
+    assert health["sprint"] == "32.3.5"
+    assert health["release_status"] == "Enterprise Demo Polish & Executive Experience"
     assert health["mission_control_ready"] is True
     assert health["business_ecosystem_foundation_ready"] is True
     assert health["mission_control"]["replaces_existing_modules"] is False
@@ -79,7 +79,7 @@ def test_module_registry_and_shell_files():
     assert "Mission Control" in top
 
     cfg = (web / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "32.3.4"' in cfg
+    assert 'sprint: "32.3.5"' in cfg
     assert "telemetryEnabled" in cfg
 
 
@@ -91,9 +91,9 @@ def test_pilot_checklist_covers_ecosystems():
 
 def test_manifest_web_foundation():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.46.0"' in manifest
-    assert "32.3.4" in manifest
-    assert "Live Enterprise Activity & AI Operations" in manifest
+    assert '"application_version": "1.47.0"' in manifest
+    assert "32.3.5" in manifest
+    assert "Enterprise Demo Polish & Executive Experience" in manifest
 
 
 def test_audit_index_links_30_4():

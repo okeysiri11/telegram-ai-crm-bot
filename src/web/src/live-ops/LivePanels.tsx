@@ -24,6 +24,16 @@ function relTime(iso: string) {
 }
 
 export function ActivityFeedPanel({ items }: { items: LiveActivityItem[] }) {
+  if (!items.length) {
+    return (
+      <Card title="Enterprise Activity Feed" className="eds-anim-fade">
+        <div className="eds-empty-art" aria-hidden>
+          ◇
+        </div>
+        <p className="eds-type-small text-[var(--eds-text-muted)]">Пока нет событий — система ожидает активность.</p>
+      </Card>
+    );
+  }
   return (
     <Card title="Enterprise Activity Feed">
       <ul className="lo-feed">

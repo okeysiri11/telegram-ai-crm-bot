@@ -567,3 +567,112 @@ body {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-2px); }
 }
+
+/* Sprint 32.3.5 — Enterprise Demo Polish */
+.eds-main {
+  max-width: 100%;
+}
+.eds-page {
+  max-width: 1800px;
+  margin: 0 auto;
+}
+.eds-skeleton-stack {
+  display: grid;
+  gap: 0.65rem;
+}
+.eds-empty-art {
+  display: grid;
+  place-items: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  margin-bottom: 0.75rem;
+  border-radius: 1rem;
+  font-size: 1.5rem;
+  background: color-mix(in oklab, #0f766e 12%, var(--ew-surface));
+  color: #0f766e;
+}
+.eds-widget-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0;
+}
+.eds-state-success {
+  border-color: color-mix(in oklab, #0f766e 35%, var(--ew-border));
+}
+.eds-state-error {
+  border-color: color-mix(in oklab, #b45309 40%, var(--ew-border));
+}
+.eds-sidebar a,
+.eds-sidebar button {
+  transition: background 140ms ease, transform 140ms ease;
+}
+.eds-sidebar a:hover {
+  transform: translateX(2px);
+}
+.command-center.is-executive .cc-header {
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--ew-surface) 86%, #0369a1), var(--ew-surface));
+}
+.demo-scenario {
+  max-width: 960px;
+  margin: 0 auto;
+}
+.demo-header {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: 1.25rem;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+}
+.demo-steps {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.demo-step {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+  transition: transform 160ms ease, border-color 160ms ease;
+}
+.demo-step:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, #0f766e 40%, var(--ew-border));
+}
+.demo-step-index {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  background: color-mix(in oklab, #0f766e 16%, var(--ew-surface));
+  color: #0f766e;
+  flex-shrink: 0;
+}
+.cc-kpi,
+.cc-module,
+.cc-action,
+.ec-building {
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .eds-anim-fade,
+  .eds-anim-slide,
+  .eds-anim-page,
+  .eds-anim-scale,
+  .lo-feed-item,
+  .ec-building.ec-tone-busy,
+  .ec-building.ec-tone-active .ec-building-icon {
+    animation: none !important;
+  }
+}

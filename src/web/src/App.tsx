@@ -10,6 +10,7 @@ import { PilotExecutionPage } from "@/pages/PilotExecutionPage";
 import { FirstEntryPage } from "@/onboarding/FirstEntryPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { EnterpriseCityPage } from "@/enterprise-city";
+import { DemoScenarioPage } from "@/demo";
 import { EmptyLayout } from "@/layouts/EmptyLayout";
 import {
   AccessDeniedPage,
@@ -139,6 +140,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <EnterpriseCityPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/demo/scenario"
+        element={
+          <ProtectedRoute>
+            <DemoScenarioPage />
           </ProtectedRoute>
         }
       />

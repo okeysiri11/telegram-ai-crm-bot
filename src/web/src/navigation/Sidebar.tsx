@@ -31,10 +31,10 @@ export function Sidebar({
   const ecosystemLinks = moduleRegistry.ecosystems();
 
   const asideClass = cn(
-    "w-60 shrink-0 border-r border-[var(--ew-border)] bg-[var(--ew-surface)] p-4",
+    "w-60 shrink-0 border-r border-[var(--ew-border)] bg-[var(--ew-surface)] p-4 eds-sidebar",
     "md:block",
     mobileOpen
-      ? "fixed inset-y-0 left-0 z-40 block shadow-lg"
+      ? "fixed inset-y-0 left-0 z-40 block shadow-lg eds-anim-slide"
       : "hidden",
   );
 
