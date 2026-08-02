@@ -2,6 +2,7 @@
  * Sprint 33.1 — Role Workspace selector (Who are you? / switch workspace).
  */
 
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Select } from "@/ui";
 import {
@@ -10,8 +11,7 @@ import {
   saveRoleWorkspaceId,
   roleWorkspaceById,
 } from "./roleWorkspaceCatalog";
-import { useEffect, useState } from "react";
-import { useExperienceModeStore } from "./experienceModeStore";
+import { ensureProMode } from "./ensureProMode";
 
 export function RoleWorkspaceSelector({
   className,
@@ -21,7 +21,6 @@ export function RoleWorkspaceSelector({
   navigateOnChange?: boolean;
 } = {}) {
   const navigate = useNavigate();
-  const setMode = useExperienceModeStore((s) => s.setMode);
   const [roleId, setRoleId] = useState(() => loadRoleWorkspaceId() || "ceo");
 
   useEffect(() => {
@@ -33,9 +32,8 @@ export function RoleWorkspaceSelector({
     saveRoleWorkspaceId(next);
     const ws = roleWorkspaceById(next);
     if (!ws) return;
-    // Developer / Production / Admin benefit from Pro visibility.
     if (next === "developer" || next === "production" || next === "administrator") {
-      setMode("pro");
+      ensureProMode("Switched to Pro Mode");
     }
     if (navigateOnChange) {
       navigate(ws.homeRoute);

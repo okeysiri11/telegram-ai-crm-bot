@@ -33,3 +33,4 @@ export { RoleWorkspaceSelector } from "./RoleWorkspaceSelector";
 export { ExecutiveSummaryDashboard } from "./ExecutiveSummaryDashboard";
 export { QUICK_ACTION_SECTIONS, buildUxPaletteCommands } from "./quickActionSections";
 export { UX_REVOLUTION_VERSION, UX_REVOLUTION_SPRINT } from "./constants";
+export { ensureProMode } from "./ensureProMode";

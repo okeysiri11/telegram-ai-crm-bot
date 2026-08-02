@@ -13,7 +13,7 @@ import {
 import { commandFavorites, commandRecent } from "@/command-center-runtime/commandFavorites";
 import { commandRuntime } from "@/runtime/commandRuntime";
 import type { CommandItem } from "../types";
-import { matchAiNavigationIntent, useExperienceModeStore } from "@/ux-revolution";
+import { matchAiNavigationIntent, ensureProMode } from "@/ux-revolution";
 
 type Mode = "palette" | "omnibox" | "ai" | "commands";
 
@@ -133,7 +133,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
           void (async () => {
             const intent = matchAiNavigationIntent(c.label) || (c.id.startsWith("ai_intent_") ? matchAiNavigationIntent(query) : null);
             if (intent?.requiresPro) {
-              useExperienceModeStore.getState().setMode("pro");
+              ensureProMode("Switched to Pro Mode");
             }
             commandRuntime.setSurface("palette");
             commandRuntime.bindNavigator(navigate);
@@ -192,7 +192,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
         if (mode === "ai") {
           const intent = matchAiNavigationIntent(query);
           if (intent) {
-            if (intent.requiresPro) useExperienceModeStore.getState().setMode("pro");
+            if (intent.requiresPro) ensureProMode("Switched to Pro Mode");
             if (intent.route) navigate(intent.route);
             onClose();
             return;

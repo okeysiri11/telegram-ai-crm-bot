@@ -90,4 +90,12 @@ describe("Sprint 33.1 UX Revolution", () => {
     expect(pro.some((c) => c.requiresPro)).toBe(true);
     expect(pro.some((c) => c.section === "open_module")).toBe(true);
   });
+
+  it("ensureProMode flips store and is idempotent when already Pro", async () => {
+    const { useExperienceModeStore, ensureProMode } = await import("@/ux-revolution");
+    useExperienceModeStore.getState().setMode("simple");
+    expect(ensureProMode("Switched to Pro Mode")).toBe(true);
+    expect(useExperienceModeStore.getState().mode).toBe("pro");
+    expect(ensureProMode("Switched to Pro Mode")).toBe(false);
+  });
 });
