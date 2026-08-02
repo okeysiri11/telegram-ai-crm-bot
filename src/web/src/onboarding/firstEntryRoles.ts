@@ -1,7 +1,9 @@
 /**
- * First-entry role catalog — Sprint 32.3.1.
+ * First-entry role catalog — Sprint 32.3.1 + 33.1 Enterprise UX personas.
  * Extensible: append via registerFirstEntryRole() without architecture changes.
  */
+
+import { ENTERPRISE_UX_ROLES } from "@/ux-revolution/roleWorkspaceCatalog";
 
 export type FirstEntryRole = {
   id: string;
@@ -13,19 +15,47 @@ export type FirstEntryRole = {
   icon: string;
 };
 
+const ENTERPRISE_PERSONAS: FirstEntryRole[] = ENTERPRISE_UX_ROLES.map((r) => ({
+  id: r.id,
+  label: r.label,
+  description: r.description,
+  icon: r.icon,
+  ecosystemHint: "platform",
+  workspaceRoute: r.homeRoute,
+}));
+
 const ROLES: FirstEntryRole[] = [
+  ...ENTERPRISE_PERSONAS,
+  {
+    id: "business_owner",
+    label: "Владелец (legacy)",
+    description: "Полный доступ · панель владельца · все модули",
+    icon: "OW",
+    ecosystemHint: "platform",
+    workspaceRoute: "/owner",
+  },
+  {
+    id: "manager",
+    label: "Менеджер",
+    description: "Команда · проекты · CRM · операционные KPI",
+    icon: "MG",
+    ecosystemHint: "platform",
+    workspaceRoute: "/dashboards/manager",
+  },
+  {
+    id: "employee",
+    label: "Сотрудник",
+    description: "Задачи · календарь · документы · уведомления",
+    icon: "EM",
+    ecosystemHint: "platform",
+    workspaceRoute: "/dashboards/employee",
+  },
   {
     id: "client",
     label: "Клиент",
     description: "Покупатель или заказчик услуг",
     icon: "CL",
-  },
-  {
-    id: "business_owner",
-    label: "Владелец бизнеса",
-    description: "Руководитель организации на платформе",
-    icon: "OW",
-    ecosystemHint: "platform",
+    workspaceRoute: "/dashboards/client",
   },
   {
     id: "executive",
@@ -93,7 +123,7 @@ const ROLES: FirstEntryRole[] = [
   },
   {
     id: "manufacturing",
-    label: "Производство",
+    label: "Производство (vertical)",
     description: "Производственные и складские процессы",
     icon: "MF",
     ecosystemHint: "drone",
@@ -114,6 +144,10 @@ export const firstEntryRoleCatalog = {
   list(): FirstEntryRole[] {
     return [...ROLES];
   },
+  /** Sprint 33.1 — primary enterprise personas for “Who are you?” */
+  enterpriseList(): FirstEntryRole[] {
+    return [...ENTERPRISE_PERSONAS];
+  },
   get(id: string): FirstEntryRole | undefined {
     return ROLES.find((r) => r.id === id);
   },
@@ -123,6 +157,10 @@ export const firstEntryRoleCatalog = {
     else ROLES.push(role);
   },
 };
+
+export function registerFirstEntryRole(role: FirstEntryRole): void {
+  firstEntryRoleCatalog.register(role);
+}
 
 export const FIRST_ENTRY_STEPS = [
   { id: "welcome", label: "Welcome" },

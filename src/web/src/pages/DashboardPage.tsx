@@ -1,10 +1,9 @@
 /**
  * Enterprise Command Center Dashboard — Sprint 32.3.2 + Live 32.3.4 + Executive 32.3.5.
- * Answers: Where am I? What's happening? What next?
- * Executive Mode: lean KPI/health/AI/feed on one screen — not a new Dashboard.
+ * EP-01: CEO Morning Experience — answers happening / attention / AI / risks / opportunities in ~10s.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { Badge, Button, Card, Charts, Input, NotificationsPanel, Skeleton } from "@/ui";
@@ -13,13 +12,13 @@ import { useWorkspaceStore } from "@/workspace/workspaceStore";
 import { useNotificationStore } from "@/notifications/notificationStore";
 import { loadFirstEntry } from "@/onboarding/firstEntryStore";
 import { firstEntryRoleCatalog } from "@/onboarding/firstEntryRoles";
-import { widgetManager } from "../../workspace/managers/widgetManager";
 import { personalizationEngine } from "../../workspace/managers/personalizationEngine";
 import { useNavigationUi } from "../../navigation/components/NavigationProvider";
 import { searchProvider } from "../../navigation/managers/searchProvider";
 import { MissionControlStrip } from "@/dashboard/MissionControlStrip";
+import { ExecutiveMorningBrief } from "@/dashboard/ExecutiveMorningBrief";
+import { deriveMorningBrief } from "@/dashboard/deriveMorningBrief";
 import {
-  BUSINESS_MODULES,
   DEFAULT_COMMAND_LAYOUT,
   KPI_CARDS,
   QUICK_ACTIONS,
@@ -31,7 +30,6 @@ import {
 import {
   ActivityFeedPanel,
   AiOperationsPanel,
-  AiRecommendationsPanel,
   EnterpriseHealthPanel,
   LiveMetaBar,
   MissionTimelinePanel,
@@ -45,6 +43,40 @@ import {
 } from "@/demo/executiveMode";
 import { EnterpriseIntelligenceDashboard } from "@/enterprise-intelligence";
 import { telemetry } from "@/integrations/telemetry";
+import { CTA, rememberNavDecision, withDecisionQuery } from "@/decision-flow";
+import { EnterpriseModuleGrid } from "@/shell/enterprise";
+import { PlatformPulsePanel } from "@/modules/PlatformPulsePanel";
+import { rememberModuleRoute } from "@/modules/lastModuleStore";
+import { DashboardWorkspaceWidgets } from "@/workspace-engine/DashboardWorkspaceWidgets";
+import { NotificationCenterPanel, ActivityJournalPanel } from "@/workspace-engine/NotificationCenterPanel";
+import { QuickActionsPanel } from "@/workspace-engine/QuickActionsPanel";
+import {
+  AiCommandCenterPanel,
+  EnterpriseMetricsStrip,
+  GlobalActivityFeed,
+  UniversalQuickActionsBar,
+} from "@/command-center-runtime";
+import { LiveDashboardShell } from "@/live-dashboard";
+import { BetaHomeDashboard } from "@/dashboard/BetaHomeDashboard";
+import { ExecutiveSummaryDashboard, useExperienceModeStore } from "@/ux-revolution";
+
+const KPI_ROUTES: Record<string, string> = {
+  sales: "/workspace/crm",
+  clients: "/workspace/crm",
+  deals: "/workspace/crm",
+  processes: "/platform-builder/workflow-center",
+  automation: "/platform-builder/ai-team",
+  documents: "/workspace/docs",
+};
+
+const KPI_WHY: Record<string, string> = {
+  sales: "Денежный пульс бизнеса сегодня",
+  clients: "Рост базы влияет на pipeline",
+  deals: "Активные сделки требуют внимания",
+  processes: "Операционная нагрузка прямо сейчас",
+  automation: "Доля работы, которую берёт AI",
+  documents: "Знания, доступные команде",
+};
 
 export function DashboardPage() {
   const user = useAuthStore((s) => s.user);
@@ -58,9 +90,18 @@ export function DashboardPage() {
   const [layout, setLayout] = useState<CommandWidgetId[]>(() => loadCommandLayout());
   const [q, setQ] = useState("");
   const [execOverride, setExecOverride] = useState<boolean | null>(() => loadExecutivePref());
-  const widgets = useMemo(() => widgetManager.list().slice(0, 6), []);
+  const [intelOpen, setIntelOpen] = useState(false);
   const personal = personalizationEngine.get();
   const { snapshot, busy, error, refresh } = useLiveEnterprise(true);
+  const uxMode = useExperienceModeStore((s) => s.mode);
+  const preferExecutiveSummary =
+    params.get("mode") === "executive" ||
+    (uxMode === "simple" && params.get("mode") !== "full");
+
+  useEffect(() => {
+    document.title = "Главная · ADOS Enterprise";
+    rememberModuleRoute("/dashboard");
+  }, []);
 
   const company = first.companyName || ws.company;
   const roleLabel = role?.label || user?.roleId || user?.roles?.[0] || "User";
@@ -73,6 +114,16 @@ export function DashboardPage() {
   });
 
   const effectiveLayout = executive ? EXECUTIVE_LAYOUT : layout;
+
+  const brief = useMemo(
+    () =>
+      deriveMorningBrief(snapshot, {
+        company,
+        unread: notifCount,
+        conciergeName: first.conciergeName,
+      }),
+    [snapshot, company, notifCount, first.conciergeName],
+  );
 
   const liveKpis = useMemo(() => {
     const healthy = snapshot.health.filter((h) => h.ok).length;
@@ -90,14 +141,6 @@ export function DashboardPage() {
       return k;
     });
   }, [snapshot, busy]);
-
-  const critical = useMemo(
-    () =>
-      snapshot.activity
-        .filter((a) => a.kind === "notification" || a.kind === "automation" || a.source === "mission_control")
-        .slice(0, 5),
-    [snapshot.activity],
-  );
 
   function visible(id: CommandWidgetId) {
     return effectiveLayout.includes(id);
@@ -129,7 +172,12 @@ export function DashboardPage() {
   return (
     <WorkspaceLayout>
       <div className={`command-center eds-anim-fade${executive ? " is-executive" : ""}`}>
-        {/* SECTION 1 — Header */}
+        {preferExecutiveSummary ? (
+          <ExecutiveSummaryDashboard />
+        ) : (
+          <>
+        {!executive ? <BetaHomeDashboard /> : null}
+
         <header className="cc-header">
           <div className="flex min-w-0 items-center gap-4">
             <div className="cc-logo" aria-hidden>
@@ -141,16 +189,18 @@ export function DashboardPage() {
             </div>
             <div className="min-w-0">
               <p className="eds-type-caption uppercase tracking-[0.16em] text-[var(--eds-text-muted)]">
-                {executive ? "Executive Mode" : "Enterprise Command Center"}
+                {executive ? "Режим руководителя · Утренний брифинг" : "Командный центр предприятия"}
               </p>
               <h1 className="truncate text-2xl font-semibold tracking-tight lg:text-3xl xl:text-4xl">
                 {company}
               </h1>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Badge>{roleLabel}</Badge>
-                <Badge>{ws.project || first.workspaceId || "workspace"}</Badge>
+                <Badge tone={brief.tone === "alert" ? "danger" : brief.tone === "watch" ? "warning" : "success"}>
+                  {brief.tone === "calm" ? "Под контролем" : brief.tone === "watch" ? "Внимание" : "Действие"}
+                </Badge>
                 <Badge tone="success">{notifCount} уведомлений</Badge>
-                {executive ? <Badge tone="warning">Executive</Badge> : null}
+                {executive ? <Badge tone="warning">Руководитель</Badge> : null}
               </div>
             </div>
           </div>
@@ -183,82 +233,216 @@ export function DashboardPage() {
               </Button>
               <Link to="/settings">
                 <Button size="sm" variant="secondary">
-                  Профиль
+                  Settings
                 </Button>
               </Link>
-              <Link to="/platform-builder/mission-control">
-                <Button size="sm" variant="secondary">
-                  Mission Control
-                </Button>
+              <Link to="/platform-builder/control-tower">
+                <Button size="sm">Control Tower</Button>
               </Link>
             </div>
           </div>
         </header>
 
-        <p className="cc-lead">
-          {executive
-            ? "Один экран руководителя: KPI, состояние компании, AI, критические события и рекомендации."
-            : `Где я — ${company}. Что происходит — live Activity Feed и Mission Control. Что делать дальше — Quick Actions и AI Recommendations.`}
-        </p>
         <LiveMetaBar snapshot={snapshot} busy={busy} error={error} onRefresh={() => void refresh()} />
 
-        <section className="mb-4 cc-span-12">
-          <EnterpriseIntelligenceDashboard />
-        </section>
-
         {busy && snapshot.updatedAt === new Date(0).toISOString() ? (
-          <Card title="Загрузка Command Center" className="mb-4">
+          <Card title="Загрузка Morning Brief" className="mb-4">
             <Skeleton rows={5} height="1.25rem" />
           </Card>
-        ) : null}
+        ) : (
+          <div className="mb-4">
+            <ExecutiveMorningBrief brief={brief} conciergeName={first.conciergeName} />
+          </div>
+        )}
 
-        {executive ? (
-          <section className="mb-4">
-            <Card title="Критические события">
-              {critical.length ? (
-                <ul className="space-y-2 eds-type-small">
-                  {critical.map((c) => (
-                    <li key={c.id}>
-                      <Badge>{c.kind}</Badge> {c.title}
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="eds-anim-scale">
-                  <div className="eds-empty-art" aria-hidden>
-                    ✓
-                  </div>
-                  <p className="eds-type-small text-[var(--eds-text-muted)]">
-                    Нет критических событий — система стабильна.
-                  </p>
-                  <div className="mt-3">
-                    <Link to="/platform-builder/mission-control">
-                      <Button size="sm" variant="secondary">
-                        Mission Control
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </Card>
-          </section>
-        ) : null}
+        <section className="mb-6" aria-label="Enterprise Live Dashboard">
+          <LiveDashboardShell />
+        </section>
+
+        <section className="mb-6" aria-label="Enterprise modules">
+          <div className="cc-section-head">
+            <h2>Enterprise Modules</h2>
+            <p className="eds-type-helper">CRM · ERP · AI · Knowledge · Analytics · more</p>
+          </div>
+          <EnterpriseModuleGrid />
+        </section>
+
+        <section className="mb-6" aria-label="Enterprise metrics">
+          <div className="cc-section-head">
+            <h2>Enterprise Metrics</h2>
+            <p className="eds-type-helper">Projects · Clients · Tasks · Revenue · AI · Workflows · Health · API</p>
+          </div>
+          <EnterpriseMetricsStrip />
+        </section>
+
+        <section className="mb-6" aria-label="Universal quick actions">
+          <div className="cc-section-head">
+            <h2>Universal Quick Actions</h2>
+            <p className="eds-type-helper">Create and open from the Command Center · also ⌘/Ctrl+K</p>
+          </div>
+          <UniversalQuickActionsBar />
+        </section>
+
+        <section className="mb-6" aria-label="AI Command Center">
+          <div className="cc-section-head">
+            <h2>AI Command Center</h2>
+            <p className="eds-type-helper">Agents · jobs · providers · memory · cost</p>
+          </div>
+          <AiCommandCenterPanel />
+        </section>
+
+        <section className="mb-6" aria-label="Global activity feed">
+          <div className="cc-section-head">
+            <h2>Global Activity Feed</h2>
+            <p className="eds-type-helper">AI · System · CRM · User · Jobs · Workflows · Errors</p>
+          </div>
+          <GlobalActivityFeed />
+        </section>
+
+        <section className="mb-6" aria-label="Platform pulse">
+          <div className="cc-section-head">
+            <h2>Platform Pulse</h2>
+            <p className="eds-type-helper">Runtime · AI · queues · API · events</p>
+          </div>
+          <PlatformPulsePanel />
+        </section>
+
+        <section className="mb-6" aria-label="Workspace widgets">
+          <div className="cc-section-head">
+            <h2>Workspace Widgets</h2>
+            <p className="eds-type-helper">System · CRM · Knowledge · Activity · Quick Actions</p>
+          </div>
+          <DashboardWorkspaceWidgets />
+        </section>
+
+        <section className="mb-6 grid gap-4 lg:grid-cols-2" aria-label="Notifications and activity">
+          <NotificationCenterPanel />
+          <ActivityJournalPanel />
+        </section>
+
+        <section className="mb-6" aria-label="Quick actions">
+          <QuickActionsPanel />
+        </section>
+
+        <div className="mb-4">
+          <button
+            type="button"
+            className="eds-ops-chrome-toggle"
+            onClick={() => setIntelOpen((v) => !v)}
+          >
+            {intelOpen ? "Hide Enterprise Intelligence" : "Show Enterprise Intelligence details"}
+          </button>
+          {intelOpen ? (
+            <section className="mt-3">
+              <EnterpriseIntelligenceDashboard />
+            </section>
+          ) : null}
+        </div>
 
         <div className="cc-grid">
-          {/* SECTION 2 — Mission Control */}
-          {visible("mission_control") ? (
+          {visible("business_kpi") ? (
             <section className="cc-span-12">
               <div className="cc-section-head">
+                <h2>Business pulse</h2>
+                {!executive ? (
+                  <Button size="sm" variant="ghost" onClick={() => hideSection("business_kpi")}>
+                    Скрыть
+                  </Button>
+                ) : null}
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 edm-stagger">
+                {liveKpis.map((k) => (
+                  <Link
+                    key={k.id}
+                    to={withDecisionQuery(KPI_ROUTES[k.id] || "/platform-builder/control-tower", {
+                      from: "/dashboard",
+                      step: "act",
+                      focus: k.id,
+                    })}
+                    className="cc-kpi cc-kpi--decision edm-kpi"
+                    data-widget={k.widgetKind}
+                    onClick={() => {
+                      rememberNavDecision("/dashboard", KPI_ROUTES[k.id] || "/platform-builder/control-tower", KPI_WHY[k.id] || k.label, "act");
+                      void telemetry.userActivity(`kpi_open:${k.id}`);
+                    }}
+                  >
+                    <p className="cc-kpi-label">{k.label}</p>
+                    <p className="cc-kpi-value edm-kpi">{k.value}</p>
+                    <Badge tone={k.tone === "up" ? "success" : "default"}>{k.delta}</Badge>
+                    <p className="cc-kpi-why">{KPI_WHY[k.id] || "Ключевой сигнал"}</p>
+                    <span className="cc-kpi-next">{CTA.kpi[k.id] || "Take action"} →</span>
+                  </Link>
+                ))}
+              </div>
+              {!executive ? (
+                <div className="mt-4">
+                  <Card title="Trend">
+                    <Charts labels={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]} values={[62, 71, 68, 80, 77, 84]} />
+                  </Card>
+                </div>
+              ) : null}
+            </section>
+          ) : null}
+
+          {visible("quick_actions") ? (
+            <section className="cc-span-5">
+              <div className="cc-section-head">
+                <h2>Решить сейчас</h2>
+                {!executive ? (
+                  <Button size="sm" variant="ghost" onClick={() => hideSection("quick_actions")}>
+                    Скрыть
+                  </Button>
+                ) : null}
+              </div>
+              <Card title="Decision flow">
+                <p className="mb-3 eds-type-small text-[var(--eds-text-muted)]">
+                  Observation → Recommendation → Decision → Action. One obvious next step.
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {QUICK_ACTIONS.map((a) => (
+                    <Link
+                      key={a.id}
+                      to={withDecisionQuery(a.route, { from: "/dashboard", step: "decide", focus: a.id })}
+                      className="cc-action"
+                      onClick={() => rememberNavDecision("/dashboard", a.route, a.label, "decide")}
+                    >
+                      <span className="cc-action-hint">{a.hint}</span>
+                      <span className="font-medium">{CTA.quick[a.id] || a.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </Card>
+            </section>
+          ) : null}
+
+          {visible("mission_control") ? (
+            <section className={executive ? "cc-span-7" : "cc-span-12"}>
+              <div className="cc-section-head">
                 <h2>Mission Control</h2>
-                <Button size="sm" variant="ghost" onClick={() => hideSection("mission_control")}>
-                  Скрыть
-                </Button>
+                {!executive ? (
+                  <Button size="sm" variant="ghost" onClick={() => hideSection("mission_control")}>
+                    Скрыть
+                  </Button>
+                ) : null}
               </div>
               <MissionControlStrip />
             </section>
           ) : null}
 
-          {/* SECTION — Activity Feed (32.3.4) */}
+          {visible("enterprise_health") ? (
+            <section className="cc-span-12">
+              <div className="cc-section-head">
+                <h2>Enterprise Health</h2>
+                {!executive ? (
+                  <Button size="sm" variant="ghost" onClick={() => hideSection("enterprise_health")}>
+                    Скрыть
+                  </Button>
+                ) : null}
+              </div>
+              <EnterpriseHealthPanel health={snapshot.health} />
+            </section>
+          ) : null}
+
           {visible("activity_feed") ? (
             <section className="cc-span-6">
               <div className="cc-section-head">
@@ -271,7 +455,6 @@ export function DashboardPage() {
             </section>
           ) : null}
 
-          {/* SECTION — Mission Timeline */}
           {visible("mission_timeline") ? (
             <section className="cc-span-6">
               <div className="cc-section-head">
@@ -284,20 +467,6 @@ export function DashboardPage() {
             </section>
           ) : null}
 
-          {/* SECTION — Enterprise Health */}
-          {visible("enterprise_health") ? (
-            <section className="cc-span-12">
-              <div className="cc-section-head">
-                <h2>Enterprise Health</h2>
-                <Button size="sm" variant="ghost" onClick={() => hideSection("enterprise_health")}>
-                  Скрыть
-                </Button>
-              </div>
-              <EnterpriseHealthPanel health={snapshot.health} />
-            </section>
-          ) : null}
-
-          {/* SECTION 3 — Today's Overview */}
           {visible("today_overview") ? (
             <section className="cc-span-7">
               <div className="cc-section-head">
@@ -325,84 +494,14 @@ export function DashboardPage() {
                       </li>
                     ))}
                   </ul>
-                  <p className="mt-3 eds-type-small text-[var(--eds-text-muted)]">
-                    Дедлайны: {TODAY_ITEMS.deadlines.map((d) => d.label).join(" · ")}
-                  </p>
                 </Card>
                 <Card title="Уведомления">
                   <NotificationsPanel />
                 </Card>
-                <Card title="Последние изменения" className="md:col-span-2 xl:col-span-3">
-                  <ul className="flex flex-wrap gap-3 eds-type-small">
-                    {TODAY_ITEMS.changes.map((c) => (
-                      <li key={c.id}>
-                        <Badge tone="success">{c.label}</Badge>
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
               </div>
             </section>
           ) : null}
 
-          {/* SECTION 5 adjacent — Quick Actions (placed for visual balance) */}
-          {visible("quick_actions") ? (
-            <section className="cc-span-5">
-              <div className="cc-section-head">
-                <h2>Quick Actions</h2>
-                <Button size="sm" variant="ghost" onClick={() => hideSection("quick_actions")}>
-                  Скрыть
-                </Button>
-              </div>
-              <Card title="Что сделать дальше">
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {QUICK_ACTIONS.map((a) => (
-                    <Link key={a.id} to={a.route} className="cc-action">
-                      <span className="cc-action-hint">{a.hint}</span>
-                      <span className="font-medium">{a.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              </Card>
-            </section>
-          ) : null}
-
-          {/* SECTION 4 — Business KPI */}
-          {visible("business_kpi") ? (
-            <section className="cc-span-12">
-              <div className="cc-section-head">
-                <h2>Business KPI</h2>
-                <Button size="sm" variant="ghost" onClick={() => hideSection("business_kpi")}>
-                  Скрыть
-                </Button>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                {liveKpis.map((k) => (
-                  <article key={k.id} className="cc-kpi" data-widget={k.widgetKind}>
-                    <p className="cc-kpi-label">{k.label}</p>
-                    <p className="cc-kpi-value">{k.value}</p>
-                    <Badge tone={k.tone === "up" ? "success" : "default"}>{k.delta}</Badge>
-                  </article>
-                ))}
-              </div>
-              <div className="mt-4 grid gap-4 lg:grid-cols-2">
-                <Card title="Trend">
-                  <Charts labels={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]} values={[62, 71, 68, 80, 77, 84]} />
-                </Card>
-                <Card title="Widget registry (existing)">
-                  <ul className="columns-2 gap-4 eds-type-small space-y-1">
-                    {widgets.map((w) => (
-                      <li key={w.widgetId}>
-                        <Badge>{w.kind}</Badge> {w.title}
-                      </li>
-                    ))}
-                  </ul>
-                </Card>
-              </div>
-            </section>
-          ) : null}
-
-          {/* SECTION 6 — AI Operations (live) */}
           {visible("ai_activity") ? (
             <section className="cc-span-6">
               <div className="cc-section-head">
@@ -425,40 +524,27 @@ export function DashboardPage() {
             </section>
           ) : null}
 
-          {/* SECTION — AI Recommendations */}
           {visible("ai_recommendations") ? (
             <section className="cc-span-6">
               <div className="cc-section-head">
-                <h2>AI Recommendations</h2>
+                <h2>AI Concierge</h2>
                 <Button size="sm" variant="ghost" onClick={() => hideSection("ai_recommendations")}>
                   Скрыть
                 </Button>
               </div>
-              <AiRecommendationsPanel items={snapshot.recommendations} />
-            </section>
-          ) : null}
-
-          {/* SECTION 7 — Business Modules */}
-          {visible("business_modules") ? (
-            <section className="cc-span-6">
-              <div className="cc-section-head">
-                <h2>Business Modules</h2>
-                <Button size="sm" variant="ghost" onClick={() => hideSection("business_modules")}>
-                  Скрыть
-                </Button>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                {BUSINESS_MODULES.map((m) => (
-                  <Link key={m.id} to={m.route} className="cc-module">
-                    <span className="font-medium">{m.label}</span>
-                    <span className="eds-type-small text-[var(--eds-text-muted)]">{m.description}</span>
+              <Card title="Главный проводник — Concierge dock">
+                <p className="eds-type-small text-[var(--eds-text-muted)]">
+                  Утренние рекомендации уже в Morning Brief. Concierge помогает углубить любое решение.
+                </p>
+                <div className="mt-3">
+                  <Link to="/platform-builder/concierge">
+                    <Button size="sm">Open AI Concierge</Button>
                   </Link>
-                ))}
-              </div>
+                </div>
+              </Card>
             </section>
           ) : null}
 
-          {/* SECTION 8 — Personal Dashboard scaffold */}
           {visible("personal_scaffold") ? (
             <section className="cc-span-12">
               <div className="cc-section-head">
@@ -467,18 +553,10 @@ export function DashboardPage() {
                   Скрыть
                 </Button>
               </div>
-              <Card title="Персонализация (архитектура)">
+              <Card title="Персонализация">
                 <p className="mb-3 max-w-3xl eds-type-small text-[var(--eds-text-muted)]">
-                  Структура готова для следующих спринт: менять расположение виджетов, скрывать блоки,
-                  закреплять панели и создавать собственные Dashboard — без нового Dashboard Engine.
-                  Сейчас используется `personalizationEngine` + `commandCenterCatalog` layout.
+                  Layout: ewp_command_center_layout_v4 · Home: {personal.homePage}
                 </p>
-                <ul className="mb-4 eds-type-small space-y-1 text-[var(--eds-text-muted)]">
-                  <li>· Layout key: ewp_command_center_layout_v2</li>
-                  <li>· Home: {personal.homePage}</li>
-                  <li>· Виджеты engine: {personal.widgets.join(", ")}</li>
-                  <li>· Видимые секции: {layout.join(" · ")}</li>
-                </ul>
                 <Button size="sm" variant="secondary" onClick={resetLayout}>
                   Сбросить layout
                 </Button>
@@ -486,6 +564,8 @@ export function DashboardPage() {
             </section>
           ) : null}
         </div>
+          </>
+        )}
       </div>
     </WorkspaceLayout>
   );

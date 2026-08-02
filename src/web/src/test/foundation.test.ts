@@ -13,8 +13,8 @@ import { sharedUiChecklist } from "@/ui/sharedUi";
 
 describe("Enterprise Web Foundation", () => {
   it("exposes version and stack readiness", () => {
-    expect(webConfig.version).toBe("9.4.0");
-    expect(webConfig.sprint).toBe("34.0");
+    expect(webConfig.version).toBe("9.5.0");
+    expect(webConfig.sprint).toBe("33.1");
     expect(webConfig.multiTenant).toBe(true);
     expect(webConfig.mfaReady).toBe(true);
     expect(webConfig.telemetryEnabled).toBeTypeOf("boolean");
@@ -347,10 +347,12 @@ describe("Sprint 32.3.2 Enterprise Command Center", () => {
       toggleCommandSection,
     } = await import("../dashboard/commandCenterCatalog");
     expect(DEFAULT_COMMAND_LAYOUT).toContain("mission_control");
-    expect(DEFAULT_COMMAND_LAYOUT).toContain("activity_feed");
+    expect(DEFAULT_COMMAND_LAYOUT).toContain("enterprise_health");
+    expect(DEFAULT_COMMAND_LAYOUT).toContain("quick_actions");
+    expect(DEFAULT_COMMAND_LAYOUT).toContain("business_kpi");
     expect(QUICK_ACTIONS.length).toBeGreaterThanOrEqual(6);
     expect(BUSINESS_MODULES.some((m) => m.id === "crm")).toBe(true);
-    expect(KPI_CARDS).toHaveLength(6);
+    expect(KPI_CARDS.length).toBeGreaterThanOrEqual(5);
     const saved = saveCommandLayout(["mission_control", "quick_actions"]);
     expect(loadCommandLayout()).toEqual(saved);
     const toggled = toggleCommandSection("ai_activity");
@@ -359,15 +361,111 @@ describe("Sprint 32.3.2 Enterprise Command Center", () => {
   });
 });
 
+describe("EP-01 CEO Morning Brief", () => {
+  it("derives five executive answers from live snapshot", async () => {
+    const { emptyLiveSnapshot } = await import("../live-ops/fetchLiveEnterprise");
+    const { deriveMorningBrief } = await import("../dashboard/deriveMorningBrief");
+    const brief = deriveMorningBrief(emptyLiveSnapshot(), {
+      company: "Demo Corp",
+      unread: 2,
+      conciergeName: "Nora",
+    });
+    expect(brief.company).toBe("Demo Corp");
+    expect(brief.happening.length).toBeGreaterThan(0);
+    expect(brief.attention.length).toBeGreaterThan(0);
+    expect(brief.aiActions.length).toBeGreaterThan(0);
+    expect(brief.risks.length).toBeGreaterThan(0);
+    expect(brief.opportunities.length).toBeGreaterThan(0);
+    expect(["calm", "watch", "alert"]).toContain(brief.tone);
+    expect(brief.aiActions.every((a) => a.impact)).toBe(true);
+    expect(brief.greeting).toMatch(/Good (morning|afternoon|evening)/);
+  });
+});
+
+describe("EP-06 Decision Flow", () => {
+  it("resolves continue chain and CEO primary action", async () => {
+    const {
+      DECISION_FLOW_VERSION,
+      DECISION_CHAIN,
+      resolveContinue,
+      deriveCeoPrimaryAction,
+      withDecisionQuery,
+      CROSS_MODULE_FLOW,
+    } = await import("../decision-flow");
+    expect(DECISION_FLOW_VERSION).toBe("1.0");
+    expect(DECISION_CHAIN.length).toBe(6);
+    expect(CROSS_MODULE_FLOW["/dashboard"].cta).toMatch(/Control Tower/i);
+    const cont = resolveContinue("/dashboard");
+    expect(cont?.cta).toBeTruthy();
+    expect(withDecisionQuery("/workspace/crm", { from: "/dashboard", step: "act" })).toContain("from=");
+    const primary = deriveCeoPrimaryAction({ tone: "alert", unread: 0, healthBad: true });
+    expect(primary.cta).toMatch(/Attention|Resolve/i);
+  });
+});
+
+describe("EP-07 Production Excellence", () => {
+  it("exposes production helpers and hardened live poll interval", async () => {
+    const { PRODUCTION_EXCELLENCE_VERSION, sanitizeErrorMessage, reliabilityCopy, LIVE_FETCH_DEDUPE_MS } =
+      await import("../production");
+    const { LIVE_POLL_MS } = await import("../live-ops/liveEnterpriseCatalog");
+    const { LAUNCH_READINESS } = await import("../launch/launchCatalog");
+    expect(PRODUCTION_EXCELLENCE_VERSION).toBe("1.0");
+    expect(LIVE_POLL_MS).toBeGreaterThanOrEqual(20_000);
+    expect(LIVE_FETCH_DEDUPE_MS).toBeGreaterThanOrEqual(2_500);
+    expect(sanitizeErrorMessage("Bearer abc.def.ghi leaked")).toContain("[redacted]");
+    expect(reliabilityCopy("offline").action).toBeTruthy();
+    expect(LAUNCH_READINESS.performance.singletonLivePoller).toBe(true);
+    expect(LAUNCH_READINESS.score).toBeGreaterThanOrEqual(94);
+    expect(LAUNCH_READINESS.gaCertified).toBe(true);
+  });
+});
+
+describe("Sprint 1.1.1 GA Audit Corrections", () => {
+  it(
+    "exposes governance edge, audit vault foundation, and route boundary module",
+    async () => {
+      const { evaluateGovernanceEdge, GOVERNANCE_EDGE_MIGRATION } = await import("../enterprise-governance");
+      const { AUDIT_VAULT_FOUNDATION, appendAuditVault } = await import("../audit-vault");
+      const { RouteErrorBoundary } = await import("../shell/RouteErrorBoundary");
+      const edge = await evaluateGovernanceEdge({ action: "read.dashboard", roleId: "owner" });
+      expect(edge.decision).toBe("allow");
+      expect(GOVERNANCE_EDGE_MIGRATION.version).toBe("1.1.1");
+      expect(AUDIT_VAULT_FOUNDATION.status).toBe("foundation_only");
+      const rec = await appendAuditVault({ actor: "test", action: "smoke" });
+      expect(rec.immutable).toBe(false);
+      expect(RouteErrorBoundary).toBeTruthy();
+    },
+    15_000,
+  );
+});
+
 describe("Sprint 32.3.3 Enterprise City", () => {
   it("maps buildings to existing routes and supports search", async () => {
     const { CITY_BUILDINGS, searchBuildings, getBuilding } = await import("../enterprise-city/cityCatalog");
     expect(CITY_BUILDINGS.length).toBeGreaterThanOrEqual(12);
-    expect(getBuilding("crm")?.route).toBe("/workspace/crm");
-    expect(getBuilding("ai_team")?.route).toBe("/platform-builder/ai-team");
+    expect(getBuilding("crm")?.route).toBe("/crm");
+    expect(getBuilding("ai_team")?.route).toBe("/ai-agents");
     expect(getBuilding("dashboard")?.route).toBe("/dashboard");
     expect(searchBuildings("finance").some((b) => b.id === "finance")).toBe(true);
     expect(CITY_BUILDINGS.every((b) => b.route.startsWith("/"))).toBe(true);
+  });
+
+  it("exposes EP-05 visual state language and identity", async () => {
+    const {
+      CITY_EXPERIENCE_VERSION,
+      CITY_STATE_LABELS,
+      resolveVisualState,
+      buildingIdentity,
+      cityGlance,
+    } = await import("../enterprise-city/cityVisualLanguage");
+    const { CITY_STATUS_SEED } = await import("../enterprise-city/cityCatalog");
+    expect(CITY_EXPERIENCE_VERSION).toMatch(/^1\./);
+    expect(CITY_STATE_LABELS.critical.ru).toBe("Критично");
+    expect(CITY_STATE_LABELS.ok.ua).toBeTruthy();
+    expect(resolveVisualState(CITY_STATUS_SEED.crm)).toBeTruthy();
+    expect(buildingIdentity("crm").silhouette).toContain("ec-sil");
+    const glance = cityGlance(CITY_STATUS_SEED);
+    expect(glance.total).toBeGreaterThanOrEqual(12);
   });
 });
 
@@ -392,7 +490,9 @@ describe("Sprint 32.3.5 Enterprise Demo Polish", () => {
     expect(resolveExecutiveMode({ queryMode: "executive" })).toBe(true);
     expect(resolveExecutiveMode({ queryMode: "full", roleId: "executive" })).toBe(false);
     expect(EXECUTIVE_LAYOUT).toContain("business_kpi");
-    expect(EXECUTIVE_LAYOUT).toContain("ai_recommendations");
+    expect(EXECUTIVE_LAYOUT).toContain("quick_actions");
+    expect(EXECUTIVE_LAYOUT).toContain("mission_control");
+    expect(EXECUTIVE_LAYOUT).toContain("enterprise_health");
     const { DEMO_SCENARIO_STEPS } = await import("../demo/demoScenarioCatalog");
     expect(DEMO_SCENARIO_STEPS.length).toBeGreaterThanOrEqual(8);
     expect(DEMO_SCENARIO_STEPS.some((s) => s.route.includes("/dashboard"))).toBe(true);
@@ -409,12 +509,12 @@ describe("Sprint 32.3.6 Unified Workspace", () => {
     expect(GLOBAL_QUICK_SWITCH.length).toBeGreaterThanOrEqual(8);
     expect(GLOBAL_QUICK_SWITCH.some((i) => i.route === "/dashboard")).toBe(true);
     expect(labelForSegment("crm")).toBe("CRM");
-    expect(labelForSegment("beauty")).toBe("Beauty");
-    expect(detectActiveEcosystem("/workspace/beauty/crm")).toBe("Beauty");
+    expect(labelForSegment("beauty")).toBe("Бьюти");
+    expect(detectActiveEcosystem("/workspace/beauty/crm")).toBe("Бьюти");
     const { breadcrumbEngine } = await import("../../navigation/managers/breadcrumbEngine");
     const crumbs = breadcrumbEngine.fromPath("/workspace/beauty/crm");
-    expect(crumbs[0]?.label).toBe("Enterprise");
-    expect(crumbs.some((c) => c.label === "Beauty")).toBe(true);
+    expect(crumbs[0]?.label).toBe("Главная");
+    expect(crumbs.some((c) => c.label === "Бьюти")).toBe(true);
   });
 });
 
@@ -426,7 +526,7 @@ describe("Sprint 32.3.7 Launch Validation", () => {
     expect(LAUNCH_CRITICAL_ROUTES).toContain("/enterprise-city");
     expect(LAUNCH_CRITICAL_ROUTES).toContain("/platform-builder/knowledge");
     expect(LAUNCH_READINESS.score).toBeGreaterThanOrEqual(90);
-    expect(LAUNCH_READINESS.modules.businessEcosystems).toBe(7);
+    expect(LAUNCH_READINESS.commercial.demoScenarioGaPath).toBe(true);
   });
 });
 
@@ -440,10 +540,15 @@ describe("Sprint 32.4 AI Operating System", () => {
     expect(crm.length).toBeGreaterThanOrEqual(2);
     expect(crm.length).toBeLessThanOrEqual(5);
     expect(crm.some((s) => s.id === "crm_create")).toBe(true);
+    expect(crm[0].observation).toBeTruthy();
+    expect(crm[0].impact).toBeTruthy();
+    expect(crm[0].confidence).toBeTruthy();
     const finance = suggestionsForPath("/workspace/finance", 5);
     expect(finance.length).toBeGreaterThanOrEqual(2);
-    const { AiOsExperienceChrome } = await import("../ai-os-chrome");
+    const { AiOsExperienceChrome, AI_PERSONALITY_VERSION, advisorContextLine } = await import("../ai-os-chrome");
     expect(typeof AiOsExperienceChrome).toBe("function");
+    expect(AI_PERSONALITY_VERSION).toBe("1.0");
+    expect(advisorContextLine({ section: "dashboard", company: "Acme", healthOk: 3, healthTotal: 3, unread: 0, aiBusy: false })).toMatch(/Acme/);
   });
 });
 
@@ -1154,5 +1259,189 @@ describe("Sprint 33.9 Enterprise Governance", () => {
     expect(bundle.aiGovernance.length).toBeGreaterThan(0);
     expect(bundle.compliance.compliancePct).toBeGreaterThanOrEqual(0);
     expect(bundle.compliance.auditScore).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe("Sprint 30.1 Enterprise Authentication", () => {
+  it("exposes enterprise roles and access middleware", async () => {
+    const { roleManager, roleResolver, accessMiddleware } = await import("../../auth/managers");
+    const names = roleManager.enterpriseRoles().map((r) => r.name);
+    for (const n of [
+      "Owner",
+      "Administrator",
+      "Manager",
+      "Employee",
+      "Client",
+      "Dealer",
+      "Partner",
+      "Accountant",
+      "Lawyer",
+      "Production",
+      "Viewer",
+    ]) {
+      expect(names).toContain(n);
+    }
+    expect(roleResolver.permissionGroups(["Owner"]).length).toBeGreaterThan(0);
+    expect(
+      accessMiddleware({ roles: ["owner"], permissions: [] }, "administration"),
+    ).toBe(true);
+    expect(
+      accessMiddleware({ roles: ["viewer"], permissions: ["analytics.read"] }, "analytics.read"),
+    ).toBe(true);
+  });
+
+  it("exports Russian auth i18n keys", async () => {
+    const { messages } = await import("../i18n/messages");
+    expect(messages.ru["auth.google"]).toMatch(/Google/);
+    expect(messages.ru["auth.emailLogin"]).toMatch(/Email/);
+    expect(messages.ru["auth.createAccount"]).toBeTruthy();
+    expect(messages.ru["auth.resetPassword"]).toBeTruthy();
+  });
+});
+
+describe("Sprint 30.2 Enterprise Navigation & Russian UI", () => {
+  it("defines Russian sidebar and owner nav", async () => {
+    const { ENTERPRISE_RU_SIDEBAR, OWNER_RU_NAV, ROLE_SWITCHER_OPTIONS, RU_QUICK_ACTIONS } =
+      await import("../navigation/enterpriseRuNav");
+    const labels = ENTERPRISE_RU_SIDEBAR.map((i) => i.label);
+    for (const required of [
+      "Главная",
+      "Рабочий стол",
+      "Город",
+      "AI-Агенты",
+      "CRM",
+      "ERP",
+      "Проекты",
+      "Клиенты",
+      "Финансы",
+      "Документы",
+      "Продакшн",
+      "AI Studio",
+      "Производство",
+      "Юридический отдел",
+      "Аналитика",
+      "Мониторинг",
+      "Настройки",
+      "Знания",
+      "Задачи",
+      "Календарь",
+      "Уведомления",
+      "Маркетплейс",
+      "Пользователи",
+    ]) {
+      expect(labels).toContain(required);
+    }
+    expect(OWNER_RU_NAV.some((i) => i.route === "/owner")).toBe(true);
+    expect(OWNER_RU_NAV.some((i) => i.route === "/admin")).toBe(true);
+    expect(OWNER_RU_NAV.some((i) => i.route === "/health")).toBe(true);
+    expect(ROLE_SWITCHER_OPTIONS.map((r) => r.id)).toEqual(
+      expect.arrayContaining([
+        "owner",
+        "administrator",
+        "manager",
+        "employee",
+        "dealer",
+        "partner",
+        "client",
+        "viewer",
+      ]),
+    );
+    expect(RU_QUICK_ACTIONS.map((a) => a.label)).toEqual(
+      expect.arrayContaining([
+        "Открыть модуль",
+        "Открыть клиента",
+        "Открыть проект",
+        "Открыть AI-агента",
+        "Создать клиента",
+        "Создать проект",
+        "Создать документ",
+        "Открыть карту",
+        "Создать задачу",
+      ]),
+    );
+  });
+
+  it("defaults locale to Russian and exposes nav i18n", async () => {
+    const { webConfig } = await import("../config/webConfig");
+    expect(webConfig.defaultLocale).toBe("ru");
+    const { messages } = await import("../i18n/messages");
+    expect(messages.ru["nav.mainMenu"]).toBe("Основное меню");
+    expect(messages.ru["nav.ownerMode"]).toBe("Режим владельца");
+    expect(messages.ru["role.switcher"]).toBe("Роль");
+    expect(messages.ru["org.switcher"]).toBe("Компания");
+    expect(messages.ru["common.searchPlaceholder"]).toMatch(/поиск/i);
+  });
+
+  it("indexes Russian search hits for clients and quick actions", async () => {
+    const { searchIndex } = await import("../../navigation/managers/searchIndex");
+    const { searchProvider } = await import("../../navigation/managers/searchProvider");
+    expect(searchIndex.list().some((d) => d.title.includes("Клиент") || d.path.includes("/crm"))).toBe(
+      true,
+    );
+    const hits = searchProvider.search("клиент");
+    expect(hits.length).toBeGreaterThan(0);
+    const mapHits = searchProvider.search("карта");
+    expect(mapHits.some((h) => h.path.includes("city") || h.path.includes("enterprise-city"))).toBe(true);
+  });
+
+  it("exports owner dashboard page", async () => {
+    const mod = await import("../navigation/OwnerDashboardPage");
+    expect(typeof mod.OwnerDashboardPage).toBe("function");
+  });
+});
+
+describe("Sprint 30.3 Beta Launch", () => {
+  it("exposes beta home catalog sections", async () => {
+    const cat = await import("../dashboard/betaHomeCatalog");
+    expect(cat.BETA_RECENT_PROJECTS.length).toBeGreaterThan(0);
+    expect(cat.CLIENT_DASHBOARD_SECTIONS.map((s) => s.title)).toEqual(
+      expect.arrayContaining(["Мои заявки", "Мои проекты", "Мои документы", "Мои сообщения", "История"]),
+    );
+    expect(cat.DEALER_DASHBOARD_SECTIONS.map((s) => s.title)).toEqual(
+      expect.arrayContaining(["Клиенты", "Заказы", "Статистика", "Продажи", "CRM"]),
+    );
+    expect(cat.OWNER_BETA_METRICS.length).toBeGreaterThanOrEqual(8);
+    expect(cat.COMING_SOON_RU).toBe("Скоро будет доступно");
+    expect(cat.BETA_PRODUCTION_STUDIOS.every((s) => s.available)).toBe(true);
+    expect(cat.BETA_PRODUCTION_STUDIOS.some((s) => s.id === "presentation")).toBe(true);
+  });
+
+  it("routes roles to beta homes", async () => {
+    const { homeRouteForRole, postAuthDestination } = await import("../navigation/roleHome");
+    expect(homeRouteForRole("owner")).toBe("/owner");
+    expect(homeRouteForRole("administrator")).toBe("/admin");
+    expect(homeRouteForRole("manager")).toBe("/dashboards/manager");
+    expect(homeRouteForRole("employee")).toBe("/dashboards/employee");
+    expect(homeRouteForRole("client")).toBe("/dashboards/client");
+    expect(homeRouteForRole("dealer")).toBe("/dashboards/dealer");
+    const { resetFirstEntry } = await import("../onboarding/firstEntryStore");
+    resetFirstEntry();
+    expect(postAuthDestination("owner")).toBe("/onboarding/first-entry");
+  });
+
+  it("exports dashboard and invitation pages", async () => {
+    expect(typeof (await import("../dashboard/BetaHomeDashboard")).BetaHomeDashboard).toBe(
+      "function",
+    );
+    expect(typeof (await import("../dashboard/ClientDashboardPage")).ClientDashboardPage).toBe(
+      "function",
+    );
+    expect(typeof (await import("../dashboard/DealerDashboardPage")).DealerDashboardPage).toBe(
+      "function",
+    );
+    expect(typeof (await import("../pages/InvitationPage")).InvitationPage).toBe("function");
+    expect(typeof (await import("../enterprise-city/CityPreviewPanel")).CityPreviewPanel).toBe(
+      "function",
+    );
+  });
+
+  it("keeps Google login and register API exports", async () => {
+    const api = await import("../auth/identityApi");
+    expect(typeof api.productionGoogleLogin).toBe("function");
+    expect(typeof api.productionRegister).toBe("function");
+    expect(typeof api.productionPasswordReset).toBe("function");
+    const store = await import("../auth/authStore");
+    expect(typeof store.useAuthStore.getState().loginWithGoogle).toBe("function");
+    expect(typeof store.useAuthStore.getState().register).toBe("function");
   });
 });

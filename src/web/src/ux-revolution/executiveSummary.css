@@ -1,0 +1,150 @@
+/* Sprint 33.1 — Executive Summary Dashboard */
+
+.ux-exec {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 0.25rem 0 1.5rem;
+}
+
+.ux-exec__hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 0.85rem;
+  background:
+    linear-gradient(135deg, color-mix(in oklab, var(--eds-accent) 18%, transparent), transparent 55%),
+    color-mix(in oklab, var(--eds-surface) 92%, var(--eds-accent));
+  border: 1px solid color-mix(in oklab, var(--ew-border) 80%, transparent);
+}
+
+.ux-exec__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--eds-text-muted);
+}
+
+.ux-exec__title {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--eds-text);
+}
+
+.ux-exec__sub {
+  margin: 0.4rem 0 0;
+  max-width: 36rem;
+  color: var(--eds-text-muted);
+  font-size: 0.95rem;
+}
+
+.ux-exec__hero-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.ux-exec__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+  gap: 0.65rem;
+}
+
+.ux-exec__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.65rem;
+  border: 1px solid var(--ew-border);
+  background: var(--eds-surface);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.ux-exec__kpi:hover {
+  border-color: color-mix(in oklab, var(--eds-accent) 55%, var(--ew-border));
+  transform: translateY(-1px);
+}
+
+.ux-exec__kpi-label {
+  font-size: 0.72rem;
+  color: var(--eds-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ux-exec__kpi-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.ux-exec__kpi-delta {
+  font-size: 0.8rem;
+  color: color-mix(in oklab, var(--eds-accent) 70%, green);
+  font-weight: 600;
+}
+
+.ux-exec__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 0.85rem;
+}
+
+.ux-exec__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  min-height: 10rem;
+}
+
+.ux-exec__h2 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.ux-exec__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.ux-exec__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.9rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--ew-border) 55%, transparent);
+}
+
+.ux-exec__row--stack {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ux-exec__muted {
+  color: var(--eds-text-muted);
+  font-size: 0.82rem;
+}
+
+.ux-exec__health-actions {
+  display: flex;
+  gap: 0.45rem;
+  margin-top: auto;
+}

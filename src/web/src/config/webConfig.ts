@@ -1,9 +1,21 @@
 export const webConfig = {
   application: "enterprise_web_platform",
-  version: "9.4.0",
-  sprint: "34.0",
+  version: "9.5.0",
+  sprint: "33.1",
+  n8nUrl: import.meta.env.VITE_N8N_URL || "http://localhost:5678",
+  litellmUrl: import.meta.env.VITE_LITELLM_URL || "http://localhost:4000",
   apiBase: import.meta.env.VITE_API_BASE || "/api",
   hubPrefix: "/api/enterprise-hub/v1",
+  ebnPrefix: "/api/enterprise-ebn/v1",
+  edcPrefix: "/api/enterprise-edc/v1",
+  lifePrefix: "/api/enterprise-life/v1",
+  assetPrefix: "/api/enterprise-assets/v1",
+  spatialPrefix: "/api/enterprise-spatial/v1",
+  cityVizPrefix: "/api/enterprise-city-viz/v1",
+  interactionPrefix: "/api/enterprise-interaction/v1",
+  intelligencePrefix: "/api/enterprise-intelligence/v1",
+  orchestratorPrefix: "/api/enterprise-orchestrator/v1",
+  kernelPrefix: "/api/enterprise-kernel/v1",
   ewfPrefix: "/api/enterprise-ewf/v1",
   edsPrefix: "/api/enterprise-eds/v1",
   eicPrefix: "/api/enterprise-eic/v1",
@@ -43,10 +55,17 @@ export const webConfig = {
   /** Maps owner@* emails to platform IAM telegram id when minting JWT. */
   defaultTelegramId: Number(import.meta.env.VITE_OWNER_TELEGRAM_ID || 1208044579),
   socketUrl: import.meta.env.VITE_SOCKET_URL || "",
-  defaultLocale: "en" as const,
+  defaultLocale: "ru" as const,
   supportedLocales: ["en", "ru", "uk"] as const,
   multiTenant: true,
   mfaReady: true,
+  /**
+   * Local Demo Auth when ISAM/IAM are unreachable.
+   * Default on in DEV; set VITE_DEMO_AUTH=false to force production-only login.
+   */
+  demoAuthEnabled:
+    import.meta.env.VITE_DEMO_AUTH === "true" ||
+    (import.meta.env.DEV && import.meta.env.VITE_DEMO_AUTH !== "false"),
   /** Posts to existing Enterprise Observability — disable in offline CI if needed. */
   telemetryEnabled: import.meta.env.VITE_TELEMETRY_ENABLED !== "false",
 };

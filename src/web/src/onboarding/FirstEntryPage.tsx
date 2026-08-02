@@ -1,6 +1,6 @@
 /**
  * First User Experience — Sprint 32.3.1.
- * Welcome → Role → Workspace → Ready → AI Team → Concierge → Dashboard.
+ * Welcome → Role → Workspace → Ready → Dashboard (AI defaults applied silently).
  * Reuses Workspace Engine (store + tenancy), AI Team / Concierge routes, Dashboard.
  */
 
@@ -30,6 +30,9 @@ import {
   saveFirstEntry,
   type FirstEntryState,
 } from "./firstEntryStore";
+import { postAuthDestination } from "@/navigation/roleHome";
+import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
+import { useI18n, type Locale } from "@/i18n";
 
 const STEP_INDEX: Record<FirstEntryStepId, number> = {
   welcome: 0,
@@ -41,25 +44,46 @@ const STEP_INDEX: Record<FirstEntryStepId, number> = {
   dashboard: 6,
 };
 
+// Sprint 34.2 — shorten mandatory onboarding UX:
+// welcome → role → workspace → ready → dashboard.
+// AI Team & AI Concierge stay optional (defaults applied) to reduce cognitive load.
+const MANDATORY_TOTAL = 4;
+const MANDATORY_STEP_INDEX: Record<FirstEntryStepId, number> = {
+  welcome: 0,
+  role: 1,
+  workspace: 2,
+  ready: 3,
+  ai_team: 3,
+  concierge: 3,
+  dashboard: 3,
+};
+
 export function FirstEntryPage() {
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const setWorkspace = useWorkspaceStore((s) => s.setWorkspace);
   const updatePrefs = usePreferencesStore((s) => s.update);
   const setMode = useThemeStore((s) => s.setMode);
+  const setLocale = useI18n((s) => s.setLocale);
 
   const [state, setState] = useState<FirstEntryState>(() => loadFirstEntry());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [animKey, setAnimKey] = useState(0);
 
-  const stepIdx = STEP_INDEX[state.step] ?? 0;
-  const roles = useMemo(() => firstEntryRoleCatalog.list(), []);
+  const stepIdx = MANDATORY_STEP_INDEX[state.step] ?? 0;
+  const roles = useMemo(() => {
+    const enterprise = firstEntryRoleCatalog.enterpriseList();
+    const rest = firstEntryRoleCatalog
+      .list()
+      .filter((r) => !enterprise.some((e) => e.id === r.id));
+    return [...enterprise, ...rest];
+  }, []);
   const selectedRole = firstEntryRoleCatalog.get(state.roleId);
 
   useEffect(() => {
     if (isFirstEntryComplete()) {
-      navigate("/dashboard", { replace: true });
+      navigate(postAuthDestination(useRoleSwitcher.getState().activeRoleId), { replace: true });
     }
   }, [navigate]);
 
@@ -124,6 +148,7 @@ export function FirstEntryPage() {
           : ["hub", "workflow", "ai", "knowledge"],
       });
       updatePrefs({ language: state.language as "en" | "ru" | "uk" });
+      setLocale((state.language as Locale) || "ru");
 
       go("ready", { workspaceId });
     } catch (e) {
@@ -158,7 +183,19 @@ export function FirstEntryPage() {
 
       markFirstEntryComplete();
       await telemetry.audit("first_entry_complete", state.roleId || "user");
-      navigate("/dashboard", { replace: true });
+      const role = state.roleId;
+      if (role === "client") useRoleSwitcher.getState().setRole("client");
+      else if (role === "business_owner" || role === "executive") useRoleSwitcher.getState().setRole("owner");
+      else if (role === "administrator") useRoleSwitcher.getState().setRole("administrator");
+      else if (role === "manager") useRoleSwitcher.getState().setRole("manager");
+      else if (role === "employee") useRoleSwitcher.getState().setRole("employee");
+      else if (role === "auto" || role === "auto_service" || role?.includes("dealer")) {
+        useRoleSwitcher.getState().setRole("dealer");
+      }
+      const dest =
+        selectedRole?.workspaceRoute ||
+        postAuthDestination(useRoleSwitcher.getState().activeRoleId);
+      navigate(dest, { replace: true });
     } finally {
       setBusy(false);
     }
@@ -188,7 +225,10 @@ export function FirstEntryPage() {
             </h1>
           </div>
           <div className="w-full max-w-sm lg:w-72">
-            <ProgressIndicator current={stepIdx} total={FIRST_ENTRY_STEPS.length} />
+            <ProgressIndicator current={stepIdx} total={MANDATORY_TOTAL} />
+            <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">
+              Оценка времени: ≈ 3 мин
+            </p>
           </div>
         </header>
 
@@ -211,8 +251,8 @@ export function FirstEntryPage() {
                   {user?.name ? `, ${user.name}` : ""}
                 </h2>
                 <p className="mt-4 max-w-xl text-lg text-[var(--eds-text-muted)]">
-                  За несколько шагов настроим ваше рабочее пространство, AI Team и AI Concierge — затем
-                  откроем Dashboard.
+                  Четыре коротких шага: роль, компания, готовность — и вы на Dashboard с Morning Brief.
+                  AI Team и Concierge уже настроены по умолчанию.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Button size="lg" onClick={() => go("role")}>
@@ -223,22 +263,37 @@ export function FirstEntryPage() {
                     variant="secondary"
                     onClick={() => {
                       markFirstEntryComplete();
-                      navigate("/dashboard", { replace: true });
+                      navigate(postAuthDestination(useRoleSwitcher.getState().activeRoleId), {
+                        replace: true,
+                      });
                     }}
                   >
                     Пропустить
                   </Button>
                 </div>
               </div>
-              <Card title="Что дальше">
+              <Card title="В этот onboarding входит">
                 <ol className="eds-type-body space-y-3 text-[var(--eds-text-muted)]">
-                  {FIRST_ENTRY_STEPS.slice(1).map((s, i) => (
-                    <li key={s.id} className="flex gap-3">
-                      <span className="first-entry-step-num">{i + 1}</span>
-                      <span>{s.label}</span>
-                    </li>
-                  ))}
+                  <li className="flex gap-3">
+                    <span className="first-entry-step-num">1</span>
+                    <span>Роль</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="first-entry-step-num">2</span>
+                    <span>Компания</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="first-entry-step-num">3</span>
+                    <span>Готово</span>
+                  </li>
+                  <li className="flex gap-3">
+                    <span className="first-entry-step-num">4</span>
+                    <span>Dashboard · Morning Brief</span>
+                  </li>
                 </ol>
+                <p className="mt-3 eds-type-small text-[var(--eds-text-muted)]">
+                  AI Team и Concierge уже работают по умолчанию — тонкая настройка доступна позже.
+                </p>
               </Card>
             </section>
           ) : null}
@@ -247,7 +302,7 @@ export function FirstEntryPage() {
             <section>
               <h2 className="text-3xl font-semibold tracking-tight">Кто вы?</h2>
               <p className="mt-2 text-[var(--eds-text-muted)]">
-                Выберите роль. Каталог расширяемый — новые роли добавляются без смены архитектуры.
+                Who are you? Выберите роль. Каталог расширяемый — новые роли добавляются без смены архитектуры.
               </p>
               <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {roles.map((role) => {
@@ -421,11 +476,21 @@ export function FirstEntryPage() {
                   </Link>
                 </p>
               ) : null}
+              <p className="mt-4 eds-type-small text-[var(--eds-text-muted)]">
+                AI Team и AI Concierge можно настроить позже — в пару кликов из Dashboard и AI Concierge dock.
+              </p>
               <div className="mt-8 flex justify-center gap-3">
                 <Button variant="secondary" onClick={() => go("workspace")}>
                   Назад
                 </Button>
-                <Button onClick={() => go("ai_team")}>Continue</Button>
+                <Button
+                  onClick={() => {
+                    setMode(useThemeStore.getState().mode);
+                    void finish();
+                  }}
+                >
+                  Открыть Dashboard
+                </Button>
               </div>
             </section>
           ) : null}

@@ -1,14 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Input } from "@/ui";
+import { Button, Input } from "@/ui";
 import { cn } from "@/utils/cn";
 import { commandPaletteEngine } from "../managers/commandPalette";
 import { omniboxEngine, navigationIndex } from "../managers/omnibox";
 import { smartSuggestions } from "../managers/suggestions";
-import { actionExecutor } from "../managers/security";
-import { aiCommandCenter } from "../managers/aiCommands";
-import { commandAnalytics } from "../managers/analytics";
 import { contextEngine } from "../managers/contextEngine";
+import {
+  buildPaletteSections,
+  searchPaletteCommands,
+} from "@/command-center-runtime/paletteSections";
+import { commandFavorites, commandRecent } from "@/command-center-runtime/commandFavorites";
+import { commandRuntime } from "@/runtime/commandRuntime";
+import type { CommandItem } from "../types";
+import { matchAiNavigationIntent, useExperienceModeStore } from "@/ux-revolution";
 
 type Mode = "palette" | "omnibox" | "ai" | "commands";
 
@@ -18,6 +23,22 @@ type Props = {
   initialMode?: Mode;
 };
 
+type Row = { key: string; label: string; meta: string; section?: string; run: () => void };
+
+async function runCommand(c: CommandItem, navigate: (path: string) => void, onClose: () => void) {
+  commandRuntime.setSurface("palette");
+  commandRuntime.bindNavigator(navigate);
+  commandRecent.push(c.id);
+  const res = await commandRuntime.execute(c.action ?? c.id);
+  if (res.route) navigate(res.route);
+  else if (c.route) navigate(c.route);
+  onClose();
+}
+
+/**
+ * Sprint 27.5 — VS Code–style Command Palette.
+ * Sections: Recent · Favorites · Open module · Create · AI · Developer.
+ */
 export function UniversalCommandPalette({ open, onClose, initialMode = "palette" }: Props) {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -27,10 +48,11 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
   const suggestions = useMemo(() => smartSuggestions.list(6), [open]);
   const commands = useMemo(() => commandPaletteEngine.search(query), [query]);
   const hits = useMemo(() => omniboxEngine.search(query, 10), [query]);
+  const sections = useMemo(() => (open && !query ? buildPaletteSections() : []), [open, query]);
+  const sectionSearch = useMemo(() => (query ? searchPaletteCommands(query) : []), [query]);
 
-  const rows = useMemo(() => {
-    type Row = { key: string; label: string; meta: string; run: () => void };
-    if (mode === "ai") return [] as Row[];
+  const rows: Row[] = useMemo(() => {
+    if (mode === "ai") return [];
     if (mode === "omnibox") {
       return hits.map((h) => ({
         key: h.id,
@@ -38,6 +60,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
         meta: `${h.score}`,
         run: () => {
           navigationIndex.recordUse(h.id);
+          commandRecent.push(h.id);
           if (h.route) {
             contextEngine.pushPage(h.route);
             navigate(h.route);
@@ -46,12 +69,46 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
         },
       }));
     }
+
+    if (mode === "palette" && !query) {
+      const out: Row[] = [];
+      for (const section of sections) {
+        for (const c of section.items) {
+          out.push({
+            key: `${section.id}:${c.id}`,
+            label: c.label,
+            meta: section.label,
+            section: section.label,
+            run: () => {
+              void runCommand(c, navigate, onClose);
+            },
+          });
+        }
+      }
+      return out;
+    }
+
+    if (mode === "palette" && query) {
+      return sectionSearch.map((c) => ({
+        key: c.id,
+        label: c.label,
+        meta: c.kind,
+        run: () => {
+          void runCommand(c, navigate, onClose);
+        },
+      }));
+    }
+
     type RowSource = { id: string; label: string; kind?: string; route?: string; action?: string };
     let list: RowSource[] = [];
     if (mode === "commands") {
-      list = commands.map((c) => ({ id: c.id, label: c.label, kind: c.kind, route: c.route, action: c.action }));
+      list = [
+        ...commands.map((c) => ({ id: c.id, label: c.label, kind: c.kind, route: c.route, action: c.action })),
+        ...sectionSearch.map((c) => ({ id: c.id, label: c.label, kind: c.kind, route: c.route, action: c.action })),
+      ];
     } else if (query) {
       list = [
+        ...sectionSearch.map((c) => ({ id: c.id, label: c.label, kind: c.kind, route: c.route, action: c.action })),
         ...commands.map((c) => ({ id: c.id, label: c.label, kind: c.kind, route: c.route, action: c.action })),
         ...hits.map((h) => ({ id: h.id, label: h.title, kind: h.type, route: h.route, action: h.action ?? h.id })),
       ];
@@ -61,28 +118,46 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
         ...commands.slice(0, 8).map((c) => ({ id: c.id, label: c.label, kind: c.kind, route: c.route, action: c.action })),
       ];
     }
-    return list.map((c) => ({
-      key: c.id,
-      label: c.label,
-      meta: c.kind ?? "command",
-      run: () => {
-        const t0 = performance.now();
-        const res = actionExecutor.execute(c.action ?? c.id);
-        commandAnalytics.track(c.id, res.ok, performance.now() - t0);
-        if (res.route) navigate(res.route);
-        else if (c.route) navigate(c.route);
-        onClose();
-      },
-    }));
-  }, [mode, query, commands, hits, suggestions, navigate, onClose]);
+    const seen = new Set<string>();
+    return list
+      .filter((c) => {
+        if (seen.has(c.id)) return false;
+        seen.add(c.id);
+        return true;
+      })
+      .map((c) => ({
+        key: c.id,
+        label: c.label,
+        meta: c.kind ?? "command",
+        run: () => {
+          void (async () => {
+            const intent = matchAiNavigationIntent(c.label) || (c.id.startsWith("ai_intent_") ? matchAiNavigationIntent(query) : null);
+            if (intent?.requiresPro) {
+              useExperienceModeStore.getState().setMode("pro");
+            }
+            commandRuntime.setSurface("palette");
+            commandRuntime.bindNavigator(navigate);
+            commandRecent.push(c.id);
+            const res = await commandRuntime.execute(c.action ?? c.id);
+            const route = res.route || c.route || intent?.route;
+            if (route) navigate(route);
+            onClose();
+          })();
+        },
+      }));
+  }, [mode, query, commands, hits, suggestions, navigate, onClose, sections, sectionSearch]);
 
   useEffect(() => {
     if (!open) {
       setQuery("");
       setActive(0);
       setMode(initialMode);
+      return;
     }
-  }, [open, initialMode]);
+    commandRuntime.setSurface("palette");
+    commandRuntime.bindNavigator(navigate);
+    commandRuntime.startup();
+  }, [open, initialMode, navigate]);
 
   useEffect(() => {
     if (!open) return;
@@ -106,16 +181,26 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
         setMode(modes[e.shiftKey ? (idx + modes.length - 1) % modes.length : (idx + 1) % modes.length]!);
         setActive(0);
       }
+      if (metaFavorite(e) && rows[active]) {
+        e.preventDefault();
+        const id = rows[active]!.key.includes(":") ? rows[active]!.key.split(":")[1]! : rows[active]!.key;
+        commandFavorites.toggle(id);
+        return;
+      }
       if (e.key === "Enter") {
         e.preventDefault();
         if (mode === "ai") {
-          const result = aiCommandCenter.interpret(query);
-          commandAnalytics.track(result.intent ?? "ai", result.ok, 1, true);
-          if (result.route) {
-            contextEngine.pushPage(result.route);
-            navigate(result.route);
+          const intent = matchAiNavigationIntent(query);
+          if (intent) {
+            if (intent.requiresPro) useExperienceModeStore.getState().setMode("pro");
+            if (intent.route) navigate(intent.route);
             onClose();
+            return;
           }
+          void commandRuntime.routeAiIntent(query).then((result) => {
+            if (result.route) navigate(result.route);
+            onClose();
+          });
           return;
         }
         rows[active]?.run();
@@ -127,6 +212,8 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
 
   if (!open) return null;
 
+  let lastSection = "";
+
   return (
     <div
       className="fixed inset-0 z-[var(--eds-z-modal,50)] flex items-start justify-center bg-black/40 p-4 pt-[10vh]"
@@ -134,7 +221,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
       aria-modal="true"
       aria-label="Universal command palette"
     >
-      <div className="w-full max-w-2xl overflow-hidden rounded-[var(--eds-radius-lg)] bg-[var(--eds-surface)] shadow-[var(--eds-shadow-lg)] eds-anim-scale">
+      <div className="w-full max-w-2xl overflow-hidden rounded-[var(--eds-radius-lg)] bg-[var(--eds-surface)] shadow-[var(--eds-shadow-lg)] edm-overlay-panel">
         <div className="flex items-center gap-2 border-b border-[var(--eds-border)] px-3 pt-3">
           {(["palette", "omnibox", "commands", "ai"] as Mode[]).map((m) => (
             <button
@@ -159,10 +246,10 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
             className="eds-focus-ring"
             placeholder={
               mode === "ai"
-                ? "Ask AI to open CRM, create invoice, summarize workspace…"
+                ? "Спросите AI: открыть CRM, создать счёт, сводка…"
                 : mode === "omnibox"
-                  ? "Search CRM, ERP, Knowledge, Agents, Workflows…"
-                  : "Type a command or search… (⌘/Ctrl+K)"
+                  ? "Поиск: CRM, ERP, Знания, Агенты, Процессы…"
+                  : "Команда или поиск… (⌘/Ctrl+K)"
             }
             value={query}
             onChange={(e) => {
@@ -178,33 +265,76 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
               Press Enter to execute AI command. Context: {contextEngine.get().workspace} / {contextEngine.get().role}
             </p>
           ) : (
-            rows.map((row, i) => (
-              <button
-                key={row.key}
-                type="button"
-                role="option"
-                aria-selected={i === active}
-                className={cn(
-                  "flex w-full items-center justify-between rounded-md px-3 py-2 text-left eds-type-small eds-anim-fade",
-                  i === active ? "bg-[var(--eds-primary-soft)] text-[var(--eds-primary)]" : "hover:bg-[var(--eds-primary-soft)]/50",
-                )}
-                onMouseEnter={() => setActive(i)}
-                onClick={() => row.run()}
-              >
-                <span>{row.label}</span>
-                <span className="eds-type-caption">{row.meta}</span>
-              </button>
-            ))
+            rows.map((row, i) => {
+              const showSection = Boolean(row.section && row.section !== lastSection);
+              if (row.section) lastSection = row.section;
+              return (
+                <div key={row.key}>
+                  {showSection ? (
+                    <p className="px-3 pt-2 pb-1 eds-type-caption uppercase tracking-wide text-[var(--eds-text-muted)]">
+                      {row.section}
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={i === active}
+                    className={cn(
+                      "edm-palette-item flex w-full items-center justify-between rounded-md px-3 py-2 text-left eds-type-small",
+                      i === active
+                        ? "bg-[var(--eds-primary-soft)] text-[var(--eds-primary)]"
+                        : "hover:bg-[var(--eds-primary-soft)]/50",
+                    )}
+                    onMouseEnter={() => setActive(i)}
+                    onClick={() => row.run()}
+                  >
+                    <span>{row.label}</span>
+                    <span className="eds-type-caption">{row.meta}</span>
+                  </button>
+                </div>
+              );
+            })
           )}
           {!rows.length && mode !== "ai" ? (
-            <p className="px-3 py-4 eds-type-small text-[var(--eds-text-muted)]">No matches</p>
+            <div className="px-3 py-4">
+              <div className="eds-empty-art" aria-hidden>
+                ◇
+              </div>
+              <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">Nothing found</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    navigate("/platform-builder/mission-control");
+                    onClose();
+                  }}
+                >
+                  Mission Control
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    navigate("/dashboard");
+                    onClose();
+                  }}
+                >
+                  Dashboard
+                </Button>
+              </div>
+            </div>
           ) : null}
         </div>
         <div className="flex justify-between border-t border-[var(--eds-border)] px-3 py-2 eds-type-caption text-[var(--eds-text-muted)]">
-          <span>↑↓ navigate · Tab modes · Enter run · Esc close</span>
-          <span>Zero-latency · fuzzy · RBAC</span>
+          <span>↑↓ · Tab modes · Enter · ⌘B favorite · Esc</span>
+          <span>Enterprise Command Center</span>
         </div>
       </div>
     </div>
   );
+}
+
+function metaFavorite(e: KeyboardEvent): boolean {
+  return (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "b";
 }
