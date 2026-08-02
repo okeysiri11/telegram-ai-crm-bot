@@ -23,8 +23,8 @@ describe("Sprint 33.1 UX Revolution", () => {
   });
 
   it("bumps webConfig sprint to 33.1", () => {
-    expect(webConfig.sprint).toBe("33.1");
-    expect(UX_REVOLUTION_SPRINT).toBe("33.1");
+    expect(webConfig.sprint).toBe("33.2");
+    expect(UX_REVOLUTION_SPRINT).toBe("33.2");
   });
 
   it("Simple Mode allowlist has required modules", () => {

@@ -15,7 +15,7 @@ import { webConfig } from "@/config/webConfig";
 
 describe("Sprint 32.5 Closed Beta Launch Preparation", () => {
   it("web sprint and catalog version align", () => {
-    expect(webConfig.sprint).toBe("33.1");
+    expect(webConfig.sprint).toBe("33.2");
     expect(CLOSED_BETA_VERSION).toBe("32.5-closed-beta");
     expect(CLOSED_BETA_META.sprint).toBe("32.5");
   });

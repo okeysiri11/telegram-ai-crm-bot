@@ -34,3 +34,15 @@ export { ExecutiveSummaryDashboard } from "./ExecutiveSummaryDashboard";
 export { QUICK_ACTION_SECTIONS, buildUxPaletteCommands } from "./quickActionSections";
 export { UX_REVOLUTION_VERSION, UX_REVOLUTION_SPRINT } from "./constants";
 export { ensureProMode } from "./ensureProMode";
+export {
+  INTELLIGENT_NAV_GROUPS,
+  groupsForMode,
+  resolveGroupForPath,
+  isNavItemActive,
+  NAV_ACCORDION_KEY,
+  type NavGroupId,
+  type IntelligentNavGroup,
+  type IntelligentNavItem,
+} from "./intelligentNavGroups";
+export { useNavAccordionStore } from "./navAccordionStore";
+export { NavAccordionGroup } from "./NavAccordionGroup";

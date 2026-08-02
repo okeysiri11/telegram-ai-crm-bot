@@ -14,8 +14,8 @@ describe("Sprint 32.1 Enterprise Multi-Agent OS", () => {
     agentOs.resetBus();
   });
 
-  it("web sprint is 33.1 Enterprise UX Revolution track", () => {
-    expect(webConfig.sprint).toBe("33.1");
+  it("web sprint is 33.2 Intelligent Navigation track", () => {
+    expect(webConfig.sprint).toBe("33.2");
   });
 
   it("registry covers executive + production roles", () => {

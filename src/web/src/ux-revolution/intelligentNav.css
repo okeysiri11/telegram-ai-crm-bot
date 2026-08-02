@@ -1,0 +1,61 @@
+/* Sprint 33.2 — Intelligent Navigation accordion */
+
+.ews-nav-group {
+  margin-bottom: 0.35rem;
+}
+
+.ews-nav-group__btn {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.55rem;
+  border: 0;
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--eds-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: left;
+}
+
+.ews-nav-group__btn:hover {
+  background: color-mix(in oklab, var(--eds-accent) 10%, transparent);
+}
+
+.ews-nav-group__btn[aria-expanded="true"] {
+  color: var(--eds-accent);
+}
+
+.ews-nav-group__chevron {
+  margin-left: auto;
+  font-size: 0.65rem;
+  opacity: 0.7;
+  transition: transform 150ms ease;
+}
+
+.ews-nav-group__btn[aria-expanded="true"] .ews-nav-group__chevron {
+  transform: rotate(90deg);
+}
+
+.ews-nav-group__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 150ms ease;
+}
+
+.ews-nav-group__panel.is-open {
+  grid-template-rows: 1fr;
+}
+
+.ews-nav-group__panel-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+.ews-nav-group__panel .ews-nav-list {
+  padding: 0.15rem 0 0.35rem 0.15rem;
+}

@@ -9,6 +9,6 @@ describe("Sprint 32.4 Enterprise Security Center", () => {
     expect(snap.version).toBe("32.4");
     expect(snap.health).toBe("healthy");
     expect(securityCenter.capabilities().systemOfRecord).toContain("security_center");
-    expect(webConfig.sprint).toBe("33.1");
+    expect(webConfig.sprint).toBe("33.2");
   });
 });
