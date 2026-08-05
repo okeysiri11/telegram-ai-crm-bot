@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
+from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, func
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import DateTime, ForeignKey, Integer, String, func
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 
@@ -30,6 +31,32 @@ class TimestampMixin:
         onupdate=func.now(),
         nullable=False,
     )
+
+
+class VersionColumnsMixin:
+    """
+    TD-54 / Sprint 35.1 — optimistic versioning columns without tenant_id.
+
+    Many tables already own a UUID `tenant_id` FK; this mixin never collides with it.
+    Use this on every persistent business entity.
+    """
+
+    version: Mapped[int] = mapped_column(Integer, nullable=False, default=1, server_default="1")
+    change_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    source_client: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    workspace_id: Mapped[str | None] = mapped_column(String(128), nullable=True, index=True)
+    created_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    updated_by: Mapped[str | None] = mapped_column(String(128), nullable=True)
+    metadata_json: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
+
+
+class VersionMixin(VersionColumnsMixin):
+    """
+    Canonical name for TD-54 versioning (Sprint 34.2D / completed 35.1).
+
+    Alias of VersionColumnsMixin — does not add String tenant_id (avoids UUID tenant collisions).
+    Tenant scope remains on entity-owned `tenant_id` columns where present.
+    """
 
 
 class CreatedAtMixin:

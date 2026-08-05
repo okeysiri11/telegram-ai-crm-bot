@@ -40,7 +40,7 @@ def test_story_timeline_navigation():
     health = platform_builder.health()
     assert health["story_timeline_ready"] is True
     assert health["milestone_viewer_ready"] is True
-    assert health["application_version"] == "1.66.0"
+    assert health["application_version"] == "1.67.0"
 
     platform_builder.simulation.emit_and_simulate("Workflow Launch")
     platform_builder.simulation.emit_and_simulate("Task Assignment")

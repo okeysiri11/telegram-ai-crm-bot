@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class BillingPlanCode(str, enum.Enum):
@@ -60,7 +60,7 @@ class InvoiceStatus(str, enum.Enum):
     VOID = "VOID"
 
 
-class TenantSubscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantSubscription(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "tenant_billing_engine_v1_subscriptions"
     __table_args__ = (
         UniqueConstraint("tenant_id", name="uq_tenant_billing_engine_v1_subscriptions_tenant"),
@@ -94,7 +94,7 @@ class TenantSubscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<TenantSubscription tenant={self.tenant_id} plan={self.plan_code}>"
 
 
-class TenantUsageRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantUsageRecord(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "tenant_billing_engine_v1_usage_records"
     __table_args__ = (
         CheckConstraint("quantity >= 0", name="ck_tenant_billing_engine_v1_usage_qty"),
@@ -139,7 +139,7 @@ class TenantUsageRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<TenantUsageRecord tenant={self.tenant_id} type={self.billing_type}>"
 
 
-class TenantInvoice(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantInvoice(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "tenant_billing_engine_v1_invoices"
     __table_args__ = (
         UniqueConstraint("invoice_number", name="uq_tenant_billing_engine_v1_invoices_number"),
@@ -183,7 +183,7 @@ class TenantInvoice(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<TenantInvoice number={self.invoice_number} total={self.total}>"
 
 
-class TenantInvoiceLine(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantInvoiceLine(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "tenant_billing_engine_v1_invoice_lines"
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_tenant_billing_engine_v1_lines_amount"),

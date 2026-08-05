@@ -29,6 +29,7 @@ type ExperienceModeState = {
 export const useExperienceModeStore = create<ExperienceModeState>((set, get) => ({
   mode: typeof window !== "undefined" ? readMode() : "simple",
   setMode: (mode) => {
+    if (get().mode === mode) return;
     try {
       localStorage.setItem(EXPERIENCE_MODE_KEY, mode);
     } catch {

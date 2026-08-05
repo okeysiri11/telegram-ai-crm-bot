@@ -11,14 +11,14 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.calendar import CalendarEvent
     from database.models.users import User
 
 
-class Task(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
+class Task(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, VersionMixin, Base):
     __tablename__ = "tasks"
     __table_args__ = (
         Index("ix_tasks_module", "module"),

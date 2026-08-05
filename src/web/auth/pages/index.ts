@@ -1,4 +1,5 @@
 export { LoginPage } from "./LoginPage";
+export { RegisterPage } from "./RegisterPage";
 export { LogoutPage } from "./LogoutPage";
 export { ForgotPasswordPage } from "./ForgotPasswordPage";
 export { ResetPasswordPage } from "./ResetPasswordPage";

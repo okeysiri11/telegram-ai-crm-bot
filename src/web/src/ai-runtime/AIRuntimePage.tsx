@@ -241,32 +241,7 @@ function HealthStat({ label, value, ok }: { label: string; value: string; ok?: b
 }
 
 /** Compact shell strip — shared useLiveEnterprise. */
-export function AIRuntimeStrip() {
-  const { snapshot } = useLiveEnterprise(true);
-  const notifications = useNotificationStore((s) => s.items);
-  const rt = useMemo(() => deriveRuntime(snapshot, notifications), [snapshot, notifications]);
-  return (
-    <div className="art-strip" aria-label="AI Runtime">
-      <span className="art-strip-label">Runtime</span>
-      <Badge tone="success">{rt.counts.active} active</Badge>
-      <Badge tone="warning">{rt.health.queueSize} queue</Badge>
-      {rt.health.failedTasks ? (
-        <Badge tone="danger">{rt.health.failedTasks} fail</Badge>
-      ) : (
-        <Badge>ok</Badge>
-      )}
-      <Link
-        to="/platform-builder/runtime"
-        className="eds-type-small text-[var(--eds-primary)]"
-        onClick={() => void telemetry.userActivity("runtime_open")}
-      >
-        Center →
-      </Link>
-    </div>
-  );
-}
 
-/** Compact Mission Control monitor — no navigation required for glance. */
 export function RuntimeMonitorCompact() {
   const { snapshot } = useLiveEnterprise(true);
   const notifications = useNotificationStore((s) => s.items);

@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class SalesLeadStatus(str, enum.Enum):
@@ -67,7 +67,7 @@ SALES_LEAD_SOURCES = frozenset(s.value for s in SalesLeadSource)
 SALES_CONVERSATION_DIRECTIONS = frozenset(d.value for d in SalesConversationDirection)
 
 
-class SalesLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SalesLead(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_sales_agent_v1_sales_leads"
     __table_args__ = (
         CheckConstraint(
@@ -137,7 +137,7 @@ class SalesLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SalesLead tenant={self.tenant_id} status={self.status}>"
 
 
-class SalesConversation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SalesConversation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_sales_agent_v1_sales_conversations"
     __table_args__ = (
         Index("ix_ai_sales_agent_v1_conversations_lead", "sales_lead_id"),
@@ -175,7 +175,7 @@ class SalesConversation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SalesConversation lead={self.sales_lead_id} direction={self.direction}>"
 
 
-class SalesOffer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SalesOffer(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_sales_agent_v1_sales_offers"
     __table_args__ = (
         CheckConstraint("offer_price >= 0", name="ck_ai_sales_agent_v1_offer_price"),
@@ -229,7 +229,7 @@ class SalesOffer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SalesOffer lead={self.sales_lead_id} status={self.status}>"
 
 
-class CustomerPreference(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class CustomerPreference(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_sales_agent_v1_customer_preferences"
     __table_args__ = (
         UniqueConstraint("sales_lead_id", name="uq_ai_sales_agent_v1_prefs_lead"),

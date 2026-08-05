@@ -8,7 +8,7 @@ from sqlalchemy import Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import UUIDPrimaryKeyMixin
+from database.models.mixins import UUIDPrimaryKeyMixin, VersionMixin
 
 
 class EnginePermissionCode(str, enum.Enum):
@@ -31,7 +31,7 @@ class EnginePermissionCode(str, enum.Enum):
     MANAGE_SETTINGS = "MANAGE_SETTINGS"
 
 
-class Permission(UUIDPrimaryKeyMixin, Base):
+class Permission(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "permission_engine_permissions"
     __table_args__ = (
         UniqueConstraint("code", name="uq_permission_engine_permissions_code"),

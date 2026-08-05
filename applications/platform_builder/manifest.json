@@ -1,9 +1,9 @@
 {
   "application_name": "Platform Builder",
   "application": "platform_builder",
-  "application_version": "1.66.0",
-  "sprint": "34.0",
-  "release_status": "Enterprise Platform v1.0 Release Candidate",
+  "application_version": "1.67.0",
+  "sprint": "1.1.1",
+  "release_status": "Enterprise Platform v1.1 General Availability",
   "api_prefix": "/api/platform-builder/v1",
   "builder_engine": "1.0",
   "builder_academy": "2.0",

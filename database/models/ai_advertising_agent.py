@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.auto_marketing_engine  # noqa: F401
 
@@ -56,7 +56,7 @@ ADVERTISING_ACTION_TYPES = frozenset(t.value for t in AdvertisingActionType)
 ADVERTISING_CHANNELS = frozenset(c.value for c in AdvertisingChannel)
 
 
-class AdvertisingAgentCampaign(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AdvertisingAgentCampaign(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_advertising_agent_v1_campaigns"
     __table_args__ = (
         CheckConstraint("budget_total >= 0", name="ck_ai_advertising_agent_v1_budget_total"),
@@ -113,7 +113,7 @@ class AdvertisingAgentCampaign(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AdvertisingAgentCampaign tenant={self.tenant_id} name={self.name}>"
 
 
-class AdvertisingAgentAction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AdvertisingAgentAction(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_advertising_agent_v1_actions"
     __table_args__ = (
         CheckConstraint(

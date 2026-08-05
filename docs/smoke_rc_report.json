@@ -1,0 +1,165 @@
+{
+  "gates": [
+    {
+      "name": "import:services.commission_engine",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:services.deal_engine",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:services.ledger_engine",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:services.partner_engine",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:services.ai_router",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:platform_security.audit.trail",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:platform_jobs.job_engine",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:platform_sdk.vertical_registry",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:platform_orchestrator.agent_registry",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:platform_workflow.registry",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:startup",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:bot",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "import:api.server",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "compose_up",
+      "ok": true,
+      "detail": "g\n Container telegrambotcourse-grafana-1  Running\n Container ai-ecosystem-postgres  Waiting\n Container ai-ecosystem-redis  Waiting\n Container ai-ecosystem-redis  Healthy\n Container ai-ecosystem-postgres  Healthy\n Container telegrambotcourse-bot-1  Waiting\n Container telegrambotcourse-bot-1  Healthy\n"
+    },
+    {
+      "name": "http://127.0.0.1:8080/liveness",
+      "ok": true,
+      "detail": "HTTP 200 (145 bytes)"
+    },
+    {
+      "name": "http://127.0.0.1:8080/health",
+      "ok": true,
+      "detail": "HTTP 200 (2480 bytes)"
+    },
+    {
+      "name": "http://127.0.0.1:8080/readiness",
+      "ok": true,
+      "detail": "HTTP 200 (344 bytes)"
+    },
+    {
+      "name": "http://127.0.0.1:8080/ready",
+      "ok": true,
+      "detail": "HTTP 200 (344 bytes)"
+    },
+    {
+      "name": "http://127.0.0.1:9090/-/healthy",
+      "ok": true,
+      "detail": "HTTP 200 (30 bytes)"
+    },
+    {
+      "name": "http://127.0.0.1:3000/api/health",
+      "ok": true,
+      "detail": "HTTP 200 (101 bytes)"
+    },
+    {
+      "name": "http://127.0.0.1/health",
+      "ok": true,
+      "detail": "HTTP 200 (2479 bytes)"
+    },
+    {
+      "name": "service:postgres",
+      "ok": true,
+      "detail": "Up 3 hours (healthy)"
+    },
+    {
+      "name": "service:redis",
+      "ok": true,
+      "detail": "Up 3 hours (healthy)"
+    },
+    {
+      "name": "service:bot",
+      "ok": true,
+      "detail": "Up 2 hours (healthy)"
+    },
+    {
+      "name": "service:nginx",
+      "ok": true,
+      "detail": "Up 3 hours (healthy)"
+    },
+    {
+      "name": "service:prometheus",
+      "ok": true,
+      "detail": "Up 3 hours (healthy)"
+    },
+    {
+      "name": "service:grafana",
+      "ok": true,
+      "detail": "Up 3 hours (healthy)"
+    },
+    {
+      "name": "postgres_select",
+      "ok": true,
+      "detail": "?column? \n----------\n        1\n(1 row)"
+    },
+    {
+      "name": "redis_ping",
+      "ok": true,
+      "detail": "PONG"
+    },
+    {
+      "name": "alembic_head",
+      "ok": true,
+      "detail": "INFO  [alembic.runtime.migration] Will assume transactional DDL."
+    },
+    {
+      "name": "tcp://127.0.0.1:5432",
+      "ok": true,
+      "detail": "connected"
+    },
+    {
+      "name": "tcp://127.0.0.1:6379",
+      "ok": true,
+      "detail": "connected"
+    }
+  ],
+  "failed": 0
+}

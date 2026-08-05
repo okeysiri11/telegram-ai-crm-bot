@@ -49,18 +49,18 @@ export const VOICE_PROFILES = [
 ];
 
 export const COMMUNICATION_STYLES = [
-  { id: "business_executive", name: "Business Executive", sample: "Good morning. Here is your priority brief for today." },
-  { id: "professional", name: "Professional", sample: "I’ve prepared a clear update on today’s key items." },
-  { id: "friendly", name: "Friendly", sample: "Happy to help — here’s a simple overview." },
-  { id: "mentor", name: "Mentor", sample: "Let’s walk through this together, one step at a time." },
-  { id: "best_friend", name: "Best Friend", sample: "I’ve got you — here’s what matters most right now." },
-  { id: "best_girlfriend", name: "Best Girlfriend", sample: "I’m right here with you. Let’s make today feel lighter." },
+  { id: "business_executive", name: "Business Executive", sample: "Good morning. Observation, why it matters, the action, and expected impact." },
+  { id: "professional", name: "Professional", sample: "Here is a clear update on today’s decision items." },
+  { id: "friendly", name: "Friendly", sample: "Here is a simple overview of what needs a decision." },
+  { id: "mentor", name: "Mentor", sample: "We will walk this in order: observation, action, impact." },
+  { id: "best_friend", name: "Best Friend", sample: "Here is what matters most right now — one clear next step." },
+  { id: "best_girlfriend", name: "Best Girlfriend", sample: "I am here. Let’s keep today focused on decisions that matter." },
   { id: "direct", name: "Direct", sample: "Three priorities: close the deal, review cash, confirm the meeting." },
-  { id: "without_formalities", name: "Without Formalities", sample: "Quick take — here’s what needs attention." },
-  { id: "very_informal", name: "Very Informal", sample: "Hey — easy wins for today are right here." },
+  { id: "without_formalities", name: "Without Formalities", sample: "Quick take — here is what needs attention." },
+  { id: "very_informal", name: "Very Informal", sample: "Easy wins for today are listed below." },
   { id: "technical", name: "Technical", sample: "Route CRM lead scoring to the Sales specialist, then open analytics." },
-  { id: "calm", name: "Calm", sample: "Take a breath. Here’s a steady plan for the morning." },
-  { id: "energetic", name: "Energetic", sample: "Let’s go — your opportunities are lining up!" },
+  { id: "calm", name: "Calm", sample: "Steady plan: review Attention, then Mission Control health." },
+  { id: "energetic", name: "Energetic", sample: "Priorities are lined up — start with the highest-impact action." },
 ];
 
 export const ROLES = [

@@ -16,8 +16,5 @@ export {
 } from "./autonomyState";
 export { deriveAutonomy } from "./deriveAutonomy";
 export type { AutonomyBundle, AutonomyDashboard, GovernanceStats } from "./deriveAutonomy";
-export {
-  AutonomousEnterprisePage,
-  AutonomyStrip,
-  AutonomousWidgetCompact,
-} from "./AutonomousEnterprisePage";
+export { AutonomousEnterprisePage, AutonomousWidgetCompact } from "./AutonomousEnterprisePage";
+export { AutonomyStrip } from "./AutonomyStrip";

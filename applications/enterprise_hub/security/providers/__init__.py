@@ -35,6 +35,11 @@ def authenticate_provider(
         "oidc": "oidc",
         "saml": "oauth2",
         "jwt": "jwt",
+        "google": "google",
+        "microsoft": "microsoft",
+        "apple": "apple",
+        "github": "github",
+        "telegram": "telegram",
     }
     method = mapping.get(p, p)
     if method not in AUTH_METHODS and p not in ("local", "saml"):

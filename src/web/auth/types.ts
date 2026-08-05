@@ -83,6 +83,13 @@ export type SecuritySnapshot = {
   securityEvents: number;
   passwordAgeDays: number;
   riskScore: number;
+  /** Sprint 32.4 Security Center extensions */
+  trustScore?: number;
+  health?: "healthy" | "degraded" | "critical";
+  openIncidents?: number;
+  emergencyMode?: boolean;
+  zeroTrust?: boolean;
+  version?: string;
 };
 
 export type ActivityKind =

@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.deal  # noqa: F401 — register deal_engine_deals for FK resolution
 import database.models.partner_engine  # noqa: F401 — register partner_engine_partners
@@ -72,7 +72,7 @@ class RiskExposureScope(str, enum.Enum):
     ASSET = "ASSET"
 
 
-class RiskRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RiskRule(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "risk_v1_rules"
     __table_args__ = (
         Index("ix_risk_v1_rules_rule_type", "rule_type"),
@@ -96,7 +96,7 @@ class RiskRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<RiskRule code={self.rule_code} type={self.rule_type}>"
 
 
-class RiskEvent(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class RiskEvent(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "risk_v1_events"
     __table_args__ = (
         Index("ix_risk_v1_events_risk_level", "risk_level"),
@@ -137,7 +137,7 @@ class RiskEvent(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<RiskEvent id={self.id} type={self.event_type} level={self.risk_level}>"
 
 
-class RiskDecision(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RiskDecision(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "risk_v1_decisions"
     __table_args__ = (
         Index("ix_risk_v1_decisions_evaluation_type", "evaluation_type"),
@@ -179,7 +179,7 @@ class RiskDecision(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class BlockedOperation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class BlockedOperation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "risk_v1_blocked_operations"
     __table_args__ = (
         Index("ix_risk_v1_blocked_operations_is_active", "is_active"),
@@ -210,7 +210,7 @@ class BlockedOperation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class ExposureLimit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ExposureLimit(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "risk_v1_exposure_limits"
     __table_args__ = (
         CheckConstraint("max_exposure >= 0", name="ck_risk_v1_exposure_limits_max"),

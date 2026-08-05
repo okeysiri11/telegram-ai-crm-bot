@@ -1,5 +1,6 @@
 import { getSocket } from "@/integrations/socket";
 import { widgetManager } from "../managers";
+import { prodLog } from "@/production";
 
 export type LiveUpdate = {
   source: "websocket" | "event_bus" | "notification_center" | "poll";
@@ -9,6 +10,7 @@ export type LiveUpdate = {
 
 type Listener = (update: LiveUpdate) => void;
 const listeners = new Set<Listener>();
+let socketBound = false;
 
 export const liveUpdates = {
   sources: ["websocket", "event_bus", "notification_center", "live_dashboard_refresh"] as const,
@@ -29,9 +31,13 @@ export const liveUpdates = {
     const socket = getSocket();
     if (!socket) return { connected: false, reason: "socket_url_unset" };
     if (!socket.connected) socket.connect();
-    socket.on("workspace:refresh", () => this.publish("websocket"));
-    socket.on("event_bus:message", () => this.publish("event_bus"));
-    socket.on("notifications:new", () => this.publish("notification_center"));
+    if (!socketBound) {
+      socket.on("workspace:refresh", () => this.publish("websocket"));
+      socket.on("event_bus:message", () => this.publish("event_bus"));
+      socket.on("notifications:new", () => this.publish("notification_center"));
+      socketBound = true;
+      prodLog("debug", "live_socket_bound");
+    }
     return { connected: true };
   },
 };

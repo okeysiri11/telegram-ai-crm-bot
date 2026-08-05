@@ -19,10 +19,10 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class LeadStatistics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class LeadStatistics(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "analytics_engine_v1_lead_statistics"
     __table_args__ = (
         UniqueConstraint(
@@ -57,7 +57,7 @@ class LeadStatistics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<LeadStatistics tenant={self.tenant_id} date={self.metric_date}>"
 
 
-class SalesStatistics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SalesStatistics(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "analytics_engine_v1_sales_statistics"
     __table_args__ = (
         UniqueConstraint(
@@ -92,7 +92,7 @@ class SalesStatistics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SalesStatistics tenant={self.tenant_id} date={self.metric_date}>"
 
 
-class AdvertisingStatistics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AdvertisingStatistics(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "analytics_engine_v1_advertising_statistics"
     __table_args__ = (
         UniqueConstraint(
@@ -128,7 +128,7 @@ class AdvertisingStatistics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AdvertisingStatistics tenant={self.tenant_id} date={self.metric_date}>"
 
 
-class ManagerStatistics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ManagerStatistics(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "analytics_engine_v1_manager_statistics"
     __table_args__ = (
         UniqueConstraint(

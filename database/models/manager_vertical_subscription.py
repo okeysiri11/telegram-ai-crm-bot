@@ -9,10 +9,10 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class ManagerVerticalSubscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ManagerVerticalSubscription(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Subscription of a manager user to one or more verticals."""
 
     __tablename__ = "manager_vertical_subscriptions_v1"

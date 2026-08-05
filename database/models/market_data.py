@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 SUPPORTED_ASSETS = frozenset({
     "USD", "EUR", "USDT", "BTC", "ETH", "AED", "PLN", "GEL", "UAH",
@@ -70,7 +70,7 @@ class MarketSnapshotType(str, enum.Enum):
     ORDERBOOK = "ORDERBOOK"
 
 
-class MarketSource(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class MarketSource(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "market_v1_sources"
     __table_args__ = (
         Index("ix_market_v1_sources_source_code", "source_code"),
@@ -99,7 +99,7 @@ class MarketSource(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<MarketSource code={self.source_code} active={self.is_active}>"
 
 
-class MarketQuote(UUIDPrimaryKeyMixin, Base):
+class MarketQuote(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "market_v1_quotes"
     __table_args__ = (
         CheckConstraint("bid >= 0", name="ck_market_v1_quotes_bid"),
@@ -135,7 +135,7 @@ class MarketQuote(UUIDPrimaryKeyMixin, Base):
         )
 
 
-class MarketOrderbook(UUIDPrimaryKeyMixin, Base):
+class MarketOrderbook(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "market_v1_orderbooks"
     __table_args__ = (
         Index("ix_market_v1_orderbooks_source_id", "source_id"),
@@ -162,7 +162,7 @@ class MarketOrderbook(UUIDPrimaryKeyMixin, Base):
         return f"<MarketOrderbook asset={self.asset} depth={self.depth}>"
 
 
-class MarketSpread(UUIDPrimaryKeyMixin, Base):
+class MarketSpread(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "market_v1_spreads"
     __table_args__ = (
         Index("ix_market_v1_spreads_asset", "asset"),
@@ -194,7 +194,7 @@ class MarketSpread(UUIDPrimaryKeyMixin, Base):
         )
 
 
-class MarketSnapshot(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class MarketSnapshot(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "market_v1_snapshots"
     __table_args__ = (
         Index("ix_market_v1_snapshots_snapshot_type", "snapshot_type"),

@@ -11,14 +11,14 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.tasks import Task
     from database.models.users import User
 
 
-class CalendarEvent(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
+class CalendarEvent(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, VersionMixin, Base):
     __tablename__ = "calendar_events"
     __table_args__ = (
         Index("ix_calendar_events_module", "module"),

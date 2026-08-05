@@ -1,0 +1,144 @@
+---
+alwaysApply: true
+---
+---
+alwaysApply: true
+---
+
+# ADOS Enterprise Architecture
+
+## Platform Vision
+
+ADOS is a modular AI Enterprise Operating System.
+
+Every component belongs to a business capability.
+
+Never create isolated functionality.
+
+Everything must integrate into the platform.
+
+---
+
+## Main Layers
+
+Platform
+
+↓
+
+Providers
+
+↓
+
+AI Services
+
+↓
+
+Business Modules
+
+↓
+
+Vertical Solutions
+
+↓
+
+Customer Applications
+
+---
+
+## Provider Layer
+
+Providers are integrations.
+
+Examples:
+
+- Cursor
+- GitHub
+- OpenAI
+- Claude
+- Obsidian
+- Telegram
+- WhatsApp
+
+Never place business logic inside providers.
+
+---
+
+## AI Layer
+
+AI Agents
+
+Planner
+
+Executor
+
+Reviewer
+
+Knowledge
+
+Memory
+
+Workflow
+
+Reasoning
+
+All AI modules must remain reusable.
+
+---
+
+## Enterprise Layer
+
+CRM
+
+ERP
+
+Finance
+
+Analytics
+
+Knowledge
+
+Marketplace
+
+Builder
+
+Command Center
+
+These modules communicate only through services.
+
+---
+
+## UI
+
+Reuse Design System.
+
+Never duplicate UI components.
+
+Prefer composition.
+
+---
+
+## API
+
+REST first.
+
+Typed DTOs.
+
+Version APIs.
+
+Never break existing contracts.
+
+---
+
+## Testing
+
+All enterprise functionality must be testable.
+
+Prefer unit tests before integration tests.
+
+---
+
+## Final Principle
+
+Architecture is more important than speed.
+
+Consistency is more important than quantity.

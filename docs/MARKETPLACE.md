@@ -17,3 +17,11 @@ Marketplace Manager, package/plugin/connector/workflow/application/agent registr
 CRM, ERP, Accounting, Legal, Construction, Drone, Auto, Agro, Manufacturing, Finance, Logistics, Healthcare, Education, Retail, Hospitality, Custom Enterprise Apps.
 
 See: [PLUGIN_STORE.md](PLUGIN_STORE.md), [DEVELOPER_PORTAL.md](DEVELOPER_PORTAL.md), [PACKAGE_MANAGER.md](PACKAGE_MANAGER.md).
+
+---
+
+## Enterprise Web module (Sprint 30.8)
+
+**Route:** `/marketplace` · `MarketplaceModulePage` over Solution Hub `installState` + `MARKETPLACE_SOLUTIONS`.
+
+Tabs: Установленные · Доступные · Обновления · Детали. Full UI also at `/platform-builder/solution-hub` (`ENTERPRISE_MARKETPLACE_32_9.md`).

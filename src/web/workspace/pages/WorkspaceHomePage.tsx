@@ -37,10 +37,9 @@ export function WorkspaceHomePage() {
       setLastLive(`${u.source} · ${u.widgetIds.length} widgets · ${u.at}`);
       setTick((t) => t + 1);
     });
-    const id = window.setInterval(() => liveUpdates.publish("poll"), 15000);
+    // EP-07: rely on shared live poller via liveUpdates; no duplicate interval.
     return () => {
       unsub();
-      window.clearInterval(id);
     };
   }, [setWorkspace]);
 

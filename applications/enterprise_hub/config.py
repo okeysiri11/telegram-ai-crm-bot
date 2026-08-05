@@ -87,6 +87,8 @@ class EnterpriseHubConfig:
     enterprise_ai_os_api_prefix: str = "/api/ai-os/v1"
     organization_brain_api_prefix: str = "/api/organization-brain/v1"
     vertical_federation_api_prefix: str = "/api/verticals/v1"
+    business_network_api_prefix: str = "/api/enterprise-ebn/v1"
+    digital_citizen_api_prefix: str = "/api/enterprise-edc/v1"
     internal_prefix: str = "/internal/enterprise-hub/v1"
     enterprise_registry: str = "1.0"
     integration_layer: str = "1.0"
@@ -164,6 +166,8 @@ class EnterpriseHubConfig:
     enterprise_ai_os: str = "1.0"
     organization_brain: str = "1.0"
     vertical_federation: str = "1.0"
+    business_network: str = "29.0"
+    digital_citizen: str = "29.1"
     knowledge: str = "1.0"
     analytics: str = "1.0"
     known_platforms: list[str] = field(

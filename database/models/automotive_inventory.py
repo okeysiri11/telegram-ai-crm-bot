@@ -25,7 +25,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class VehicleStatus(str, enum.Enum):
@@ -44,7 +44,7 @@ class VehicleDocumentStatus(str, enum.Enum):
     REJECTED = "REJECTED"
 
 
-class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_v1_vehicles"
     __table_args__ = (
         UniqueConstraint("vin", name="uq_automotive_v1_vehicles_vin"),
@@ -86,7 +86,7 @@ class Vehicle(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class VehicleImage(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class VehicleImage(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_v1_vehicle_images"
     __table_args__ = (
         Index("ix_automotive_v1_vehicle_images_vehicle_id", "vehicle_id"),
@@ -107,7 +107,7 @@ class VehicleImage(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<VehicleImage id={self.id} vehicle={self.vehicle_id} type={self.image_type}>"
 
 
-class VehicleDocument(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleDocument(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_v1_vehicle_documents"
     __table_args__ = (
         Index("ix_automotive_v1_vehicle_documents_vehicle_id", "vehicle_id"),
@@ -141,7 +141,7 @@ class VehicleDocument(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class VehicleStatusHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class VehicleStatusHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_v1_status_history"
     __table_args__ = (
         Index("ix_automotive_v1_status_history_vehicle_id", "vehicle_id"),
@@ -165,7 +165,7 @@ class VehicleStatusHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         )
 
 
-class VehicleLocation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleLocation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_v1_vehicle_locations"
     __table_args__ = (
         Index("ix_automotive_v1_vehicle_locations_vehicle_id", "vehicle_id"),

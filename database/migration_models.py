@@ -9,10 +9,14 @@ _SKIP = frozenset({"__init__", "mixins", "registry"})
 
 
 _PRIORITY_MODULES = (
+    # Tenant graph first so FK dependents (events, users, …) resolve cleanly.
+    "database.models.multi_company",
+    "database.models.multi_tenant_foundation",
     "database.models.user_role",
     "database.models.role",
     "database.models.role_permission",
     "database.models.users",
+    "database.models.user_identity_link",
 )
 
 

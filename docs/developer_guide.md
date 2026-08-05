@@ -33,6 +33,14 @@ scripts/                    Validation helpers
 
 ## Architecture rules
 
+### Enterprise Web UI polish (Sprint 34.2 / EP-01…EP-08 GA)
+If you work on `src/web` during UX / production readiness / GA polish:
+- Do **not** add new Engine / Runtime / Store / Framework layers.
+- Prefer editing existing shells/pages/widgets (copy, empty states, nav IA, loading/skeleton UX).
+- Keep the experience “single assistant” and “executive-first” (AI Concierge dock is primary).
+- Follow EDL (`edl.css`), MDL (`motion.css`), Advisor personality, Decision Continue strip.
+- GA artifacts: `docs/ENTERPRISE_PLATFORM_V1_GA.md`, `docs/GA_READINESS_REPORT.md`, `docs/PILOT_CHECKLIST.md`.
+
 ### 1. Handlers are thin
 
 Handlers parse Telegram/HTTP input and call services. No database access.

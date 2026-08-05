@@ -123,25 +123,6 @@ export function AIBuilderStudioPage() {
   );
 }
 
-export function AIBuilderStudioStrip() {
-  const stats = studioCatalogStats();
-  return (
-    <div className="abs-strip" aria-label="AI Builder Studio">
-      <span className="abs-strip-label">Builder</span>
-      <Badge>{stats.skills} skills</Badge>
-      <Badge>{stats.workflows} wf</Badge>
-      <Badge>{stats.templates} tpl</Badge>
-      <Link
-        to="/platform-builder/builder-studio"
-        className="eds-type-small text-[var(--eds-primary)]"
-        onClick={() => void telemetry.userActivity("abs_open")}
-      >
-        Studio →
-      </Link>
-    </div>
-  );
-}
-
 function BuilderHome({ onOpen }: { onOpen: (id: StudioSectionId) => void }) {
   const { snapshot } = useLiveEnterprise(true);
   const wf = useMemo(() => deriveWorkflowAutomation(snapshot), [snapshot]);

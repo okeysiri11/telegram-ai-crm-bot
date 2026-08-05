@@ -1977,7 +1977,8 @@ def _seed_workflow_rules():
     conn.commit()
 
 
-_migrate_schema()
+if not POSTGRES_ONLY:
+    _migrate_schema()
 
 ROLE_NAMES = (
     "OWNER",
@@ -2571,7 +2572,8 @@ def _rbac_build_resolved_grants() -> dict[str, set[str]]:
 
 
 RBAC_RESOLVED_ROLE_GRANTS = _rbac_build_resolved_grants()
-_seed_hierarchical_rbac()
+if not POSTGRES_ONLY:
+    _seed_hierarchical_rbac()
 
 
 def _seed_roles():
@@ -2586,7 +2588,8 @@ def _seed_roles():
     conn.commit()
 
 
-_seed_roles()
+if not POSTGRES_ONLY:
+    _seed_roles()
 
 
 def ensure_user(telegram_id: int, full_name: str = "", username: str = ""):
@@ -2750,6 +2753,10 @@ MEMORY_FIELDS = {
 
 
 def save_memory(user_id: int, key: str, value: str):
+    if POSTGRES_ONLY:
+        from services.user_memory_service import save_memory as _pg_save_memory
+
+        return _pg_save_memory(user_id, key, value)
     cursor.execute(
         "REPLACE INTO user_memory (user_id, key, value) VALUES (?, ?, ?)",
         (user_id, key, value)
@@ -2758,6 +2765,10 @@ def save_memory(user_id: int, key: str, value: str):
 
 
 def load_memory(user_id: int):
+    if POSTGRES_ONLY:
+        from services.user_memory_service import load_memory as _pg_load_memory
+
+        return _pg_load_memory(user_id)
     cursor.execute(
         "SELECT key, value FROM user_memory WHERE user_id=?",
         (user_id,)
@@ -2772,6 +2783,10 @@ def load_memory(user_id: int):
 
 
 def get_memory(user_id: int, key: str):
+    if POSTGRES_ONLY:
+        from services.user_memory_service import get_memory as _pg_get_memory
+
+        return _pg_get_memory(user_id, key)
     cursor.execute(
         "SELECT value FROM user_memory WHERE user_id=? AND key=?",
         (user_id, key)
@@ -2786,6 +2801,10 @@ def get_memory(user_id: int, key: str):
 
 
 def get_user_profile(user_id: int) -> dict:
+    if POSTGRES_ONLY:
+        from services.user_memory_service import get_user_profile as _pg_get_user_profile
+
+        return _pg_get_user_profile(user_id)
     profile = load_memory(user_id)
     return {
         key: profile[key]
@@ -2795,6 +2814,10 @@ def get_user_profile(user_id: int) -> dict:
 
 
 def save_profile_fields(user_id: int, fields: dict):
+    if POSTGRES_ONLY:
+        from services.user_memory_service import save_profile_fields as _pg_save_profile_fields
+
+        return _pg_save_profile_fields(user_id, fields)
     for key, value in fields.items():
         if key not in MEMORY_FIELDS:
             continue
@@ -2803,6 +2826,10 @@ def save_profile_fields(user_id: int, fields: dict):
 
 
 def format_memory_text(user_id: int) -> str:
+    if POSTGRES_ONLY:
+        from services.user_memory_service import format_memory_text as _pg_format_memory_text
+
+        return _pg_format_memory_text(user_id)
     memory = load_memory(user_id)
     if not memory:
         return "🧠 Память пуста. AI запомнит данные из будущих диалогов."
@@ -2815,6 +2842,10 @@ def format_memory_text(user_id: int) -> str:
 
 
 def format_memory_context(user_id: int) -> str:
+    if POSTGRES_ONLY:
+        from services.user_memory_service import format_memory_context as _pg_format_memory_context
+
+        return _pg_format_memory_context(user_id)
     profile = get_user_profile(user_id)
     if not profile:
         return ""
@@ -3258,6 +3289,10 @@ def format_dialog_history_text(user_id: int, limit: int = 10) -> str:
 
 
 def format_profile_text(user_id: int) -> str:
+    if POSTGRES_ONLY:
+        from services.user_memory_service import format_profile_text as _pg_format_profile_text
+
+        return _pg_format_profile_text(user_id)
     profile = get_user_profile(user_id)
     if not profile:
         return "Профиль пока пуст. AI запомнит данные из диалога."

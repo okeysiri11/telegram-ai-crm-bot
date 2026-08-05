@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.deal  # noqa: F401 — register deal_engine_deals for FK resolution
 
@@ -50,7 +50,7 @@ class LiquidityAlertType(str, enum.Enum):
     POOL_LIMIT_EXCEEDED = "POOL_LIMIT_EXCEEDED"
 
 
-class LiquidityPool(UUIDPrimaryKeyMixin, Base):
+class LiquidityPool(UUIDPrimaryKeyMixin, VersionMixin, Base):
     """Liquidity pool — maps to logical table liquidity_pools."""
 
     __tablename__ = "liquidity_v1_pools"
@@ -92,7 +92,7 @@ class LiquidityPool(UUIDPrimaryKeyMixin, Base):
         )
 
 
-class LiquidityReservation(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class LiquidityReservation(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     """Deal liquidity reservation — maps to logical table liquidity_reservations."""
 
     __tablename__ = "liquidity_v1_reservations"
@@ -129,7 +129,7 @@ class LiquidityReservation(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         )
 
 
-class LiquidityAlert(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class LiquidityAlert(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "liquidity_v1_alerts"
     __table_args__ = (
         Index("ix_liquidity_v1_alerts_alert_type", "alert_type"),

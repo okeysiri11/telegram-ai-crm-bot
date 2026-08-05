@@ -25,7 +25,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class PricingSourceType(str, enum.Enum):
@@ -61,7 +61,7 @@ class MarkupAppliesTo(str, enum.Enum):
     GLOBAL = "GLOBAL"
 
 
-class PricingSource(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PricingSource(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "pricing_engine_sources"
     __table_args__ = (
         UniqueConstraint("code", name="uq_pricing_engine_sources_code"),
@@ -94,7 +94,7 @@ class PricingSource(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class PricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PricingRule(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "pricing_engine_rules"
     __table_args__ = (
         UniqueConstraint("code", name="uq_pricing_engine_rules_code"),
@@ -131,7 +131,7 @@ class PricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class Spread(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Spread(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "pricing_engine_spreads"
     __table_args__ = (
         CheckConstraint("bid_spread >= 0", name="ck_pricing_engine_spreads_bid"),
@@ -168,7 +168,7 @@ class Spread(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class Markup(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Markup(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "pricing_engine_markups"
     __table_args__ = (
         Index("ix_pricing_engine_markups_rule_id", "rule_id"),

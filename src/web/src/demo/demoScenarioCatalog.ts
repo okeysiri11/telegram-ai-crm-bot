@@ -1,4 +1,4 @@
-/** Demo scenario catalog — Sprint 32.3.5. Existing routes only. */
+/** Demo scenario catalog — Sprint 32.3.5 / EP-08 GA path. Existing routes only. */
 
 export type DemoStep = {
   id: string;
@@ -9,77 +9,94 @@ export type DemoStep = {
   duration: string;
 };
 
+/** Canonical commercial / pilot demo path (EP-08). */
 export const DEMO_SCENARIO_STEPS: DemoStep[] = [
   {
+    id: "login",
+    title: "Login",
+    description: "Secure enterprise entry · demo identity ready",
+    route: "/login",
+    cta: "Sign in",
+    duration: "30 s",
+  },
+  {
     id: "first_entry",
-    title: "Первый вход",
-    description: "Welcome → роль → workspace → AI Team → Concierge",
+    title: "Organization · First Entry",
+    description: "Welcome → role → company → ready → Dashboard (AI defaults applied)",
     route: "/onboarding/first-entry",
     cta: "First Entry",
-    duration: "2 мин",
+    duration: "2 min",
   },
   {
-    id: "role",
-    title: "Выбор роли",
-    description: "В т.ч. Владелец / Executive для режима руководителя",
-    route: "/onboarding/first-entry",
-    cta: "Роль",
-    duration: "30 с",
-  },
-  {
-    id: "workspace",
-    title: "Workspace",
-    description: "Домашний экран организации",
-    route: "/workspace",
-    cta: "Workspace",
-    duration: "30 с",
+    id: "morning_brief",
+    title: "Morning Brief",
+    description: "Observation · Attention · Recommendation · Risks · Opportunities",
+    route: "/dashboard?mode=executive",
+    cta: "Morning Brief",
+    duration: "1 min",
   },
   {
     id: "dashboard",
-    title: "Dashboard / Executive",
-    description: "Command Center или Executive Mode",
+    title: "Dashboard",
+    description: "Executive Decision Flow · KPI · Continue strip",
     route: "/dashboard?mode=executive",
     cta: "Dashboard",
-    duration: "1 мин",
-  },
-  {
-    id: "mission_control",
-    title: "Mission Control",
-    description: "Живая телеметрия экосистем",
-    route: "/platform-builder/mission-control",
-    cta: "Mission Control",
-    duration: "1 мин",
+    duration: "1 min",
   },
   {
     id: "city",
     title: "Enterprise City",
-    description: "Визуальная навигация по модулям",
+    description: "Company map · RU/UA states · one-glance health",
     route: "/enterprise-city",
     cta: "City",
-    duration: "1 мин",
+    duration: "1 min",
   },
   {
-    id: "ai",
-    title: "AI Activity",
-    description: "AI Team и live operations",
-    route: "/platform-builder/ai-team",
-    cta: "AI Team",
-    duration: "45 с",
+    id: "mission_control",
+    title: "Mission Control",
+    description: "Live health · ops pulse",
+    route: "/platform-builder/mission-control",
+    cta: "Mission Control",
+    duration: "1 min",
   },
   {
-    id: "crm",
-    title: "CRM",
-    description: "Клиенты и сделки",
-    route: "/workspace/crm",
-    cta: "CRM",
-    duration: "45 с",
+    id: "concierge",
+    title: "AI Concierge · Advisor",
+    description: "Top decisions · Observation / Why / Action / Impact",
+    route: "/platform-builder/concierge",
+    cta: "Ask Advisor",
+    duration: "1 min",
   },
   {
-    id: "back",
-    title: "Возврат на Dashboard",
-    description: "Завершение демо-петли",
-    route: "/dashboard",
-    cta: "Dashboard",
-    duration: "15 с",
+    id: "control_tower",
+    title: "Control Tower",
+    description: "Owner escalations · decide now",
+    route: "/platform-builder/control-tower",
+    cta: "Decide",
+    duration: "1 min",
+  },
+  {
+    id: "settings",
+    title: "Settings",
+    description: "Notifications · preferences · profile",
+    route: "/settings",
+    cta: "Settings",
+    duration: "45 s",
+  },
+  {
+    id: "logout",
+    title: "Logout",
+    description: "Safe sign-out",
+    route: "/auth/logout",
+    cta: "Logout",
+    duration: "15 s",
   },
 ];
+
+export const GA_DEMO_VALUE = {
+  product: "Enterprise Platform v1.0 GA",
+  pitch:
+    "Owner sees the company in 10 seconds, decides in one click, and acts without hunting navigation.",
+  durationMin: 20,
+  durationMax: 35,
+} as const;

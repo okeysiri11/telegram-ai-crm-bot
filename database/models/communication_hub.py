@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class HubChannelType(str, enum.Enum):
@@ -65,7 +65,7 @@ HUB_SENDER_TYPES = frozenset(s.value for s in HubSenderType)
 HUB_CAMPAIGN_STATUSES = frozenset(s.value for s in HubCampaignStatus)
 
 
-class CommunicationChannel(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class CommunicationChannel(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "communication_hub_v1_channels"
     __table_args__ = (
         UniqueConstraint(
@@ -100,7 +100,7 @@ class CommunicationChannel(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<CommunicationChannel {self.channel_type} name={self.name}>"
 
 
-class CommunicationCampaign(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class CommunicationCampaign(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "communication_hub_v1_campaigns"
     __table_args__ = (
         Index("ix_communication_hub_v1_campaigns_tenant", "tenant_id"),
@@ -136,7 +136,7 @@ class CommunicationCampaign(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<CommunicationCampaign name={self.name} status={self.status}>"
 
 
-class CommunicationMessage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class CommunicationMessage(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "communication_hub_v1_messages"
     __table_args__ = (
         Index("ix_communication_hub_v1_messages_tenant", "tenant_id"),

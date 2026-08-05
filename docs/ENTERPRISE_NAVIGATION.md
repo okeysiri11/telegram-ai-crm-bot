@@ -1,64 +1,44 @@
 # Enterprise Navigation
 
-Sprint **26.7** / Platform **v9.0.6** — Enterprise Navigation, Global Search & Workspace Federation.
+**Sprint:** 30.7 · Enterprise Workspace Russian UI
 
-Transforms the platform into a unified workspace where every module, application, vertical, AI agent and workflow is instantly discoverable.
+> **Note:** `docs/NAVIGATION.md` is the drone resilience navigation doc (Sprint 11.9). This file is the Enterprise Web sidebar / shell navigation map.
 
-## Architecture
+## Sources of truth
 
-```
-platform_enterprise_navigation/          # library
-applications/enterprise_hub/navigation/  # hub suite + API
-src/web/navigation/                      # React UI
-```
+| Concern | File |
+|---------|------|
+| Sidebar (RU) | `src/web/src/navigation/enterpriseRuNav.ts` → `ENTERPRISE_RU_SIDEBAR` |
+| Owner nav | `OWNER_RU_NAV` |
+| Quick actions | `RU_QUICK_ACTIONS` |
+| Breadcrumbs | `BREADCRUMB_LABEL_RU` |
+| Role homes | `src/web/src/navigation/roleHome.ts` |
+| Search index | `src/web/navigation/managers/searchIndex.ts` |
+| Shell sidebar | `src/web/src/navigation/Sidebar.tsx` |
+| Top bar | `src/web/src/navigation/TopNavigation.tsx` |
 
-Legacy Sprint 26.5 ENP API remains at `/api/enterprise-enp/v1`.
+## Features
 
-## API
+- **Left Navigation** — every item routes to a live module (`/crm`, `/tasks`, `/city`, …)
+- **Favorites / Recent** — workspace engine + navigation history
+- **Notifications** — top bar → `/notifications`
+- **Global Search** — top search + `/search` + Cmd/Ctrl+K
+- **Breadcrumbs** — Russian segment labels
+- **Role switcher / Org selector** — top bar (RU)
 
-Base: **`/api/enterprise-navigation/v1`**
+## Aliases
 
-| Method | Path | Purpose |
-|--------|------|---------|
-| GET | `/health` | Readiness |
-| POST | `/bootstrap` | Bootstrap suite |
-| GET | `/inventory` | Architecture inventory |
-| GET | `/dashboard` | Navigation dashboard |
-| GET | `/global` | Global navigation sections |
-| GET | `/workspaces` | Federated workspaces |
-| POST | `/workspaces/switch` | Switch workspace |
-| GET | `/registry` | Application registry |
-| GET/POST | `/search` | Global fuzzy search |
-| GET/POST | `/favorites` | Smart favorites |
-| GET | `/history` | Recent history |
-| GET | `/breadcrumbs` | Dynamic breadcrumbs |
-| POST | `/quick-switch` | Ctrl+Tab switcher |
-| GET | `/analytics` | Navigation analytics |
-| POST | `/permissions` | RBAC validation |
+| Alias | Target |
+|-------|--------|
+| `/city` | Enterprise City (same as `/enterprise-city`) |
+| `/ai` | `/ai-agents` |
+| `/admin` | Admin dashboard |
+| `/dashboards/admin` | → `/admin` |
 
-## Frontend
+## Rule
 
-Path: `src/web/navigation/`
+No menu item may use empty `#` anchors or placeholder-only pages.
 
-- Global navigation dashboard `/navigation`
-- Workspace federation switcher
-- Application registry
-- Global search
-- Smart favorites & recent history
-- Quick Switcher (`Ctrl+Tab`)
-- Enterprise breadcrumbs
-- Navigation analytics
+## Related
 
-## Application Registry
-
-Automatically registers every application with icon, name, status, owner, permissions, version, health, and last update.
-
-Personal · Organization · Department · Project · Customer · AI · Temporary
-
-## Security
-
-RBAC · Workspace Isolation · Tenant Isolation · Organization Isolation
-
-## Integrations
-
-Workspace · Command Center · Dashboard · AI Platform · Marketplace · Identity Center
+[WORKSPACE.md](./WORKSPACE.md) · [COMMAND_PALETTE.md](./COMMAND_PALETTE.md) · [UI_NAVIGATION.md](./UI_NAVIGATION.md) · [NAVIGATION.md](./NAVIGATION.md) (drone)

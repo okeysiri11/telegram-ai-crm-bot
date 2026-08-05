@@ -181,6 +181,49 @@ Related: [RELEASE_NOTES_32_2.md](./RELEASE_NOTES_32_2.md) · [KNOWN_ISSUES_32_2.
 
 [ENTERPRISE_PLATFORM_1_0.md](./ENTERPRISE_PLATFORM_1_0.md) — Production RC audit, stabilizations, demo, limitations, roadmap. Platform Builder **v1.66.0**.
 
+## Enterprise UX Polish & Executive Demo Hardening (Sprint 34.2)
+
+[ENTERPRISE_PLATFORM_1_0.md](./ENTERPRISE_PLATFORM_1_0.md) — UX polish (AI Concierge consolidation, navigation/search/empty-state improvements, First Entry shortening).
+[EXECUTIVE_DEMO_34_0.md](./EXECUTIVE_DEMO_34_0.md) — updated demo script to Login → Dashboard → Ops journey → Settings → Logout.
+
+## Enterprise Product Excellence — EP-01 Executive Experience
+
+[EP_01_EXECUTIVE_EXPERIENCE.md](./EP_01_EXECUTIVE_EXPERIENCE.md) — CEO Morning Brief on Dashboard; What/Why/Next cards; decision flow.
+
+## Enterprise Product Excellence — EP-02 Visual Excellence & EDL
+
+[EP_02_ENTERPRISE_DESIGN_LANGUAGE.md](./EP_02_ENTERPRISE_DESIGN_LANGUAGE.md) — Enterprise Design Language: typography, spacing, cards, buttons, forms, color language, ≥30 premium polish items.
+
+## Enterprise Product Excellence — EP-03 Motion & Microinteractions
+
+[EP_03_MOTION_DESIGN_LANGUAGE.md](./EP_03_MOTION_DESIGN_LANGUAGE.md) — Motion Design Language: durations, easing, page/AI/city patterns, Reduce Motion, ≥35 premium motion improvements.
+
+## Enterprise Product Excellence — EP-04 AI Personality
+
+[EP_04_AI_PERSONALITY.md](./EP_04_AI_PERSONALITY.md) — Executive Advisor voice: Observation/Why/Action/Impact, confidence, language policy, session memory.
+
+## Enterprise Product Excellence — EP-05 Enterprise City Experience
+
+[EP_05_ENTERPRISE_CITY.md](./EP_05_ENTERPRISE_CITY.md) — City as visual command center: RU/UA states, building identity, executive overlays, Concierge focus.
+
+## Enterprise Product Excellence — EP-06 Decision Flow
+
+[EP_06_ENTERPRISE_INTELLIGENCE.md](./EP_06_ENTERPRISE_INTELLIGENCE.md) — Observation→Result chain, context handoff, concrete CTAs, Continue strip.
+
+## Enterprise Product Excellence — EP-07 Production Excellence
+
+[EP_07_PRODUCTION_EXCELLENCE.md](./EP_07_PRODUCTION_EXCELLENCE.md) — Singleton live poller, timeouts, offline/reconnect, sanitized errors, ≥40 production polish items.
+
+## Enterprise Product Excellence — EP-08 Pilot, Commercial & GA
+
+[EP_08_GA_READINESS.md](./EP_08_GA_READINESS.md) — Pilot path, commercial demo, quality gates, GA certification.  
+[ENTERPRISE_PLATFORM_V1_GA.md](./ENTERPRISE_PLATFORM_V1_GA.md) · [GA_READINESS_REPORT.md](./GA_READINESS_REPORT.md) · [FINAL_EQI_REPORT.md](./FINAL_EQI_REPORT.md) · [PILOT_CHECKLIST.md](./PILOT_CHECKLIST.md)
+
+## Enterprise Platform v1.1 — Sprint 1.1.1 GA Audit Corrections
+
+[SPRINT_1_1_1_GA_AUDIT.md](./SPRINT_1_1_1_GA_AUDIT.md) — High-priority Grand Audit closures.  
+[API_EDGE_GOVERNANCE_PLAN.md](./API_EDGE_GOVERNANCE_PLAN.md) · [IMMUTABLE_AUDIT_VAULT_FOUNDATION.md](./IMMUTABLE_AUDIT_VAULT_FOUNDATION.md) · [DEPLOYMENT_CHECKLIST_1_1_1.md](./DEPLOYMENT_CHECKLIST_1_1_1.md) · [SPRINT_1_1_1_RESULT.md](./SPRINT_1_1_1_RESULT.md)
+
 ## Compatibility Guarantee
 
 - Existing Platform Builder hubs remain operational  

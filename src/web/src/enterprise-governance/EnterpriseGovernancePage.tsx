@@ -289,37 +289,6 @@ export function EnterpriseGovernancePage() {
   );
 }
 
-export function GovernanceStrip() {
-  const { snapshot } = useLiveEnterprise(true);
-  const notifications = useNotificationStore((s) => s.items);
-  const first = loadFirstEntry();
-  const user = useAuthStore((s) => s.user);
-  const gov = useMemo(
-    () =>
-      deriveGovernance(snapshot, {
-        notifications,
-        roleId: user?.roleId || first.roleId,
-        permissions: user?.permissions,
-      }),
-    [snapshot, notifications, user?.roleId, user?.permissions, first.roleId],
-  );
-  const pending = gov.approvalQueue.filter((a) => a.queue === "pending" || a.queue === "critical").length;
-  return (
-    <div className="gov-strip" aria-label="Governance">
-      <span className="gov-strip-label">Governance</span>
-      <Badge tone="success">{gov.compliance.compliancePct}%</Badge>
-      {pending ? <Badge tone="danger">{pending} queue</Badge> : <Badge>clear</Badge>}
-      <Link
-        to="/platform-builder/governance"
-        className="eds-type-small text-[var(--eds-primary)]"
-        onClick={() => void telemetry.userActivity("gov_open")}
-      >
-        Policies →
-      </Link>
-    </div>
-  );
-}
-
 export function GovernanceWidgetCompact() {
   const { snapshot } = useLiveEnterprise(true);
   const notifications = useNotificationStore((s) => s.items);

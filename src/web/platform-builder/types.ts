@@ -1,5 +1,5 @@
-export const PLATFORM_BUILDER_VERSION = "1.66.0";
-export const PLATFORM_BUILDER_SPRINT = "34.0";
+export const PLATFORM_BUILDER_VERSION = "1.67.0";
+export const PLATFORM_BUILDER_SPRINT = "1.1.1";
 export const PLATFORM_BUILDER_API = "/api/platform-builder/v1";
 
 export const FRAMEWORK_PHASES = [
@@ -85,6 +85,8 @@ export type BuilderDef = {
   purpose?: string;
   requiresRole?: "platform_owner";
   frameOnly?: boolean;
+  /** For preview-only frame builders — open the corresponding workspace / operational surface. */
+  openWorkspaceRoute?: string;
   constraints?: Record<string, boolean>;
 };
 

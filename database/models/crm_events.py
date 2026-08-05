@@ -11,7 +11,11 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import UUIDPrimaryKeyMixin
+from database.models.mixins import UUIDPrimaryKeyMixin, VersionMixin
+
+# Register FK targets on Base.metadata (avoids NoReferencedTableError on flush).
+import database.models.multi_company  # noqa: F401
+import database.models.multi_tenant_foundation  # noqa: F401
 
 EVENT_STATUS_PENDING = "PENDING"
 EVENT_STATUS_PROCESSING = "PROCESSING"
@@ -28,7 +32,7 @@ EVENT_STATUSES = (
 )
 
 
-class Event(UUIDPrimaryKeyMixin, Base):
+class Event(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "events"
     __table_args__ = (
         Index("ix_events_event_type", "event_type"),

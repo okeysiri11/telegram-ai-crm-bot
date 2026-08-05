@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class PartnerType(str, enum.Enum):
@@ -79,7 +79,7 @@ class PartnerCommissionType(str, enum.Enum):
     PERCENTAGE = "PERCENTAGE"
 
 
-class PartnerEnginePartner(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerEnginePartner(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_engine_partners"
     __table_args__ = (
         Index("ix_partner_engine_partners_partner_type", "partner_type"),
@@ -124,7 +124,7 @@ class PartnerEnginePartner(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class PartnerContact(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerContact(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_engine_contacts"
     __table_args__ = (
         Index("ix_partner_engine_contacts_partner_id", "partner_id"),
@@ -148,7 +148,7 @@ class PartnerContact(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<PartnerContact id={self.id} partner={self.partner_id} name={self.full_name}>"
 
 
-class PartnerWallet(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerWallet(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_engine_wallets"
     __table_args__ = (
         Index("ix_partner_engine_wallets_partner_id", "partner_id"),
@@ -173,7 +173,7 @@ class PartnerWallet(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class PartnerLimit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerLimit(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_engine_limits"
     __table_args__ = (
         UniqueConstraint("partner_id", name="uq_partner_engine_limits_partner_id"),
@@ -228,7 +228,7 @@ class PartnerLimit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class PartnerCommission(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerCommission(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_engine_commissions"
     __table_args__ = (
         Index("ix_partner_engine_commissions_partner_id", "partner_id"),

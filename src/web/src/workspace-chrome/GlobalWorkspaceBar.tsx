@@ -1,6 +1,5 @@
 /**
- * Global Workspace chrome — Sprint 32.3.6.
- * Context bar + Quick Switch — client-side navigate only.
+ * Global Workspace chrome — Sprint 32.3.6 / 30.2 Russian.
  */
 
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -17,8 +16,13 @@ import {
   detectActiveEcosystem,
   workspaceStatusLabel,
 } from "./workspaceContext";
+import { useI18n } from "@/i18n";
+import { useRoleSwitcher, resolveRoleLabel } from "@/navigation/roleSwitcherStore";
+import { useOrgSelector } from "@/navigation/orgSelectorStore";
+import { ORG_SELECTOR_OPTIONS, ROLE_SWITCHER_OPTIONS } from "@/navigation/enterpriseRuNav";
 
 export function GlobalWorkspaceBar() {
+  const t = useI18n((s) => s.t);
   const loc = useLocation();
   const navigate = useNavigate();
   const { openPalette, openQuickSwitcher } = useNavigationUi();
@@ -27,21 +31,33 @@ export function GlobalWorkspaceBar() {
   const ws = useWorkspaceStore((s) => s.workspace);
   const first = loadFirstEntry();
   const role = firstEntryRoleCatalog.get(first.roleId);
-  const roleLabel = role?.label || user?.roleId || user?.roles?.[0] || ws.userContext || "User";
-  const company = first.companyName || ws.company;
-  const ecosystem = detectActiveEcosystem(loc.pathname) || "Platform";
-  const concierge = first.conciergeName || "AI Concierge";
+  const switcherRoleId = useRoleSwitcher((s) => s.activeRoleId);
+  const switcherLabel = ROLE_SWITCHER_OPTIONS.find((o) => o.id === switcherRoleId)?.label;
+  const roleLabel =
+    switcherLabel ||
+    role?.label ||
+    resolveRoleLabel(user?.roleId) ||
+    user?.roles?.[0] ||
+    ws.userContext ||
+    "Сотрудник";
+  const orgId = useOrgSelector((s) => s.organizationId);
+  const company =
+    ORG_SELECTOR_OPTIONS.find((o) => o.id === orgId)?.label ||
+    first.companyName ||
+    ws.company;
+  const ecosystem = detectActiveEcosystem(loc.pathname) || "Платформа";
+  const concierge = first.conciergeName || t("uws.concierge");
   const status = workspaceStatusLabel(ws.activeModules);
 
   return (
     <div className="uws-chrome eds-anim-fade">
-      <div className="uws-context" aria-label="Workspace context">
+      <div className="uws-context" aria-label="Контекст рабочего пространства">
         <Badge>{company}</Badge>
-        <Badge>{ws.project || "workspace"}</Badge>
+        <Badge>{ws.project || "пространство"}</Badge>
         <Badge>{roleLabel}</Badge>
         <Badge tone="success">{ecosystem}</Badge>
         <Badge>{concierge}</Badge>
-        <Badge tone={status === "Operational" ? "success" : "warning"}>{status}</Badge>
+        <Badge tone={status === "В работе" ? "success" : "warning"}>{status}</Badge>
         <button
           type="button"
           className="uws-link eds-type-small"
@@ -50,7 +66,7 @@ export function GlobalWorkspaceBar() {
             openPalette();
           }}
         >
-          Search · ⌘K
+          {t("uws.search")}
         </button>
         <button
           type="button"
@@ -60,11 +76,11 @@ export function GlobalWorkspaceBar() {
             openQuickSwitcher();
           }}
         >
-          Switch · Ctrl+Tab
+          {t("uws.switch")}
         </button>
       </div>
 
-      <nav className="uws-switch" aria-label="Global quick switch">
+      <nav className="uws-switch" aria-label="Быстрое переключение">
         {GLOBAL_QUICK_SWITCH.map((item) => {
           const active =
             loc.pathname === item.route ||
@@ -90,7 +106,7 @@ export function GlobalWorkspaceBar() {
             openOmnibox();
           }}
         >
-          Commands · ⌘/
+          {t("uws.commands")}
         </Button>
         <Button
           size="sm"
@@ -98,7 +114,7 @@ export function GlobalWorkspaceBar() {
           className="eds-anim-micro"
           onClick={() => navigate("/platform-builder/concierge")}
         >
-          Concierge
+          {t("uws.concierge")}
         </Button>
       </nav>
     </div>

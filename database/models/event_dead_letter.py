@@ -9,10 +9,10 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class EventDeadLetter(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class EventDeadLetter(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "event_dead_letters"
     __table_args__ = (
         Index("ix_event_dead_letters_event_name", "event_name"),

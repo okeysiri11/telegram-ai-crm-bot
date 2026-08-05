@@ -15,6 +15,7 @@ import {
   useExperienceModeStore,
   useModuleContextNav,
   groupsForMode,
+  warmRegistryNavigation,
   useNavAccordionStore,
   resolveGroupForPath,
   isNavItemActive,
@@ -41,7 +42,6 @@ export function Sidebar({
   const context = useModuleContextNav();
   const expandedId = useNavAccordionStore((s) => s.expandedId);
   const toggleGroup = useNavAccordionStore((s) => s.toggle);
-  const ensureForRoute = useNavAccordionStore((s) => s.ensureForRoute);
 
   const showOwner = isOwner || ownerView;
   const groups = useMemo(
@@ -49,11 +49,16 @@ export function Sidebar({
     [uxMode, showOwner],
   );
 
+  useEffect(() => {
+    warmRegistryNavigation(uxMode, { owner: showOwner });
+  }, [uxMode, showOwner]);
+
   const visibleGroups = groups;
   useEffect(() => {
     const gid = resolveGroupForPath(pathname, search);
-    ensureForRoute(gid);
-  }, [pathname, search, ensureForRoute]);
+    // Call store action via getState to avoid unstable selector identity churn.
+    useNavAccordionStore.getState().ensureForRoute(gid);
+  }, [pathname, search]);
 
   const asideClass = cn(
     "ews-sidebar ews-glass eds-sidebar shrink-0",

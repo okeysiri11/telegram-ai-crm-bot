@@ -1,0 +1,869 @@
+/**
+ * Sprint 27.1 — Application Shell glass chrome.
+ * Complements EDL; does not replace EDS tokens.
+ */
+
+.ews-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(1200px 600px at 12% -10%, color-mix(in oklab, var(--eds-primary) 16%, transparent), transparent 60%),
+    radial-gradient(900px 500px at 88% 0%, color-mix(in oklab, var(--eds-accent) 12%, transparent), transparent 55%),
+    var(--eds-bg);
+  color: var(--eds-text);
+}
+
+.ews-shell-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+
+.ews-glass {
+  background: color-mix(in oklab, var(--eds-surface) 78%, transparent);
+  border-color: color-mix(in oklab, var(--eds-border) 80%, transparent);
+  backdrop-filter: blur(16px) saturate(1.15);
+  -webkit-backdrop-filter: blur(16px) saturate(1.15);
+  box-shadow: 0 8px 28px color-mix(in oklab, #0b1220 8%, transparent);
+}
+
+.ews-header.ews-glass {
+  border-bottom: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+}
+
+.ews-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-right: 0.35rem;
+  text-decoration: none;
+  color: inherit;
+}
+.ews-logo-mark {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  color: #fff;
+  background: linear-gradient(145deg, var(--eds-primary), color-mix(in oklab, var(--eds-accent) 70%, var(--eds-primary)));
+  box-shadow: 0 4px 12px color-mix(in oklab, var(--eds-primary) 28%, transparent);
+}
+.ews-logo-text {
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  white-space: nowrap;
+}
+.ews-logo-text span {
+  font-weight: 500;
+  color: var(--eds-text-muted);
+}
+
+.ews-ai-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--eds-success) 35%, var(--eds-border));
+  background: color-mix(in oklab, var(--eds-success-soft) 70%, transparent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.ews-sidebar.ews-glass {
+  width: 15.5rem;
+  border-right: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  overflow-y: auto;
+  padding: 1rem 0.75rem 1.25rem;
+}
+.ews-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ews-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.7rem;
+  font-size: 0.875rem;
+  color: var(--eds-text-muted);
+  text-decoration: none;
+  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+}
+.ews-nav-link:hover {
+  background: color-mix(in oklab, var(--eds-primary) 8%, transparent);
+  color: var(--eds-text);
+  transform: translateX(2px);
+}
+.ews-nav-link.is-active {
+  background: color-mix(in oklab, var(--eds-primary) 14%, transparent);
+  color: var(--eds-primary);
+  font-weight: 600;
+}
+.ews-nav-link.is-soon {
+  opacity: 0.78;
+}
+.ews-nav-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+.ews-nav-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ews-nav-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.35rem 0.5rem 0.25rem;
+  padding: 0;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--eds-text-muted);
+  background: transparent;
+  border: 0;
+  width: calc(100% - 1rem);
+  cursor: default;
+}
+.ews-nav-section-btn {
+  cursor: pointer;
+}
+.ews-nav-section-btn:hover {
+  color: var(--eds-primary);
+}
+.ews-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+.ews-nav-row .ews-nav-link {
+  flex: 1;
+  min-width: 0;
+}
+.ews-nav-actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.05rem;
+  opacity: 0.55;
+}
+.ews-nav-row:hover .ews-nav-actions {
+  opacity: 1;
+}
+.ews-nav-action {
+  border: 0;
+  background: transparent;
+  color: var(--eds-text-muted);
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.2rem;
+  cursor: pointer;
+  border-radius: 0.35rem;
+}
+.ews-nav-action.is-on,
+.ews-nav-action:hover {
+  color: var(--eds-primary);
+  background: color-mix(in oklab, var(--eds-primary) 10%, transparent);
+}
+
+.ews-runtime-bar {
+  flex-shrink: 0;
+  border-top: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 88%, transparent);
+}
+.ews-runtime-metrics {
+  border-bottom: 1px solid color-mix(in oklab, var(--eds-border) 70%, transparent);
+  color: var(--eds-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.ews-workspace {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+.ews-main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: var(--eds-page-pad);
+}
+
+.ews-activity {
+  width: 18.5rem;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  min-height: 0;
+}
+.ews-activity--collapsed {
+  width: 2.25rem;
+  align-items: center;
+  padding-top: 0.75rem;
+}
+.ews-activity-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.85rem 0.85rem 0.5rem;
+}
+.ews-activity-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0 0.65rem 0.5rem;
+}
+.ews-activity-tabs button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--eds-text-muted);
+  background: transparent;
+  cursor: pointer;
+}
+.ews-activity-tabs button.is-active {
+  color: var(--eds-primary);
+  background: color-mix(in oklab, var(--eds-primary) 12%, transparent);
+}
+.ews-activity-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.65rem 0.65rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.ews-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  padding: 0.55rem 0.6rem;
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--eds-surface-raised) 80%, transparent);
+  border: 1px solid color-mix(in oklab, var(--eds-border) 70%, transparent);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+.ews-activity-item:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px color-mix(in oklab, #0b1220 8%, transparent);
+}
+.ews-activity-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.ews-activity-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem 0.85rem;
+  border-top: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+}
+
+.ews-status {
+  flex-shrink: 0;
+  border-top: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  padding: 0.35rem 0.75rem;
+}
+.ews-status-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 1rem;
+  max-width: 100%;
+}
+.ews-status-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+}
+.ews-status-label {
+  font-weight: 650;
+  color: var(--eds-text-muted);
+}
+.ews-status-detail {
+  color: var(--eds-text);
+  opacity: 0.9;
+}
+.ews-status-brand {
+  margin-left: auto;
+}
+
+.ews-dot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: var(--eds-text-muted);
+}
+.ews-dot--ok {
+  background: var(--eds-success, #12b76a);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--eds-success, #12b76a) 22%, transparent);
+}
+.ews-dot--warn {
+  background: var(--eds-warning, #f79009);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--eds-warning, #f79009) 22%, transparent);
+}
+.ews-dot--err {
+  background: var(--eds-danger, #f04438);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--eds-danger, #f04438) 22%, transparent);
+}
+.ews-dot--info,
+.ews-dot--unknown {
+  background: var(--eds-info, #0ba5ec);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--eds-info, #0ba5ec) 18%, transparent);
+}
+
+.ews-modules {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+@media (min-width: 720px) {
+  .ews-modules {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .ews-modules {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1680px) {
+  .ews-modules {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (min-width: 2400px) {
+  .ews-modules {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+.ews-module-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.1rem 1.15rem;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+.ews-module-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in oklab, var(--eds-primary) 35%, var(--eds-border));
+  box-shadow: 0 14px 36px color-mix(in oklab, #0b1220 12%, transparent);
+}
+.ews-module-card-top {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+.ews-module-icon {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.75rem;
+  color: var(--eds-primary);
+  background: color-mix(in oklab, var(--eds-primary) 12%, transparent);
+}
+.ews-module-title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.ews-module-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem;
+  margin: 0;
+}
+.ews-module-stats dt {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--eds-text-muted);
+}
+.ews-module-stats dd {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+@media (max-width: 1100px) {
+  .ews-activity:not(.ews-activity--collapsed) {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 1.75rem;
+    z-index: 35;
+    box-shadow: -12px 0 32px color-mix(in oklab, #0b1220 18%, transparent);
+  }
+}
+
+.ews-tabbar {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.35rem 0 0.65rem;
+  padding: 0.35rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 70%, transparent);
+  backdrop-filter: blur(12px);
+}
+.ews-tabbar-scroll {
+  display: flex;
+  flex: 1;
+  gap: 0.25rem;
+  overflow-x: auto;
+  min-width: 0;
+}
+.ews-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  border-radius: 0.65rem;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 0.15rem 0.2rem 0.15rem 0.35rem;
+  max-width: 14rem;
+}
+.ews-tab.is-active {
+  background: color-mix(in oklab, var(--eds-primary) 12%, transparent);
+  border-color: color-mix(in oklab, var(--eds-primary) 30%, var(--eds-border));
+}
+.ews-tab-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--eds-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  min-width: 0;
+  padding: 0.25rem 0.2rem;
+}
+.ews-tab-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ews-tab-pin {
+  font-size: 0.55rem;
+  color: var(--eds-primary);
+}
+.ews-tab-action {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--eds-text-muted);
+  font-size: 0.85rem;
+  line-height: 1;
+  padding: 0.2rem 0.35rem;
+  border-radius: 0.4rem;
+}
+.ews-tab-action:hover {
+  background: color-mix(in oklab, var(--eds-primary) 10%, transparent);
+  color: var(--eds-text);
+}
+.ews-tab-new {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  border: 1px dashed color-mix(in oklab, var(--eds-border) 90%, transparent);
+  background: transparent;
+  cursor: pointer;
+  color: var(--eds-text-muted);
+  font-size: 1rem;
+}
+.ews-tab-new:hover {
+  color: var(--eds-primary);
+  border-color: var(--eds-primary);
+}
+.ews-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: color-mix(in oklab, var(--eds-bg) 55%, transparent);
+}
+.ews-loading-card {
+  padding: 1rem 1.25rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--eds-border);
+  min-width: 12rem;
+  text-align: center;
+}
+.ews-progress {
+  height: 0.3rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--eds-border) 80%, transparent);
+  overflow: hidden;
+}
+.ews-progress > span {
+  display: block;
+  height: 100%;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--eds-primary);
+  animation: ews-progress 1.1s ease-in-out infinite;
+}
+@keyframes ews-progress {
+  0% { transform: translateX(-120%); }
+  100% { transform: translateX(280%); }
+}
+.ews-error-state {
+  padding: 1.25rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklab, var(--eds-danger) 35%, var(--eds-border));
+}
+.ews-module-section {
+  min-width: 0;
+}
+.ews-module-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.ews-module-hero {
+  padding: 1.15rem 1.25rem;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+}
+.ews-readiness-bar {
+  margin-top: 1rem;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--eds-border) 80%, transparent);
+  overflow: hidden;
+}
+.ews-readiness-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--eds-primary), color-mix(in oklab, var(--eds-accent) 70%, var(--eds-primary)));
+}
+.ews-coming-soon {
+  padding: 1.25rem 1.35rem;
+  border-radius: 1.1rem;
+  border: 1px dashed color-mix(in oklab, var(--eds-warning) 45%, var(--eds-border));
+  background: color-mix(in oklab, var(--eds-warning-soft) 55%, transparent);
+}
+.ews-user-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 40;
+  min-width: 10rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+}
+.ews-user-menu button {
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--eds-text);
+}
+.ews-user-menu button:hover {
+  background: color-mix(in oklab, var(--eds-primary) 10%, transparent);
+}
+
+/* Sprint 27.4 — docks, pro tabs, quick create, runtime health */
+.ews-dock {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  min-height: 0;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 78%, transparent);
+  backdrop-filter: blur(14px);
+}
+.ews-dock--left {
+  border-right-width: 1px;
+}
+.ews-dock--right {
+  border-left-width: 1px;
+}
+.ews-dock--bottom {
+  border-top-width: 1px;
+  width: 100%;
+}
+.ews-dock--collapsed {
+  width: 2.25rem !important;
+  height: auto;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.5rem 0;
+}
+.ews-dock--bottom.ews-dock--collapsed {
+  width: 100% !important;
+  height: 2rem !important;
+  flex-direction: row;
+  padding: 0 0.5rem;
+}
+.ews-dock-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem 0.35rem;
+}
+.ews-dock-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.15rem;
+  justify-content: flex-end;
+}
+.ews-dock-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 0.65rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+.ews-dock-resize {
+  position: absolute;
+  z-index: 2;
+  background: transparent;
+}
+.ews-dock-resize--left {
+  top: 0;
+  right: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+}
+.ews-dock-resize--right {
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+}
+.ews-dock-resize--bottom {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  cursor: row-resize;
+}
+.ews-dock-resize:hover {
+  background: color-mix(in oklab, var(--eds-primary) 35%, transparent);
+}
+.ews-activity-dock {
+  /* Activity uses DockPanel chrome */
+}
+.ews-left-dock-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-bottom: 0.75rem;
+}
+.ews-left-dock-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0.4rem 0.45rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  color: var(--eds-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.ews-left-dock-link:hover {
+  background: color-mix(in oklab, var(--eds-primary) 10%, transparent);
+}
+.ews-left-dock-icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+.ews-bottom-dock-peek {
+  display: flex;
+  justify-content: center;
+  padding: 0.15rem 0;
+  border-top: 1px dashed color-mix(in oklab, var(--eds-border) 80%, transparent);
+}
+.ews-workspace {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.ews-tab {
+  cursor: grab;
+}
+.ews-tab:active {
+  cursor: grabbing;
+}
+.ews-tab-menu {
+  position: fixed;
+  z-index: 60;
+  min-width: 10rem;
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 92%, transparent);
+  box-shadow: 0 12px 28px color-mix(in oklab, #0b1220 18%, transparent);
+}
+.ews-tab-menu button {
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--eds-text);
+}
+.ews-tab-menu button:hover:not(:disabled) {
+  background: color-mix(in oklab, var(--eds-primary) 10%, transparent);
+}
+.ews-tab-menu button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.ews-tab-new:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.ews-quick-create {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 3.25rem;
+  z-index: 45;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+.ews-quick-create-menu {
+  min-width: 14rem;
+  max-height: 22rem;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  padding: 0.35rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+}
+.ews-quick-create-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.55rem;
+  cursor: pointer;
+  color: var(--eds-text);
+}
+.ews-quick-create-item:hover {
+  background: color-mix(in oklab, var(--eds-primary) 10%, transparent);
+}
+.ews-quick-create-fab {
+  box-shadow: 0 10px 24px color-mix(in oklab, #0b1220 22%, transparent);
+}
+.ews-health-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.ews-health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+  gap: 0.45rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ews-health-grid--compact {
+  grid-template-columns: 1fr;
+}
+.ews-health-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+}
+.ews-health-label {
+  flex: 1;
+  font-weight: 600;
+  min-width: 0;
+}
+
+/* Sprint 27.5 — enterprise status bar + metrics */
+.ews-status-btn {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.ews-status-btn:hover {
+  color: var(--eds-primary);
+}
+.ews-metric-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+.ews-metric-card:hover {
+  outline: 1px solid color-mix(in oklab, var(--eds-primary) 35%, transparent);
+  border-radius: 0.85rem;
+}

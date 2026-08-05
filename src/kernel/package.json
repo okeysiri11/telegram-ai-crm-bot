@@ -1,0 +1,41 @@
+{
+  "name": "@ados/kernel",
+  "private": true,
+  "version": "1.4.0",
+  "description": "ADOS OS Enterprise Kernel — sprint 1.4 Runtime Server",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prebuild": "npm run build --prefix ../providers && npm run build --prefix ../orchestrator && npm run build --prefix ../chat_bridge && npm run build --prefix ../voice && npm run build --prefix ../mcp && npm run build --prefix ../execution",
+    "ados": "npm run build && node dist/main.js"
+  },
+  "dependencies": {
+    "@ados/chat-bridge": "file:../chat_bridge",
+    "@ados/execution": "file:../execution",
+    "@ados/mcp": "file:../mcp",
+    "@ados/orchestrator": "file:../orchestrator",
+    "@ados/providers": "file:../providers",
+    "@ados/voice": "file:../voice",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.2",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

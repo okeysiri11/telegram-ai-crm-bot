@@ -3,6 +3,8 @@
 import re
 from typing import Optional
 
+from openrouter import MEMORY_KEYS
+
 DOMAINS = ("agro", "crypto", "legal", "drone", "beauty", "finance", "general")
 
 DOMAIN_TO_AGENT = {
@@ -36,7 +38,7 @@ DOMAIN_KEYWORDS = {
         "cad", "прошив", "мотор", "пропеллер", "fpv",
     ),
     "beauty": (
-        "beauty", "cafe", "кафе", "салон", "космет", "маникюр",
+        "beauty", "beauty", "cafe", "кафе", "салон", "космет", "маникюр",
         "барбер", "склад", "меню", "бронирован",
     ),
     "finance": (

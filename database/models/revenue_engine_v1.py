@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class RevenueEngineV1PaymentStatus(str, enum.Enum):
@@ -24,7 +24,7 @@ REVENUE_ENGINE_V1_PAYMENT_STATUSES = frozenset(s.value for s in RevenueEngineV1P
 REVENUE_ENGINE_V1_SUPPORTED_VERTICALS = frozenset({"auto", "agro"})
 
 
-class RevenueEngineV1Entry(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class RevenueEngineV1Entry(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "revenue_engine_v1_entries"
     __table_args__ = (
         UniqueConstraint("deal_id", name="uq_revenue_engine_v1_deal"),

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Badge, Button, Card, Input } from "@/ui";
+import { Badge, Button, Card, EmptyState, Input } from "@/ui";
 import { PlatformBuilderLayout } from "../layouts/PlatformBuilderLayout";
 import { PLATFORM_BUILDER_API } from "../types";
 import { AITeamCollaborationWorkspace } from "@/ai-team-collaboration";
@@ -129,31 +129,43 @@ export function AITeamCenterPage() {
           </div>
 
           <div className="eds-grid eds-grid--dashboard">
-            {dash.members.map((m) => (
-              <Card key={m.agent_id} title={`${m.avatar} ${m.name}`}>
-                <ul className="space-y-1 eds-type-small">
-                  <li>Profession: {m.profession}</li>
-                  <li>Specialization: {m.specialization}</li>
-                  <li>Status: {m.status}</li>
-                  <li>Current task: {m.current_task || "—"}</li>
-                  <li>Memory: {Math.round((m.memory_usage || 0) * 100)}%</li>
-                  <li>Last activity: {m.last_activity || "—"}</li>
-                  <li>Capabilities: {(m.capabilities || []).join(", ") || "—"}</li>
-                </ul>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {(dash.owner_actions || []).map((action) => (
-                    <Button
-                      key={action}
-                      variant="ghost"
-                      disabled={busy}
-                      onClick={() => void runAction(m.agent_id, action)}
-                    >
-                      {ACTION_LABELS[action] || action}
-                    </Button>
-                  ))}
-                </div>
-              </Card>
-            ))}
+            {dash.members.length ? (
+              dash.members.map((m) => (
+                <Card key={m.agent_id} title={`${m.avatar} ${m.name}`}>
+                  <ul className="space-y-1 eds-type-small">
+                    <li>Profession: {m.profession}</li>
+                    <li>Specialization: {m.specialization}</li>
+                    <li>Status: {m.status}</li>
+                    <li>Current task: {m.current_task || "—"}</li>
+                    <li>Memory: {Math.round((m.memory_usage || 0) * 100)}%</li>
+                    <li>Last activity: {m.last_activity || "—"}</li>
+                    <li>Capabilities: {(m.capabilities || []).join(", ") || "—"}</li>
+                  </ul>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {(dash.owner_actions || []).map((action) => (
+                      <Button
+                        key={action}
+                        variant="ghost"
+                        disabled={busy}
+                        onClick={() => void runAction(m.agent_id, action)}
+                      >
+                        {ACTION_LABELS[action] || action}
+                      </Button>
+                    ))}
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div>
+                <EmptyState
+                  title="No AI specialists yet"
+                  description="AI Team Center is ready, but this organization doesn’t have specialists configured. Create your first agent in Builder Studio."
+                  actionLabel="Open Builder Studio Wizard"
+                  actionTo="/platform-builder/builder-studio?mode=wizard"
+                  illustration="◇"
+                />
+              </div>
+            )}
           </div>
 
           <Card title="Group AI Chat Foundation">
@@ -169,7 +181,19 @@ export function AITeamCenterPage() {
           </Card>
         </>
       ) : (
-        <p className="eds-type-small">{busy ? "Loading…" : "No dashboard yet"}</p>
+        <div>
+          {busy ? (
+            <p className="eds-type-small">Loading AI Team Center…</p>
+          ) : (
+            <EmptyState
+              title="AI Team Center"
+              description="This screen composes specialists for your organization. If you haven’t created agents yet, start with the Builder Studio wizard."
+              actionLabel="Create an Agent"
+              actionTo="/platform-builder/builder-studio?mode=wizard"
+              illustration="◇"
+            />
+          )}
+        </div>
       )}
     </PlatformBuilderLayout>
   );

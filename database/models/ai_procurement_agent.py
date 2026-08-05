@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 import database.models.automotive_procurement  # noqa: F401
@@ -53,7 +53,7 @@ PROCUREMENT_SUBJECT_TYPES = frozenset(t.value for t in ProcurementSubjectType)
 PROCUREMENT_OPPORTUNITY_STATUSES = frozenset(s.value for s in ProcurementOpportunityStatus)
 
 
-class ProcurementAnalysis(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ProcurementAnalysis(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_procurement_agent_v1_analyses"
     __table_args__ = (
         CheckConstraint(
@@ -80,7 +80,7 @@ class ProcurementAnalysis(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<ProcurementAnalysis type={self.analysis_type} subject={self.subject_id}>"
 
 
-class ProcurementOpportunity(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ProcurementOpportunity(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_procurement_agent_v1_opportunities"
     __table_args__ = (
         CheckConstraint(

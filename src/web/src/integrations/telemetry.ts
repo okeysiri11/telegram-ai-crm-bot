@@ -62,6 +62,18 @@ export const telemetry = {
       kind: "audit",
       message: detail ? `${action}: ${detail}` : action,
     });
+    try {
+      const { appendAuditVault } = await import("@/audit-vault");
+      const ctx = getIdentityContext();
+      await appendAuditVault({
+        actor: ctx.email || ctx.userId || "anonymous",
+        action,
+        detail,
+        correlationId: correlationId(),
+      });
+    } catch {
+      /* foundation stub must never break UX */
+    }
   },
 
   async error(message: string, err?: Error): Promise<void> {

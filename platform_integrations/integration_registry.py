@@ -77,6 +77,66 @@ PROVIDER_CATALOG: dict[str, dict] = {
         "implemented": False,
         "description": "Stripe payments (future)",
     },
+    ProviderType.N8N.value: {
+        "connector_type": ConnectorType.WEBHOOK.value,
+        "version": "1.0.0",
+        "implemented": True,
+        "description": "n8n external workflow orchestration (no business logic)",
+    },
+    ProviderType.ANTHROPIC.value: {
+        "connector_type": ConnectorType.OUTBOUND.value,
+        "version": "1.0.0",
+        "implemented": True,
+        "description": "Anthropic via AI Provider Hub",
+    },
+    ProviderType.OPENROUTER.value: {
+        "connector_type": ConnectorType.OUTBOUND.value,
+        "version": "1.0.0",
+        "implemented": True,
+        "description": "OpenRouter via AI Provider Hub",
+    },
+    ProviderType.LITELLM.value: {
+        "connector_type": ConnectorType.OUTBOUND.value,
+        "version": "1.0.0",
+        "implemented": True,
+        "description": "LiteLLM gateway via AI Provider Hub",
+    },
+    ProviderType.SLACK.value: {
+        "connector_type": ConnectorType.BIDIRECTIONAL.value,
+        "version": "0.1.0",
+        "implemented": False,
+        "description": "Slack workspace messaging",
+    },
+    ProviderType.DISCORD.value: {
+        "connector_type": ConnectorType.BIDIRECTIONAL.value,
+        "version": "0.1.0",
+        "implemented": False,
+        "description": "Discord bots / webhooks",
+    },
+    ProviderType.HUBSPOT.value: {
+        "connector_type": ConnectorType.BIDIRECTIONAL.value,
+        "version": "0.1.0",
+        "implemented": False,
+        "description": "HubSpot CRM",
+    },
+    ProviderType.SALESFORCE.value: {
+        "connector_type": ConnectorType.BIDIRECTIONAL.value,
+        "version": "0.1.0",
+        "implemented": False,
+        "description": "Salesforce CRM",
+    },
+    ProviderType.S3.value: {
+        "connector_type": ConnectorType.OUTBOUND.value,
+        "version": "0.1.0",
+        "implemented": False,
+        "description": "Amazon S3 object storage",
+    },
+    ProviderType.MINIO.value: {
+        "connector_type": ConnectorType.OUTBOUND.value,
+        "version": "0.1.0",
+        "implemented": False,
+        "description": "MinIO S3-compatible storage",
+    },
 }
 
 

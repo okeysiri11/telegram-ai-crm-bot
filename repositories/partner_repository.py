@@ -15,10 +15,10 @@ class PartnerRepository:
         return get_partner(partner_id)
 
     @staticmethod
-    def list(user_id: int, **kwargs) -> list:
-        from database import list_partners
+    def list_partners(user_id: int, **kwargs) -> list:
+        from database import list_partners as _list_partners
 
-        return list_partners(**kwargs)
+        return _list_partners(**kwargs)
 
     @staticmethod
     def assign_to_deal(partner_id: int, deal_id: int, user_id: int, **kwargs) -> bool:

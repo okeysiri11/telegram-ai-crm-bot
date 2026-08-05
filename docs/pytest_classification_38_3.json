@@ -1,0 +1,19 @@
+{
+  "counts": {
+    "failed": 350,
+    "passed": 2156,
+    "skipped": 5,
+    "xfailed": 0,
+    "legacy_fail": 350,
+    "current_fail": 0,
+    "note": "Baseline full run: 2154 passed / 352 failed. Two CURRENT failures (management/ops RBAC monkeypatches) fixed and re-verified PASS; remaining failures classified LEGACY (version/sprint pins). Architecture boundary collection has a separate circular-import issue via src.platform.layers (TD)."
+  },
+  "rc_suite": {
+    "passed": 64,
+    "failed": 0
+  },
+  "smoke": {
+    "gates": 32,
+    "failed": 0
+  }
+}

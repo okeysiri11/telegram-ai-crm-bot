@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.partner_engine  # noqa: F401 — register partner_engine_partners
 
@@ -83,7 +83,7 @@ class ComplianceRiskLevel(str, enum.Enum):
     CRITICAL = "CRITICAL"
 
 
-class ComplianceKycProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ComplianceKycProfile(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner KYC profile — maps to logical table kyc_profiles."""
 
     __tablename__ = "compliance_engine_kyc_profiles"
@@ -126,7 +126,7 @@ class ComplianceKycProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class ComplianceKycDocument(UUIDPrimaryKeyMixin, Base):
+class ComplianceKycDocument(UUIDPrimaryKeyMixin, VersionMixin, Base):
     """KYC document — maps to logical table kyc_documents."""
 
     __tablename__ = "compliance_engine_kyc_documents"
@@ -166,7 +166,7 @@ class ComplianceKycDocument(UUIDPrimaryKeyMixin, Base):
         )
 
 
-class ComplianceAmlCheck(UUIDPrimaryKeyMixin, Base):
+class ComplianceAmlCheck(UUIDPrimaryKeyMixin, VersionMixin, Base):
     """AML screening result — maps to logical table aml_checks."""
 
     __tablename__ = "compliance_engine_aml_checks"
@@ -198,7 +198,7 @@ class ComplianceAmlCheck(UUIDPrimaryKeyMixin, Base):
         )
 
 
-class ComplianceRiskProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ComplianceRiskProfile(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner risk profile — maps to logical table risk_profiles."""
 
     __tablename__ = "compliance_engine_risk_profiles"

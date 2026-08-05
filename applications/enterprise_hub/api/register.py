@@ -22,7 +22,7 @@ from applications.enterprise_hub.process_mining import api as epm_api
 from applications.enterprise_hub.business_capabilities import api as ebc_api
 from applications.enterprise_hub.command_center import api as ecc_api
 from applications.enterprise_hub.api_standardization import api as eas_api
-from applications.enterprise_hub.data_contracts import api as edc_api
+from applications.enterprise_hub.data_contracts import api as edc_contracts_api
 from applications.enterprise_hub.security_hardening import api as esh_api
 from applications.enterprise_hub.quality_assurance import api as eqa_api
 from applications.enterprise_hub.documentation_platform import api as edo_api
@@ -70,6 +70,8 @@ from applications.enterprise_hub.release_candidate import api as rc_api
 from applications.enterprise_hub.enterprise_ai_os import api as maos_api
 from applications.enterprise_hub.organization_brain import api as obr_api
 from applications.enterprise_hub.vertical_federation import api as vf_api
+from applications.enterprise_hub.business_network import api as ebn_api
+from applications.enterprise_hub.digital_citizen import api as edc_api
 from applications.enterprise_hub.knowledge_platform import api as ekp_api
 from applications.enterprise_hub.observability import api as obs_api
 from applications.enterprise_hub.security import api as isam_api
@@ -603,18 +605,19 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{eas}/governance", eas_api.eas_governance_handler)
 
     # Sprint 21.3 — Data Contracts (additive; prior routes unchanged)
+    # Note: alias edc_contracts_api — must not shadow digital_citizen `edc_api` (Sprint 30.0 fix)
     edc = DEFAULT_CONFIG.data_contracts_api_prefix
-    app.router.add_get(f"{edc}/health", edc_api.edc_health_handler)
-    app.router.add_post(f"{edc}/bootstrap", edc_api.edc_bootstrap_handler)
-    app.router.add_get(f"{edc}/dtos", edc_api.edc_dtos_handler)
-    app.router.add_post(f"{edc}/dtos", edc_api.edc_dtos_handler)
-    app.router.add_get(f"{edc}/schemas", edc_api.edc_schemas_handler)
-    app.router.add_post(f"{edc}/schemas", edc_api.edc_schemas_handler)
-    app.router.add_post(f"{edc}/validate", edc_api.edc_validate_handler)
-    app.router.add_post(f"{edc}/serialize", edc_api.edc_serialize_handler)
-    app.router.add_post(f"{edc}/map", edc_api.edc_map_handler)
-    app.router.add_post(f"{edc}/tests", edc_api.edc_tests_handler)
-    app.router.add_get(f"{edc}/docs", edc_api.edc_docs_handler)
+    app.router.add_get(f"{edc}/health", edc_contracts_api.edc_health_handler)
+    app.router.add_post(f"{edc}/bootstrap", edc_contracts_api.edc_bootstrap_handler)
+    app.router.add_get(f"{edc}/dtos", edc_contracts_api.edc_dtos_handler)
+    app.router.add_post(f"{edc}/dtos", edc_contracts_api.edc_dtos_handler)
+    app.router.add_get(f"{edc}/schemas", edc_contracts_api.edc_schemas_handler)
+    app.router.add_post(f"{edc}/schemas", edc_contracts_api.edc_schemas_handler)
+    app.router.add_post(f"{edc}/validate", edc_contracts_api.edc_validate_handler)
+    app.router.add_post(f"{edc}/serialize", edc_contracts_api.edc_serialize_handler)
+    app.router.add_post(f"{edc}/map", edc_contracts_api.edc_map_handler)
+    app.router.add_post(f"{edc}/tests", edc_contracts_api.edc_tests_handler)
+    app.router.add_get(f"{edc}/docs", edc_contracts_api.edc_docs_handler)
 
     # Sprint 21.4 — Security Hardening (additive; prior routes unchanged)
     esh = DEFAULT_CONFIG.security_hardening_api_prefix
@@ -1250,3 +1253,35 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_post(f"{vf}/knowledge", vf_api.vf_knowledge_handler)
     app.router.add_post(f"{vf}/search", vf_api.vf_search_handler)
     app.router.add_get(f"{vf}/exec-dashboard", vf_api.vf_dashboard_handler)
+
+    # Sprint 29.0 — Enterprise Business Network
+    ebn = DEFAULT_CONFIG.business_network_api_prefix
+    app.router.add_get(f"{ebn}/health", ebn_api.ebn_health_handler)
+    app.router.add_post(f"{ebn}/bootstrap", ebn_api.ebn_bootstrap_handler)
+    app.router.add_get(f"{ebn}/inventory", ebn_api.ebn_inventory_handler)
+    app.router.add_get(f"{ebn}/dashboard", ebn_api.ebn_dashboard_handler)
+    app.router.add_get(f"{ebn}/profiles", ebn_api.ebn_profiles_handler)
+    app.router.add_get(f"{ebn}/profiles/{{profile_id}}", ebn_api.ebn_profile_handler)
+    app.router.add_get(f"{ebn}/relationships", ebn_api.ebn_relationships_handler)
+    app.router.add_post(f"{ebn}/relationships", ebn_api.ebn_relationships_handler)
+    app.router.add_post(
+        f"{ebn}/relationships/{{relationship_id}}/approve", ebn_api.ebn_approve_handler
+    )
+    app.router.add_post(
+        f"{ebn}/relationships/{{relationship_id}}/reject", ebn_api.ebn_reject_handler
+    )
+    app.router.add_get(f"{ebn}/graph", ebn_api.ebn_graph_handler)
+    app.router.add_get(f"{ebn}/city/{{profile_id}}", ebn_api.ebn_city_handler)
+
+    # Sprint 29.1 — Enterprise Digital Citizen
+    edc = DEFAULT_CONFIG.digital_citizen_api_prefix
+    app.router.add_get(f"{edc}/health", edc_api.edc_health_handler)
+    app.router.add_post(f"{edc}/bootstrap", edc_api.edc_bootstrap_handler)
+    app.router.add_get(f"{edc}/inventory", edc_api.edc_inventory_handler)
+    app.router.add_get(f"{edc}/dashboard", edc_api.edc_dashboard_handler)
+    app.router.add_get(f"{edc}/citizens", edc_api.edc_citizens_handler)
+    app.router.add_get(f"{edc}/citizens/{{citizen_id}}", edc_api.edc_citizen_handler)
+    app.router.add_get(f"{edc}/memberships", edc_api.edc_memberships_handler)
+    app.router.add_get(f"{edc}/presence", edc_api.edc_presence_handler)
+    app.router.add_post(f"{edc}/presence", edc_api.edc_presence_handler)
+    app.router.add_get(f"{edc}/city/{{citizen_id}}", edc_api.edc_city_handler)

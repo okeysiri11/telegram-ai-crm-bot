@@ -65,22 +65,36 @@ export function EmployeePortalPage() {
 export function OwnerPortalPage() {
   return (
     <PortalLayout
-      title="Owner Portal"
-      subtitle="Shell for owners and executives. Reuses Strategy, Scorecard, and Mission Control — no parallel executive stack."
+      title="Портал владельца"
+      subtitle="Оболочка для владельцев и руководителей. Использует Стратегию, Scorecard и Мониторинг — без параллельного executive-стека."
       audience="owner"
     >
       <PortalLinksCard
-        title="Executive surfaces"
+        title="Руководящие поверхности"
         links={[
-          { label: "Mission Control", to: "/platform-builder/mission-control" },
-          { label: "Strategy Engine", to: "/platform-builder/strategy" },
-          { label: "Twin Intelligence", to: "/platform-builder/twin-intelligence" },
-          { label: "Analytics", to: "/workspace/analytics" },
-          { label: "Global Command Center", to: "/command-center" },
-          ...SHARED,
+          { label: "Панель владельца", to: "/owner" },
+          { label: "Мониторинг", to: "/platform-builder/mission-control" },
+          { label: "Движок стратегии", to: "/platform-builder/strategy" },
+          { label: "Интеллект двойника", to: "/platform-builder/twin-intelligence" },
+          { label: "Аналитика", to: "/workspace/analytics" },
+          { label: "Командный центр", to: "/command-center" },
+          { label: "Рабочее пространство", to: "/workspace" },
+          { label: "Цифровой двойник", to: "/enterprise-twin" },
+          { label: "Бизнес-экосистемы", to: "/platform-builder/business-ecosystem" },
         ]}
       />
-      <PortalLinksCard title="Business ecosystems" links={ECOSYSTEMS} />
+      <PortalLinksCard
+        title="Бизнес-экосистемы"
+        links={[
+          { label: "Авто", to: "/workspace/auto" },
+          { label: "Бьюти", to: "/workspace/beauty" },
+          { label: "Кафе", to: "/workspace/cafe" },
+          { label: "Агро", to: "/workspace/agro" },
+          { label: "Дроны", to: "/workspace/drone" },
+          { label: "Юридический", to: "/workspace/legal" },
+          { label: "Crypto (Bidex)", to: "/workspace/crypto" },
+        ]}
+      />
     </PortalLayout>
   );
 }

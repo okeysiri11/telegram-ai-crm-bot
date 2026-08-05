@@ -1,6 +1,6 @@
 # Architecture Map — ADOS / BIDEX Enterprise Platform
 
-**Last verified:** 2026-08-02 · Sprint **33.1** Enterprise UX Revolution · prior **32.6B** · **Status:** permanent, living document — part of a four-document set
+**Last verified:** 2026-08-02 · Sprint **33.2** Intelligent Navigation · prior **33.1** · **Status:** permanent, living document — part of a four-document set
 maintained together and refreshed every sprint (per `CLAUDE.md`'s sprint-closeout rule):
 
 - **`ARCHITECTURE_MAP.md`** (this document) — narrative structure: what exists, how it's organized.
@@ -9,7 +9,7 @@ maintained together and refreshed every sprint (per `CLAUDE.md`'s sprint-closeou
 - [`API_MAP.md`](./API_MAP.md) — concrete endpoint-level inventory (REST/WS/MCP/events).
 - [`TECH_DEBT.md`](./TECH_DEBT.md) — the living debt registry; this map's §12–16 feed its entries.
 - [`TECH_DEBT_REGISTRY.md`](./TECH_DEBT_REGISTRY.md) — categorized debt index (Architecture / Performance / Security / UX / Infrastructure).
-- [`ENTERPRISE_UX_33_1.md`](./ENTERPRISE_UX_33_1.md) · [`LOCAL_RUN.md`](./LOCAL_RUN.md) — UX foundation + local launch.
+- [`INTELLIGENT_NAVIGATION_33_2.md`](./INTELLIGENT_NAVIGATION_33_2.md) · [`ENTERPRISE_UX_33_1.md`](./ENTERPRISE_UX_33_1.md) — UX navigation.
 
 **Method:** direct repository reads + targeted greps across the full tree (Python backend, `src/` TS ecosystem,
 `src/web`, `platform_console`, `docs/`), cross-checked against existing generated reports
@@ -801,6 +801,9 @@ auto Alembic on startup, Redis-optional health, `FIRST_SUCCESSFUL_LOCAL_RUN.md`.
 **Sprint 33.1 — Enterprise UX Revolution (Foundation)** — Simple/Pro mode, role workspaces,
 context nav, AI Ctrl+K intents, Executive Summary dashboard. Docs: `ENTERPRISE_UX_33_1.md`,
 `SPRINT_33_1_RESULT.md`. Frontend only.
+
+**Sprint 33.2 — Intelligent Navigation** — Collapsible left-nav accordion (Workspace / Business /
+AI / City / Platform / Owner). Docs: `INTELLIGENT_NAVIGATION_33_2.md`, `SPRINT_33_2_RESULT.md`.
 
 ## 13. Duplicate modules
 

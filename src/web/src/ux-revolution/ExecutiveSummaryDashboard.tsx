@@ -3,6 +3,7 @@
  * Presentation-only: uses existing stores + local demo data — no API changes.
  */
 
+import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Badge, Button, Card } from "@/ui";
 import { useAuthStore } from "@/auth/authStore";
@@ -63,7 +64,9 @@ export function ExecutiveSummaryDashboard() {
   const user = useAuthStore((s) => s.user);
   const navigate = useNavigate();
   const { openPalette } = useNavigationUi();
-  const notifs = useNotificationStore((s) => s.items.filter((i) => !i.read));
+  // Select stable items ref; derive unread list outside selector (Sprint 33.2.1).
+  const items = useNotificationStore((s) => s.items);
+  const notifs = useMemo(() => items.filter((i) => !i.read), [items]);
   const { snapshot, busy } = useLiveEnterprise(true);
   const brief = deriveMorningBrief(snapshot, {
     company: user?.tenantId || "ADOS",

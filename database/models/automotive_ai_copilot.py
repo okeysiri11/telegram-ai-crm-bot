@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 
@@ -55,7 +55,7 @@ class FeedbackRating(str, enum.Enum):
     NEGATIVE = "NEGATIVE"
 
 
-class AiRecommendation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AiRecommendation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_ai_copilot_v1_ai_recommendations"
     __table_args__ = (
         CheckConstraint(
@@ -91,7 +91,7 @@ class AiRecommendation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class AiPrediction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AiPrediction(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_ai_copilot_v1_ai_predictions"
     __table_args__ = (
         CheckConstraint(
@@ -129,7 +129,7 @@ class AiPrediction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class AiDecision(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AiDecision(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_ai_copilot_v1_ai_decisions"
     __table_args__ = (
         Index("ix_automotive_ai_copilot_v1_dec_status", "status"),
@@ -170,7 +170,7 @@ class AiDecision(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AiDecision type={self.decision_type} status={self.status}>"
 
 
-class AiFeedback(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class AiFeedback(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_ai_copilot_v1_ai_feedback"
     __table_args__ = (
         Index("ix_automotive_ai_copilot_v1_fb_recommendation", "recommendation_id"),

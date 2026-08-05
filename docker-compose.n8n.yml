@@ -1,0 +1,34 @@
+# Optional n8n sidecar — external workflow orchestration only.
+# Platform Runtime remains system of record. Do not put business logic in n8n.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.n8n.yml --profile n8n up -d
+#
+# Webhooks must target platform `/integrations/n8n/callback` (via webhook_manager / n8n_bridge).
+
+services:
+  n8n:
+    profiles: ["n8n"]
+    image: n8nio/n8n:1.64.3
+    container_name: ados-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      N8N_HOST: ${N8N_HOST:-localhost}
+      N8N_PORT: 5678
+      N8N_PROTOCOL: ${N8N_PROTOCOL:-http}
+      WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://localhost:5678/}
+      # Set a strong N8N_ENCRYPTION_KEY in .env before enabling profile n8n.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY:-local-dev-n8n-encryption-key-change-me}
+      GENERIC_TIMEZONE: ${TZ:-UTC}
+      # Callbacks into platform — never store CRM/domain state inside n8n
+      ADOS_CALLBACK_URL: ${ADOS_CALLBACK_URL:-http://host.docker.internal:8000/integrations/n8n/callback}
+      ADOS_SYSTEM_OF_RECORD: platform_runtime
+    volumes:
+      - n8n_data:/home/node/.n8n
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  n8n_data:

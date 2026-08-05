@@ -84,6 +84,10 @@ def register_platform_event_handlers() -> None:
 
     register_realtime_event_handlers()
 
+    from platform_state.realtime_handler import register_platform_state_handlers
+
+    register_platform_state_handlers()
+
     from events.adapters.legacy_adapter import register_legacy_handlers_on_platform_bus
 
     register_legacy_handlers_on_platform_bus()

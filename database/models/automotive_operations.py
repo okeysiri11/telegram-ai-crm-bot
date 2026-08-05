@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 
@@ -77,7 +77,7 @@ class VehicleAttachmentType(str, enum.Enum):
     OTHER = "OTHER"
 
 
-class VehicleOperation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleOperation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_operations_v1_vehicle_operations"
     __table_args__ = (
         UniqueConstraint(
@@ -119,7 +119,7 @@ class VehicleOperation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class VehicleStateHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class VehicleStateHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_operations_v1_vehicle_state_history"
     __table_args__ = (
         Index("ix_automotive_operations_v1_state_hist_operation", "operation_id"),
@@ -148,7 +148,7 @@ class VehicleStateHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         )
 
 
-class VehicleTask(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleTask(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_operations_v1_vehicle_tasks"
     __table_args__ = (
         Index("ix_automotive_operations_v1_tasks_operation", "operation_id"),
@@ -198,7 +198,7 @@ class VehicleTask(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<VehicleTask type={self.task_type} status={self.status}>"
 
 
-class VehicleChecklist(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleChecklist(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_operations_v1_vehicle_checklists"
     __table_args__ = (
         Index("ix_automotive_operations_v1_checklists_operation", "operation_id"),
@@ -230,7 +230,7 @@ class VehicleChecklist(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<VehicleChecklist key={self.item_key} done={self.is_completed}>"
 
 
-class VehicleAttachment(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class VehicleAttachment(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_operations_v1_vehicle_attachments"
     __table_args__ = (
         Index("ix_automotive_operations_v1_attachments_operation", "operation_id"),

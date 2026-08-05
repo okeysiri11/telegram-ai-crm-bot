@@ -84,7 +84,7 @@ const ECOSYSTEMS: Array<{ id: string; label: string; route: string; tokens: RegE
 
 export const CONTROL_TOWER_COMMANDS: CommandAction[] = [
   { id: "cmd_ws", label: "Открыть Workspace", route: "/workspace" },
-  { id: "cmd_twin", label: "Открыть Digital Twin", route: "/enterprise-twin" },
+  { id: "cmd_twin", label: "Открыть Digital Twin", route: "/platform-builder/digital-twin" },
   { id: "cmd_runtime", label: "Перейти в Runtime", route: "/platform-builder/runtime" },
   { id: "cmd_approval", label: "Approval Center", route: "/platform-builder/autonomy" },
   { id: "cmd_builder", label: "AI Builder", route: "/platform-builder/builder-studio" },
@@ -158,7 +158,7 @@ export function deriveControlTower(
       label: "Digital Twins",
       value: "1",
       detail: `${twin.nodes.length} nodes`,
-      route: "/enterprise-twin",
+      route: "/platform-builder/digital-twin",
       tone: "ok",
     },
     {

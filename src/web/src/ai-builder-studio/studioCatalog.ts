@@ -34,7 +34,7 @@ export const STUDIO_HOME_CARDS: StudioHomeCard[] = [
   { id: "skills", title: "Skills", detail: "Библиотека навыков" },
   { id: "prompts", title: "Prompt Library", detail: "Системные и корпоративные промпты" },
   { id: "templates", title: "Templates", detail: "Шаблоны экосистем" },
-  { id: "wizard", title: "Create Agent", detail: "Классический AI Builder wizard", route: "/platform-builder/ai?mode=wizard" },
+  { id: "wizard", title: "Create Agent", detail: "Классический AI Builder wizard", route: "/platform-builder/builder-studio?mode=wizard" },
 ];
 
 /** Domain skill packs for Skill Library (SECTION 4). */

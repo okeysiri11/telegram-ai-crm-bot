@@ -580,6 +580,6 @@ async def test_vertical_registry_enabled_filter():
     config_provider.apply_snapshot({"feature_flags.verticals.auto": False})
     assert "auto" in registry.list_codes()
     assert "auto" not in registry.list_enabled_codes()
-    entry = registry.list()[0]
+    entry = registry.list_verticals()[0]
     assert entry["enabled"] is False
 

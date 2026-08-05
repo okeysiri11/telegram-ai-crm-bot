@@ -303,10 +303,13 @@ function DecisionPanel({
           </ul>
         </div>
       </div>
-      <div className="mt-3">
+      <div className="mt-3 flex flex-wrap gap-2">
         <Link to="/dashboard?mode=executive">
+          <Button size="sm">Act from Morning Brief</Button>
+        </Link>
+        <Link to="/platform-builder/control-tower">
           <Button size="sm" variant="secondary">
-            Открыть Executive Mode
+            Decide in Control Tower
           </Button>
         </Link>
       </div>

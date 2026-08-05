@@ -4,6 +4,7 @@
  */
 
 import { moduleRegistry } from "../../workspace/managers/moduleRegistry";
+import { BREADCRUMB_LABEL_RU } from "../navigation/enterpriseRuNav";
 
 export type QuickSwitchItem = {
   id: string;
@@ -14,39 +15,71 @@ export type QuickSwitchItem = {
 
 /** Enterprise OS quick switch — existing routes only. */
 export const GLOBAL_QUICK_SWITCH: QuickSwitchItem[] = [
-  { id: "dashboard", label: "Dashboard", route: "/dashboard", hint: "CC" },
-  { id: "mission_control", label: "Mission Control", route: "/platform-builder/mission-control", hint: "MC" },
-  { id: "city", label: "Enterprise City", route: "/enterprise-city", hint: "City" },
-  { id: "workflows", label: "Workflows", route: "/platform-builder/workflow-center", hint: "WF" },
-  { id: "builder", label: "Builder Studio", route: "/platform-builder/builder-studio", hint: "Build" },
-  { id: "marketplace", label: "Marketplace", route: "/platform-builder/solution-hub", hint: "Mkt" },
-  { id: "crm", label: "CRM", route: "/workspace/crm", hint: "CRM" },
-  { id: "analytics", label: "Analytics", route: "/platform-builder/intelligence", hint: "BI" },
-  { id: "documents", label: "Documents", route: "/workspace/docs", hint: "Docs" },
-  { id: "ai_team", label: "AI Team", route: "/platform-builder/ai-team", hint: "AI" },
-  { id: "knowledge", label: "Knowledge", route: "/platform-builder/knowledge", hint: "KB" },
-  { id: "settings", label: "Settings", route: "/settings", hint: "Cfg" },
+  { id: "desktop", label: "Рабочий стол", route: "/desktop", hint: "ОС" },
+  { id: "dashboard", label: "Главная", route: "/dashboard", hint: "КЦ" },
+  { id: "city", label: "Город", route: "/enterprise-city", hint: "Город" },
+  { id: "production", label: "Продакшн", route: "/production-studio", hint: "Прод" },
+  { id: "command_center", label: "Командный центр", route: "/command-center", hint: "Кмд" },
+  { id: "workspace", label: "Рабочее пространство", route: "/workspace", hint: "РП" },
+  { id: "mission_control", label: "Мониторинг", route: "/platform-builder/mission-control", hint: "Мон" },
+  { id: "workflows", label: "Процессы", route: "/platform-builder/workflow-center", hint: "ПР" },
+  { id: "builder", label: "Конструктор", route: "/platform-builder/builder-studio", hint: "Кнстр" },
+  { id: "crm", label: "CRM", route: "/crm", hint: "CRM" },
+  { id: "analytics", label: "Аналитика", route: "/analytics", hint: "BI" },
+  { id: "documents", label: "Документы", route: "/documents", hint: "Док" },
+  { id: "ai_team", label: "AI-Агенты", route: "/ai-agents", hint: "AI" },
+  { id: "knowledge", label: "Знания", route: "/knowledge", hint: "БЗ" },
+  { id: "owner", label: "Владелец", route: "/owner", hint: "Вл" },
+  { id: "settings", label: "Настройки", route: "/settings", hint: "Нстр" },
 ];
 
 const ECOSYSTEM_LABELS: Record<string, string> = {
-  auto: "Automotive",
-  beauty: "Beauty",
-  cafe: "Cafe",
-  agro: "Agriculture",
-  legal: "Legal",
+  auto: "Авто",
+  beauty: "Бьюти",
+  cafe: "Кафе",
+  agro: "Агро",
+  legal: "Юридический",
   crypto: "Bidex",
-  drone: "Drone",
+  drone: "Дроны",
 };
 
 const LABEL_OVERRIDES: Record<string, string> = {
+  "production-studio": "AI Production Center",
+  production: "AI Production Center",
+  desktop: "Enterprise Desktop",
   dashboard: "Dashboard",
   "enterprise-city": "Enterprise City",
+  city: "Enterprise City",
+  "ai-studio": "AI Studio",
+  "ai-agents": "AI Agents",
+  knowledge: "Knowledge Base",
+  documents: "Documents",
+  analytics: "Analytics",
+  marketplace: "Marketplace",
+  automation: "Automation",
+  integrations: "Integrations",
+  security: "Security",
+  projects: "Projects",
+  search: "Search",
   "platform-builder": "Platform Builder",
   "mission-control": "Mission Control",
   "ai-team": "AI Team",
+  "builder-studio": "Builder Studio",
+  builder: "Builder",
   crm: "CRM",
+  erp: "ERP",
   docs: "Documents",
-  documents: "Documents",
+  "solution-hub": "Marketplace",
+  "digital-twin": "Digital Twin",
+  "workflow-center": "Workflow Center",
+  "command-center": "Command Center OS",
+  framework: "Universal Builder Framework",
+  vertical: "Vertical Builder",
+  academy: "Builder Academy 2.0",
+  "business-ecosystem": "Business Ecosystem",
+  strategy: "Strategy Engine",
+  "twin-intelligence": "Twin Intelligence",
+  "control-tower": "Control Tower",
   finance: "Finance",
   hr: "HR",
   settings: "Settings",
@@ -56,21 +89,21 @@ const LABEL_OVERRIDES: Record<string, string> = {
   scenario: "Scenario",
   workspace: "Workspace",
   intelligence: "Analytics",
-  knowledge: "Knowledge",
   concierge: "AI Concierge",
   ...ECOSYSTEM_LABELS,
 };
 
 export function labelForSegment(segment: string): string {
   const key = segment.toLowerCase();
-  if (LABEL_OVERRIDES[key]) return LABEL_OVERRIDES[key];
+  if (BREADCRUMB_LABEL_RU[key]) return BREADCRUMB_LABEL_RU[key]!;
+  if (LABEL_OVERRIDES[key]) return LABEL_OVERRIDES[key]!;
   try {
     const meta = moduleRegistry.resolve(key);
     if (meta?.title) return meta.title;
   } catch {
     /* ignore */
   }
-  return segment.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return segment.replace(/[-_]/g, " ");
 }
 
 export function detectActiveEcosystem(pathname: string): string | null {
@@ -89,6 +122,6 @@ export function detectActiveEcosystem(pathname: string): string | null {
 }
 
 export function workspaceStatusLabel(activeModules: string[]): string {
-  if (!activeModules.length) return "Idle";
-  return activeModules.length >= 4 ? "Operational" : "Partial";
+  if (!activeModules.length) return "Ожидание";
+  return activeModules.length >= 4 ? "В работе" : "Частично";
 }

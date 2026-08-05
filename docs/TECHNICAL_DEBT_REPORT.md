@@ -1,68 +1,82 @@
-# Technical Debt Report — Sprint 30.2
+# Technical Debt Report — Enterprise Audit v1.0
 
-**Scope:** Identify contradictions and debt. **Do not remove functionality.** Prefer documentation ownership, extension, and composition.
+**Supersedes for Freeze planning:** historical `docs/TECHNICAL_DEBT_REPORT.md` (Sprint 30.2) content is retained below as legacy reference; **active Freeze backlog is this file’s “Active debt (post-37.0)” section**.
 
----
-
-## Priority debt (P0–P2)
-
-| ID | Area | Debt | Severity | Recommended action |
-|----|------|------|----------|-------------------|
-| TD-01 | Naming | Three “ecosystem” layers (`ecosystem/`, `applications/ecosystem/`, PB `business_ecosystem`) | P0 | Publish ownership map; keep all code; route by prefix |
-| TD-02 | Naming | Mission Control / Executive Center / drone Mission overlap | P0 | Clarify scopes in docs; no merge of runtimes |
-| TD-03 | Naming | Command Center (web global vs PB OS vs hub ECC) | P0 | Navigation labels distinguish surfaces |
-| TD-04 | Naming | Digital Twin (PB visual vs hub EDT vs drone twin) | P1 | Namespace glossary |
-| TD-05 | Naming | `recommendation_engine` in 6+ places | P1 | Alias map; no rewrite |
-| TD-06 | API | Unversioned CRM `/api/*` beside frozen `/api/v1` | P1 | Deprecation schedule only |
-| TD-07 | API | Shared `/api/ai-os/v1` (kernel + hub MAOS) | P1 | Document subpath ownership |
-| TD-08 | Auth | PB middleware header-only (`X-Principal`, `X-Platform-Role`) | P0 | Extend with live identity — do not replace UI |
-| TD-09 | Web | No industry vertical React apps | P0 | Extend web; reuse EDS + portals |
-| TD-10 | Web | 8 frame-only PB builders | P2 | Fill frames via UBF — do not fork |
-| TD-11 | Web | Duplicate LoginPage paths (`auth/pages` vs `src/pages`) | P2 | Prefer Identity Center page |
-| TD-12 | Test | Near-zero Vitest for platform-builder pages | P1 | Add smoke tests incrementally |
-| TD-13 | OpenAPI | Uneven published specs for PB/verticals | P1 | Extend EAS governance coverage |
-| TD-14 | Runtime | Dual entry (bot + API) orchestration | P1 | Deploy docs / compose |
-| TD-15 | Product | Cafe vertical = catalog only | P1 | First Cafe app sprint extends foundation |
-| TD-16 | Product | Beauty = libraries + hub, no `applications/beauty_*` | P2 | Optional app facade sprint |
+**Date:** 2026-08-04  
+**Audit:** `docs/ENTERPRISE_AUDIT_1_0.md`
 
 ---
 
-## Subsystem debt notes
+## Active debt (post-37.0)
 
-### API Core
-Inconsistent response envelopes across apps; strong patterns inside each vertical. SDK readiness uneven.
+### P0 — Block full production freeze
 
-### Event Bus
-Multiple event packages; schema registry not enforced globally.
+| ID | Debt | Owner SoR | Action |
+|----|------|-----------|--------|
+| TD-E01 | DB 14 revisions behind head `t3n456789012` | Ops / DB | `alembic upgrade head` all envs |
+| TD-E02 | Audit tables missing VersionMixin columns | `database` | New Alembic backfill; align ORM/DB |
+| TD-E03 | Multiple EventBus implementations | `events` | Deprecate peers; single publish path |
+| TD-E04 | Stale ARCHITECTURE_REPORT FAIL | Architecture | Regen after boundary fixes |
 
-### Router
-Many `register.py` files — correct for modularity; debt is **discoverability**, not duplication of business logic.
+### P1 — Block “clean architecture” freeze
 
-### Workflow Engine
-PB Workflow Intelligence is analysis-only (correct). Executable workflows live elsewhere — document boundary to avoid “second engine” rewrites.
+| ID | Debt | Action |
+|----|------|--------|
+| TD-E05 | Triple workflow engines | Quarantine `platform_workflows` + AI-local; canonical `platform_workflow` |
+| TD-E06 | Dual MemoryService | Canonical `platform_memory`; AI package adapter only |
+| TD-E07 | Creative UI dual (`ai-production-studio`) | Redirect to `/platform-builder/creative` |
+| TD-E08 | City UI triad (map / console / `platform_console` app) | Document ownership; nest map under `/platform` |
+| TD-E09 | Parallel orchestrators / ServiceRegistries | Document SoR; stop new registries |
+| TD-E10 | Incomplete production secrets | Provision IAM/API JWT + master key; set `ENVIRONMENT=production` |
+| TD-E11 | Hardcoded DB credentials in defaults | Env-only in prod; scrub docs/samples |
+| TD-E12 | Legacy suite version/doc gate failures | Quarantine or update assertions |
 
-### Knowledge Graph / Digital Twin / Mission Control / Workspace
-Operational at PB + hub levels. Debt is synonym collision, not missing code.
+### P2 — Cleanup / maintainability
 
-### Caching / Notifications / Search
-Claimed in catalogs (realtime, HA) often as **in-memory readiness flags**. Production needs real backends — extend, don’t replace engines.
-
-### Shared models / interfaces
-EntityStore pattern in PB is consistent. Cross-app DTOs not unified — OpenAPI standardization path already exists (`docs/ENTERPRISE_API_STANDARDIZATION.md`).
+| ID | Debt | Action |
+|----|------|--------|
+| TD-E13 | `content_factory` vs `creative_factory` | Deprecation banner + no new features on content_factory |
+| TD-E14 | FOUNDATION_CATALOG gaps vs canonical | Add `svc_service_builder` (+ event bus svc if required) |
+| TD-E15 | Route alias sprawl (207 routes) | Deprecation map; keep aliases one release |
+| TD-E16 | Telegram legacy handlers | Freeze new root handlers; migrate to SDK |
+| TD-E17 | Coarse City/Creative RBAC | Module-scoped permissions |
+| TD-E18 | Name collision `platform_console` | Rename admin app or document clearly |
+| TD-E19 | Fragmented audit table names | Single SoR write path |
+| TD-E20 | Async cancel warnings in tests | Engine/session lifecycle cleanup |
 
 ---
 
-## Contradictions to resolve (docs only)
+## Debt intentionally accepted for Freeze v1.0
 
-1. Catalogs claim “distributed cache / HA” while engines use process memory — label as **foundation readiness**, not production HA.  
-2. Business Ecosystem says “nothing is copied” while vertical apps historically grew independently — future work **connects** via universal modules.  
-3. Frame builders appear in navigation as operational destinations but are thin frames — mark UI status badges.
+| Item | Rationale |
+|------|-----------|
+| Spatial City map separate from `/platform` control plane | By design (presentation adapter) |
+| Thin `__all__` on `platform_ai` / `platform_orchestrator` | Prefer explicit submodule imports |
+| Telegram polling + web dual entry | Product requirement; document deploy topology |
+| Historical vertical pilots failing version docs tests | Outside 36–37 Freeze scope |
 
 ---
 
-## Explicit non-actions
+## Inventory notes
 
-- Do **not** delete legacy CRM API  
-- Do **not** merge vertical apps into one monolith  
-- Do **not** replace God Mode / Mission Control / Twin engines  
-- Do **not** rewrite Telegram handlers into web in this sprint  
+- **~81** top-level `platform_*` packages — high surface; Freeze must list **in-scope** packages explicitly.  
+- Forbidden parallel packages (`platform_city`, `platform_creative`, `platform_voice`, `platform_multi_agent`) **correctly absent**.  
+- Sprint 36–37 SoR extensions are the **preferred pattern** going forward.
+
+---
+
+## Resolved / improved in this audit
+
+| Item | Change |
+|------|--------|
+| Eager `platform_ai.memory` → `platform_memory` import | Lazied in `memory_context.py` |
+| Missing Freeze checklist | Added `docs/ENTERPRISE_FREEZE_CHECKLIST.md` |
+| Missing Enterprise Audit v1.0 | Added `docs/ENTERPRISE_AUDIT_1_0.md` |
+
+---
+
+## Legacy reference (Sprint 30.2 excerpt)
+
+Earlier TD-01…TD-16 (naming ecosystems, Mission Control overlap, unversioned CRM, PB header auth, Vitest gaps, etc.) remain relevant for monorepo hygiene but are **not** the Freeze v1.0 gate. See git history of this file prior to 2026-08-04 for the full Sprint 30.2 table if needed.
+
+**Related registries:** `docs/TECH_DEBT_REGISTRY.md`, `docs/TECH_DEBT_V2.md`, `docs/TECHNICAL_DEBT_30_5.md`.

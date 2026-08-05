@@ -46,7 +46,7 @@ def test_unified_experience_surfaces():
     assert health["unified_ux_ready"] is True
     assert health["adaptive_interface_ready"] is True
     assert health["accessibility_operational"] is True
-    assert health["application_version"] == "1.66.0"
+    assert health["application_version"] == "1.67.0"
 
     eng = platform_builder.experience
     unified = eng.unified_experience()

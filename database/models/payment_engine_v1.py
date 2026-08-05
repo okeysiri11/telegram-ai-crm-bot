@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class PaymentEngineMethod(str, enum.Enum):
@@ -49,7 +49,7 @@ PAYMENT_ENGINE_PENDING_STATUSES = frozenset({
 })
 
 
-class PaymentEngineV1Payment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PaymentEngineV1Payment(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "payment_engine_v1_payments"
     __table_args__ = (
         Index("ix_payment_engine_v1_order", "order_id"),

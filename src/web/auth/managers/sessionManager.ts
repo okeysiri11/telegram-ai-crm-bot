@@ -1,3 +1,4 @@
+import { hubIntegrations } from "@/integrations/hub";
 import type { LoginHistoryEntry, SessionRecord } from "../types";
 
 let sessions: SessionRecord[] = [
@@ -25,6 +26,17 @@ const history: LoginHistoryEntry[] = [
   { id: "lh3", at: new Date(Date.now() - 172800000).toISOString(), ipAddress: "203.0.113.9", success: false, method: "password" },
 ];
 
+function mapRemote(raw: Record<string, unknown>): SessionRecord {
+  return {
+    sessionId: String(raw.session_id || raw.sessionId || ""),
+    device: String(raw.device || "device"),
+    browser: String(raw.browser || ""),
+    ipAddress: String(raw.ip || raw.ipAddress || ""),
+    lastActivity: String(raw.last_activity || raw.at || new Date().toISOString()),
+    current: Boolean(raw.current),
+  };
+}
+
 export const sessionManager = {
   activeSessions(): SessionRecord[] {
     return [...sessions];
@@ -40,5 +52,35 @@ export const sessionManager = {
   },
   revoke(sessionId: string) {
     sessions = sessions.filter((s) => s.sessionId !== sessionId);
+  },
+  async syncFromIsam(identityId: string) {
+    if (!identityId) return sessions;
+    const res = await fetch(
+      `${hubIntegrations.authentication}/sessions?identity_id=${encodeURIComponent(identityId)}`,
+    );
+    if (!res.ok) return sessions;
+    const body = (await res.json()) as { sessions?: Record<string, unknown>[] } | Record<string, unknown>[];
+    const list = Array.isArray(body) ? body : body.sessions || [];
+    if (list.length) {
+      sessions = list.map((s) => mapRemote(s as Record<string, unknown>));
+    }
+    return sessions;
+  },
+  async terminateAllRemote(identityId: string) {
+    const res = await fetch(`${hubIntegrations.authentication}/sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "terminate_all", identity_id: identityId }),
+    });
+    if (res.ok) sessions = [];
+    return res.ok;
+  },
+  async trustRemote(sessionId: string, trusted = true) {
+    const res = await fetch(`${hubIntegrations.authentication}/sessions`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "trust", session_id: sessionId, trusted }),
+    });
+    return res.ok;
   },
 };

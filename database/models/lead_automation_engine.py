@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class AutomationLeadSource(str, enum.Enum):
@@ -50,7 +50,7 @@ OPEN_LEAD_STATUSES = frozenset({
 })
 
 
-class AutomationLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomationLead(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "lead_automation_engine_v1_leads"
     __table_args__ = (
         Index("ix_lead_automation_engine_v1_leads_source", "source"),
@@ -114,7 +114,7 @@ class AutomationLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class LeadSourceEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class LeadSourceEvent(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "lead_automation_engine_v1_source_events"
     __table_args__ = (
         Index("ix_lead_automation_engine_v1_events_lead", "lead_id"),

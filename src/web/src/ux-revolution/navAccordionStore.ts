@@ -38,6 +38,7 @@ type NavAccordionState = {
 export const useNavAccordionStore = create<NavAccordionState>((set, get) => ({
   expandedId: typeof window !== "undefined" ? readExpanded() : "workspace",
   expand: (id) => {
+    if (get().expandedId === id) return;
     try {
       if (id) localStorage.setItem(NAV_ACCORDION_KEY, id);
       else localStorage.removeItem(NAV_ACCORDION_KEY);

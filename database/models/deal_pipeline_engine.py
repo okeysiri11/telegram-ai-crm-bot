@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.ai_sales_agent  # noqa: F401
 import database.models.car  # noqa: F401
@@ -87,7 +87,7 @@ DEFAULT_STAGE_ORDER: dict[str, int] = {
 }
 
 
-class PipelineDeal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PipelineDeal(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "deal_pipeline_engine_v2_deals"
     __table_args__ = (
         Index("ix_deal_pipeline_engine_v2_deals_tenant", "tenant_id"),
@@ -143,7 +143,7 @@ class PipelineDeal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<PipelineDeal id={self.id} stage={self.current_stage}>"
 
 
-class DealStage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class DealStage(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "deal_pipeline_engine_v2_deal_stages"
     __table_args__ = (
         UniqueConstraint(
@@ -179,7 +179,7 @@ class DealStage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<DealStage tenant={self.tenant_id} code={self.stage_code}>"
 
 
-class DealStageHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class DealStageHistory(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "deal_pipeline_engine_v2_deal_stage_history"
     __table_args__ = (
         Index("ix_deal_pipeline_engine_v2_history_deal", "deal_id"),
@@ -208,7 +208,7 @@ class DealStageHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<DealStageHistory deal={self.deal_id} {self.from_stage}->{self.to_stage}>"
 
 
-class DealTask(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class DealTask(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "deal_pipeline_engine_v2_deal_tasks"
     __table_args__ = (
         Index("ix_deal_pipeline_engine_v2_tasks_deal", "deal_id"),
@@ -245,7 +245,7 @@ class DealTask(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<DealTask deal={self.deal_id} title={self.title}>"
 
 
-class DealComment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class DealComment(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "deal_pipeline_engine_v2_deal_comments"
     __table_args__ = (
         Index("ix_deal_pipeline_engine_v2_comments_deal", "deal_id"),

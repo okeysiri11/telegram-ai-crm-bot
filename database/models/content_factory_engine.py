@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class ContentType(str, enum.Enum):
@@ -25,7 +25,7 @@ class ContentType(str, enum.Enum):
 CONTENT_TYPES = frozenset(t.value for t in ContentType)
 
 
-class ContentItem(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ContentItem(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "content_factory_engine_v1_content_items"
     __table_args__ = (
         Index("ix_content_factory_engine_v1_items_car", "car_id"),

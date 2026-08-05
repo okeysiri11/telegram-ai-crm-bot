@@ -27,9 +27,9 @@ def test_32_3_6_docs_exist():
 
 def test_platform_version_32_3_6():
     health = platform_builder.health()
-    assert health["application_version"] == "1.66.0"
-    assert health["sprint"] == "34.0"
-    assert "Release Candidate" in health["release_status"]
+    assert health["application_version"] == "1.67.0"
+    assert health["sprint"] == "1.1.1"
+    assert "General Availability" in health["release_status"]
 
 
 def test_unified_workspace_chrome():
@@ -60,13 +60,13 @@ def test_unified_workspace_chrome():
 
 def test_config_manifest_32_3_6():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
-    assert 'application_version: str = "1.66.0"' in cfg
-    assert 'sprint: str = "34.0"' in cfg
+    assert 'application_version: str = "1.67.0"' in cfg
+    assert 'sprint: str = "1.1.1"' in cfg
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.66.0"' in manifest
-    assert '"sprint": "34.0"' in manifest
+    assert '"application_version": "1.67.0"' in manifest
+    assert '"sprint": "1.1.1"' in manifest
     web = (ROOT / "src" / "web" / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "34.0"' in web
+    assert 'sprint: "1.1.1"' in web
     types = (ROOT / "src" / "web" / "platform-builder" / "types.ts").read_text()
-    assert 'PLATFORM_BUILDER_VERSION = "1.66.0"' in types
-    assert 'PLATFORM_BUILDER_SPRINT = "34.0"' in types
+    assert 'PLATFORM_BUILDER_VERSION = "1.67.0"' in types
+    assert 'PLATFORM_BUILDER_SPRINT = "1.1.1"' in types

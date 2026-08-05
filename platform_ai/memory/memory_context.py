@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from platform_memory.memory_service import memory_service as platform_memory_service
 from platform_ai.memory.models import AIContextBundle
 
 
@@ -23,6 +22,8 @@ class MemoryContextBuilder:
         configuration: dict[str, Any] | None = None,
         limit: int = 5,
     ) -> AIContextBundle:
+        from platform_memory.memory_service import memory_service as platform_memory_service
+
         bundle = await platform_memory_service.build_ai_context(
             query=query,
             plugin_id=plugin_id,

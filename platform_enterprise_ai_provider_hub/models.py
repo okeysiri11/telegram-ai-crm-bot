@@ -15,6 +15,9 @@ PROVIDER_KINDS = (
     "azure_openai",
     "aws_bedrock",
     "local_corporate",
+    "openrouter",
+    "groq",
+    "litellm",
 )
 
 PROVIDER_STATUSES = ("active", "degraded", "offline", "disabled")

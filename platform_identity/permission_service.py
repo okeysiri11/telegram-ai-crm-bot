@@ -50,6 +50,8 @@ IAM_PERMISSIONS: dict[str, str] = {
     "realtime.channel.plugins": "Subscribe to plugins channel",
     "realtime.channel.ai": "Subscribe to AI channel",
     "realtime.channel.health": "Subscribe to health channel",
+    "realtime.channel.platform_state": "Subscribe to unified platform state sync channel",
+    "realtime.channel.event_bus": "Subscribe to enterprise event bus live stream",
     # Management API
     "management.read": "Read management API",
     "management.write": "Write via management API",
@@ -133,6 +135,8 @@ REALTIME_CHANNEL_PERMISSIONS: dict[str, str] = {
     "plugins": "realtime.channel.plugins",
     "ai": "realtime.channel.ai",
     "health": "realtime.channel.health",
+    "platform_state": "realtime.channel.platform_state",  # Sprint 34.2C / stabilized 35.0
+    "event_bus": "realtime.channel.event_bus",  # Sprint 36.1
 }
 
 

@@ -1,4 +1,4 @@
-/** Enterprise Control Tower — Sprint 33.6. */
+/** Enterprise Control Tower — Sprint 33.6 / 1.1.1 strip split. */
 export { deriveControlTower, CONTROL_TOWER_COMMANDS } from "./deriveControlTower";
 export type {
   ControlTowerBundle,
@@ -8,4 +8,5 @@ export type {
   EcosystemStatus,
   IncidentItem,
 } from "./deriveControlTower";
-export { EnterpriseControlTowerPage, ControlTowerStrip } from "./EnterpriseControlTowerPage";
+export { EnterpriseControlTowerPage } from "./EnterpriseControlTowerPage";
+export { ControlTowerStrip } from "./ControlTowerStrip";

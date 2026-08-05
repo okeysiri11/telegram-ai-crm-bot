@@ -53,12 +53,45 @@ def test_all_flow_steps_have_pending_mapping():
 
 
 @pytest.mark.asyncio
-async def test_redis_required_when_postgres_only():
-    from config import POSTGRES_ONLY, REDIS_REQUIRED
+async def test_redis_not_forced_by_postgres_only_in_development(monkeypatch):
+    """Sprint 32.6B — POSTGRES_ONLY no longer forces Redis in development."""
+    from platform_configuration.configuration_center import ConfigurationCenter
+    from platform_configuration.env_source import load_environment
 
-    if POSTGRES_ONLY:
-        assert REDIS_REQUIRED is True
+    monkeypatch.setenv("POSTGRES_ONLY", "true")
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.setenv("REDIS_REQUIRED", "false")
+    load_environment.cache_clear()
+    center = ConfigurationCenter()
+    settings = center.load()
+    assert settings.database.postgres_only is True
+    assert settings.redis.required is False
 
+
+@pytest.mark.asyncio
+async def test_explicit_redis_required_true_in_development(monkeypatch):
+    from platform_configuration.configuration_center import ConfigurationCenter
+    from platform_configuration.env_source import load_environment
+
+    monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.setenv("REDIS_REQUIRED", "true")
+    load_environment.cache_clear()
+    center = ConfigurationCenter()
+    settings = center.load()
+    assert settings.redis.required is True
+
+
+@pytest.mark.asyncio
+async def test_production_always_requires_redis(monkeypatch):
+    from platform_configuration.configuration_center import ConfigurationCenter
+    from platform_configuration.env_source import load_environment
+
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.setenv("REDIS_REQUIRED", "false")
+    load_environment.cache_clear()
+    center = ConfigurationCenter()
+    settings = center.load()
+    assert settings.redis.required is True
 
 @pytest.mark.asyncio
 async def test_fsm_storage_exits_without_redis_when_required(monkeypatch):

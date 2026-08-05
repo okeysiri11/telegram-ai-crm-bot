@@ -8,3 +8,9 @@ export { mfaCenter } from "./mfaCenter";
 export { securityCenter } from "./securityCenter";
 export { profileCenter } from "./profileCenter";
 export { activityCenter } from "./activityCenter";
+export {
+  roleResolver,
+  permissionResolver,
+  accessMiddleware,
+} from "./enterpriseAccess";
+export type { AccessContext } from "./enterpriseAccess";

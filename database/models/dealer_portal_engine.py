@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class RecommendationStatus(str, enum.Enum):
@@ -26,7 +26,7 @@ class RecommendationPriority(str, enum.Enum):
     HIGH = "HIGH"
 
 
-class DealerPortalSnapshot(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class DealerPortalSnapshot(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "dealer_portal_engine_v1_snapshots"
     __table_args__ = (
         UniqueConstraint(
@@ -56,7 +56,7 @@ class DealerPortalSnapshot(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<DealerPortalSnapshot tenant={self.tenant_id} date={self.snapshot_date}>"
 
 
-class DealerPortalRecommendation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class DealerPortalRecommendation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "dealer_portal_engine_v1_recommendations"
     __table_args__ = (
         Index("ix_dealer_portal_engine_v1_reco_tenant", "tenant_id"),

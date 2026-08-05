@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class ReferenceSourceCode(str, enum.Enum):
@@ -44,7 +44,7 @@ REFERENCE_SOURCE_CODES = frozenset(s.value for s in ReferenceSourceCode)
 QUOTE_PAIRS = frozenset(p.value for p in QuotePair)
 
 
-class ReferenceMarketQuote(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class ReferenceMarketQuote(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "dealer_quote_authority_v1_reference_quotes"
     __table_args__ = (
         Index("ix_dqa_ref_source", "source_code"),
@@ -64,7 +64,7 @@ class ReferenceMarketQuote(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<ReferenceMarketQuote source={self.source_code} pair={self.pair}>"
 
 
-class QuoteDeviation(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class QuoteDeviation(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "dealer_quote_authority_v1_deviations"
     __table_args__ = (
         Index("ix_dqa_dev_pair", "pair"),
@@ -89,7 +89,7 @@ class QuoteDeviation(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<QuoteDeviation pair={self.pair} source={self.source_code} pct={self.deviation_pct}>"
 
 
-class MarketAlert(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class MarketAlert(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "dealer_quote_authority_v1_market_alerts"
     __table_args__ = (
         Index("ix_dqa_alert_severity", "severity"),

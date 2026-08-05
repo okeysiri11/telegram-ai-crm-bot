@@ -9,8 +9,5 @@ export {
 export type { FabricEntity, FabricEdge, FabricEntityKind } from "./fabricCatalog";
 export { deriveDataFabric } from "./deriveFabric";
 export type { FabricBundle, FabricLineage, FabricImpact, FabricExecutive } from "./deriveFabric";
-export {
-  EnterpriseDataFabricPage,
-  DataFabricStrip,
-  DataFabricOverviewCompact,
-} from "./EnterpriseDataFabricPage";
+export { EnterpriseDataFabricPage, DataFabricOverviewCompact } from "./EnterpriseDataFabricPage";
+export { DataFabricStrip } from "./DataFabricStrip";

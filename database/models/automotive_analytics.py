@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 
@@ -33,7 +33,7 @@ class AgingBucket(str, enum.Enum):
     DAYS_90_PLUS = "DAYS_90_PLUS"
 
 
-class InventoryMetrics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class InventoryMetrics(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_analytics_v1_inventory_metrics"
     __table_args__ = (
         Index("ix_automotive_analytics_v1_im_vehicle_id", "vehicle_id"),
@@ -71,7 +71,7 @@ class InventoryMetrics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class SalesMetrics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SalesMetrics(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_analytics_v1_sales_metrics"
     __table_args__ = (
         Index("ix_automotive_analytics_v1_sm_metric_date", "metric_date"),
@@ -109,7 +109,7 @@ class SalesMetrics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SalesMetrics id={self.id} date={self.metric_date}>"
 
 
-class ProfitabilityMetrics(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ProfitabilityMetrics(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_analytics_v1_profitability_metrics"
     __table_args__ = (
         Index("ix_automotive_analytics_v1_pm_vehicle_id", "vehicle_id"),

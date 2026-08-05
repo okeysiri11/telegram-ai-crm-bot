@@ -1,6 +1,9 @@
-# TelegramBotCourse — BIDEX Platform v1.0
+# TelegramBotCourse — BIDEX Platform / Enterprise Platform v1.1 GA
 
 Enterprise CRM platform with Telegram bot integration, PostgreSQL persistence, and a governed multi-layer architecture.
+
+**Enterprise Web:** Platform Builder **1.67.0** · Sprint **1.1.1** · **General Availability**  
+Docs: [ENTERPRISE_PLATFORM_V1_GA.md](docs/ENTERPRISE_PLATFORM_V1_GA.md) · [SPRINT_1_1_1_RESULT.md](docs/SPRINT_1_1_1_RESULT.md) · smoke: `scripts/ga_staging_smoke.py`
 
 ## Platform overview
 
@@ -126,6 +129,17 @@ TelegramBotCourse/
 
 - `docs/PLATFORM_CERTIFICATION.md` — certification report
 - `docs/ARCHITECTURE_BASELINE.md` — frozen RC1 architecture baseline
+- `docs/ENTERPRISE_PLATFORM_V1_GA.md` — **Enterprise Platform v1.1 GA** (Sprint 1.1.1)
+- `docs/SPRINT_1_1_1_RESULT.md` — Sprint 1.1.1 RESULT / EQI
+- `docs/API_EDGE_GOVERNANCE_PLAN.md` — UI → API edge governance plan
+- `docs/IMMUTABLE_AUDIT_VAULT_FOUNDATION.md` — Audit Vault foundation
+- `docs/GA_READINESS_REPORT.md` — GA readiness report + decision
+- `docs/FINAL_EQI_REPORT.md` — final Enterprise Quality Index
+- `docs/PILOT_CHECKLIST.md` — pilot acceptance checklist
+- `docs/ENTERPRISE_PLATFORM_1_0.md` — RC→GA baseline + 1.1.1 pointer
+- `docs/EXECUTIVE_DEMO_34_0.md` — GA Executive Demo (Login → Brief → City → Concierge → Control Tower)
+- `docs/USER_GUIDE_ENTERPRISE_V1.md` — enterprise owner/operator user guide
+- `docs/EP_01_EXECUTIVE_EXPERIENCE.md` — CEO Morning Brief / Executive Experience (EP-01)
 - `docs/architecture_baseline/` — module, dependency, service, import graphs
 - `ARCHITECTURE_REPORT.md` — governance audit output
 - `docs/architecture/PLATFORM_MEMORY.md` — memory engine architecture (Sprint 2.1)

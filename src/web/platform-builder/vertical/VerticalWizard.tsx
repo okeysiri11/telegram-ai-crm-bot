@@ -338,7 +338,7 @@ export function VerticalWizard() {
                 ))}
               </div>
               {draft.aiMode === "launch_ai_builder" ? (
-                <Link className="eds-type-small text-[var(--eds-primary)]" to="/platform-builder/ai">
+                <Link className="eds-type-small text-[var(--eds-primary)]" to="/platform-builder/builder-studio?mode=wizard">
                   Open AI Builder →
                 </Link>
               ) : (

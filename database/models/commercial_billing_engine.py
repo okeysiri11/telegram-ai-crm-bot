@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.tenant_billing_engine  # noqa: F401
 
@@ -61,7 +61,7 @@ PAYMENT_METHODS = frozenset(m.value for m in PaymentMethod)
 PAYMENT_STATUSES = frozenset(s.value for s in PaymentStatus)
 
 
-class CommercialPayment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class CommercialPayment(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "commercial_billing_engine_v1_payments"
     __table_args__ = (
         Index("ix_commercial_billing_payments_user", "user_id"),
@@ -105,7 +105,7 @@ class CommercialPayment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<CommercialPayment user={self.user_id} plan={self.plan_code} status={self.status}>"
 
 
-class PaymentReceipt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PaymentReceipt(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "commercial_billing_engine_v1_payment_receipts"
     __table_args__ = (
         Index("ix_commercial_billing_receipts_payment", "payment_id"),
@@ -128,7 +128,7 @@ class PaymentReceipt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<PaymentReceipt payment={self.payment_id}>"
 
 
-class SubscriptionHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SubscriptionHistory(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "commercial_billing_engine_v1_subscription_history"
     __table_args__ = (
         Index("ix_commercial_billing_sub_history_tenant", "tenant_id"),
@@ -155,7 +155,7 @@ class SubscriptionHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SubscriptionHistory event={self.event_type}>"
 
 
-class BillingEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class BillingEvent(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "commercial_billing_engine_v1_billing_events"
     __table_args__ = (
         Index("ix_commercial_billing_events_type", "event_type"),

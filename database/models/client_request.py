@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 # Register FK targets on Base.metadata (avoids NoReferencedTableError on flush).
 import database.models.marketplace_listing  # noqa: F401
@@ -36,7 +36,7 @@ class CrmFunnelStage(str, enum.Enum):
     LOST = "LOST"
 
 
-class ClientRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ClientRequest(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "client_requests"
     __table_args__ = (
         Index("ix_client_requests_client", "client_telegram_id"),

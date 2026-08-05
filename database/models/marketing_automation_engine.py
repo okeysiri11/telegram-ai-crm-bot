@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class AutomationChannel(str, enum.Enum):
@@ -52,7 +52,7 @@ AUTOMATION_CAMPAIGN_STATUSES = frozenset(s.value for s in AutomationCampaignStat
 SCHEDULED_POST_STATUSES = frozenset(s.value for s in ScheduledPostStatus)
 
 
-class AutomationCampaign(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomationCampaign(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "marketing_automation_engine_v1_campaigns"
     __table_args__ = (
         Index("ix_marketing_automation_engine_v1_campaigns_status", "status"),
@@ -85,7 +85,7 @@ class AutomationCampaign(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomationCampaign name={self.name} status={self.status}>"
 
 
-class RepostRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RepostRule(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "marketing_automation_engine_v1_repost_rules"
     __table_args__ = (
         Index("ix_marketing_automation_engine_v1_repost_campaign", "campaign_id"),
@@ -127,7 +127,7 @@ class RepostRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<RepostRule name={self.name} reposts={self.repost_count}/{self.max_reposts}>"
 
 
-class ScheduledPost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ScheduledPost(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "marketing_automation_engine_v1_scheduled_posts"
     __table_args__ = (
         Index("ix_marketing_automation_engine_v1_posts_campaign", "campaign_id"),
@@ -184,7 +184,7 @@ class ScheduledPost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class ProcessedMedia(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ProcessedMedia(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "marketing_automation_engine_v1_processed_media"
     __table_args__ = (
         Index("ix_marketing_automation_engine_v1_media_post", "scheduled_post_id"),

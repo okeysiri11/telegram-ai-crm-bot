@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class AutoClientRequestType(str, enum.Enum):
@@ -31,7 +31,7 @@ class AutoClientRequestStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
-class AutoClientRequest(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutoClientRequest(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "auto_client_requests_v1"
     __table_args__ = (
         Index("ix_auto_client_requests_v1_number", "request_number", unique=True),

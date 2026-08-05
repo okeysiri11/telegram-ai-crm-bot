@@ -13,14 +13,14 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.deals import Deal
     from database.models.users import User
 
 
-class Partner(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
+class Partner(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, VersionMixin, Base):
     __tablename__ = "partners"
     __table_args__ = (
         Index("ix_partners_type", "partner_type"),
@@ -55,7 +55,7 @@ class Partner(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
     )
 
 
-class PartnerDealAssignment(UUIDPrimaryKeyMixin, Base):
+class PartnerDealAssignment(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "partner_deal_assignments"
     __table_args__ = (
         UniqueConstraint("partner_id", "deal_id", name="uq_partner_deal_assignments"),
@@ -85,7 +85,7 @@ class PartnerDealAssignment(UUIDPrimaryKeyMixin, Base):
     assigned_by: Mapped[User] = relationship(foreign_keys=[assigned_by_id])
 
 
-class PartnerKpi(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerKpi(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_kpi"
     __table_args__ = (
         UniqueConstraint("partner_id", "period", name="uq_partner_kpi_period"),

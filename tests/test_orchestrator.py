@@ -69,7 +69,7 @@ def orchestrator(registry: AgentRegistry) -> PlatformOrchestrator:
 
 @pytest.mark.asyncio
 async def test_registry_register_and_list(registry: AgentRegistry):
-    assert len(registry.list()) == len(BUILTIN_AGENTS)
+    assert len(registry.list_agents()) == len(BUILTIN_AGENTS)
     meta = registry.metadata("auto_agent")
     assert meta.name == "Auto Agent"
     assert "buy_car" in meta.capabilities

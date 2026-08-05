@@ -114,7 +114,7 @@ class JobEngine:
                 "scheduled": job_scheduler.list_scheduled(),
                 "recurring": job_scheduler.list_recurring(),
             },
-            "history": job_history.list(limit=20),
+            "history": job_history.list_entries(limit=20),
             "retry_history": job_retry.history(limit=20),
             "dead_letter": [j.to_dict() for j in await job_queue.dead_letter_queue()],
         }

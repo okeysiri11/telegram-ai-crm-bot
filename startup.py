@@ -48,15 +48,26 @@ class StartupContext:
 
 
 async def run_startup() -> StartupContext:
+    import time as _time
+
     from platform_configuration.configuration_center import configuration_center
 
+    _boot_t0 = _time.perf_counter()
+    _phases_ms: dict[str, float] = {}
+
+    def _mark(phase: str) -> None:
+        _phases_ms[phase] = round((_time.perf_counter() - _boot_t0) * 1000.0, 1)
+
     configuration_center.load()
-    configuration_center.validate(fail_fast=False)
+    # Sprint 30.0 / TD-57 — fail closed in production; warn-only in development
+    configuration_center.validate(fail_fast=configuration_center.settings.is_production)
+    _mark("config_validated")
     logger.info("ConfigurationCenter loaded: %s", configuration_center.diagnostics()["validation"])
 
     from platform_identity.jwt_service import validate_iam_jwt_secret
 
     validate_iam_jwt_secret()
+    _mark("jwt_validated")
 
     from api.server import start_api_server
     from platform_legacy import legacy
@@ -70,15 +81,18 @@ async def run_startup() -> StartupContext:
 
     register_platform_event_handlers()
     logger.info("Platform internal event handlers registered")
+    _mark("handlers_registered")
 
     from events.crm_publisher import get_crm_worker
 
     await get_crm_worker().start()
     logger.info("CRM event bus workers started for platform metrics and webhooks")
+    _mark("event_workers_started")
 
     scheduler = legacy.scheduler.get_default_worker()
     await scheduler.start()
     runner = await start_api_server(host=API_HOST, port=API_PORT)
+    _mark("api_listening")
     if runner is not None:
         logger.info(
             "API server listening on http://%s:%s/health (liveness/readiness enabled)",
@@ -94,6 +108,7 @@ async def run_startup() -> StartupContext:
     from services.production_readiness_suite import ProductionReadinessSuite
 
     startup = await ProductionReadinessSuite.validate_startup()
+    _mark("readiness_validated")
     logger.info(
         "Production readiness startup: status=%s ready=%s",
         startup.get("status"),
@@ -179,6 +194,18 @@ async def run_startup() -> StartupContext:
 
     escalation_worker = get_escalation_worker()
     await escalation_worker.start()
+    _mark("escalation_started")
+    _mark("startup_complete")
+
+    # Sprint 37.3 — phase timings for cold-boot / readiness reports (no behavior change)
+    startup = dict(startup or {})
+    startup["phases_ms"] = dict(_phases_ms)
+    startup["startup_total_ms"] = _phases_ms.get("startup_complete")
+    logger.info(
+        "startup_timing total_ms=%s phases=%s",
+        startup.get("startup_total_ms"),
+        _phases_ms,
+    )
 
     return StartupContext(
         scheduler=scheduler,
@@ -190,8 +217,11 @@ async def run_startup() -> StartupContext:
 
 
 async def shutdown_startup(context: StartupContext) -> None:
+    import time as _time
+
     from database.session import shutdown_db
 
+    _t0 = _time.perf_counter()
     try:
         from events.crm_publisher import get_crm_worker
 
@@ -208,3 +238,7 @@ async def shutdown_startup(context: StartupContext) -> None:
     if context.runner is not None:
         await context.runner.cleanup()
     await shutdown_db()
+    logger.info(
+        "graceful_shutdown_ms=%s",
+        round((_time.perf_counter() - _t0) * 1000.0, 1),
+    )

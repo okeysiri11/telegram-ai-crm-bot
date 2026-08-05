@@ -15,8 +15,11 @@ import { useCommandCenterUi } from "../../command-center/components/CommandCente
 import { useLiveEnterprise, type LiveEnterpriseSnapshot } from "@/live-ops";
 import { detectActiveEcosystem } from "@/workspace-chrome/workspaceContext";
 import { telemetry } from "@/integrations/telemetry";
-import { suggestionsForPath, sectionKeyFromPath, type SmartSuggestion } from "./smartSuggestions";
-import { alignRecommendation } from "@/enterprise-okr/deriveOkr";
+import { suggestionsForPath, sectionKeyFromPath, toAdvisor } from "./smartSuggestions";
+import { advisorContextLine, markAdvisorSeen } from "./aiPersonality";
+import { AdvisorRecView } from "./AdvisorRecView";
+import { getBuilding } from "@/enterprise-city/cityCatalog";
+import { getCityFocus, buildingIdentity } from "@/enterprise-city/cityVisualLanguage";
 
 export function AiOsExperienceChrome() {
   const loc = useLocation();
@@ -35,73 +38,77 @@ export function AiOsExperienceChrome() {
   const roleLabel = role?.label || user?.roleId || "User";
   const ecosystem = detectActiveEcosystem(loc.pathname) || "Platform";
   const section = sectionKeyFromPath(loc.pathname);
-  const suggestions = useMemo(() => suggestionsForPath(loc.pathname, 5, snapshot), [loc.pathname, snapshot]);
-
   const healthOk = snapshot.health.filter((h) => h.ok).length;
   const healthTotal = snapshot.health.length || 1;
   const aiBusy = snapshot.aiOps.running.length > 0;
+  // EP-04: dock is Executive Advisor surface (not a chatbot).
+  const suggestions = useMemo(() => suggestionsForPath(loc.pathname, 2, snapshot), [loc.pathname, snapshot]);
+  const cityFocus = getCityFocus();
+  const cityBuilding = cityFocus ? getBuilding(cityFocus) : null;
+  const contextLine = useMemo(() => {
+    const base = advisorContextLine({
+      section,
+      company: first.companyName || ws.company,
+      healthOk,
+      healthTotal,
+      unread,
+      aiBusy,
+    });
+    if (cityBuilding) {
+      return `${base} City focus: ${cityBuilding.short} · ${buildingIdentity(cityBuilding.id).purposeRu}.`;
+    }
+    return base;
+  }, [section, first.companyName, ws.company, healthOk, healthTotal, unread, aiBusy, cityBuilding]);
 
   return (
     <div className="aios-chrome eds-anim-fade">
       <WorkspacePulse
         aiActive={aiBusy}
-        crmHint={section === "crm" || snapshot.activeModules.includes("crm")}
-        automation={snapshot.aiOps.completed[0] || "idle"}
         notifications={unread}
         health={`${healthOk}/${healthTotal}`}
-        busy={busy}
+        busy={busy || aiBusy}
       />
 
       {dockOpen ? (
-        <aside className="aios-dock" aria-label="AI Concierge">
+        <aside className={`aios-dock${busy || aiBusy ? " is-analyzing edm-ai-analyzing" : " edm-ai-live"}`} aria-label="AI Concierge">
           <div className="aios-dock-head">
             <div>
               <p className="eds-type-caption uppercase tracking-[0.14em] text-[var(--eds-text-muted)]">
-                AI Concierge
+                Executive Advisor
               </p>
               <p className="font-semibold">{concierge}</p>
             </div>
             <div className="flex flex-wrap gap-1">
               <Badge tone={aiBusy ? "success" : "warning"}>{aiBusy ? "Active" : "Ready"}</Badge>
+              {busy || aiBusy ? <span className="edm-stream-bar w-16 self-center" aria-hidden /> : null}
               <Button size="sm" variant="ghost" onClick={() => setDockOpen(false)} aria-label="Collapse Concierge">
                 −
               </Button>
             </div>
           </div>
 
-          <p className="eds-type-small text-[var(--eds-text-muted)]">
-            Контекст: <strong>{section}</strong> · {ws.company} · {roleLabel} · {ecosystem}
+          <p className="eds-type-small text-[var(--eds-text-muted)] ai-advisor-context">{contextLine}</p>
+          <p className="eds-type-caption text-[var(--eds-text-muted)]">
+            Context · {section} · {roleLabel} · {ecosystem}
           </p>
 
           <div className="aios-dock-block">
-            <p className="mb-1 font-medium eds-type-small">Рекомендации</p>
-            <ul className="space-y-1">
+            <p className="mb-1 font-medium eds-type-small">Next decisions · top 2</p>
+            <ul className="space-y-1 edm-stagger">
               {suggestions.map((s) => (
                 <li key={s.id}>
                   <button
                     type="button"
-                    className="aios-suggest"
+                    className="aios-suggest edm-ai-suggest"
                     onClick={() => {
+                      markAdvisorSeen(s.id);
                       void telemetry.userActivity(`aios_suggest:${s.id}`);
                       navigate(s.route);
                     }}
                   >
-                    <Badge>{s.tone}</Badge>
-                    <span>
-                      <span className="font-medium">{s.title}</span>
-                      <span className="block eds-type-small text-[var(--eds-text-muted)]">{s.detail}</span>
-                    </span>
+                    <AdvisorRecView rec={toAdvisor(s)} compact />
                   </button>
                 </li>
-              ))}
-            </ul>
-          </div>
-
-          <div className="aios-dock-block">
-            <p className="mb-1 font-medium eds-type-small">Активные задачи AI</p>
-            <ul className="eds-type-small space-y-1 text-[var(--eds-text-muted)]">
-              {(snapshot.aiOps.queue.length ? snapshot.aiOps.queue : ["Нет задач в очереди"]).slice(0, 3).map((q) => (
-                <li key={q}>· {q}</li>
               ))}
             </ul>
           </div>
@@ -135,7 +142,7 @@ export function AiOsExperienceChrome() {
       ) : (
         <button
           type="button"
-          className="aios-dock-collapsed"
+          className="aios-dock-collapsed edm-ai-done"
           onClick={() => setDockOpen(true)}
           aria-label="Expand AI Concierge"
         >
@@ -147,7 +154,6 @@ export function AiOsExperienceChrome() {
         <ExecutiveSnapshot
           company={first.companyName || ws.company}
           snapshot={snapshot}
-          suggestions={suggestions.slice(0, 3)}
           unread={unread}
           onClose={() => setSnapOpen(false)}
         />
@@ -158,26 +164,20 @@ export function AiOsExperienceChrome() {
 
 function WorkspacePulse({
   aiActive,
-  crmHint,
-  automation,
   notifications,
   health,
   busy,
 }: {
   aiActive: boolean;
-  crmHint: boolean;
-  automation: string;
   notifications: number;
   health: string;
   busy: boolean;
 }) {
   return (
-    <div className="aios-pulse" aria-label="Workspace Pulse">
+    <div className={`aios-pulse${busy ? " is-busy" : ""}`} aria-label="Workspace Pulse">
       <span className="aios-pulse-label">Pulse</span>
       <Badge tone={aiActive ? "success" : "default"}>AI {aiActive ? "on" : "idle"}</Badge>
-      <Badge tone={crmHint ? "success" : "default"}>CRM</Badge>
-      <Badge>Auto · {automation.slice(0, 18)}</Badge>
-      <Badge tone={notifications ? "warning" : "success"}>Notif {notifications}</Badge>
+      <Badge tone={notifications ? "warning" : "default"}>{notifications ? `Notif ${notifications}` : "No notif"}</Badge>
       <Badge tone={busy ? "warning" : "success"}>Health {health}</Badge>
     </div>
   );
@@ -186,19 +186,17 @@ function WorkspacePulse({
 function ExecutiveSnapshot({
   company,
   snapshot,
-  suggestions,
   unread,
   onClose,
 }: {
   company: string;
   snapshot: LiveEnterpriseSnapshot;
-  suggestions: SmartSuggestion[];
   unread: number;
   onClose: () => void;
 }) {
   const critical = snapshot.activity.slice(0, 4);
   return (
-    <Card title={`Executive Snapshot · ${company}`} className="aios-snapshot eds-anim-scale">
+    <Card title={`Executive Snapshot · ${company}`} className="aios-snapshot eds-anim-scale edm-card-enter">
       <div className="grid gap-3 md:grid-cols-3">
         <div>
           <p className="mb-1 font-medium eds-type-small">Что происходит</p>
@@ -234,33 +232,17 @@ function ExecutiveSnapshot({
           </ul>
         </div>
         <div>
-          <p className="mb-1 font-medium eds-type-small">AI рекомендует</p>
+          <p className="mb-1 font-medium eds-type-small">Executive Advisor</p>
           <ul className="eds-type-small space-y-1 text-[var(--eds-text-muted)]">
-            {suggestions.map((s) => {
-              const a = alignRecommendation({ id: s.id, title: s.title });
-              return (
-                <li key={s.id}>
-                  · {s.title}
-                  <span className="block text-[var(--eds-muted)]">
-                    → {a.goalLabel} · {a.kpi} · {a.expectedEffect}
-                  </span>
-                </li>
-              );
-            })}
-            {snapshot.recommendations.slice(0, 2).map((r) => {
-              const a = alignRecommendation(r);
-              return (
-                <li key={r.id}>
-                  · {r.title}
-                  <span className="block text-[var(--eds-muted)]">
-                    → {a.goalLabel} · {a.kpi} · {a.expectedEffect}
-                  </span>
-                </li>
-              );
-            })}
+            <li>Next decisions live in the dock — Observation, Why, Action, Impact.</li>
+            <li className={unread ? "" : "text-[var(--eds-text-muted)]"}>
+              {unread
+                ? `${unread} notifications remain — treat them as decision items.`
+                : "Signals are calm — use the window for opportunities."}
+            </li>
           </ul>
-          <Link to="/platform-builder/okr" className="eds-type-small text-[var(--eds-primary)]">
-            OKR →
+          <Link to="/platform-builder/concierge" className="eds-type-small text-[var(--eds-primary)]">
+            Configure Advisor →
           </Link>
         </div>
       </div>

@@ -16,7 +16,7 @@ export function Breadcrumbs() {
   }, [loc.pathname]);
 
   return (
-    <nav className="uws-breadcrumbs flex flex-wrap items-center gap-2 text-xs text-[var(--ew-muted)]" aria-label="Breadcrumb">
+    <nav className="uws-breadcrumbs flex flex-wrap items-center gap-2 text-xs text-[var(--ew-muted)]" aria-label="Навигационная цепочка">
       {crumbs.map((c, i) => (
         <span key={`${c.path}-${c.level}`} className="inline-flex items-center gap-2">
           {i > 0 ? <span className="uws-crumb-sep" aria-hidden>›</span> : null}

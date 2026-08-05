@@ -1,55 +1,43 @@
-# Agro Marketplace Deployment Guide
+# Deployment — Closed Beta
 
-## Prerequisites
+**Sprint:** 31.0 Closed Beta RC
 
-- Python 3.11+ with project virtualenv
-- AI Platform Core v3.0 available on `PYTHONPATH` (unchanged)
-- AI Ecosystem v1.5 available on `PYTHONPATH` (unchanged)
-- Application package: `applications/agro_marketplace`
+## Stack
 
-## Configuration verification
+| Layer | Compose / path |
+|-------|----------------|
+| App API | `bot` service · Dockerfile |
+| Postgres / Redis | `docker-compose.prod.yml` |
+| Edge | `nginx.conf` (SPA + `/api` proxy) |
+| Metrics | Prometheus + Grafana |
 
-Confirm `applications/agro_marketplace/config.py` / `manifest.json`:
+## Required secrets (prod)
 
-| Key | Expected |
-|-----|----------|
-| `application_version` | `2.0.0` |
-| `application_status` | `Production Ready` |
-| `release` | `Commercial` |
+- `POSTGRES_PASSWORD`
+- `GRAFANA_ADMIN_PASSWORD`
+- `IAM_JWT_SECRET` / `SECURITY_MASTER_KEY`
+- `GOOGLE_CLIENT_ID` (production Google Sign-In)
+- `VITE_DEMO_AUTH=false` for web build
 
-## Deploy steps
-
-1. Install dependencies into the project venv.
-2. Ensure Platform Core and Ecosystem imports resolve (do not patch them).
-3. Mount agro routes via `register_agro_marketplace_routes(app)` (already wired from host `api/server.py` when enabled).
-4. Verify:
-   - `GET /api/agro/v1/health`
-   - `GET /api/agro/v1/ops/health`
-   - `GET /api/agro/v1/ops/version`
-   - `POST /api/agro/v1/ops/readiness`
-5. Run commercial certification: `POST /api/agro/v1/ops/release`
-
-## Deployment verification
+## Deploy sequence
 
 ```bash
-.venv/bin/python -m pytest tests/test_agro_*.py -q
+# 1. Build web
+cd src/web && npm ci && npm run build && cd ../..
+
+# 2. Configure .env.production (no default Grafana/Postgres passwords)
+
+# 3. Start
+docker compose -f docker-compose.prod.yml up -d --build
+
+# 4. Health
+curl -fsS http://localhost/health
 ```
 
-Or via API: `POST /api/agro/v1/ops/deploy/verify`
+## TLS
 
-## Rollback notes
+Uncomment the TLS server block in `nginx.conf` and mount certs under `/etc/nginx/certs/`.
 
-- Application state is in-memory (`AgroStore`). Restart clears operational data.
-- Version pin is configuration-only; revert `config.py` / `manifest.json` if needed.
-- Never roll back by editing Platform Core or Ecosystem.
+## See also
 
-## Disaster recovery (summary)
-
-| Scenario | Action |
-|----------|--------|
-| Process crash | Restart host API; re-seed via portals/ops as needed |
-| Bad config | Restore `config.py` / `manifest.json` to `2.0.0` Production Ready |
-| Bridge outage | Agro remains up with fallbacks; check `/ops/health` component section |
-| Data loss | Rebuild from partner/ERP sync hooks and re-import catalog/CRM |
-
-Full operational procedures: [OPERATIONS.md](OPERATIONS.md).
+[INSTALLATION.md](./INSTALLATION.md) · [INFRASTRUCTURE_SECURITY.md](./INFRASTRUCTURE_SECURITY.md) · [PRODUCTION_CHECKLIST.md](./PRODUCTION_CHECKLIST.md) · `docs/deployment.md`

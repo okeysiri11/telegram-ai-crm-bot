@@ -9,10 +9,10 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class VinReport(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VinReport(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "vin_engine_v1_vin_reports"
     __table_args__ = (
         UniqueConstraint("vin", name="uq_vin_engine_v1_vin_reports_vin"),

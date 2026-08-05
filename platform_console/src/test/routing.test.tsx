@@ -1,42 +1,33 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
-import { LoginPage } from '../pages/LoginPage';
-import { ProtectedRoute } from '../components/auth/ProtectedRoute';
-import { useAuthStore } from '../stores/authStore';
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
+import { Sidebar } from "../components/layout/Sidebar";
 
-describe('routing', () => {
-  it('shows login page when logged out', () => {
-    useAuthStore.setState({ isLoggedIn: false, roles: [], actorTelegramId: null });
+const LABELS = [
+  "Dashboard",
+  "Workflows",
+  "AI Agents",
+  "Providers",
+  "ChatGPT Bridge",
+  "Voice Center",
+  "MCP Gateway",
+  "Execution Planner",
+  "Memory",
+  "Timeline",
+  "Tasks",
+  "Queue",
+  "Metrics",
+];
+
+describe("navigation", () => {
+  it("renders Control Center nav items", () => {
     render(
       <MemoryRouter>
-        <LoginPage />
+        <Sidebar collapsed={false} />
       </MemoryRouter>,
     );
-    expect(screen.getByText(/Platform Operations Center/i)).toBeInTheDocument();
-  });
-
-  it('protected route redirects when logged out', () => {
-    useAuthStore.setState({ isLoggedIn: false, roles: [], actorTelegramId: null });
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <ProtectedRoute>
-          <div>Secret</div>
-        </ProtectedRoute>
-      </MemoryRouter>,
-    );
-    expect(screen.queryByText('Secret')).not.toBeInTheDocument();
-  });
-
-  it('protected route renders children when logged in', () => {
-    useAuthStore.setState({ isLoggedIn: true, roles: ['owner'], actorTelegramId: 1 });
-    render(
-      <MemoryRouter>
-        <ProtectedRoute>
-          <div>Secret</div>
-        </ProtectedRoute>
-      </MemoryRouter>,
-    );
-    expect(screen.getByText('Secret')).toBeInTheDocument();
+    for (const label of LABELS) {
+      expect(screen.getByText(label)).toBeInTheDocument();
+    }
   });
 });

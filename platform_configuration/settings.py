@@ -12,6 +12,11 @@ class DatabaseSettings(BaseModel):
         default="postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem"
     )
     postgres_only: bool = True
+    # Sprint 37.3 — production-tunable pool (env: DB_POOL_SIZE / DB_MAX_OVERFLOW / …)
+    pool_size: int = 20
+    max_overflow: int = 40
+    pool_timeout: float = 30.0
+    pool_recycle: int = 1800
 
 
 class RedisSettings(BaseModel):
@@ -102,6 +107,15 @@ class SecuritySettings(BaseModel):
     log_level: str = "INFO"
     sentry_dsn: str = ""
     prometheus_enabled: bool = True
+    # Sprint 30.0 — governance
+    allow_header_auth: bool = True
+    secret_master_key: str = ""
+    require_tenant_filter: bool = True
+    security_headers_enabled: bool = True
+    rate_limit_enabled: bool = True
+    rate_limit_per_minute: int = 600
+    csrf_protection_enabled: bool = False  # cookie sessions only; Bearer APIs exempt
+    trust_proxy: bool = False  # only honor X-Forwarded-For when behind a trusted proxy
 
 
 class StorageSettings(BaseModel):
@@ -207,4 +221,5 @@ class PlatformSettings(BaseModel):
 
     @property
     def is_production(self) -> bool:
-        return self.security.environment in {"production", "prod"}
+        # Staging shares production secret / auth fail-closed gates (Sprint 37.2).
+        return self.security.environment in {"production", "prod", "staging"}

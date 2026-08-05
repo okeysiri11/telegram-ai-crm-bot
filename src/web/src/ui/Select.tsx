@@ -1,13 +1,22 @@
 import type { SelectHTMLAttributes } from "react";
 import { cn } from "@/utils/cn";
 
-export function Select({ className, children, ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {
+type Props = SelectHTMLAttributes<HTMLSelectElement> & {
+  sizeVariant?: "sm" | "md" | "lg";
+  invalid?: boolean;
+};
+
+export function Select({ className, children, sizeVariant = "md", invalid, ...rest }: Props) {
   return (
     <select
       className={cn(
-        "h-10 w-full rounded-md border border-[var(--ew-border)] bg-[var(--ew-surface)] px-3 text-sm",
+        "eds-control",
+        sizeVariant === "sm" && "eds-control--sm",
+        sizeVariant === "lg" && "eds-control--lg",
+        invalid && "border-[var(--eds-danger)]",
         className,
       )}
+      aria-invalid={invalid || undefined}
       {...rest}
     >
       {children}

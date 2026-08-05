@@ -1,5 +1,8 @@
 # Universal Deal Engine — shared deal lifecycle across verticals.
 
+from __future__ import annotations
+
+
 from config import OWNER_ID
 
 
@@ -39,13 +42,13 @@ class DealEngine:
         return get_deal(deal_id)
 
     @staticmethod
-    def list(user_id: int, module: str = None, status: str = None, limit: int = 50) -> list:
+    def list_deals(user_id: int, module: str = None, status: str = None, limit: int = 50) -> list:
         if not DealEngine.can_view(user_id):
             return []
-        from database import list_deals, has_deal_action
+        from database import list_deals as _list_deals, has_deal_action
         if has_deal_action(user_id, "DEAL_APPROVE"):
-            return list_deals(module=module, status=status, limit=limit)
-        return list_deals(
+            return _list_deals(module=module, status=status, limit=limit)
+        return _list_deals(
             module=module, status=status, manager_id=user_id, limit=limit,
         )
 

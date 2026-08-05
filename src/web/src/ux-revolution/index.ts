@@ -37,6 +37,7 @@ export { ensureProMode } from "./ensureProMode";
 export {
   INTELLIGENT_NAV_GROUPS,
   groupsForMode,
+  warmRegistryNavigation,
   resolveGroupForPath,
   isNavItemActive,
   NAV_ACCORDION_KEY,

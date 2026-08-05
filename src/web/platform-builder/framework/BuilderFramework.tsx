@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { Badge, Button, Card, Switch } from "@/ui";
 import { FRAMEWORK_PHASES } from "../types";
 import { helpFor } from "../managers/builderRegistry";
@@ -16,6 +17,7 @@ type Props = {
   steps: readonly string[];
   frameOnly?: boolean;
   note?: string;
+  openWorkspaceRoute?: string;
 };
 
 export function BuilderFramework({
@@ -25,6 +27,7 @@ export function BuilderFramework({
   steps,
   frameOnly = true,
   note,
+  openWorkspaceRoute,
 }: Props) {
   const [current, setCurrent] = useState(0);
   const [created, setCreated] = useState(false);
@@ -35,6 +38,7 @@ export function BuilderFramework({
   const help = useMemo(() => helpFor(step, title), [step, title]);
   const guided = learning && mode === "guided_learning";
   const phase = FRAMEWORK_PHASES[Math.min(current, FRAMEWORK_PHASES.length - 1)];
+  const isLastStep = current >= steps.length - 1;
 
   return (
     <PlatformBuilderLayout
@@ -42,14 +46,17 @@ export function BuilderFramework({
       subtitle={purpose || "Builder Framework · Step → Explanation → Information → Example → Preview → Create"}
     >
       <div className="flex flex-wrap items-center gap-3">
-        <Badge>{frameOnly ? "Frame only" : "Operational"}</Badge>
+        <Badge>{frameOnly ? "Preview" : "Operational"}</Badge>
+        {frameOnly ? <Badge tone="warning">Coming soon</Badge> : null}
         <Badge>Phase · {phase}</Badge>
         <Badge>Academy · {mode}</Badge>
-        <Switch
-          checked={learning}
-          onChange={(v) => toggleLearning(builderId, v)}
-          label="Learning mode"
-        />
+        {!frameOnly ? (
+          <Switch
+            checked={learning}
+            onChange={(v) => toggleLearning(builderId, v)}
+            label="Learning mode"
+          />
+        ) : null}
       </div>
 
       {note ? <p className="eds-type-small text-[var(--eds-text-muted)]">{note}</p> : null}
@@ -76,15 +83,29 @@ export function BuilderFramework({
             >
               Next
             </Button>
-            <Button
-              variant="primary"
-              onClick={() => {
-                setCurrent(steps.length - 1);
-                setCreated(true);
-              }}
-            >
-              Create
-            </Button>
+            {frameOnly ? (
+              isLastStep ? (
+                openWorkspaceRoute ? (
+                  <Link to={openWorkspaceRoute}>
+                    <Button variant="primary">Open Workspace Version</Button>
+                  </Link>
+                ) : (
+                  <Button variant="primary" disabled>
+                    Coming soon
+                  </Button>
+                )
+              ) : null
+            ) : (
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setCurrent(steps.length - 1);
+                  setCreated(true);
+                }}
+              >
+                Create
+              </Button>
+            )}
           </div>
         </Card>
 
@@ -93,9 +114,11 @@ export function BuilderFramework({
         <PreviewWindow
           title={title}
           summary={
-            created
-              ? `${title} draft recorded — navigation frame complete.`
-              : `Live preview for «${step}».`
+            frameOnly
+              ? `${title} — Preview only (no entities created). Next step: Open Workspace Version.`
+              : created
+                ? `${title} draft recorded — navigation frame complete.`
+                : `Live preview for «${step}».`
           }
           payload={{ builderId, step, phase, frameOnly }}
         />

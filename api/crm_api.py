@@ -71,12 +71,28 @@ async def api_auth_handler(request: web.Request) -> web.Response:
     api_key = body.get("api_key") or request.headers.get("X-API-Key")
     from config import JWT_SECRET, OWNER_ID
 
-    if api_key != JWT_SECRET and telegram_id != OWNER_ID:
-        # Allow owner telegram id OR matching JWT_SECRET as simple bootstrap auth
-        if not api_key:
-            return _json_error("Unauthorized", 401)
-        if api_key != JWT_SECRET:
-            return _json_error("Unauthorized", 401)
+    # Sprint 37.2 — do not accept JWT signing secret as CRM bootstrap API key in prod/staging.
+    import os
+
+    bootstrap = (os.getenv("CRM_BOOTSTRAP_API_KEY") or "").strip()
+    try:
+        from platform_configuration.configuration_center import configuration_center
+
+        is_prod = configuration_center.settings.is_production
+    except Exception:
+        is_prod = (os.getenv("ENVIRONMENT") or "").lower() in {"production", "prod", "staging"}
+
+    owner_ok = OWNER_ID is not None and telegram_id == OWNER_ID
+    key_ok = False
+    if api_key:
+        if bootstrap and api_key == bootstrap:
+            key_ok = True
+        elif not is_prod and api_key == JWT_SECRET:
+            # Legacy bootstrap: JWT_SECRET as API key — development only
+            key_ok = True
+
+    if not owner_ok and not key_ok:
+        return _json_error("Unauthorized", 401)
 
     token = _encode_jwt({"sub": str(telegram_id or "api"), "role": "ADMIN"})
     return web.json_response({"ok": True, "access_token": token, "token_type": "Bearer"})

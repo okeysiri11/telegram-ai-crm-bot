@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class SnapshotPeriod(str, enum.Enum):
@@ -22,7 +22,7 @@ class SnapshotPeriod(str, enum.Enum):
 SNAPSHOT_PERIODS = frozenset(p.value for p in SnapshotPeriod)
 
 
-class AnalyticsSnapshot(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AnalyticsSnapshot(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "analytics_automation_engine_v1_snapshots"
     __table_args__ = (
         UniqueConstraint(

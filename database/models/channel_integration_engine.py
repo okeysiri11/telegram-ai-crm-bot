@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class IntegrationChannelType(str, enum.Enum):
@@ -40,7 +40,7 @@ class ChannelIntegrationStatus(str, enum.Enum):
     ERROR = "ERROR"
 
 
-class ChannelIntegration(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ChannelIntegration(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "channel_integration_engine_v1_channels"
     __table_args__ = (
         UniqueConstraint(

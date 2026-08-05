@@ -1,0 +1,42 @@
+{
+  "name": "ados-enterprise-os",
+  "private": true,
+  "version": "1.1.0",
+  "description": "ADOS Enterprise Operating System",
+  "type": "module",
+  "scripts": {
+    "dev:all": "node scripts/dev_all.mjs",
+    "dev:api": "./venv/bin/python scripts/run_api_local.py",
+    "dev:web": "npm run dev --prefix src/web -- --host 127.0.0.1 --port 5180",
+    "dev:infra": "docker compose up -d postgres redis",
+    "dev:migrate": "./venv/bin/python scripts/ensure_local_schema.py",
+    "install:kernel": "npm install --prefix src/kernel",
+    "install:orchestrator": "npm install --prefix src/orchestrator",
+    "install:providers": "npm install --prefix src/providers",
+    "install:chat-bridge": "npm install --prefix src/chat_bridge",
+    "install:voice": "npm install --prefix src/voice",
+    "install:mcp": "npm install --prefix src/mcp",
+    "install:execution": "npm install --prefix src/execution",
+    "install:console": "npm install --prefix platform_console",
+    "install:web": "npm install --prefix src/web",
+    "build:orchestrator": "npm run build --prefix src/orchestrator",
+    "build:providers": "npm run build --prefix src/providers",
+    "build:chat-bridge": "npm run build --prefix src/chat_bridge",
+    "build:voice": "npm run build --prefix src/voice",
+    "build:mcp": "npm run build --prefix src/mcp",
+    "build:execution": "npm run build --prefix src/execution",
+    "build": "npm run build:providers && npm run build:orchestrator && npm run build:chat-bridge && npm run build:voice && npm run build:mcp && npm run build:execution && npm run build --prefix src/kernel",
+    "build:console": "npm run build --prefix platform_console",
+    "build:web": "npm run build --prefix src/web",
+    "test": "npm run test --prefix src/providers && npm run test --prefix src/orchestrator && npm run test --prefix src/chat_bridge && npm run test --prefix src/voice && npm run test --prefix src/mcp && npm run test --prefix src/execution && npm run test --prefix src/kernel",
+    "test:console": "npm run test --prefix platform_console",
+    "test:web": "npm run test --prefix src/web",
+    "ados": "npm run ados --prefix src/kernel",
+    "console": "npm run dev --prefix platform_console",
+    "dev": "npm run console",
+    "postinstall": "npm install --prefix src/providers && npm install --prefix src/orchestrator && npm install --prefix src/chat_bridge && npm install --prefix src/voice && npm install --prefix src/mcp && npm install --prefix src/execution && npm install --prefix src/kernel && npm install --prefix platform_console"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

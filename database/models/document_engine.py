@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class DocumentType(str, enum.Enum):
@@ -47,7 +47,7 @@ class SignerRole(str, enum.Enum):
     CUSTOMS_OFFICER = "CUSTOMS_OFFICER"
 
 
-class DocumentTemplate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class DocumentTemplate(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "document_engine_v1_document_templates"
     __table_args__ = (
         UniqueConstraint("code", name="uq_document_engine_v1_templates_code"),
@@ -67,7 +67,7 @@ class DocumentTemplate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<DocumentTemplate code={self.code} type={self.document_type}>"
 
 
-class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Document(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "document_engine_v1_documents"
     __table_args__ = (
         UniqueConstraint(
@@ -113,7 +113,7 @@ class Document(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class DocumentVersion(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class DocumentVersion(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "document_engine_v1_document_versions"
     __table_args__ = (
         UniqueConstraint(
@@ -139,7 +139,7 @@ class DocumentVersion(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<DocumentVersion doc={self.document_id} v={self.version_number}>"
 
 
-class DocumentSignature(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class DocumentSignature(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "document_engine_v1_document_signatures"
     __table_args__ = (
         Index("ix_document_engine_v1_signatures_document_id", "document_id"),

@@ -1,4 +1,4 @@
-# Identity service — central IAM facade for all platform modules.
+# Identity service — central IAM facade for all platform modules (Sprint 34.2A Identity Core).
 
 from __future__ import annotations
 
@@ -59,14 +59,18 @@ class IdentityService:
 
         init_data = body.get("telegram_init_data")
         if init_data:
-            return verify_telegram_init_data(str(init_data))
+            telegram_id = verify_telegram_init_data(str(init_data))
+            await self._link_optional_email(telegram_id, body)
+            return telegram_id
 
         login_proof = body.get("login_proof")
         if login_proof and verify_login_proof(str(login_proof)):
             telegram_id = body.get("telegram_id")
             if telegram_id is None:
                 raise AuthenticationError("telegram_id required with login_proof")
-            return int(telegram_id)
+            tid = int(telegram_id)
+            await self._link_optional_email(tid, body)
+            return tid
 
         try:
             principal = await self.authenticate_request(request)
@@ -77,12 +81,30 @@ class IdentityService:
             telegram_id = body.get("telegram_id")
             if telegram_id is None:
                 raise AuthenticationError("telegram_id required for API-key-assisted login")
-            return int(telegram_id)
+            tid = int(telegram_id)
+            await self._link_optional_email(tid, body)
+            return tid
         except AuthenticationError as exc:
             raise AuthenticationError(
                 "Login requires telegram_init_data, valid login_proof + telegram_id, "
                 "or API key with identity.login scope"
             ) from exc
+
+    async def _link_optional_email(self, telegram_id: int, body: dict[str, Any]) -> None:
+        """Sprint 34.2A — attach email link when Web login provides email."""
+        email = body.get("email")
+        if not email:
+            return
+        try:
+            from platform_identity.user_resolver import user_resolver
+
+            await user_resolver.ensure_email_link(
+                email=str(email),
+                telegram_id=telegram_id,
+                display_name=body.get("display_name") or body.get("name"),
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("email link skipped: %s", exc)
 
     async def refresh_tokens(self, refresh_token: str) -> dict[str, Any]:
         tokens = jwt_service.rotate_refresh_token(refresh_token)
@@ -95,7 +117,7 @@ class IdentityService:
         }
 
     async def logout(self, session_id: str) -> None:
-        session = session_manager.revoke(session_id)
+        session_manager.revoke(session_id)
 
     async def revoke_token(self, token: str) -> None:
         jwt_service.revoke_token(token)
@@ -134,6 +156,11 @@ class IdentityService:
             return True
 
         from platform_identity.permission_service import LEGACY_PERMISSION_MAP
+        from platform_identity.registries.permission_registry import normalize_permission
+
+        canon = normalize_permission(legacy_code)
+        if canon and await self.authorize(principal, canon):
+            return True
 
         for iam_code, mapped_legacy in LEGACY_PERMISSION_MAP.items():
             if mapped_legacy == legacy_code:
@@ -153,6 +180,82 @@ class IdentityService:
     async def assert_realtime_channel(self, principal: Principal, channel: str) -> None:
         await authorization_service.assert_realtime_channel(principal, channel)
 
+    # ---- Identity Core lookups (Sprint 34.2A) ----
+
+    async def get_identity(
+        self,
+        *,
+        user_id: str | None = None,
+        telegram_id: int | None = None,
+    ) -> dict[str, Any] | None:
+        """Canonical identity lookup for any client."""
+        from platform_identity.user_resolver import user_resolver
+
+        if user_id:
+            from uuid import UUID
+
+            from services.user_service import UserService
+
+            snap = await UserService.get_user_by_id(UUID(str(user_id)))
+            if snap:
+                return snap
+        if telegram_id is not None:
+            try:
+                return await user_resolver.ensure_telegram_user(telegram_id)
+            except Exception:
+                user = await user_resolver.resolve_by_telegram(telegram_id)
+                if user is None:
+                    return None
+                return user_resolver.canonical_snapshot(user)
+        return None
+
+    def list_canonical_roles(self) -> dict[str, Any]:
+        from platform_identity.registries.role_registry import ROLE_REGISTRY, all_role_codes
+
+        return {
+            "roles": all_role_codes(),
+            "registry": {
+                code: {
+                    "label": d.label,
+                    "description": d.description,
+                    "aliases": list(d.aliases),
+                }
+                for code, d in ROLE_REGISTRY.items()
+            },
+        }
+
+    def list_canonical_permissions(self) -> dict[str, Any]:
+        from platform_identity.registries.permission_registry import (
+            PERMISSION_REGISTRY,
+            ROLE_PERMISSION_DEFAULTS,
+            all_permission_codes,
+        )
+
+        return {
+            "permissions": all_permission_codes(),
+            "registry": {
+                code: {"description": d.description, "aliases": list(d.aliases)}
+                for code, d in PERMISSION_REGISTRY.items()
+            },
+            "role_defaults": {k: list(v) for k, v in ROLE_PERMISSION_DEFAULTS.items()},
+        }
+
+    def list_workspaces(self) -> dict[str, Any]:
+        from platform_identity.registries.workspace_registry import WORKSPACE_REGISTRY
+
+        return {
+            "workspaces": [
+                {
+                    "code": w.code,
+                    "label": w.label,
+                    "description": w.description,
+                    "web_path": w.web_path,
+                    "telegram_entry": w.telegram_entry,
+                }
+                for w in WORKSPACE_REGISTRY.values()
+            ]
+        }
+
     # ---- Management role bridge (backward compat) ----
 
     async def resolve_management_role(
@@ -165,9 +268,9 @@ class IdentityService:
         from platform_management.permissions import ManagementRole
 
         if principal is not None:
-            if PlatformRole.OWNER.value in principal.roles:
+            if PlatformRole.OWNER.value in principal.roles or "owner" in principal.roles:
                 return ManagementRole.OWNER
-            if PlatformRole.ADMINISTRATOR.value in principal.roles:
+            if PlatformRole.ADMINISTRATOR.value in principal.roles or "administrator" in principal.roles:
                 return ManagementRole.ADMINISTRATOR
             if principal.auth_method == AuthMethod.API_KEY:
                 scopes = set(principal.permissions or [])
@@ -175,7 +278,7 @@ class IdentityService:
                     return ManagementRole.ADMINISTRATOR
                 if scopes or principal.roles:
                     return ManagementRole.READ_ONLY
-            if PlatformRole.READ_ONLY.value in principal.roles or principal.roles:
+            if PlatformRole.READ_ONLY.value in principal.roles or "client" in principal.roles or principal.roles:
                 return ManagementRole.READ_ONLY
             if principal.permissions:
                 return ManagementRole.READ_ONLY
@@ -188,9 +291,9 @@ class IdentityService:
 
         principal = await self.authenticate_telegram(telegram_id)
 
-        if PlatformRole.OWNER.value in principal.roles:
+        if PlatformRole.OWNER.value in principal.roles or "owner" in principal.roles:
             return ManagementRole.OWNER
-        if PlatformRole.ADMINISTRATOR.value in principal.roles:
+        if PlatformRole.ADMINISTRATOR.value in principal.roles or "administrator" in principal.roles:
             return ManagementRole.ADMINISTRATOR
         if PlatformRole.READ_ONLY.value in principal.roles or principal.roles:
             return ManagementRole.READ_ONLY
@@ -209,6 +312,7 @@ class IdentityService:
                 session.telegram_id,
                 {
                     "telegram_id": session.telegram_id,
+                    "user_id": session.user_id,
                     "sessions": [],
                     "roles": session.roles,
                 },
@@ -222,12 +326,14 @@ class IdentityService:
         return {
             "roles": role_service.list_roles(),
             "inheritance": {role: list(parents) for role, parents in ROLE_INHERITANCE.items()},
+            "canonical": self.list_canonical_roles(),
         }
 
     def list_permissions(self) -> dict[str, Any]:
         return {
             "permissions": permission_service.list_permissions(),
             "tree": permission_service.permission_tree(),
+            "canonical": self.list_canonical_permissions(),
         }
 
     def list_sessions(self) -> list[dict[str, Any]]:
@@ -241,9 +347,12 @@ class IdentityService:
 
     def status(self) -> dict[str, Any]:
         return {
+            "sprint": "34.2A",
+            "identity_core": True,
             "users": self.list_users(),
             "roles": self.list_roles(),
             "permissions": self.list_permissions(),
+            "workspaces": self.list_workspaces(),
             "sessions": self.list_sessions(),
             "api_keys": self.list_api_keys(),
             "policies": self.list_policies(),

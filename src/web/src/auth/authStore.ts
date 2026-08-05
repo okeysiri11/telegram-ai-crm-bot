@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { webConfig } from "@/config/webConfig";
 import {
   productionLogin,
+  productionGoogleLogin,
+  productionRegister,
   refreshProductionSession,
   validateSessionOnline,
   type AuthSessionPayload,
@@ -12,6 +14,7 @@ export type UserProfile = {
   id: string;
   email: string;
   name: string;
+  displayName?: string;
   tenantId: string;
   roleId?: string;
   telegramId?: number;
@@ -29,6 +32,14 @@ type AuthState = {
   accessExpiresAt: string | null;
   mfaReady: boolean;
   login: (email: string, password: string, tenantId: string) => Promise<void>;
+  loginWithGoogle: (input: {
+    email?: string;
+    name?: string;
+    idToken?: string;
+    tenantId: string;
+    rememberMe?: boolean;
+  }) => Promise<void>;
+  register: (email: string, password: string, tenantId: string, name?: string) => Promise<void>;
   logout: () => void;
   restoreSession: () => void;
   refreshSession: () => Promise<boolean>;
@@ -77,10 +88,55 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       authMode: payload.authMode,
       accessExpiresAt: payload.accessExpiresAt,
     });
+    try {
+      localStorage.setItem("ews_last_login_at", new Date().toISOString());
+    } catch {
+      /* ignore */
+    }
     void telemetry.audit(
       "auth_login",
       `${email}; mode=${session.authMode}; tenant=${tenantId}`,
     );
+    try {
+      const { logActivity } = await import("@/workspace-engine/activityJournal");
+      logActivity({ kind: "login", title: "User signed in", detail: email });
+    } catch {
+      /* ignore */
+    }
+  },
+
+  loginWithGoogle: async (input) => {
+    const session = await productionGoogleLogin(input);
+    const payload = fromLogin(session);
+    set({
+      user: payload.user,
+      accessToken: payload.accessToken,
+      refreshToken: payload.refreshToken,
+      authMode: payload.authMode,
+      accessExpiresAt: payload.accessExpiresAt,
+    });
+    try {
+      localStorage.setItem("ews_last_login_at", new Date().toISOString());
+    } catch {
+      /* ignore */
+    }
+    void telemetry.audit(
+      "auth_google_login",
+      `${payload.user.email}; tenant=${input.tenantId}`,
+    );
+  },
+
+  register: async (email, password, tenantId, name) => {
+    const session = await productionRegister({ email, password, tenantId, name });
+    const payload = fromLogin(session);
+    set({
+      user: payload.user,
+      accessToken: payload.accessToken,
+      refreshToken: payload.refreshToken,
+      authMode: payload.authMode,
+      accessExpiresAt: payload.accessExpiresAt,
+    });
+    void telemetry.audit("auth_register", `${email}; tenant=${tenantId}`);
   },
 
   logout: () => {

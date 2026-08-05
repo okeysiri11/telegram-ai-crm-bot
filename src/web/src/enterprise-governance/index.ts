@@ -15,6 +15,19 @@ export type {
 } from "./deriveGovernance";
 export {
   EnterpriseGovernancePage,
-  GovernanceStrip,
   GovernanceWidgetCompact,
 } from "./EnterpriseGovernancePage";
+export { GovernanceStrip } from "./GovernanceStrip";
+export {
+  evaluateGovernanceEdge,
+  registerGovernanceEdgeHook,
+  resetGovernanceEdgeHook,
+  defaultGovernanceEdgeHook,
+  GOVERNANCE_EDGE_MIGRATION,
+} from "./governanceEdge";
+export type {
+  GovernanceDecision,
+  GovernanceEdgeContext,
+  GovernanceEdgeResult,
+  GovernanceEdgeHook,
+} from "./governanceEdge";

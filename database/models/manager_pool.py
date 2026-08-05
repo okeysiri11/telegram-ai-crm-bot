@@ -8,10 +8,10 @@ from sqlalchemy import BigInteger, Boolean, DateTime, Index, Integer, String, Un
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class ManagerPoolEntry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ManagerPoolEntry(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "manager_pool"
     __table_args__ = (
         UniqueConstraint("telegram_id", "vertical", name="uq_manager_pool_telegram_vertical"),

@@ -19,7 +19,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class ConversationSkillCode(str, enum.Enum):
@@ -53,7 +53,7 @@ CONVERSATION_TONES = frozenset(t.value for t in ConversationTone)
 CONVERSATION_STYLES = frozenset(s.value for s in ConversationStyle)
 
 
-class AiSkill(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AiSkill(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_conversation_skills_v1_skills"
     __table_args__ = (
         UniqueConstraint(
@@ -86,7 +86,7 @@ class AiSkill(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AiSkill tenant={self.tenant_id} code={self.skill_code}>"
 
 
-class AiPersonality(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AiPersonality(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_conversation_skills_v1_personalities"
     __table_args__ = (
         Index("ix_ai_conversation_skills_v1_personalities_tenant", "tenant_id"),
@@ -118,7 +118,7 @@ class AiPersonality(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AiPersonality tenant={self.tenant_id} name={self.name}>"
 
 
-class AiResponseTemplate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AiResponseTemplate(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_conversation_skills_v1_response_templates"
     __table_args__ = (
         UniqueConstraint(
@@ -156,7 +156,7 @@ class AiResponseTemplate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AiResponseTemplate code={self.template_code}>"
 
 
-class ConversationMemory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ConversationMemory(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_conversation_skills_v1_conversation_memory"
     __table_args__ = (
         UniqueConstraint(

@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class RequestMetricStatus(str, enum.Enum):
@@ -25,7 +25,7 @@ class RequestMetricStatus(str, enum.Enum):
     DEAL = "DEAL"
 
 
-class RequestMetric(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RequestMetric(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Per-request lifecycle timings (source of truth for observability)."""
 
     __tablename__ = "request_metrics"
@@ -57,7 +57,7 @@ class RequestMetric(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     converted_to_deal: Mapped[bool] = mapped_column(default=False, nullable=False)
 
 
-class ManagerMetric(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ManagerMetric(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Daily manager efficiency rollups per vertical."""
 
     __tablename__ = "manager_metrics"
@@ -84,7 +84,7 @@ class ManagerMetric(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     total_response_time_seconds: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
-class PlatformMetricsDaily(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PlatformMetricsDaily(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Daily platform-wide aggregates per vertical."""
 
     __tablename__ = "platform_metrics_daily"

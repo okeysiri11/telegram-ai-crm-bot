@@ -73,6 +73,7 @@ ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {
         "realtime.channel.notifications",
         "realtime.channel.system",
         "realtime.channel.health",
+        "realtime.channel.platform_state",
     ),
     PlatformRole.OPERATOR.value: (
         "dashboard.read",
@@ -90,6 +91,7 @@ ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {
         "realtime.channel.system",
         "realtime.channel.health",
         "realtime.channel.audit",
+        "realtime.channel.platform_state",
     ),
     PlatformRole.READ_ONLY.value: (
         "system.read",
@@ -114,6 +116,7 @@ ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {
         "realtime.channel.audit",
         "realtime.channel.notifications",
         "realtime.channel.health",
+        "realtime.channel.platform_state",
     ),
     PlatformRole.SERVICE.value: (
         "sdk.read",
@@ -131,6 +134,7 @@ ROLE_PERMISSIONS: dict[str, tuple[str, ...]] = {
         "ai.read",
         "ai.use",
         "realtime.channel.ai",
+        "realtime.channel.platform_state",
     ),
 }
 

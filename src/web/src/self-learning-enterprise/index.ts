@@ -12,8 +12,5 @@ export type {
   LearningRecommendation,
   ExecutiveLearningReport,
 } from "./deriveLearning";
-export {
-  SelfLearningEnterprisePage,
-  LearningStrip,
-  LearningWidgetCompact,
-} from "./SelfLearningEnterprisePage";
+export { SelfLearningEnterprisePage, LearningWidgetCompact } from "./SelfLearningEnterprisePage";
+export { LearningStrip } from "./LearningStrip";

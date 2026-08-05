@@ -6,10 +6,10 @@ from sqlalchemy import BigInteger, Boolean, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class UserVerticalPreferences(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class UserVerticalPreferences(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "user_vertical_preferences_v1"
     __table_args__ = (
         Index("ix_user_vertical_prefs_telegram", "telegram_user_id", unique=True),

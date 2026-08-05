@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class CartPaymentMethod(str, enum.Enum):
@@ -32,7 +32,7 @@ CART_PAYMENT_METHODS = frozenset(m.value for m in CartPaymentMethod)
 CART_ORDER_STATUSES = frozenset(s.value for s in CartOrderStatus)
 
 
-class CartEngineV1Order(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class CartEngineV1Order(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "cart_engine_v1_orders"
     __table_args__ = (
         Index("ix_cart_engine_v1_orders_user", "user_id"),
@@ -59,7 +59,7 @@ class CartEngineV1Order(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     payment_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
-class CartEngineV1OrderItem(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class CartEngineV1OrderItem(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "cart_engine_v1_order_items"
     __table_args__ = (
         Index("ix_cart_engine_v1_items_order", "order_id"),

@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.deal  # noqa: F401 — register deal_engine_deals for FK resolution
 
@@ -51,7 +51,7 @@ class SettlementStepType(str, enum.Enum):
     INTERNAL = "INTERNAL"
 
 
-class Settlement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Settlement(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "settlement_v1_settlements"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_settlement_v1_settlements_amount"),
@@ -87,7 +87,7 @@ class Settlement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class SettlementRoute(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SettlementRoute(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "settlement_v1_routes"
     __table_args__ = (
         Index("ix_settlement_v1_routes_settlement_id", "settlement_id"),
@@ -106,7 +106,7 @@ class SettlementRoute(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SettlementRoute id={self.id} settlement={self.settlement_id} steps={self.step_count}>"
 
 
-class SettlementStep(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SettlementStep(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "settlement_v1_steps"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_settlement_v1_steps_amount"),
@@ -145,7 +145,7 @@ class SettlementStep(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class SettlementStatusHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SettlementStatusHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "settlement_v1_status_history"
     __table_args__ = (
         Index("ix_settlement_v1_status_history_settlement_id", "settlement_id"),

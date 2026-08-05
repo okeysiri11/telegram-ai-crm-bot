@@ -1,0 +1,441 @@
+/* Sprint 27.7 — Enterprise Desktop Environment (EDL motion) */
+.edt-shell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 100vh;
+  overflow: hidden;
+  color: var(--eds-text);
+}
+.edt-menubar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.45rem 0.85rem;
+  z-index: 40;
+  border-bottom: 1px solid color-mix(in oklab, var(--eds-border) 70%, transparent);
+  backdrop-filter: blur(16px);
+}
+.edt-menubar-left,
+.edt-menubar-right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+}
+.edt-brand {
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.02em;
+}
+.edt-field {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.72rem;
+}
+.edt-field select {
+  border-radius: 0.4rem;
+  border: 1px solid var(--eds-border);
+  background: color-mix(in oklab, var(--eds-surface) 80%, transparent);
+  color: var(--eds-text);
+  padding: 0.2rem 0.4rem;
+}
+.edt-status-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  color: var(--eds-text-muted);
+}
+.edt-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+.edt-icons {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+.edt-icon {
+  position: absolute;
+  pointer-events: auto;
+  width: 5.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  border: 0;
+  background: transparent;
+  color: #f4f7fb;
+  cursor: grab;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 45%);
+}
+.edt-icon:active {
+  cursor: grabbing;
+}
+.edt-icon-glyph {
+  width: 3rem;
+  height: 3rem;
+  display: grid;
+  place-items: center;
+  border-radius: 0.85rem;
+  background: color-mix(in oklab, var(--eds-surface) 55%, transparent);
+  border: 1px solid color-mix(in oklab, #fff 18%, transparent);
+  backdrop-filter: blur(8px);
+  font-size: 1.25rem;
+}
+.edt-icon-svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+.edt-icon-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+  line-height: 1.2;
+}
+.edt-window {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--eds-radius-xl, 1rem);
+  border: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 94%, transparent);
+  box-shadow: 0 18px 48px color-mix(in oklab, #0b1220 28%, transparent);
+  overflow: hidden;
+  transition:
+    box-shadow var(--eds-motion-fast, 160ms) var(--eds-ease, ease),
+    transform var(--eds-motion-fast, 160ms) var(--eds-ease, ease);
+}
+.edt-window.is-focused {
+  box-shadow: 0 22px 56px color-mix(in oklab, #0b1220 36%, transparent);
+  border-color: color-mix(in oklab, var(--eds-primary) 35%, var(--eds-border));
+}
+.edt-window-titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.55rem;
+  cursor: grab;
+  background: color-mix(in oklab, var(--eds-surface-raised, var(--eds-surface)) 90%, transparent);
+  border-bottom: 1px solid color-mix(in oklab, var(--eds-border) 70%, transparent);
+  user-select: none;
+}
+.edt-window-titlebar:active {
+  cursor: grabbing;
+}
+.edt-window-traffic {
+  display: flex;
+  gap: 0.35rem;
+}
+.edt-traffic {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+}
+.edt-traffic--close {
+  background: #e26a6a;
+}
+.edt-traffic--min {
+  background: #e2b35a;
+}
+.edt-traffic--max {
+  background: #5fbe7d;
+}
+.edt-window-title {
+  flex: 1;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.edt-window-actions {
+  display: flex;
+  gap: 0.15rem;
+}
+.edt-window-actions button {
+  border: 0;
+  background: transparent;
+  color: var(--eds-text-muted);
+  cursor: pointer;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.35rem;
+  font-size: 0.75rem;
+}
+.edt-window-actions button:hover {
+  background: color-mix(in oklab, var(--eds-primary) 12%, transparent);
+  color: var(--eds-text);
+}
+.edt-window-body {
+  flex: 1;
+  min-height: 0;
+  background: var(--eds-bg);
+}
+.edt-window-frame {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+  background: var(--eds-bg);
+}
+.edt-window-resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 1rem;
+  height: 1rem;
+  cursor: nwse-resize;
+}
+.edt-window-resize--e {
+  top: 2rem;
+  right: 0;
+  bottom: 1rem;
+  width: 0.4rem;
+  height: auto;
+  cursor: ew-resize;
+}
+.edt-window-resize--s {
+  left: 0;
+  right: 1rem;
+  bottom: 0;
+  width: auto;
+  height: 0.4rem;
+  cursor: ns-resize;
+}
+.edt-window-resize--w {
+  top: 2rem;
+  left: 0;
+  bottom: 1rem;
+  width: 0.4rem;
+  height: auto;
+  cursor: ew-resize;
+}
+.edt-window-resize--n {
+  top: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 0.35rem;
+  cursor: ns-resize;
+}
+.edt-window-tabs {
+  display: flex;
+  gap: 0.2rem;
+  padding: 0.2rem 0.45rem;
+  overflow-x: auto;
+  border-bottom: 1px solid color-mix(in oklab, var(--eds-border) 70%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 55%, transparent);
+}
+.edt-window-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 10rem;
+  padding: 0.25rem 0.45rem;
+  border: 1px solid transparent;
+  border-radius: 0.45rem 0.45rem 0 0;
+  background: transparent;
+  color: var(--eds-text-muted);
+  font-size: 0.72rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.edt-window-tab.is-active {
+  background: color-mix(in oklab, var(--eds-bg) 90%, transparent);
+  color: var(--eds-text);
+  border-color: color-mix(in oklab, var(--eds-border) 80%, transparent);
+}
+.edt-window-tab-x,
+.edt-window-tab-detach {
+  opacity: 0.55;
+  font-size: 0.7rem;
+}
+.edt-window-tab-x:hover,
+.edt-window-tab-detach:hover {
+  opacity: 1;
+}
+.edt-window-body.is-split {
+  display: grid;
+}
+.edt-window-body.is-split--vertical {
+  grid-template-columns: 1fr 1fr;
+}
+.edt-window-body.is-split--horizontal {
+  grid-template-rows: 1fr 1fr;
+}
+.edt-snap-preview {
+  position: absolute;
+  z-index: 15;
+  pointer-events: none;
+  border-radius: 0.75rem;
+  border: 2px solid color-mix(in oklab, var(--eds-primary) 70%, transparent);
+  background: color-mix(in oklab, var(--eds-primary) 18%, transparent);
+}
+.edt-inspector {
+  position: absolute;
+  right: 0.75rem;
+  top: 0.75rem;
+  z-index: 85;
+  width: min(22rem, calc(100% - 1.5rem));
+  max-height: calc(100% - 5rem);
+  overflow: auto;
+  padding: 0.75rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+}
+.edt-inspector kbd {
+  font-size: 0.68rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 0.3rem;
+  border: 1px solid var(--eds-border);
+}
+.edt-dock {
+  z-index: 45;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.45rem;
+  margin: 0 auto 0.65rem;
+  padding: 0.55rem 0.85rem;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  border-radius: 1.15rem;
+  border: 1px solid color-mix(in oklab, #fff 16%, transparent);
+  background: color-mix(in oklab, #121820 72%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 12px 32px color-mix(in oklab, #0b1220 35%, transparent);
+}
+.edt-dock-item {
+  position: relative;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.85rem;
+  border: 1px solid color-mix(in oklab, #fff 12%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 45%, transparent);
+  color: #eef3f8;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: transform var(--eds-motion-fast, 160ms) var(--eds-ease-out, ease-out);
+}
+.edt-dock-item:hover {
+  background: color-mix(in oklab, var(--eds-primary) 22%, transparent);
+}
+.edt-dock-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.edt-dock-glyph {
+  font-weight: 700;
+  font-size: 0.95rem;
+}
+.edt-dock-dot {
+  position: absolute;
+  bottom: 0.15rem;
+  width: 0.3rem;
+  height: 0.3rem;
+  border-radius: 999px;
+  background: #8fd0ff;
+}
+.edt-dock-badge {
+  position: absolute;
+  top: -0.25rem;
+  right: -0.25rem;
+  min-width: 1rem;
+  height: 1rem;
+  padding: 0 0.2rem;
+  border-radius: 999px;
+  background: #e26a6a;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+.edt-dock-sep {
+  width: 1px;
+  height: 1.75rem;
+  background: color-mix(in oklab, #fff 18%, transparent);
+  margin: 0 0.15rem;
+}
+.edt-dock-meta {
+  color: color-mix(in oklab, #fff 65%, transparent);
+  padding: 0 0.35rem;
+  align-self: center;
+}
+.edt-launcher-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: start center;
+  padding-top: 12vh;
+  background: color-mix(in oklab, #0b1220 45%, transparent);
+}
+.edt-launcher {
+  width: min(42rem, calc(100% - 2rem));
+  max-height: 70vh;
+  overflow: auto;
+  padding: 1rem;
+  border-radius: 1.1rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+}
+.edt-launcher-grid {
+  display: grid;
+  gap: 1rem;
+  margin-top: 0.85rem;
+}
+.edt-launcher-group ul {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.45rem;
+}
+.edt-launcher-app {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 70%, transparent);
+  border-radius: 0.7rem;
+  padding: 0.55rem 0.65rem;
+  cursor: pointer;
+  color: var(--eds-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+}
+.edt-launcher-app:hover {
+  border-color: color-mix(in oklab, var(--eds-primary) 40%, var(--eds-border));
+  background: color-mix(in oklab, var(--eds-primary) 10%, transparent);
+}
+.edt-launcher-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex-shrink: 0;
+}
+.edt-embed-root {
+  min-height: 100%;
+  background: var(--eds-bg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .edt-window,
+  .edt-dock-item {
+    transition: none;
+  }
+}

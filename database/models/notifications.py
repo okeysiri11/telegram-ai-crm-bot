@@ -11,13 +11,13 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import SoftDeleteMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.users import User
 
 
-class Notification(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, Base):
+class Notification(UUIDPrimaryKeyMixin, TimestampMixin, SoftDeleteMixin, VersionMixin, Base):
     __tablename__ = "notifications"
     __table_args__ = (
         Index("ix_notifications_user_id", "user_id"),

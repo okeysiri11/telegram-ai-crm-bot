@@ -180,18 +180,24 @@ async def test_jwt_secret_validation_fails_on_default():
 
     import os
 
-    old = os.environ.get("IAM_JWT_SECRET")
+    old_iam = os.environ.get("IAM_JWT_SECRET")
+    old_jwt = os.environ.get("JWT_SECRET")
     try:
         os.environ["IAM_JWT_SECRET"] = "change-me-in-production"
+        os.environ["JWT_SECRET"] = "change-me-in-production"
         load_environment.cache_clear()
         configuration_center.reload()
         with pytest.raises(RuntimeError):
             validate_iam_jwt_secret()
     finally:
-        if old is None:
+        if old_iam is None:
             os.environ.pop("IAM_JWT_SECRET", None)
         else:
-            os.environ["IAM_JWT_SECRET"] = old
+            os.environ["IAM_JWT_SECRET"] = old_iam
+        if old_jwt is None:
+            os.environ.pop("JWT_SECRET", None)
+        else:
+            os.environ["JWT_SECRET"] = old_jwt
         load_environment.cache_clear()
         configuration_center.reload()
 

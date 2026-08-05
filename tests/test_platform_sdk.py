@@ -46,7 +46,7 @@ def test_vertical_registry_register_get_list_remove(clean_registry):
     clean_registry.register(AgroVertical)
     assert clean_registry.get("agro") is AgroVertical
     assert "agro" in clean_registry.list_codes()
-    assert clean_registry.list()[0]["workflow_name"] == "agro_post_create"
+    assert clean_registry.list_verticals()[0]["workflow_name"] == "agro_post_create"
     clean_registry.remove("agro")
     with pytest.raises(VerticalNotFoundError):
         clean_registry.get("agro")

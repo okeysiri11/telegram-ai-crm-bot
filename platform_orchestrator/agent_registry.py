@@ -59,7 +59,7 @@ class AgentRegistry:
             raise AgentNotFoundError(agent_id)
         return self._agents[agent_id]
 
-    def list(self) -> list[AgentMetadata]:
+    def list_agents(self) -> list[AgentMetadata]:
         return list(self._metadata.values())
 
     def capabilities(self) -> dict[str, list[str]]:

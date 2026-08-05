@@ -39,14 +39,17 @@ from platform_configuration.settings import (
     TelegramSettings,
     WorkflowSettings,
 )
+from platform_security.jwt_secrets import (
+    insecure_secret_set,
+    is_insecure_secret,
+    normalize_jwt_secrets,
+)
 
 logger = logging.getLogger(__name__)
 
 Observer = Callable[["ConfigurationCenter"], None]
 
-_INSECURE_JWT_SECRETS = frozenset(
-    {"", "change-me-in-production", "change-me-in-production-api-jwt-secret"}
-)
+_INSECURE_JWT_SECRETS = insecure_secret_set()
 
 
 @dataclass
@@ -89,17 +92,30 @@ class ConfigurationCenter:
             self._providers_loaded.append("runtime_overrides")
 
         env = self._runtime_overrides.get("environment") or getenv("ENVIRONMENT", "development")
-        is_production = str(env).lower() in {"production", "prod"}
+        # Staging uses the same fail-closed secret/auth gates as production (Sprint 37.2).
+        is_production = str(env).lower() in {"production", "prod", "staging"}
         postgres_only = getenv_bool("POSTGRES_ONLY", True)
         redis_url = getenv("REDIS_URL", "")
-        redis_required = getenv_bool("REDIS_REQUIRED", False) or is_production or postgres_only
+        # Production always requires Redis. Non-production: respect REDIS_REQUIRED
+        # explicitly (default false) so local zero-touch works with POSTGRES_ONLY.
+        if is_production:
+            redis_required = True
+        else:
+            redis_required = getenv_bool("REDIS_REQUIRED", False)
 
         owner_id = optional_telegram_id("OWNER_ID")
         platform_owner = optional_telegram_id("PLATFORM_OWNER_TELEGRAM_ID") or owner_id
 
-        jwt_secret = getenv("JWT_SECRET", "change-me-in-production")
-        iam_secret = getenv("IAM_JWT_SECRET", jwt_secret)
+        jwt_secret_raw = getenv("JWT_SECRET", "change-me-in-production")
+        iam_secret_raw = getenv("IAM_JWT_SECRET", jwt_secret_raw)
+        jwt_secret, iam_secret = normalize_jwt_secrets(
+            jwt_secret=jwt_secret_raw,
+            iam_secret=iam_secret_raw,
+        )
         openrouter_key = getenv("OPENROUTER_API_KEY", "")
+
+        allow_header_auth = getenv_bool("ALLOW_HEADER_AUTH", not is_production)
+        secret_master_key = getenv("SECURITY_MASTER_KEY", "")
 
         self._settings = PlatformSettings(
             database=DatabaseSettings(
@@ -108,6 +124,10 @@ class ConfigurationCenter:
                     "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem",
                 ),
                 postgres_only=postgres_only,
+                pool_size=getenv_int("DB_POOL_SIZE", 20),
+                max_overflow=getenv_int("DB_MAX_OVERFLOW", 40),
+                pool_timeout=getenv_float("DB_POOL_TIMEOUT", 30.0),
+                pool_recycle=getenv_int("DB_POOL_RECYCLE", 1800),
             ),
             redis=RedisSettings(url=redis_url, required=redis_required),
             jwt=JWTSettings(
@@ -170,6 +190,14 @@ class ConfigurationCenter:
                 log_level=getenv("LOG_LEVEL", "INFO"),
                 sentry_dsn=getenv("SENTRY_DSN", ""),
                 prometheus_enabled=getenv_bool("PROMETHEUS_ENABLED", True),
+                allow_header_auth=allow_header_auth,
+                secret_master_key=secret_master_key,
+                require_tenant_filter=getenv_bool("REQUIRE_TENANT_FILTER", True),
+                security_headers_enabled=getenv_bool("SECURITY_HEADERS_ENABLED", True),
+                rate_limit_enabled=getenv_bool("RATE_LIMIT_ENABLED", True),
+                rate_limit_per_minute=getenv_int("RATE_LIMIT_PER_MINUTE", 600),
+                csrf_protection_enabled=getenv_bool("CSRF_PROTECTION_ENABLED", False),
+                trust_proxy=getenv_bool("TRUST_PROXY", False),
             ),
             storage=StorageSettings(
                 media_provider=getenv("MEDIA_STORAGE_PROVIDER", "telegram"),
@@ -277,6 +305,41 @@ class ConfigurationCenter:
             report.errors.append("IAM_JWT_SECRET must be set to a secure value in production")
         if s.jwt.secret in _INSECURE_JWT_SECRETS and s.is_production:
             report.errors.append("JWT_SECRET must be set to a secure value in production")
+        if s.jwt.api_jwt_secret in _INSECURE_JWT_SECRETS and s.is_production:
+            report.errors.append("API_JWT_SECRET must be set to a secure value in production")
+        if is_insecure_secret(s.jwt.iam_secret) and not s.is_production:
+            report.warnings.append("IAM_JWT_SECRET is insecure — acceptable only in non-production")
+        if s.is_production and s.security.allow_header_auth:
+            report.errors.append(
+                "ALLOW_HEADER_AUTH must be disabled in production/staging — use Bearer JWT / API keys"
+            )
+        if s.is_production and not s.security.secret_master_key:
+            report.errors.append("SECURITY_MASTER_KEY must be set in production")
+        if s.is_production and s.security.secret_master_key in {
+            "",
+            "platform-dev-key",
+            "change-me-in-production",
+        }:
+            report.errors.append("SECURITY_MASTER_KEY must not use a development default in production")
+
+        # Sprint 32.3 — reject placeholder provider / n8n secrets when explicitly set in production
+        from platform_security.secret_policy import is_forbidden_secret
+
+        n8n_key = getenv("N8N_ENCRYPTION_KEY", "")
+        if s.is_production and n8n_key and is_forbidden_secret(n8n_key):
+            report.errors.append("N8N_ENCRYPTION_KEY must not use a placeholder value in production")
+        if s.is_production and not n8n_key:
+            report.warnings.append(
+                "N8N_ENCRYPTION_KEY unset — required when running docker-compose.n8n.yml profile"
+            )
+        for env_name in ("OPENAI_API_KEY", "ANTHROPIC_API_KEY", "SMTP_PASSWORD", "MCP_API_KEY"):
+            val = getenv(env_name, "")
+            if val and is_forbidden_secret(val):
+                msg = f"{env_name} is set to a known placeholder — replace or unset"
+                if s.is_production:
+                    report.errors.append(msg)
+                else:
+                    report.warnings.append(msg)
 
         if s.plugins.directory and not Path(s.plugins.directory).exists():
             report.warnings.append(f"Plugin directory not found: {s.plugins.directory}")
@@ -290,6 +353,16 @@ class ConfigurationCenter:
             )
         if s.ai.providers_enabled and not s.ai.openrouter_api_key:
             report.warnings.append("AI providers enabled but OPENROUTER_API_KEY is missing")
+
+        # Sprint 37.2 — align ConfigurationCenter with secret_policy fail-closed gates
+        from platform_security.secret_policy import validate_runtime_secrets
+
+        secret_report = validate_runtime_secrets(production=s.is_production)
+        for finding in secret_report.findings:
+            if finding.severity == "critical":
+                report.errors.append(finding.message)
+            elif finding.severity == "warn":
+                report.warnings.append(finding.message)
 
         report.ok = not report.errors
         if fail_fast and report.errors:

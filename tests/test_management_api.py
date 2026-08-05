@@ -23,13 +23,16 @@ def management_app():
 
 @pytest.fixture(autouse=True)
 def _grant_owner(monkeypatch):
-    async def _owner(_tid):
+    from platform_identity.identity_service import identity_service
+
+    async def _owner(telegram_id=None, *, principal=None):
         return ManagementRole.OWNER
 
     monkeypatch.setattr(
         "platform_management.permissions.resolve_role",
         _owner,
     )
+    monkeypatch.setattr(identity_service, "resolve_management_role", _owner)
 
 
 @pytest.mark.asyncio
@@ -70,12 +73,15 @@ async def test_health_endpoint(management_app, actor_header):
 
 @pytest.mark.asyncio
 async def test_permissions_denied_without_actor(management_app, monkeypatch):
-    async def _deny(_tid):
+    from platform_identity.identity_service import identity_service
+
+    async def _deny(telegram_id=None, *, principal=None):
         from platform_management.exceptions import ManagementPermissionError
 
         raise ManagementPermissionError("actor_telegram_id is required")
 
     monkeypatch.setattr("platform_management.permissions.resolve_role", _deny)
+    monkeypatch.setattr(identity_service, "resolve_management_role", _deny)
     with patch(
         "platform_management.management_service.management_service.log_request",
         new_callable=AsyncMock,
@@ -89,10 +95,13 @@ async def test_permissions_denied_without_actor(management_app, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_readonly_cannot_mutate_config(management_app, actor_header, monkeypatch):
-    async def _readonly(_tid):
+    from platform_identity.identity_service import identity_service
+
+    async def _readonly(telegram_id=None, *, principal=None):
         return ManagementRole.READ_ONLY
 
     monkeypatch.setattr("platform_management.permissions.resolve_role", _readonly)
+    monkeypatch.setattr(identity_service, "resolve_management_role", _readonly)
     with patch(
         "platform_management.management_service.management_service.log_request",
         new_callable=AsyncMock,

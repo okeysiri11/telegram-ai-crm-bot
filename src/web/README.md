@@ -1,9 +1,22 @@
 # Enterprise Web Platform
 
-**Version:** `9.0.4`  
-**Sprint:** 26.5 — Enterprise Navigation Platform  
-**Design path:** `src/web`
+**Version:** `9.5.0`  
+**Sprint label:** 27.1 / 27.1.1 — Application Shell + Local Auth Recovery  
+**Design path:** `src/web`  
+**Shell:** `src/shell/enterprise/`  
+**Auth:** ISAM when online · Demo Auth Provider when `:8080` is down (`VITE_DEMO_AUTH`)
 
 React 19 · TypeScript · Vite · Tailwind · TanStack Query · React Router · Zustand · RHF · Zod · Chart.js · Socket.IO
 
-Unified shell for Enterprise Hub modules (CRM, ERP, AI Agents, Analytics, Marketplace) without changing architecture.
+## Quick start
+
+```bash
+cd src/web
+npm install
+npm run dev      # http://localhost:5180
+# Login: owner@demo.corp / demo → Dashboard
+npm run build
+```
+
+Local auth recovery notes: `docs/SPRINT_27_1_1_AUTH_RECOVERY.md`  
+Shell notes: `docs/SPRINT_27_1_RESULT.md`

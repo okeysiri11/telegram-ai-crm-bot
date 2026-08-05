@@ -8,6 +8,7 @@ from typing import Any
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 from config import BOT_USERNAME, OWNER_ID
+from database.models.tenant_entry_registry import OwnerVerticalNote
 from database.session import get_session
 from repositories.tenant_entry_registry_repository import (
     OwnerVerticalNoteRepository,

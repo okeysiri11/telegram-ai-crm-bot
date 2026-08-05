@@ -39,10 +39,8 @@ from services.crypto_auth import CryptoAuthService
 from services.crypto_otc_agent import CryptoOTCAgent
 from services.hr_agent import HRAgent
 from services.company_core import CompanyCoreService
+from services.user_memory_service import UserMemoryService
 from database import (
-    get_user_profile,
-    save_profile_fields,
-    format_memory_context,
     create_request,
     update_request_status,
     assign_manager,
@@ -65,8 +63,6 @@ from database import (
     get_dialog_history_for_llm,
     clear_dialog_history,
     format_dialog_history_text,
-    format_profile_text,
-    format_memory_text,
     format_projects_text,
     format_ai_project_detail,
     format_ai_project_context,
@@ -4153,13 +4149,13 @@ async def ai_router_select_agent(message: Message):
 @router.message(F.text == "👤 Мой профиль")
 async def show_ai_profile(message: Message):
     _init_ai_user(message)
-    await message.answer(format_profile_text(message.from_user.id))
+    await message.answer(await UserMemoryService.format_profile_text(message.from_user.id))
 
 
 @router.message(F.text == "🧠 Моя память")
 async def show_ai_memory(message: Message):
     _init_ai_user(message)
-    await message.answer(format_memory_text(message.from_user.id))
+    await message.answer(await UserMemoryService.format_memory_text(message.from_user.id))
 
 
 @router.message(F.text == "📁 Мои проекты")
@@ -4419,7 +4415,7 @@ async def ai_chat_message(message: Message):
         log_audit(user_id, "ai_project_create", "ai_assistant", str(project_id))
         return
 
-    profile = get_user_profile(user_id)
+    profile = await UserMemoryService.get_user_profile(user_id)
     extracted = await extract_memory_from_message(message.text, profile)
     manual = ai_router_agent.get(user_id, AIRouter.AUTO)
     domain, agent_code = AIRouter.resolve_agent(
@@ -4428,7 +4424,7 @@ async def ai_chat_message(message: Message):
         manual if manual != AIRouter.AUTO else None,
     )
     if extracted:
-        save_profile_fields(user_id, extracted)
+        await UserMemoryService.save_profile_fields(user_id, extracted)
         save_ai_agent_memory_fields(user_id, agent_code, extracted)
 
     settings = get_ai_settings(user_id)

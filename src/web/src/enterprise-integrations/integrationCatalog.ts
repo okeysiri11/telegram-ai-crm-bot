@@ -111,6 +111,30 @@ export const COMMUNICATION_INTEGRATIONS: IntegrationDef[] = [
     defaultStatus: "active",
     wizardSteps: ["Канал", "Права устройства", "Сегменты", "Тест push"],
   },
+  {
+    id: "slack",
+    title: "Slack",
+    category: "communication",
+    description: "Workspace alerts через Notification Center.",
+    hubKey: "notifications",
+    route: "/settings",
+    processes: ["Ops alerts"],
+    aiAgents: ["Ops Copilot"],
+    defaultStatus: "needs_setup",
+    wizardSteps: ["Workspace", "Bot token", "Channels", "Тест"],
+  },
+  {
+    id: "discord",
+    title: "Discord",
+    category: "communication",
+    description: "Community / ops bot webhooks.",
+    hubKey: "notifications",
+    route: "/settings",
+    processes: ["Community alerts"],
+    aiAgents: ["Support Agent"],
+    defaultStatus: "draft",
+    wizardSteps: ["Server", "Webhook", "Roles", "Тест"],
+  },
 ];
 
 export const BUSINESS_INTEGRATIONS: IntegrationDef[] = [
@@ -118,7 +142,7 @@ export const BUSINESS_INTEGRATIONS: IntegrationDef[] = [
     id: "crm",
     title: "CRM",
     category: "business",
-    description: "CRM workspace и pipeline sync.",
+    description: "CRM workspace и pipeline sync (HubSpot · Salesforce · Bitrix24 · Pipedrive · Zoho).",
     hubKey: "commerceCore",
     route: "/workspace/crm",
     processes: ["Pipeline", "Deals"],
@@ -201,6 +225,19 @@ export const BUSINESS_INTEGRATIONS: IntegrationDef[] = [
 
 export const DEVELOPER_INTEGRATIONS: IntegrationDef[] = [
   {
+    id: "n8n",
+    title: "n8n",
+    category: "developer",
+    description: "Внешний оркестратор workflow. Platform Runtime = SoR. Без бизнес-логики в n8n.",
+    hubKey: "workflow",
+    healthHint: "/integrations/n8n/callback",
+    route: "/integrations",
+    processes: ["Webhook bridge", "Execution callbacks", "Templates"],
+    aiAgents: ["Automation"],
+    defaultStatus: "active",
+    wizardSteps: ["Docker profile n8n", "OAuth / webhook secret", "Callback URL", "Тестовый workflow"],
+  },
+  {
     id: "rest_api",
     title: "REST API",
     category: "developer",
@@ -260,6 +297,19 @@ export const DEVELOPER_INTEGRATIONS: IntegrationDef[] = [
     aiAgents: ["Builder"],
     defaultStatus: "draft",
     wizardSteps: ["Язык SDK", "Пакет", "Пример", "Publish"],
+  },
+  {
+    id: "ai_providers",
+    title: "AI Providers (APH)",
+    category: "developer",
+    description: "OpenAI · Claude · Gemini · OpenRouter · LiteLLM — через AI Provider Hub.",
+    hubKey: "aiProviderHub",
+    healthHint: "/api/enterprise-aph/v1",
+    route: "/integrations",
+    processes: ["Model routing", "Failover", "Cost track"],
+    aiAgents: ["Ops Copilot"],
+    defaultStatus: "active",
+    wizardSteps: ["Выбор провайдера", "Vault secret", "Route policy", "Smoke invoke"],
   },
 ];
 

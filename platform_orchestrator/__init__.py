@@ -20,6 +20,17 @@ from platform_orchestrator.models import (
     TaskStatus,
 )
 from platform_orchestrator.orchestrator import PlatformOrchestrator, platform_orchestrator
+from platform_orchestrator.multi_agent_engine import MultiAgentRuntimeEngine, multi_agent_runtime_engine
+from platform_orchestrator.multi_agent_service import MultiAgentRuntimeService, multi_agent_runtime_service
+from platform_orchestrator.runtime_models import CollaborationMode
+from platform_orchestrator.city_runtime_engine import (
+    EnterpriseCityRuntimeEngine,
+    enterprise_city_runtime_engine,
+)
+from platform_orchestrator.city_runtime_service import (
+    EnterpriseCityRuntimeService,
+    enterprise_city_runtime_service,
+)
 
 __all__ = [
     "AgentContext",
@@ -32,8 +43,13 @@ __all__ = [
     "BaseAgent",
     "BUILTIN_AGENTS",
     "CapabilityRouter",
+    "CollaborationMode",
     "DEFAULT_ORCHESTRATOR_CONFIG",
+    "EnterpriseCityRuntimeEngine",
+    "EnterpriseCityRuntimeService",
     "MessageType",
+    "MultiAgentRuntimeEngine",
+    "MultiAgentRuntimeService",
     "OrchestratorConfig",
     "OrchestratorMetrics",
     "PlatformOrchestrator",
@@ -45,6 +61,10 @@ __all__ = [
     "agent_message_bus",
     "agent_registry",
     "capability_router",
+    "enterprise_city_runtime_engine",
+    "enterprise_city_runtime_service",
+    "multi_agent_runtime_engine",
+    "multi_agent_runtime_service",
     "orchestrator_metrics",
     "platform_orchestrator",
     "register_builtin_agents",

@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class InventoryStatus(str, enum.Enum):
@@ -21,7 +21,7 @@ class InventoryStatus(str, enum.Enum):
     ARCHIVED = "ARCHIVED"
 
 
-class MarketplaceInventory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class MarketplaceInventory(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "inventory"
     __table_args__ = (
         Index("ix_inventory_status", "status"),

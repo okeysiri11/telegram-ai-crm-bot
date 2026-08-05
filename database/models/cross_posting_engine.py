@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.channel_integration_engine  # noqa: F401
 import database.models.car  # noqa: F401
@@ -55,7 +55,7 @@ POSTING_JOB_STATUSES = frozenset(s.value for s in PostingJobStatus)
 POSTING_RESULT_STATUSES = frozenset(s.value for s in PostingResultStatus)
 
 
-class PostingChannel(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PostingChannel(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "cross_posting_engine_v1_posting_channels"
     __table_args__ = (
         UniqueConstraint(
@@ -94,7 +94,7 @@ class PostingChannel(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<PostingChannel type={self.channel_type} name={self.display_name}>"
 
 
-class PostingTemplate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PostingTemplate(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "cross_posting_engine_v1_posting_templates"
     __table_args__ = (
         UniqueConstraint(
@@ -127,7 +127,7 @@ class PostingTemplate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<PostingTemplate code={self.code} channel={self.channel_type}>"
 
 
-class PostingJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PostingJob(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "cross_posting_engine_v1_posting_jobs"
     __table_args__ = (
         Index("ix_cross_posting_engine_v1_jobs_tenant", "tenant_id"),
@@ -186,7 +186,7 @@ class PostingJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<PostingJob id={self.id} status={self.status}>"
 
 
-class PostingResult(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PostingResult(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "cross_posting_engine_v1_posting_results"
     __table_args__ = (
         Index("ix_cross_posting_engine_v1_results_job", "job_id"),

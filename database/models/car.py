@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class CarStatus(str, enum.Enum):
@@ -36,7 +36,7 @@ class CarStatus(str, enum.Enum):
 CAR_STATUSES = frozenset(s.value for s in CarStatus)
 
 
-class Car(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Car(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "car_engine_v1_cars"
     __table_args__ = (
         UniqueConstraint("tenant_id", "vin", name="uq_car_engine_v1_cars_tenant_vin"),

@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 
@@ -59,7 +59,7 @@ class TestDriveStatus(str, enum.Enum):
     NO_SHOW = "NO_SHOW"
 
 
-class Lead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Lead(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_sales_v1_leads"
     __table_args__ = (
         Index("ix_automotive_sales_v1_leads_pipeline_stage", "pipeline_stage"),
@@ -97,7 +97,7 @@ class Lead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class VehicleReservation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleReservation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_sales_v1_vehicle_reservations"
     __table_args__ = (
         Index("ix_automotive_sales_v1_res_lead_id", "lead_id"),
@@ -135,7 +135,7 @@ class VehicleReservation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class TestDrive(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TestDrive(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_sales_v1_test_drives"
     __table_args__ = (
         Index("ix_automotive_sales_v1_td_lead_id", "lead_id"),
@@ -172,7 +172,7 @@ class TestDrive(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class SalesPipelineEntry(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SalesPipelineEntry(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_sales_v1_sales_pipeline"
     __table_args__ = (
         Index("ix_automotive_sales_v1_sp_lead_id", "lead_id"),

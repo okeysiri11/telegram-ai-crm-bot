@@ -11,6 +11,7 @@ import { hubIntegrations } from "@/integrations/hub";
 import { liveUpdates } from "../../workspace/realtime/liveUpdates";
 import { PLATFORM_BUILDER_API } from "../../platform-builder/types";
 import { RuntimeMonitorCompact } from "@/ai-runtime";
+import { EnterpriseRuntimeMonitor } from "@/enterprise-runtime/EnterpriseRuntimeMonitor";
 import { DataFabricOverviewCompact } from "@/enterprise-data-fabric";
 import { PredictiveWidgetCompact } from "@/predictive-intelligence";
 import { AutonomousWidgetCompact } from "@/autonomous-enterprise";
@@ -39,6 +40,7 @@ export function MissionControlStrip() {
       if (!mcRes.ok && !obsRes.ok) setError("Mission Control / OBS temporarily unavailable");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Probe failed");
+      // Keep last good MC/OBS payloads on transient failure
     } finally {
       setBusy(false);
     }
@@ -46,7 +48,12 @@ export function MissionControlStrip() {
 
   useEffect(() => {
     void refresh();
+    let last = 0;
     const unsub = liveUpdates.subscribe(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
+      const now = Date.now();
+      if (now - last < 12_000) return;
+      last = now;
       void refresh();
     });
     return () => {
@@ -69,12 +76,16 @@ export function MissionControlStrip() {
         </Button>
         <Link to="/platform-builder/mission-control">
           <Button size="sm" variant="secondary">
-            Open Mission Control
+            Open live Mission Control
           </Button>
+        </Link>
+        <Link to="/platform-builder/concierge">
+          <Button size="sm">Ask Advisor next</Button>
         </Link>
       </div>
       {error ? <p className="mb-3 eds-type-small text-[var(--eds-danger)]">{error}</p> : null}
       <div className="mb-4">
+        <EnterpriseRuntimeMonitor />
         <RuntimeMonitorCompact />
         <DataFabricOverviewCompact />
         <PredictiveWidgetCompact />

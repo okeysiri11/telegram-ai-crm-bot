@@ -11,13 +11,13 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.users import User
 
 
-class AiAgent(UUIDPrimaryKeyMixin, Base):
+class AiAgent(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "ai_agents"
     __table_args__ = (
         UniqueConstraint("code", name="uq_ai_agents_code"),
@@ -89,7 +89,7 @@ class AiAgentMemory(Base):
     agent: Mapped[AiAgent] = relationship(back_populates="memory_entries")
 
 
-class AiDialog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AiDialog(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_dialogs"
     __table_args__ = (
         Index("ix_ai_dialogs_user_id", "user_id"),

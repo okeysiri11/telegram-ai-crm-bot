@@ -78,12 +78,28 @@ class UserRepository(BaseRepository):
 
     @staticmethod
     def snapshot(user: User) -> dict[str, Any]:
+        from platform_identity.registries.workspace_registry import normalize_workspace_codes
+
         return {
             "id": str(user.id),
+            "uuid": str(user.id),
             "telegram_id": user.telegram_id,
+            "telegram_username": user.username,
             "username": user.username,
             "full_name": user.full_name,
+            "display_name": getattr(user, "resolved_display_name", None) or user.full_name,
+            "email": getattr(user, "email", None),
+            "phone": getattr(user, "phone", None),
+            "avatar": getattr(user, "avatar_url", None),
+            "status": getattr(user, "status", None) or ("active" if user.is_active else "inactive"),
             "role": user.role,
+            "roles": [user.role] if user.role else [],
             "verticals": list(user.verticals or []),
+            "workspaces": normalize_workspace_codes(list(user.verticals or [])),
+            "preferences": dict(getattr(user, "preferences", None) or {}),
+            "companies": [str(user.tenant_id)] if user.tenant_id else [],
             "is_active": user.is_active,
+            "created_at": user.created_at.isoformat() if getattr(user, "created_at", None) else None,
+            "updated_at": user.updated_at.isoformat() if getattr(user, "updated_at", None) else None,
+            "last_login": user.last_login_at.isoformat() if getattr(user, "last_login_at", None) else None,
         }

@@ -19,7 +19,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class PipelineStage(str, enum.Enum):
@@ -66,7 +66,7 @@ STAGE_LABELS = {
 }
 
 
-class PipelineLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PipelineLead(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "sales_pipeline_automation_engine_v1_pipeline_leads"
     __table_args__ = (
         Index("ix_sales_pipeline_automation_engine_v1_pl_stage", "stage"),
@@ -105,7 +105,7 @@ class PipelineLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<PipelineLead id={self.id} stage={self.stage}>"
 
 
-class StageTransition(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class StageTransition(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "sales_pipeline_automation_engine_v1_stage_transitions"
     __table_args__ = (
         Index("ix_sales_pipeline_automation_engine_v1_st_pl", "pipeline_lead_id"),
@@ -126,7 +126,7 @@ class StageTransition(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<StageTransition {self.from_stage}->{self.to_stage}>"
 
 
-class PipelineReminder(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PipelineReminder(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "sales_pipeline_automation_engine_v1_reminders"
     __table_args__ = (
         Index("ix_sales_pipeline_automation_engine_v1_rem_pl", "pipeline_lead_id"),
@@ -156,7 +156,7 @@ class PipelineReminder(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<PipelineReminder type={self.reminder_type} due={self.due_at}>"
 
 
-class FollowUpTask(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class FollowUpTask(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "sales_pipeline_automation_engine_v1_follow_up_tasks"
     __table_args__ = (
         Index("ix_sales_pipeline_automation_engine_v1_task_pl", "pipeline_lead_id"),
@@ -186,7 +186,7 @@ class FollowUpTask(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<FollowUpTask title={self.title} status={self.status}>"
 
 
-class InactivityAlert(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class InactivityAlert(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "sales_pipeline_automation_engine_v1_inactivity_alerts"
     __table_args__ = (
         Index("ix_sales_pipeline_automation_engine_v1_alert_pl", "pipeline_lead_id"),

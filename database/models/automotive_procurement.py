@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 import database.models.partner_engine  # noqa: F401
@@ -62,7 +62,7 @@ class AuctionLotStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
-class PurchaseOrder(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PurchaseOrder(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_procurement_v1_purchase_orders"
     __table_args__ = (
         UniqueConstraint(
@@ -110,7 +110,7 @@ class PurchaseOrder(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class SupplierOffer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SupplierOffer(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_procurement_v1_suppliers_offers"
     __table_args__ = (
         Index("ix_automotive_procurement_v1_offers_status", "status"),
@@ -157,7 +157,7 @@ class SupplierOffer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class AuctionLot(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AuctionLot(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_procurement_v1_auction_lots"
     __table_args__ = (
         CheckConstraint("year >= 1900", name="ck_automotive_procurement_v1_lot_year"),
@@ -206,7 +206,7 @@ class AuctionLot(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class VehicleSource(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleSource(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_procurement_v1_vehicle_sources"
     __table_args__ = (
         Index("ix_automotive_procurement_v1_vs_source", "source"),

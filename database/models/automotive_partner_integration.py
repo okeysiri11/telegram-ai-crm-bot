@@ -19,7 +19,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class AutomotivePartnerType(str, enum.Enum):
@@ -38,7 +38,7 @@ class DealerSourceType(str, enum.Enum):
     MANUAL = "manual"
 
 
-class AutomotiveRegistryPartner(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotiveRegistryPartner(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Automotive partner registry (logical: partners)."""
 
     __tablename__ = "automotive_partner_v1_partners"
@@ -62,7 +62,7 @@ class AutomotiveRegistryPartner(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotiveRegistryPartner code={self.code} type={self.partner_type}>"
 
 
-class AutomotivePartnerProduct(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotivePartnerProduct(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner product catalog (logical: partner_products)."""
 
     __tablename__ = "automotive_partner_v1_partner_products"
@@ -89,7 +89,7 @@ class AutomotivePartnerProduct(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotivePartnerProduct code={self.product_code} partner={self.partner_id}>"
 
 
-class AutomotiveDealerSource(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotiveDealerSource(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Dealer inventory/pricing source (logical: dealer_sources)."""
 
     __tablename__ = "automotive_partner_v1_dealer_sources"
@@ -121,7 +121,7 @@ class AutomotiveDealerSource(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotiveDealerSource code={self.source_code} type={self.source_type}>"
 
 
-class AutomotiveInsuranceOffer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotiveInsuranceOffer(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Insurance offer linked to partner product (logical: insurance_offers)."""
 
     __tablename__ = "automotive_partner_v1_insurance_offers"
@@ -159,7 +159,7 @@ class AutomotiveInsuranceOffer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotiveInsuranceOffer title={self.title} product={self.product_id}>"
 
 
-class AutomotivePartnerBranding(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotivePartnerBranding(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner branding card — logo, description, display settings."""
 
     __tablename__ = "automotive_partner_v1_branding"
@@ -187,7 +187,7 @@ class AutomotivePartnerBranding(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotivePartnerBranding partner={self.partner_id}>"
 
 
-class AutomotivePartnerCta(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotivePartnerCta(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner call-to-action button."""
 
     __tablename__ = "automotive_partner_v1_cta_buttons"

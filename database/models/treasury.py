@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.deal  # noqa: F401 — register deal_engine_deals for FK resolution
 
@@ -58,7 +58,7 @@ class LiquidityReservationStatus(str, enum.Enum):
     CONSUMED = "CONSUMED"
 
 
-class TreasuryAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TreasuryAccount(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "treasury_engine_accounts"
     __table_args__ = (
         CheckConstraint("balance >= 0", name="ck_treasury_engine_accounts_balance"),
@@ -106,7 +106,7 @@ class TreasuryAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return self.balance - self.reserved_balance
 
 
-class TreasuryTransfer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TreasuryTransfer(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "treasury_engine_transfers"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_treasury_engine_transfers_amount"),
@@ -153,7 +153,7 @@ class TreasuryTransfer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class LiquidityReservation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class LiquidityReservation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "treasury_engine_liquidity_reservations"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_treasury_engine_reservations_amount"),

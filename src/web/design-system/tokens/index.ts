@@ -3,9 +3,11 @@
 export const colors = {
   primary: { DEFAULT: "#0f6a5a", soft: "#d8efe9", hover: "#0c5649", active: "#0a4a3f", focus: "#0f6a5a" },
   secondary: { DEFAULT: "#1f3a5f", soft: "#e4ebf5", hover: "#18304f", active: "#14283f" },
+  accent: { DEFAULT: "#1f3a5f", soft: "#e4ebf5" },
   success: { DEFAULT: "#027a48", soft: "#d1fadf" },
   warning: { DEFAULT: "#b54708", soft: "#fef0c7" },
   danger: { DEFAULT: "#b42318", soft: "#fee4e2" },
+  critical: { DEFAULT: "#b42318", soft: "#fee4e2" },
   info: { DEFAULT: "#026aa2", soft: "#e0f2fe" },
   neutral: {
     0: "#ffffff",
@@ -103,10 +105,16 @@ export const breakpoints = {
 } as const;
 
 export const motion = {
+  instant: "80ms",
   fast: "120ms",
   normal: "200ms",
   slow: "320ms",
+  settle: "400ms",
   easing: "cubic-bezier(0.2, 0.8, 0.2, 1)",
+  easeOut: "cubic-bezier(0.16, 1, 0.3, 1)",
+  easeIn: "cubic-bezier(0.4, 0, 1, 1)",
+  easeEmphasized: "cubic-bezier(0.2, 0, 0, 1)",
+  stagger: "40ms",
 } as const;
 
 export const opacity = {

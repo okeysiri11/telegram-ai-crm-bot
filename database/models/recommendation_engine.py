@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class RecommendationType(str, enum.Enum):
@@ -45,7 +45,7 @@ RECOMMENDATION_TYPES = frozenset(t.value for t in RecommendationType)
 RECOMMENDATION_FEEDBACK_TYPES = frozenset(f.value for f in RecommendationFeedbackType)
 
 
-class RecommendationProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RecommendationProfile(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "recommendation_engine_v1_profiles"
     __table_args__ = (
         CheckConstraint(
@@ -92,7 +92,7 @@ class RecommendationProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<RecommendationProfile tenant={self.tenant_id} label={self.label}>"
 
 
-class RecommendationHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RecommendationHistory(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "recommendation_engine_v1_history"
     __table_args__ = (
         CheckConstraint(
@@ -133,7 +133,7 @@ class RecommendationHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<RecommendationHistory profile={self.profile_id} type={self.recommendation_type}>"
 
 
-class RecommendationFeedback(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RecommendationFeedback(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "recommendation_engine_v1_feedback"
     __table_args__ = (
         CheckConstraint(

@@ -15,7 +15,7 @@ export function NotificationsPanel() {
   return (
     <ul className="space-y-2 uws-notif-panel">
       {items.map((n) => (
-        <li key={n.id} className="rounded-md border border-[var(--ew-border)] p-2 text-sm eds-anim-fade">
+        <li key={n.id} className="rounded-md border border-[var(--ew-border)] p-2 text-sm edm-notify-enter">
           <div className="mb-1 flex items-center justify-between gap-2">
             <span className="font-medium">{n.title}</span>
             <Badge>{kindLabel[n.kind] || n.kind}</Badge>

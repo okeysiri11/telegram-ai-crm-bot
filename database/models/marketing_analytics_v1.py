@@ -10,7 +10,7 @@ from sqlalchemy import Index, Numeric, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class MarketingSourceKey(str, enum.Enum):
@@ -36,7 +36,7 @@ MARKETING_SOURCE_DISPLAY = {
 }
 
 
-class MarketingAnalyticsV1SourceCost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class MarketingAnalyticsV1SourceCost(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "marketing_analytics_v1_source_costs"
     __table_args__ = (
         UniqueConstraint("source_key", name="uq_marketing_analytics_v1_source_key"),

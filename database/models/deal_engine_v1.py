@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class DealEngineV1Status(str, enum.Enum):
@@ -32,7 +32,7 @@ DEAL_ENGINE_V1_TERMINAL_STATUSES = frozenset({
 DEAL_ENGINE_V1_SUPPORTED_VERTICALS = frozenset({"auto", "agro"})
 
 
-class DealEngineV1Deal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class DealEngineV1Deal(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "deal_engine_v1_deals"
     __table_args__ = (
         Index("ix_deal_engine_v1_lead", "lead_id"),

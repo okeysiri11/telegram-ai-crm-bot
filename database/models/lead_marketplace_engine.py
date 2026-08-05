@@ -22,7 +22,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class MarketplaceDistributionMode(str, enum.Enum):
@@ -62,7 +62,7 @@ MARKETPLACE_OFFER_TYPES = frozenset(t.value for t in MarketplaceOfferType)
 MARKETPLACE_OFFER_STATUSES = frozenset(s.value for s in MarketplaceOfferStatus)
 
 
-class LeadMarketplaceListing(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class LeadMarketplaceListing(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "lead_marketplace_engine_v1_listings"
     __table_args__ = (
         CheckConstraint("quality_score >= 0 AND quality_score <= 100", name="ck_lead_marketplace_v1_listing_score"),
@@ -125,7 +125,7 @@ class LeadMarketplaceListing(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class LeadMarketplaceOffer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class LeadMarketplaceOffer(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "lead_marketplace_engine_v1_offers"
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_lead_marketplace_v1_offer_amount"),
@@ -160,7 +160,7 @@ class LeadMarketplaceOffer(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<LeadMarketplaceOffer listing={self.listing_id} amount={self.amount} status={self.status}>"
 
 
-class LeadMarketplacePricingRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class LeadMarketplacePricingRule(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "lead_marketplace_engine_v1_pricing_rules"
     __table_args__ = (
         UniqueConstraint("tenant_id", "code", name="uq_lead_marketplace_v1_pricing_tenant_code"),

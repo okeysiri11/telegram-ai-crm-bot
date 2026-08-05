@@ -16,8 +16,15 @@ DEFAULT_PROVIDER_CONFIG: dict[str, dict[str, Any]] = {
     "openai": {"api_base": "https://api.openai.com/v1", "default_model": "gpt-4o-mini"},
     "anthropic": {"api_base": "https://api.anthropic.com", "default_model": "claude-3-haiku"},
     "google": {"api_base": "https://generativelanguage.googleapis.com", "default_model": "gemini-1.5-flash"},
+    "gemini": {"api_base": "https://generativelanguage.googleapis.com", "default_model": "gemini-1.5-flash"},
     "openrouter": {"api_base": "https://openrouter.ai/api/v1", "default_model": "openai/gpt-4o-mini"},
+    "ollama": {"api_base": "http://localhost:11434", "default_model": "llama3.1"},
     "local_llama": {"api_base": "http://localhost:11434", "default_model": "llama-3.1-8b"},
+    "azure_openai": {
+        "api_base": "https://{resource}.openai.azure.com",
+        "default_model": "gpt-4o-mini",
+        "api_version": "2024-06-01",
+    },
     "deepseek": {"api_base": "https://api.deepseek.com", "default_model": "deepseek-chat"},
 }
 
@@ -26,7 +33,16 @@ class ProviderManager:
     def __init__(self) -> None:
         self._enabled: dict[str, bool] = {}
         self._default_provider = "openrouter"
-        self._fallback_chain = ["openrouter", "openai", "anthropic", "google", "deepseek", "local_llama"]
+        self._fallback_chain = [
+            "openrouter",
+            "openai",
+            "azure_openai",
+            "anthropic",
+            "google",
+            "ollama",
+            "deepseek",
+            "local_llama",
+        ]
         self._initialized = False
 
     def reset(self) -> None:
@@ -48,7 +64,10 @@ class ProviderManager:
             MockAIProvider("openai", "OpenAI", response_prefix="[openai]"),
             MockAIProvider("anthropic", "Anthropic Claude", response_prefix="[claude]"),
             MockAIProvider("google", "Google Gemini", response_prefix="[gemini]"),
+            MockAIProvider("gemini", "Google Gemini (alias)", response_prefix="[gemini]"),
             MockAIProvider("openrouter", "OpenRouter", response_prefix="[openrouter]"),
+            MockAIProvider("ollama", "Ollama", response_prefix="[ollama]", latency_ms=180.0),
+            MockAIProvider("azure_openai", "Azure OpenAI", response_prefix="[azure]"),
             MockAIProvider("local_llama", "Local Llama", response_prefix="[llama]", latency_ms=200.0),
             MockAIProvider("deepseek", "DeepSeek", response_prefix="[deepseek]"),
         ]

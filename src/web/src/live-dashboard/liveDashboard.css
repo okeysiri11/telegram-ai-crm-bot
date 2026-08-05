@@ -1,0 +1,157 @@
+/* Sprint 27.6 — Enterprise Live Dashboard */
+.eld-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.eld-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+}
+.eld-toolbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+.eld-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+}
+.eld-field select {
+  border-radius: 0.5rem;
+  border: 1px solid var(--eds-border);
+  background: var(--eds-surface);
+  color: var(--eds-text);
+  padding: 0.35rem 0.5rem;
+  min-width: 8rem;
+}
+.eld-save-input {
+  min-width: 10rem;
+}
+.eld-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+@media (max-width: 1100px) {
+  .eld-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .eld-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.eld-grid-item {
+  min-width: 0;
+}
+.eld-widget {
+  display: flex;
+  flex-direction: column;
+  min-height: 7rem;
+  border-radius: 0.95rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 78%, transparent);
+  overflow: hidden;
+}
+.eld-widget.is-pinned {
+  border-color: color-mix(in oklab, var(--eds-primary) 40%, var(--eds-border));
+}
+.eld-widget.is-collapsed {
+  min-height: 0;
+}
+.eld-widget.is-fullscreen {
+  position: fixed;
+  inset: 3.5rem 1rem 3rem;
+  z-index: 55;
+  grid-column: auto !important;
+}
+.eld-widget-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.65rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--eds-border) 70%, transparent);
+  cursor: grab;
+}
+.eld-widget-title {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.eld-widget-title h3 {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 650;
+}
+.eld-widget-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.1rem;
+  justify-content: flex-end;
+}
+.eld-widget-body {
+  padding: 0.75rem;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.eld-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.eld-meter-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+}
+.eld-meter-bar {
+  height: 0.4rem;
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--eds-border) 80%, transparent);
+  overflow: hidden;
+}
+.eld-meter-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--eds-primary), color-mix(in oklab, var(--eds-accent, #5b8def) 70%, var(--eds-primary)));
+  transition: width 0.4s ease;
+}
+.eld-chip {
+  border: 1px solid var(--eds-border);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.7rem;
+  cursor: pointer;
+  color: var(--eds-text-muted);
+}
+.eld-chip.is-active {
+  color: var(--eds-primary);
+  border-color: color-mix(in oklab, var(--eds-primary) 40%, var(--eds-border));
+  background: color-mix(in oklab, var(--eds-primary) 10%, transparent);
+}
+.eld-fullscreen-host {
+  position: relative;
+  min-height: 20rem;
+}
+.eld-fs-close {
+  position: fixed;
+  top: 4rem;
+  right: 1.5rem;
+  z-index: 56;
+}

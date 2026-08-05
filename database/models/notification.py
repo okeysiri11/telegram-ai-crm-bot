@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.deal  # noqa: F401 — register deal_engine_deals for FK resolution
 
@@ -39,7 +39,7 @@ class NotificationStatus(str, enum.Enum):
     FAILED = "FAILED"
 
 
-class Notification(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class Notification(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "notification_engine_notifications"
     __table_args__ = (
         CheckConstraint("retries >= 0", name="ck_notification_engine_retries_non_negative"),

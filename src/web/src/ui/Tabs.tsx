@@ -7,15 +7,19 @@ type Props = { tabs: Tab[]; active: string; onChange: (id: string) => void; chil
 export function Tabs({ tabs, active, onChange, children }: Props) {
   return (
     <div>
-      <div className="mb-3 flex gap-2 border-b border-[var(--ew-border)]">
+      <div className="eds-toolbar mb-[var(--eds-space-3)] gap-0 border-b border-[var(--eds-border)]" role="tablist">
         {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
+            role="tab"
+            aria-selected={active === t.id}
             onClick={() => onChange(t.id)}
             className={cn(
-              "px-3 py-2 text-sm",
-              active === t.id ? "border-b-2 border-[var(--ew-brand)] font-semibold" : "text-[var(--ew-muted)]",
+              "eds-focus-ring px-[var(--eds-space-3)] py-[var(--eds-space-2)] text-sm transition",
+              active === t.id
+                ? "border-b-2 border-[var(--eds-primary)] font-semibold text-[var(--eds-text)]"
+                : "border-b-2 border-transparent text-[var(--eds-text-muted)] hover:text-[var(--eds-text)]",
             )}
           >
             {t.label}

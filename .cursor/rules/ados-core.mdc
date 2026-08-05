@@ -1,0 +1,55 @@
+---
+alwaysApply: true
+---
+# ADOS Core Rules
+
+## Mission
+
+ADOS is an Enterprise AI Operating System.
+
+Always preserve the architecture.
+
+Never duplicate existing functionality.
+
+Prefer extending existing modules instead of creating new ones.
+
+## Code
+
+Generate production-ready code.
+
+Avoid temporary solutions.
+
+Keep files modular.
+
+Use existing services whenever possible.
+
+## Architecture
+
+Respect the current project structure.
+
+Do not rename or move modules unless explicitly requested.
+
+Do not modify unrelated files.
+
+## Documentation
+
+When adding a feature:
+
+- update documentation;
+- update architecture if required;
+- keep changes consistent.
+
+## Testing
+
+Do not reduce test coverage.
+
+Generate tests for new functionality whenever appropriate.
+
+## Final Check
+
+Before completing a task:
+
+- verify imports;
+- verify typing;
+- verify architecture consistency;
+- verify tests.

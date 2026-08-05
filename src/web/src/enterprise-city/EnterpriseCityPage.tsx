@@ -1,9 +1,9 @@
 /**
- * Enterprise City map + chrome — Sprint 32.3.3.
- * Lightweight CSS/DOM city (no WebGL). Click → existing routes only.
+ * Enterprise City map + chrome — Sprint 32.3.3 / EP-05 / 27.8 / 30.4 Beta.
+ * Interactive CSS/DOM city: pan · zoom · select · hover · open module.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { Badge, Button, Card, Input } from "@/ui";
@@ -12,14 +12,54 @@ import { searchIndex } from "../../navigation/managers/searchIndex";
 import { telemetry } from "@/integrations/telemetry";
 import { useLiveEnterprise } from "@/live-ops";
 import { deriveWorkflowAutomation, getWorkflowTemplate } from "@/enterprise-workflow";
+import { suggestionsForPath } from "@/ai-os-chrome/smartSuggestions";
+import { withDecisionQuery, rememberNavDecision } from "@/decision-flow";
+import { enterpriseEventBus } from "@/integration-hub";
+import { EnterpriseRuntimeMonitorCompact } from "@/enterprise-runtime/EnterpriseRuntimeMonitor";
+import { runtimeEngine } from "@/enterprise-runtime/runtimeEngine";
+import { deriveGodModeMetrics } from "@/enterprise-business";
 import {
   CITY_BUILDINGS,
+  getBuilding,
   searchBuildings,
   type CityBuilding,
   type CityBuildingId,
+  type CityDistrictId,
   type CityLiveStatus,
 } from "./cityCatalog";
+import { CITY_DISTRICTS, getPlaza, getDistrict, primaryBuildingForDistrict } from "./cityDistricts";
+import {
+  applyPanDelta,
+  panToBuilding,
+  readViewport,
+  writeViewport,
+  zoomBy,
+  viewportRect,
+  type CityViewport,
+  CITY_EXPERIENCE_CORE,
+} from "./cityEngine";
+import { cityNavigation } from "./cityNavigation";
 import { useCityLiveStatus } from "./useCityLiveStatus";
+import {
+  CITY_STATE_LABELS,
+  advisorHintForBuilding,
+  badgeToneForState,
+  buildingIdentity,
+  cityGlance,
+  districtLinks,
+  getCityFocus,
+  resolveVisualState,
+  setCityFocus,
+  stateLabelRu,
+} from "./cityVisualLanguage";
+import { useCityGraphicsRuntime } from "./graphics/useCityGraphicsRuntime";
+import { CityDevOverlay } from "./graphics/CityDevOverlay";
+import { defaultGraphicsSettings } from "./graphics/graphicsConfig";
+import type { ResolvedEffect } from "./graphics/types";
+import { buildingOps, HEALTH_LABEL_RU, healthFromLiveTone } from "./buildingOps";
+import { selectCityBuilding } from "./cityInteractionBridge";
+import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
+import type { BuildingHealth } from "./buildingOps";
 
 function registerCitySearchDocs() {
   for (const b of CITY_BUILDINGS) {
@@ -28,8 +68,18 @@ function registerCitySearchDocs() {
       category: "modules",
       title: `${b.label} · Enterprise City`,
       path: b.route,
-      tokens: [...b.searchTokens, "city", "enterprise", "building"],
+      tokens: [...b.searchTokens, "city", "enterprise", "building", "город", b.district],
       rankBoost: 8,
+    });
+  }
+  for (const d of CITY_DISTRICTS) {
+    searchIndex.upsert({
+      id: `city_district_${d.id}`,
+      category: "modules",
+      title: `District · ${d.label}`,
+      path: "/enterprise-city",
+      tokens: [d.id, d.label, "district", "район", "city"],
+      rankBoost: 7,
     });
   }
   searchIndex.upsert({
@@ -37,24 +87,61 @@ function registerCitySearchDocs() {
     category: "modules",
     title: "Enterprise City",
     path: "/enterprise-city",
-    tokens: ["enterprise", "city", "map", "navigation", "buildings"],
+    tokens: ["enterprise", "city", "map", "navigation", "buildings", "город", "plaza"],
     rankBoost: 12,
   });
+}
+
+function withEmbed(path: string, embed: boolean): string {
+  if (!embed || path.includes("embed=1")) return path;
+  return `${path}${path.includes("?") ? "&" : "?"}embed=1`;
 }
 
 export function EnterpriseCityPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const embed = params.get("embed") === "1";
   const { statusById, unread, mcLinked, refreshMc } = useCityLiveStatus();
   const { snapshot } = useLiveEnterprise(true);
   const [q, setQ] = useState("");
-  const [focusId, setFocusId] = useState<CityBuildingId | null>(null);
-  const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
+  const [focusId, setFocusId] = useState<CityBuildingId | null>(() => getCityFocus());
+  const [hoverId, setHoverId] = useState<CityBuildingId | null>(null);
+  const [viewport, setViewport] = useState<CityViewport>(() => readViewport());
+  const [overlay, setOverlay] = useState<"all" | "health" | "activity" | "ai">("all");
+  const [favTick, setFavTick] = useState(0);
+  const [showDevOverlay, setShowDevOverlay] = useState(false);
+  const ownerView = useRoleSwitcher((s) => s.isOwnerView());
   const planeRef = useRef<HTMLDivElement>(null);
+  const cityRootRef = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ sx: number; sy: number; vx: number; vy: number } | null>(null);
+
+  const graphics = useCityGraphicsRuntime(planeRef, cityRootRef, viewport, setViewport, statusById);
+  const graphicsRef = useRef(graphics);
+  useEffect(() => {
+    graphicsRef.current = graphics;
+  }, [graphics]);
 
   useEffect(() => {
     registerCitySearchDocs();
+    runtimeEngine.publishStream("city", { surface: "city" });
   }, []);
+
+  useEffect(() => {
+    const building = params.get("building") as CityBuildingId | null;
+    if (building && getBuilding(building)) {
+      const b = getBuilding(building)!;
+      setFocusId(b.id);
+      setViewport((v) => panToBuilding(b, v));
+    }
+  }, [params]);
+
+  useEffect(() => {
+    setCityFocus(focusId);
+  }, [focusId]);
+
+  useEffect(() => {
+    writeViewport(viewport);
+  }, [viewport]);
 
   const wfBundle = useMemo(() => deriveWorkflowAutomation(snapshot, [], params.get("wf")), [snapshot, params]);
   const cityPath = useMemo(() => {
@@ -62,92 +149,303 @@ export function EnterpriseCityPage() {
     return tpl?.cityPath || wfBundle.cityRoute;
   }, [params, wfBundle.cityRoute]);
   const pathSet = useMemo(() => new Set(cityPath), [cityPath]);
+  const links = useMemo(() => districtLinks(), []);
+  const glance = useMemo(() => cityGlance(statusById), [statusById]);
+  const focused = focusId ? CITY_BUILDINGS.find((b) => b.id === focusId) : null;
+  const focusedStatus = focusId ? statusById[focusId] : null;
+  const focusedOps = focused
+    ? {
+        ...buildingOps(focused.id, focused.route),
+        health: healthFromLiveTone(
+          focusedStatus?.tone || "idle",
+          focusedStatus?.notifications || 0,
+          focusedStatus?.tasks || 0,
+        ),
+      }
+    : null;
+  const advisor = focused && focusedStatus ? advisorHintForBuilding(focused.id, focusedStatus) : null;
+  const cityAdvice = useMemo(() => suggestionsForPath("/enterprise-city", 2, snapshot), [snapshot]);
+  const crumbs = useMemo(() => cityNavigation.breadcrumbs(focused || null), [focused]);
+  const recentIds = useMemo(() => cityNavigation.recent(), [focusId, favTick]);
+  const historyIds = useMemo(() => cityNavigation.history().slice(0, 8), [focusId, favTick]);
+  const favoriteIds = useMemo(() => cityNavigation.favorites(), [favTick]);
+  const plaza = useMemo(() => getPlaza(), []);
+  const miniRect = useMemo(() => viewportRect(viewport), [viewport]);
 
   const filtered = useMemo(() => searchBuildings(q), [q]);
   const globalHits = useMemo(() => (q.trim() ? searchProvider.search(q).slice(0, 6) : []), [q]);
 
-  function openBuilding(b: CityBuilding) {
+  const platformActiveUsers = useMemo(
+    () => CITY_BUILDINGS.reduce((sum, b) => sum + buildingOps(b.id, b.route).activeUsers, 0),
+    [],
+  );
+  const healthCounts = useMemo(() => {
+    const counts: Record<BuildingHealth, number> = {
+      online: 0,
+      warning: 0,
+      critical: 0,
+      maintenance: 0,
+    };
+    for (const b of CITY_BUILDINGS) {
+      const st = statusById[b.id];
+      if (!st) continue;
+      counts[
+        healthFromLiveTone(st.tone, st.notifications, st.tasks)
+      ] += 1;
+    }
+    return counts;
+  }, [statusById]);
+  const runtimeSnap = useMemo(() => runtimeEngine.getSnapshot(), [favTick, focusId]);
+
+  const selectBuilding = useCallback((b: CityBuilding) => {
     setFocusId(b.id);
-    void telemetry.userActivity(`city_enter:${b.id}`);
-    navigate(b.route);
+    setCityFocus(b.id);
+    cityNavigation.pushRecent(b.id);
+    setFavTick((t) => t + 1);
+    selectCityBuilding(b.id);
+    void telemetry.userActivity(`city_select:${b.id}`);
+    graphicsRef.current.triggerBuildingEffect(b.id, "selection");
+    graphicsRef.current.focusBuildingAnimated(b);
+  }, []);
+
+  const returnHome = useCallback(() => {
+    if (plaza) selectBuilding(plaza);
+    else navigate(withEmbed("/dashboard", embed));
+  }, [plaza, selectBuilding, navigate, embed]);
+
+  const openBuilding = useCallback(
+    async (b: CityBuilding) => {
+      setFocusId(b.id);
+      setCityFocus(b.id);
+      cityNavigation.pushHistory(b.id);
+      setFavTick((t) => t + 1);
+      selectCityBuilding(b.id);
+      void telemetry.userActivity(`city_enter:${b.id}`);
+      enterpriseEventBus.openCityBuilding(b.id, b.route);
+      graphicsRef.current.triggerBuildingEffect(b.id, "selection");
+      if (b.id === "plaza" || b.route === "/enterprise-city" || b.route === "/city") {
+        graphicsRef.current.focusBuildingAnimated(b);
+        return;
+      }
+      if (b.route.startsWith("/production")) {
+        enterpriseEventBus.openProduction(
+          new URLSearchParams(b.route.split("?")[1] || "").get("studio") || undefined,
+          new URLSearchParams(b.route.split("?")[1] || "").get("tab") || undefined,
+        );
+      }
+      // Portal effect: a brief visual cue at the tile before handing off to the real route. Skips
+      // itself (resolves immediately) under reduced motion, a hidden tab, or Low quality — see
+      // `useCityGraphicsRuntime.playPortalEffect`.
+      await graphicsRef.current.playPortalEffect(b.id);
+      navigate(withEmbed(b.route, embed));
+    },
+    [embed, navigate],
+  );
+
+  const panTo = useCallback((b: CityBuilding) => {
+    setFocusId(b.id);
+    graphicsRef.current.triggerBuildingEffect(b.id, "selection");
+    graphicsRef.current.focusBuildingAnimated(b);
+  }, []);
+
+  const jumpDistrict = useCallback(
+    (id: CityDistrictId) => {
+      graphicsRef.current.triggerDistrictEffect(id, "district_activation");
+      const target = primaryBuildingForDistrict(id);
+      if (target) panTo(target);
+    },
+    [panTo],
+  );
+
+  /** Sprint 30.6 — district open navigates into the real module. */
+  const openDistrict = useCallback(
+    (id: CityDistrictId) => {
+      graphicsRef.current.triggerDistrictEffect(id, "district_activation");
+      const target = primaryBuildingForDistrict(id);
+      if (target) void openBuilding(target);
+    },
+    [openBuilding],
+  );
+
+  function showLayer(_b: CityBuilding, st: CityLiveStatus): boolean {
+    if (overlay === "all") return true;
+    if (overlay === "health") return resolveVisualState(st) === "critical" || resolveVisualState(st) === "attention";
+    if (overlay === "activity") return st.tone === "busy" || st.tone === "active" || st.tasks > 0;
+    if (overlay === "ai") return st.aiActive;
+    return true;
   }
 
-  function panTo(b: CityBuilding) {
-    setFocusId(b.id);
-    setViewport((v) => ({
-      ...v,
-      x: Math.min(20, Math.max(-20, 50 - b.x)),
-      y: Math.min(20, Math.max(-20, 50 - b.y)),
-    }));
+  const isBuildingDimmed = useCallback(
+    // `showLayer` reads `overlay` from the enclosing closure — listed explicitly below since
+    // `showLayer` itself isn't memoized.
+    (b: CityBuilding, st: CityLiveStatus) =>
+      !showLayer(b, st) ||
+      (filtered.length < CITY_BUILDINGS.length && !filtered.some((f) => f.id === b.id)) ||
+      (pathSet.size > 0 && !pathSet.has(b.id) && focusId !== b.id),
+    [overlay, filtered, pathSet, focusId],
+  );
+
+  const visibleBuildingsCount = useMemo(() => {
+    let count = 0;
+    for (const b of CITY_BUILDINGS) {
+      const st = statusById[b.id];
+      if (st && !isBuildingDimmed(b, st)) count += 1;
+    }
+    return count;
+  }, [statusById, isBuildingDimmed]);
+
+  function onMapPointerDown(e: ReactMouseEvent) {
+    if (e.button !== 0) return;
+    if ((e.target as HTMLElement).closest(".ec-building")) return;
+    graphicsRef.current.cancelActiveAnimation();
+    const live = graphicsRef.current.getLiveViewport();
+    drag.current = { sx: e.clientX, sy: e.clientY, vx: live.x, vy: live.y };
+    function onMove(ev: MouseEvent) {
+      if (!drag.current || !planeRef.current) return;
+      const rect = planeRef.current.getBoundingClientRect();
+      const dxPct = ((ev.clientX - drag.current.sx) / rect.width) * 100;
+      const dyPct = ((ev.clientY - drag.current.sy) / rect.height) * 100;
+      setViewport(
+        applyPanDelta(
+          { x: drag.current.vx, y: drag.current.vy, zoom: live.zoom },
+          dxPct,
+          dyPct,
+        ),
+      );
+    }
+    function onUp() {
+      drag.current = null;
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
   }
+
+  useEffect(() => {
+    const el = planeRef.current;
+    if (!el) return;
+    function onWheel(e: WheelEvent) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.08 : 0.08;
+      const g = graphicsRef.current;
+      g.animateViewportTo(zoomBy(g.getLiveViewport(), delta), { durationMs: 120 });
+    }
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   return (
     <WorkspaceLayout>
-      <div className="enterprise-city eds-anim-fade">
-        <header className="ec-header">
+      <div className="enterprise-city edm-page-soft" ref={cityRootRef} data-tab-hidden="false">
+        <header className="ec-header ews-glass">
           <div className="min-w-0">
             <p className="eds-type-caption uppercase tracking-[0.16em] text-[var(--eds-text-muted)]">
-              Enterprise City Navigation
+              Город предприятия · Beta · Core {CITY_EXPERIENCE_CORE}
             </p>
-            <h1 className="text-2xl font-semibold tracking-tight lg:text-3xl xl:text-4xl">
-              Город модулей
-            </h1>
-            <p className="mt-2 max-w-2xl eds-type-small text-[var(--eds-text-muted)]">
-              Альтернативная навигация к существующим Workspace и Platform Builder страницам. Dashboard не
-              заменяется — это визуальная карта.
-            </p>
+            <h1 className="text-2xl font-semibold tracking-tight lg:text-3xl">Интерактивный город</h1>
+            <nav className="ec-breadcrumbs" aria-label="City breadcrumbs">
+              {crumbs.map((c, i) => (
+                <span key={`${c.label}_${i}`}>
+                  {i > 0 ? <span className="ec-crumb-sep">/</span> : null}
+                  {c.id?.startsWith("district:") ? (
+                    <button
+                      type="button"
+                      className="ec-crumb"
+                      onClick={() => jumpDistrict(c.id!.replace("district:", "") as CityDistrictId)}
+                    >
+                      {c.label}
+                    </button>
+                  ) : (
+                    <span className="ec-crumb">{c.label}</span>
+                  )}
+                </span>
+              ))}
+            </nav>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge tone={mcLinked ? "success" : "warning"}>MC {mcLinked ? "linked" : "check"}</Badge>
-            <Badge>{unread} alerts</Badge>
-            <Badge tone="success">Live city</Badge>
-            {cityPath.length ? <Badge tone="warning">WF route</Badge> : null}
-            <Button size="sm" variant="secondary" onClick={() => void refreshMc()}>
-              Refresh status
-            </Button>
-            <Link to="/platform-builder/workflow-center">
-              <Button size="sm" variant="secondary">
-                Workflow Center
-              </Button>
-            </Link>
-            <Link to="/dashboard">
-              <Button size="sm" variant="secondary">
-                Command Center
-              </Button>
-            </Link>
-            <Link to="/enterprise-twin">
-              <Button size="sm" variant="secondary">
-                Digital Twin
-              </Button>
+          <div className="ec-glance edm-stagger" aria-label="City glance">
+            <GlanceChip label="OK" value={glance.ok} tone="success" />
+            <GlanceChip label="Увага" value={glance.attention} tone="warning" />
+            <GlanceChip label="Крит." value={glance.critical} tone="danger" />
+            <GlanceChip label="В роботі" value={glance.running} tone="info" />
+            <GlanceChip label="AI" value={glance.ai} tone="default" />
+            <Badge tone={mcLinked ? "success" : "warning"}>MC {mcLinked ? "live" : "check"}</Badge>
+            {unread ? <Badge tone="warning">{unread}</Badge> : null}
+            <EnterpriseRuntimeMonitorCompact />
+            <Link to="/desktop" className="eds-type-helper text-[var(--eds-primary)]">
+              Desktop OS
             </Link>
           </div>
         </header>
 
+        <nav className="ec-exec-nav" aria-label="Навигация города">
+          <Button size="sm" variant="primary" toolbar onClick={returnHome}>
+            Домой
+          </Button>
+          <Link
+            to={withDecisionQuery("/dashboard?mode=executive", { from: "/enterprise-city", step: "decide" })}
+            onClick={() => rememberNavDecision("/enterprise-city", "/dashboard", "City → Dashboard decision", "decide")}
+          >
+            <Button size="sm" variant="secondary" toolbar>
+              Главная
+            </Button>
+          </Link>
+          <Link
+            to={withDecisionQuery("/platform-builder/concierge", { from: "/enterprise-city", step: "recommend" })}
+            onClick={() => rememberNavDecision("/enterprise-city", "/platform-builder/concierge", "City → Advisor", "recommend")}
+          >
+            <Button size="sm" variant="secondary" toolbar>
+              AI-советник
+            </Button>
+          </Link>
+          {plaza ? (
+            <Button size="sm" variant="secondary" toolbar onClick={() => selectBuilding(plaza)}>
+              Площадь
+            </Button>
+          ) : null}
+          <Button size="sm" variant="ghost" toolbar onClick={() => void refreshMc()}>
+            Обновить
+          </Button>
+        </nav>
+
+        <div className="ec-quick-jump" aria-label="Районы города">
+          {CITY_DISTRICTS.map((d) => (
+            <button key={d.id} type="button" className="ec-jump-chip" onClick={() => openDistrict(d.id)}>
+              {d.labelRu}
+            </button>
+          ))}
+        </div>
+
         <div className="ec-toolbar">
           <div className="ec-search">
             <Input
-              placeholder="Поиск модуля · workspace · сотрудников · документов"
+              placeholder="Search · jump · district · building"
               aria-label="City search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
-                  const hit = filtered[0] || (globalHits[0] ? CITY_BUILDINGS.find((b) => b.route === globalHits[0].path) : undefined);
+                  const hit =
+                    filtered[0] ||
+                    (globalHits[0] ? CITY_BUILDINGS.find((b) => b.route === globalHits[0]!.path) : undefined);
                   if (hit) openBuilding(hit);
-                  else if (globalHits[0]) navigate(globalHits[0].path);
+                  else if (globalHits[0]) navigate(withEmbed(globalHits[0].path, embed));
                 }
               }}
             />
             {q.trim() ? (
-              <Card title="Результаты" className="ec-search-panel">
+              <Card title="Results" className="ec-search-panel">
                 <ul className="space-y-1 eds-type-small">
                   {filtered.map((b) => (
                     <li key={b.id}>
-                      <button type="button" className="ec-search-hit" onClick={() => openBuilding(b)}>
-                        <span>
-                          {b.icon} {b.label}
+                      <button type="button" className="ec-search-hit" onClick={() => selectBuilding(b)}>
+                        <span className="ec-search-id">
+                          <span className={`ec-sil-mini ${buildingIdentity(b.id).silhouette}`} aria-hidden />
+                          {b.label}
                         </span>
-                        <Badge>{b.short}</Badge>
+                        <Badge tone={badgeToneForState(resolveVisualState(statusById[b.id]!))}>
+                          {stateLabelRu(statusById[b.id]!)}
+                        </Badge>
                       </button>
                     </li>
                   ))}
@@ -158,7 +456,7 @@ export function EnterpriseCityPage() {
                         className="ec-search-hit"
                         onClick={() => {
                           void telemetry.userActivity(`city_search:${h.path}`);
-                          navigate(h.path);
+                          navigate(withEmbed(h.path, embed));
                         }}
                       >
                         <span>
@@ -172,29 +470,141 @@ export function EnterpriseCityPage() {
               </Card>
             ) : null}
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="ghost" onClick={() => setViewport({ x: 0, y: 0, zoom: 1 })}>
-              Reset view
+          <div className="ec-layer-toggles" role="group" aria-label="Executive overlays">
+            {(
+              [
+                ["all", "All"],
+                ["health", "Health"],
+                ["activity", "Activity"],
+                ["ai", "AI"],
+              ] as const
+            ).map(([id, label]) => (
+              <Button
+                key={id}
+                size="sm"
+                variant={overlay === id ? "primary" : "ghost"}
+                toolbar
+                onClick={() => setOverlay(id)}
+              >
+                {label}
+              </Button>
+            ))}
+            <Button size="sm" variant="ghost" toolbar onClick={() => graphics.resetCameraAnimated()}>
+              Reset
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => setViewport((v) => ({ ...v, zoom: Math.min(1.4, v.zoom + 0.1) }))}
+              toolbar
+              onClick={() => graphics.animateViewportTo(zoomBy(graphics.getLiveViewport(), 0.1), { durationMs: 160 })}
             >
-              Zoom +
+              +
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => setViewport((v) => ({ ...v, zoom: Math.max(0.75, v.zoom - 0.1) }))}
+              toolbar
+              onClick={() => graphics.animateViewportTo(zoomBy(graphics.getLiveViewport(), -0.1), { durationMs: 160 })}
             >
-              Zoom −
+              −
+            </Button>
+            <Button
+              size="sm"
+              variant={showDevOverlay ? "primary" : "ghost"}
+              toolbar
+              onClick={() => setShowDevOverlay((v) => !v)}
+              aria-pressed={showDevOverlay}
+            >
+              Debug
             </Button>
           </div>
         </div>
 
+        <div className="ec-legend" aria-label="Живой статус">
+          {(Object.keys(HEALTH_LABEL_RU) as BuildingHealth[]).map((k) => (
+            <span key={k} className={`ec-legend-item ec-live-${k}`}>
+              <i aria-hidden />
+              {HEALTH_LABEL_RU[k]}
+              <span className="ec-legend-count">{healthCounts[k]}</span>
+            </span>
+          ))}
+        </div>
+
+        {ownerView ? (
+          <Card
+            title="Owner Mode · God Mode"
+            className="ec-owner-panel edm-page-soft"
+            status={<Badge tone="success">Owner</Badge>}
+            data-testid="city-owner-god-mode"
+          >
+            <div className="ec-owner-grid">
+              <div>
+                <p className="eds-type-caption">Здоровье платформы</p>
+                <p className="eds-type-small">
+                  OK {glance.ok} · Увага {glance.attention} · Крит. {glance.critical} · AI {glance.ai}
+                </p>
+              </div>
+              <div>
+                <p className="eds-type-caption">Активные пользователи</p>
+                <p className="font-semibold">{platformActiveUsers}</p>
+              </div>
+              <div>
+                <p className="eds-type-caption">Runtime</p>
+                <p className="eds-type-small">
+                  {runtimeSnap.status} · {runtimeSnap.healthItems.length} checks · {runtimeSnap.jobs.length} jobs
+                </p>
+                <EnterpriseRuntimeMonitorCompact />
+              </div>
+            </div>
+            <div className="ec-god-metrics mt-3" aria-label="God Mode метрики" data-testid="city-god-metrics">
+              {deriveGodModeMetrics()
+                .slice(0, 14)
+                .map((m) => (
+                  <Link key={m.id} to={m.route} className="ec-god-metric" title={m.title}>
+                    <span className="eds-type-caption">{m.title}</span>
+                    <Badge tone={m.tone || "default"}>{m.value}</Badge>
+                  </Link>
+                ))}
+            </div>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <Link className="text-[var(--eds-primary)] eds-type-small" to="/platform-builder/god-mode">
+                Control Center God Mode →
+              </Link>
+              <Link className="text-[var(--eds-primary)] eds-type-small" to="/health">
+                Здоровье платформы →
+              </Link>
+            </div>
+            <div className="ec-chip-row mt-2" aria-label="Прыжок по зданиям">
+              {CITY_BUILDINGS.slice(0, 24).map((b) => (
+                <button
+                  key={b.id}
+                  type="button"
+                  className="ec-jump-chip"
+                  onClick={() => selectBuilding(b)}
+                  title={b.label}
+                >
+                  {b.short}
+                </button>
+              ))}
+            </div>
+            <div className="ec-chip-row mt-2" aria-label="Все районы">
+              {CITY_DISTRICTS.map((d) => (
+                <button key={d.id} type="button" className="ec-jump-chip" onClick={() => jumpDistrict(d.id)}>
+                  {d.labelRu}
+                </button>
+              ))}
+            </div>
+          </Card>
+        ) : null}
+
         <div className="ec-stage">
-          <div className="ec-map-shell" ref={planeRef}>
+          <div
+            className="ec-map-shell"
+            ref={planeRef}
+            onMouseDown={onMapPointerDown}
+            role="presentation"
+            title="Drag to pan · wheel to zoom"
+          >
             <div
               className="ec-plane"
               style={{
@@ -202,11 +612,49 @@ export function EnterpriseCityPage() {
               }}
             >
               <div className="ec-grid" aria-hidden />
+              <div className="ec-plaza-ring" aria-hidden />
+              {CITY_DISTRICTS.map((d) => (
+                <button
+                  key={d.id}
+                  type="button"
+                  className={`ec-district-label ${d.css}${graphics.districtEffects[d.id] ? " is-activated" : ""}`}
+                  style={{ left: `${d.x}%`, top: `${d.y}%` }}
+                  onClick={() => openDistrict(d.id)}
+                >
+                  {d.labelRu}
+                </button>
+              ))}
+              <svg className="ec-links" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+                {links.map((l) => {
+                  const a = CITY_BUILDINGS.find((b) => b.id === l.from);
+                  const b = CITY_BUILDINGS.find((x) => x.id === l.to);
+                  if (!a || !b) return null;
+                  // Roads: the "flowing" treatment is confined to links touching the focused
+                  // building — never a whole-map ambient loop — and gated by the effects layer,
+                  // graphics quality, and reduced motion, same as every other transient effect.
+                  const touchesFocus = !!focusId && (l.from === focusId || l.to === focusId);
+                  const flowing =
+                    touchesFocus &&
+                    !graphics.reducedMotion &&
+                    graphics.frame.layers.isEnabled("effects") &&
+                    graphics.settings.effectQuality !== "low";
+                  return (
+                    <line
+                      key={`${l.from}_${l.to}`}
+                      className={`ec-link-line${flowing ? " is-flowing" : ""}`}
+                      x1={a.x + a.w / 2}
+                      y1={a.y + a.h / 2}
+                      x2={b.x + b.w / 2}
+                      y2={b.y + b.h / 2}
+                    />
+                  );
+                })}
+              </svg>
               {cityPath.length >= 2 ? (
                 <svg className="ec-wf-route" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
                   <polyline
                     fill="none"
-                    stroke="color-mix(in oklab, #0f766e 75%, #0369a1)"
+                    stroke="var(--eds-primary)"
                     strokeWidth="0.9"
                     strokeDasharray="2 1.2"
                     points={cityPath
@@ -218,35 +666,30 @@ export function EnterpriseCityPage() {
                       .filter(Boolean)
                       .join(" ")}
                   />
-                  {cityPath.map((id, i) => {
-                    const b = CITY_BUILDINGS.find((x) => x.id === id);
-                    if (!b) return null;
-                    return (
-                      <circle
-                        key={`${id}_${i}`}
-                        cx={b.x + b.w / 2}
-                        cy={b.y + b.h / 2}
-                        r="1.4"
-                        fill={i === 0 ? "#0f766e" : i === cityPath.length - 1 ? "#0369a1" : "#14857c"}
-                      />
-                    );
-                  })}
                 </svg>
               ) : null}
-              {CITY_BUILDINGS.map((b) => (
-                <CityBuildingTile
-                  key={b.id}
-                  building={b}
-                  status={statusById[b.id]}
-                  focused={focusId === b.id || pathSet.has(b.id)}
-                  dimmed={
-                    (filtered.length < CITY_BUILDINGS.length && !filtered.some((f) => f.id === b.id)) ||
-                    (pathSet.size > 0 && !pathSet.has(b.id) && focusId !== b.id)
-                  }
-                  onOpen={() => openBuilding(b)}
-                  onFocus={() => setFocusId(b.id)}
-                />
-              ))}
+              {CITY_BUILDINGS.map((b) => {
+                const st = statusById[b.id];
+                if (!st) return null;
+                return (
+                  <CityBuildingTile
+                    key={b.id}
+                    building={b}
+                    status={st}
+                    focused={focusId === b.id || pathSet.has(b.id)}
+                    hovered={hoverId === b.id}
+                    dimmed={isBuildingDimmed(b, st)}
+                    effect={graphics.buildingEffects[b.id]}
+                    onSelect={() => selectBuilding(b)}
+                    onOpen={() => openBuilding(b)}
+                    onHover={() => {
+                      setHoverId(b.id);
+                      graphics.triggerBuildingEffect(b.id, "hover");
+                    }}
+                    onHoverEnd={() => setHoverId((cur) => (cur === b.id ? null : cur))}
+                  />
+                );
+              })}
             </div>
           </div>
 
@@ -254,37 +697,203 @@ export function EnterpriseCityPage() {
             <CityMinimap
               focusId={focusId}
               statusById={statusById}
-              onSelect={(b) => {
-                panTo(b);
-                setFocusId(b.id);
-              }}
+              rect={miniRect}
+              onSelect={(b) => selectBuilding(b)}
             />
-            <Card title="Live status">
-              <ul className="space-y-2 eds-type-small">
-                {CITY_BUILDINGS.filter((b) => statusById[b.id].tone !== "idle")
-                  .slice(0, 6)
-                  .map((b) => (
-                    <li key={b.id} className="flex items-center justify-between gap-2">
-                      <button type="button" className="text-left underline-offset-2 hover:underline" onClick={() => panTo(b)}>
-                        {b.icon} {b.short}
+
+            <Card title="Недавние" className="ec-nav-card">
+              <div className="ec-chip-row">
+                {recentIds.map((id) => {
+                  const b = CITY_BUILDINGS.find((x) => x.id === id);
+                  if (!b) return null;
+                  return (
+                    <button key={id} type="button" className="ec-jump-chip" onClick={() => selectBuilding(b)}>
+                      {b.short}
+                    </button>
+                  );
+                })}
+                {!recentIds.length ? <span className="eds-type-helper">Нет недавних</span> : null}
+              </div>
+            </Card>
+
+            <Card title="Избранное" className="ec-nav-card">
+              <div className="ec-chip-row">
+                {favoriteIds.map((id) => {
+                  const b = CITY_BUILDINGS.find((x) => x.id === id);
+                  if (!b) return null;
+                  return (
+                    <button key={id} type="button" className="ec-jump-chip" onClick={() => selectBuilding(b)}>
+                      ★ {b.short}
+                    </button>
+                  );
+                })}
+                {!favoriteIds.length ? <span className="eds-type-helper">Добавьте ★ на здании</span> : null}
+              </div>
+            </Card>
+
+            <Card title="История" className="ec-nav-card">
+              <ul className="space-y-1 eds-type-small">
+                {historyIds.map((id) => {
+                  const b = CITY_BUILDINGS.find((x) => x.id === id);
+                  if (!b) return null;
+                  return (
+                    <li key={id}>
+                      <button type="button" className="hover:underline" onClick={() => selectBuilding(b)}>
+                        {b.label}
                       </button>
-                      <Badge tone={statusById[b.id].tone === "alert" ? "warning" : "success"}>
-                        {statusById[b.id].processLabel}
-                      </Badge>
                     </li>
-                  ))}
+                  );
+                })}
+                {!historyIds.length ? <li className="eds-type-helper">Пусто</li> : null}
               </ul>
             </Card>
-            <Card title="Districts">
-              <p className="eds-type-small text-[var(--eds-text-muted)]">
-                Commerce · Ops · People · Intel · Hub — клик по зданию открывает существующий маршрут без
-                новой бизнес-логики.
-              </p>
+
+            <Card
+              title="Здание"
+              className="ec-inspector"
+              status={
+                focused && focusedOps ? (
+                  <Badge
+                    tone={
+                      focusedOps.health === "critical"
+                        ? "danger"
+                        : focusedOps.health === "warning"
+                          ? "warning"
+                          : focusedOps.health === "maintenance"
+                            ? "default"
+                            : "success"
+                    }
+                  >
+                    {HEALTH_LABEL_RU[focusedOps.health]}
+                  </Badge>
+                ) : null
+              }
+            >
+              {focused && focusedStatus && focusedOps ? (
+                <div className="ec-inspector-body">
+                  <div className="ec-inspector-id">
+                    <span className={`ec-sil ${buildingIdentity(focused.id).silhouette}`} aria-hidden />
+                    <div>
+                      <p className="font-semibold">{focused.label}</p>
+                      <p className="eds-type-helper">{focusedOps.description}</p>
+                    </div>
+                  </div>
+                  <ul className="ec-inspector-meta eds-type-small">
+                    <li>
+                      Ответственный: <strong>{focusedOps.owner}</strong>
+                    </li>
+                    <li>
+                      Статус: <strong>{stateLabelRu(focusedStatus)}</strong>
+                    </li>
+                    <li>
+                      Здоровье: <strong>{HEALTH_LABEL_RU[focusedOps.health]}</strong>
+                    </li>
+                    <li>
+                      Активные пользователи: <strong>{focusedOps.activeUsers}</strong>
+                    </li>
+                    <li>
+                      Район: <strong>{getDistrict(focused.district)?.labelRu || focused.district}</strong>
+                    </li>
+                    <li>
+                      Недавняя активность: <strong>{focusedStatus.processLabel}</strong>
+                    </li>
+                    <li>
+                      AI: <strong>{focused.aiAssistant || "City Concierge"}</strong>
+                    </li>
+                  </ul>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button size="sm" onClick={() => openBuilding(focused)}>
+                      Открыть модуль
+                    </Button>
+                    {focusedOps.quickActions
+                      .filter((a) => a.id !== "open")
+                      .slice(0, 3)
+                      .map((a) => (
+                        <Button
+                          key={a.id}
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => navigate(withEmbed(a.route, embed))}
+                        >
+                          {a.label}
+                        </Button>
+                      ))}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        cityNavigation.toggleFavorite(focused.id);
+                        setFavTick((t) => t + 1);
+                      }}
+                    >
+                      {cityNavigation.isFavorite(focused.id) ? "Убрать ★" : "В избранное"}
+                    </Button>
+                  </div>
+                  {advisor ? (
+                    <div className="ai-advisor-rec ec-inspector-advice">
+                      <p className="eds-type-caption">{advisor.assistant}</p>
+                      <p className="ai-advisor-obs">{advisor.observation}</p>
+                      <p className="ai-advisor-why">{advisor.why}</p>
+                      <p className="ai-advisor-impact">Impact: {advisor.impact}</p>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="eds-type-helper">Выберите здание — клик для выбора, двойной клик для входа.</p>
+              )}
+            </Card>
+
+            <Card title="Advisor · City">
+              <ul className="space-y-2">
+                {cityAdvice.map((s) => (
+                  <li key={s.id}>
+                    <button
+                      type="button"
+                      className="ec-advice-hit"
+                      onClick={() => {
+                        void telemetry.userActivity(`city_advice:${s.id}`);
+                        navigate(withEmbed(s.route, embed));
+                      }}
+                    >
+                      <span className="font-medium eds-type-small">{s.action}</span>
+                      <span className="block eds-type-helper">{s.observation}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </Card>
           </aside>
         </div>
       </div>
+      {showDevOverlay ? (
+        <CityDevOverlay
+          perf={graphics.perf}
+          objects={Object.values(graphics.frame.stats).reduce((sum, n) => sum + n, 0)}
+          visibleBuildings={visibleBuildingsCount}
+          animationQueueLength={graphics.animationQueueLength}
+          settings={graphics.settings}
+          onQualityChange={(quality) => graphics.updateSettings(defaultGraphicsSettings(quality))}
+          onClose={() => setShowDevOverlay(false)}
+        />
+      ) : null}
     </WorkspaceLayout>
+  );
+}
+
+function GlanceChip({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "success" | "warning" | "danger" | "info" | "default";
+}) {
+  return (
+    <span className="ec-glance-chip">
+      <Badge tone={tone}>{value}</Badge>
+      <span className="eds-type-caption">{label}</span>
+    </span>
   );
 }
 
@@ -292,39 +901,58 @@ function CityBuildingTile({
   building,
   status,
   focused,
+  hovered,
   dimmed,
+  effect,
+  onSelect,
   onOpen,
-  onFocus,
+  onHover,
+  onHoverEnd,
 }: {
   building: CityBuilding;
   status: CityLiveStatus;
   focused: boolean;
+  hovered: boolean;
   dimmed: boolean;
+  effect?: ResolvedEffect;
+  onSelect: () => void;
   onOpen: () => void;
-  onFocus: () => void;
+  onHover: () => void;
+  onHoverEnd: () => void;
 }) {
+  const visual = resolveVisualState(status);
+  const identity = buildingIdentity(building.id);
+  const plaza = building.kind === "plaza";
+  const effectClass = effect ? ` ${effect.className}` : "";
+  const ops = buildingOps(building.id, building.route);
+  const health = healthFromLiveTone(status.tone, status.notifications, status.tasks);
   return (
     <button
       type="button"
-      className={`ec-building ec-tone-${status.tone}${focused ? " is-focused" : ""}${dimmed ? " is-dimmed" : ""}`}
+      className={`ec-building ${identity.districtClass} ${CITY_STATE_LABELS[visual].css}${focused ? " is-focused" : ""}${hovered ? " is-hovered" : ""}${dimmed ? " is-dimmed" : ""}${status.aiActive ? " has-ai" : ""}${plaza ? " is-plaza" : ""}${health === "online" ? " is-online" : ""}${effectClass}`}
       style={{
         left: `${building.x}%`,
         top: `${building.y}%`,
         width: `${building.w}%`,
         height: `${building.h}%`,
       }}
-      onClick={onOpen}
-      onMouseEnter={onFocus}
-      onFocus={onFocus}
-      aria-label={`${building.label} — ${status.processLabel}`}
-      title={`${building.label}\n${status.processLabel}`}
+      onClick={onSelect}
+      onDoubleClick={onOpen}
+      onMouseEnter={onHover}
+      onMouseLeave={onHoverEnd}
+      onFocus={onHover}
+      aria-label={`${building.label} — ${HEALTH_LABEL_RU[health]}`}
+      title={`${building.label}\n${HEALTH_LABEL_RU[health]} · ${ops.owner}\nUsers: ${ops.activeUsers}\n${ops.description}`}
     >
-      <span className="ec-building-icon" aria-hidden>
-        {building.icon}
-      </span>
+      <span className={`ec-online-dot ec-health-${health}`} title={HEALTH_LABEL_RU[health]} aria-hidden />
+      <span className={`ec-sil ${identity.silhouette}`} aria-hidden />
       <span className="ec-building-label">{building.short}</span>
+      <span className="ec-building-state">{HEALTH_LABEL_RU[health]}</span>
+      <span className="ec-building-meta" aria-hidden>
+        {ops.activeUsers}
+      </span>
       {status.notifications > 0 ? <span className="ec-badge">{status.notifications}</span> : null}
-      {status.aiActive ? <span className="ec-ai-dot" title="AI activity" /> : null}
+      {status.aiActive ? <span className="ec-ai-dot" title="AI активность" /> : null}
       {status.tasks > 0 ? <span className="ec-tasks">{status.tasks}</span> : null}
     </button>
   );
@@ -333,28 +961,39 @@ function CityBuildingTile({
 function CityMinimap({
   focusId,
   statusById,
+  rect,
   onSelect,
 }: {
   focusId: CityBuildingId | null;
   statusById: Record<CityBuildingId, CityLiveStatus>;
+  rect: { left: number; top: number; width: number; height: number };
   onSelect: (b: CityBuilding) => void;
 }) {
   return (
-    <Card title="Minimap">
-      <div className="ec-minimap" role="img" aria-label="City minimap">
+    <Card title="Мини-карта">
+      <div className="ec-minimap" role="img" aria-label="Мини-карта города">
+        <div
+          className="ec-mini-viewport"
+          style={{
+            left: `${rect.left}%`,
+            top: `${rect.top}%`,
+            width: `${rect.width}%`,
+            height: `${rect.height}%`,
+          }}
+          aria-hidden
+        />
         {CITY_BUILDINGS.map((b) => (
           <button
             key={b.id}
             type="button"
-            className={`ec-mini-dot ec-tone-${statusById[b.id].tone}${focusId === b.id ? " is-focused" : ""}`}
+            className={`ec-mini-dot ${CITY_STATE_LABELS[resolveVisualState(statusById[b.id]!)].css}${focusId === b.id ? " is-focused" : ""}`}
             style={{ left: `${b.x + b.w / 2}%`, top: `${b.y + b.h / 2}%` }}
             onClick={() => onSelect(b)}
             aria-label={`Go to ${b.label}`}
-            title={b.label}
+            title={`${b.label} · ${stateLabelRu(statusById[b.id]!)}`}
           />
         ))}
       </div>
-      <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">Быстрый переход к району</p>
     </Card>
   );
 }

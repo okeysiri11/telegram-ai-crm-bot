@@ -321,36 +321,6 @@ function GovStat({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function AutonomyStrip() {
-  const { snapshot } = useLiveEnterprise(true);
-  const notifications = useNotificationStore((s) => s.items);
-  const first = loadFirstEntry();
-  const bundle = useMemo(
-    () => deriveAutonomy(snapshot, { roleId: first.roleId, notifications }),
-    [snapshot, first.roleId, notifications],
-  );
-  return (
-    <div className="auto-strip" aria-label="Autonomy">
-      <span className="auto-strip-label">Autonomy</span>
-      <Badge>L{bundle.dashboard.level}</Badge>
-      <Badge tone="warning">{bundle.dashboard.awaitingApproval} pending</Badge>
-      {bundle.dashboard.needsIntervention ? (
-        <Badge tone="danger">{bundle.dashboard.needsIntervention} alert</Badge>
-      ) : (
-        <Badge tone="success">ok</Badge>
-      )}
-      <Link
-        to="/platform-builder/autonomy"
-        className="eds-type-small text-[var(--eds-primary)]"
-        onClick={() => void telemetry.userActivity("auto_open")}
-      >
-        Center →
-      </Link>
-    </div>
-  );
-}
-
-/** Compact Mission Control widget. */
 export function AutonomousWidgetCompact() {
   const { snapshot } = useLiveEnterprise(true);
   const notifications = useNotificationStore((s) => s.items);

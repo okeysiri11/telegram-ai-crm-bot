@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class CrmPipelineEntityType(str, enum.Enum):
@@ -48,7 +48,7 @@ AGRO_WIN_STAGES = frozenset({"CLOSED"})
 PIPELINE_LOST_STAGES = frozenset({"LOST"})
 
 
-class CrmPipelineBoardStage(UUIDPrimaryKeyMixin, Base):
+class CrmPipelineBoardStage(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "crm_pipeline_boards_v1_stages"
     __table_args__ = (
         UniqueConstraint("vertical", "stage_code", name="uq_crm_pipeline_v1_stage_vertical_code"),
@@ -63,7 +63,7 @@ class CrmPipelineBoardStage(UUIDPrimaryKeyMixin, Base):
     order_index: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
 
-class CrmPipelineBoardTransition(CreatedAtMixin, UUIDPrimaryKeyMixin, Base):
+class CrmPipelineBoardTransition(CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "crm_pipeline_boards_v1_transitions"
     __table_args__ = (
         Index("ix_crm_pipeline_v1_trans_entity", "entity_type", "entity_id"),

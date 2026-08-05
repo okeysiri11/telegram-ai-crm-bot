@@ -29,8 +29,13 @@ def test_34_0_docs_exist():
     index = (docs / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "ENTERPRISE_PLATFORM_1_0" in index
     platform = (docs / "ENTERPRISE_PLATFORM_1_0.md").read_text()
-    assert "Release Candidate" in platform
+    assert "General Availability" in platform or "Release Candidate" in platform
     assert "No new Engine" in platform or "Без новых Engine" in platform
+    assert (docs / "ENTERPRISE_PLATFORM_V1_GA.md").exists()
+    assert (docs / "GA_READINESS_REPORT.md").exists()
+    assert (docs / "FINAL_EQI_REPORT.md").exists()
+    assert (docs / "PILOT_CHECKLIST.md").exists()
+    assert "READY FOR GENERAL AVAILABILITY" in (docs / "GA_READINESS_REPORT.md").read_text()
     demo = (docs / "EXECUTIVE_DEMO_34_0.md").read_text()
     for route in (
         "/login",
@@ -45,9 +50,9 @@ def test_34_0_docs_exist():
 
 def test_platform_version_34_0():
     health = platform_builder.health()
-    assert health["application_version"] == "1.66.0"
-    assert health["sprint"] == "34.0"
-    assert "Release Candidate" in health["release_status"]
+    assert health["application_version"] == "1.67.0"
+    assert health["sprint"] == "1.1.1"
+    assert "General Availability" in health["release_status"]
 
 
 def test_34_0_rc_stabilizations():
@@ -81,14 +86,14 @@ def test_34_0_rc_stabilizations():
 
 def test_config_manifest_34_0():
     cfg = (ROOT / "applications" / "platform_builder" / "config.py").read_text()
-    assert 'application_version: str = "1.66.0"' in cfg
-    assert 'sprint: str = "34.0"' in cfg
-    assert "Release Candidate" in cfg
+    assert 'application_version: str = "1.67.0"' in cfg
+    assert 'sprint: str = "1.1.1"' in cfg
+    assert "General Availability" in cfg
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.66.0"' in manifest
-    assert '"sprint": "34.0"' in manifest
+    assert '"application_version": "1.67.0"' in manifest
+    assert '"sprint": "1.1.1"' in manifest
     web = (ROOT / "src" / "web" / "src" / "config" / "webConfig.ts").read_text()
-    assert 'sprint: "34.0"' in web
+    assert 'sprint: "1.1.1"' in web
     types = (ROOT / "src" / "web" / "platform-builder" / "types.ts").read_text()
-    assert 'PLATFORM_BUILDER_VERSION = "1.66.0"' in types
-    assert 'PLATFORM_BUILDER_SPRINT = "34.0"' in types
+    assert 'PLATFORM_BUILDER_VERSION = "1.67.0"' in types
+    assert 'PLATFORM_BUILDER_SPRINT = "1.1.1"' in types

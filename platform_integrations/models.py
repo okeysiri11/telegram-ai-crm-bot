@@ -32,6 +32,16 @@ class ProviderType(str, enum.Enum):
     GOOGLE = "google"
     OPENAI = "openai"
     STRIPE = "stripe"
+    N8N = "n8n"
+    ANTHROPIC = "anthropic"
+    OPENROUTER = "openrouter"
+    LITELLM = "litellm"
+    SLACK = "slack"
+    DISCORD = "discord"
+    HUBSPOT = "hubspot"
+    SALESFORCE = "salesforce"
+    S3 = "s3"
+    MINIO = "minio"
 
 
 class ConnectorStatus(str, enum.Enum):

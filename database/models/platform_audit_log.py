@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class PlatformAuditEvent(str, enum.Enum):
     NOTIFICATION_SENT = "NOTIFICATION_SENT"
 
 
-class PlatformAuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class PlatformAuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "audit_log"
     __table_args__ = (
         Index("ix_audit_log_event_type", "event_type"),

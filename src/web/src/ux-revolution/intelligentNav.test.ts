@@ -21,7 +21,7 @@ describe("Sprint 33.2 Intelligent Navigation", () => {
   });
 
   it("bumps sprint to 33.2", () => {
-    expect(webConfig.sprint).toBe("33.2");
+    expect(webConfig.sprint).toBe("33.2.1");
     expect(UX_REVOLUTION_SPRINT).toBe("33.2");
   });
 

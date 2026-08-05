@@ -40,7 +40,12 @@ export function PlatformBuilderLayout({
             >
               <span className="inline-flex items-center gap-2">
                 {item.name}
-                {item.status === "frame" ? <Badge>Frame</Badge> : null}
+                {item.status === "frame" ? (
+                  <>
+                    <Badge>Preview</Badge>
+                    <Badge tone="warning">Coming soon</Badge>
+                  </>
+                ) : null}
               </span>
             </Link>
           ))}

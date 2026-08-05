@@ -1,6 +1,6 @@
 /**
- * Shared Live Enterprise hook — Sprint 32.3.4.
- * One poller + liveUpdates bridge; minimizes duplicate fetches.
+ * Shared Live Enterprise hook — Sprint 32.3.4 / EP-07 production hardening.
+ * Singleton poller + liveUpdates bridge; minimizes duplicate fetches & intervals.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,15 +12,60 @@ import {
   fetchLiveEnterpriseSnapshot,
   type LiveEnterpriseSnapshot,
 } from "./fetchLiveEnterprise";
+import {
+  LIVE_FETCH_DEDUPE_MS,
+  isDocumentHidden,
+  prodLog,
+  sanitizeErrorMessage,
+} from "@/production";
 
 let sharedSnapshot: LiveEnterpriseSnapshot = emptyLiveSnapshot();
 let sharedInflight: Promise<LiveEnterpriseSnapshot> | null = null;
 let lastFetchAt = 0;
 
+let pollerRefCount = 0;
+let pollerId: number | null = null;
+let visibilityBound = false;
+
+function onVisibility() {
+  if (!isDocumentHidden()) {
+    liveUpdates.publish("poll");
+  }
+}
+
+function acquireSharedPoller() {
+  pollerRefCount += 1;
+  if (pollerId != null) return;
+  liveUpdates.connect();
+  pollerId = window.setInterval(() => {
+    if (isDocumentHidden()) return;
+    liveUpdates.publish("poll");
+  }, LIVE_POLL_MS);
+  if (!visibilityBound && typeof document !== "undefined") {
+    document.addEventListener("visibilitychange", onVisibility);
+    visibilityBound = true;
+  }
+  prodLog("debug", "live_poller_acquired", { pollerRefCount, pollMs: LIVE_POLL_MS });
+}
+
+function releaseSharedPoller() {
+  pollerRefCount = Math.max(0, pollerRefCount - 1);
+  if (pollerRefCount > 0) return;
+  if (pollerId != null) {
+    window.clearInterval(pollerId);
+    pollerId = null;
+  }
+  if (visibilityBound && typeof document !== "undefined") {
+    document.removeEventListener("visibilitychange", onVisibility);
+    visibilityBound = false;
+  }
+  prodLog("debug", "live_poller_released");
+}
+
 async function sharedRefresh(notifications: ReturnType<typeof useNotificationStore.getState>["items"]) {
   const now = Date.now();
   if (sharedInflight) return sharedInflight;
-  if (now - lastFetchAt < 2_500 && sharedSnapshot.updatedAt !== new Date(0).toISOString()) {
+  if (now - lastFetchAt < LIVE_FETCH_DEDUPE_MS && sharedSnapshot.updatedAt !== new Date(0).toISOString()) {
     return sharedSnapshot;
   }
   sharedInflight = fetchLiveEnterpriseSnapshot(notifications)
@@ -41,16 +86,21 @@ export function useLiveEnterprise(enabled = true) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(true);
+  const notifLen = notifications.length;
 
   const refresh = useCallback(async () => {
     if (!enabled) return;
-    setBusy(true);
+    setBusy((b) => (b ? b : true));
     setError(null);
     try {
       const snap = await sharedRefresh(useNotificationStore.getState().items);
-      if (mounted.current) setSnapshot(snap);
+      if (mounted.current) {
+        setSnapshot((prev) => (prev.updatedAt === snap.updatedAt ? prev : snap));
+      }
     } catch (e) {
-      if (mounted.current) setError(e instanceof Error ? e.message : "Live refresh failed");
+      const msg = sanitizeErrorMessage(e instanceof Error ? e.message : "Live refresh failed");
+      prodLog("warn", "live_refresh_failed", { message: msg });
+      if (mounted.current) setError(msg);
     } finally {
       if (mounted.current) setBusy(false);
     }
@@ -59,30 +109,33 @@ export function useLiveEnterprise(enabled = true) {
   useEffect(() => {
     mounted.current = true;
     if (!enabled) return;
-    liveUpdates.connect();
+    acquireSharedPoller();
     void refresh();
     const unsub = liveUpdates.subscribe(() => {
+      if (isDocumentHidden()) return;
       void refresh();
     });
-    const id = window.setInterval(() => {
-      liveUpdates.publish("poll");
-    }, LIVE_POLL_MS);
     return () => {
       mounted.current = false;
       unsub();
-      window.clearInterval(id);
+      releaseSharedPoller();
     };
   }, [enabled, refresh]);
 
   useEffect(() => {
     if (!enabled) return;
-    // Notifications change → soft refresh (deduped by sharedRefresh)
+    // Soft refresh when notification count changes (deduped)
     void refresh();
-  }, [notifications, enabled, refresh]);
+  }, [notifLen, enabled, refresh]);
 
   return { snapshot, busy, error, refresh };
 }
 
 export function getSharedLiveSnapshot() {
   return sharedSnapshot;
+}
+
+/** Test / diagnostics hook — current poller refcount. */
+export function __livePollerRefCount() {
+  return pollerRefCount;
 }

@@ -9,7 +9,7 @@ from sqlalchemy import Index, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import UUIDPrimaryKeyMixin
+from database.models.mixins import UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.user_role import PermissionUserRole
@@ -26,7 +26,7 @@ class EngineRoleCode(str, enum.Enum):
     VIEWER = "VIEWER"
 
 
-class PermissionRole(UUIDPrimaryKeyMixin, Base):
+class PermissionRole(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "permission_engine_roles"
     __table_args__ = (
         UniqueConstraint("code", name="uq_permission_engine_roles_code"),

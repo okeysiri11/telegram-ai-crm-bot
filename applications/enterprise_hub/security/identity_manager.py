@@ -23,6 +23,39 @@ class IdentityManager:
     def __init__(self, store: EnterpriseHubStore | None = None) -> None:
         self.store = store or enterprise_hub_store
 
+    def find_by_subject(self, *, subject: str) -> dict[str, Any] | None:
+        needle = subject.strip().lower()
+        for item in self.store.isam_identities.list_all():
+            if not isinstance(item, dict):
+                continue
+            if str(item.get("subject") or "").strip().lower() == needle:
+                return item
+        return None
+
+    def register_or_get(
+        self,
+        *,
+        subject: str,
+        identity_type: str = "user",
+        roles: list[str] | None = None,
+        attributes: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        existing = self.find_by_subject(subject=subject)
+        if existing is not None:
+            if attributes:
+                merged = dict(existing.get("attributes") or {})
+                merged.update(attributes)
+                existing["attributes"] = merged
+                existing["at"] = _now()
+                self.store.isam_identities.save(existing["identity_id"], existing)
+            return existing
+        return self.register(
+            subject=subject,
+            identity_type=identity_type,
+            roles=roles,
+            attributes=attributes,
+        )
+
     def register(
         self,
         *,
@@ -40,6 +73,10 @@ class IdentityManager:
         for r in role_list:
             if r not in ROLES:
                 raise ValidationError(f"role must be one of {list(ROLES)}")
+        # Idempotent when subject already exists (Google first login)
+        existing = self.find_by_subject(subject=subject)
+        if existing is not None:
+            return existing
         iid = _id("isam_id")
         return self.store.isam_identities.save(
             iid,
@@ -50,6 +87,8 @@ class IdentityManager:
                 "roles": role_list,
                 "attributes": attributes or {},
                 "status": "active",
+                "email_verified": False,
+                "mfa_enabled": False,
                 "at": _now(),
             },
         )

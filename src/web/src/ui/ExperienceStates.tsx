@@ -1,6 +1,6 @@
 /**
- * Unified experience surfaces — Sprint 32.3.5.
- * Skeleton / Empty / Success reuse EDS tokens — no parallel design system.
+ * Unified experience surfaces — Sprint 32.3.5 / EP-03 motion.
+ * Skeleton / Empty / Success reuse EDS + MDL tokens — no parallel design system.
  */
 
 import type { ReactNode } from "react";
@@ -21,7 +21,7 @@ export function Skeleton({
       {Array.from({ length: rows }).map((_, i) => (
         <div
           key={i}
-          className="eds-anim-skeleton rounded-md"
+          className="edm-skeleton"
           style={{ height, width: i === rows - 1 ? "70%" : "100%" }}
         />
       ))}
@@ -41,7 +41,7 @@ export function SuccessState({
   actionTo?: string;
 }) {
   return (
-    <Card title={title} className="eds-state eds-state-success eds-anim-scale">
+    <Card title={title} success className="eds-state eds-state-success edm-ai-done">
       <p className="eds-type-small text-[var(--eds-text-muted)]">{description || "Операция выполнена успешно."}</p>
       {actionLabel && actionTo ? (
         <div className="mt-3">
@@ -60,8 +60,14 @@ export function WidgetLoading({ label = "Загрузка…" }: { label?: strin
     <div className="eds-widget-loading eds-anim-fade">
       <span className="eds-anim-loading" aria-hidden />
       <span className="eds-type-small text-[var(--eds-text-muted)]">{label}</span>
+      <span className="edm-stream-bar w-full max-w-[12rem]" aria-hidden />
     </div>
   );
+}
+
+/** Soft refresh overlay for partial / background updates. */
+export function Refreshing({ children, active }: { children: ReactNode; active: boolean }) {
+  return <div className={active ? "edm-refreshing" : undefined}>{children}</div>;
 }
 
 export function ExperienceState({
@@ -72,18 +78,27 @@ export function ExperienceState({
   actionTo,
   children,
 }: {
-  kind: "empty" | "loading" | "error" | "success";
+  kind: "empty" | "loading" | "error" | "success" | "refreshing" | "streaming";
   title: string;
   description?: string;
   actionLabel?: string;
   actionTo?: string;
   children?: ReactNode;
 }) {
-  if (kind === "loading") {
+  if (kind === "loading" || kind === "refreshing") {
     return (
-      <Card title={title} className="eds-state eds-anim-fade">
+      <Card title={title} loading={kind === "refreshing"} className="eds-state eds-anim-fade">
+        {kind === "refreshing" ? <div className="edm-stream-bar mb-3" aria-hidden /> : null}
         <Skeleton rows={4} />
         {description ? <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">{description}</p> : null}
+      </Card>
+    );
+  }
+  if (kind === "streaming") {
+    return (
+      <Card title={title} className="eds-state edm-ai-analyzing">
+        <p className="eds-type-helper">{description || "Обновление данных…"}</p>
+        {children}
       </Card>
     );
   }
@@ -108,7 +123,7 @@ export function ExperienceState({
     );
   }
   return (
-    <Card title={title} className="eds-state eds-state-empty eds-anim-scale">
+    <Card title={title} empty className="eds-state eds-state-empty eds-anim-scale">
       <div className="eds-empty-art" aria-hidden>
         ◇
       </div>

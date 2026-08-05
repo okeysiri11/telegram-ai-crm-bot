@@ -23,6 +23,9 @@ import {
 } from "./integrationCatalog";
 import { connectIntegration, syncIntegration } from "./connectionState";
 import { deriveIntegrationHub } from "./deriveIntegrations";
+import { ProductionProviderStrip } from "./ProductionProviderStrip";
+import { PROVIDER_REGISTRY, PROVIDER_REGISTRY_META, providersByCategory } from "./providerRegistry";
+import { n8nMonitorSnapshot, N8N_UI, listWorkflowTemplates } from "./n8nBridge";
 
 const STATUS_TONE: Record<IntegrationStatus, "default" | "success" | "warning" | "danger"> = {
   active: "success",
@@ -102,10 +105,13 @@ export function EnterpriseIntegrationHubPage() {
       <div className="eih-page" data-testid="enterprise-integration-hub">
         <header className="eih-hero">
           <div>
-            <p className="eds-type-small text-[var(--eds-muted)]">Enterprise Integration Hub · Sprint 33.1</p>
+            <p className="eds-type-small text-[var(--eds-muted)]">
+              Enterprise Integration Hub · Sprint 33.1 / 31.2
+            </p>
             <h1 className="eih-title">Integrations</h1>
             <p className="eds-type-body">
-              Единая точка управления внешними интеграциями — Communication, Business, Developer.
+              Единая точка управления внешними интеграциями — Communication, Business, Developer,
+              AI Providers, n8n. Platform Runtime = system of record.
             </p>
           </div>
           <div className="eih-hero-actions">
@@ -134,6 +140,41 @@ export function EnterpriseIntegrationHubPage() {
           />
           <DashCard label="Статус" value={bundle.dashboard.statusSummary} />
         </div>
+
+        <section className="mt-4 space-y-3" aria-label="Providers and n8n" data-testid="integration-hub-providers">
+          <ProductionProviderStrip />
+          <Card title="Provider Registry" status={<Badge>{PROVIDER_REGISTRY.length}</Badge>}>
+            <p className="eds-type-helper mb-2">
+              Vault {PROVIDER_REGISTRY_META.vault} · APH {PROVIDER_REGISTRY_META.aiGateway} · SoR{" "}
+              {PROVIDER_REGISTRY_META.systemOfRecord}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {(["ai", "image", "video", "audio", "crm", "orchestration"] as const).map((c) => {
+                const rows = providersByCategory(c);
+                const ready = rows.filter((r) => r.ready).length;
+                return (
+                  <Badge key={c} tone={ready ? "success" : "default"}>
+                    {c}: {ready}/{rows.length}
+                  </Badge>
+                );
+              })}
+            </div>
+          </Card>
+          <Card title="n8n Workflow Library" status={<Badge tone="success">bridge</Badge>}>
+            <ul className="space-y-1 eds-type-small">
+              {listWorkflowTemplates().map((t) => (
+                <li key={t.id}>
+                  <strong>{t.name}</strong> · v{t.version} · {t.trigger}
+                  <span className="block eds-type-helper">{t.description}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="eds-type-helper mt-2">
+              Monitor: {JSON.stringify(n8nMonitorSnapshot().byStatus)} · UI {N8N_UI.defaultUrl} · compose{" "}
+              {N8N_UI.composeFile}
+            </p>
+          </Card>
+        </section>
 
         <div className="eih-filters">
           {INTEGRATION_CATEGORIES.map((c) => (
@@ -330,32 +371,6 @@ function DashCard({
     <div className={`eih-dash-card${tone ? ` eih-dash-card--${tone}` : ""}`}>
       <span className="eih-dash-label">{label}</span>
       <strong>{value}</strong>
-    </div>
-  );
-}
-
-export function IntegrationHubStrip() {
-  const { snapshot } = useLiveEnterprise(true);
-  const bundle = useMemo(() => deriveIntegrationHub(snapshot), [snapshot]);
-  return (
-    <div className="eih-strip" aria-label="Integration Hub">
-      <span className="eih-strip-label">Integrations</span>
-      <Badge tone="success">{bundle.dashboard.active} active</Badge>
-      {bundle.dashboard.needsSetup ? (
-        <Badge tone="warning">{bundle.dashboard.needsSetup} setup</Badge>
-      ) : null}
-      {bundle.dashboard.errors ? (
-        <Badge tone="danger">{bundle.dashboard.errors} err</Badge>
-      ) : (
-        <Badge>ok</Badge>
-      )}
-      <Link
-        to="/platform-builder/integrations"
-        className="eds-type-small text-[var(--eds-primary)]"
-        onClick={() => void telemetry.userActivity("int_hub_open")}
-      >
-        Hub →
-      </Link>
     </div>
   );
 }

@@ -304,31 +304,6 @@ function ExecStat({
   );
 }
 
-export function DataFabricStrip() {
-  const { snapshot } = useLiveEnterprise(true);
-  const notifications = useNotificationStore((s) => s.items);
-  const fabric = useMemo(() => deriveDataFabric(snapshot, { notifications }), [snapshot, notifications]);
-  return (
-    <div className="edf-strip" aria-label="Data Fabric">
-      <span className="edf-strip-label">Data Fabric</span>
-      <Badge>{fabric.executive.linkedObjects} links</Badge>
-      {fabric.executive.problemLinks ? (
-        <Badge tone="warning">{fabric.executive.problemLinks} issues</Badge>
-      ) : (
-        <Badge tone="success">healthy</Badge>
-      )}
-      <Link
-        to="/platform-builder/data-fabric"
-        className="eds-type-small text-[var(--eds-primary)]"
-        onClick={() => void telemetry.userActivity("fabric_open")}
-      >
-        Graph →
-      </Link>
-    </div>
-  );
-}
-
-/** Compact Mission Control overview — no extra navigation required. */
 export function DataFabricOverviewCompact() {
   const { snapshot } = useLiveEnterprise(true);
   const notifications = useNotificationStore((s) => s.items);

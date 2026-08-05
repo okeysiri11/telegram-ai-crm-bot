@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 
@@ -56,7 +56,7 @@ class ConsolidatedReportStatus(str, enum.Enum):
     PUBLISHED = "PUBLISHED"
 
 
-class Company(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Company(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "multi_company_v1_companies"
     __table_args__ = (
         UniqueConstraint("code", name="uq_multi_company_v1_companies_code"),
@@ -76,7 +76,7 @@ class Company(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<Company code={self.code} name={self.legal_name}>"
 
 
-class Branch(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Branch(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "multi_company_v1_branches"
     __table_args__ = (
         UniqueConstraint(
@@ -105,7 +105,7 @@ class Branch(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<Branch code={self.code} company={self.company_id}>"
 
 
-class IntercompanyTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class IntercompanyTransaction(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "multi_company_v1_intercompany_transactions"
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_multi_company_v1_ict_amount"),
@@ -159,7 +159,7 @@ class IntercompanyTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class ConsolidatedReport(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ConsolidatedReport(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "multi_company_v1_consolidated_reports"
     __table_args__ = (
         Index("ix_multi_company_v1_cr_type", "report_type"),

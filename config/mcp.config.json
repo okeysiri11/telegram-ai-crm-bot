@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "host": "127.0.0.1",
+  "port": 3100,
+  "transport": "http+stdio",
+  "authentication": {
+    "required": true,
+    "tokenHeader": "x-ados-mcp-token",
+    "defaultAdminToken": "ados-mcp-dev-token"
+  },
+  "permissions": {
+    "defaultLevel": "read",
+    "allowAnonymousRead": false
+  },
+  "runtime": {
+    "baseUrl": "http://127.0.0.1:3000"
+  },
+  "logging": {
+    "connections": true,
+    "toolCalls": true,
+    "resourceReads": true,
+    "permissionFailures": true,
+    "latency": true
+  }
+}

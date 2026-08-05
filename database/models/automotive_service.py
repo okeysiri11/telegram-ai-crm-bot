@@ -23,7 +23,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 
@@ -67,7 +67,7 @@ class WarrantyType(str, enum.Enum):
     FULL = "FULL"
 
 
-class ServiceOrder(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ServiceOrder(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_service_v1_service_orders"
     __table_args__ = (
         UniqueConstraint(
@@ -121,7 +121,7 @@ class ServiceOrder(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class ServiceOperation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ServiceOperation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_service_v1_service_operations"
     __table_args__ = (
         CheckConstraint("labor_hours >= 0", name="ck_automotive_service_v1_op_hours"),
@@ -161,7 +161,7 @@ class ServiceOperation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class ServicePart(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ServicePart(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_service_v1_service_parts"
     __table_args__ = (
         CheckConstraint("quantity > 0", name="ck_automotive_service_v1_part_qty"),
@@ -195,7 +195,7 @@ class ServicePart(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class ServiceHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class ServiceHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_service_v1_service_history"
     __table_args__ = (
         Index("ix_automotive_service_v1_sh_order_id", "service_order_id"),
@@ -219,7 +219,7 @@ class ServiceHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         )
 
 
-class WarrantyRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class WarrantyRecord(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_service_v1_warranty_records"
     __table_args__ = (
         Index("ix_automotive_service_v1_wr_vehicle_id", "vehicle_id"),

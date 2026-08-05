@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { UniversalCommandPalette } from "./UniversalCommandPalette";
 import { Omnibox } from "./Omnibox";
 import { contextEngine } from "../managers/contextEngine";
@@ -25,6 +25,20 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [omniboxOpen, setOmniboxOpen] = useState(false);
   const [aiMode, setAiMode] = useState(false);
+
+  const openPalette = useCallback(() => {
+    setAiMode(false);
+    setPaletteOpen(true);
+  }, []);
+  const openOmnibox = useCallback(() => setOmniboxOpen(true), []);
+  const openAi = useCallback(() => {
+    setAiMode(true);
+    setPaletteOpen(true);
+  }, []);
+  const close = useCallback(() => {
+    setPaletteOpen(false);
+    setOmniboxOpen(false);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -67,26 +81,20 @@ export function CommandCenterProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const value = useMemo(
+    () => ({
+      paletteOpen,
+      omniboxOpen,
+      openPalette,
+      openOmnibox,
+      openAi,
+      close,
+    }),
+    [paletteOpen, omniboxOpen, openPalette, openOmnibox, openAi, close],
+  );
+
   return (
-    <Ctx.Provider
-      value={{
-        paletteOpen,
-        omniboxOpen,
-        openPalette: () => {
-          setAiMode(false);
-          setPaletteOpen(true);
-        },
-        openOmnibox: () => setOmniboxOpen(true),
-        openAi: () => {
-          setAiMode(true);
-          setPaletteOpen(true);
-        },
-        close: () => {
-          setPaletteOpen(false);
-          setOmniboxOpen(false);
-        },
-      }}
-    >
+    <Ctx.Provider value={value}>
       {children}
       <UniversalCommandPalette
         open={paletteOpen}

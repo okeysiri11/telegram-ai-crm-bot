@@ -39,30 +39,23 @@ export type KpiCard = {
   widgetKind: string;
 };
 
-/** Default visible sections — personalization can hide later. */
+/** Default visible sections — personalization can hide later.
+ * EP-01: Morning Brief answers the 5 CEO questions; below — decision surfaces only.
+ */
 export const DEFAULT_COMMAND_LAYOUT: CommandWidgetId[] = [
-  "mission_control",
-  "activity_feed",
-  "today_overview",
-  "mission_timeline",
-  "enterprise_health",
   "business_kpi",
   "quick_actions",
-  "ai_activity",
-  "ai_recommendations",
-  "business_modules",
-  "personal_scaffold",
+  "mission_control",
+  "enterprise_health",
 ];
 
 export const QUICK_ACTIONS: QuickAction[] = [
-  { id: "create_client", label: "Создать клиента", route: "/workspace/crm", hint: "CRM" },
-  { id: "create_task", label: "Создать задачу", route: "/workspace", hint: "Tasks" },
-  { id: "create_doc", label: "Создать документ", route: "/workspace/docs", hint: "Documents" },
-  { id: "open_crm", label: "Открыть CRM", route: "/workspace/crm", hint: "CRM" },
-  { id: "ai_team", label: "AI Team", route: "/platform-builder/ai-team", hint: "AI" },
-  { id: "analytics", label: "Analytics", route: "/platform-builder/intelligence", hint: "BI" },
-  { id: "enterprise_city", label: "Enterprise City", route: "/enterprise-city", hint: "City" },
-  { id: "mission_control", label: "Mission Control", route: "/platform-builder/mission-control", hint: "MC" },
+  { id: "control_tower", label: "Decide escalations", route: "/platform-builder/control-tower", hint: "Decide" },
+  { id: "mission_control", label: "Check live health", route: "/platform-builder/mission-control", hint: "Ops" },
+  { id: "ai_concierge", label: "Ask Advisor to prioritize", route: "/platform-builder/concierge", hint: "AI" },
+  { id: "ai_team", label: "Review running agents", route: "/platform-builder/ai-team", hint: "Team" },
+  { id: "enterprise_city", label: "Glance company map", route: "/enterprise-city", hint: "Map" },
+  { id: "digital_twin", label: "Inspect Twin structure", route: "/platform-builder/digital-twin", hint: "Twin" },
 ];
 
 export const BUSINESS_MODULES: BusinessModule[] = [
@@ -84,7 +77,6 @@ export const KPI_CARDS: KpiCard[] = [
   { id: "sales", label: "Продажи", value: "₴ 1.28M", delta: "+8.2%", tone: "up", widgetKind: "kpi_cards" },
   { id: "clients", label: "Клиенты", value: "4 812", delta: "+124", tone: "up", widgetKind: "crm_summary" },
   { id: "deals", label: "Сделки", value: "186", delta: "+12", tone: "up", widgetKind: "crm_summary" },
-  { id: "documents", label: "Документы", value: "942", delta: "+31", tone: "up", widgetKind: "analytics" },
   { id: "processes", label: "Активные процессы", value: "57", delta: "stable", tone: "flat", widgetKind: "workflow_queue" },
   { id: "automation", label: "AI Automation", value: "73%", delta: "+4%", tone: "up", widgetKind: "ai_assistant" },
 ];
@@ -125,7 +117,8 @@ export const AI_ACTIVITY = {
   completed: ["Автоматизация follow-up · 12", "Классификация feedback · 8"],
 };
 
-const LAYOUT_KEY = "ewp_command_center_layout_v2";
+// EP-01 — CEO Morning layout (localStorage reset).
+const LAYOUT_KEY = "ewp_command_center_layout_v4";
 
 export function loadCommandLayout(): CommandWidgetId[] {
   try {

@@ -1,7 +1,59 @@
+# Secrets — never commit
 .env
-memory.db
+.env.local
+.env.*.local
+.env.production
+!.env.example
+
+# Python
 venv/
 .venv/
 __pycache__/
-*.pyc
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+coverage/
+*.cover
+.tox/
+.hypothesis/
+
+# Node / frontend
+node_modules/
+src/web/node_modules/
+src/web/dist/
+dist/
+*.tsbuildinfo
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
 .DS_Store
+Thumbs.db
+
+# Runtime / local data
+memory.db
+*.sqlite
+*.sqlite3
+data/media_cache/
+*.log
+
+# Docker / build
+.docker/
+
+# Cursor / agents (local)
+.cursor/projects/
+
+# Obsidian workspace noise (keep vault docs)
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+
+# Kernel build artifacts
+src/kernel/node_modules/
+src/kernel/dist/
+src/kernel/package-lock.json

@@ -1,5 +1,11 @@
-/** Enterprise Command Center — Sprint 32.3.2. */
+/** Enterprise Command Center — Sprint 32.3.2 + EP-01 Morning Brief + Sprint 27.1 modules. */
 export { MissionControlStrip } from "./MissionControlStrip";
+export { ExecutiveMorningBrief } from "./ExecutiveMorningBrief";
+export { deriveMorningBrief, type MorningBrief, type BriefItem } from "./deriveMorningBrief";
+export {
+  ENTERPRISE_MODULE_CARDS,
+  type EnterpriseModuleCard,
+} from "./enterpriseModuleCards";
 export {
   AI_ACTIVITY,
   BUSINESS_MODULES,

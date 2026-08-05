@@ -11,10 +11,10 @@ from sqlalchemy import DateTime
 from datetime import datetime
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class LeadSlaRecord(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class LeadSlaRecord(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "lead_sla_records"
     __table_args__ = (
         Index("ix_lead_sla_request", "client_request_id", unique=True),

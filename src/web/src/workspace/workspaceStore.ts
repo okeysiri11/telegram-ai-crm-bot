@@ -14,7 +14,7 @@ type WorkspaceState = {
   setWorkspace: (patch: Partial<Workspace>) => void;
 };
 
-export const useWorkspaceStore = create<WorkspaceState>((set) => ({
+export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   workspace: {
     company: "demo-corp",
     department: "operations",
@@ -23,6 +23,16 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
     permissions: ["read", "write", "admin"],
     activeModules: ["hub", "workflow", "ai", "knowledge", "marketplace"],
   },
-  setWorkspace: (patch) =>
-    set((s) => ({ workspace: { ...s.workspace, ...patch } })),
+  setWorkspace: (patch) => {
+    const cur = get().workspace;
+    let changed = false;
+    for (const key of Object.keys(patch) as (keyof Workspace)[]) {
+      if (patch[key] !== undefined && patch[key] !== cur[key]) {
+        changed = true;
+        break;
+      }
+    }
+    if (!changed) return;
+    set({ workspace: { ...cur, ...patch } });
+  },
 }));

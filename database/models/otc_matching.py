@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.deal  # noqa: F401
 import database.models.partner_engine  # noqa: F401
@@ -80,7 +80,7 @@ class OtcRouteStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
-class OtcOrder(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class OtcOrder(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "otc_v1_orders"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_otc_v1_orders_amount"),
@@ -139,7 +139,7 @@ class OtcOrder(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class OtcQuote(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class OtcQuote(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "otc_v1_quotes"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_otc_v1_quotes_amount"),
@@ -184,7 +184,7 @@ class OtcQuote(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class OtcMatch(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class OtcMatch(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "otc_v1_matches"
     __table_args__ = (
         CheckConstraint("matched_amount > 0", name="ck_otc_v1_matches_amount"),
@@ -231,7 +231,7 @@ class OtcMatch(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class OtcExecutionRoute(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class OtcExecutionRoute(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "otc_v1_execution_routes"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_otc_v1_execution_routes_amount"),
@@ -278,7 +278,7 @@ class OtcExecutionRoute(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class OtcFillHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class OtcFillHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "otc_v1_fill_history"
     __table_args__ = (
         CheckConstraint("fill_amount > 0", name="ck_otc_v1_fill_history_amount"),

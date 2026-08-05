@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 
@@ -61,7 +61,7 @@ class ImportLogAction(str, enum.Enum):
     ERROR = "ERROR"
 
 
-class ConnectorCredential(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ConnectorCredential(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_marketplace_v1_connector_credentials"
     __table_args__ = (
         UniqueConstraint(
@@ -88,7 +88,7 @@ class ConnectorCredential(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<ConnectorCredential type={self.connector_type}>"
 
 
-class VehicleImportJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleImportJob(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_marketplace_v1_vehicle_import_jobs"
     __table_args__ = (
         Index("ix_automotive_marketplace_v1_job_connector", "connector_type"),
@@ -131,7 +131,7 @@ class VehicleImportJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class VehicleImportLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class VehicleImportLog(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_marketplace_v1_vehicle_import_logs"
     __table_args__ = (
         Index("ix_automotive_marketplace_v1_log_job_id", "job_id"),

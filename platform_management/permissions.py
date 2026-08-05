@@ -58,7 +58,13 @@ def require_role(required: ManagementRole) -> Callable[[Handler], Handler]:
                 request["principal"] = principal
                 attach_principal_to_context(ctx, principal)
 
-                actor_role = await resolve_role(ctx.actor_telegram_id)
+                # Prefer JWT/API-key principal roles over telegram-only lookup (Sprint 37.2).
+                from platform_identity.identity_service import identity_service
+
+                actor_role = await identity_service.resolve_management_role(
+                    telegram_id=ctx.actor_telegram_id,
+                    principal=principal,
+                )
                 ctx.role = actor_role.value
                 if not role_allows(actor_role, required):
                     raise ManagementPermissionError(

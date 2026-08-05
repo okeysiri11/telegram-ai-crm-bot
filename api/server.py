@@ -15,13 +15,15 @@ async def db_health_handler(request: web.Request) -> web.Response:
 def create_app() -> web.Application:
     from api.crm_api import register_crm_api_routes
     from api.v1 import register_api_v1_routes
+    from middleware.security_middleware import security_middleware_stack
     from services.observability import metrics_handler, prometheus_middleware
 
-    app = web.Application(middlewares=[prometheus_middleware])
+    app = web.Application(middlewares=[*security_middleware_stack(), prometheus_middleware])
 
     # System / production readiness
     app.router.add_get("/liveness", liveness_handler)
     app.router.add_get("/readiness", readiness_handler)
+    app.router.add_get("/ready", readiness_handler)  # alias — Sprint 38.3 RC contract
     app.router.add_get("/health", health_handler)
     app.router.add_get("/system/db-health", db_health_handler)
     app.router.add_get("/metrics", metrics_handler)

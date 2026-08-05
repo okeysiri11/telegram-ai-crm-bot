@@ -64,6 +64,86 @@ class AIProviderHubLibrary:
             priority=90,
             health_score=0.88,
         )
+        gemini = self.providers.register(
+            provider_id="prov_gemini",
+            name="Google Gemini",
+            kind="google_gemini",
+            endpoint="https://generativelanguage.googleapis.com",
+            supported_models=["gemini-1.5-flash"],
+            cost_per_1k=0.1,
+            priority=25,
+            health_score=0.9,
+        )
+        openrouter = self.providers.register(
+            provider_id="prov_openrouter",
+            name="OpenRouter",
+            kind="openrouter",
+            endpoint="https://openrouter.ai/api/v1",
+            supported_models=["openrouter/auto"],
+            cost_per_1k=0.12,
+            priority=30,
+            health_score=0.91,
+        )
+        deepseek = self.providers.register(
+            provider_id="prov_deepseek",
+            name="DeepSeek",
+            kind="deepseek",
+            endpoint="https://api.deepseek.com",
+            supported_models=["deepseek-chat"],
+            cost_per_1k=0.05,
+            priority=35,
+            health_score=0.89,
+        )
+        mistral = self.providers.register(
+            provider_id="prov_mistral",
+            name="Mistral",
+            kind="mistral",
+            endpoint="https://api.mistral.ai",
+            supported_models=["mistral-small"],
+            cost_per_1k=0.08,
+            priority=40,
+            health_score=0.9,
+        )
+        groq = self.providers.register(
+            provider_id="prov_groq",
+            name="Groq",
+            kind="groq",
+            endpoint="https://api.groq.com/openai/v1",
+            supported_models=["llama-3.1-8b"],
+            cost_per_1k=0.04,
+            priority=15,
+            health_score=0.93,
+        )
+        xai = self.providers.register(
+            provider_id="prov_xai",
+            name="xAI Grok",
+            kind="xai",
+            endpoint="https://api.x.ai/v1",
+            supported_models=["grok-beta"],
+            cost_per_1k=0.2,
+            priority=45,
+            health_score=0.87,
+        )
+        ollama = self.providers.register(
+            provider_id="prov_ollama",
+            name="Ollama",
+            kind="ollama",
+            endpoint="http://localhost:11434",
+            supported_models=["llama3.2"],
+            cost_per_1k=0.0,
+            priority=85,
+            health_score=0.86,
+        )
+        litellm = self.providers.register(
+            provider_id="prov_litellm",
+            name="LiteLLM Gateway",
+            kind="litellm",
+            endpoint="http://localhost:4000",
+            supported_models=["litellm/proxy"],
+            cost_per_1k=0.0,
+            priority=5,
+            health_score=0.94,
+        )
         m1 = self.models.register(
             model_id="gpt-4o-mini",
             provider_id="prov_openai",
@@ -88,11 +168,29 @@ class AIProviderHubLibrary:
             cost_per_1k=0.01,
             capabilities=["chat", "secure_local"],
         )
-        route = self.router.route(task_type="general_chat", models=[m1, m2, m3], prefer_quality=True)
+        m4 = self.models.register(
+            model_id="gemini-1.5-flash",
+            provider_id="prov_gemini",
+            quality_score=0.84,
+            speed_score=0.92,
+            cost_per_1k=0.1,
+            capabilities=["chat", "vision"],
+        )
+        m5 = self.models.register(
+            model_id="llama-3.1-8b",
+            provider_id="prov_groq",
+            quality_score=0.78,
+            speed_score=0.98,
+            cost_per_1k=0.04,
+            capabilities=["chat", "code"],
+        )
+        route = self.router.route(task_type="general_chat", models=[m1, m2, m3, m4, m5], prefer_quality=True)
         fb = self.fallback.execute(
             chain=[
+                {"provider_id": "prov_litellm", "model_id": "litellm/proxy"},
                 {"provider_id": "prov_openai", "model_id": "gpt-4o-mini"},
                 {"provider_id": "prov_anthropic", "model_id": "claude-haiku"},
+                {"provider_id": "prov_groq", "model_id": "llama-3.1-8b"},
                 {"provider_id": "local_corporate", "model_id": "corp-llm"},
             ],
             fail_until=1,
@@ -120,11 +218,24 @@ class AIProviderHubLibrary:
         )
         sec = self.security.protect(
             secret_ref="vault://providers/openai/api_key",
-            allowed_models=["gpt-4o-mini", "claude-haiku", "corp-llm"],
+            allowed_models=["gpt-4o-mini", "claude-haiku", "corp-llm", "gemini-1.5-flash", "llama-3.1-8b"],
             actor="platform_owner",
             action="bootstrap",
         )
         links = self.integrations.link()
+        providers_full = [
+            openai,
+            anthropic,
+            local,
+            gemini,
+            openrouter,
+            deepseek,
+            mistral,
+            groq,
+            xai,
+            ollama,
+            litellm,
+        ]
         return {
             "bootstrap": True,
             "principles": self.principles(),
@@ -141,8 +252,8 @@ class AIProviderHubLibrary:
             "integrations": links,
             "full": {
                 "catalog": catalog,
-                "providers": [openai, anthropic, local],
-                "models": [m1, m2, m3],
+                "providers": providers_full,
+                "models": [m1, m2, m3, m4, m5],
                 "route": route,
                 "fallback": fb,
                 "prompt": prompt,

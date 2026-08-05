@@ -15,7 +15,7 @@ describe("Sprint 32.1 Enterprise Multi-Agent OS", () => {
   });
 
   it("web sprint is 33.2 Intelligent Navigation track", () => {
-    expect(webConfig.sprint).toBe("33.2");
+    expect(webConfig.sprint).toBe("33.2.1");
   });
 
   it("registry covers executive + production roles", () => {

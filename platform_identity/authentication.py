@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import uuid
 from typing import Any
 
 from aiohttp import web
@@ -62,6 +63,9 @@ class AuthenticationService:
 
     async def authenticate_telegram(self, telegram_id: int) -> Principal:
         from config import OWNER_ID
+        from platform_identity.registries.permission_registry import defaults_for_roles, expand_permissions
+        from platform_identity.registries.role_registry import normalize_roles
+        from platform_identity.registries.workspace_registry import normalize_workspace_codes
 
         if OWNER_ID is not None and telegram_id == OWNER_ID:
             roles = [PlatformRole.OWNER.value]
@@ -70,15 +74,45 @@ class AuthenticationService:
             roles = await role_service.roles_for_telegram_user(telegram_id)
             auth_method = AuthMethod.TELEGRAM_USER
 
+        roles = normalize_roles(roles) or roles
         permissions = sorted(
             await permission_service.resolve_user_permissions(telegram_id, roles)
         )
+        permissions = expand_permissions(permissions)
+        # Ensure registry defaults when DB grants are sparse
+        for p in defaults_for_roles(roles):
+            if p not in permissions:
+                permissions.append(p)
+        permissions = sorted(set(permissions))
+
+        user_id: str | None = None
+        email: str | None = None
+        display_name: str | None = None
+        workspaces: list[str] = []
+        try:
+            from platform_identity.user_resolver import user_resolver
+
+            snap = await user_resolver.ensure_telegram_user(telegram_id)
+            user_id = snap.get("id")
+            email = snap.get("email")
+            display_name = snap.get("display_name")
+            workspaces = list(snap.get("workspaces") or [])
+            if user_id:
+                await user_resolver.touch_login(uuid.UUID(user_id))
+        except Exception as exc:  # noqa: BLE001 — auth must work without DB in unit tests
+            logger.debug("user resolve skipped for telegram %s: %s", telegram_id, exc)
+
+        principal_id = f"user:{user_id}" if user_id else f"telegram:{telegram_id}"
         return Principal(
-            principal_id=f"telegram:{telegram_id}",
+            principal_id=principal_id,
             auth_method=auth_method,
             roles=roles,
             permissions=permissions,
             telegram_id=telegram_id,
+            user_id=user_id,
+            email=email,
+            display_name=display_name,
+            workspaces=normalize_workspace_codes(workspaces),
         )
 
     async def authenticate_service_account(self, account_id: str, *, roles: list[str] | None = None) -> Principal:
@@ -115,6 +149,7 @@ class AuthenticationService:
             roles=principal.roles,
             permissions=principal.permissions,
             telegram_id=telegram_id,
+            user_id=principal.user_id,
             session_id=session.session_id,
         )
         session.refresh_token_id = jwt_svc.fingerprint(tokens.refresh_token)
@@ -183,6 +218,7 @@ async def _authenticate_jwt(token: str) -> Principal:
         roles=roles,
         permissions=permissions,
         telegram_id=telegram_id,
+        user_id=claims.get("user_id"),
         session_id=session_id,
     )
 

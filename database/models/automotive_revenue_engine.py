@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class RevenueServiceType(str, enum.Enum):
@@ -59,7 +59,7 @@ REVENUE_SERVICE_TYPES = frozenset(s.value for s in RevenueServiceType)
 COMMISSION_STATUSES = frozenset(s.value for s in CommissionStatus)
 
 
-class AutomotivePartnerLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotivePartnerLead(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner-attributed lead (logical: partner_leads)."""
 
     __tablename__ = "automotive_revenue_v1_partner_leads"
@@ -100,7 +100,7 @@ class AutomotivePartnerLead(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotivePartnerLead partner={self.partner_id} lead={self.lead_id}>"
 
 
-class AutomotivePartnerCommission(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotivePartnerCommission(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner commission accrual (logical: partner_commissions)."""
 
     __tablename__ = "automotive_revenue_v1_partner_commissions"
@@ -147,7 +147,7 @@ class AutomotivePartnerCommission(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotivePartnerCommission partner={self.partner_id} amount={self.commission_amount}>"
 
 
-class AutomotivePartnerSettlement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotivePartnerSettlement(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner settlement batch (logical: partner_settlements)."""
 
     __tablename__ = "automotive_revenue_v1_partner_settlements"
@@ -183,7 +183,7 @@ class AutomotivePartnerSettlement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotivePartnerSettlement partner={self.partner_id} total={self.total_amount}>"
 
 
-class AutomotivePartnerPayout(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotivePartnerPayout(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner payout record (logical: partner_payouts)."""
 
     __tablename__ = "automotive_revenue_v1_partner_payouts"
@@ -219,7 +219,7 @@ class AutomotivePartnerPayout(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotivePartnerPayout partner={self.partner_id} amount={self.amount}>"
 
 
-class AutomotiveDealCommission(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotiveDealCommission(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Deal-level commission (logical: deal_commissions)."""
 
     __tablename__ = "automotive_revenue_v1_deal_commissions"
@@ -260,7 +260,7 @@ class AutomotiveDealCommission(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotiveDealCommission deal={self.deal_id} amount={self.commission_amount}>"
 
 
-class AutomotiveDealProfit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotiveDealProfit(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Deal profit snapshot (logical: deal_profit)."""
 
     __tablename__ = "automotive_revenue_v1_deal_profit"
@@ -292,7 +292,7 @@ class AutomotiveDealProfit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotiveDealProfit deal={self.deal_id} profit={self.profit}>"
 
 
-class AutomotiveDealerReferral(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotiveDealerReferral(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Dealer referral tracking (logical: dealer_referrals)."""
 
     __tablename__ = "automotive_revenue_v1_dealer_referrals"

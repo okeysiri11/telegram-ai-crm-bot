@@ -46,9 +46,9 @@ def test_web_core_docs_exist():
 
 def test_platform_web_core_version():
     health = platform_builder.health()
-    assert health["application_version"] == "1.66.0"
-    assert health["sprint"] == "34.0"
-    assert health["release_status"] == "Enterprise Platform v1.0 Release Candidate"
+    assert health["application_version"] == "1.67.0"
+    assert health["sprint"] == "1.1.1"
+    assert health["release_status"] == "Enterprise Platform v1.1 General Availability"
     assert health["mission_control_ready"] is True
     assert health["business_ecosystem_foundation_ready"] is True
     assert health["mission_control"]["replaces_existing_modules"] is False
@@ -103,9 +103,9 @@ def test_shared_ui_and_observability_extensions():
 
 def test_manifest_and_audit_index():
     manifest = (ROOT / "applications" / "platform_builder" / "manifest.json").read_text()
-    assert '"application_version": "1.66.0"' in manifest
+    assert '"application_version": "1.67.0"' in manifest
     assert "33.6" in manifest
-    assert "Release Candidate" in manifest
+    assert "General Availability" in manifest
     index = (ROOT / "docs" / "ARCHITECTURE_AUDIT_INDEX.md").read_text()
     assert "WEB_CORE_30_5" in index
 

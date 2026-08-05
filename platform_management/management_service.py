@@ -189,7 +189,7 @@ class ManagementService:
         from platform_sdk.vertical_registry import vertical_registry
 
         items = []
-        for entry in vertical_registry.list():
+        for entry in vertical_registry.list_verticals():
             code = entry["code"]
             detail = await ManagementService.get_vertical(code)
             items.append(detail)
@@ -207,7 +207,7 @@ class ManagementService:
         except Exception as exc:
             raise ManagementNotFoundError(f"Vertical not found: {code}") from exc
 
-        entry = next((e for e in vertical_registry.list() if e["code"] == key), {})
+        entry = next((e for e in vertical_registry.list_verticals() if e["code"] == key), {})
         sla = config_provider.sla_settings()
         return {
             **entry,

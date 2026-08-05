@@ -9,10 +9,10 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import UUIDPrimaryKeyMixin
+from database.models.mixins import UUIDPrimaryKeyMixin, VersionMixin
 
 
-class AuditEventRow(UUIDPrimaryKeyMixin, Base):
+class AuditEventRow(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "audit_events"
     __table_args__ = (
         Index("ix_audit_events_created_at", "created_at"),

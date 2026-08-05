@@ -26,7 +26,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class VerificationLevel(str, enum.Enum):
@@ -84,7 +84,7 @@ class RiskLevel(str, enum.Enum):
     CRITICAL = "CRITICAL"
 
 
-class KycProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class KycProfile(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "kyc_engine_profiles"
     __table_args__ = (
         UniqueConstraint("user_id", name="uq_kyc_engine_profiles_user_id"),
@@ -124,7 +124,7 @@ class KycProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class KycDocument(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class KycDocument(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "kyc_engine_documents"
     __table_args__ = (
         Index("ix_kyc_engine_documents_profile_id", "profile_id"),
@@ -166,7 +166,7 @@ class KycDocument(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class SanctionsCheck(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SanctionsCheck(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "kyc_engine_sanctions_checks"
     __table_args__ = (
         Index("ix_kyc_engine_sanctions_checks_profile_id", "profile_id"),
@@ -207,7 +207,7 @@ class SanctionsCheck(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class RiskProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RiskProfile(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "kyc_engine_risk_profiles"
     __table_args__ = (
         UniqueConstraint("profile_id", name="uq_kyc_engine_risk_profiles_profile_id"),

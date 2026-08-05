@@ -47,9 +47,12 @@ def test_validation_passes_in_development():
 def test_validation_fail_fast_on_insecure_production_jwt(monkeypatch):
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("IAM_JWT_SECRET", "change-me-in-production")
+    monkeypatch.setenv("JWT_SECRET", "change-me-in-production")
+    monkeypatch.setenv("API_JWT_SECRET", "change-me-in-production-api-jwt-secret")
+    monkeypatch.delenv("SECURITY_MASTER_KEY", raising=False)
     center = ConfigurationCenter()
     center.load()
-    with pytest.raises(RuntimeError, match="IAM_JWT_SECRET"):
+    with pytest.raises(RuntimeError, match="IAM_JWT_SECRET|JWT_SECRET|SECURITY_MASTER_KEY"):
         center.validate(fail_fast=True)
 
 
@@ -98,6 +101,7 @@ def test_missing_redis_required_in_production(monkeypatch):
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("POSTGRES_ONLY", "true")
     monkeypatch.setenv("REDIS_URL", "")
+    monkeypatch.delenv("REDIS_REQUIRED", raising=False)
     center = ConfigurationCenter()
     center.load()
     report = center.validate()

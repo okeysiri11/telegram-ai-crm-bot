@@ -27,3 +27,14 @@ Onboard the first external pilot organizations onto the completed seven-ecosyste
 ## Rules
 
 No new ecosystems. No duplicated APIs or AI. Reuse Tenancy, EON, EPR, Ecosystem invitations, ISAM, OBS.
+
+## GA overlay (EP-08)
+
+After org activation, walk the owner through:
+
+1. Morning Brief (`/dashboard?mode=executive`)
+2. Enterprise City
+3. Mission Control → AI Concierge → Control Tower
+4. Sign-off via `docs/PILOT_CHECKLIST.md`
+
+Product certification: `docs/ENTERPRISE_PLATFORM_V1_GA.md`.

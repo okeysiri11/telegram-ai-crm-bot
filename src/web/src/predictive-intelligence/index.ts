@@ -9,8 +9,5 @@ export type {
   ExecutiveForecast,
   TwinForecastZone,
 } from "./derivePredictive";
-export {
-  PredictiveIntelligencePage,
-  PredictiveStrip,
-  PredictiveWidgetCompact,
-} from "./PredictiveIntelligencePage";
+export { PredictiveIntelligencePage, PredictiveWidgetCompact } from "./PredictiveIntelligencePage";
+export { PredictiveStrip } from "./PredictiveStrip";

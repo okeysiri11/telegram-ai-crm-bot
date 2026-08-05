@@ -1,13 +1,22 @@
 import type { InputHTMLAttributes } from "react";
 import { cn } from "@/utils/cn";
 
-export function Input({ className, ...rest }: InputHTMLAttributes<HTMLInputElement>) {
+type Props = InputHTMLAttributes<HTMLInputElement> & {
+  sizeVariant?: "sm" | "md" | "lg";
+  invalid?: boolean;
+};
+
+export function Input({ className, sizeVariant = "md", invalid, ...rest }: Props) {
   return (
     <input
       className={cn(
-        "h-10 w-full rounded-md border border-[var(--ew-border)] bg-[var(--ew-surface)] px-3 text-sm outline-none focus:ring-2 focus:ring-[var(--ew-brand)]",
+        "eds-control",
+        sizeVariant === "sm" && "eds-control--sm",
+        sizeVariant === "lg" && "eds-control--lg",
+        invalid && "border-[var(--eds-danger)]",
         className,
       )}
+      aria-invalid={invalid || undefined}
       {...rest}
     />
   );

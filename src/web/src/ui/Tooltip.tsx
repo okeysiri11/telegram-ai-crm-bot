@@ -4,7 +4,7 @@ export function Tooltip({ label, children }: { label: string; children: ReactNod
   return (
     <span className="group relative inline-flex">
       {children}
-      <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded bg-black px-2 py-1 text-xs text-white group-hover:block">
+      <span className="pointer-events-none absolute bottom-full left-1/2 z-[var(--eds-z-modal)] mb-[var(--eds-space-1)] hidden -translate-x-1/2 whitespace-nowrap rounded-[var(--eds-radius-md)] bg-[var(--eds-text)] px-[var(--eds-space-2)] py-[var(--eds-space-1)] text-xs text-[var(--eds-surface)] shadow-[var(--eds-shadow-md)] group-hover:block">
         {label}
       </span>
     </span>

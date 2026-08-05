@@ -13,8 +13,5 @@ export type {
   McGoalsBlock,
   GoalStatus,
 } from "./deriveOkr";
-export {
-  EnterpriseOkrPage,
-  OkrStrip,
-  EnterpriseGoalsWidgetCompact,
-} from "./EnterpriseOkrPage";
+export { EnterpriseOkrPage, EnterpriseGoalsWidgetCompact } from "./EnterpriseOkrPage";
+export { OkrStrip } from "./OkrStrip";

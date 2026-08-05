@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class SlaTrafficLight(str, enum.Enum):
@@ -25,7 +25,7 @@ SLA_YELLOW_MAX_MINUTES = 60
 SLA_OVERDUE_MINUTES = 15
 
 
-class SlaTrackingV1Entry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SlaTrackingV1Entry(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "sla_tracking_v1_entries"
     __table_args__ = (
         Index("ix_sla_tracking_v1_lead", "lead_id"),

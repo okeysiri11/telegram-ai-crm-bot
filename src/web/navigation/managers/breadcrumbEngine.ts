@@ -8,7 +8,7 @@ import { labelForSegment } from "../../src/workspace-chrome/workspaceContext";
 export const breadcrumbEngine = {
   fromPath(pathname: string): BreadcrumbPart[] {
     const parts = pathname.split("/").filter(Boolean);
-    const crumbs: BreadcrumbPart[] = [{ label: "Enterprise", path: "/dashboard", level: "workspace" }];
+    const crumbs: BreadcrumbPart[] = [{ label: "Главная", path: "/dashboard", level: "workspace" }];
     if (parts.length === 0) {
       return crumbs;
     }

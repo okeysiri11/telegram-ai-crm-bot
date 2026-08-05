@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class WebhookSubscriptionStatus(str, enum.Enum):
@@ -43,7 +43,7 @@ class WebhookRetryStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
-class WebhookSubscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class WebhookSubscription(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "webhook_engine_v1_webhook_subscriptions"
     __table_args__ = (
         Index("ix_webhook_engine_v1_sub_status", "status"),
@@ -68,7 +68,7 @@ class WebhookSubscription(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<WebhookSubscription name={self.name} url={self.target_url}>"
 
 
-class WebhookDelivery(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class WebhookDelivery(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "webhook_engine_v1_webhook_deliveries"
     __table_args__ = (
         Index("ix_webhook_engine_v1_del_subscription", "subscription_id"),
@@ -111,7 +111,7 @@ class WebhookDelivery(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class WebhookFailure(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class WebhookFailure(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "webhook_engine_v1_webhook_failures"
     __table_args__ = (
         Index("ix_webhook_engine_v1_fail_delivery", "delivery_id"),
@@ -137,7 +137,7 @@ class WebhookFailure(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<WebhookFailure delivery={self.delivery_id} attempt={self.attempt_number}>"
 
 
-class WebhookRetry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class WebhookRetry(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "webhook_engine_v1_webhook_retries"
     __table_args__ = (
         Index("ix_webhook_engine_v1_retry_delivery", "delivery_id"),

@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class SkillCode(str, enum.Enum):
@@ -43,7 +43,7 @@ class SkillHandoffStatus(str, enum.Enum):
     CLOSED = "CLOSED"
 
 
-class TenantSkillProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantSkillProfile(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_skill_engine_v1_tenant_profiles"
     __table_args__ = (
         UniqueConstraint("tenant_id", name="uq_ai_skill_engine_v1_profiles_tenant"),
@@ -77,7 +77,7 @@ class TenantSkillProfile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<TenantSkillProfile tenant={self.tenant_id} name={self.dealership_name}>"
 
 
-class TenantSkillConfig(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantSkillConfig(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_skill_engine_v1_skill_configs"
     __table_args__ = (
         UniqueConstraint(
@@ -107,7 +107,7 @@ class TenantSkillConfig(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<TenantSkillConfig tenant={self.tenant_id} skill={self.skill_code}>"
 
 
-class SkillHandoff(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SkillHandoff(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_skill_engine_v1_handoffs"
     __table_args__ = (
         Index("ix_ai_skill_engine_v1_handoffs_tenant", "tenant_id"),
@@ -140,7 +140,7 @@ class SkillHandoff(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SkillHandoff tenant={self.tenant_id} manager={self.manager_id}>"
 
 
-class SkillExecution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SkillExecution(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_skill_engine_v1_executions"
     __table_args__ = (
         Index("ix_ai_skill_engine_v1_executions_tenant", "tenant_id"),

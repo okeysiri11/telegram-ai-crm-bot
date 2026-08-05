@@ -42,7 +42,7 @@ def test_viewport_culling():
     health = platform_builder.health()
     assert health["viewport_engine_ready"] is True
     assert health["layer_system_ready"] is True
-    assert health["application_version"] == "1.66.0"
+    assert health["application_version"] == "1.67.0"
 
     vp = ViewportEngine()
     objects = [

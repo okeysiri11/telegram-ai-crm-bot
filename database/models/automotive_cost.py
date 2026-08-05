@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_inventory  # noqa: F401
 
@@ -54,7 +54,7 @@ class MarginRuleType(str, enum.Enum):
     TIERED = "TIERED"
 
 
-class VehicleCost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleCost(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_cost_v1_vehicle_costs"
     __table_args__ = (
         UniqueConstraint("vehicle_id", name="uq_automotive_cost_v1_vehicle_costs_vehicle_id"),
@@ -98,7 +98,7 @@ class VehicleCost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class VehicleCostItem(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class VehicleCostItem(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_cost_v1_vehicle_cost_items"
     __table_args__ = (
         Index("ix_automotive_cost_v1_vci_vehicle_id", "vehicle_id"),
@@ -121,7 +121,7 @@ class VehicleCostItem(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         )
 
 
-class VehicleMarginRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VehicleMarginRule(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_cost_v1_vehicle_margin_rules"
     __table_args__ = (
         Index("ix_automotive_cost_v1_vmr_is_active", "is_active"),

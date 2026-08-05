@@ -622,6 +622,58 @@ def register_management_routes(app: web.Application) -> None:
 
     register_identity_routes(app)
 
+    from platform_registry.router import register_platform_registry_routes
+
+    register_platform_registry_routes(app)
+
+    from platform_state.router import register_platform_state_routes
+
+    register_platform_state_routes(app)
+
+    from platform_service_builder.router import register_service_builder_routes
+
+    register_service_builder_routes(app)
+
+    from platform_enterprise_event_bus.router import register_enterprise_event_bus_routes
+
+    register_enterprise_event_bus_routes(app)
+
+    from platform_workflow.router import register_workflow_runtime_routes
+
+    register_workflow_runtime_routes(app)
+
+    from platform_ai.router import register_ai_runtime_routes
+
+    register_ai_runtime_routes(app)
+
+    from platform_memory.router import register_context_engine_routes
+
+    register_context_engine_routes(app)
+
+    from platform_memory.project_memory_router import register_project_memory_routes
+
+    register_project_memory_routes(app)
+
+    from platform_ai.voice_router import register_voice_runtime_routes
+
+    register_voice_runtime_routes(app)
+
+    from platform_orchestrator.multi_agent_router import register_multi_agent_runtime_routes
+
+    register_multi_agent_runtime_routes(app)
+
+    from platform_ai.skills_sdk_router import register_skills_sdk_routes
+
+    register_skills_sdk_routes(app)
+
+    from platform_ai.creative_router import register_creative_factory_routes
+
+    register_creative_factory_routes(app)
+
+    from platform_orchestrator.city_runtime_router import register_enterprise_city_runtime_routes
+
+    register_enterprise_city_runtime_routes(app)
+
     from platform_integrations.integration_router import register_integration_routes
 
     register_integration_routes(app)

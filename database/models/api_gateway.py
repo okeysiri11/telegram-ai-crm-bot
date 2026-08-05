@@ -22,7 +22,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class ApiClientStatus(str, enum.Enum):
@@ -37,7 +37,7 @@ class ApiKeyStatus(str, enum.Enum):
     EXPIRED = "EXPIRED"
 
 
-class ApiClient(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ApiClient(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "api_gateway_v1_api_clients"
     __table_args__ = (
         UniqueConstraint("client_id", name="uq_api_gateway_v1_clients_client_id"),
@@ -60,7 +60,7 @@ class ApiClient(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<ApiClient client_id={self.client_id} name={self.name}>"
 
 
-class ApiKey(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ApiKey(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "api_gateway_v1_api_keys"
     __table_args__ = (
         Index("ix_api_gateway_v1_keys_client_id", "client_id"),
@@ -95,7 +95,7 @@ class ApiKey(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<ApiKey prefix={self.key_prefix} client={self.client_id}>"
 
 
-class ApiUsageLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class ApiUsageLog(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "api_gateway_v1_api_usage_logs"
     __table_args__ = (
         Index("ix_api_gateway_v1_usage_client_id", "client_id"),
@@ -128,7 +128,7 @@ class ApiUsageLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<ApiUsageLog {self.method} {self.path} status={self.status_code}>"
 
 
-class ApiRateLimit(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ApiRateLimit(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "api_gateway_v1_api_rate_limits"
     __table_args__ = (
         CheckConstraint("requests_per_minute > 0", name="ck_api_gateway_v1_rl_rpm"),

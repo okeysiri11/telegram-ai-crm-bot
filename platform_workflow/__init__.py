@@ -30,6 +30,11 @@ from platform_workflow.workflow_events import (
     WorkflowFailedEvent,
 )
 
+# Sprint 36.2 — graph runtime / registry façade
+from platform_workflow.registry import WorkflowRegistry, workflow_registry
+from platform_workflow.runtime_engine import WorkflowRuntimeEngine, workflow_runtime
+from platform_workflow.service import WorkflowRuntimeService, workflow_runtime_service
+
 __all__ = [
     "AgentAssignmentService",
     "DEFAULT_WORKFLOW_CONFIG",
@@ -58,10 +63,16 @@ __all__ = [
     "WorkflowMetrics",
     "WorkflowStatus",
     "WorkflowStep",
+    "WorkflowRegistry",
+    "WorkflowRuntimeEngine",
+    "WorkflowRuntimeService",
     "agent_assignment_service",
     "human_assignment_service",
     "task_engine",
     "task_queue",
     "workflow_engine",
     "workflow_metrics",
+    "workflow_registry",
+    "workflow_runtime",
+    "workflow_runtime_service",
 ]

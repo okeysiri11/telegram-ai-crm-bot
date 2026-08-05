@@ -13,6 +13,7 @@ import jwt
 from platform_configuration.configuration_center import configuration_center
 from platform_identity.exceptions import TokenError
 from platform_identity.models import TokenPair
+from platform_security.jwt_secrets import resolve_iam_signing_secret, validate_signing_secret
 
 logger = logging.getLogger(__name__)
 
@@ -29,16 +30,12 @@ REFRESH_TOKEN_DAYS = _jwt_settings().refresh_token_days
 
 
 def get_jwt_secret() -> str:
-    secret = _jwt_settings().iam_secret or _jwt_settings().secret
-    return secret.strip()
+    """Canonical IAM signing secret (TD-57 — single path)."""
+    return resolve_iam_signing_secret()
 
 
 def validate_iam_jwt_secret() -> None:
-    secret = get_jwt_secret()
-    if not secret or secret == _DEFAULT_INSECURE_SECRET:
-        raise RuntimeError(
-            "IAM_JWT_SECRET must be set to a secure value (not empty and not 'change-me-in-production')"
-        )
+    validate_signing_secret()
 
 
 IAM_JWT_SECRET = get_jwt_secret()
@@ -60,6 +57,7 @@ class JwtService:
         roles: list[str],
         permissions: list[str],
         telegram_id: int | None = None,
+        user_id: str | None = None,
         session_id: str | None = None,
         extra: dict[str, Any] | None = None,
     ) -> TokenPair:
@@ -75,6 +73,7 @@ class JwtService:
             roles=roles,
             permissions=permissions,
             telegram_id=telegram_id,
+            user_id=user_id,
             session_id=session_id,
             token_type="access",
             jti=token_id,
@@ -86,6 +85,7 @@ class JwtService:
             roles=roles,
             permissions=permissions,
             telegram_id=telegram_id,
+            user_id=user_id,
             session_id=session_id,
             token_type="refresh",
             jti=refresh_id,
@@ -122,6 +122,7 @@ class JwtService:
             roles=list(claims.get("roles", [])),
             permissions=list(claims.get("permissions", [])),
             telegram_id=claims.get("telegram_id"),
+            user_id=claims.get("user_id"),
             session_id=claims.get("session_id"),
         )
 
@@ -161,6 +162,7 @@ class JwtService:
         roles: list[str],
         permissions: list[str],
         telegram_id: int | None,
+        user_id: str | None = None,
         session_id: str | None,
         token_type: str,
         jti: str,
@@ -178,6 +180,8 @@ class JwtService:
         }
         if telegram_id is not None:
             payload["telegram_id"] = telegram_id
+        if user_id:
+            payload["user_id"] = user_id
         if session_id:
             payload["session_id"] = session_id
         if extra:

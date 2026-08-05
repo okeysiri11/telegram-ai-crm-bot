@@ -19,6 +19,16 @@ export const hubIntegrations = {
   tenancy: "/api/enterprise-tenancy/v1",
   onboarding: "/api/enterprise-eon/v1",
   ecosystem: "/api/ecosystem/v1",
+  businessNetwork: webConfig.ebnPrefix,
+  digitalCitizen: webConfig.edcPrefix,
+  lifeEngine: webConfig.lifePrefix,
+  assets: webConfig.assetPrefix,
+  spatial: webConfig.spatialPrefix,
+  cityVisualization: webConfig.cityVizPrefix,
+  interaction: webConfig.interactionPrefix,
+  intelligence: webConfig.intelligencePrefix,
+  orchestrator: webConfig.orchestratorPrefix,
+  kernel: webConfig.kernelPrefix,
   secretsVault: "/api/enterprise-esh/v1",
   releasePlatform: "/api/enterprise-erl/v1",
   operationsCenter: "/api/enterprise-eoc/v1",
@@ -49,6 +59,9 @@ export const hubIntegrations = {
   precisionAgriculture: webConfig.precisionAgriculturePrefix,
   aiMarketingOs: webConfig.aiMarketingOsPrefix,
   commerceCore: webConfig.commerceCorePrefix,
+  aiProviderHub: "/api/enterprise-aph/v1",
+  n8nBridge: "/integrations/n8n",
+  litellmGateway: import.meta.env.VITE_LITELLM_URL || "http://localhost:4000",
 } as const;
 
 export async function fetchWebFoundationHealth(): Promise<Record<string, unknown>> {

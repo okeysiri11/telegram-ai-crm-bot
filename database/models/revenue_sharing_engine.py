@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class RevenueShareModel(str, enum.Enum):
@@ -51,7 +51,7 @@ class SettlementStatus(str, enum.Enum):
     FAILED = "FAILED"
 
 
-class RevenueShareAgreement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RevenueShareAgreement(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "revenue_sharing_engine_v1_agreements"
     __table_args__ = (
         UniqueConstraint(
@@ -91,7 +91,7 @@ class RevenueShareAgreement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<RevenueShareAgreement partner={self.partner_ref} model={self.model_type}>"
 
 
-class RevenueShareCalculation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RevenueShareCalculation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "revenue_sharing_engine_v1_calculations"
     __table_args__ = (
         UniqueConstraint(
@@ -120,7 +120,7 @@ class RevenueShareCalculation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<RevenueShareCalculation agreement={self.agreement_id} total={self.total_amount}>"
 
 
-class RevenueShareReport(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RevenueShareReport(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "revenue_sharing_engine_v1_reports"
     __table_args__ = (
         UniqueConstraint(
@@ -155,7 +155,7 @@ class RevenueShareReport(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<RevenueShareReport agreement={self.agreement_id} month={self.report_month}>"
 
 
-class RevenueShareSettlement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RevenueShareSettlement(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "revenue_sharing_engine_v1_settlements"
     __table_args__ = (
         Index("ix_revenue_sharing_engine_v1_settlements_agreement", "agreement_id"),

@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class FinancialSettlementStatus(str, enum.Enum):
@@ -49,7 +49,7 @@ FINANCIAL_SETTLEMENT_STATUSES = frozenset(s.value for s in FinancialSettlementSt
 FINANCIAL_COMMISSION_STATUSES = frozenset(s.value for s in FinancialCommissionStatus)
 
 
-class FinancialSettlementV1Revenue(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class FinancialSettlementV1Revenue(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     """Revenue record created when a payment is confirmed."""
 
     __tablename__ = "financial_settlement_v1_revenues"
@@ -79,7 +79,7 @@ class FinancialSettlementV1Revenue(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     currency: Mapped[str] = mapped_column(String(10), default="USD", nullable=False)
 
 
-class FinancialSettlementV1Settlement(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class FinancialSettlementV1Settlement(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "financial_settlement_v1_settlements"
     __table_args__ = (
         UniqueConstraint("payment_id", name="uq_fin_settlement_v1_settlement_payment"),
@@ -127,7 +127,7 @@ class FinancialSettlementV1Settlement(UUIDPrimaryKeyMixin, TimestampMixin, Base)
     )
 
 
-class FinancialSettlementV1Commission(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class FinancialSettlementV1Commission(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "financial_settlement_v1_commissions"
     __table_args__ = (
         Index("ix_fin_settlement_v1_comm_settlement", "settlement_id"),
@@ -151,7 +151,7 @@ class FinancialSettlementV1Commission(UUIDPrimaryKeyMixin, CreatedAtMixin, Base)
     )
 
 
-class FinancialSettlementV1TreasuryTransaction(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class FinancialSettlementV1TreasuryTransaction(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "financial_settlement_v1_treasury_transactions"
     __table_args__ = (
         Index("ix_fin_settlement_v1_treasury_payment", "payment_id"),

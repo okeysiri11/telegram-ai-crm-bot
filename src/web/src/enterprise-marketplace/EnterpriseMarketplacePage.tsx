@@ -5,7 +5,7 @@
 
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Badge, Button, Card } from "@/ui";
+import { Badge, Button, Card, EmptyState } from "@/ui";
 import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { loadFirstEntry } from "@/onboarding/firstEntryStore";
 import { useWorkspaceStore } from "@/workspace/workspaceStore";
@@ -175,33 +175,45 @@ export function EnterpriseMarketplacePage() {
           ))}
         </nav>
 
-        <div className="mkt-grid mt-3">
-          {solutions.map((sol) => {
-            const status = resolveStatus(sol);
-            return (
-              <button
-                key={sol.id}
-                type="button"
-                className={`mkt-card${selectedId === sol.id ? " is-active" : ""}`}
-                onClick={() => setSelectedId(sol.id)}
-              >
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <span className="font-semibold">{sol.title}</span>
-                  <Badge tone={STATUS_TONE[status]}>{status}</Badge>
-                </div>
-                <p className="mt-1 eds-type-small text-[var(--eds-text-muted)]">{sol.description}</p>
-                <div className="mt-2 flex flex-wrap gap-1">
-                  <Badge>★ {sol.rating}</Badge>
-                  <Badge>v{sol.version}</Badge>
-                  {sol.enterprisePack ? <Badge tone="success">Enterprise</Badge> : null}
-                </div>
-                <p className="mt-2 eds-type-caption text-[var(--eds-text-muted)]">
-                  Eco: {sol.ecosystems.join(", ")}
-                </p>
-              </button>
-            );
-          })}
-        </div>
+        {solutions.length ? (
+          <div className="mkt-grid mt-3">
+            {solutions.map((sol) => {
+              const status = resolveStatus(sol);
+              return (
+                <button
+                  key={sol.id}
+                  type="button"
+                  className={`mkt-card${selectedId === sol.id ? " is-active" : ""}`}
+                  onClick={() => setSelectedId(sol.id)}
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <span className="font-semibold">{sol.title}</span>
+                    <Badge tone={STATUS_TONE[status]}>{status}</Badge>
+                  </div>
+                  <p className="mt-1 eds-type-small text-[var(--eds-text-muted)]">{sol.description}</p>
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    <Badge>★ {sol.rating}</Badge>
+                    <Badge>v{sol.version}</Badge>
+                    {sol.enterprisePack ? <Badge tone="success">Enterprise</Badge> : null}
+                  </div>
+                  <p className="mt-2 eds-type-caption text-[var(--eds-text-muted)]">
+                    Eco: {sol.ecosystems.join(", ")}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="mt-4">
+            <EmptyState
+              title="No solutions in this category"
+              description="Попробуйте другой фильтр или откройте Builder Studio, чтобы собрать собственные packs."
+              actionLabel="Open Builder Studio"
+              actionTo="/platform-builder/builder-studio"
+              illustration="◇"
+            />
+          </div>
+        )}
 
         {selected ? (
           <SolutionDetail
@@ -238,25 +250,6 @@ export function EnterpriseMarketplacePage() {
         ) : null}
       </div>
     </WorkspaceLayout>
-  );
-}
-
-export function MarketplaceStrip() {
-  const n = MARKETPLACE_SOLUTIONS.length;
-  const packs = MARKETPLACE_SOLUTIONS.filter((s) => s.enterprisePack).length;
-  return (
-    <div className="mkt-strip" aria-label="Marketplace">
-      <span className="mkt-strip-label">Marketplace</span>
-      <Badge>{n} solutions</Badge>
-      <Badge tone="success">{packs} packs</Badge>
-      <Link
-        to="/platform-builder/solution-hub"
-        className="eds-type-small text-[var(--eds-primary)]"
-        onClick={() => void telemetry.userActivity("mkt_open")}
-      >
-        Hub →
-      </Link>
-    </div>
   );
 }
 

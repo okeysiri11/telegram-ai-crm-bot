@@ -6,11 +6,19 @@ type Props = { open: boolean; title: string; onClose: () => void; children: Reac
 export function Modal({ open, title, onClose, children }: Props) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-lg border border-[var(--ew-border)] bg-[var(--ew-surface)] p-4 shadow-lg">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{title}</h2>
-          <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
+    <div className="eds-dialog-overlay flex items-center justify-center p-[var(--eds-page-pad)]" role="presentation" onClick={onClose}>
+      <div
+        className="eds-card edm-overlay-panel w-full max-w-lg p-[var(--eds-dialog-pad)] shadow-[var(--eds-shadow-lg)]"
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="eds-drawer-header">
+          <h2 className="eds-drawer-title">{title}</h2>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Close
+          </Button>
         </div>
         {children}
       </div>

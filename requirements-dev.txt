@@ -1,0 +1,2 @@
+# Optional static-analysis / RC tooling (not required at runtime).
+ruff==0.9.10

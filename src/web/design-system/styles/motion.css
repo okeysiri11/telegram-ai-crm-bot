@@ -1,0 +1,546 @@
+/**
+ * Motion Design Language (MDL) — EP-03.
+ * Functional motion over EDS + EDL. No new Engine / Store / Runtime.
+ *
+ * Principles: purposeful · calm · fast · accessible (Reduce Motion).
+ */
+
+:root {
+  --eds-motion-instant: 80ms;
+  --eds-motion-fast: 120ms;
+  --eds-motion-normal: 200ms;
+  --eds-motion-slow: 320ms;
+  --eds-motion-settle: 400ms;
+  --eds-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --eds-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --eds-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --eds-ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --eds-stagger: 40ms;
+  --edm-lift: -1px;
+  --edm-press: 0.98;
+}
+
+/* —— Page transitions —— */
+.edm-page {
+  animation: edm-page-enter var(--eds-motion-slow) var(--eds-ease-out);
+}
+.edm-page-soft {
+  animation: edm-fade-up var(--eds-motion-normal) var(--eds-ease-out);
+}
+
+@keyframes edm-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(0.4rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes edm-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes edm-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes edm-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes edm-slide-end {
+  from {
+    opacity: 0;
+    transform: translateX(0.75rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes edm-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes edm-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(1rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes edm-pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+@keyframes edm-breathe {
+  0%, 100% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--eds-primary) 0%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in oklab, var(--eds-primary) 18%, transparent);
+  }
+}
+@keyframes edm-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes edm-stream {
+  0% { transform: translateX(-30%); opacity: 0.35; }
+  50% { opacity: 0.85; }
+  100% { transform: translateX(130%); opacity: 0.35; }
+}
+@keyframes edm-status-flash {
+  0% { background-color: color-mix(in oklab, var(--eds-primary) 18%, var(--eds-surface)); }
+  100% { background-color: transparent; }
+}
+@keyframes edm-kpi-tick {
+  from {
+    opacity: 0.45;
+    transform: translateY(0.2rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes edm-suggest-in {
+  from {
+    opacity: 0;
+    transform: translateX(-0.35rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes edm-done-check {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Align legacy EDS presets to MDL easing */
+.eds-anim-fade { animation: edm-fade-in var(--eds-motion-normal) var(--eds-ease-out); }
+.eds-anim-slide { animation: edm-fade-up var(--eds-motion-normal) var(--eds-ease-out); }
+.eds-anim-scale { animation: edm-scale-in var(--eds-motion-fast) var(--eds-ease-out); }
+.eds-anim-page { animation: edm-page-enter var(--eds-motion-slow) var(--eds-ease-out); }
+
+/* —— Stagger —— */
+.edm-stagger > * {
+  animation: edm-fade-up var(--eds-motion-normal) var(--eds-ease-out) both;
+}
+.edm-stagger > *:nth-child(1) { animation-delay: calc(var(--eds-stagger) * 0); }
+.edm-stagger > *:nth-child(2) { animation-delay: calc(var(--eds-stagger) * 1); }
+.edm-stagger > *:nth-child(3) { animation-delay: calc(var(--eds-stagger) * 2); }
+.edm-stagger > *:nth-child(4) { animation-delay: calc(var(--eds-stagger) * 3); }
+.edm-stagger > *:nth-child(5) { animation-delay: calc(var(--eds-stagger) * 4); }
+.edm-stagger > *:nth-child(6) { animation-delay: calc(var(--eds-stagger) * 5); }
+.edm-stagger > *:nth-child(7) { animation-delay: calc(var(--eds-stagger) * 6); }
+.edm-stagger > *:nth-child(8) { animation-delay: calc(var(--eds-stagger) * 7); }
+
+/* —— Cards —— */
+.eds-card {
+  transition:
+    transform var(--eds-motion-fast) var(--eds-ease),
+    border-color var(--eds-motion-fast) var(--eds-ease),
+    box-shadow var(--eds-motion-normal) var(--eds-ease),
+    opacity var(--eds-motion-fast) var(--eds-ease);
+}
+.eds-card:active:not(.is-loading) {
+  transform: scale(var(--edm-press));
+}
+.eds-card--interactive:hover {
+  transform: translateY(var(--edm-lift));
+}
+.eds-card--interactive:active {
+  transform: scale(var(--edm-press));
+}
+.edm-card-expand {
+  animation: eds-expand var(--eds-motion-normal) var(--eds-ease) both;
+  overflow: hidden;
+}
+.edm-card-collapse {
+  animation: eds-collapse var(--eds-motion-normal) var(--eds-ease) forwards;
+  overflow: hidden;
+}
+.edm-card-refresh {
+  animation: edm-status-flash var(--eds-motion-settle) var(--eds-ease-out);
+}
+.edm-card-enter {
+  animation: edm-scale-in var(--eds-motion-normal) var(--eds-ease-out);
+}
+
+/* —— Buttons / controls —— */
+.eds-btn {
+  transition:
+    background var(--eds-motion-fast) var(--eds-ease),
+    border-color var(--eds-motion-fast) var(--eds-ease),
+    color var(--eds-motion-fast) var(--eds-ease),
+    transform var(--eds-motion-instant) var(--eds-ease),
+    box-shadow var(--eds-motion-fast) var(--eds-ease),
+    opacity var(--eds-motion-fast) var(--eds-ease);
+}
+.eds-btn:hover:not(:disabled) {
+  transform: translateY(var(--edm-lift));
+}
+.eds-btn:active:not(:disabled) {
+  transform: scale(var(--edm-press));
+}
+.eds-control {
+  transition:
+    border-color var(--eds-motion-fast) var(--eds-ease),
+    box-shadow var(--eds-motion-fast) var(--eds-ease),
+    background var(--eds-motion-fast) var(--eds-ease);
+}
+.edm-press:active {
+  transform: scale(var(--edm-press));
+}
+
+/* —— Loading family —— */
+.edm-skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--eds-border),
+    var(--eds-surface),
+    var(--eds-border)
+  );
+  background-size: 200% 100%;
+  animation: edm-shimmer 1.2s linear infinite;
+  border-radius: var(--eds-radius-md);
+}
+.edm-refreshing {
+  position: relative;
+  pointer-events: none;
+}
+.edm-refreshing::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: color-mix(in oklab, var(--eds-surface) 55%, transparent);
+  animation: edm-fade-in var(--eds-motion-fast) var(--eds-ease);
+}
+.edm-stream-bar {
+  position: relative;
+  overflow: hidden;
+  height: 2px;
+  border-radius: var(--eds-radius-full);
+  background: color-mix(in oklab, var(--eds-primary) 15%, transparent);
+}
+.edm-stream-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  background: var(--eds-primary);
+  animation: edm-stream 1.1s var(--eds-ease) infinite;
+}
+.edm-partial-update {
+  animation: edm-status-flash var(--eds-motion-settle) var(--eds-ease-out);
+}
+.edm-bg-update {
+  animation: edm-pulse-soft 2.4s var(--eds-ease) infinite;
+}
+.eds-anim-skeleton {
+  animation: edm-shimmer 1.2s linear infinite;
+}
+
+/* —— AI Concierge motion —— */
+.edm-ai-live {
+  animation: edm-breathe 2.8s var(--eds-ease) infinite;
+}
+.edm-ai-analyzing {
+  position: relative;
+}
+.edm-ai-analyzing::before {
+  content: "";
+  display: block;
+  height: 2px;
+  margin-bottom: var(--eds-space-2);
+  border-radius: var(--eds-radius-full);
+  background: color-mix(in oklab, var(--eds-primary) 18%, transparent);
+  overflow: hidden;
+}
+.edm-ai-analyzing::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 2px;
+  width: 35%;
+  border-radius: var(--eds-radius-full);
+  background: var(--eds-primary);
+  animation: edm-stream 1.2s var(--eds-ease) infinite;
+}
+.edm-ai-suggest {
+  animation: edm-suggest-in var(--eds-motion-normal) var(--eds-ease-out) both;
+  transition:
+    background var(--eds-motion-fast) var(--eds-ease),
+    transform var(--eds-motion-fast) var(--eds-ease);
+}
+.edm-ai-suggest:hover {
+  transform: translateX(2px);
+}
+.edm-ai-suggest:active {
+  transform: scale(0.99);
+}
+.edm-ai-done {
+  animation: edm-done-check var(--eds-motion-normal) var(--eds-ease-out);
+}
+.aios-suggest {
+  transition:
+    background var(--eds-motion-fast) var(--eds-ease),
+    transform var(--eds-motion-fast) var(--eds-ease);
+}
+.aios-dock.is-analyzing {
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--eds-primary) 28%, var(--eds-border));
+}
+.aios-pulse.is-busy {
+  animation: edm-pulse-soft 1.8s var(--eds-ease) infinite;
+}
+
+/* —— Executive / KPI —— */
+.edm-kpi {
+  font-variant-numeric: tabular-nums;
+  transition: color var(--eds-motion-fast) var(--eds-ease);
+}
+.edm-kpi.is-updating {
+  animation: edm-kpi-tick var(--eds-motion-normal) var(--eds-ease-out);
+}
+.ex-morning {
+  animation: edm-fade-up var(--eds-motion-slow) var(--eds-ease-out);
+}
+.ex-brief-card {
+  transition:
+    transform var(--eds-motion-fast) var(--eds-ease),
+    border-color var(--eds-motion-fast) var(--eds-ease),
+    box-shadow var(--eds-motion-normal) var(--eds-ease);
+}
+.ex-brief-card:active {
+  transform: scale(0.99);
+}
+.ex-morning-grid.edm-stagger > * {
+  animation-name: edm-fade-up;
+}
+
+/* —— Enterprise City (meaningful only) —— */
+.ec-building {
+  transition:
+    transform var(--eds-motion-fast) var(--eds-ease),
+    border-color var(--eds-motion-fast) var(--eds-ease),
+    opacity var(--eds-motion-normal) var(--eds-ease),
+    background var(--eds-motion-normal) var(--eds-ease),
+    box-shadow var(--eds-motion-normal) var(--eds-ease);
+}
+.ec-building.is-focused {
+  animation: edm-breathe 2.4s var(--eds-ease) infinite;
+}
+.ec-building.ec-state-running,
+.ec-building.ec-state-attention,
+.ec-building.ec-state-critical {
+  animation: edm-status-flash var(--eds-motion-settle) var(--eds-ease-out);
+}
+.ec-building.has-ai .ec-ai-dot {
+  animation: edm-pulse-soft 1.6s var(--eds-ease) infinite;
+}
+.ec-plane {
+  transition: transform var(--eds-motion-normal) var(--eds-ease-out);
+}
+/* CG-3: suspended while the Graphics Engine camera controller (requestAnimationFrame) drives an
+   in-flight transition directly, so the CSS transition and the JS tween never double-animate the
+   same property. Re-enabled the instant the tween completes or is cancelled. */
+.ec-plane.ec-plane--js-anim {
+  transition: none;
+}
+.ec-mini-dot {
+  transition: transform var(--eds-motion-fast) var(--eds-ease);
+}
+
+/* —— Enterprise City · Graphics Engine (CG-3 integration) —— */
+/* Roads: confined to links touching the focused building only — never a whole-map ambient loop,
+   the same confinement rule the AI dot pulse above already follows. */
+@keyframes ec-road-flow {
+  to {
+    stroke-dashoffset: -8;
+  }
+}
+.ec-link-line.is-flowing {
+  stroke: var(--eds-primary);
+  opacity: 0.85;
+  animation: ec-road-flow 1.1s linear infinite;
+}
+/* Portal: a one-shot burst on the specific tile being entered, played just before navigation. */
+@keyframes ec-portal-burst {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--eds-primary) 55%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px color-mix(in oklab, var(--eds-primary) 0%, transparent);
+  }
+}
+.ec-building.is-portal {
+  animation: ec-portal-burst var(--eds-motion-settle) var(--eds-ease-out);
+}
+/* District activation: reuses the existing status-flash keyframe — a "this changed" flash is
+   exactly the right treatment, so no new keyframe was created for it. */
+.ec-district-label.is-activated {
+  animation: edm-status-flash var(--eds-motion-settle) var(--eds-ease-out);
+}
+/* Tab-inactive pause: one rule pauses every continuous City animation (AI dot, road flow, focus
+   breathe) at once — set by the Graphics Engine runtime hook on `document.visibilitychange`. */
+.enterprise-city[data-tab-hidden="true"] * {
+  animation-play-state: paused !important;
+}
+
+/* —— Overlays —— */
+.eds-dialog-overlay {
+  animation: edm-overlay-in var(--eds-motion-fast) var(--eds-ease);
+}
+.eds-drawer-panel {
+  animation: edm-panel-in var(--eds-motion-normal) var(--eds-ease-out);
+}
+.edm-overlay-panel {
+  animation: edm-scale-in var(--eds-motion-normal) var(--eds-ease-out);
+}
+
+/* —— Tables / search / palette —— */
+.eds-table tbody tr {
+  transition: background var(--eds-motion-fast) var(--eds-ease);
+}
+.edm-row-enter {
+  animation: edm-fade-up var(--eds-motion-fast) var(--eds-ease-out);
+}
+.edm-toast {
+  animation: edm-slide-end var(--eds-motion-normal) var(--eds-ease-out);
+}
+.edm-palette-item {
+  transition: background var(--eds-motion-instant) var(--eds-ease);
+}
+.edm-palette-item:active {
+  transform: scale(0.99);
+}
+
+/* —— Notifications —— */
+.edm-notify-enter {
+  animation: edm-fade-up var(--eds-motion-normal) var(--eds-ease-out);
+}
+
+/* —— Focus visibility (motion-safe) —— */
+.eds-focus-ring:focus-visible {
+  transition: box-shadow var(--eds-motion-instant) var(--eds-ease);
+}
+
+/* —— Reduce Motion —— */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --eds-motion-instant: 1ms;
+    --eds-motion-fast: 1ms;
+    --eds-motion-normal: 1ms;
+    --eds-motion-slow: 1ms;
+    --eds-motion-settle: 1ms;
+    --eds-stagger: 0ms;
+  }
+
+  .edm-page,
+  .edm-page-soft,
+  .edm-stagger > *,
+  .edm-card-enter,
+  .edm-card-expand,
+  .edm-card-collapse,
+  .edm-card-refresh,
+  .edm-ai-live,
+  .edm-ai-suggest,
+  .edm-ai-done,
+  .edm-kpi.is-updating,
+  .edm-partial-update,
+  .edm-bg-update,
+  .edm-skeleton,
+  .edm-stream-bar::after,
+  .edm-ai-analyzing::after,
+  .edm-overlay-panel,
+  .edm-toast,
+  .edm-notify-enter,
+  .edm-row-enter,
+  .eds-anim-fade,
+  .eds-anim-slide,
+  .eds-anim-scale,
+  .eds-anim-page,
+  .eds-anim-skeleton,
+  .eds-anim-loading,
+  .eds-anim-collapse,
+  .eds-anim-expand,
+  .ex-morning,
+  .ec-building.is-focused,
+  .ec-building.ec-state-running,
+  .ec-building.ec-state-attention,
+  .ec-building.ec-state-critical,
+  .ec-building.has-ai .ec-ai-dot,
+  .ec-link-line.is-flowing,
+  .ec-building.is-portal,
+  .ec-district-label.is-activated,
+  .aios-pulse.is-busy,
+  .eds-dialog-overlay,
+  .eds-drawer-panel {
+    animation: none !important;
+  }
+
+  .eds-btn:hover:not(:disabled),
+  .eds-btn:active:not(:disabled),
+  .eds-card:active:not(.is-loading),
+  .eds-card--interactive:hover,
+  .eds-card--interactive:active,
+  .edm-ai-suggest:hover,
+  .edm-ai-suggest:active,
+  .ex-brief-card:hover,
+  .ex-brief-card:active,
+  .ec-building:hover,
+  .ec-building.is-focused {
+    transform: none !important;
+  }
+
+  .edm-refreshing::after {
+    animation: none !important;
+    opacity: 0.35;
+  }
+}
+
+[data-reduced-motion="true"] .edm-page,
+[data-reduced-motion="true"] .edm-stagger > *,
+[data-reduced-motion="true"] .edm-ai-live,
+[data-reduced-motion="true"] .edm-skeleton,
+[data-reduced-motion="true"] .edm-stream-bar::after,
+[data-reduced-motion="true"] .eds-anim-fade,
+[data-reduced-motion="true"] .eds-anim-slide,
+[data-reduced-motion="true"] .eds-anim-scale,
+[data-reduced-motion="true"] .eds-anim-page,
+[data-reduced-motion="true"] .eds-anim-skeleton,
+[data-reduced-motion="true"] .ec-ai-dot,
+[data-reduced-motion="true"] .ec-link-line.is-flowing,
+[data-reduced-motion="true"] .ec-building.is-portal,
+[data-reduced-motion="true"] .ec-district-label.is-activated,
+[data-reduced-motion="true"] .aios-pulse.is-busy {
+  animation: none !important;
+}

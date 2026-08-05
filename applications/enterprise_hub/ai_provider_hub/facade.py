@@ -114,6 +114,19 @@ class AIProviderHubSuite:
         return record
 
     def assemble_prompt(self, **kwargs: Any) -> dict[str, Any]:
+        from applications.enterprise_hub.ai_provider_hub.prompt_firewall import guard_prompt
+
+        user_prompt = str(kwargs.get("user_prompt") or "")
+        if user_prompt:
+            guarded = guard_prompt(user_prompt, actor=str(kwargs.get("actor") or "hub"))
+            if not guarded["ok"]:
+                raise ValidationError(f"prompt_firewall:{','.join(guarded['reasons'])}")
+            kwargs["user_prompt"] = guarded["sanitized"]
+            kwargs["prompt_security"] = {
+                "risk": guarded["risk"],
+                "token_estimate": guarded["token_estimate"],
+                "truncated": guarded["truncated"],
+            }
         try:
             # light EKG hook
             try:
@@ -159,8 +172,26 @@ class AIProviderHubSuite:
 
     def invoke(self, *, task_type: str = "general_chat", user_prompt: str = "", prefer_quality: bool = True) -> dict[str, Any]:
         """Unified hub invoke — modules call this instead of providers."""
+        from applications.enterprise_hub.ai_provider_hub.prompt_firewall import guard_prompt
+
+        guarded = guard_prompt(user_prompt or "ping", actor="aph_invoke")
+        if not guarded["ok"]:
+            raise ValidationError(f"prompt_firewall:{','.join(guarded['reasons'])}")
+        # Audit via APH security store (existing surface — not library.protect vault API)
+        sec_id = _id("aph_sec")
+        self.store.aph_security.save(
+            sec_id,
+            {
+                "security_id": sec_id,
+                "action": "invoke_guard",
+                "risk": guarded["risk"],
+                "reasons": guarded["reasons"],
+                "token_estimate": guarded["token_estimate"],
+                "created_at": _now(),
+            },
+        )
         route = self.route(task_type=task_type, prefer_quality=prefer_quality)
-        prompt = self.assemble_prompt(template="enterprise_default", user_prompt=user_prompt or "ping")
+        prompt = self.assemble_prompt(template="enterprise_default", user_prompt=guarded["sanitized"])
         # simulate success via selected provider; no outbound network
         usage = {
             "success": True,
@@ -185,6 +216,11 @@ class AIProviderHubSuite:
             "invoke_id": rid,
             "route": route,
             "prompt": {"prompt_id": prompt["prompt_id"], "gateway": True},
+            "prompt_security": {
+                "risk": guarded["risk"],
+                "token_estimate": guarded["token_estimate"],
+                "truncated": guarded["truncated"],
+            },
             "result": usage,
             "direct_provider_call": False,
             "via_hub_only": True,

@@ -1,12 +1,12 @@
 # Architecture Certificate
 
-> Issued: 2026-07-20 07:41:46 UTC
+> Issued: 2026-08-05 10:32:37 UTC
 
 ## Result
 
 **FAIL**
 
-Architecture Score: **95.45/100**
+Architecture Score: **73.85/100**
 
 Quality Gates: **FAILED**
 
@@ -16,13 +16,13 @@ Quality Gates: **FAILED**
 |------|-------|--------|-------|
 | Security | 100.0 | PASS | Plugin SDK isolation |
 | Architecture | 100.0 | PASS | 0 dependency cycles |
-| Boundaries | 80 | WARN/FAIL | 4 critical violations |
-| Dependencies | 100 | PASS | 0 cross-layer violations |
+| Boundaries | 0 | WARN/FAIL | 22 critical violations |
+| Dependencies | 84 | WARN/FAIL | 2 cross-layer violations |
 | API | 100.0 | PASS | OpenAPI contract validation |
 | Workflow | 100.0 | PASS | Workflow schema validation |
 | Plugin SDK | 100.0 | PASS | SDK export surface |
 | Configuration | 85.0 | WARN/FAIL | ConfigurationCenter boundary |
-| Legacy | 100.0 | PASS | Legacy isolation via platform_legacy |
+| Legacy | 0.0 | WARN/FAIL | Legacy isolation via platform_legacy |
 | Observability | 95.0 | PASS | Metrics and tracing present |
 | Testing | 90.0 | PASS | Architecture governance test suite |
 
@@ -38,7 +38,10 @@ Quality Gates: **FAILED**
 
 ## Failed Gates
 
-- 4 critical boundary/import violations
+- Architecture score 73.85 < 90
+- 22 critical boundary/import violations
+- 0 dependency cycles and 2 strict layer violations detected
+- Legacy CI validation failed
 
 ---
 

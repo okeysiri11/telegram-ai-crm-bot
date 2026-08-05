@@ -1,32 +1,23 @@
-# React + TypeScript + Vite
+# ADOS Enterprise Control Center
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Visual OS UI for ADOS Enterprise.
 
-Currently, two official plugins are available:
+See:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- [ENTERPRISE_CONTROL_CENTER.md](./ENTERPRISE_CONTROL_CENTER.md)
+- [UI_ARCHITECTURE.md](./UI_ARCHITECTURE.md)
+- [DASHBOARD_GUIDE.md](./DASHBOARD_GUIDE.md)
 
-## React Compiler
+## Quick start
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+# from repo root — Runtime must be up
+npm run ados
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+# another terminal
+npm run console
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Open http://localhost:5173
+
+Requires Runtime at http://localhost:3000 (live data only — no mocks).

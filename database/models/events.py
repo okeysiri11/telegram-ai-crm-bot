@@ -10,11 +10,11 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 from database.models.users import User
 
 
-class PlatformEvent(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PlatformEvent(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "platform_events"
     __table_args__ = (
         Index("ix_platform_events_type", "event_type"),

@@ -27,10 +27,13 @@ def management_app():
 
 @pytest.fixture(autouse=True)
 def _grant_owner(monkeypatch):
-    async def _owner(_tid):
+    from platform_identity.identity_service import identity_service
+
+    async def _owner(telegram_id=None, *, principal=None):
         return ManagementRole.OWNER
 
     monkeypatch.setattr("platform_management.permissions.resolve_role", _owner)
+    monkeypatch.setattr(identity_service, "resolve_management_role", _owner)
 
 
 @pytest.fixture(autouse=True)
@@ -107,12 +110,15 @@ async def test_dashboard_widget_endpoint(management_app, actor_header):
 
 @pytest.mark.asyncio
 async def test_dashboard_permissions_denied(management_app, auth_headers, monkeypatch):
-    async def _deny(_tid):
+    from platform_identity.identity_service import identity_service
+
+    async def _deny(telegram_id=None, *, principal=None):
         from platform_management.exceptions import ManagementPermissionError
 
         raise ManagementPermissionError("denied")
 
     monkeypatch.setattr("platform_management.permissions.resolve_role", _deny)
+    monkeypatch.setattr(identity_service, "resolve_management_role", _deny)
     with patch(
         "platform_management.management_service.management_service.log_request",
         new_callable=AsyncMock,

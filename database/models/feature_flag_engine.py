@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class FeatureFlagStatus(str, enum.Enum):
@@ -47,7 +47,7 @@ class FeatureHistoryAction(str, enum.Enum):
     VARIANT_CHANGED = "VARIANT_CHANGED"
 
 
-class FeatureFlag(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class FeatureFlag(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "feature_flag_engine_v1_feature_flags"
     __table_args__ = (
         UniqueConstraint("flag_key", name="uq_feature_flag_engine_v1_flags_key"),
@@ -72,7 +72,7 @@ class FeatureFlag(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<FeatureFlag key={self.flag_key} enabled={self.enabled}>"
 
 
-class FeatureAssignment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class FeatureAssignment(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "feature_flag_engine_v1_feature_assignments"
     __table_args__ = (
         Index("ix_feature_flag_engine_v1_assign_flag", "flag_id"),
@@ -105,7 +105,7 @@ class FeatureAssignment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class FeatureHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class FeatureHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "feature_flag_engine_v1_feature_history"
     __table_args__ = (
         Index("ix_feature_flag_engine_v1_hist_flag", "flag_id"),

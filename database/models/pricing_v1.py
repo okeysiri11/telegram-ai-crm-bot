@@ -22,7 +22,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.partner_engine  # noqa: F401 — register partner_engine_partners
 
@@ -42,7 +42,7 @@ class SpreadRuleType(str, enum.Enum):
     PERCENTAGE = "PERCENTAGE"
 
 
-class PriceSource(UUIDPrimaryKeyMixin, Base):
+class PriceSource(UUIDPrimaryKeyMixin, VersionMixin, Base):
     """Market price source — maps to logical table price_sources."""
 
     __tablename__ = "pricing_v1_price_sources"
@@ -72,7 +72,7 @@ class PriceSource(UUIDPrimaryKeyMixin, Base):
         )
 
 
-class SpreadRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SpreadRule(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Spread rule — maps to logical table spread_rules."""
 
     __tablename__ = "pricing_v1_spread_rules"
@@ -94,7 +94,7 @@ class SpreadRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class PartnerPricing(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerPricing(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Partner-specific pricing — maps to logical table partner_pricing."""
 
     __tablename__ = "pricing_v1_partner_pricing"
@@ -120,7 +120,7 @@ class PartnerPricing(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class ManagerPricing(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ManagerPricing(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Manager-specific margin — maps to logical table manager_pricing."""
 
     __tablename__ = "pricing_v1_manager_pricing"

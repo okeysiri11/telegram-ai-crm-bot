@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class DealerRateField(str, enum.Enum):
@@ -30,7 +30,7 @@ DEALER_RATE_FIELDS = frozenset(f.value for f in DealerRateField)
 AUTOMOTIVE_TREASURY_CURRENCIES = frozenset({"UAH", "USD", "EUR", "USDT"})
 
 
-class AutomotiveDealerRateSheet(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AutomotiveDealerRateSheet(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Active dealer rate sheet — valid until replaced by a new channel update."""
 
     __tablename__ = "automotive_treasury_v1_rate_sheets"
@@ -72,7 +72,7 @@ class AutomotiveDealerRateSheet(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<AutomotiveDealerRateSheet tenant={self.tenant_id} active={self.is_active}>"
 
 
-class AutomotiveDealerRateHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class AutomotiveDealerRateHistory(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_treasury_v1_rate_history"
     __table_args__ = (
         Index("ix_automotive_treasury_v1_history_tenant", "tenant_id"),

@@ -36,7 +36,7 @@ export function UnifiedToastStrip() {
           : "default";
 
   return (
-    <div className="uws-toast eds-anim-slide" role="status">
+    <div className="uws-toast edm-toast" role="status">
       <Badge tone={tone as "default" | "success" | "warning" | "danger"}>{latest.kind}</Badge>
       <div className="min-w-0 flex-1">
         <p className="font-medium eds-type-small">{latest.title}</p>

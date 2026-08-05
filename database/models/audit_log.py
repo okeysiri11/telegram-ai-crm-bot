@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class AuditAction(str, enum.Enum):
@@ -50,7 +50,7 @@ class AuditAction(str, enum.Enum):
     TENANT_BILLING_PROVISION = "TENANT_BILLING_PROVISION"
 
 
-class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "audit_engine_logs"
     __table_args__ = (
         Index("ix_audit_engine_logs_user_id", "user_id"),

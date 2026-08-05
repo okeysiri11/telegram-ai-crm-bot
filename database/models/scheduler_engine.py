@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class JobScheduleType(str, enum.Enum):
@@ -45,7 +45,7 @@ class JobExecutionStatus(str, enum.Enum):
     DEAD_LETTER = "DEAD_LETTER"
 
 
-class ScheduledJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ScheduledJob(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "scheduler_engine_v1_scheduled_jobs"
     __table_args__ = (
         Index("ix_scheduler_engine_v1_jobs_status", "status"),
@@ -89,7 +89,7 @@ class ScheduledJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<ScheduledJob key={self.job_key} status={self.status}>"
 
 
-class JobExecution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class JobExecution(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "scheduler_engine_v1_job_executions"
     __table_args__ = (
         Index("ix_scheduler_engine_v1_exec_job", "job_id"),
@@ -133,7 +133,7 @@ class JobExecution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class JobFailure(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class JobFailure(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "scheduler_engine_v1_job_failures"
     __table_args__ = (
         Index("ix_scheduler_engine_v1_fail_exec", "execution_id"),

@@ -20,7 +20,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class ErrorSeverity(str, enum.Enum):
@@ -31,7 +31,7 @@ class ErrorSeverity(str, enum.Enum):
     CRITICAL = "CRITICAL"
 
 
-class SystemMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SystemMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "observability_engine_v1_system_metrics"
     __table_args__ = (
         Index("ix_observability_v1_sys_name", "metric_name"),
@@ -51,7 +51,7 @@ class SystemMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<SystemMetric name={self.metric_name} value={self.metric_value}>"
 
 
-class BusinessMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class BusinessMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "observability_engine_v1_business_metrics"
     __table_args__ = (
         Index("ix_observability_v1_biz_kpi", "kpi_name"),
@@ -80,7 +80,7 @@ class BusinessMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<BusinessMetric kpi={self.kpi_name} value={self.kpi_value}>"
 
 
-class ErrorEvent(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class ErrorEvent(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "observability_engine_v1_error_events"
     __table_args__ = (
         Index("ix_observability_v1_err_source", "source"),
@@ -109,7 +109,7 @@ class ErrorEvent(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<ErrorEvent source={self.source} type={self.error_type}>"
 
 
-class PerformanceMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class PerformanceMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "observability_engine_v1_performance_metrics"
     __table_args__ = (
         Index("ix_observability_v1_perf_operation", "operation_name"),

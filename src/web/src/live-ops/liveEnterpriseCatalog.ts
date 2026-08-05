@@ -110,4 +110,4 @@ export const SEED_ACTIVITY: LiveActivityItem[] = [
   },
 ];
 
-export const LIVE_POLL_MS = 15_000;
+export const LIVE_POLL_MS = 20_000;

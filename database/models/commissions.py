@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.deals import Deal
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from database.models.users import User
 
 
-class CommissionRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class CommissionRule(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "commission_rules"
     __table_args__ = (
         Index("ix_commission_rules_type", "commission_type"),
@@ -40,7 +40,7 @@ class CommissionRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     commissions: Mapped[list[Commission]] = relationship(back_populates="rule")
 
 
-class Commission(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Commission(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "commissions"
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_commissions_amount_non_negative"),
@@ -85,7 +85,7 @@ class Commission(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
 
-class CommissionPayment(UUIDPrimaryKeyMixin, Base):
+class CommissionPayment(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "commission_payments"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_commission_payments_amount_positive"),

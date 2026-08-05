@@ -71,7 +71,7 @@ export function CommandPalette({ open, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-[var(--eds-z-modal,50)] flex items-start justify-center bg-black/40 p-4 pt-[12vh]" role="dialog" aria-modal="true" aria-label="Command palette">
-      <div className="w-full max-w-xl overflow-hidden rounded-[var(--eds-radius-lg)] bg-[var(--eds-surface)] shadow-[var(--eds-shadow-lg)] eds-anim-scale">
+      <div className="w-full max-w-xl overflow-hidden rounded-[var(--eds-radius-lg)] bg-[var(--eds-surface)] shadow-[var(--eds-shadow-lg)] edm-overlay-panel">
         <div className="border-b border-[var(--eds-border)] p-3">
           <Input
             autoFocus
@@ -91,7 +91,7 @@ export function CommandPalette({ open, onClose }: Props) {
               key={c.id}
               type="button"
               className={cn(
-                "flex w-full items-center justify-between rounded-md px-3 py-2 text-left eds-type-small",
+                "edm-palette-item flex w-full items-center justify-between rounded-md px-3 py-2 text-left eds-type-small",
                 i === active ? "bg-[var(--eds-primary-soft)] text-[var(--eds-primary)]" : "hover:bg-[var(--eds-primary-soft)]/50",
               )}
               onMouseEnter={() => setActive(i)}

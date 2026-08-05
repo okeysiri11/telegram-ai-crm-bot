@@ -1,5 +1,7 @@
 # Commission Engine — accruals, approvals, payouts; integrates with Finance Core.
 
+from __future__ import annotations
+
 from config import OWNER_ID
 
 
@@ -68,11 +70,11 @@ class CommissionEngine:
         return get_commission(commission_id)
 
     @staticmethod
-    def list(user_id: int, **kwargs) -> list:
+    def list_commissions(user_id: int, **kwargs) -> list:
         if not CommissionEngine.can_view(user_id):
             return []
-        from database import list_commissions
-        return list_commissions(**kwargs)
+        from database import list_commissions as _list_commissions
+        return _list_commissions(**kwargs)
 
     @staticmethod
     def approve(commission_id: int, user_id: int) -> bool:

@@ -7,6 +7,7 @@
 import type { LiveEnterpriseSnapshot } from "@/live-ops";
 import type { AppNotification } from "@/notifications/notificationStore";
 import { CITY_BUILDINGS, type CityBuildingId } from "@/enterprise-city/cityCatalog";
+import { CITY_DISTRICTS } from "@/enterprise-city/cityDistricts";
 import { BUSINESS_WORKFLOW_TEMPLATES } from "@/enterprise-workflow/workflowTemplates";
 import { deriveIntelligence } from "@/enterprise-intelligence/deriveIntelligence";
 
@@ -129,18 +130,18 @@ export function deriveEnterpriseTwin(
 
   const nodes: TwinNode[] = [];
 
-  // Departments from city districts
-  const districts = ["commerce", "ops", "people", "intel", "hub"] as const;
-  for (const d of districts) {
-    const buildings = CITY_BUILDINGS.filter((b) => b.district === d);
+  // Departments from city districts (Sprint 27.8)
+  for (const d of CITY_DISTRICTS) {
+    const buildings = CITY_BUILDINGS.filter((b) => b.district === d.id);
     const heat = clamp(
       buildings.reduce((s, b) => s + (activeSet.has(b.id) ? 25 : 8), 0) +
-        (d === "commerce" && /crm|sales|client/.test(activityBlob) ? 30 : 0),
+        (d.id === "crm" && /crm|sales|client/.test(activityBlob) ? 30 : 0) +
+        (d.id === "ai" && /ai|agent/.test(activityBlob) ? 20 : 0),
     );
     nodes.push({
-      id: `dept_${d}`,
+      id: `dept_${d.id}`,
       kind: "department",
-      label: d === "hub" ? "Headquarters" : d[0]!.toUpperCase() + d.slice(1),
+      label: d.id === "enterprise" ? "Headquarters" : d.label,
       detail: `${buildings.length} модулей`,
       heat,
       route: "/enterprise-city",

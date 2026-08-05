@@ -96,6 +96,60 @@ async def isam_auth_handler(request: web.Request) -> web.Response:
                 ),
                 status=201,
             )
+        if action == "google_login":
+            result = suite.authentication.login_google(
+                id_token=body.get("id_token") or body.get("secret") or "",
+                subject_hint=body.get("subject", ""),
+                default_role=body.get("role", "employee"),
+            )
+            identity = result["identity"]
+            access = suite.tokens.issue(identity_id=identity["identity_id"], token_type="access")
+            refresh = suite.tokens.issue(identity_id=identity["identity_id"], token_type="refresh")
+            session = suite.sessions.create(
+                identity_id=identity["identity_id"],
+                device=body.get("device", "enterprise_web"),
+                ip=body.get("ip", ""),
+                remember_me=bool(body.get("remember_me")),
+                browser=body.get("browser", ""),
+            )
+            suite.audit.record(
+                action="google_login",
+                actor=identity.get("subject", ""),
+                subject=identity["identity_id"],
+                detail=f"mode={result['claims'].get('mode')}",
+            )
+            return json_response(
+                {
+                    **result,
+                    "access_token": access.get("value"),
+                    "refresh_token": refresh.get("value"),
+                    "session": session,
+                },
+                status=201,
+            )
+        if action == "register":
+            result = suite.authentication.register_local(
+                email=body.get("email") or body.get("subject") or "",
+                password=body.get("password") or body.get("secret") or "",
+                name=body.get("name", ""),
+                role=body.get("role", "employee"),
+            )
+            suite.audit.record(
+                action="register",
+                actor=result["identity"].get("subject", ""),
+                subject=result["identity"]["identity_id"],
+            )
+            return json_response(result, status=201)
+        if action == "password_reset":
+            result = suite.authentication.request_password_reset(
+                email=body.get("email") or body.get("subject") or ""
+            )
+            suite.audit.record(
+                action="password_reset",
+                actor=result.get("email", ""),
+                detail="request",
+            )
+            return json_response(result, status=201)
         return json_response(
             suite.authentication.login(
                 subject=body.get("subject", ""),
@@ -139,17 +193,46 @@ async def isam_session_handler(request: web.Request) -> web.Response:
     try:
         sessions = _suite().sessions
         if request.method == "GET":
+            identity_id = request.rel_url.query.get("identity_id", "")
+            if identity_id:
+                return json_response(
+                    {
+                        "sessions": sessions.list_for_identity(identity_id=identity_id),
+                        "last_login": sessions.last_login(identity_id=identity_id),
+                        "status": sessions.status(),
+                    }
+                )
             return json_response(sessions.status())
         body = await _read_json(request)
         action = body.get("action", "create")
         if action == "terminate":
             return json_response(sessions.terminate(session_id=body.get("session_id", "")), status=201)
+        if action == "terminate_all":
+            result = sessions.terminate_all(identity_id=body.get("identity_id", ""))
+            _suite().audit.record(
+                action="session_revoke_all",
+                actor=body.get("identity_id", ""),
+                subject=body.get("identity_id", ""),
+                detail=f"revoked={result.get('revoked')}",
+            )
+            return json_response(result, status=201)
+        if action == "trust":
+            return json_response(
+                sessions.trust_device(
+                    session_id=body.get("session_id", ""),
+                    trusted=bool(body.get("trusted", True)),
+                ),
+                status=201,
+            )
         return json_response(
             sessions.create(
                 identity_id=body.get("identity_id", ""),
                 device=body.get("device", "unknown"),
                 ip=body.get("ip", ""),
                 ttl_seconds=int(body.get("ttl_seconds", 3600) or 3600),
+                remember_me=bool(body.get("remember_me")),
+                trusted=bool(body.get("trusted")),
+                browser=body.get("browser", ""),
             ),
             status=201,
         )
@@ -195,8 +278,44 @@ async def isam_mfa_handler(request: web.Request) -> web.Response:
     try:
         mfa = _suite().mfa
         if request.method == "GET":
+            identity_id = request.rel_url.query.get("identity_id", "")
+            org = request.rel_url.query.get("organization_id", "")
+            if identity_id:
+                return json_response(
+                    {
+                        **mfa.status(),
+                        "requirement": mfa.required_for(
+                            identity_id=identity_id, organization_id=org
+                        ),
+                    }
+                )
             return json_response(mfa.status())
         body = await _read_json(request)
+        action = body.get("action", "challenge")
+        if action == "enable":
+            result = mfa.set_user_mfa(identity_id=body.get("identity_id", ""), enabled=True)
+            _suite().audit.record(
+                action="mfa_enable",
+                actor=body.get("identity_id", ""),
+                subject=body.get("identity_id", ""),
+            )
+            return json_response(result, status=201)
+        if action == "disable":
+            result = mfa.set_user_mfa(identity_id=body.get("identity_id", ""), enabled=False)
+            _suite().audit.record(
+                action="mfa_disable",
+                actor=body.get("identity_id", ""),
+                subject=body.get("identity_id", ""),
+            )
+            return json_response(result, status=201)
+        if action == "org_policy":
+            return json_response(
+                mfa.set_org_policy(
+                    organization_id=body.get("organization_id", ""),
+                    require_mfa=bool(body.get("require_mfa")),
+                ),
+                status=201,
+            )
         return json_response(
             mfa.challenge(
                 method=body.get("method", "totp"),
@@ -303,6 +422,9 @@ async def isam_dashboard_handler(request: web.Request) -> web.Response:
     try:
         dashboard = _suite().dashboard
         if request.method == "GET":
+            dt = request.rel_url.query.get("dashboard_type", "")
+            if dt:
+                return json_response(dashboard.render(dashboard_type=dt))
             return json_response(dashboard.status())
         body = await _read_json(request)
         return json_response(

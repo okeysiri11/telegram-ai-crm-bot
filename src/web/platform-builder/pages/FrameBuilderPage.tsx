@@ -11,6 +11,7 @@ export function FrameBuilderPage({ builderId }: { builderId: string }) {
       purpose={builder?.purpose || "Framework-only builder ready for future implementation."}
       steps={builder?.steps || GENERIC_STEPS}
       frameOnly
+      openWorkspaceRoute={builder?.openWorkspaceRoute}
     />
   );
 }

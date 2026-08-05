@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class PermissionCategory(str, enum.Enum):
@@ -21,7 +21,7 @@ class PermissionCategory(str, enum.Enum):
     ANALYTICS = "analytics"
 
 
-class RbacPermission(UUIDPrimaryKeyMixin, Base):
+class RbacPermission(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "rbac_v2_permissions"
     __table_args__ = (
         UniqueConstraint("code", name="uq_rbac_v2_permissions_code"),
@@ -68,7 +68,7 @@ class RbacRoleInheritance(Base):
     parent_role_code: Mapped[str] = mapped_column(String(64), primary_key=True)
 
 
-class RbacRoleTemplate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class RbacRoleTemplate(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "rbac_v2_role_templates"
     __table_args__ = (
         UniqueConstraint("code", name="uq_rbac_v2_role_templates_code"),

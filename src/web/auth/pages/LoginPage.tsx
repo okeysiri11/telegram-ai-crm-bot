@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -10,106 +11,208 @@ import { loginSchema, type LoginForm } from "../schemas";
 import { AuthLink, AuthShell } from "../components/AuthShell";
 import { identityManager } from "../managers";
 import { profileCenter } from "../managers/profileCenter";
-import { isFirstEntryComplete } from "@/onboarding/firstEntryStore";
+import { isFirstEntryComplete, saveFirstEntry } from "@/onboarding/firstEntryStore";
+import { isDemoAuthEnabled } from "@/auth/demoAuthProvider";
+import { postAuthDestination } from "@/navigation/roleHome";
+import { useOrgSelector } from "@/navigation/orgSelectorStore";
+import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 
 export function LoginPage() {
   const t = useI18n((s) => s.t);
   const setLocale = useI18n((s) => s.setLocale);
   const login = useAuthStore((s) => s.login);
+  const loginWithGoogle = useAuthStore((s) => s.loginWithGoogle);
   const setWorkspace = useWorkspaceStore((s) => s.setWorkspace);
   const updatePrefs = usePreferencesStore((s) => s.update);
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from || "/dashboard";
+  const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<"chooser" | "email">("chooser");
+  const [googleBusy, setGoogleBusy] = useState(false);
 
-  const { register, handleSubmit, formState } = useForm<LoginForm>({
+  const { register, handleSubmit, formState, getValues } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema) as never,
     defaultValues: {
-      identifier: "owner@demo.corp",
-      password: "demo",
+      identifier: isDemoAuthEnabled() ? "owner@demo.corp" : "",
+      password: isDemoAuthEnabled() ? "demo" : "",
       rememberMe: true,
-      tenantId: localStorage.getItem("ewp_remember_tenant") || "demo-corp",
-      language: "en",
+      tenantId: localStorage.getItem("ewp_remember_tenant") || (isDemoAuthEnabled() ? "demo-corp" : ""),
+      language: "ru",
     },
   });
+
+  async function afterAuth(email: string, tenantId: string, language: LoginForm["language"]) {
+    const identity = identityManager.byEmail(email);
+    const authUser = useAuthStore.getState().user;
+    setWorkspace({
+      company: tenantId,
+      department: identity?.department || "operations",
+      userContext: identity?.username || "user",
+      permissions: authUser?.permissions?.length
+        ? authUser.permissions
+        : ["read", "write", "admin"],
+    });
+    setLocale(language);
+    updatePrefs({ language });
+    profileCenter.update({
+      language,
+      name: identity?.name || authUser?.name || email.split("@")[0] || "user",
+    });
+    localStorage.setItem("ewp_remember_tenant", tenantId);
+    useOrgSelector.getState().setOrganization(
+      ["demo-corp", "acme-ltd", "bidex"].includes(tenantId) ? tenantId : "demo-corp",
+    );
+
+    // Seed first-run wizard for new sessions; do not skip Beta onboarding.
+    if (!isFirstEntryComplete()) {
+      saveFirstEntry({
+        completed: false,
+        step: "welcome",
+        roleId: authUser?.roleId || "",
+        companyName: tenantId || "Demo Corp",
+        language,
+        workspaceId: `ws_${tenantId}`,
+      });
+    }
+
+    const roleHome = postAuthDestination(useRoleSwitcher.getState().activeRoleId);
+    const next = !isFirstEntryComplete()
+      ? "/onboarding/first-entry"
+      : from.startsWith("/onboarding") || from === "/login"
+        ? roleHome
+        : from || roleHome;
+    navigate(next, { replace: true });
+  }
 
   return (
     <AuthShell
       title={t("app.title")}
-      subtitle="Enterprise Identity Center · MFA ready"
-      footer={<AuthLink to="/auth/forgot-password">Forgot password?</AuthLink>}
+      subtitle="Корпоративная аутентификация · Google · MFA"
+      footer={
+        <div className="flex flex-col gap-1">
+          <AuthLink to="/auth/register">Создать аккаунт</AuthLink>
+          <AuthLink to="/auth/invite">Приглашение</AuthLink>
+          <AuthLink to="/auth/forgot-password">Восстановить пароль</AuthLink>
+        </div>
+      }
     >
-      <form
-        className="space-y-3"
-        onSubmit={handleSubmit(async (values) => {
-          const email = values.identifier.includes("@")
-            ? values.identifier
-            : `${values.identifier}@demo.corp`;
-          await login(email, values.password, values.tenantId);
-          const identity = identityManager.byEmail(email);
-          const authUser = useAuthStore.getState().user;
-          setWorkspace({
-            company: values.tenantId,
-            department: identity?.department || "operations",
-            userContext: identity?.username || "user",
-            permissions: authUser?.permissions?.length
-              ? authUser.permissions
-              : ["read", "write", "admin"],
-          });
-          setLocale(values.language);
-          updatePrefs({ language: values.language });
-          profileCenter.update({
-            language: values.language,
-            name: identity?.name || email.split("@")[0] || "user",
-          });
-          if (values.rememberMe) localStorage.setItem("ewp_remember_tenant", values.tenantId);
-          const next =
-            !isFirstEntryComplete()
-              ? "/onboarding/first-entry"
-              : from.startsWith("/onboarding")
-                ? "/dashboard"
-                : from;
-          navigate(next, { replace: true });
-        })}
-      >
-        <div>
-          <label className="eds-type-label mb-1 block">Email / Username</label>
-          <Input className="eds-focus-ring" {...register("identifier")} />
-          {formState.errors.identifier ? (
-            <p className="eds-type-caption text-[var(--eds-danger)]">{formState.errors.identifier.message}</p>
+      {mode === "chooser" ? (
+        <div className="space-y-3">
+          <Button
+            className="w-full eds-type-button"
+            type="button"
+            disabled={googleBusy}
+            onClick={async () => {
+              setError(null);
+              setGoogleBusy(true);
+              try {
+                const tenantId = getValues("tenantId") || "demo-corp";
+                const language = getValues("language") || "ru";
+                await loginWithGoogle({
+                  email: "user@gmail.com",
+                  name: "Google User",
+                  tenantId,
+                  rememberMe: true,
+                });
+                const email = useAuthStore.getState().user?.email || "user@gmail.com";
+                await afterAuth(email, tenantId, language);
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "Ошибка входа через Google");
+              } finally {
+                setGoogleBusy(false);
+              }
+            }}
+          >
+            {googleBusy ? "Вход…" : "Продолжить через Google"}
+          </Button>
+          <Button
+            className="w-full"
+            type="button"
+            variant="secondary"
+            onClick={() => setMode("email")}
+          >
+            Войти по Email
+          </Button>
+          <p className="eds-type-caption text-[var(--eds-text-muted)]">
+            Google — основной способ входа для Beta. Microsoft, Apple, GitHub и Telegram будут
+            добавлены позже.
+            {isDemoAuthEnabled() ? " · Локальный demo-режим включён" : null}
+          </p>
+          {error ? (
+            <p
+              className="rounded-md border border-[var(--eds-danger)]/40 bg-[var(--eds-danger-soft)] px-3 py-2 eds-type-caption text-[var(--eds-danger)]"
+              role="alert"
+            >
+              {error}
+            </p>
           ) : null}
         </div>
-        <div>
-          <label className="eds-type-label mb-1 block">{t("auth.password")}</label>
-          <Input type="password" className="eds-focus-ring" {...register("password")} />
-        </div>
-        <div>
-          <label className="eds-type-label mb-1 block">{t("auth.tenant")}</label>
-          <Select className="eds-focus-ring" {...register("tenantId")}>
-            <option value="demo-corp">demo-corp</option>
-            <option value="acme-ltd">acme-ltd</option>
-          </Select>
-        </div>
-        <div>
-          <label className="eds-type-label mb-1 block">Language</label>
-          <Select className="eds-focus-ring" {...register("language")}>
-            <option value="en">English</option>
-            <option value="ru">Русский</option>
-            <option value="uk">Українська</option>
-          </Select>
-        </div>
-        <label className="flex items-center gap-2 eds-type-small">
-          <Checkbox {...register("rememberMe")} />
-          Remember me
-        </label>
-        <Button className="w-full eds-type-button" type="submit" disabled={formState.isSubmitting}>
-          {t("auth.login")}
-        </Button>
-        <p className="eds-type-caption text-[var(--eds-text-muted)]">
-          Production auth: Enterprise ISAM + platform JWT when{" "}
-          <code>VITE_IAM_LOGIN_SECRET</code> is set. Demo tokens are disabled.
-        </p>
-      </form>
+      ) : (
+        <form
+          className="space-y-3"
+          onSubmit={handleSubmit(async (values) => {
+            setError(null);
+            try {
+              const email = values.identifier.includes("@")
+                ? values.identifier
+                : `${values.identifier}@demo.corp`;
+              await login(email, values.password, values.tenantId);
+              if (values.rememberMe) localStorage.setItem("ewp_remember_tenant", values.tenantId);
+              await afterAuth(email, values.tenantId, values.language);
+            } catch (err) {
+              setError(err instanceof Error ? err.message : "Ошибка входа");
+            }
+          })}
+        >
+          <div>
+            <label className="eds-type-label mb-1 block">Email</label>
+            <Input className="eds-focus-ring" {...register("identifier")} />
+            {formState.errors.identifier ? (
+              <p className="eds-type-caption text-[var(--eds-danger)]">
+                {formState.errors.identifier.message}
+              </p>
+            ) : null}
+          </div>
+          <div>
+            <label className="eds-type-label mb-1 block">{t("auth.password")}</label>
+            <Input type="password" className="eds-focus-ring" {...register("password")} />
+          </div>
+          <div>
+            <label className="eds-type-label mb-1 block">{t("auth.tenant")}</label>
+            <Select className="eds-focus-ring" {...register("tenantId")}>
+              <option value="demo-corp">demo-corp</option>
+              <option value="acme-ltd">acme-ltd</option>
+            </Select>
+          </div>
+          <div>
+            <label className="eds-type-label mb-1 block">Язык</label>
+            <Select className="eds-focus-ring" {...register("language")}>
+              <option value="ru">Русский</option>
+              <option value="en">English</option>
+              <option value="uk">Українська</option>
+            </Select>
+          </div>
+          <label className="flex items-center gap-2 eds-type-small">
+            <Checkbox {...register("rememberMe")} />
+            Запомнить меня
+          </label>
+          {error ? (
+            <p
+              className="rounded-md border border-[var(--eds-danger)]/40 bg-[var(--eds-danger-soft)] px-3 py-2 eds-type-caption text-[var(--eds-danger)]"
+              role="alert"
+            >
+              {error}
+            </p>
+          ) : null}
+          <Button className="w-full eds-type-button" type="submit" disabled={formState.isSubmitting}>
+            {formState.isSubmitting ? "Вход…" : "Войти по Email"}
+          </Button>
+          <Button className="w-full" type="button" variant="ghost" onClick={() => setMode("chooser")}>
+            ← Назад
+          </Button>
+        </form>
+      )}
     </AuthShell>
   );
 }

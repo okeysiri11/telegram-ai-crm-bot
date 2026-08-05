@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class AntiLossEntityType(str, enum.Enum):
@@ -33,7 +33,7 @@ class AntiLossEventType(str, enum.Enum):
     DEAL_MERGED = "deal_merged"
 
 
-class AntiLossLayerV1Fingerprint(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AntiLossLayerV1Fingerprint(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "anti_loss_layer_v1_fingerprints"
     __table_args__ = (
         UniqueConstraint(
@@ -55,7 +55,7 @@ class AntiLossLayerV1Fingerprint(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 
-class AntiLossLayerV1Event(CreatedAtMixin, UUIDPrimaryKeyMixin, Base):
+class AntiLossLayerV1Event(CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "anti_loss_layer_v1_events"
     __table_args__ = (
         Index("ix_anti_loss_v1_events_type", "event_type"),

@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 from database.models.payment_engine_v1 import PaymentEngineMethod
 
 OWNER_PAYMENT_PROFILE_SINGLETON_KEY = "default"
@@ -24,7 +24,7 @@ METHOD_ENABLE_FIELDS = {
 }
 
 
-class OwnerPaymentProfileV1(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class OwnerPaymentProfileV1(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "owner_payment_profile_v1"
     __table_args__ = (
         UniqueConstraint("profile_key", name="uq_owner_payment_profile_v1_key"),

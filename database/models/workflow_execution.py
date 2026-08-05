@@ -9,10 +9,10 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class WorkflowExecution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class WorkflowExecution(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "workflow_executions"
     __table_args__ = (
         Index("ix_workflow_executions_workflow_id", "workflow_id"),
@@ -31,7 +31,7 @@ class WorkflowExecution(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
-class WorkflowStepLog(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class WorkflowStepLog(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "workflow_step_logs"
     __table_args__ = (
         Index("ix_workflow_step_logs_execution_id", "execution_id"),

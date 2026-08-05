@@ -24,7 +24,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.automotive_service  # noqa: F401
 
@@ -52,7 +52,7 @@ class PartReservationStatus(str, enum.Enum):
     EXPIRED = "EXPIRED"
 
 
-class Supplier(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Supplier(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_warehouse_v1_suppliers"
     __table_args__ = (
         Index("ix_automotive_warehouse_v1_suppliers_is_active", "is_active"),
@@ -71,7 +71,7 @@ class Supplier(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<Supplier id={self.id} name={self.name}>"
 
 
-class Part(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Part(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_warehouse_v1_parts"
     __table_args__ = (
         UniqueConstraint("part_number", name="uq_automotive_warehouse_v1_parts_part_number"),
@@ -110,7 +110,7 @@ class Part(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return self.quantity_on_hand - self.quantity_reserved
 
 
-class StockMovement(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class StockMovement(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "automotive_warehouse_v1_stock_movements"
     __table_args__ = (
         CheckConstraint("quantity > 0", name="ck_automotive_warehouse_v1_sm_qty"),
@@ -143,7 +143,7 @@ class StockMovement(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         )
 
 
-class PartReservation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartReservation(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_warehouse_v1_reservations"
     __table_args__ = (
         CheckConstraint("quantity > 0", name="ck_automotive_warehouse_v1_res_qty"),
@@ -181,7 +181,7 @@ class PartReservation(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class ReorderRule(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ReorderRule(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "automotive_warehouse_v1_reorder_rules"
     __table_args__ = (
         UniqueConstraint("part_id", name="uq_automotive_warehouse_v1_reorder_rules_part_id"),

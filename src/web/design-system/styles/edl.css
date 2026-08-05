@@ -1,0 +1,471 @@
+/**
+ * Enterprise Design Language (EDL) — EP-02.
+ * Visual recipes over existing EDS tokens. No new Engine / Store.
+ */
+
+/* —— Spacing rhythm —— */
+:root {
+  --eds-space-5: 1.25rem;
+  --eds-space-10: 2.5rem;
+  --eds-space-12: 3rem;
+  --eds-space-16: 4rem;
+  --eds-page-pad: var(--eds-space-6);
+  --eds-section-gap: var(--eds-space-6);
+  --eds-card-pad: var(--eds-space-4);
+  --eds-card-gap: var(--eds-space-3);
+  --eds-toolbar-gap: var(--eds-space-2);
+  --eds-dialog-pad: var(--eds-space-6);
+  --eds-drawer-pad: var(--eds-space-5);
+  --eds-control-h: 2.5rem;
+  --eds-control-h-sm: 2rem;
+  --eds-control-h-lg: 2.75rem;
+  --eds-icon-sm: 1rem;
+  --eds-icon-md: 1.25rem;
+  --eds-icon-lg: 1.5rem;
+  --eds-radius-xl: 0.75rem;
+  --eds-radius-2xl: 1rem;
+  --eds-radius-full: 9999px;
+  --eds-accent: #1f3a5f;
+  --eds-accent-soft: #e4ebf5;
+  --eds-success-soft: #d1fadf;
+  --eds-warning-soft: #fef0c7;
+  --eds-danger-soft: #fee4e2;
+  --eds-info-soft: #e0f2fe;
+  --eds-surface-raised: color-mix(in oklab, var(--eds-surface) 92%, var(--eds-primary) 4%);
+  --eds-surface-sunken: color-mix(in oklab, var(--eds-bg) 88%, var(--eds-border) 12%);
+  --ew-info: var(--eds-info);
+  --ew-accent: var(--eds-accent);
+  --ew-radius: var(--eds-radius-lg);
+  --ew-shadow: var(--eds-shadow-md);
+}
+
+[data-theme="dark"] {
+  --eds-accent: #8fb0d8;
+  --eds-accent-soft: #1a2740;
+  --eds-success-soft: #0f2f22;
+  --eds-warning-soft: #3a2410;
+  --eds-danger-soft: #3a1512;
+  --eds-info-soft: #0f2a3a;
+  --eds-surface-raised: color-mix(in oklab, var(--eds-surface) 90%, var(--eds-primary) 8%);
+  --eds-surface-sunken: #0a101c;
+}
+
+/* —— Typography roles (EDL) —— */
+.eds-type-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  color: var(--eds-text);
+}
+.eds-type-section {
+  font-size: 0.8125rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--eds-text-muted);
+}
+.eds-type-helper {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--eds-text-muted);
+}
+.eds-type-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* —— Form controls —— */
+.eds-control {
+  height: var(--eds-control-h);
+  width: 100%;
+  border-radius: var(--eds-radius-md);
+  border: 1px solid var(--eds-border);
+  background: var(--eds-surface);
+  color: var(--eds-text);
+  padding-inline: var(--eds-space-3);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  outline: none;
+  transition:
+    border-color var(--eds-motion-fast) var(--eds-ease),
+    box-shadow var(--eds-motion-fast) var(--eds-ease),
+    background var(--eds-motion-fast) var(--eds-ease);
+}
+.eds-control:hover:not(:disabled) {
+  border-color: color-mix(in oklab, var(--eds-primary) 35%, var(--eds-border));
+}
+.eds-control:focus-visible {
+  border-color: var(--eds-primary);
+  box-shadow: var(--eds-shadow-focus);
+}
+.eds-control:disabled {
+  opacity: var(--eds-opacity-disabled);
+  cursor: not-allowed;
+}
+.eds-control--sm { height: var(--eds-control-h-sm); font-size: 0.8125rem; }
+.eds-control--lg { height: var(--eds-control-h-lg); font-size: 1rem; }
+textarea.eds-control {
+  height: auto;
+  min-height: 6rem;
+  padding-block: var(--eds-space-3);
+  resize: vertical;
+}
+
+/* —— Cards —— */
+.eds-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eds-card-gap);
+  padding: var(--eds-card-pad);
+  border-radius: var(--eds-radius-xl);
+  border: 1px solid var(--eds-border);
+  background: var(--eds-surface);
+  box-shadow: var(--eds-shadow-sm);
+  transition:
+    transform var(--eds-motion-fast) var(--eds-ease),
+    border-color var(--eds-motion-fast) var(--eds-ease),
+    box-shadow var(--eds-motion-normal) var(--eds-ease);
+}
+.eds-card:hover {
+  border-color: color-mix(in oklab, var(--eds-primary) 28%, var(--eds-border));
+  box-shadow: var(--eds-shadow-md);
+}
+.eds-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--eds-space-3);
+}
+.eds-card__title {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--eds-text-muted);
+}
+.eds-card__body {
+  min-width: 0;
+  flex: 1;
+}
+.eds-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--eds-toolbar-gap);
+  margin-top: var(--eds-space-1);
+}
+.eds-card--raised {
+  background: var(--eds-surface-raised);
+}
+.eds-card--interactive {
+  cursor: pointer;
+}
+.eds-card--interactive:hover {
+  transform: translateY(-1px);
+}
+.eds-card.is-loading {
+  opacity: 0.72;
+  pointer-events: none;
+}
+.eds-card.is-empty {
+  border-style: dashed;
+  background: var(--eds-surface-sunken);
+}
+.eds-card.is-success {
+  border-color: color-mix(in oklab, var(--eds-success) 40%, var(--eds-border));
+}
+
+/* —— Buttons (recipe helpers; component still owns variants) —— */
+.eds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--eds-space-2);
+  border-radius: var(--eds-radius-md);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition:
+    background var(--eds-motion-fast) var(--eds-ease),
+    border-color var(--eds-motion-fast) var(--eds-ease),
+    color var(--eds-motion-fast) var(--eds-ease),
+    transform var(--eds-motion-fast) var(--eds-ease),
+    opacity var(--eds-motion-fast) var(--eds-ease);
+}
+.eds-btn:disabled,
+.eds-btn[aria-busy="true"] {
+  opacity: var(--eds-opacity-disabled);
+  cursor: not-allowed;
+}
+.eds-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.eds-btn--success {
+  background: var(--eds-success);
+  color: #fff;
+}
+.eds-btn--success:hover:not(:disabled) {
+  filter: brightness(1.05);
+}
+.eds-btn--icon {
+  width: var(--eds-control-h);
+  padding-inline: 0;
+}
+.eds-btn--icon.eds-btn--sm,
+.eds-btn--sm.eds-btn--icon {
+  width: var(--eds-control-h-sm);
+}
+.eds-btn--toolbar {
+  height: var(--eds-control-h-sm);
+  padding-inline: var(--eds-space-3);
+  font-size: 0.8125rem;
+}
+
+/* —— Tables —— */
+.eds-table-wrap {
+  overflow: auto;
+  border-radius: var(--eds-radius-lg);
+  border: 1px solid var(--eds-border);
+  background: var(--eds-surface);
+}
+.eds-table {
+  width: 100%;
+  min-width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+.eds-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: color-mix(in oklab, var(--eds-primary-soft) 55%, var(--eds-surface));
+}
+.eds-table th {
+  padding: var(--eds-space-3) var(--eds-space-3);
+  font-weight: 600;
+  color: var(--eds-text);
+  border-bottom: 1px solid var(--eds-border);
+  white-space: nowrap;
+}
+.eds-table td {
+  padding: var(--eds-space-3);
+  border-bottom: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+  color: var(--eds-text);
+}
+.eds-table tbody tr {
+  transition: background var(--eds-motion-fast) var(--eds-ease);
+}
+.eds-table tbody tr:hover {
+  background: color-mix(in oklab, var(--eds-primary-soft) 35%, transparent);
+}
+.eds-table tbody tr.is-selected {
+  background: color-mix(in oklab, var(--eds-primary-soft) 65%, transparent);
+}
+.eds-table__empty {
+  padding: var(--eds-space-8) var(--eds-space-4);
+  text-align: center;
+  color: var(--eds-text-muted);
+}
+
+/* —— Dialog / Drawer —— */
+.eds-dialog-overlay,
+.eds-drawer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--eds-z-modal);
+  background: rgba(11, 18, 32, 0.4);
+}
+.eds-drawer-panel {
+  height: 100%;
+  width: min(28rem, 100%);
+  margin-left: auto;
+  border-left: 1px solid var(--eds-border);
+  background: var(--eds-surface);
+  padding: var(--eds-drawer-pad);
+  box-shadow: var(--eds-shadow-lg);
+  animation: eds-slide var(--eds-motion-normal) var(--eds-ease);
+}
+.eds-drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--eds-space-3);
+  margin-bottom: var(--eds-space-4);
+}
+.eds-drawer-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* —— Badges / status —— */
+.eds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: var(--eds-radius-sm);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.eds-badge--default {
+  background: var(--eds-primary-soft);
+  color: var(--eds-primary);
+}
+.eds-badge--success {
+  background: var(--eds-success-soft);
+  color: var(--eds-success);
+}
+.eds-badge--warning {
+  background: var(--eds-warning-soft);
+  color: var(--eds-warning);
+}
+.eds-badge--danger {
+  background: var(--eds-danger-soft);
+  color: var(--eds-danger);
+}
+.eds-badge--info {
+  background: var(--eds-info-soft);
+  color: var(--eds-info);
+}
+
+/* —— Page / shell rhythm —— */
+.eds-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--eds-section-gap);
+}
+.eds-main {
+  background: transparent;
+}
+.eds-shell {
+  background: var(--eds-bg);
+  color: var(--eds-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+.eds-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--eds-toolbar-gap);
+}
+
+/* —— Icon sizing —— */
+.eds-icon { width: var(--eds-icon-md); height: var(--eds-icon-md); flex-shrink: 0; }
+.eds-icon--sm { width: var(--eds-icon-sm); height: var(--eds-icon-sm); }
+.eds-icon--lg { width: var(--eds-icon-lg); height: var(--eds-icon-lg); }
+.eds-icon--muted { color: var(--eds-text-muted); }
+.eds-icon--brand { color: var(--eds-primary); }
+
+/* —— Executive identity surfaces share EDL —— */
+.ex-morning,
+.ect-page,
+.etwin-page,
+.mkt-hub,
+.aios-chrome,
+.command-center {
+  --edl-identity-radius: var(--eds-radius-2xl);
+  --edl-identity-border: color-mix(in oklab, var(--eds-primary) 22%, var(--eds-border));
+}
+.ex-morning {
+  border-radius: var(--edl-identity-radius);
+  border-color: var(--edl-identity-border);
+}
+.aios-dock,
+.ect-hero,
+.etwin-hero,
+.cc-header {
+  border-radius: var(--eds-radius-2xl);
+}
+
+@media (max-width: 767px) {
+  :root {
+    --eds-page-pad: var(--eds-space-4);
+    --eds-section-gap: var(--eds-space-4);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .eds-card,
+  .eds-btn,
+  .eds-control,
+  .eds-table tbody tr {
+    transition: none !important;
+  }
+  .eds-card--interactive:hover,
+  .eds-btn:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* —— Premium polish (EP-02) —— */
+::selection {
+  background: color-mix(in oklab, var(--eds-primary) 28%, transparent);
+  color: var(--eds-text);
+}
+
+.eds-main a:not([class]) {
+  color: var(--eds-primary);
+  text-underline-offset: 0.15em;
+}
+
+.eds-main a:not([class]):hover {
+  text-decoration: underline;
+}
+
+.eds-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--eds-primary) 35%, var(--eds-border)) transparent;
+}
+
+.eds-card + .eds-card {
+  margin-top: 0;
+}
+
+.eds-kpi-value {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.eds-divider {
+  height: 1px;
+  background: var(--eds-border);
+  border: 0;
+  margin-block: var(--eds-space-4);
+}
+
+.eds-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--eds-space-1);
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--eds-radius-full, 9999px);
+  border: 1px solid var(--eds-border);
+  background: var(--eds-surface);
+  font-size: 0.75rem;
+  color: var(--eds-text-muted);
+}
+
+.eds-panel-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.eds-quiet-label {
+  font-size: 0.6875rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--eds-text-muted);
+}

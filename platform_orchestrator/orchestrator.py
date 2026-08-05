@@ -82,12 +82,12 @@ class PlatformOrchestrator:
 
     async def initialize(self, context: AgentContext | None = None) -> None:
         ctx = context or AgentContext()
-        for meta in self._registry.list():
+        for meta in self._registry.list_agents():
             agent = self._registry.get(meta.id)
             await agent.initialize(ctx)
         self._wire_message_handlers()
         self._initialized = True
-        logger.info("orchestrator_initialized agents=%s", len(self._registry.list()))
+        logger.info("orchestrator_initialized agents=%s", len(self._registry.list_agents()))
 
     def _wire_message_handlers(self) -> None:
         async def _handle_request(message: AgentMessage) -> None:
@@ -111,7 +111,7 @@ class PlatformOrchestrator:
         self._message_bus.subscribe(MessageType.REQUEST, _handle_request)
 
     async def shutdown(self) -> None:
-        for meta in self._registry.list():
+        for meta in self._registry.list_agents():
             await self._registry.get(meta.id).shutdown()
         self._initialized = False
         logger.info("orchestrator_shutdown")

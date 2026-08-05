@@ -11,14 +11,14 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import UUIDPrimaryKeyMixin
+from database.models.mixins import UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.permissions import RolePermission
     from database.models.users import User
 
 
-class RbacRole(UUIDPrimaryKeyMixin, Base):
+class RbacRole(UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "roles"
     __table_args__ = (
         UniqueConstraint("code", name="uq_roles_code"),

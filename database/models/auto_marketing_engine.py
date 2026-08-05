@@ -21,7 +21,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class MarketingChannel(str, enum.Enum):
@@ -60,7 +60,7 @@ PUBLICATION_STATUSES = frozenset(s.value for s in PublicationStatus)
 MEDIA_TYPES = frozenset(t.value for t in MediaType)
 
 
-class MarketingCampaign(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class MarketingCampaign(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "auto_marketing_engine_v1_campaigns"
     __table_args__ = (
         Index("ix_auto_marketing_engine_v1_campaigns_status", "status"),
@@ -108,7 +108,7 @@ class MarketingCampaign(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<MarketingCampaign name={self.name} status={self.status}>"
 
 
-class MarketingPostTemplate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class MarketingPostTemplate(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "auto_marketing_engine_v1_post_templates"
     __table_args__ = (
         UniqueConstraint("code", name="uq_auto_marketing_engine_v1_templates_code"),
@@ -128,7 +128,7 @@ class MarketingPostTemplate(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<MarketingPostTemplate code={self.code} channel={self.channel}>"
 
 
-class MarketingMediaAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class MarketingMediaAsset(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "auto_marketing_engine_v1_media_assets"
     __table_args__ = (
         Index("ix_auto_marketing_engine_v1_media_campaign", "campaign_id"),
@@ -158,7 +158,7 @@ class MarketingMediaAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<MarketingMediaAsset file={self.file_name} type={self.media_type}>"
 
 
-class MarketingPublication(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class MarketingPublication(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "auto_marketing_engine_v1_publications"
     __table_args__ = (
         Index("ix_auto_marketing_engine_v1_pub_campaign", "campaign_id"),

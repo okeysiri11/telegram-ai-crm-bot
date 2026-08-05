@@ -37,24 +37,43 @@ export function ActivityFeedPanel({ items }: { items: LiveActivityItem[] }) {
           ◇
         </div>
         <p className="eds-type-small text-[var(--eds-text-muted)]">Пока нет событий — система ожидает активность.</p>
+        <div className="mt-3">
+          <Link to="/platform-builder/mission-control" className="eds-type-small text-[var(--eds-primary)]">
+            Mission Control →
+          </Link>
+        </div>
       </Card>
     );
   }
   return (
     <Card title="Enterprise Activity Feed">
       <ul className="lo-feed">
-        {items.slice(0, 10).map((a) => (
-          <li key={a.id} className="lo-feed-item">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge>{a.kind}</Badge>
-              <span className="font-medium">{a.title}</span>
-              <span className="eds-type-small text-[var(--eds-text-muted)]">{relTime(a.at)}</span>
-            </div>
-            <p className="eds-type-small text-[var(--eds-text-muted)]">
-              {a.detail} · {a.source}
-            </p>
-          </li>
-        ))}
+        {items.slice(0, 8).map((a) => {
+          const route =
+            a.kind === "ai"
+              ? "/platform-builder/ai-team"
+              : a.source === "mission_control"
+                ? "/platform-builder/mission-control"
+                : "/platform-builder/control-tower";
+          return (
+            <li key={a.id} className="lo-feed-item">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge>{a.kind}</Badge>
+                <span className="font-medium">{a.title}</span>
+                <span className="eds-type-small text-[var(--eds-text-muted)]">{relTime(a.at)}</span>
+              </div>
+              <p className="eds-type-small text-[var(--eds-text-muted)]">
+                Что: {a.title}
+              </p>
+              <p className="eds-type-small text-[var(--eds-text-muted)]">
+                Почему: {a.detail || a.source}
+              </p>
+              <Link to={route} className="eds-type-small text-[var(--eds-primary)]">
+                Act on this signal →
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </Card>
   );
@@ -146,10 +165,18 @@ export function EnterpriseHealthPanel({ health }: { health: HealthStatus[] }) {
     <Card title="Enterprise Health">
       <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
         {health.map((h) => (
-          <div key={h.id} className={`lo-health ${h.ok ? "is-ok" : "is-warn"}`}>
+          <Link
+            key={h.id}
+            to={h.ok ? "/platform-builder/mission-control" : "/platform-builder/control-tower"}
+            className={`lo-health ${h.ok ? "is-ok" : "is-warn"}`}
+          >
             <p className="font-medium">{h.label}</p>
             <Badge tone={h.ok ? "success" : "warning"}>{h.detail}</Badge>
-          </div>
+            <p className="eds-type-small text-[var(--eds-text-muted)] mt-1">
+              {h.ok ? "Стабильно — наблюдать" : "Важно — разобрать сейчас"}
+            </p>
+            <span className="eds-type-small text-[var(--eds-primary)]">{h.ok ? "MC →" : "Tower →"}</span>
+          </Link>
         ))}
       </div>
     </Card>
@@ -161,26 +188,39 @@ export function AiRecommendationsPanel({ items }: { items: RecommendationItem[] 
   const notifications = useNotificationStore((s) => s.items);
   const goals = useMemo(() => deriveOkr(snapshot, notifications).goals, [snapshot, notifications]);
   const toneLabel: Record<RecommendationItem["tone"], string> = {
-    suggest: "AI рекомендует",
-    today: "Сегодня желательно",
-    risk: "Обнаружены риски",
-    improve: "Найдено улучшение",
+    suggest: "Insight",
+    today: "Today",
+    risk: "Risk",
+    improve: "Improve",
   };
   return (
-    <Card title="AI Recommendations">
+    <Card title="Executive Advisor · Recommendations">
+      <p className="mb-2 eds-type-helper">Observation · Why · Action · Impact</p>
       <ul className="space-y-2">
         {items.map((r) => {
           const align = alignRecommendation(r, goals);
+          const route =
+            r.tone === "risk"
+              ? "/platform-builder/control-tower"
+              : /crm|сделк/i.test(r.title)
+                ? "/workspace/crm"
+                : "/platform-builder/concierge";
+          const confidence = r.tone === "risk" || r.tone === "today" ? "High" : r.tone === "improve" ? "Likely" : "Likely";
           return (
-            <li key={r.id} className="lo-rec">
+            <li key={r.id} className="lo-rec ai-advisor-rec">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge>{toneLabel[r.tone]}</Badge>
                 <Badge tone="success">{align.goalLabel}</Badge>
+                <Badge tone={confidence === "High" ? "success" : "default"}>{confidence}</Badge>
               </div>
-              <span className="eds-type-small">{r.title}</span>
-              <p className="eds-type-small text-[var(--eds-muted)]">
-                Цель: {align.goalLabel} · KPI: {align.kpi} · {align.expectedEffect}
+              <span className="eds-type-small font-medium">Observation: {r.title}</span>
+              <p className="eds-type-small text-[var(--eds-text-muted)]">
+                Why: {align.expectedEffect}
               </p>
+              <p className="eds-type-small text-[var(--eds-text-muted)]">Impact: KPI {align.kpi}</p>
+              <Link to={route} className="eds-type-small text-[var(--eds-primary)]">
+                Take suggested action →
+              </Link>
             </li>
           );
         })}
@@ -207,11 +247,15 @@ export function LiveMetaBar({
     <div className="lo-meta">
       <Badge tone={snapshot.mcOk ? "success" : "warning"}>Live · {busy ? "updating…" : "ready"}</Badge>
       <span className="eds-type-small text-[var(--eds-text-muted)]">
-        обновлено {snapshot.updatedAt === new Date(0).toISOString() ? "—" : relTime(snapshot.updatedAt)} назад
+        updated {snapshot.updatedAt === new Date(0).toISOString() ? "—" : relTime(snapshot.updatedAt)} ago
       </span>
-      {error ? <span className="eds-type-small text-[var(--eds-danger)]">{error}</span> : null}
+      {error ? (
+        <span className="eds-type-small text-[var(--eds-danger)]" role="status">
+          Live refresh paused — last snapshot kept. {error}
+        </span>
+      ) : null}
       <button type="button" className="eds-type-small underline" onClick={onRefresh} disabled={busy}>
-        Refresh now
+        {busy ? "Refreshing…" : "Refresh now"}
       </button>
     </div>
   );

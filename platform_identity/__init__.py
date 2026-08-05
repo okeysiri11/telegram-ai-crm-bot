@@ -1,4 +1,4 @@
-# Platform Identity & Access Management — single authorization source.
+# Platform Identity & Access Management — single authorization source (Sprint 34.2A).
 
 from platform_identity.authentication import authentication_service
 from platform_identity.authorization import authorization_service

@@ -10,7 +10,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class TenantStatus(str, enum.Enum):
@@ -40,7 +40,7 @@ class TenantBillingAccountType(str, enum.Enum):
     RESERVE = "RESERVE"
 
 
-class PartnerTenant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerTenant(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_tenant_engine_v1_tenants"
     __table_args__ = (
         UniqueConstraint("company_id", "code", name="uq_partner_tenant_engine_v1_tenants_company_code"),
@@ -66,7 +66,7 @@ class PartnerTenant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<PartnerTenant code={self.code} company={self.company_id}>"
 
 
-class TenantUserRole(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantUserRole(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_tenant_engine_v1_user_roles"
     __table_args__ = (
         UniqueConstraint("tenant_id", "user_id", name="uq_partner_tenant_engine_v1_user_roles_tenant_user"),
@@ -91,7 +91,7 @@ class TenantUserRole(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<TenantUserRole tenant={self.tenant_id} user={self.user_id} role={self.role_code}>"
 
 
-class TenantResourceBinding(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantResourceBinding(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_tenant_engine_v1_resource_bindings"
     __table_args__ = (
         UniqueConstraint(
@@ -126,7 +126,7 @@ class TenantResourceBinding(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class TenantBillingAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantBillingAccount(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_tenant_engine_v1_billing_accounts"
     __table_args__ = (
         UniqueConstraint(

@@ -1,11 +1,12 @@
 /**
- * Identity-aware API client — Sprint 30.4 / refresh in 30.6.
+ * Identity-aware API client — Sprint 30.4 / refresh in 30.6 / EP-07 timeouts.
  * Reuses authStore session; attaches Authorization; refreshes on 401.
  */
 
 import { useAuthStore } from "@/auth/authStore";
 import { useWorkspaceStore } from "@/workspace/workspaceStore";
 import { webConfig } from "@/config/webConfig";
+import { API_TIMEOUT_MS, prodLog, withTimeoutSignal } from "@/production";
 
 export type IdentityContext = {
   userId: string | null;
@@ -28,9 +29,7 @@ export function getIdentityContext(): IdentityContext {
     roleId: auth.user?.roleId ?? null,
     organization: ws.company,
     workspaceProject: ws.project,
-    permissions: auth.user?.permissions?.length
-      ? auth.user.permissions
-      : ws.permissions,
+    permissions: auth.user?.permissions?.length ? auth.user.permissions : ws.permissions,
     accessToken: auth.accessToken,
   };
 }
@@ -38,6 +37,8 @@ export function getIdentityContext(): IdentityContext {
 export type ApiFetchInit = RequestInit & {
   anonymous?: boolean;
   skipRefresh?: boolean;
+  /** Override default timeout; set 0 to disable. */
+  timeoutMs?: number;
 };
 
 function buildHeaders(initHeaders: HeadersInit | undefined, anonymous?: boolean): Headers {
@@ -59,14 +60,26 @@ function buildHeaders(initHeaders: HeadersInit | undefined, anonymous?: boolean)
 
 /** Fetch with session + org/workspace context headers when logged in. */
 export async function apiFetch(input: string, init: ApiFetchInit = {}): Promise<Response> {
-  const { anonymous, skipRefresh, headers: initHeaders, ...rest } = init;
+  const { anonymous, skipRefresh, headers: initHeaders, timeoutMs = API_TIMEOUT_MS, signal, ...rest } = init;
   const headers = buildHeaders(initHeaders, anonymous);
   if (!headers.has("Content-Type") && rest.body && typeof rest.body === "string") {
     headers.set("Content-Type", "application/json");
   }
 
   const url = input.startsWith("http") || input.startsWith("/") ? input : `${webConfig.apiBase}/${input}`;
-  let res = await fetch(url, { ...rest, headers });
+  const timed =
+    timeoutMs && timeoutMs > 0
+      ? withTimeoutSignal(timeoutMs, signal || undefined)
+      : signal;
+
+  let res: Response;
+  try {
+    res = await fetch(url, { ...rest, headers, signal: timed });
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "network_error";
+    prodLog("warn", "api_fetch_failed", { url: url.split("?")[0], message: msg });
+    throw e;
+  }
 
   if (res.status === 401 && !anonymous && !skipRefresh) {
     const ok = await useAuthStore.getState().refreshSession();
@@ -75,7 +88,9 @@ export async function apiFetch(input: string, init: ApiFetchInit = {}): Promise<
       if (!retryHeaders.has("Content-Type") && rest.body && typeof rest.body === "string") {
         retryHeaders.set("Content-Type", "application/json");
       }
-      res = await fetch(url, { ...rest, headers: retryHeaders });
+      const retrySignal =
+        timeoutMs && timeoutMs > 0 ? withTimeoutSignal(timeoutMs, signal || undefined) : signal;
+      res = await fetch(url, { ...rest, headers: retryHeaders, signal: retrySignal });
     }
   }
   return res;

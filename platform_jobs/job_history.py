@@ -18,7 +18,7 @@ class JobHistory:
         if len(self._entries) > self._max_entries:
             self._entries = self._entries[-self._max_entries :]
 
-    def list(self, *, limit: int = 100) -> list[dict]:
+    def list_entries(self, *, limit: int = 100) -> list[dict]:
         return [j.to_dict() for j in self._entries[-limit:]]
 
     def by_handler(self, handler_name: str, *, limit: int = 50) -> list[dict]:

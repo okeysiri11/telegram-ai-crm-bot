@@ -59,7 +59,8 @@ export type SearchCategory =
   | "applications"
   | "dashboards"
   | "widgets"
-  | "knowledge";
+  | "knowledge"
+  | "commands";
 
 export type SearchDocument = {
   id: string;

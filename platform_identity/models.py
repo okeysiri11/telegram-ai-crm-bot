@@ -23,10 +23,13 @@ class PlatformRole(str, enum.Enum):
 class AuthMethod(str, enum.Enum):
     TELEGRAM_OWNER = "telegram_owner"
     TELEGRAM_USER = "telegram_user"
+    EMAIL = "email"
     JWT = "jwt"
     API_KEY = "api_key"
     SERVICE_ACCOUNT = "service_account"
     OAUTH = "oauth"
+    MOBILE = "mobile"
+    DESKTOP = "desktop"
 
 
 @dataclass
@@ -38,13 +41,17 @@ class ResourceRef:
 
 @dataclass
 class Principal:
-    """Authenticated identity — single source for authorization checks."""
+    """Authenticated identity — single source for authorization checks (Sprint 34.2A)."""
 
     principal_id: str
     auth_method: AuthMethod
     roles: list[str] = field(default_factory=list)
     permissions: list[str] = field(default_factory=list)
     telegram_id: int | None = None
+    user_id: str | None = None  # canonical users.id UUID
+    email: str | None = None
+    display_name: str | None = None
+    workspaces: list[str] = field(default_factory=list)
     service_account_id: str | None = None
     tenant_id: str | None = None
     session_id: str | None = None
@@ -53,7 +60,7 @@ class Principal:
 
     @property
     def is_owner(self) -> bool:
-        return PlatformRole.OWNER.value in self.roles
+        return PlatformRole.OWNER.value in self.roles or "owner" in self.roles
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -62,6 +69,10 @@ class Principal:
             "roles": self.roles,
             "permissions": self.permissions,
             "telegram_id": self.telegram_id,
+            "user_id": self.user_id,
+            "email": self.email,
+            "display_name": self.display_name,
+            "workspaces": self.workspaces,
             "service_account_id": self.service_account_id,
             "tenant_id": self.tenant_id,
             "session_id": self.session_id,
@@ -75,6 +86,7 @@ class SessionRecord:
     session_id: str
     principal_id: str
     telegram_id: int | None
+    user_id: str | None
     roles: list[str]
     login_at: datetime
     last_activity: datetime
@@ -98,6 +110,7 @@ class SessionRecord:
             session_id=str(uuid.uuid4()),
             principal_id=principal.principal_id,
             telegram_id=principal.telegram_id,
+            user_id=principal.user_id,
             roles=list(principal.roles),
             login_at=now,
             last_activity=now,
@@ -112,6 +125,7 @@ class SessionRecord:
             "session_id": self.session_id,
             "principal_id": self.principal_id,
             "telegram_id": self.telegram_id,
+            "user_id": self.user_id,
             "roles": self.roles,
             "login_at": self.login_at.isoformat(),
             "last_activity": self.last_activity.isoformat(),

@@ -1,15 +1,17 @@
 /**
- * Production identity API — Sprint 30.6.
- * Reuses platform_identity JWT + Enterprise ISAM (roles/sessions/audit).
- * No parallel auth stack. No demo token minting.
+ * Production identity API — Sprint 30.6 + Sprint 27.1.1 local demo fallback.
+ * Prefer platform JWT + ISAM when backend is up; fall back to Demo Auth Provider locally.
  */
 
 import { hubIntegrations } from "@/integrations/hub";
 import { webConfig } from "@/config/webConfig";
+import { isDemoAuthEnabled, loginViaDemoAuth } from "./demoAuthProvider";
 
 const ISAM = hubIntegrations.authentication;
 const IAM_LOGIN = "/management/identity/login";
 const IAM_REFRESH = "/management/identity/refresh";
+const DEMO_AUTH_LOGIN = "/api/enterprise-demo-auth/v1/login";
+const DEMO_AUTH_GOOGLE = "/api/enterprise-demo-auth/v1/google";
 
 export type AuthSessionPayload = {
   user: {
@@ -37,7 +39,6 @@ function telegramIdForEmail(email: string): number {
   if (lower.startsWith("owner@") || lower.includes("+owner@")) {
     return configured || 1208044579;
   }
-  // Stable non-colliding id for other demo staff emails
   let hash = 0;
   for (let i = 0; i < lower.length; i += 1) hash = (hash * 31 + lower.charCodeAt(i)) >>> 0;
   return 2_000_000_000 + (hash % 100_000_000);
@@ -50,6 +51,20 @@ async function postJson(url: string, body: Record<string, unknown>, init?: Reque
     body: JSON.stringify(body),
     ...init,
   });
+}
+
+/** Soft probe — treats network / 5xx / proxy 502 as unavailable. */
+async function isBackendReachable(url: string, timeoutMs = 1800): Promise<boolean> {
+  const ctrl = new AbortController();
+  const timer = window.setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { method: "GET", signal: ctrl.signal });
+    return res.ok || (res.status > 0 && res.status < 500);
+  } catch {
+    return false;
+  } finally {
+    window.clearTimeout(timer);
+  }
 }
 
 /** Enterprise ISAM: identity → auth → tokens → session → roles → permissions → audit */
@@ -168,6 +183,9 @@ export async function loginViaPlatformJwt(
   const res = await postJson(IAM_LOGIN, {
     telegram_id: telegramId,
     login_proof: loginProof,
+    // Sprint 34.2A — Identity Core links email ↔ users.id (no synthetic-only account).
+    email,
+    display_name: email.split("@")[0] || "user",
   });
   const body = (await res.json()) as {
     success?: boolean;
@@ -186,12 +204,13 @@ export async function loginViaPlatformJwt(
 
   return {
     user: {
-      id: String(principal.principal_id || `tg_${telegramId}`),
+      id: String(principal.user_id || principal.principal_id || `tg_${telegramId}`),
       email,
-      name: email.split("@")[0] || "user",
+      name: String(principal.display_name || email.split("@")[0] || "user"),
       tenantId,
       roleId,
-      telegramId,
+      telegramId: principal.telegram_id != null ? Number(principal.telegram_id) : telegramId,
+      identityId: principal.user_id ? String(principal.user_id) : undefined,
       sessionId: String(data.session_id || ""),
       roles,
       permissions: Array.isArray(principal.permissions)
@@ -206,35 +225,222 @@ export async function loginViaPlatformJwt(
   };
 }
 
+/** Hit Vite Demo Auth middleware when present. */
+async function loginViaDemoAuthApi(
+  email: string,
+  password: string,
+  tenantId: string,
+): Promise<AuthSessionPayload | null> {
+  try {
+    const res = await postJson(DEMO_AUTH_LOGIN, {
+      email,
+      password,
+      tenant_id: tenantId,
+    });
+    if (!res.ok) return null;
+    const body = (await res.json()) as {
+      success?: boolean;
+      data?: Record<string, unknown>;
+    };
+    if (body.success === false || !body.data) return null;
+    const data = body.data;
+    const principal = (data.principal || {}) as Record<string, unknown>;
+    const roles = Array.isArray(principal.roles) ? (principal.roles as string[]) : ["owner"];
+    return {
+      user: {
+        id: String(principal.principal_id || `local_${email}`),
+        email,
+        name: email.split("@")[0] || "demo",
+        tenantId: String(principal.tenant_id || tenantId),
+        roleId: roles.includes("owner") ? "platform_owner" : "role_org_owner",
+        identityId: String(principal.principal_id || ""),
+        sessionId: String(data.session_id || ""),
+        roles,
+        permissions: Array.isArray(principal.permissions)
+          ? (principal.permissions as string[])
+          : ["read", "write", "admin"],
+      },
+      accessToken: String(data.access_token || ""),
+      refreshToken: String(data.refresh_token || ""),
+      accessExpiresAt: data.access_expires_at ? String(data.access_expires_at) : undefined,
+      authMode: "platform_jwt",
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Production login: prefer platform JWT when configured; always run ISAM for
- * org/role/permission/audit resolution. JWT becomes the Bearer when available.
+ * Production login with local recovery:
+ * 1) ISAM (+ optional platform JWT) when backend reachable
+ * 2) Vite Demo Auth API
+ * 3) In-process Demo Auth Provider (JWT → localStorage)
  */
 export async function productionLogin(
   email: string,
   password: string,
   tenantId: string,
 ): Promise<AuthSessionPayload> {
-  const isam = await loginViaIsam(email, password, tenantId);
-  try {
-    const jwt = await loginViaPlatformJwt(email, tenantId);
-    if (jwt) {
-      return {
-        ...jwt,
-        user: {
-          ...jwt.user,
-          identityId: isam.user.identityId,
-          permissions: Array.from(
-            new Set([...(jwt.user.permissions || []), ...(isam.user.permissions || [])]),
-          ),
-          roles: Array.from(new Set([...(jwt.user.roles || []), ...(isam.user.roles || [])])),
-        },
-      };
+  const demoOn = isDemoAuthEnabled();
+  const isamUp = await isBackendReachable(`${ISAM}/health`);
+
+  if (isamUp) {
+    try {
+      const isam = await loginViaIsam(email, password, tenantId);
+      try {
+        const jwt = await loginViaPlatformJwt(email, tenantId);
+        if (jwt) {
+          return {
+            ...jwt,
+            user: {
+              ...jwt.user,
+              identityId: isam.user.identityId,
+              permissions: Array.from(
+                new Set([...(jwt.user.permissions || []), ...(isam.user.permissions || [])]),
+              ),
+              roles: Array.from(new Set([...(jwt.user.roles || []), ...(isam.user.roles || [])])),
+            },
+          };
+        }
+      } catch {
+        /* ISAM session remains valid when JWT mint is unavailable */
+      }
+      return isam;
+    } catch (err) {
+      if (!demoOn) throw err;
     }
-  } catch {
-    // ISAM session remains valid when JWT mint is unavailable (misconfigured secret)
   }
-  return isam;
+
+  if (demoOn) {
+    const fromApi = await loginViaDemoAuthApi(email, password, tenantId);
+    if (fromApi?.accessToken) return fromApi;
+    return loginViaDemoAuth(email, password, tenantId);
+  }
+
+  throw new Error(
+    "Authentication backend unavailable (ISAM proxy → localhost:8080). Set VITE_DEMO_AUTH=true or start the API.",
+  );
+}
+
+/** Google Sign-In — preferred Beta auth (auto-creates account on first login). */
+export async function productionGoogleLogin(
+  input: {
+    email?: string;
+    name?: string;
+    idToken?: string;
+    tenantId: string;
+    rememberMe?: boolean;
+  },
+): Promise<AuthSessionPayload> {
+  const tenantId = input.tenantId || "demo-corp";
+  const isamUp = await isBackendReachable(`${ISAM}/health`);
+
+  if (isamUp) {
+    let idToken = input.idToken || "";
+    if (!idToken) {
+      // Mint local demo credential consumed by ISAM Google provider
+      idToken = `google_demo_${JSON.stringify({
+        email: (input.email || "user@gmail.com").toLowerCase(),
+        name: input.name || "Google User",
+        sub: `google:${input.email || "user@gmail.com"}`,
+      })}`;
+    }
+    const res = await postJson(`${ISAM}/auth`, {
+      action: "google_login",
+      id_token: idToken,
+      device: "enterprise_web",
+      remember_me: Boolean(input.rememberMe),
+      role: "employee",
+    });
+    const body = (await res.json()) as Record<string, unknown>;
+    if (!res.ok || body.error) {
+      throw new Error(String(body.error || "Google login failed"));
+    }
+    const identity = (body.identity || {}) as Record<string, unknown>;
+    const session = (body.session || {}) as Record<string, unknown>;
+    const email = String(identity.subject || input.email || "");
+    const roles = Array.isArray(identity.roles) ? (identity.roles as string[]) : ["employee"];
+    return {
+      user: {
+        id: String(identity.identity_id || `google_${email}`),
+        email,
+        name: String((identity.attributes as { name?: string } | undefined)?.name || email.split("@")[0]),
+        tenantId,
+        roleId: roles.includes("owner") ? "platform_owner" : "role_employee",
+        identityId: String(identity.identity_id || ""),
+        sessionId: String(session.session_id || ""),
+        roles,
+        permissions: ["read", "write"],
+      },
+      accessToken: String(body.access_token || ""),
+      refreshToken: String(body.refresh_token || ""),
+      authMode: "isam",
+    };
+  }
+
+  if (isDemoAuthEnabled()) {
+    const res = await postJson(DEMO_AUTH_GOOGLE, {
+      email: input.email || "user@gmail.com",
+      name: input.name,
+      tenant_id: tenantId,
+    });
+    const body = (await res.json()) as { success?: boolean; data?: Record<string, unknown>; error?: string };
+    if (!res.ok || body.success === false || !body.data) {
+      throw new Error(body.error || "Google demo login failed");
+    }
+    const data = body.data;
+    const principal = (data.principal || {}) as Record<string, unknown>;
+    return {
+      user: {
+        id: String(principal.principal_id || ""),
+        email: String(principal.email || input.email || ""),
+        name: String(principal.name || "Google User"),
+        tenantId: String(principal.tenant_id || tenantId),
+        roleId: "role_employee",
+        identityId: String(principal.principal_id || ""),
+        sessionId: String(data.session_id || ""),
+        roles: Array.isArray(principal.roles) ? (principal.roles as string[]) : ["employee"],
+        permissions: Array.isArray(principal.permissions)
+          ? (principal.permissions as string[])
+          : ["read", "write"],
+      },
+      accessToken: String(data.access_token || ""),
+      refreshToken: String(data.refresh_token || ""),
+      accessExpiresAt: data.access_expires_at ? String(data.access_expires_at) : undefined,
+      authMode: "platform_jwt",
+    };
+  }
+
+  throw new Error("Google authentication unavailable");
+}
+
+export async function productionRegister(input: {
+  email: string;
+  password: string;
+  name?: string;
+  tenantId: string;
+}): Promise<AuthSessionPayload> {
+  const isamUp = await isBackendReachable(`${ISAM}/health`);
+  if (isamUp) {
+    const res = await postJson(`${ISAM}/auth`, {
+      action: "register",
+      email: input.email,
+      password: input.password,
+      name: input.name || "",
+      role: "employee",
+    });
+    const body = (await res.json()) as Record<string, unknown>;
+    if (!res.ok || body.error) throw new Error(String(body.error || "Registration failed"));
+  }
+  return productionLogin(input.email, input.password, input.tenantId);
+}
+
+export async function productionPasswordReset(email: string): Promise<{ ok: boolean }> {
+  const isamUp = await isBackendReachable(`${ISAM}/health`);
+  if (isamUp) {
+    await postJson(`${ISAM}/auth`, { action: "password_reset", email });
+  }
+  return { ok: true };
 }
 
 export async function refreshProductionSession(
@@ -243,6 +449,31 @@ export async function refreshProductionSession(
   identityId?: string,
 ): Promise<{ accessToken: string; refreshToken: string; accessExpiresAt?: string }> {
   if (authMode === "platform_jwt") {
+    if (refreshToken.split(".").length === 3) {
+      try {
+        const mid = refreshToken.split(".")[1] || "";
+        const json = JSON.parse(atob(mid.replace(/-/g, "+").replace(/_/g, "/"))) as {
+          iss?: string;
+          sub?: string;
+          tid?: string;
+          email?: string;
+        };
+        if (json.iss === "ados-enterprise-local") {
+          const { mintLocalDemoJwt } = await import("./demoAuthProvider");
+          return {
+            accessToken: mintLocalDemoJwt({
+              sub: json.sub,
+              email: json.email,
+              tid: json.tid,
+            }),
+            refreshToken,
+            accessExpiresAt: new Date(Date.now() + 12 * 3600_000).toISOString(),
+          };
+        }
+      } catch {
+        /* fall through to IAM refresh */
+      }
+    }
     const res = await postJson(IAM_REFRESH, { refresh_token: refreshToken });
     const body = (await res.json()) as {
       success?: boolean;
@@ -279,17 +510,25 @@ export function isJwtToken(token: string | null | undefined): boolean {
   return parts.length === 3 && !token.includes(".demo");
 }
 
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const mid = token.split(".")[1];
+    if (!mid) return null;
+    const padded = mid.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((mid.length + 3) % 4);
+    return JSON.parse(atob(padded)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 export async function validateSessionOnline(accessToken: string): Promise<boolean> {
   if (!accessToken || accessToken.includes(".demo")) return false;
   if (isJwtToken(accessToken)) {
-    try {
-      const payload = JSON.parse(atob(accessToken.split(".")[1] || "")) as { exp?: number };
-      if (payload.exp && payload.exp * 1000 < Date.now()) return false;
-      return true;
-    } catch {
-      return false;
-    }
+    const payload = decodeJwtPayload(accessToken);
+    if (!payload) return false;
+    const exp = typeof payload.exp === "number" ? payload.exp : 0;
+    if (exp && exp * 1000 < Date.now()) return false;
+    return true;
   }
-  // ISAM opaque token — treat present non-demo token as valid until refresh fails
   return Boolean(accessToken);
 }

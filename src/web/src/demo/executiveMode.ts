@@ -13,14 +13,12 @@ export const EXECUTIVE_ROLE_IDS = new Set([
   "platform_owner",
 ]);
 
-/** Lean layout: KPI, health, AI, critical feed, recommendations — one screen. */
+/** EP-01 lean layout: Morning Brief is above; keep only decision surfaces. */
 export const EXECUTIVE_LAYOUT: CommandWidgetId[] = [
+  "business_kpi",
+  "quick_actions",
   "mission_control",
   "enterprise_health",
-  "business_kpi",
-  "activity_feed",
-  "ai_activity",
-  "ai_recommendations",
 ];
 
 export function isExecutiveRole(roleId?: string | null, roles?: string[] | null): boolean {

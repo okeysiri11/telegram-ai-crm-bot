@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class PlatformConfigEntry(Base):
@@ -39,7 +39,7 @@ class PlatformConfigEntry(Base):
     )
 
 
-class PlatformConfigHistory(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PlatformConfigHistory(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "platform_config_history"
     __table_args__ = (
         UniqueConstraint("config_key", "version", name="uq_platform_config_history_key_version"),

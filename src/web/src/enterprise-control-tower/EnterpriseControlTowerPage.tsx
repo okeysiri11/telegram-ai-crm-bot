@@ -118,7 +118,22 @@ export function EnterpriseControlTowerPage() {
               ))}
             </ul>
           ) : q.trim() ? (
-            <p className="eds-type-small text-[var(--eds-muted)] mt-2">Ничего не найдено</p>
+            <div className="mt-3 eds-anim-scale">
+              <div className="eds-empty-art" aria-hidden>
+                ◇
+              </div>
+              <p className="eds-type-small text-[var(--eds-muted)] mt-2">Ничего не найдено</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Link to="/platform-builder/concierge">
+                  <Button size="sm" variant="secondary">
+                    AI Concierge
+                  </Button>
+                </Link>
+                <Link to="/platform-builder/builder-studio">
+                  <Button size="sm">Builder Studio</Button>
+                </Link>
+              </div>
+            </div>
           ) : null}
         </Card>
 
@@ -244,30 +259,5 @@ export function EnterpriseControlTowerPage() {
         </div>
       </div>
     </WorkspaceLayout>
-  );
-}
-
-export function ControlTowerStrip() {
-  const { snapshot } = useLiveEnterprise(true);
-  const notifications = useNotificationStore((s) => s.items);
-  const first = loadFirstEntry();
-  const tower = useMemo(
-    () => deriveControlTower(snapshot, { company: first.companyName, notifications, roleId: first.roleId }),
-    [snapshot, first.companyName, first.roleId, notifications],
-  );
-  const risks = tower.incidents.filter((i) => i.severity === "error" || i.severity === "overload").length;
-  return (
-    <div className="ect-strip" aria-label="Control Tower">
-      <span className="ect-strip-label">Control Tower</span>
-      <Badge tone="success">{tower.overview.find((o) => o.id === "runtime")?.value || "0"} runtime</Badge>
-      {risks ? <Badge tone="danger">{risks} incidents</Badge> : <Badge>stable</Badge>}
-      <Link
-        to="/platform-builder/control-tower"
-        className="eds-type-small text-[var(--eds-primary)]"
-        onClick={() => void telemetry.userActivity("ect_open")}
-      >
-        Tower →
-      </Link>
-    </div>
   );
 }

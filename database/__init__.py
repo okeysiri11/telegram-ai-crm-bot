@@ -27,6 +27,15 @@ _PG_SHIMS = frozenset({
     "has_permission",
     "get_user_roles",
     "assign_role",
+    "get_user_profile",
+    "save_profile_fields",
+    "format_memory_context",
+    "format_memory_text",
+    "format_profile_text",
+    "load_memory",
+    "save_memory",
+    "get_memory",
+    "MEMORY_FIELDS",
 })
 
 
@@ -120,6 +129,60 @@ def _assign_role_pg(telegram_id: int, role_name: str) -> bool:
     return result is not None
 
 
+def _memory_fields_pg():
+    from services.user_memory_service import MEMORY_FIELDS
+
+    return MEMORY_FIELDS
+
+
+def _get_user_profile_pg(user_id: int) -> dict:
+    from services.user_memory_service import get_user_profile
+
+    return get_user_profile(user_id)
+
+
+def _save_profile_fields_pg(user_id: int, fields: dict) -> None:
+    from services.user_memory_service import save_profile_fields
+
+    save_profile_fields(user_id, fields)
+
+
+def _format_memory_context_pg(user_id: int) -> str:
+    from services.user_memory_service import format_memory_context
+
+    return format_memory_context(user_id)
+
+
+def _format_memory_text_pg(user_id: int) -> str:
+    from services.user_memory_service import format_memory_text
+
+    return format_memory_text(user_id)
+
+
+def _format_profile_text_pg(user_id: int) -> str:
+    from services.user_memory_service import format_profile_text
+
+    return format_profile_text(user_id)
+
+
+def _load_memory_pg(user_id: int) -> dict:
+    from services.user_memory_service import load_memory
+
+    return load_memory(user_id)
+
+
+def _save_memory_pg(user_id: int, key: str, value: str) -> None:
+    from services.user_memory_service import save_memory
+
+    save_memory(user_id, key, value)
+
+
+def _get_memory_pg(user_id: int, key: str):
+    from services.user_memory_service import get_memory
+
+    return get_memory(user_id, key)
+
+
 _SHIM_IMPL = {
     "ensure_user": _ensure_user_pg,
     "create_request": _create_request_pg,
@@ -127,12 +190,25 @@ _SHIM_IMPL = {
     "has_permission": _has_permission_pg,
     "get_user_roles": _get_user_roles_pg,
     "assign_role": _assign_role_pg,
+    "get_user_profile": _get_user_profile_pg,
+    "save_profile_fields": _save_profile_fields_pg,
+    "format_memory_context": _format_memory_context_pg,
+    "format_memory_text": _format_memory_text_pg,
+    "format_profile_text": _format_profile_text_pg,
+    "load_memory": _load_memory_pg,
+    "save_memory": _save_memory_pg,
+    "get_memory": _get_memory_pg,
+    "MEMORY_FIELDS": _memory_fields_pg,
 }
 
 
 def __getattr__(name: str) -> Any:
     if name in _PG_SHIMS:
-        return _SHIM_IMPL[name]
+        impl = _SHIM_IMPL[name]
+        # MEMORY_FIELDS is a constant dict; shim factory returns it.
+        if name == "MEMORY_FIELDS" and callable(impl):
+            return impl()
+        return impl
     import database_legacy as legacy
 
     if hasattr(legacy, name):

@@ -1,14 +1,25 @@
-# Enterprise Platform Version 1.0 — Release Candidate
+# Enterprise Platform Version 1.0 → v1.1
 
-**Sprint:** 34.0  
-**Platform Builder:** v1.66.0  
-**Release status:** Enterprise Platform v1.0 Release Candidate  
-**Date:** 2026-07-26
+**Sprint (current):** 1.1.1  
+**Platform Builder:** v1.67.0  
+**Release status:** Enterprise Platform v1.1 General Availability  
+**v1.0 RC baseline docs retained for history**  
+**GA cert:** 2026-07-27 (EP-08) · **Audit corrections:** Sprint 1.1.1
 
 ## Purpose
 
 Подготовка Enterprise Platform Version 1.0 к Production: аудит, стабилизация, полировка, документация.  
-**Без новых Engine / Core / Runtime / AI систем / Dashboard.**
+**Без новых Engine / Core / Runtime / AI systems / Dashboard.**
+
+**EP-08:** Pilot / Commercial / GA readiness — [GA_READINESS_REPORT.md](./GA_READINESS_REPORT.md).  
+**Sprint 1.1.1:** Grand Audit High Priority closures — [SPRINT_1_1_1_GA_AUDIT.md](./SPRINT_1_1_1_GA_AUDIT.md).
+
+## Sprint 34.2 — UX Polish (no functional changes)
+- Dashboard: executive-first widget set, AI Recommendations removed as primary surface (AI Concierge dock is the main assistant).
+- Navigation: Platform Builder menu grouped; Preview & Frames collapsed by default; canonical routes for AI/Twin.
+- First Entry: mandatory onboarding shortened; progress + estimated time.
+- Frame Builders: preview-only UI (Preview · Coming soon · Open Workspace Version).
+- Search & empty states: improved “no results” experiences (Control Tower search, command palette) and added polished empty states for CRM/Knowledge/Marketplace shells and AI Team Center.
 
 ## Architecture Overview
 
@@ -69,6 +80,7 @@ Industry extensions поверх platform core (не копируют core): Bea
 - [x] Route map for Executive Demo  
 - [x] Lazy-load heavy composition pages  
 - [x] Collapsed platform strips (render budget)  
+- [x] GA certification pack (EP-08)  
 - [ ] Staging smoke of Executive Demo (operator)  
 - [ ] Env secrets review for target deploy  
 
@@ -82,6 +94,8 @@ Industry extensions поверх platform core (не копируют core): Bea
 
 ## Related docs
 
+- [ENTERPRISE_PLATFORM_V1_GA.md](./ENTERPRISE_PLATFORM_V1_GA.md)  
+- [GA_READINESS_REPORT.md](./GA_READINESS_REPORT.md)  
 - [ARCHITECTURE_AUDIT_34_0.md](./ARCHITECTURE_AUDIT_34_0.md)  
 - [EXECUTIVE_DEMO_34_0.md](./EXECUTIVE_DEMO_34_0.md)  
 - [RELEASE_NOTES_34_0.md](./RELEASE_NOTES_34_0.md)  

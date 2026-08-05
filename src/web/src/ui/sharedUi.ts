@@ -5,14 +5,14 @@
 
 export const SHARED_UI = {
   buttons: ["Button"],
-  forms: ["Input", "Select", "Checkbox", "Switch", "Radio", "DatePicker"],
+  forms: ["Input", "Textarea", "Select", "FormField", "Checkbox", "Switch", "Radio", "DatePicker"],
   tables: ["Table", "DataGrid", "Pagination"],
   cards: ["Card", "Badge", "Avatar"],
   dialogs: ["Modal", "Dialog", "Drawer"],
   notifications: ["NotificationsPanel"],
   charts: ["Charts"],
   widgets: ["Card", "Badge"],
-  loaders: ["LoadingScreen", "Skeleton", "WidgetLoading"],
+  loaders: ["LoadingScreen", "Skeleton", "WidgetLoading", "Refreshing"],
   errorPages: ["ErrorBoundary", "AccessDeniedPage", "ErrorPage"],
   emptyStates: ["EmptyState", "ExperienceState", "SuccessState"],
   permissions: ["PermissionGuard", "ProtectedRoute"],

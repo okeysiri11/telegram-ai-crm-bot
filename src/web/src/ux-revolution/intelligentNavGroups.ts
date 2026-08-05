@@ -1,11 +1,13 @@
 /**
  * Sprint 33.2 — Intelligent Navigation groups (collapsible accordion).
- * Routes unchanged; presentation only.
+ * Sprint 34.2B — Sidebar groups generated from Platform Menu Catalog.
  */
 
 import type { RuNavItem } from "@/navigation/enterpriseRuNav";
 import { OWNER_RU_NAV } from "@/navigation/enterpriseRuNav";
 import type { ShellIconId } from "@/shell/enterprise";
+import { groupsFromPlatformRegistry } from "@/platform-registry/menuCatalog";
+import { groupsForModeWithBridge, prefetchRegistryNavigation } from "@/platform-registry/menuApiBridge";
 import type { ExperienceMode } from "./experienceModeStore";
 
 export type NavGroupId =
@@ -140,9 +142,14 @@ export function groupsForMode(
   mode: ExperienceMode,
   opts?: { owner?: boolean },
 ): IntelligentNavGroup[] {
-  const owner = opts?.owner ?? false;
+  // Sprint 35.1 — prefer API-bridged registry cache, then static projection fallback.
+  const bridged = groupsForModeWithBridge(mode, opts);
+  if (bridged.length > 0) return bridged;
 
-  // Owner Mode: every group including Owner (full Pro item lists).
+  const fromRegistry = groupsFromPlatformRegistry(mode, opts);
+  if (fromRegistry.length > 0) return fromRegistry;
+
+  const owner = opts?.owner ?? false;
   if (owner) {
     return INTELLIGENT_NAV_GROUPS.map((g) => ({ ...g, items: [...g.items] }));
   }
@@ -157,11 +164,23 @@ export function groupsForMode(
   }));
 }
 
+/** Kick off registry navigation prefetch (non-blocking). */
+export function warmRegistryNavigation(
+  mode: ExperienceMode,
+  opts?: { owner?: boolean; roles?: string[]; token?: string },
+): void {
+  prefetchRegistryNavigation(mode, opts);
+}
+
 /** Resolve which group contains the current path (for auto-expand / highlight). */
 export function resolveGroupForPath(pathname: string, search = ""): NavGroupId | null {
   const full = `${pathname}${search}`.toLowerCase();
   const path = pathname.toLowerCase();
-  for (const g of INTELLIGENT_NAV_GROUPS) {
+  const catalogs = [
+    ...groupsFromPlatformRegistry("pro", { owner: true }),
+    ...INTELLIGENT_NAV_GROUPS,
+  ];
+  for (const g of catalogs) {
     for (const item of g.items) {
       const route = item.route.toLowerCase();
       const base = route.split("?")[0] || route;

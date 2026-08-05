@@ -6,10 +6,10 @@ from sqlalchemy import Boolean, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class TenantEntryLink(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantEntryLink(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "tenant_entry_links_v1"
     __table_args__ = (
         Index("ix_tenant_entry_links_code", "code", unique=True),
@@ -28,7 +28,7 @@ class TenantEntryLink(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
 
 
-class OwnerVerticalNote(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class OwnerVerticalNote(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "owner_vertical_notes_v1"
     __table_args__ = (
         Index("ix_owner_notes_vertical", "vertical"),

@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.ledger import LedgerEntry
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from database.models.users import User
 
 
-class FinanceAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class FinanceAccount(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "finance_accounts"
     __table_args__ = (
         Index("ix_finance_accounts_type", "account_type"),
@@ -33,7 +33,7 @@ class FinanceAccount(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     status: Mapped[str] = mapped_column(String(32), default="ACTIVE", nullable=False)
 
 
-class FinanceTransaction(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class FinanceTransaction(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "finance_transactions"
     __table_args__ = (
         CheckConstraint("amount > 0", name="ck_finance_transactions_amount_positive"),

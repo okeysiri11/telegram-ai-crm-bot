@@ -19,7 +19,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class SalesSessionStatus(str, enum.Enum):
@@ -54,7 +54,7 @@ SALES_MEETING_STATUSES = frozenset(s.value for s in SalesMeetingStatus)
 SALES_HANDOFF_STATUSES = frozenset(s.value for s in SalesHandoffStatus)
 
 
-class SalesAssistantSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SalesAssistantSession(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_sales_assistant_v1_sessions"
     __table_args__ = (
         Index("ix_ai_sales_assistant_v1_sessions_telegram", "telegram_user_id"),
@@ -91,7 +91,7 @@ class SalesAssistantSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class SalesAssistantMessage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SalesAssistantMessage(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_sales_assistant_v1_messages"
     __table_args__ = (
         Index("ix_ai_sales_assistant_v1_messages_session", "session_id"),
@@ -112,7 +112,7 @@ class SalesAssistantMessage(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SalesAssistantMessage session={self.session_id} role={self.role}>"
 
 
-class SalesAssistantMeeting(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SalesAssistantMeeting(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_sales_assistant_v1_meetings"
     __table_args__ = (
         Index("ix_ai_sales_assistant_v1_meetings_session", "session_id"),
@@ -139,7 +139,7 @@ class SalesAssistantMeeting(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<SalesAssistantMeeting session={self.session_id} at={self.scheduled_at}>"
 
 
-class SalesAssistantHandoff(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SalesAssistantHandoff(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "ai_sales_assistant_v1_handoffs"
     __table_args__ = (
         Index("ix_ai_sales_assistant_v1_handoffs_session", "session_id"),

@@ -13,6 +13,7 @@ ROLE_INHERITANCE: dict[str, list[str]] = {
     SecurityRole.OPERATOR.value: [SecurityRole.VIEWER.value],
     SecurityRole.AI_AGENT.value: [],
     SecurityRole.SERVICE.value: [],
+    SecurityRole.AUDITOR.value: [SecurityRole.VIEWER.value],
 }
 
 DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
@@ -38,6 +39,9 @@ DEFAULT_ROLE_PERMISSIONS: dict[str, list[str]] = {
     ],
     SecurityRole.SERVICE.value: [
         "workflow.execute", "tool.execute", "repository.read",
+    ],
+    SecurityRole.AUDITOR.value: [
+        "audit.read", "workflow.read", "tool.read", "agent.read", "repository.read",
     ],
 }
 

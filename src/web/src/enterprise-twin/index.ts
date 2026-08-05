@@ -9,4 +9,5 @@ export type {
   TwinTimelineItem,
   TwinExecutive,
 } from "./deriveTwin";
-export { EnterpriseTwinPage, EnterpriseTwinStrip } from "./EnterpriseTwinPage";
+export { EnterpriseTwinPage } from "./EnterpriseTwinPage";
+export { EnterpriseTwinStrip } from "./EnterpriseTwinStrip";

@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class OnboardingSessionStatus(str, enum.Enum):
@@ -45,7 +45,7 @@ ONBOARDING_SESSION_STATUSES = frozenset(status.value for status in OnboardingSes
 ONBOARDING_STEP_STATUSES = frozenset(status.value for status in OnboardingStepStatus)
 
 
-class OnboardingSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class OnboardingSession(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "onboarding_sessions"
     __table_args__ = (
         Index("ix_onboarding_sessions_user", "telegram_user_id"),
@@ -91,7 +91,7 @@ class OnboardingSession(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         )
 
 
-class OnboardingStep(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class OnboardingStep(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "onboarding_steps"
     __table_args__ = (
         Index("ix_onboarding_steps_session", "session_id"),

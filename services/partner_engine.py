@@ -1,5 +1,8 @@
 # Partner Hub — registry, deal assignment, performance analytics.
 
+from __future__ import annotations
+
+
 from config import OWNER_ID
 
 
@@ -49,11 +52,11 @@ class PartnerEngine:
         return get_partner(partner_id)
 
     @staticmethod
-    def list(user_id: int, **kwargs) -> list:
+    def list_partners(user_id: int, **kwargs) -> list:
         if not PartnerEngine.can_view(user_id):
             return []
-        from database import list_partners
-        return list_partners(**kwargs)
+        from database import list_partners as _list_partners
+        return _list_partners(**kwargs)
 
     @staticmethod
     def update(partner_id: int, user_id: int, **fields) -> bool:

@@ -8,6 +8,14 @@ The Platform Observability Layer provides **complete visibility into platform be
 
 **Extends existing `platform_observability` services without modifying Sprint 1–5.1 architecture.**
 
+## Sprint 30.9 Beta Hardening notes
+
+- Prometheus: `deploy/prometheus.yml` + compose service (port 9090).
+- Grafana: **no default password** in `docker-compose.prod.yml` — set `GRAFANA_ADMIN_PASSWORD`.
+- Bot healthcheck required before nginx depends_on healthy.
+- Runtime / AI queue monitoring remains via Platform Health + `jobManager` / AI Runtime pages.
+- App metrics: `/metrics` proxied through nginx.
+
 ---
 
 ## Architecture

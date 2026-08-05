@@ -1,5 +1,8 @@
 # Internal Ledger — accounting state only; no payment execution.
 
+from __future__ import annotations
+
+
 from config import OWNER_ID
 
 
@@ -43,7 +46,7 @@ class LedgerEngine:
         return get_ledger_entry(entry_row_id)
 
     @staticmethod
-    def list(user_id: int, **kwargs) -> list:
+    def list_entries(user_id: int, **kwargs) -> list:
         if not LedgerEngine.can_view(user_id):
             return []
         from database import list_ledger_entries

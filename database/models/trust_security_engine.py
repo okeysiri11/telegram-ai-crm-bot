@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class AccessAction(str, enum.Enum):
@@ -80,7 +80,7 @@ class RevokeStatus(str, enum.Enum):
     RELEASED = "RELEASED"
 
 
-class SecurityAccessLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SecurityAccessLog(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "trust_security_engine_v1_access_logs"
     __table_args__ = (
         Index("ix_trust_security_engine_v1_access_user", "user_id"),
@@ -101,7 +101,7 @@ class SecurityAccessLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
 
 
-class SecurityPermissionAudit(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SecurityPermissionAudit(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "trust_security_engine_v1_permission_audits"
     __table_args__ = (
         Index("ix_trust_security_engine_v1_perm_actor", "actor_id"),
@@ -121,7 +121,7 @@ class SecurityPermissionAudit(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
 
-class SecurityExportLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SecurityExportLog(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "trust_security_engine_v1_export_logs"
     __table_args__ = (
         Index("ix_trust_security_engine_v1_export_user", "user_id"),
@@ -139,7 +139,7 @@ class SecurityExportLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
 
 
-class SecurityApiAccessLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SecurityApiAccessLog(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "trust_security_engine_v1_api_access_logs"
     __table_args__ = (
         Index("ix_trust_security_engine_v1_api_client", "api_client_id"),
@@ -161,7 +161,7 @@ class SecurityApiAccessLog(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
 
 
-class SecurityContentApproval(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SecurityContentApproval(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "trust_security_engine_v1_content_approvals"
     __table_args__ = (
         Index("ix_trust_security_engine_v1_content_tenant", "tenant_id"),
@@ -186,7 +186,7 @@ class SecurityContentApproval(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
 
 
-class SecurityEmergencyRevoke(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class SecurityEmergencyRevoke(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "trust_security_engine_v1_emergency_revokes"
     __table_args__ = (
         Index("ix_trust_security_engine_v1_revoke_scope", "scope"),

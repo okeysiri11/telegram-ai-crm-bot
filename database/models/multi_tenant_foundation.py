@@ -10,7 +10,10 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
+
+# Register FK target for company_id (avoids NoReferencedTableError on flush/DDL).
+import database.models.multi_company  # noqa: F401
 
 
 class TenantStatus(str, enum.Enum):
@@ -19,7 +22,7 @@ class TenantStatus(str, enum.Enum):
     ARCHIVED = "ARCHIVED"
 
 
-class Tenant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Tenant(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     """Canonical tenant registry (mirrors partner_tenant rows by shared id)."""
 
     __tablename__ = "tenants"
@@ -46,7 +49,7 @@ class Tenant(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<Tenant code={self.code} company={self.company_id}>"
 
 
-class TenantSettings(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantSettings(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "tenant_settings"
     __table_args__ = (
         UniqueConstraint("tenant_id", name="uq_tenant_settings_tenant_id"),
@@ -68,7 +71,7 @@ class TenantSettings(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         return f"<TenantSettings tenant={self.tenant_id}>"
 
 
-class TenantLimits(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class TenantLimits(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "tenant_limits"
     __table_args__ = (
         UniqueConstraint("tenant_id", name="uq_tenant_limits_tenant_id"),

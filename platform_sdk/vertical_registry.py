@@ -48,7 +48,7 @@ class VerticalRegistry:
     def set_built(self, code: str, instance: PlatformVertical) -> None:
         self._built[code.strip().lower()] = instance
 
-    def list(self) -> list[dict[str, str]]:
+    def list_verticals(self) -> list[dict[str, str]]:
         from platform_configuration.config_provider import config_provider
 
         return [

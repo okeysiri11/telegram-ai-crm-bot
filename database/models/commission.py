@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 import database.models.deal  # noqa: F401 — register deal_engine_deals for FK resolution
 
@@ -31,7 +31,7 @@ class CommissionStatus(str, enum.Enum):
     CANCELLED = "CANCELLED"
 
 
-class DealEngineCommission(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class DealEngineCommission(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "commission_engine_commissions"
     __table_args__ = (
         CheckConstraint("amount >= 0", name="ck_commission_engine_amount_non_negative"),

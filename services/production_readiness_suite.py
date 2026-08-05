@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from config import API_HOST, API_PORT, BOT_TOKEN, REDIS_REQUIRED, REDIS_URL
+from config import API_HOST, API_PORT, BOT_TOKEN, IS_PRODUCTION, REDIS_REQUIRED, REDIS_URL
 from database.models.production_readiness_engine import AlertSeverity, HealthCheckStatus
 from database.session import check_db_health, get_session
 from repositories.production_readiness_repository import (
@@ -67,13 +67,19 @@ class ProductionReadinessSuite:
             "api_host": bool(API_HOST),
             "api_port": API_PORT > 0,
         }
-        ok = checks["bot_token"] and checks["api_port"] > 0
-        degraded = ok and not checks["database_configured"]
+        ok = (checks["bot_token"] or not IS_PRODUCTION) and checks["api_port"] > 0
+        degraded = ok and (not checks["database_configured"] or not checks["bot_token"])
         return _check_result(
             "startup",
             ok=ok,
             degraded=degraded,
-            detail="startup configuration validated" if ok else "missing BOT_TOKEN or API config",
+            detail=(
+                "startup configuration validated"
+                if ok and checks["bot_token"]
+                else "API-local mode (BOT_TOKEN optional)"
+                if ok
+                else "missing BOT_TOKEN or API config"
+            ),
             payload=checks,
         )
 
@@ -132,6 +138,14 @@ class ProductionReadinessSuite:
                 payload={"host": host, "port": port, "duration_ms": duration_ms},
             )
         except Exception as exc:
+            if not REDIS_REQUIRED:
+                return _check_result(
+                    "redis",
+                    ok=False,
+                    degraded=True,
+                    detail=f"optional redis unavailable: {exc}",
+                    payload={"url_configured": True},
+                )
             return _check_result(
                 "redis",
                 ok=False,
@@ -164,6 +178,14 @@ class ProductionReadinessSuite:
                         },
                     )
         except Exception as exc:
+            if not IS_PRODUCTION:
+                return _check_result(
+                    "api",
+                    ok=False,
+                    degraded=True,
+                    detail=f"self-probe deferred: {exc}",
+                    payload={"host": API_HOST, "port": API_PORT},
+                )
             return _check_result(
                 "api",
                 ok=False,
@@ -186,11 +208,25 @@ class ProductionReadinessSuite:
                 payload={"worker_id": worker.worker_id, "running": running},
             )
         except Exception as exc:
+            if not IS_PRODUCTION:
+                return _check_result(
+                    "scheduler",
+                    ok=False,
+                    degraded=True,
+                    detail=f"scheduler unavailable (non-production): {exc}",
+                )
             return _check_result("scheduler", ok=False, detail=str(exc))
 
     @classmethod
     async def check_telegram(cls) -> dict[str, Any]:
         if not BOT_TOKEN:
+            if not IS_PRODUCTION:
+                return _check_result(
+                    "telegram",
+                    ok=True,
+                    skipped=True,
+                    detail="BOT_TOKEN missing (API-local / non-production)",
+                )
             return _check_result("telegram", ok=False, detail="BOT_TOKEN missing")
 
         started = time.perf_counter()
@@ -212,11 +248,17 @@ class ProductionReadinessSuite:
                 },
             )
         except Exception as exc:
+            if not IS_PRODUCTION:
+                return _check_result(
+                    "telegram",
+                    ok=False,
+                    degraded=True,
+                    detail=f"telegram unreachable (non-production): {exc}",
+                )
             return _check_result("telegram", ok=False, detail=str(exc))
         finally:
             if bot is not None:
                 await bot.session.close()
-
     @classmethod
     async def check_bidex_quote_parser(cls) -> dict[str, Any]:
         try:
@@ -309,7 +351,9 @@ class ProductionReadinessSuite:
             if item.get("status") == HealthCheckStatus.UNHEALTHY.value:
                 critical_ready = False
                 break
-        if REDIS_URL or REDIS_REQUIRED:
+        # Only fail readiness on Redis when it is required (local demo may have
+        # REDIS_URL set in .env while Redis is absent — treat as degraded).
+        if REDIS_REQUIRED:
             redis = by_name.get("redis", {})
             if redis.get("status") == HealthCheckStatus.UNHEALTHY.value:
                 critical_ready = False

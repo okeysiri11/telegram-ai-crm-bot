@@ -24,6 +24,8 @@ class RealtimeChannel(str, enum.Enum):
     PLUGINS = "plugins"
     AI = "ai"
     HEALTH = "health"
+    PLATFORM_STATE = "platform_state"  # Sprint 34.2C unified state sync
+    EVENT_BUS = "event_bus"  # Sprint 36.1 enterprise event bus live stream
 
 
 ALL_CHANNELS: tuple[str, ...] = tuple(ch.value for ch in RealtimeChannel)

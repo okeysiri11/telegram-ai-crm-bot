@@ -134,7 +134,7 @@ class PartnerEngine:
         contact: dict[str, Any] | None = None,
         daily_limit: Decimal | None = None,
         monthly_limit: Decimal | None = None,
-    ) -> Partner:
+    ) -> PartnerEnginePartner:
         if not await PartnerEngine.user_can_write(actor_id):
             raise PermissionDeniedError("Access denied")
 
@@ -208,7 +208,7 @@ class PartnerEngine:
         actor_id: int,
         partner_id: uuid.UUID,
         **fields: Any,
-    ) -> Partner:
+    ) -> PartnerEnginePartner:
         if not await PartnerEngine.user_can_write(actor_id):
             raise PermissionDeniedError("Access denied")
 
@@ -243,7 +243,7 @@ class PartnerEngine:
         return partner
 
     @staticmethod
-    async def block_partner(actor_id: int, partner_id: uuid.UUID) -> Partner:
+    async def block_partner(actor_id: int, partner_id: uuid.UUID) -> PartnerEnginePartner:
         if not await PartnerEngine.user_can_write(actor_id):
             raise PermissionDeniedError("Access denied")
 
@@ -275,7 +275,7 @@ class PartnerEngine:
         return partner
 
     @staticmethod
-    async def approve_kyc(actor_id: int, partner_id: uuid.UUID) -> Partner:
+    async def approve_kyc(actor_id: int, partner_id: uuid.UUID) -> PartnerEnginePartner:
         if not await PartnerEngine.user_can_write(actor_id):
             raise PermissionDeniedError("Access denied")
 
@@ -301,7 +301,7 @@ class PartnerEngine:
         return partner
 
     @staticmethod
-    async def reject_kyc(actor_id: int, partner_id: uuid.UUID) -> Partner:
+    async def reject_kyc(actor_id: int, partner_id: uuid.UUID) -> PartnerEnginePartner:
         if not await PartnerEngine.user_can_write(actor_id):
             raise PermissionDeniedError("Access denied")
 

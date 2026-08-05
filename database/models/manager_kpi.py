@@ -10,10 +10,10 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class ManagerDailyKpi(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ManagerDailyKpi(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "manager_daily_kpi"
     __table_args__ = (
         UniqueConstraint(
@@ -45,7 +45,7 @@ class ManagerDailyKpi(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     total_resolution_seconds: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
 
 
-class ManagerMonthlyKpi(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class ManagerMonthlyKpi(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "manager_monthly_kpi"
     __table_args__ = (
         UniqueConstraint(
@@ -77,7 +77,7 @@ class ManagerMonthlyKpi(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     total_resolution_seconds: Mapped[int] = mapped_column(BigInteger, default=0, nullable=False)
 
 
-class VerticalKpi(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class VerticalKpi(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "vertical_kpi"
     __table_args__ = (
         UniqueConstraint("vertical", "metric_date", name="uq_vertical_kpi_vertical_date"),

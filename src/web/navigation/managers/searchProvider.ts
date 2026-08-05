@@ -12,6 +12,46 @@ function fuzzy(a: string, b: string): number {
   return score;
 }
 
+const GROUP_ORDER: SearchCategory[] = [
+  "crm",
+  "erp",
+  "ai_agents",
+  "documents",
+  "projects",
+  "knowledge",
+  "users",
+  "commands",
+  "modules",
+  "workflows",
+  "tasks",
+  "organizations",
+  "dashboards",
+  "applications",
+];
+
+const GROUP_LABELS: Partial<Record<SearchCategory, string>> = {
+  crm: "Клиенты",
+  erp: "ERP",
+  ai_agents: "AI-Агенты",
+  documents: "Документы",
+  projects: "Проекты",
+  knowledge: "Знания",
+  users: "Пользователи",
+  commands: "Команды",
+  modules: "Модули / Настройки",
+  workflows: "Процессы",
+  tasks: "Задачи",
+  organizations: "Компании",
+  dashboards: "Панели",
+  applications: "Приложения",
+};
+
+export type SearchGroup = {
+  category: SearchCategory;
+  label: string;
+  hits: SearchHit[];
+};
+
 export const searchProvider = {
   modes: ["fuzzy", "exact", "semantic_ready"] as const,
   search(query: string, category?: SearchCategory): SearchHit[] {
@@ -39,6 +79,38 @@ export const searchProvider = {
       .filter((h) => h.score > 15)
       .sort((a, b) => b.score - a.score);
     return hits;
+  },
+  /** Sprint 27.4 — grouped results for Search Workspace / palette. */
+  searchGrouped(query: string, limitPerGroup = 6): SearchGroup[] {
+    const hits = this.search(query);
+    const map = new Map<SearchCategory, SearchHit[]>();
+    for (const h of hits) {
+      const list = map.get(h.category) || [];
+      if (list.length < limitPerGroup) list.push(h);
+      map.set(h.category, list);
+    }
+    const ordered: SearchGroup[] = [];
+    for (const cat of GROUP_ORDER) {
+      const groupHits = map.get(cat);
+      if (groupHits?.length) {
+        ordered.push({
+          category: cat,
+          label: GROUP_LABELS[cat] || cat,
+          hits: groupHits,
+        });
+        map.delete(cat);
+      }
+    }
+    for (const [cat, groupHits] of map) {
+      if (groupHits.length) {
+        ordered.push({
+          category: cat,
+          label: GROUP_LABELS[cat] || cat,
+          hits: groupHits,
+        });
+      }
+    }
+    return ordered;
   },
   suggestions(query: string) {
     return this.search(query).slice(0, 5).map((h) => h.title);

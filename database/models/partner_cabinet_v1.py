@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class PartnerCabinetRole(str, enum.Enum):
@@ -53,7 +53,7 @@ class PartnerCabinetCommissionStatus(str, enum.Enum):
     PAID = "PAID"
 
 
-class PartnerCabinetV1Profile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class PartnerCabinetV1Profile(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "partner_cabinet_v1_profiles"
     __table_args__ = (
         UniqueConstraint("partner_id", name="uq_partner_cabinet_v1_partner"),
@@ -75,7 +75,7 @@ class PartnerCabinetV1Profile(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     blocked_by_telegram_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
 
 
-class PartnerCabinetV1Commission(CreatedAtMixin, UUIDPrimaryKeyMixin, Base):
+class PartnerCabinetV1Commission(CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin, Base):
     __tablename__ = "partner_cabinet_v1_commissions"
     __table_args__ = (
         UniqueConstraint("revenue_entry_id", name="uq_partner_cabinet_v1_revenue"),

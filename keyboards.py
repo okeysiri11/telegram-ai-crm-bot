@@ -7,6 +7,23 @@ from aiogram.types import (
 
 
 def owner_main_menu(*, show_automotive: bool = True):
+    """
+    Owner ReplyKeyboard.
+    Sprint 34.2B: prefer Platform Registry catalog; fall back to legacy layout
+    so existing Telegram handlers keep matching button texts.
+    """
+    try:
+        from platform_registry.clients.telegram_adapter import build_owner_keyboard_from_registry
+
+        kb = build_owner_keyboard_from_registry(show_automotive=show_automotive)
+        if isinstance(kb, ReplyKeyboardMarkup) and kb.keyboard:
+            return kb
+    except Exception:
+        pass
+    return _owner_main_menu_legacy(show_automotive=show_automotive)
+
+
+def _owner_main_menu_legacy(*, show_automotive: bool = True):
     keyboard_rows = [
         [
             KeyboardButton(text="💰 Crypto OTC"),

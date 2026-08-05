@@ -11,7 +11,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 if TYPE_CHECKING:
     from database.models.commissions import Commission
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from database.models.users import User
 
 
-class Deal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class Deal(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "deals"
     __table_args__ = (
         Index("ix_deals_module", "module"),

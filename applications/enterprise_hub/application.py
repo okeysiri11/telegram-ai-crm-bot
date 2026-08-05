@@ -64,6 +64,8 @@ from applications.enterprise_hub.release_candidate.facade import ReleaseCandidat
 from applications.enterprise_hub.enterprise_ai_os.facade import EnterpriseAIOSSuite
 from applications.enterprise_hub.organization_brain.facade import OrganizationBrainSuite
 from applications.enterprise_hub.vertical_federation.facade import VerticalFederationSuite
+from applications.enterprise_hub.business_network.facade import BusinessNetworkSuite
+from applications.enterprise_hub.digital_citizen.facade import DigitalCitizenSuite
 from applications.enterprise_hub.event_platform.facade import EventPlatformSuite
 from applications.enterprise_hub.events import EventInfrastructure
 from applications.enterprise_hub.identity import EnterpriseIdentity
@@ -162,6 +164,8 @@ class EnterpriseHubApplication:
         enterprise_ai_os_svc: EnterpriseAIOSSuite | None = None,
         organization_brain_svc: OrganizationBrainSuite | None = None,
         vertical_federation_svc: VerticalFederationSuite | None = None,
+        business_network_svc: BusinessNetworkSuite | None = None,
+        digital_citizen_svc: DigitalCitizenSuite | None = None,
     ) -> None:
         self.config = config or DEFAULT_CONFIG
         self.store = store or enterprise_hub_store
@@ -243,6 +247,8 @@ class EnterpriseHubApplication:
         self.enterprise_ai_os = enterprise_ai_os_svc or EnterpriseAIOSSuite(self.store)
         self.organization_brain = organization_brain_svc or OrganizationBrainSuite(self.store)
         self.vertical_federation = vertical_federation_svc or VerticalFederationSuite(self.store)
+        self.business_network = business_network_svc or BusinessNetworkSuite(self.store)
+        self.digital_citizen = digital_citizen_svc or DigitalCitizenSuite(self.store)
 
     def reset(self) -> None:
         self.store.reset()
@@ -719,6 +725,8 @@ class EnterpriseHubApplication:
             "organization_knowledge_ready": True,
             "org_executive_dashboard_ready": True,
             "vertical_federation_ready": True,
+            "business_network_ready": True,
+            "digital_citizen_ready": True,
             "vertical_registry_ready": True,
             "vertical_executive_ai_ready": True,
             "cross_vertical_communication_ready": True,
@@ -802,6 +810,8 @@ class EnterpriseHubApplication:
                 "enterprise_ai_os": self.config.enterprise_ai_os,
                 "organization_brain": self.config.organization_brain,
                 "vertical_federation": self.config.vertical_federation,
+                "business_network": self.config.business_network,
+                "digital_citizen": self.config.digital_citizen,
                 "knowledge": self.config.knowledge,
                 "analytics": self.config.analytics,
             },
@@ -883,6 +893,8 @@ class EnterpriseHubApplication:
             "enterprise_ai_os": self.enterprise_ai_os.status(),
             "organization_brain": self.organization_brain.status(),
             "vertical_federation": self.vertical_federation.status(),
+            "business_network": self.business_network.status(),
+            "digital_citizen": self.digital_citizen.status(),
         }
 
 

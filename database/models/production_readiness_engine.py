@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import CreatedAtMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
 class HealthCheckStatus(str, enum.Enum):
@@ -32,7 +32,7 @@ HEALTH_CHECK_STATUSES = frozenset(s.value for s in HealthCheckStatus)
 ALERT_SEVERITIES = frozenset(s.value for s in AlertSeverity)
 
 
-class SystemHealth(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SystemHealth(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "system_health"
     __table_args__ = (
         Index("ix_system_health_check_name", "check_name"),
@@ -51,7 +51,7 @@ class SystemHealth(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<SystemHealth check={self.check_name} status={self.status}>"
 
 
-class SystemMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SystemMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "system_metrics"
     __table_args__ = (
         Index("ix_system_metrics_name", "metric_name"),
@@ -68,7 +68,7 @@ class SystemMetric(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
         return f"<SystemMetric name={self.metric_name} value={self.metric_value}>"
 
 
-class SystemAlert(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+class SystemAlert(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "system_alerts"
     __table_args__ = (
         Index("ix_system_alerts_component", "component"),

@@ -9,10 +9,10 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
-from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
+from database.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin, VersionMixin
 
 
-class AssignmentScore(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+class AssignmentScore(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     __tablename__ = "assignment_scores"
     __table_args__ = (
         Index("ix_assignment_scores_segment", "segment"),
