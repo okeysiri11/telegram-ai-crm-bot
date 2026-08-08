@@ -1,5 +1,5 @@
 export const EXPERIENCE_STEPS = [
-  "Visual Experience Engine",
+  "Движок визуального опыта",
   "Unified Experience",
   "User Context",
   "Adaptive Interface",
@@ -8,5 +8,5 @@ export const EXPERIENCE_STEPS = [
   "Cognitive Load Control",
   "Multi-Workspace Experience",
   "Accessibility",
-  "Create",
+  "Создать",
 ] as const;

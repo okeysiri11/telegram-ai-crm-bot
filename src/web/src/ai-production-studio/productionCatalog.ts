@@ -75,21 +75,21 @@ export type ProductionStudioDef = {
 };
 
 export const PIPELINE_STAGES: { id: PipelineStageId; label: string; order: number }[] = [
-  { id: "draft", label: "Draft", order: 0 },
-  { id: "review", label: "Review", order: 1 },
-  { id: "approval", label: "Approval", order: 2 },
-  { id: "generation", label: "Generation", order: 3 },
-  { id: "render", label: "Render", order: 4 },
-  { id: "publish", label: "Publish", order: 5 },
-  { id: "archive", label: "Archive", order: 6 },
+  { id: "draft", label: "Черновик", order: 0 },
+  { id: "review", label: "Проверка", order: 1 },
+  { id: "approval", label: "Согласование", order: 2 },
+  { id: "generation", label: "Генерация", order: 3 },
+  { id: "render", label: "Рендер", order: 4 },
+  { id: "publish", label: "Публикация", order: 5 },
+  { id: "archive", label: "Архив", order: 6 },
 ];
 
 /** 17 Production Center studios — City Production District destinations. */
 export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   {
     id: "image",
-    label: "Image Studio",
-    short: "Image",
+    label: "Студия изображений",
+    short: "Изображение",
     group: "generate",
     description: "Still images · variants · brand-safe crops",
     aiAgents: ["Creative Director", "Brand Compliance"],
@@ -97,8 +97,8 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "video",
-    label: "Video Studio",
-    short: "Video",
+    label: "Студия видео",
+    short: "Видео",
     group: "generate",
     description: "Clips · timelines · scene boards",
     aiAgents: ["Video Director", "Editor Agent"],
@@ -106,8 +106,8 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "audio",
-    label: "Audio Studio",
-    short: "Audio",
+    label: "Студия аудио",
+    short: "Аудио",
     group: "generate",
     description: "Beds · SFX · mix stems",
     aiAgents: ["Audio Agent"],
@@ -115,8 +115,8 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "voice",
-    label: "Voice Studio",
-    short: "Voice",
+    label: "Голосовая студия",
+    short: "Голос",
     group: "generate",
     description: "TTS · clone · localization",
     aiAgents: ["Voice Agent", "Localization"],
@@ -124,8 +124,8 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "avatar",
-    label: "Avatar Studio",
-    short: "Avatar",
+    label: "Студия аватаров",
+    short: "Аватар",
     group: "generate",
     description: "Presenters · lip-sync · consent metadata",
     aiAgents: ["Avatar Agent", "Compliance"],
@@ -133,7 +133,7 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "reels",
-    label: "Reels Factory",
+    label: "Фабрика Reels",
     short: "Reels",
     group: "generate",
     description: "9:16 social shorts pipeline",
@@ -142,8 +142,8 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "ads",
-    label: "Ads Factory",
-    short: "Ads",
+    label: "Фабрика рекламы",
+    short: "Реклама",
     group: "generate",
     description: "Paid creative packs · A/B variants",
     aiAgents: ["Ads Agent", "Performance"],
@@ -151,8 +151,8 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "creative",
-    label: "Creative Studio",
-    short: "Creative",
+    label: "Креативная студия",
+    short: "Креатив",
     group: "generate",
     description: "Campaign briefs · multi-modal boards",
     aiAgents: ["Creative Director", "Concierge"],
@@ -160,7 +160,7 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "prompt",
-    label: "Prompt Studio",
+    label: "Студия промптов",
     short: "Prompts",
     group: "library",
     description: "Creative prompt library · versions · variables",
@@ -169,7 +169,7 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "brand",
-    label: "Brand Studio",
+    label: "Студия бренда",
     short: "Brand",
     group: "brand",
     description: "Kits · tone · forbidden words · templates",
@@ -179,7 +179,7 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "assets",
-    label: "Asset Library",
+    label: "Библиотека ресурсов",
     short: "Assets",
     group: "library",
     description: "Approved creative assets catalog",
@@ -189,7 +189,7 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "templates",
-    label: "Template Center",
+    label: "Центр шаблонов",
     short: "Templates",
     group: "library",
     description: "Reusable creative templates",
@@ -198,7 +198,7 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "media",
-    label: "Media Storage",
+    label: "Хранилище медиа",
     short: "Media",
     group: "library",
     description: "Unified media manager",
@@ -208,7 +208,7 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "render",
-    label: "Render Center",
+    label: "Центр рендера",
     short: "Render",
     group: "ops",
     description: "Queue · retries · farm status",
@@ -218,8 +218,8 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "publishing",
-    label: "Publishing Center",
-    short: "Publish",
+    label: "Центр публикаций",
+    short: "Публикация",
     group: "ops",
     description: "Channels · approval gate · schedule",
     aiAgents: ["Publisher", "Compliance"],
@@ -227,7 +227,7 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "scheduler",
-    label: "Scheduler",
+    label: "Планировщик",
     short: "Schedule",
     group: "ops",
     description: "Calendars · windows · batch slots",
@@ -237,8 +237,8 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "analytics",
-    label: "Analytics Center",
-    short: "Analytics",
+    label: "Центр аналитики",
+    short: "Аналитика",
     group: "ops",
     description: "Creative performance · reach",
     deepLink: "/analytics",
@@ -247,7 +247,7 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
   },
   {
     id: "presentation",
-    label: "Presentation Builder",
+    label: "Конструктор презентаций",
     labelRu: "Презентации",
     short: "Slides",
     group: "generate",
@@ -288,11 +288,11 @@ export const PRODUCTION_STUDIOS: ProductionStudioDef[] = [
 ];
 
 export const STUDIO_GROUPS = [
-  { id: "generate", label: "Generation" },
-  { id: "brand", label: "Brand" },
-  { id: "library", label: "Library" },
-  { id: "ops", label: "Operations" },
-  { id: "social", label: "Social" },
+  { id: "generate", label: "Генерация" },
+  { id: "brand", label: "Бренд" },
+  { id: "library", label: "Библиотека" },
+  { id: "ops", label: "Операции" },
+  { id: "social", label: "Соцсети" },
 ] as const;
 
 /** Sprint 30.5 — Russian Production UX quick actions */

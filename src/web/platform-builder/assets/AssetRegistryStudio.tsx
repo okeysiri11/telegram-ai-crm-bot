@@ -33,12 +33,12 @@ export function AssetRegistryStudio() {
     () => ({
       shortDescription: ASSET_STEPS[step],
       detailedExplanation:
-        "Visual Asset Registry stores, versions, and optimizes platform visuals. Completely separated from business logic.",
+        "Реестр визуальных активов stores, versions, and optimizes platform visuals. Completely separated from business logic.",
       example: `Example: complete «${ASSET_STEPS[step]}».`,
       popup: { title: ASSET_STEPS[step], body: "Enterprise visual asset management." },
       tooltip: ASSET_STEPS[step],
       purpose: "Central visual resource registry",
-      benefits: "Versioned, searchable, optimized assets",
+      benefits: "Версияed, searchable, optimized assets",
       typicalUse: "Browse, preview, replace, and rollback assets",
       businessValue: "Visual assets without logic coupling",
     }),
@@ -53,7 +53,7 @@ export function AssetRegistryStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -73,7 +73,7 @@ export function AssetRegistryStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -86,10 +86,10 @@ export function AssetRegistryStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/assets/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -135,10 +135,10 @@ export function AssetRegistryStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -146,8 +146,8 @@ export function AssetRegistryStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Visual Asset Registry"
-      subtitle="Browse · Version · Optimize — visual assets separated from business logic."
+      title="Реестр визуальных активов"
+      subtitle="Browse · Версия · Optimize — visual assets separated from business logic."
     >
       <div className="mb-4 flex flex-wrap gap-2">
         <Badge tone="success">Separated from Logic</Badge>
@@ -175,7 +175,7 @@ export function AssetRegistryStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Visual Asset Registry">
+            <Card title="Реестр визуальных активов">
               <div className="flex flex-wrap gap-2">
                 <Button disabled={busy} onClick={() => void load("registry", setRegistry)}>
                   Load registry
@@ -186,7 +186,7 @@ export function AssetRegistryStudio() {
               </div>
               {registry ? (
                 <div className="mt-3 eds-type-small">
-                  Assets: {String(registry.count)} · Types:{" "}
+                  Ресурсы: {String(registry.count)} · Types:{" "}
                   {((registry.supported_types as string[]) || []).join(", ")}
                 </div>
               ) : null}
@@ -220,7 +220,7 @@ export function AssetRegistryStudio() {
           ) : null}
 
           {step === 2 ? (
-            <Card title="Version Management">
+            <Card title="Версия Management">
               <div className="flex flex-wrap gap-2">
                 <Button
                   disabled={busy}
@@ -275,7 +275,7 @@ export function AssetRegistryStudio() {
           ) : null}
 
           {step === 5 ? (
-            <Card title="Organization Branding">
+            <Card title="Организация Branding">
               <Button disabled={busy} onClick={() => void load("branding", setBranding)}>
                 Load brand assets
               </Button>
@@ -304,7 +304,7 @@ export function AssetRegistryStudio() {
           ) : null}
 
           {step === 7 ? (
-            <Card title="Search & Filters">
+            <Card title="Поиск & Filters">
               <Button
                 disabled={busy}
                 onClick={() =>
@@ -335,7 +335,7 @@ export function AssetRegistryStudio() {
                   disabled={busy}
                   onClick={() => void load(`preview/${selectedId}`, setPreview)}
                 >
-                  Preview panel
+                  Предпросмотр panel
                 </Button>
               </div>
               {perf ? (
@@ -345,14 +345,14 @@ export function AssetRegistryStudio() {
               ) : null}
               {preview ? (
                 <div className="mt-3 eds-type-small">
-                  Preview: {String(preview.preview_uri)}
+                  Предпросмотр: {String(preview.preview_uri)}
                 </div>
               ) : null}
             </Card>
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create — Register Asset Stack">
+            <Card title="Создать — зарегистрировать Asset Stack">
               <p className="eds-type-small mb-3">
                 Registers Asset Registry, Version Registry, and Optimization Engine.
               </p>
@@ -378,13 +378,13 @@ export function AssetRegistryStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= ASSET_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

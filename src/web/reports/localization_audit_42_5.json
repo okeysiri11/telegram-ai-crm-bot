@@ -1,0 +1,17 @@
+{
+  "sprint": "42.5",
+  "critical": {
+    "russianStrings": 774,
+    "englishStrings": 0,
+    "hardcodedEnglish": 0,
+    "missingTranslation": 0,
+    "localizationCoverage": 100
+  },
+  "platformBuilder": {
+    "russianStrings": 1365,
+    "englishStrings": 638,
+    "hardcodedEnglish": 638,
+    "localizationCoverage": 68.1
+  },
+  "samples": []
+}

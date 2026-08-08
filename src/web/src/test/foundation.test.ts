@@ -711,10 +711,10 @@ describe("Sprint 32.8 AI Builder Studio", () => {
       ECOSYSTEM_TEMPLATES,
       studioCatalogStats,
     } = await import("../ai-builder-studio/studioCatalog");
-    expect(STUDIO_HOME_CARDS.some((c) => c.title === "AI Team")).toBe(true);
-    expect(STUDIO_HOME_CARDS.some((c) => c.title === "Prompt Library")).toBe(true);
+    expect(STUDIO_HOME_CARDS.some((c) => c.title === "Команда AI")).toBe(true);
+    expect(STUDIO_HOME_CARDS.some((c) => c.title === "Подсказки")).toBe(true);
     expect(DOMAIN_SKILL_PACKS.map((p) => p.title)).toEqual(
-      expect.arrayContaining(["CRM", "Marketing", "Sales", "Legal", "Analytics", "Finance", "Knowledge", "Automation"]),
+      expect.arrayContaining(["CRM", "Маркетинг", "Продажи", "Юриспруденция", "Аналитика", "Финансы", "База знаний", "Автоматизация"]),
     );
     expect(PROMPT_LIBRARY.some((p) => p.kind === "system")).toBe(true);
     expect(PROMPT_LIBRARY.some((p) => p.kind === "corporate")).toBe(true);
@@ -1316,7 +1316,7 @@ describe("Sprint 30.2 Enterprise Navigation & Russian UI", () => {
       "Финансы",
       "Документы",
       "Продакшн",
-      "AI Studio",
+      "Студия AI",
       "Производство",
       "Юридический отдел",
       "Аналитика",
@@ -1369,7 +1369,7 @@ describe("Sprint 30.2 Enterprise Navigation & Russian UI", () => {
     expect(messages.ru["nav.ownerMode"]).toBe("Режим владельца");
     expect(messages.ru["role.switcher"]).toBe("Роль");
     expect(messages.ru["org.switcher"]).toBe("Компания");
-    expect(messages.ru["common.searchPlaceholder"]).toMatch(/поиск/i);
+    expect(messages.ru["common.searchPlaceholder"]).toMatch(/хотите сделать/i);
   });
 
   it("indexes Russian search hits for clients and quick actions", async () => {
@@ -1412,7 +1412,7 @@ describe("Sprint 30.3 Beta Launch", () => {
     expect(homeRouteForRole("administrator")).toBe("/admin");
     expect(homeRouteForRole("manager")).toBe("/dashboards/manager");
     expect(homeRouteForRole("employee")).toBe("/dashboards/employee");
-    expect(homeRouteForRole("client")).toBe("/dashboards/client");
+    expect(homeRouteForRole("client")).toBe("/dashboard");
     expect(homeRouteForRole("dealer")).toBe("/dashboards/dealer");
     const { resetFirstEntry } = await import("../onboarding/firstEntryStore");
     resetFirstEntry();

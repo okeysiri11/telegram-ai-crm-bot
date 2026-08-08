@@ -13,6 +13,8 @@ import { TasksPage } from "@/enterprise-workspace";
 import { CalendarModulePage, NotificationsModulePage } from "@/enterprise-business";
 import { InvitationPage } from "@/pages/InvitationPage";
 import { homeRouteForRole } from "@/navigation/roleHome";
+import { wsKey } from "@/multi-role/workspaceSlot";
+import { ClientOnboardingPage } from "@/multi-role/ClientOnboardingPage";
 import { PilotDashboardPage } from "@/pages/PilotDashboardPage";
 import { ProductionReadinessPage } from "@/pages/ProductionReadinessPage";
 import { ExternalPilotOnboardPage } from "@/pages/ExternalPilotOnboardPage";
@@ -22,9 +24,17 @@ import { PilotExecutionPage } from "@/pages/PilotExecutionPage";
 import { FirstEntryPage } from "@/onboarding/FirstEntryPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { DemoScenarioPage } from "@/demo";
-import { ModulePageById, SearchWorkspacePage } from "@/modules";
+import { ModulePageById, SearchWorkspacePage, WorkspaceLandingGate } from "@/modules";
 import { useLastModuleStore } from "@/modules/lastModuleStore";
 import { DesktopShell } from "@/enterprise-desktop";
+import { PlatformOpsCenterPage } from "@/human-first";
+import { HerculesControlCenterPage } from "@/hercules";
+import { AiCommandCenterPage } from "@/ai-command";
+import { ModeSettingsPage } from "@/platform-modes";
+import { AiWorkspacePage } from "@/ai-workspace";
+import { AutomationCenterPage45 } from "@/universal-automation";
+import { VerticalWorkspacePage } from "@/vertical-workspace";
+import { AiTasksPage } from "@/owner-experience";
 
 const CommandRuntimeInspectorPage = lazy(() =>
   import("@/runtime/commandRuntime/CommandRuntimeInspectorPage").then((m) => ({
@@ -95,7 +105,7 @@ function HomeRedirect() {
   const last = useLastModuleStore((s) => s.lastRoute);
   let roleId = "employee";
   try {
-    roleId = localStorage.getItem("ewp_role_switcher_v1") || "employee";
+    roleId = localStorage.getItem(wsKey("ewp_role_switcher_v1")) || "employee";
   } catch {
     /* ignore */
   }
@@ -334,6 +344,14 @@ export function App() {
         }
       />
       <Route
+        path="/onboarding/client"
+        element={
+          <ProtectedRoute>
+            <ClientOnboardingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
@@ -348,7 +366,9 @@ export function App() {
         element={
           <ProtectedRoute>
             <RouteErrorBoundary zone="Owner" recoveryHref="/dashboard">
-              <OwnerDashboardPage />
+              <WorkspaceLandingGate landingId="owner">
+                <OwnerDashboardPage />
+              </WorkspaceLandingGate>
             </RouteErrorBoundary>
           </ProtectedRoute>
         }
@@ -435,6 +455,13 @@ export function App() {
         }
       />
       <Route path="/crm" element={<Hub id="crm" />} />
+      {/* Sprint 40.3 — ACC-40-004 top-level CRM aliases (no redesign) */}
+      <Route path="/deals" element={<Navigate to="/crm?view=deals" replace />} />
+      <Route path="/clients" element={<Navigate to="/crm?view=clients" replace />} />
+      <Route path="/companies" element={<Navigate to="/crm?view=companies" replace />} />
+      <Route path="/leads" element={<Navigate to="/crm?view=leads" replace />} />
+      <Route path="/reports" element={<Navigate to="/analytics" replace />} />
+      <Route path="/profile" element={<Navigate to="/identity/profile" replace />} />
       <Route path="/erp" element={<Hub id="erp" />} />
       <Route path="/projects" element={<Hub id="projects" />} />
       <Route
@@ -463,7 +490,9 @@ export function App() {
         element={
           <ProtectedRoute>
             <RouteErrorBoundary zone="AI Agent Center" recoveryHref="/dashboard">
-              <AIAgentCenterPage />
+              <WorkspaceLandingGate landingId="ai">
+                <AIAgentCenterPage />
+              </WorkspaceLandingGate>
             </RouteErrorBoundary>
           </ProtectedRoute>
         }
@@ -486,6 +515,7 @@ export function App() {
       <Route path="/errors/offline" element={<PlatformErrorPage kind="offline" />} />
       <Route path="/errors/unauthorized" element={<PlatformErrorPage kind="unauthorized" />} />
       <Route path="/knowledge" element={<Hub id="knowledge" />} />
+      <Route path="/support" element={<Navigate to="/knowledge?view=articles&q=support" replace />} />
       <Route path="/documents" element={<Hub id="documents" />} />
       <Route path="/analytics" element={<Hub id="analytics" />} />
       <Route path="/marketplace" element={<Hub id="marketplace" />} />
@@ -820,6 +850,76 @@ export function App() {
         }
       />
       <Route
+        path="/platform-builder/ops-center"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="Platform Ops Center" recoveryHref="/platform-builder">
+              <PlatformOpsCenterPage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/platform-builder/hercules"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="Hercules Control Center" recoveryHref="/platform-builder/ops-center">
+              <HerculesControlCenterPage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ai-command"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="AI Command Center" recoveryHref="/">
+              <AiCommandCenterPage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/ai-workspace"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="AI Workspace" recoveryHref="/ai-command">
+              <AiWorkspacePage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/memory"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="AI Workspace" recoveryHref="/ai-command">
+              <AiWorkspacePage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/automation-engine"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="Universal Automation" recoveryHref="/automation">
+              <AutomationCenterPage45 />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workflows"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="Universal Automation" recoveryHref="/automation">
+              <AutomationCenterPage45 />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/platform-builder/learning"
         element={
           <ProtectedRoute>
@@ -947,7 +1047,9 @@ export function App() {
         path="/workspace/auto"
         element={
           <ProtectedRoute>
-            <AutomotiveLiveWorkflowPage />
+            <WorkspaceLandingGate landingId="auto">
+              <AutomotiveLiveWorkflowPage />
+            </WorkspaceLandingGate>
           </ProtectedRoute>
         }
       />
@@ -979,7 +1081,9 @@ export function App() {
         path="/workspace/cafe"
         element={
           <ProtectedRoute>
-            <CafeLiveWorkflowPage />
+            <WorkspaceLandingGate landingId="cafe">
+              <CafeLiveWorkflowPage />
+            </WorkspaceLandingGate>
           </ProtectedRoute>
         }
       />
@@ -995,7 +1099,9 @@ export function App() {
         path="/workspace/agro"
         element={
           <ProtectedRoute>
-            <AgricultureLiveWorkflowPage />
+            <WorkspaceLandingGate landingId="agro">
+              <AgricultureLiveWorkflowPage />
+            </WorkspaceLandingGate>
           </ProtectedRoute>
         }
       />
@@ -1011,7 +1117,9 @@ export function App() {
         path="/workspace/legal"
         element={
           <ProtectedRoute>
-            <LegalLiveWorkflowPage />
+            <WorkspaceLandingGate landingId="legal">
+              <LegalLiveWorkflowPage />
+            </WorkspaceLandingGate>
           </ProtectedRoute>
         }
       />
@@ -1027,7 +1135,9 @@ export function App() {
         path="/workspace/crypto"
         element={
           <ProtectedRoute>
-            <BidexLiveWorkflowPage />
+            <WorkspaceLandingGate landingId="crypto">
+              <BidexLiveWorkflowPage />
+            </WorkspaceLandingGate>
           </ProtectedRoute>
         }
       />
@@ -1043,7 +1153,9 @@ export function App() {
         path="/workspace/drone"
         element={
           <ProtectedRoute>
-            <DroneLiveWorkflowPage />
+            <WorkspaceLandingGate landingId="drone">
+              <DroneLiveWorkflowPage />
+            </WorkspaceLandingGate>
           </ProtectedRoute>
         }
       />
@@ -1055,6 +1167,45 @@ export function App() {
           </ProtectedRoute>
         }
       />
+      {/* Sprint 42.8 — Universal Vertical Workspace Framework */}
+      <Route
+        path="/vertical/:verticalId"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="VerticalWorkspace" recoveryHref="/vertical/owner">
+              <VerticalWorkspacePage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/vertical/:verticalId/:sectionId"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="VerticalWorkspaceSection" recoveryHref="/vertical/owner">
+              <VerticalWorkspacePage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      {/* Sprint 42.9 — AI Tasks center */}
+      <Route
+        path="/ai-tasks"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="AiTasks" recoveryHref="/dashboard">
+              <AiTasksPage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      {/* Sprint 40.3 — ACC-40-005 workspace → canonical hubs */}
+      <Route path="/workspace/crm" element={<Navigate to="/crm" replace />} />
+      <Route path="/workspace/erp" element={<Navigate to="/erp" replace />} />
+      <Route path="/workspace/docs" element={<Navigate to="/documents" replace />} />
+      <Route path="/workspace/documents" element={<Navigate to="/documents" replace />} />
+      <Route path="/workspace/analytics" element={<Navigate to="/analytics" replace />} />
+      <Route path="/workspace/reports" element={<Navigate to="/analytics" replace />} />
       <Route
         path="/workspace/:module"
         element={
@@ -1303,7 +1454,9 @@ export function App() {
         path="/platform-builder"
         element={
           <ProtectedRoute>
-            <PlatformBuilderDashboard />
+            <WorkspaceLandingGate landingId="platform">
+              <PlatformBuilderDashboard />
+            </WorkspaceLandingGate>
           </ProtectedRoute>
         }
       />
@@ -1605,6 +1758,26 @@ export function App() {
           <ProtectedRoute>
             <RouteErrorBoundary zone="Settings" recoveryHref="/dashboard">
               <SettingsPage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/ai-mode"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="AI Mode Settings" recoveryHref="/settings">
+              <ModeSettingsPage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings/ai"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="AI Mode Settings" recoveryHref="/settings">
+              <ModeSettingsPage />
             </RouteErrorBoundary>
           </ProtectedRoute>
         }

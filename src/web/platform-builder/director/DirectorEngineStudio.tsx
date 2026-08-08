@@ -31,7 +31,7 @@ export function DirectorEngineStudio() {
     () => ({
       shortDescription: DIRECTOR_STEPS[step],
       detailedExplanation:
-        "Visual Director Engine orchestrates how visual events are presented. It does not generate business events.",
+        "Движок визуальной режиссуры orchestrates how visual events are presented. It does not generate business events.",
       example: `Example: complete «${DIRECTOR_STEPS[step]}».`,
       popup: { title: DIRECTOR_STEPS[step], body: "Intelligent scene orchestration." },
       tooltip: DIRECTOR_STEPS[step],
@@ -51,7 +51,7 @@ export function DirectorEngineStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -68,7 +68,7 @@ export function DirectorEngineStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -81,10 +81,10 @@ export function DirectorEngineStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/director/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -131,10 +131,10 @@ export function DirectorEngineStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -142,7 +142,7 @@ export function DirectorEngineStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Visual Director Engine"
+      title="Движок визуальной режиссуры"
       subtitle="Scene orchestration · Focus · Attention — presentation only, no business events."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -200,7 +200,7 @@ export function DirectorEngineStudio() {
                   List scenes
                 </Button>
                 <Button disabled={busy} onClick={() => void createScene()}>
-                  Create & switch
+                  Создать & switch
                 </Button>
               </div>
               {scenes ? (
@@ -241,7 +241,7 @@ export function DirectorEngineStudio() {
           ) : null}
 
           {step === 4 ? (
-            <Card title="Simulation Coordination">
+            <Card title="Симуляция Coordination">
               <Button disabled={busy} onClick={() => void load("coordination", setCoord)}>
                 Coordinate engines
               </Button>
@@ -256,7 +256,7 @@ export function DirectorEngineStudio() {
           ) : null}
 
           {step === 5 ? (
-            <Card title="Live Organization">
+            <Card title="Live Организация">
               <Button disabled={busy} onClick={() => void load("live-organization", setLiveOrg)}>
                 Direct live org
               </Button>
@@ -314,7 +314,7 @@ export function DirectorEngineStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create — Register Director Stack">
+            <Card title="Создать — зарегистрировать Director Stack">
               <p className="eds-type-small mb-3">
                 Registers Director Engine, Scene Manager, Focus Manager, and Priority Manager.
               </p>
@@ -340,13 +340,13 @@ export function DirectorEngineStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= DIRECTOR_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

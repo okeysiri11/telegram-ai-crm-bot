@@ -30,14 +30,14 @@ export function OperationsCenterStudio() {
     () => ({
       shortDescription: OPS_STEPS[step],
       detailedExplanation:
-        "The AI Operations Center visualizes the Logical Layer in real time. It does not execute business logic.",
+        "The Центр операций AI visualizes the Logical Layer in real time. It does not execute business logic.",
       example: `Example: complete «${OPS_STEPS[step]}».`,
       popup: { title: OPS_STEPS[step], body: "Enterprise visual control room." },
       tooltip: OPS_STEPS[step],
-      purpose: "Real-time AI Organization visibility",
+      purpose: "Real-time AI Организация visibility",
       benefits: "Operators see live status without guessing",
       typicalUse: "Control room monitoring during collaborative AI work",
-      businessValue: "Foundation for Visual Layer and AI City",
+      businessValue: "Foundation for Визуальный слой and AI City",
     }),
     [step],
   );
@@ -50,7 +50,7 @@ export function OperationsCenterStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -67,7 +67,7 @@ export function OperationsCenterStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -80,10 +80,10 @@ export function OperationsCenterStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/operations/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -105,10 +105,10 @@ export function OperationsCenterStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -116,7 +116,7 @@ export function OperationsCenterStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="AI Operations Center"
+      title="Центр операций AI"
       subtitle="Real-time visual control room — visualizes Logical Layer, does not execute business logic."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -138,9 +138,9 @@ export function OperationsCenterStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Operations Dashboard">
+            <Card title="Operations Панель управления">
               <Button disabled={busy} onClick={() => void load("dashboard", setDashboard)}>
-                Refresh dashboard
+                Обновить dashboard
               </Button>
               {dashboard ? (
                 <div className="mt-4 grid gap-2 sm:grid-cols-2 md:grid-cols-3">
@@ -159,7 +159,7 @@ export function OperationsCenterStudio() {
           ) : null}
 
           {step === 1 ? (
-            <Card title="Live Status Engine">
+            <Card title="Live Статус Engine">
               <div className="mb-3 flex flex-wrap gap-2">
                 {LIVE_STATUSES.map((s) => (
                   <Badge key={s}>{s}</Badge>
@@ -272,7 +272,7 @@ export function OperationsCenterStudio() {
           ) : null}
 
           {step === 5 ? (
-            <Card title="Team Overview">
+            <Card title="Team Обзор">
               <Button disabled={busy} onClick={() => void load("teams", setTeams)}>
                 Load teams
               </Button>
@@ -299,7 +299,7 @@ export function OperationsCenterStudio() {
           {step === 6 ? (
             <Card title="System Health">
               <Button disabled={busy} onClick={() => void load("health", setHealth)}>
-                Refresh health
+                Обновить health
               </Button>
               {health ? (
                 <div className="mt-3 grid gap-2 md:grid-cols-2">
@@ -338,7 +338,7 @@ export function OperationsCenterStudio() {
           ) : null}
 
           {step === 8 ? (
-            <Card title="Summary">
+            <Card title="Итоги">
               <Button disabled={busy} onClick={() => void load("summary-view", setSummary)}>
                 Load summary
               </Button>
@@ -360,7 +360,7 @@ export function OperationsCenterStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create — Register Operations Surfaces">
+            <Card title="Создать — зарегистрировать Operations Surfaces">
               <p className="eds-type-small mb-3">
                 Registers Operations Center, Visual Layer, and Status Engine.
               </p>
@@ -385,10 +385,10 @@ export function OperationsCenterStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button disabled={busy || step >= OPS_STEPS.length - 1} onClick={() => void go(step + 1)}>
-              Next
+              Далее
             </Button>
           </div>
         </div>

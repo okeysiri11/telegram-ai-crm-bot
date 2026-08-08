@@ -14,6 +14,85 @@
 @import "./enterprise-okr/enterprise-okr.css";
 @import "./enterprise-governance/enterprise-governance.css";
 @import "./enterprise-desktop/enterprise-desktop.css";
+@import "./human-first/humanFirst.css";
+
+/* Sprint 42.4 — Platform Builder / AI Studio unified RU UX */
+.pb-hub-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 768px) {
+  .pb-hub-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.pb-hub-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  text-align: left;
+  min-height: 9.5rem;
+  padding: 1.25rem 1.35rem;
+  border-radius: 1rem;
+  border: 1px solid var(--ew-border);
+  background: var(--ew-surface);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+.pb-hub-card:hover {
+  border-color: color-mix(in oklab, var(--eds-primary) 50%, var(--ew-border));
+  box-shadow: 0 8px 24px color-mix(in oklab, var(--eds-primary) 12%, transparent);
+  transform: translateY(-1px);
+}
+.pb-hub-icon {
+  font-size: 1.75rem;
+  line-height: 1;
+}
+.pb-hub-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.pb-hub-detail {
+  font-size: 0.9rem;
+  color: var(--eds-text-muted);
+  line-height: 1.4;
+}
+.pb-wizard-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 1024px) {
+  .pb-wizard-grid {
+    grid-template-columns: 1.4fr 1fr;
+  }
+}
+.pb-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pb-chip {
+  border-radius: 999px;
+  border: 1px solid var(--ew-border);
+  background: var(--eds-surface, transparent);
+  padding: 0.45rem 0.85rem;
+  font-size: 0.85rem;
+  transition: border-color 140ms ease, background 140ms ease;
+}
+.pb-chip.is-on {
+  border-color: var(--eds-primary);
+  background: color-mix(in oklab, var(--eds-primary) 12%, var(--ew-surface));
+  font-weight: 600;
+}
+.pb-card {
+  border-radius: 0.9rem;
+}
+.pb-preview {
+  position: sticky;
+  top: 1rem;
+}
 
 * { box-sizing: border-box; }
 html, body, #root { height: 100%; max-height: 100%; }

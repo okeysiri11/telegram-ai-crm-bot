@@ -20,6 +20,23 @@ Focused flows with thin handlers:
 - Call service engine
 - Render response with keyboard helper
 
+**Sprint 43.0 / 43.1:** `routers/telegram_super_app_router.py` — Owner Super App shell
+(AI Консьерж, AI Studio, Developer).
+Logic: `services/telegram_ai_super_app/` → **`platform_ai.UnifiedAiPipeline`**
+(Sprint 43.1). See `docs/SPRINT_43_0_TELEGRAM_AI_SUPER_APP.md` and
+`docs/SPRINT_43_1_UNIFIED_AI_RUNTIME_PIPELINE.md`.
+
+**Sprint 46.5 routing priority** (first match wins):
+
+1. `routers.auto_add_vehicle_router` — active Add-car FSM
+2. `routers.vertical_nav_router` — Auto/Agro/Beauty/… entry + role selector (**never Hercules**)
+3. `routers.telegram_super_app_router` — Concierge / AI Studio / generative Command Center
+4. Auto client/dealer / hub routers → `auto_vertical_handlers` → `handlers`
+
+Vertical labels (`🚗 Auto`, `🌾 Agro`, …) are deterministic navigation.
+Hercules only runs for generative tasks after navigation layer.
+See `docs/SPRINT_46_5_RESULT.md`.
+
 ### Feature handlers (`*_handlers.py`)
 
 Domain-specific modules included from `handlers.py` or registered directly in `startup.py`.

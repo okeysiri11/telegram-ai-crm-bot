@@ -233,7 +233,7 @@ export const CITY_BUILDINGS: CityBuilding[] = [
   },
   {
     id: "ai_studio",
-    label: "AI Studio",
+    label: "Студия AI",
     short: "Studio",
     icon: "✦",
     route: "/ai-studio",
@@ -303,7 +303,7 @@ export const CITY_BUILDINGS: CityBuilding[] = [
   },
   {
     id: "prod_image",
-    label: "Image Studio",
+    label: "Студия изображений",
     short: "Img",
     icon: "▣",
     route: "/production-studio?studio=image",
@@ -317,7 +317,7 @@ export const CITY_BUILDINGS: CityBuilding[] = [
   },
   {
     id: "prod_video",
-    label: "Video Studio",
+    label: "Студия видео",
     short: "Vid",
     icon: "▤",
     route: "/production-studio?studio=video",
@@ -331,7 +331,7 @@ export const CITY_BUILDINGS: CityBuilding[] = [
   },
   {
     id: "prod_audio",
-    label: "Audio Studio",
+    label: "Студия аудио",
     short: "Audio",
     icon: "♪",
     route: "/production-studio?studio=audio",
@@ -345,7 +345,7 @@ export const CITY_BUILDINGS: CityBuilding[] = [
   },
   {
     id: "prod_voice",
-    label: "Voice Studio",
+    label: "Голосовая студия",
     short: "Voice",
     icon: "◉",
     route: "/production-studio?studio=voice",
@@ -415,7 +415,7 @@ export const CITY_BUILDINGS: CityBuilding[] = [
   },
   {
     id: "prod_prompt",
-    label: "Prompt Studio",
+    label: "Студия промптов",
     short: "Prompt",
     icon: "✦",
     route: "/production-studio?tab=prompts",
@@ -569,7 +569,7 @@ export const CITY_BUILDINGS: CityBuilding[] = [
   },
   {
     id: "digital_citizens",
-    label: "Digital Citizens",
+    label: "Цифровые граждане",
     short: "People",
     icon: "◎",
     route: "/digital-citizens",

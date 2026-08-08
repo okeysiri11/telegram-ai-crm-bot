@@ -1,3 +1,4 @@
+import { wsKey } from "@/multi-role/workspaceSlot";
 /**
  * First-entry progress — Sprint 32.3.1.
  * Client persistence only; does not replace tenancy/EON/EPR engines.
@@ -5,7 +6,8 @@
 
 import type { FirstEntryStepId } from "./firstEntryRoles";
 
-const KEY = "ewp_first_entry_v1";
+const KEY_BASE = "ewp_first_entry_v1";
+const KEY = () => wsKey(KEY_BASE);
 
 export type FirstEntryState = {
   completed: boolean;
@@ -53,7 +55,7 @@ const DEFAULTS: FirstEntryState = {
 
 export function loadFirstEntry(): FirstEntryState {
   try {
-    return { ...DEFAULTS, ...(JSON.parse(localStorage.getItem(KEY) || "{}") as Partial<FirstEntryState>) };
+    return { ...DEFAULTS, ...(JSON.parse(localStorage.getItem(KEY()) || "{}") as Partial<FirstEntryState>) };
   } catch {
     return { ...DEFAULTS };
   }
@@ -65,7 +67,7 @@ export function saveFirstEntry(patch: Partial<FirstEntryState>): FirstEntryState
     ...patch,
     updatedAt: new Date().toISOString(),
   };
-  localStorage.setItem(KEY, JSON.stringify(next));
+  localStorage.setItem(KEY(), JSON.stringify(next));
   return next;
 }
 
@@ -74,7 +76,7 @@ export function isFirstEntryComplete(): boolean {
 }
 
 export function resetFirstEntry(): FirstEntryState {
-  localStorage.removeItem(KEY);
+  localStorage.removeItem(KEY());
   return saveFirstEntry({ ...DEFAULTS, completed: false, step: "welcome" });
 }
 

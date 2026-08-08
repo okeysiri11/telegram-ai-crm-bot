@@ -3,10 +3,10 @@ export const DIRECTOR_STEPS = [
   "Scene Management",
   "Focus Engine",
   "Attention Management",
-  "Simulation Coordination",
-  "Live Organization",
+  "Симуляция Coordination",
+  "Live Организация",
   "Intelligent Camera API",
   "Conflict Resolution",
   "Performance",
-  "Create",
+  "Создать",
 ] as const;

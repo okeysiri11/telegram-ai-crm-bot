@@ -38,10 +38,41 @@ export function OwnerDashboardPage() {
         <div>
           <h1 className="eds-type-h1">Панель владельца</h1>
           <p className="eds-type-helper">
-            Режим владельца · God Mode · живые метрики · {roleLabel}
+            Единый Dashboard · Workflow · Hercules · Студия AI · Память · {roleLabel}
             {!isOwner ? " · просмотр с переключённой ролью" : ""}
           </p>
         </div>
+
+        <Card title="Единый Dashboard" status={<Badge tone="success">46.0</Badge>} data-testid="owner-unified-dashboard">
+          <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { label: "Работающие Workflow", to: "/workflows" },
+              { label: "Очередь Hercules", to: "/platform-builder/hercules" },
+              { label: "Студия AI", to: "/ai-command" },
+              { label: "Последние проекты", to: "/projects" },
+              { label: "Последние документы", to: "/documents" },
+              { label: "Последние генерации", to: "/ai-workspace" },
+              { label: "Расход AI", to: "/workflows" },
+              { label: "Уведомления", to: "/notifications" },
+              { label: "Рекомендации AI", to: "/ai-command" },
+              { label: "Быстрые действия", to: "/ai-command" },
+              { label: "Настройки", to: "/settings" },
+              { label: "Память", to: "/memory" },
+            ].map((item) => (
+              <li key={item.label}>
+                <Link
+                  to={item.to}
+                  className="block rounded-md border border-[var(--ew-border)] px-3 py-2 eds-type-small hover:border-[var(--eds-primary)]"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 eds-type-helper">
+            Каждое действие доступно вручную или через AI Command («Создай проект», «Сделай рекламу»).
+          </p>
+        </Card>
 
         <Card
           title="Owner God Mode"

@@ -47,7 +47,12 @@ Version constants (`platform_api/contracts.py`, `platform_api/versioning.py`): `
 ### 1.3 Frozen public API — `/api/v1/*` (`api/v1/public_router.py`, + `/v1/*` legacy aliases)
 
 `GET /api/v1`, `GET /api/v1/`, `GET /api/v1/openapi.json`, `GET /api/v1/docs` ·
-`POST /api/v1/auth/token` · `GET|POST /api/v1/deals` · `GET|POST /api/v1/partners` ·
+`POST /api/v1/auth/token` · `GET|POST /api/v1/deals` · `GET|PATCH|DELETE /api/v1/deals/{deal_id}` ·
+`GET|POST /api/v1/leads` · `GET|PATCH|DELETE /api/v1/leads/{lead_id}` ·
+`GET|POST /api/v1/clients` · `GET|PATCH|DELETE /api/v1/clients/{client_id}` ·
+`GET|POST /api/v1/crm/deals` · `GET|PATCH|DELETE /api/v1/crm/deals/{deal_id}` ·
+`GET /api/v1/reports` · `GET /api/v1/reports/{report_id}` ·
+`GET|POST /api/v1/partners` ·
 `POST /api/v1/pricing/calculate` · `GET /api/v1/fx/rates` · `GET|POST /api/v1/vehicles` ·
 `GET /api/v1/inventory` · `GET|POST /api/v1/orders` · `GET|POST /api/v1/documents` ·
 `GET|POST /api/v1/notifications` · `GET /api/v1/dealer-portal` (+`/modules/{module}`) ·
@@ -55,8 +60,9 @@ Version constants (`platform_api/contracts.py`, `platform_api/versioning.py`): `
 `GET /api/v1/ai-procurement-agent`, `ai-advertising-agent`, `ai-sales-agent`,
 `recommendation-engine`, `communication-hub`, `ai-conversation-skills`, `deal-pipeline`,
 `cross-posting`, `analytics` (each + `/features/{feature}`) ·
-Reserved 501 stubs (`api/v1/__init__.py`): `GET|POST /api/v1/leads`, `/clients`, `/managers`,
+Remaining reserved 501 stubs (`api/v1/__init__.py`): `GET|POST /api/v1/managers`,
 `/inventory/crm`, `/analytics/crm`.
+CRM leads/clients/reports implemented in Sprint 40.2 (`api/v1/crm_foundation.py`).
 
 ### 1.4 Authenticated admin API — `/management/v1/*` (`platform_management/management_router.py`)
 

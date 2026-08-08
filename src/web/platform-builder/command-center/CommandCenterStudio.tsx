@@ -32,7 +32,7 @@ export function CommandCenterStudio() {
     () => ({
       shortDescription: COMMAND_CENTER_STEPS[step],
       detailedExplanation:
-        "Enterprise Command Center is the universal control layer for the platform. It orchestrates user interaction across modules, AI agents, workspaces and services — never business logic.",
+        "Центр управления is the universal control layer for the platform. It orchestrates user interaction across modules, AI agents, workspaces and services — never business logic.",
       example: `Example: complete «${COMMAND_CENTER_STEPS[step]}».`,
       popup: { title: COMMAND_CENTER_STEPS[step], body: "Universal command platform." },
       tooltip: COMMAND_CENTER_STEPS[step],
@@ -52,7 +52,7 @@ export function CommandCenterStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -69,7 +69,7 @@ export function CommandCenterStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -82,10 +82,10 @@ export function CommandCenterStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/command-center/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -167,10 +167,10 @@ export function CommandCenterStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -178,7 +178,7 @@ export function CommandCenterStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Enterprise Command Center"
+      title="Центр управления"
       subtitle="Universal command platform — keyboard first, voice ready, AI native. Interaction only."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -369,7 +369,7 @@ export function CommandCenterStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create">
+            <Card title="Создать">
               <Button disabled={busy} onClick={() => void runCreate()}>
                 Register Command Center
               </Button>

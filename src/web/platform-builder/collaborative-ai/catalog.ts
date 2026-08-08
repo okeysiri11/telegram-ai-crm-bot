@@ -1,15 +1,15 @@
 export const COLLAB_STEPS = [
   "AI Team Creation",
-  "Role Assignment",
+  "Роль Assignment",
   "Collaborative Session",
   "Task Distribution",
-  "Shared Knowledge",
+  "Shared База знаний",
   "Decision Engine",
-  "Executive Summary",
+  "Executive Итоги",
   "Team Performance",
   "Explain Decision",
-  "AI Operations Center Foundation",
-  "Create",
+  "Центр операций AI Foundation",
+  "Создать",
 ] as const;
 
 export const PRIORITIES = ["critical", "high", "medium", "low"] as const;

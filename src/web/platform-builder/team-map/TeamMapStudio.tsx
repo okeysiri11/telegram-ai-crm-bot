@@ -35,7 +35,7 @@ export function TeamMapStudio() {
     () => ({
       shortDescription: TEAM_MAP_STEPS[step],
       detailedExplanation:
-        "Live Organization Map visualizes the AI Organization in real time via the Visual Event Bus and Visual Layer.",
+        "Live Карта организации visualizes the AI Организация in real time via the Visual Event Bus and Визуальный слой.",
       example: `Example: complete «${TEAM_MAP_STEPS[step]}».`,
       popup: { title: TEAM_MAP_STEPS[step], body: "Interactive org map with zoom, pan, and filters." },
       tooltip: TEAM_MAP_STEPS[step],
@@ -55,7 +55,7 @@ export function TeamMapStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -75,7 +75,7 @@ export function TeamMapStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -92,10 +92,10 @@ export function TeamMapStudio() {
       if (statusFilter) q.set("status", statusFilter);
       const res = await fetch(`${PLATFORM_BUILDER_API}/team-map/map?${q}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Map failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка карты");
       setMap(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Map failed");
+      setError(e instanceof Error ? e.message : "Ошибка карты");
     } finally {
       setBusy(false);
     }
@@ -108,10 +108,10 @@ export function TeamMapStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/team-map/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -149,10 +149,10 @@ export function TeamMapStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -181,11 +181,11 @@ export function TeamMapStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="AI Team Map"
-      subtitle="Live Organization Map — Visual Event Bus, relationships, workload, and animation layer."
+      title="Карта команды AI"
+      subtitle="Live Карта организации — Visual Event Bus, relationships, workload, and animation layer."
     >
       <div className="mb-4 flex flex-wrap gap-2">
-        <Badge tone="success">Live Organization</Badge>
+        <Badge tone="success">Live Организация</Badge>
         <Badge>Visual Event Bus</Badge>
         <Badge>Sprint 29.2</Badge>
         {sessionId ? <Badge>session {sessionId}</Badge> : null}
@@ -203,12 +203,12 @@ export function TeamMapStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Live Organization Map">
+            <Card title="Live Карта организации">
               <div className="mb-3 flex flex-wrap gap-2">
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search"
+                  placeholder="Поиск"
                 />
                 <select
                   className="rounded-md border border-[var(--eds-border)] bg-transparent px-2"
@@ -346,7 +346,7 @@ export function TeamMapStudio() {
                         {String(c.current_status)} · {String(c.current_task)}
                       </div>
                       <div>
-                        Knowledge {String(c.knowledge_level)} · Health {String(c.health)}
+                        База знаний {String(c.knowledge_level)} · Health {String(c.health)}
                       </div>
                     </div>
                   ))}
@@ -356,7 +356,7 @@ export function TeamMapStudio() {
           ) : null}
 
           {step === 2 ? (
-            <Card title="Live Status">
+            <Card title="Live Статус">
               <Button disabled={busy} onClick={() => void load("live-status", setLive)}>
                 Snapshot
               </Button>
@@ -480,9 +480,9 @@ export function TeamMapStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create — Register Map Engines">
+            <Card title="Создать — зарегистрировать Map Engines">
               <p className="eds-type-small mb-3">
-                Registers Organization Map, Relationship Engine, Workload Engine, and Animation Layer.
+                Registers карта организации, движок связей, Workload Engine, and Animation Layer.
               </p>
               <Button disabled={busy} onClick={() => void runCreate()}>
                 Register
@@ -502,13 +502,13 @@ export function TeamMapStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= TEAM_MAP_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

@@ -4,6 +4,7 @@ import { logActivity } from "./activityJournal";
 import { useWorkspaceNavigation } from "./useWorkspaceTabs";
 import { useNotificationStore } from "@/notifications/notificationStore";
 import { RU_QUICK_ACTIONS } from "@/navigation/enterpriseRuNav";
+import { isRouteAllowedForViewMode, useViewModeStore } from "@/ux-revolution";
 
 export type QuickActionDef = {
   id: string;
@@ -27,11 +28,13 @@ export const ENTERPRISE_QUICK_ACTIONS: QuickActionDef[] = [
 export function QuickActionsPanel({ compact = false }: { compact?: boolean }) {
   const { open } = useWorkspaceNavigation();
   const push = useNotificationStore((s) => s.push);
+  const viewMode = useViewModeStore((s) => s.viewMode);
+  const actions = ENTERPRISE_QUICK_ACTIONS.filter((a) => isRouteAllowedForViewMode(a.route, viewMode));
 
   return (
     <Card title="Быстрые действия">
       <div className={compact ? "grid gap-2 sm:grid-cols-2" : "grid gap-2 sm:grid-cols-2 lg:grid-cols-3"}>
-        {ENTERPRISE_QUICK_ACTIONS.map((a) => (
+        {actions.map((a) => (
           <button
             key={a.id}
             type="button"
@@ -48,7 +51,6 @@ export function QuickActionsPanel({ compact = false }: { compact?: boolean }) {
             }}
           >
             <span className="font-medium">{a.label}</span>
-            <span className="eds-type-helper">{a.route}</span>
           </button>
         ))}
       </div>

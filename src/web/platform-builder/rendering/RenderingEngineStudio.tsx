@@ -30,7 +30,7 @@ export function RenderingEngineStudio() {
     () => ({
       shortDescription: RENDER_STEPS[step],
       detailedExplanation:
-        "Visual Rendering Engine displays objects efficiently with LOD and viewport culling. Independent from business logic — updates from Event Bus and Behavior Engine.",
+        "Движок визуализации displays objects efficiently with LOD and viewport culling. Independent from business logic — updates from Event Bus and Behavior Engine.",
       example: `Example: complete «${RENDER_STEPS[step]}».`,
       popup: { title: RENDER_STEPS[step], body: "GPU-friendly visual rendering." },
       tooltip: RENDER_STEPS[step],
@@ -50,7 +50,7 @@ export function RenderingEngineStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -67,7 +67,7 @@ export function RenderingEngineStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -80,10 +80,10 @@ export function RenderingEngineStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/rendering/${path}${qs}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -105,10 +105,10 @@ export function RenderingEngineStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -116,7 +116,7 @@ export function RenderingEngineStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Visual Rendering Engine"
+      title="Движок визуализации"
       subtitle="LOD · Smart Viewport · Layers — GPU-friendly, independent from business logic."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -255,7 +255,7 @@ export function RenderingEngineStudio() {
           ) : null}
 
           {step === 6 ? (
-            <Card title="Live Organization Support">
+            <Card title="Live Организация Support">
               <Button disabled={busy} onClick={() => void load("live-organization", setLiveOrg)}>
                 Load live surfaces
               </Button>
@@ -300,7 +300,7 @@ export function RenderingEngineStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create — Register Render Stack">
+            <Card title="Создать — зарегистрировать Render Stack">
               <p className="eds-type-small mb-3">
                 Registers Rendering Engine, LOD Engine, Viewport Engine, and Layer System.
               </p>
@@ -322,13 +322,13 @@ export function RenderingEngineStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= RENDER_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

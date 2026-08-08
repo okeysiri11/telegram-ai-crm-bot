@@ -632,7 +632,7 @@ async def _remove_inline_keyboard(callback: CallbackQuery) -> None:
     F.data.in_({"vin_no", "ac:vin:skip"}),
 )
 async def auto_client_vin_no(callback: CallbackQuery, state: FSMContext) -> None:
-    """VIN branch: Нет → create request without VIN, no waiting_vin state."""
+    """VIN branch: Нет → VIN_SKIPPED → continue workflow immediately."""
     if callback.message is None or callback.from_user is None:
         await callback.answer()
         return
@@ -640,10 +640,16 @@ async def auto_client_vin_no(callback: CallbackQuery, state: FSMContext) -> None
         await callback.answer()
         return
 
-    logger.warning("VIN_NO user=%s", callback.from_user.id)
+    from services.auto_dialog_state import VIN_SKIPPED, auto_dialog_state
+    from services.auto_human_conversation_policy import vin_skipped_ack_ru
+
+    logger.warning("VIN_NO user=%s event=%s", callback.from_user.id, VIN_SKIPPED)
+    auto_dialog_state.begin_vin_choice(callback.from_user.id)
+    auto_dialog_state.resolve_short_answer(callback.from_user.id, "нет")
     await callback.answer()
     await _remove_inline_keyboard(callback)
-    await state.update_data(vin=None, flow_step="vin_optional")
+    await state.update_data(vin=None, flow_step="vin_optional", vin_status=VIN_SKIPPED)
+    await callback.message.answer(vin_skipped_ack_ru())
     await _finish_request(callback.message, state, actor=callback.from_user)
 
 
@@ -652,7 +658,7 @@ async def auto_client_vin_no(callback: CallbackQuery, state: FSMContext) -> None
     F.data.in_({"vin_yes", "ac:vin:add"}),
 )
 async def auto_client_vin_yes(callback: CallbackQuery, state: FSMContext) -> None:
-    """VIN branch: Да → waiting_vin → ask for VIN text."""
+    """VIN branch: Да → WAITING_FOR_VIN → ask only for VIN."""
     if callback.message is None or callback.from_user is None:
         await callback.answer()
         return
@@ -660,20 +666,52 @@ async def auto_client_vin_yes(callback: CallbackQuery, state: FSMContext) -> Non
         await callback.answer()
         return
 
-    logger.warning("VIN_YES user=%s", callback.from_user.id)
+    from services.auto_dialog_state import WAITING_FOR_VIN, auto_dialog_state
+    from services.auto_human_conversation_policy import vin_ask_only_ru
+
+    logger.warning("VIN_YES user=%s event=%s", callback.from_user.id, WAITING_FOR_VIN)
+    auto_dialog_state.begin_vin_choice(callback.from_user.id)
+    auto_dialog_state.resolve_short_answer(callback.from_user.id, "да")
     await callback.answer()
     await _remove_inline_keyboard(callback)
     await state.set_state(AutoClientFlow.awaiting_vin)
-    await state.update_data(flow_step="vin", awaiting_vin_input=True)
-    await callback.message.answer("Введите VIN автомобиля:")
+    await state.update_data(flow_step="vin", awaiting_vin_input=True, vin_status=WAITING_FOR_VIN)
+    await callback.message.answer(vin_ask_only_ru())
 
 
 @router.message(StateFilter(AutoClientFlow.awaiting_vin_choice))
 async def auto_client_vin_choice_text(message: Message, state: FSMContext) -> None:
+    """Deterministic VIN Yes/No — text must not freeze FSM (root cause fix)."""
     if not await _ensure_auto_client(message):
         return
     if await _handle_interrupt(message, state):
         return
+
+    from services.auto_client_flow_engine import SKIP_TOKENS, YES_TOKENS
+    from services.auto_dialog_state import VIN_SKIPPED, WAITING_FOR_VIN, auto_dialog_state
+    from services.auto_human_conversation_policy import vin_ask_only_ru, vin_skipped_ack_ru
+
+    text = (message.text or "").strip()
+    low = text.lower()
+    user_id = message.from_user.id if message.from_user else 0
+    auto_dialog_state.begin_vin_choice(user_id)
+
+    if low in SKIP_TOKENS or low in {"2"}:
+        logger.warning("VIN_NO text user=%s token=%s event=%s", user_id, low, VIN_SKIPPED)
+        transition = auto_dialog_state.resolve_short_answer(user_id, text) or {}
+        await state.update_data(vin=None, flow_step="vin_optional", vin_status=VIN_SKIPPED)
+        await message.answer(transition.get("reply_ru") or vin_skipped_ack_ru())
+        await _finish_request(message, state)
+        return
+
+    if low in YES_TOKENS or low in {"1"}:
+        logger.warning("VIN_YES text user=%s event=%s", user_id, WAITING_FOR_VIN)
+        auto_dialog_state.resolve_short_answer(user_id, text)
+        await state.set_state(AutoClientFlow.awaiting_vin)
+        await state.update_data(flow_step="vin", awaiting_vin_input=True, vin_status=WAITING_FOR_VIN)
+        await message.answer(vin_ask_only_ru())
+        return
+
     await message.answer(
         "Хотите добавить VIN автомобиля?",
         reply_markup=auto_client_vin_inline(),
@@ -687,7 +725,22 @@ async def auto_client_vin_text(message: Message, state: FSMContext) -> None:
     if await _handle_interrupt(message, state):
         return
 
+    from services.auto_client_flow_engine import SKIP_TOKENS
+    from services.auto_dialog_state import VIN_SKIPPED, auto_dialog_state
+    from services.auto_human_conversation_policy import vin_skipped_ack_ru
+
     text = (message.text or "").strip()
+    low = text.lower()
+    user_id = message.from_user.id if message.from_user else 0
+
+    # Allow skip even while WAITING_FOR_VIN
+    if low in SKIP_TOKENS:
+        auto_dialog_state.set_phase(user_id, "finishing", vin_status=VIN_SKIPPED)
+        await state.update_data(vin=None, awaiting_vin_input=False, vin_status=VIN_SKIPPED)
+        await message.answer(vin_skipped_ack_ru())
+        await _finish_request(message, state)
+        return
+
     data = await state.get_data()
     ok, error, value = validate_text_step(
         "vin",
@@ -696,13 +749,14 @@ async def auto_client_vin_text(message: Message, state: FSMContext) -> None:
     )
     if not ok:
         await message.answer(
-            f"❌ {error}\n\nВведите корректный VIN или начните заново из меню.",
+            f"❌ {error}\n\nВведите корректный VIN или напишите «Нет».",
             reply_markup=auto_client_menu(
                 await VerticalOnboardingEngineV1.get_language(message.from_user.id)
             ),
         )
         return
 
+    auto_dialog_state.set_phase(user_id, "finishing", vin_status="VIN_PROVIDED")
     await state.update_data(vin=value, awaiting_vin_input=False)
     await _finish_request(message, state)
 

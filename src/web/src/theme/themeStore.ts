@@ -1,3 +1,4 @@
+import { wsKey } from "@/multi-role/workspaceSlot";
 import { create } from "zustand";
 import { applyTheme, type BrandOverrides, type ThemeId } from "../../design-system/theme";
 
@@ -19,7 +20,7 @@ function resolve(mode: ThemeMode): ThemeId {
   return mode;
 }
 
-const THEME_KEY = "ews_theme_mode_v1";
+const THEME_KEY = wsKey("ews_theme_mode_v1");
 
 function readMode(): ThemeMode {
   try {

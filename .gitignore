@@ -43,6 +43,11 @@ memory.db
 data/media_cache/
 *.log
 
+# Database backups (keep directory; never commit dumps)
+backups/*
+!backups/.gitkeep
+!backups/README.md
+
 # Docker / build
 .docker/
 
@@ -57,3 +62,8 @@ data/media_cache/
 src/kernel/node_modules/
 src/kernel/dist/
 src/kernel/package-lock.json
+
+# TLS material
+deploy/certs/*
+!deploy/certs/README.md
+!deploy/certs/.gitkeep

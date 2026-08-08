@@ -1,14 +1,14 @@
 export const ACADEMY_V2_STEPS = [
   "User Experience Level",
-  "Contextual Help",
+  "Contextual Справка",
   "AI Guide",
   "Smart Recommendations",
   "Interactive Learning",
   "Live Builder Analysis",
   "Business Impact",
   "Academy Progress",
-  "Summary",
-  "Create",
+  "Итоги",
+  "Создать",
 ] as const;
 
 export const EXPERIENCE_LEVELS = [
@@ -45,10 +45,10 @@ export const HELP_FIELDS = [
 
 export const RECOMMENDATION_TYPES = [
   "AI Specialists",
-  "Modules",
-  "Departments",
-  "Dashboards",
-  "Automations",
-  "Marketplace Apps",
-  "Knowledge Sources",
+  "Модули",
+  "Отделы",
+  "Панели управления",
+  "Автоматизацияs",
+  "Маркетплейс Apps",
+  "База знаний Sources",
 ] as const;

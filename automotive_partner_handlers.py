@@ -267,6 +267,6 @@ async def partner_lead_phone(message: Message) -> None:
 
     await message.answer(
         f"✅ Lead created #{lead.get('id', '—')[:8]}\n"
-        f"Manager assigned. Score: {lead.get('score', '—')}",
+        "Менеджер назначен.",
         reply_markup=auto_vertical_hub_menu(),
     )

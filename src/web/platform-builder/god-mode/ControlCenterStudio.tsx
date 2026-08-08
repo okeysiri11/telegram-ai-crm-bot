@@ -41,14 +41,14 @@ export function ControlCenterStudio() {
     () => ({
       shortDescription: CONTROL_CENTER_STEPS[step],
       detailedExplanation:
-        "God Mode Platform Control Center gives the Platform Owner unrestricted access to every object, registry, and architecture surface.",
+        "Режим владельца Центр управления платформой gives the Platform Owner unrestricted access to every object, registry, and architecture surface.",
       example: `Example: complete «${CONTROL_CENTER_STEPS[step]}».`,
       popup: {
         title: CONTROL_CENTER_STEPS[step],
         body: "Enterprise Platform Control — owner only.",
       },
       tooltip: CONTROL_CENTER_STEPS[step],
-      purpose: "Enterprise Platform Control Center",
+      purpose: "Enterprise Центр управления платформой",
       benefits: "Full visibility, diagnostics, and repair in one place",
       typicalUse: "Platform Owner incident response and architecture review",
       businessValue: "Faster recovery and safer platform evolution",
@@ -64,7 +64,7 @@ export function ControlCenterStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start Control Center session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать Control Center session");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -89,7 +89,7 @@ export function ControlCenterStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -104,10 +104,10 @@ export function ControlCenterStudio() {
         headers: OWNER_HEADERS,
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Overview failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка обзора");
       setOverview(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Overview failed");
+      setError(e instanceof Error ? e.message : "Ошибка обзора");
     } finally {
       setBusy(false);
     }
@@ -122,12 +122,12 @@ export function ControlCenterStudio() {
         { headers: OWNER_HEADERS },
       );
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Search failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка поиска");
       setSearch(body);
       const first = (body.results as Dict[] | undefined)?.[0];
       if (first?.internal_id) setObjectId(String(first.internal_id));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Search failed");
+      setError(e instanceof Error ? e.message : "Ошибка поиска");
     } finally {
       setBusy(false);
     }
@@ -189,10 +189,10 @@ export function ControlCenterStudio() {
         body: JSON.stringify({ action: action || registryAction }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Registries failed");
+      if (!res.ok) throw new Error(body.error || "Реестры failed");
       setRegistries(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Registries failed");
+      setError(e instanceof Error ? e.message : "Реестры failed");
     } finally {
       setBusy(false);
     }
@@ -278,10 +278,10 @@ export function ControlCenterStudio() {
         { method: "POST", headers: OWNER_HEADERS, body: "{}" },
       );
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -292,12 +292,12 @@ export function ControlCenterStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="God Mode · Platform Control Center"
+      title="Режим владельца · Центр управления платформой"
       subtitle="Enterprise Platform Control — Platform Owner only."
     >
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Badge tone="success">Platform Owner</Badge>
-        <Badge>God Mode 2.0</Badge>
+        <Badge>Режим владельца 2.0</Badge>
         <Badge>Sprint 28.7</Badge>
         {sessionId ? <Badge>session {sessionId}</Badge> : null}
       </div>
@@ -318,10 +318,10 @@ export function ControlCenterStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Global Platform Overview">
+            <Card title="Global Platform Обзор">
               <p className="eds-type-small mb-3">
                 Organizations · Users · AI · Concierges · Verticals · Departments · Modules ·
-                Knowledge · Workflows · Marketplace · Registries · Visual Layer
+                Knowledge · Workflows · Маркетплейс · Registries · Visual Layer
               </p>
               <Button disabled={busy} onClick={() => void loadOverview()}>
                 Load overview
@@ -343,7 +343,7 @@ export function ControlCenterStudio() {
           ) : null}
 
           {step === 1 ? (
-            <Card title="Global Search">
+            <Card title="Global Поиск">
               <div className="flex flex-wrap gap-2">
                 <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Query" />
                 <select
@@ -443,7 +443,7 @@ export function ControlCenterStudio() {
           {step === 5 ? (
             <Card title="System Health">
               <Button disabled={busy} onClick={() => void loadHealth()}>
-                Refresh health
+                Обновить health
               </Button>
               {health ? (
                 <div className="mt-3 grid gap-2 md:grid-cols-2">
@@ -592,7 +592,7 @@ export function ControlCenterStudio() {
           ) : null}
 
           {step === 10 ? (
-            <Card title="Create — Register Control Centers">
+            <Card title="Создать — зарегистрировать Control Centers">
               <p className="eds-type-small mb-3">
                 Registers Diagnostics, Audit, Architecture snapshot, and Health Center for the
                 Platform Owner.
@@ -610,13 +610,13 @@ export function ControlCenterStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= CONTROL_CENTER_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
 

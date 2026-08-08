@@ -2,11 +2,13 @@ import { webConfig } from "@/config/webConfig";
 import { useRuntimeHealth, toStatusSnapshots } from "./useRuntimeHealth";
 import { useEnterpriseStatus } from "@/command-center-runtime/useEnterpriseStatus";
 import { useShellLayoutStore } from "./shellLayoutStore";
+import { useI18n } from "@/i18n";
 
 /**
- * Sprint 27.5 / 30.2 — Enterprise Status Bar (Russian chrome).
+ * Sprint 27.5 / 30.2 / 41.3 — Enterprise Status Bar (localized chrome).
  */
 export function StatusBar() {
+  const t = useI18n((s) => s.t);
   const { items } = useRuntimeHealth(45_000);
   const statusItems = toStatusSnapshots(items).filter((i) =>
     ["runtime", "api", "providers", "mcp"].includes(i.id),
@@ -40,7 +42,7 @@ export function StatusBar() {
         </div>
         <div className="ews-status-item" title={`Среда выполнения: ${ent.runtime}`}>
           <span className={`ews-dot ews-dot--${statusItems.find((i) => i.id === "runtime")?.tone || "unknown"}`} aria-hidden />
-          <span className="ews-status-label">Runtime</span>
+          <span className="ews-status-label">{t("status.probe.runtime")}</span>
           <span className="ews-status-detail">{ent.runtime}</span>
         </div>
         <div className="ews-status-item" title="Ветка Git">
@@ -80,7 +82,9 @@ export function StatusBar() {
           .map((item) => (
             <div key={item.id} className="ews-status-item" title={`${item.label}: ${item.detail}`}>
               <span className={`ews-dot ews-dot--${item.tone}`} aria-hidden />
-              <span className="ews-status-label">{item.label}</span>
+              <span className="ews-status-label">
+                {t(`status.probe.${item.id}` as "status.probe.api") || item.label}
+              </span>
               <span className="ews-status-detail">{item.detail}</span>
             </div>
           ))}

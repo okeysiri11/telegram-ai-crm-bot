@@ -37,7 +37,7 @@ export function MissionControlStudio() {
       tooltip: MISSION_CONTROL_STEPS[step],
       purpose: "Single operational interface for executive management",
       benefits: "Cockpit, timeline, risk and recommendation surfaces",
-      typicalUse: "Mission Control Home and Executive Cockpit",
+      typicalUse: "Mission Control Главная and Executive Cockpit",
       businessValue: "Unified situational awareness without module ownership",
     }),
     [step],
@@ -51,7 +51,7 @@ export function MissionControlStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -68,7 +68,7 @@ export function MissionControlStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -81,10 +81,10 @@ export function MissionControlStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/mission-control/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -126,10 +126,10 @@ export function MissionControlStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -137,7 +137,7 @@ export function MissionControlStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Enterprise Mission Control"
+      title="Миссион-контроль предприятия"
       subtitle="Unified executive operating center — aggregates existing services, never replaces modules."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -202,7 +202,7 @@ export function MissionControlStudio() {
           ) : null}
 
           {step === 2 ? (
-            <Card title="Executive Overview">
+            <Card title="Executive Обзор">
               <Button disabled={busy} onClick={() => void load("overview", setExecutive)}>
                 Load executive overview
               </Button>
@@ -317,7 +317,7 @@ export function MissionControlStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create">
+            <Card title="Создать">
               <Button disabled={busy} onClick={() => void runCreate()}>
                 Register Mission Control
               </Button>

@@ -22,3 +22,10 @@ class ValidationError(AutoMarketplaceError):
 class AuthorizationError(AutoMarketplaceError):
     def __init__(self, message: str = "Unauthorized") -> None:
         super().__init__(message)
+
+
+class AuthenticationError(AutoMarketplaceError):
+    """Missing or invalid credentials (HTTP 401)."""
+
+    def __init__(self, message: str = "Authentication required") -> None:
+        super().__init__(message)

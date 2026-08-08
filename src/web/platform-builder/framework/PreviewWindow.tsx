@@ -1,4 +1,5 @@
 import { Card } from "@/ui";
+import { bu } from "../i18n/builderUiRu";
 
 export function PreviewWindow({
   title,
@@ -10,7 +11,7 @@ export function PreviewWindow({
   payload?: Record<string, unknown>;
 }) {
   return (
-    <Card title={`Preview · ${title}`}>
+    <Card title={`${bu("preview")} · ${title}`}>
       <p className="eds-type-small text-[var(--eds-text-muted)]">{summary}</p>
       {payload ? (
         <pre className="mt-3 max-h-48 overflow-auto rounded-md border border-[var(--eds-border)] bg-[var(--eds-surface)] p-3 eds-type-caption">

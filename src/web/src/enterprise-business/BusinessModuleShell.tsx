@@ -29,12 +29,13 @@ export function BusinessModuleShell({
   tabs,
   activeTab,
   onTab,
-  source,
+  source: _source,
   permissions = ["read"],
   actions,
   children,
   testId,
 }: Props) {
+  void _source;
   return (
     <PermissionGuard require={permissions}>
       <WorkspaceLayout>
@@ -42,8 +43,7 @@ export function BusinessModuleShell({
           <header className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <div className="mb-2 flex flex-wrap gap-2">
-                <Badge tone="success">Sprint 30.8</Badge>
-                {source ? <Badge>{source}</Badge> : null}
+                <Badge tone="success">Рабочий модуль</Badge>
               </div>
               <h1 className="eds-type-h1">{title}</h1>
               <p className="eds-type-helper">{subtitle}</p>

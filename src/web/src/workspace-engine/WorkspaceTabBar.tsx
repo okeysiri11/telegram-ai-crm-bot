@@ -1,11 +1,13 @@
 import { useWorkspaceManager } from "./workspaceManagerStore";
 import { useWorkspaceNavigation } from "./useWorkspaceTabs";
 import { useEffect, useRef, useState } from "react";
+import { useI18n } from "@/i18n";
 
 type MenuState = { tabId: string; x: number; y: number } | null;
 
 /** Professional multi-tab chrome — drag reorder, pin, duplicate, reopen closed. */
 export function WorkspaceTabBar() {
+  const t = useI18n((s) => s.t);
   const tabs = useWorkspaceManager((s) => s.tabs);
   const activeTabId = useWorkspaceManager((s) => s.activeTabId);
   const closedTabs = useWorkspaceManager((s) => s.closedTabs);
@@ -77,7 +79,7 @@ export function WorkspaceTabBar() {
                 <button
                   type="button"
                   className="ews-tab-action"
-                  aria-label={`Close ${tab.title}`}
+                  aria-label={`${t("common.close") || "Закрыть"} ${tab.title}`}
                   onClick={() => close(tab.id)}
                 >
                   ×
@@ -119,7 +121,7 @@ export function WorkspaceTabBar() {
               setMenu(null);
             }}
           >
-            Activate
+            Активировать
           </button>
           <button
             type="button"
@@ -129,7 +131,7 @@ export function WorkspaceTabBar() {
               setMenu(null);
             }}
           >
-            Toggle pin
+            Закрепить / открепить
           </button>
           <button
             type="button"
@@ -140,7 +142,7 @@ export function WorkspaceTabBar() {
               setMenu(null);
             }}
           >
-            Duplicate
+            Дублировать
           </button>
           <button
             type="button"
@@ -150,7 +152,7 @@ export function WorkspaceTabBar() {
               setMenu(null);
             }}
           >
-            Close
+            Закрыть
           </button>
           <button
             type="button"
@@ -162,7 +164,7 @@ export function WorkspaceTabBar() {
               setMenu(null);
             }}
           >
-            Reopen closed
+            Открыть закрытую
           </button>
         </div>
       ) : null}

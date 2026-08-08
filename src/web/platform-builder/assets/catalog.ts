@@ -1,12 +1,12 @@
 export const ASSET_STEPS = [
-  "Visual Asset Registry",
+  "Реестр визуальных активов",
   "Asset Categories",
-  "Version Management",
+  "Версия Management",
   "Resource Optimization",
   "AI Avatar Library",
-  "Organization Branding",
+  "Организация Branding",
   "Foundation for AI City",
-  "Search",
+  "Поиск",
   "Performance",
-  "Create",
+  "Создать",
 ] as const;

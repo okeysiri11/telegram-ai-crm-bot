@@ -3,9 +3,10 @@
  */
 
 import { create } from "zustand";
+import { wsKey } from "@/multi-role/workspaceSlot";
 import { ROLE_SWITCHER_OPTIONS, type RoleSwitcherOption } from "./enterpriseRuNav";
 
-const STORAGE_KEY = "ewp_role_switcher_v1";
+const STORAGE_KEY = wsKey("ewp_role_switcher_v1");
 
 function loadRole(): string {
   try {

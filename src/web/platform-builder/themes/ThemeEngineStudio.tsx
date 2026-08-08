@@ -31,7 +31,7 @@ export function ThemeEngineStudio() {
     () => ({
       shortDescription: THEME_STEPS[step],
       detailedExplanation:
-        "Visual Theme Engine controls platform appearance only. Themes never contain business logic.",
+        "Движок визуальных тем controls platform appearance only. Themes never contain business logic.",
       example: `Example: complete «${THEME_STEPS[step]}».`,
       popup: { title: THEME_STEPS[step], body: "Enterprise visual identity." },
       tooltip: THEME_STEPS[step],
@@ -51,7 +51,7 @@ export function ThemeEngineStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -68,7 +68,7 @@ export function ThemeEngineStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -81,10 +81,10 @@ export function ThemeEngineStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/themes/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -126,10 +126,10 @@ export function ThemeEngineStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -137,7 +137,7 @@ export function ThemeEngineStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Visual Theme Engine"
+      title="Движок визуальных тем"
       subtitle="Enterprise branding · Dark/Light · Live switching — appearance only."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -301,7 +301,7 @@ export function ThemeEngineStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create — Register Theme Stack">
+            <Card title="Создать — зарегистрировать Theme Stack">
               <p className="eds-type-small mb-3">
                 Registers Theme Engine, Theme Registry, and Brand Profiles.
               </p>
@@ -326,13 +326,13 @@ export function ThemeEngineStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= THEME_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

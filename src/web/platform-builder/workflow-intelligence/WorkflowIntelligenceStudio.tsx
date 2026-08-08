@@ -30,13 +30,13 @@ export function WorkflowIntelligenceStudio() {
     () => ({
       shortDescription: WORKFLOW_INTELLIGENCE_STEPS[step],
       detailedExplanation:
-        "Workflow Intelligence OS analyzes, coordinates and optimizes workflow visibility. It never executes business logic directly — only visibility, dependency analysis and recommendations.",
+        "ОС интеллекта сценариев analyzes, coordinates and optimizes workflow visibility. It never executes business logic directly — only visibility, dependency analysis and recommendations.",
       example: `Example: complete «${WORKFLOW_INTELLIGENCE_STEPS[step]}».`,
       popup: { title: WORKFLOW_INTELLIGENCE_STEPS[step], body: "Global process orchestrator." },
       tooltip: WORKFLOW_INTELLIGENCE_STEPS[step],
-      purpose: "Workflow visibility and recommendations",
+      purpose: "Сценарий visibility and recommendations",
       benefits: "Dependency analysis, critical path, bottleneck detection",
-      typicalUse: "Workflow Intelligence Center and Critical Path Viewer",
+      typicalUse: "Интеллект сценариев Center and Critical Path Viewer",
       businessValue: "Process clarity without business coupling",
     }),
     [step],
@@ -50,7 +50,7 @@ export function WorkflowIntelligenceStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -67,7 +67,7 @@ export function WorkflowIntelligenceStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -80,10 +80,10 @@ export function WorkflowIntelligenceStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/workflow-intelligence/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -108,10 +108,10 @@ export function WorkflowIntelligenceStudio() {
         },
       );
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -119,7 +119,7 @@ export function WorkflowIntelligenceStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Workflow Intelligence OS"
+      title="ОС интеллекта сценариев"
       subtitle="Global process orchestrator — visibility, dependencies and recommendations only."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -146,7 +146,7 @@ export function WorkflowIntelligenceStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Workflow Intelligence Core">
+            <Card title="Интеллект сценариев Core">
               <Button disabled={busy} onClick={() => void load("engine", setOverview)}>
                 Load engine
               </Button>
@@ -161,7 +161,7 @@ export function WorkflowIntelligenceStudio() {
           ) : null}
 
           {step === 1 ? (
-            <Card title="Global Workflow Graph">
+            <Card title="Global Сценарий Graph">
               <Button disabled={busy} onClick={() => void load("graph", setGraph)}>
                 Load graphs
               </Button>
@@ -238,7 +238,7 @@ export function WorkflowIntelligenceStudio() {
           ) : null}
 
           {step === 6 ? (
-            <Card title="Workflow Recommendations">
+            <Card title="Сценарий Recommendations">
               <Button disabled={busy} onClick={() => void load("recommendations", setRecs)}>
                 Load recommendations
               </Button>
@@ -274,7 +274,7 @@ export function WorkflowIntelligenceStudio() {
                   Load performance
                 </Button>
                 <Button disabled={busy} onClick={() => void load("ui", setUi)}>
-                  Load Workflow UI
+                  Load Сценарий UI
                 </Button>
               </div>
               {performance ? (
@@ -293,9 +293,9 @@ export function WorkflowIntelligenceStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create">
+            <Card title="Создать">
               <Button disabled={busy} onClick={() => void runCreate()}>
-                Register Workflow Intelligence
+                Register Интеллект сценариев
               </Button>
               {created ? (
                 <ul className="mt-3 eds-type-small space-y-1">

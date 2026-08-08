@@ -1,0 +1,50 @@
+name: Nightly Platform Validation
+
+on:
+  schedule:
+    # 02:00 UTC daily
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+env:
+  POSTGRES_ONLY: "true"
+  REDIS_URL: redis://localhost:6379/15
+  REDIS_REQUIRED: "false"
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+      - name: Prepare env
+        run: |
+          if [ ! -f .env ]; then cp .env.example .env; fi
+          grep -q '^BOT_TOKEN=' .env || echo 'BOT_TOKEN=0000000000:CI_NIGHTLY_TOKEN_PLACEHOLDER' >> .env
+          grep -q '^IAM_JWT_SECRET=' .env || echo 'IAM_JWT_SECRET=ci-iam-jwt-secret-change-me-32chars' >> .env
+          grep -q '^API_JWT_SECRET=' .env || echo 'API_JWT_SECRET=ci-api-jwt-secret-change-me-32chars' >> .env
+          mkdir -p src/web/dist
+          if [ ! -f src/web/dist/index.html ]; then
+            printf '%s\n' '<!doctype html><title>ADOS Nightly</title>' > src/web/dist/index.html
+          fi
+      - name: Nightly validation
+        run: python scripts/nightly_validation.py
+      - name: Upload nightly artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-report
+          path: |
+            docs/NIGHTLY_REPORT.md
+            docs/nightly_report.json
+            docs/nightly_pytest.txt
+            docs/smoke_rc_report.json
+            docs/pytest_classification_38_3.json

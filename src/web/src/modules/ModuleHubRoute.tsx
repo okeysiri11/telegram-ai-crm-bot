@@ -1,4 +1,4 @@
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useParams, useSearchParams } from "react-router-dom";
 import { getModuleBySlug } from "./moduleCatalog";
 import { EnterpriseModulePage } from "./EnterpriseModulePage";
 import { EmptyState } from "@/ui";
@@ -11,6 +11,8 @@ import {
   MarketplaceModulePage,
   AiStudioModulePage,
 } from "@/enterprise-business";
+import { MODULE_LANDINGS } from "./moduleLandingCatalog";
+import { ModuleLandingView } from "./ModuleLandingView";
 
 /** Resolves /:slug hub pages from the enterprise module catalog. */
 export function ModuleHubRoute() {
@@ -34,9 +36,28 @@ export function ModuleHubRoute() {
   return <ModulePageById id={mod.id} />;
 }
 
+function landingIdForModule(id: string): string | undefined {
+  if (id === "ai_studio") return "ai";
+  if (MODULE_LANDINGS.some((m) => m.id === id)) return id;
+  return undefined;
+}
+
 export function ModulePageById({ id }: { id: string }) {
   const mod = getModuleBySlug(id);
   if (!mod) return <Navigate to="/dashboard" replace />;
+
+  const [params] = useSearchParams();
+  const deep = Boolean(params.get("view") || params.get("action") || params.get("demo") === "1");
+  const lid = landingIdForModule(id);
+  const landing = lid ? MODULE_LANDINGS.find((m) => m.id === lid) : undefined;
+
+  if (landing && !deep) {
+    return (
+      <WorkspaceLayout>
+        <ModuleLandingView landing={landing} />
+      </WorkspaceLayout>
+    );
+  }
 
   if (id === "crm") return <CrmModulePage />;
   if (id === "projects") return <ProjectsModulePage />;

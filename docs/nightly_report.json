@@ -1,0 +1,36 @@
+{
+  "started_at": "2026-08-05T12:58:44.285630+00:00",
+  "finished_at": "2026-08-05T12:59:39.511635+00:00",
+  "passed": true,
+  "steps": [
+    {
+      "name": "ruff_critical",
+      "ok": true,
+      "detail": "All checks passed!",
+      "duration_s": 0.19868,
+      "group": "static"
+    },
+    {
+      "name": "platform_protections",
+      "ok": true,
+      "detail": "=== Platform protections (Sprint 38.4) ===\n[PASS] empty_python_modules\n[PASS] required_files\n[PASS] builtin_shadowing\n[PASS] health_ready_routes\n[PASS] alembic_migrations\n[PASS] empty_workflows\n[PASS] duplicate_registry_names\n[PASS] critical_imports\n[PASS] mass_rename\n[INFO] migration files checksummed: 129\n[INFO] alembic_head_file_sha256=5b75f48c65285811ed0828571a20b41991dd028d68541d58d6312a799efd3d66\n\nPROTECTION_GATE=PASS\nDEFAULT_AGRO_MANAGER_ID is not set in .env \u2014 related routing and access checks may be limited\nDEFAULT_REALTY_MANAGER_ID is not set in .env \u2014 related routing and access checks may be limited",
+      "duration_s": 14.339966,
+      "group": "architecture"
+    },
+    {
+      "name": "rc_tests",
+      "ok": true,
+      "detail": "  /Users/macbook/Desktop/TelegramBotCourse/ecosystem/api/middleware.py:23: NotAppKeyWarning: It is recommended to use web.RequestKey instances for keys.\n  https://docs.aiohttp.org/en/stable/web_advanced.html#request-s-storage\n    request[\"ecosystem_user\"] = user\n\ntests/test_api_v1_freeze.py::test_public_api_v1_health_envelope\n  /Users/macbook/Desktop/TelegramBotCourse/applications/platform_builder/api/middleware.py:36: NotAppKeyWarning: It is recommended to use web.RequestKey instances for keys.\n  https://docs.aiohttp.org/en/stable/web_advanced.html#request-s-storage\n    request[\"platform_role\"] = None\n\ntests/test_api_v1_freeze.py::test_public_api_v1_health_envelope\n  /Users/macbook/Desktop/TelegramBotCourse/applications/platform_builder/api/middleware.py:37: NotAppKeyWarning: It is recommended to use web.RequestKey instances for keys.\n  https://docs.aiohttp.org/en/stable/web_advanced.html#request-s-storage\n    request[\"auth_source\"] = None\n\ntests/test_api_v1_freeze.py::test_public_api_v1_health_envelope\n  /Users/macbook/Desktop/TelegramBotCourse/applications/platform_builder/api/middleware.py:38: NotAppKeyWarning: It is recommended to use web.RequestKey instances for keys.\n  https://docs.aiohttp.org/en/stable/web_advanced.html#request-s-storage\n    request[\"iam_principal\"] = None\n\ntests/test_admin_security.py::test_management_sla_requires_authentication[/management/v1/sla/owner-escalated]\n  /Users/macbook/Desktop/TelegramBotCourse/.venv/lib/python3.14/site-packages/aiohttp/web_urldispatcher.py:391: RuntimeWarning: coroutine 'Connection._cancel' was never awaited\n    def __init__(self, path: str, *, name: str | None = None) -> None:\n  Enable tracemalloc to get traceback where the object was allocated.\n  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n64 passed, 17 warnings in 15.83s\n/Users/macbook/Desktop/TelegramBotCourse/.venv/lib/python3.14/site-packages/_pytest/unraisableexception.py:33: RuntimeWarning: coroutine 'Connection._cancel' was never awaited\n  gc.collect()\nRuntimeWarning: Enable tracemalloc to get the object allocation traceback",
+      "duration_s": 18.220553,
+      "group": "rc"
+    },
+    {
+      "name": "docker_smoke",
+      "ok": true,
+      "detail": " Container ai-ecosystem-postgres  Healthy\n Container telegrambotcourse-bot-1  Waiting\n Container telegrambotcourse-bot-1  Healthy\n\n[PASS] http://127.0.0.1:8080/liveness \u2014 HTTP 200 (145 bytes)\n[PASS] http://127.0.0.1:8080/health \u2014 HTTP 200 (2480 bytes)\n[PASS] http://127.0.0.1:8080/readiness \u2014 HTTP 200 (344 bytes)\n[PASS] http://127.0.0.1:8080/ready \u2014 HTTP 200 (344 bytes)\n[PASS] http://127.0.0.1:9090/-/healthy \u2014 HTTP 200 (30 bytes)\n[PASS] http://127.0.0.1:3000/api/health \u2014 HTTP 200 (101 bytes)\n[PASS] http://127.0.0.1/health \u2014 HTTP 200 (2480 bytes)\n[PASS] service:postgres \u2014 Up 3 minutes (healthy)\n[PASS] service:redis \u2014 Up 3 minutes (healthy)\n[PASS] service:bot \u2014 Up 2 minutes (healthy)\n[PASS] service:nginx \u2014 Up 2 minutes (healthy)\n[PASS] service:prometheus \u2014 Up 3 minutes (healthy)\n[PASS] service:grafana \u2014 Up 3 minutes (healthy)\n[PASS] postgres_select \u2014 ?column? \n----------\n        1\n(1 row)\n[PASS] redis_ping \u2014 PONG\n[PASS] alembic_head \u2014 INFO  [alembic.runtime.migration] Will assume transactional DDL.\n[PASS] tcp://127.0.0.1:5432 \u2014 connected\n[PASS] tcp://127.0.0.1:6379 \u2014 connected\n\nTotal: 32  PASS: 32  FAIL: 0\nWrote /Users/macbook/Desktop/TelegramBotCourse/docs/smoke_rc_report.json\nDEFAULT_AGRO_MANAGER_ID is not set in .env \u2014 related routing and access checks may be limited\nDEFAULT_REALTY_MANAGER_ID is not set in .env \u2014 related routing and access checks may be limited",
+      "duration_s": 22.465105,
+      "group": "docker"
+    }
+  ],
+  "backlog_keys": []
+}

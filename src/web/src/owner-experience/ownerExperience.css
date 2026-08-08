@@ -1,0 +1,354 @@
+/* Sprint 42.9 — Owner Experience chrome */
+
+.oe-identity {
+  display: none;
+  align-items: center;
+  gap: 0.65rem;
+  max-width: min(42rem, 52vw);
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 88%, transparent);
+}
+
+@media (min-width: 900px) {
+  .oe-identity {
+    display: flex;
+  }
+}
+
+.oe-identity-user {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.oe-identity-avatar {
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.oe-identity-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.oe-ai-chat-backdrop,
+.oe-create-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: color-mix(in oklab, #0b1220 45%, transparent);
+}
+
+.oe-create-panel {
+  width: min(36rem, 100%);
+  max-height: min(80vh, 40rem);
+  overflow: auto;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+  background: var(--eds-surface);
+  padding: 1rem;
+  box-shadow: 0 20px 50px color-mix(in oklab, #0b1220 28%, transparent);
+}
+
+/* Sprint 46.3 — Concierge chat modal */
+.oe-ai-chat {
+  --oe-chat-min-w: 720px;
+  --oe-chat-min-h: 600px;
+  display: flex;
+  flex-direction: column;
+  width: min(900px, 90vw);
+  height: min(760px, 82vh);
+  min-width: min(var(--oe-chat-min-w), 90vw);
+  min-height: min(var(--oe-chat-min-h), 82vh);
+  max-width: 90vw;
+  max-height: 82vh;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+  background: var(--eds-surface);
+  color: var(--eds-text);
+  padding: 1rem 1rem 0.85rem;
+  box-shadow: 0 20px 50px color-mix(in oklab, #0b1220 28%, transparent);
+}
+
+@media (max-width: 760px) {
+  .oe-ai-chat {
+    width: 96vw;
+    height: 88vh;
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+.oe-ai-chat-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  margin-bottom: 0.65rem;
+}
+
+.oe-ai-chat-context {
+  margin-top: 0.15rem;
+  color: var(--eds-text-muted);
+}
+
+.oe-ai-chat-details-toggle {
+  margin-top: 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--eds-text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.oe-ai-chat-exec {
+  margin-top: 0.35rem;
+  padding: 0.45rem 0.55rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--eds-border);
+  font-size: 0.75rem;
+  color: var(--eds-text-muted);
+  background: color-mix(in oklab, var(--eds-surface-muted, #eef1f4) 70%, transparent);
+}
+
+.oe-ai-chat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  margin-bottom: 0.55rem;
+}
+
+.oe-ai-chat-followups {
+  margin-top: -0.25rem;
+}
+
+.oe-ai-chip {
+  border-radius: 999px;
+  border: 1px solid var(--eds-border);
+  background: transparent;
+  color: var(--eds-text);
+  padding: 0.3rem 0.65rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.oe-ai-chip.is-follow {
+  border-color: color-mix(in oklab, var(--eds-primary) 45%, var(--eds-border));
+}
+
+.oe-ai-chip:hover {
+  border-color: var(--eds-primary);
+  color: var(--eds-primary);
+}
+
+.oe-ai-chat-log-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.oe-ai-chat-log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-gutter: stable;
+  padding-right: 18px;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.oe-ai-msg {
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.8rem;
+  max-width: 78%;
+  align-self: flex-start;
+  background: color-mix(in oklab, var(--eds-surface-muted, #e8ecf1) 92%, #c5ced8);
+  color: var(--eds-text);
+  border: 1px solid color-mix(in oklab, var(--eds-border) 70%, transparent);
+}
+
+.oe-ai-msg.is-user {
+  background: color-mix(in oklab, var(--eds-primary) 14%, var(--eds-surface));
+  color: var(--eds-text);
+  align-self: flex-end;
+  max-width: 72%;
+  margin-right: 0.35rem;
+}
+
+.oe-ai-msg.kind-status {
+  background: color-mix(in oklab, var(--eds-primary) 8%, var(--eds-surface));
+}
+
+.oe-ai-msg.kind-error {
+  border-color: color-mix(in oklab, #c0392b 40%, var(--eds-border));
+}
+
+.oe-ai-msg-label {
+  margin: 0 0 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--eds-text-muted);
+}
+
+.oe-ai-msg-body {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--eds-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.oe-ai-msg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+.oe-ai-cancel {
+  margin-top: 0.4rem;
+  border: 1px solid var(--eds-border);
+  background: transparent;
+  border-radius: 0.45rem;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+  color: var(--eds-text);
+}
+
+.oe-ai-jump {
+  position: absolute;
+  left: 50%;
+  bottom: 0.35rem;
+  transform: translateX(-50%);
+  z-index: 2;
+  border-radius: 999px;
+  border: 1px solid var(--eds-border);
+  background: var(--eds-surface);
+  color: var(--eds-text);
+  padding: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  box-shadow: 0 6px 16px color-mix(in oklab, #0b1220 18%, transparent);
+  cursor: pointer;
+}
+
+.oe-ai-voice-preview {
+  flex-shrink: 0;
+  margin-bottom: 0.45rem;
+  padding: 0.5rem 0.65rem;
+  border-radius: 0.55rem;
+  border: 1px dashed var(--eds-border);
+  color: var(--eds-text);
+}
+
+.oe-ai-chat-form {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  padding-top: 0.55rem;
+  border-top: 1px solid color-mix(in oklab, var(--eds-border) 70%, transparent);
+  background: var(--eds-surface);
+}
+
+.oe-ai-composer {
+  flex: 1 1 auto;
+  min-height: 2.5rem;
+  max-height: 7.5rem;
+  resize: none;
+  border-radius: 0.65rem;
+  border: 1px solid var(--eds-border);
+  background: color-mix(in oklab, var(--eds-surface-muted, #f4f6f8) 55%, transparent);
+  color: var(--eds-text);
+  padding: 0.55rem 0.7rem;
+  font: inherit;
+  line-height: 1.35;
+  overflow-y: auto;
+}
+
+.oe-ai-composer:focus {
+  outline: 2px solid color-mix(in oklab, var(--eds-primary) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.oe-ai-icon-btn {
+  flex: 0 0 auto;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.55rem;
+  border: 1px solid var(--eds-border);
+  background: transparent;
+  color: var(--eds-text);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.oe-ai-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.oe-create-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.oe-create-card {
+  display: grid;
+  place-items: center;
+  min-height: 4.5rem;
+  border-radius: 0.85rem;
+  border: 1px solid var(--eds-border);
+  background: color-mix(in oklab, var(--eds-primary) 6%, transparent);
+  text-decoration: none;
+  color: var(--eds-text);
+  font-weight: 600;
+}
+
+.oe-create-card:hover {
+  border-color: var(--eds-primary);
+}
+
+/* Profile menu — escape header overflow (Sprint 42.9) */
+.ews-user-menu {
+  position: fixed !important;
+  z-index: 90 !important;
+  right: 0.75rem;
+  top: auto;
+  max-height: min(70vh, 24rem);
+  overflow: auto;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

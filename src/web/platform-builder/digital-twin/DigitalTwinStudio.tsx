@@ -30,12 +30,12 @@ export function DigitalTwinStudio() {
     () => ({
       shortDescription: DIGITAL_TWIN_STEPS[step],
       detailedExplanation:
-        "Enterprise Digital Twin mirrors verified platform state in realtime. It never owns business logic — it is a read-only reflection layer aggregating existing services.",
+        "Цифровой двойник предприятия mirrors verified platform state in realtime. It never owns business logic — it is a read-only reflection layer aggregating existing services.",
       example: `Example: complete «${DIGITAL_TWIN_STEPS[step]}».`,
-      popup: { title: DIGITAL_TWIN_STEPS[step], body: "Organization and platform mirror." },
+      popup: { title: DIGITAL_TWIN_STEPS[step], body: "Организация and platform mirror." },
       tooltip: DIGITAL_TWIN_STEPS[step],
       purpose: "Realtime verified-state reflection",
-      benefits: "Organization, AI, workflow, knowledge and resource mirrors",
+      benefits: "Организация, AI, workflow, knowledge and resource mirrors",
       typicalUse: "Digital Twin Center and Snapshot Browser",
       businessValue: "Shared situational awareness without business coupling",
     }),
@@ -50,7 +50,7 @@ export function DigitalTwinStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -67,7 +67,7 @@ export function DigitalTwinStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -80,10 +80,10 @@ export function DigitalTwinStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/digital-twin/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -125,10 +125,10 @@ export function DigitalTwinStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -136,7 +136,7 @@ export function DigitalTwinStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Enterprise Digital Twin"
+      title="Цифровой двойник предприятия"
       subtitle="Read-only realtime mirror of verified platform state — never owns business logic."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -174,7 +174,7 @@ export function DigitalTwinStudio() {
           ) : null}
 
           {step === 1 ? (
-            <Card title="Organization Mirror">
+            <Card title="Организация Mirror">
               <Button disabled={busy} onClick={() => void load("organization", setOrganization)}>
                 Load organization mirror
               </Button>
@@ -204,7 +204,7 @@ export function DigitalTwinStudio() {
           ) : null}
 
           {step === 3 ? (
-            <Card title="Workflow Mirror">
+            <Card title="Сценарий Mirror">
               <Button disabled={busy} onClick={() => void load("workflow", setWorkflow)}>
                 Load workflow mirror
               </Button>
@@ -219,7 +219,7 @@ export function DigitalTwinStudio() {
           ) : null}
 
           {step === 4 ? (
-            <Card title="Knowledge Mirror">
+            <Card title="База знаний Mirror">
               <Button disabled={busy} onClick={() => void load("knowledge", setKnowledge)}>
                 Load knowledge mirror
               </Button>
@@ -307,7 +307,7 @@ export function DigitalTwinStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create">
+            <Card title="Создать">
               <Button disabled={busy} onClick={() => void runCreate()}>
                 Register Digital Twin
               </Button>

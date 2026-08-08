@@ -9,6 +9,7 @@ import type { ShellIconId } from "@/shell/enterprise";
 import { groupsFromPlatformRegistry } from "@/platform-registry/menuCatalog";
 import { groupsForModeWithBridge, prefetchRegistryNavigation } from "@/platform-registry/menuApiBridge";
 import type { ExperienceMode } from "./experienceModeStore";
+import { isRouteAllowedForViewMode, type ViewModeId } from "./viewModeCatalog";
 
 export type NavGroupId =
   | "workspace"
@@ -70,14 +71,10 @@ export const INTELLIGENT_NAV_GROUPS: IntelligentNavGroup[] = [
     simple: true,
     items: [
       { id: "biz_crm", label: "CRM", route: "/crm", icon: "crm", simple: true },
-      { id: "biz_clients", label: "Клиенты", route: "/crm?view=clients", icon: "crm", simple: true },
       { id: "biz_projects", label: "Проекты", route: "/projects", icon: "projects", simple: true },
-      { id: "biz_finance", label: "Финансы", route: "/analytics", icon: "analytics", simple: true },
       { id: "biz_erp", label: "ERP", route: "/erp", icon: "erp" },
-      { id: "biz_mfg", label: "Производство", route: "/erp?view=production", icon: "erp" },
       { id: "biz_marketplace", label: "Маркетплейс", route: "/marketplace", icon: "marketplace" },
-      { id: "biz_legal", label: "Юридический отдел", route: "/workspace/legal", icon: "security" },
-      { id: "biz_analytics", label: "Аналитика", route: "/analytics", icon: "analytics" },
+      { id: "biz_analytics", label: "Отчёты", route: "/analytics", icon: "analytics", simple: true },
     ],
   },
   {
@@ -138,30 +135,48 @@ export const INTELLIGENT_NAV_GROUPS: IntelligentNavGroup[] = [
 
 export const NAV_ACCORDION_KEY = "ewp_nav_accordion_group_v1";
 
+function applyViewModeFilter(
+  groups: IntelligentNavGroup[],
+  viewMode?: ViewModeId,
+): IntelligentNavGroup[] {
+  if (!viewMode || viewMode === "platform_owner" || viewMode === "developer") {
+    return groups;
+  }
+  return groups
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((item) => isRouteAllowedForViewMode(item.route, viewMode)),
+    }))
+    .filter((g) => g.items.length > 0 && !(g.ownerOnly && viewMode === "client"));
+}
+
 export function groupsForMode(
   mode: ExperienceMode,
-  opts?: { owner?: boolean },
+  opts?: { owner?: boolean; viewMode?: ViewModeId },
 ): IntelligentNavGroup[] {
+  const viewMode = opts?.viewMode;
   // Sprint 35.1 — prefer API-bridged registry cache, then static projection fallback.
   const bridged = groupsForModeWithBridge(mode, opts);
-  if (bridged.length > 0) return bridged;
+  if (bridged.length > 0) return applyViewModeFilter(bridged, viewMode);
 
   const fromRegistry = groupsFromPlatformRegistry(mode, opts);
-  if (fromRegistry.length > 0) return fromRegistry;
+  if (fromRegistry.length > 0) return applyViewModeFilter(fromRegistry, viewMode);
 
   const owner = opts?.owner ?? false;
-  if (owner) {
-    return INTELLIGENT_NAV_GROUPS.map((g) => ({ ...g, items: [...g.items] }));
+  let base: IntelligentNavGroup[];
+  if (owner && (!viewMode || viewMode === "platform_owner" || viewMode === "developer")) {
+    base = INTELLIGENT_NAV_GROUPS.map((g) => ({ ...g, items: [...g.items] }));
+  } else {
+    base = INTELLIGENT_NAV_GROUPS.filter((g) => {
+      if (g.ownerOnly) return false;
+      if (mode === "simple") return g.simple;
+      return true;
+    }).map((g) => ({
+      ...g,
+      items: mode === "simple" ? g.items.filter((i) => i.simple) : [...g.items],
+    }));
   }
-
-  return INTELLIGENT_NAV_GROUPS.filter((g) => {
-    if (g.ownerOnly) return false;
-    if (mode === "simple") return g.simple;
-    return true;
-  }).map((g) => ({
-    ...g,
-    items: mode === "simple" ? g.items.filter((i) => i.simple) : [...g.items],
-  }));
+  return applyViewModeFilter(base, viewMode);
 }
 
 /** Kick off registry navigation prefetch (non-blocking). */

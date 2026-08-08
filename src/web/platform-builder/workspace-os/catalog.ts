@@ -6,7 +6,7 @@ export const WORKSPACE_OS_STEPS = [
   "Module Integration",
   "Context Engine",
   "Multitasking",
-  "Workspace Search",
+  "Workspace Поиск",
   "Performance",
-  "Create",
+  "Создать",
 ] as const;

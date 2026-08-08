@@ -28,23 +28,38 @@ from platform_memory.project_memory_engine import ProjectMemoryEngine, project_m
 from platform_memory.project_memory_service import ProjectMemoryService, project_memory_service
 from platform_memory.project_memory_models import MemoryKind, MemoryLayer
 
+# Epic 45.2 — Continuous Memory
+from platform_memory.memory_manager import MemoryManager, VERSION as CONTINUOUS_MEMORY_VERSION, memory_manager
+from platform_memory.conversation_memory import ConversationMemory, conversation_memory
+from platform_memory.working_memory import WorkingMemory, working_memory
+from platform_memory.long_term_memory import LongTermMemory, long_term_memory
+from platform_memory.smart_recall import SmartRecall, smart_recall
+from platform_memory.ai_resume import AiResume, ai_resume
+from platform_memory.context_engine_v2 import ContextEngineV2, context_engine_v2
+
 __all__ = [
     "AgentMemoryRepository",
     "AIContextBundle",
+    "AiResume",
     "BusinessMemoryRepository",
     "ContextAssembler",
     "ContextAssemblyRequest",
     "ContextAssemblyResult",
     "ContextEngine",
     "ContextEngineService",
+    "ContextEngineV2",
+    "CONTINUOUS_MEMORY_VERSION",
     "ConversationHistoryRepository",
+    "ConversationMemory",
     "DEFAULT_SEMANTIC_CONFIG",
     "DEFAULT_TOKEN_LIMITS",
     "DummyEmbeddingProvider",
     "EmbeddingProvider",
     "InMemoryMemoryRepository",
+    "LongTermMemory",
     "MemoryEntity",
     "MemoryFilters",
+    "MemoryManager",
     "MemoryRepository",
     "MemorySearchHit",
     "MemorySearchService",
@@ -52,10 +67,17 @@ __all__ = [
     "ProjectMemoryRepository",
     "SemanticMemoryConfig",
     "SessionMemoryRepository",
+    "SmartRecall",
     "TokenLimits",
     "UserProfileRepository",
+    "WorkingMemory",
+    "ai_resume",
     "context_engine",
     "context_engine_service",
+    "context_engine_v2",
+    "conversation_memory",
+    "long_term_memory",
+    "memory_manager",
     "memory_service",
     "MemoryKind",
     "MemoryLayer",
@@ -63,4 +85,6 @@ __all__ = [
     "ProjectMemoryService",
     "project_memory_engine",
     "project_memory_service",
+    "smart_recall",
+    "working_memory",
 ]

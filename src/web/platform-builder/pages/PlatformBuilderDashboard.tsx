@@ -3,6 +3,14 @@ import { Badge, Card } from "@/ui";
 import { PlatformBuilderLayout } from "../layouts/PlatformBuilderLayout";
 import { BUILDER_CATALOG } from "../managers/builderRegistry";
 import { useIsPlatformOwner } from "../managers/platformOwner";
+import { builderDisplayName, term } from "@/i18n/platformGlossary";
+import { HUB_CARDS } from "@/ai-builder-studio/studioCatalog";
+
+const STATUS_RU: Record<string, string> = {
+  operational: "Работает",
+  frame: "Скоро",
+  preview: "Превью",
+};
 
 export function PlatformBuilderDashboard() {
   const owner = useIsPlatformOwner();
@@ -12,35 +20,51 @@ export function PlatformBuilderDashboard() {
 
   return (
     <PlatformBuilderLayout
-      title="Platform Builder"
-      subtitle="Visual operating system for building every future object on the platform."
+      title="Конструктор платформы"
+      subtitle="Создавайте AI, сценарии и модули через понятные мастера — без инженерного шума."
     >
+      <div className="pb-hub-grid mb-4" data-testid="platform-builder-hub">
+        {HUB_CARDS.map((c) => (
+          <Link
+            key={c.id}
+            to={c.externalRoute || `/platform-builder/builder-studio?section=${c.section}`}
+            className="pb-hub-card"
+          >
+            <span className="pb-hub-icon" aria-hidden>
+              {c.icon}
+            </span>
+            <span className="pb-hub-title">{c.title}</span>
+            <span className="pb-hub-detail">{c.detail}</span>
+          </Link>
+        ))}
+      </div>
+
       <div className="eds-grid eds-grid--dashboard">
-        <Card title="Builder Framework">
-          <p className="eds-type-small">
-            Step → Explanation → Information → Example → Preview → Create
-          </p>
-          <Badge>Operational</Badge>
+        <Card title="Как устроен мастер">
+          <p className="eds-type-small">Шаг → Пояснение → Пример → {term("preview")} → {term("create")}</p>
+          <Badge tone="success">Готово к демо</Badge>
         </Card>
-        <Card title="Builder Academy">
-          <p className="eds-type-small">Quick Start · Guided Learning · Expert Mode</p>
+        <Card title="Академия">
+          <p className="eds-type-small">Быстрый старт · Обучение · Эксперт</p>
           <Link className="eds-type-small text-[var(--eds-primary)]" to="/platform-builder/academy">
-            Open Academy
+            Открыть академию
           </Link>
         </Card>
-        <Card title="Platform Owner">
+        <Card title="Владелец платформы">
           <p className="eds-type-small">
             {owner
-              ? "God Mode available for your Platform Owner role."
-              : "God Mode is reserved for Platform Owner."}
+              ? "Режим владельца доступен — полный доступ к конструкторам."
+              : "Полный доступ к конструкторам — у владельца и разработчика."}
           </p>
         </Card>
-        <Card title="Theme">
-          <p className="eds-type-small">Enterprise Design System · Dark Mode ready via theme toggle.</p>
+        <Card title="Центр управления">
+          <Link className="eds-type-small text-[var(--eds-primary)]" to="/platform-builder/ops-center">
+            Инженерные панели →
+          </Link>
         </Card>
       </div>
 
-      <Card title="Builders">
+      <Card title="Все конструкторы">
         <ul className="grid gap-2 md:grid-cols-2">
           {builders.map((b) => (
             <li key={b.id}>
@@ -48,8 +72,8 @@ export function PlatformBuilderDashboard() {
                 to={b.route}
                 className="flex items-center justify-between rounded-md border border-[var(--eds-border)] p-3 eds-type-small transition hover:border-[var(--eds-primary)]"
               >
-                <span>{b.name}</span>
-                <Badge>{b.status}</Badge>
+                <span>{builderDisplayName(b.id, b.name)}</span>
+                <Badge>{STATUS_RU[b.status] || b.status}</Badge>
               </Link>
             </li>
           ))}

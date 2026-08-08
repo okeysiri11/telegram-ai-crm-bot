@@ -32,7 +32,7 @@ export function WorkspaceOSStudio() {
     () => ({
       shortDescription: WORKSPACE_OS_STEPS[step],
       detailedExplanation:
-        "Enterprise Workspace OS is the unified operating environment for every platform module. It provides one consistent workspace while allowing each department, AI team and application to keep its own context.",
+        "ОС рабочего пространства is the unified operating environment for every platform module. It provides one consistent workspace while allowing each department, AI team and application to keep its own context.",
       example: `Example: complete «${WORKSPACE_OS_STEPS[step]}».`,
       popup: { title: WORKSPACE_OS_STEPS[step], body: "Unified workspace platform." },
       tooltip: WORKSPACE_OS_STEPS[step],
@@ -52,7 +52,7 @@ export function WorkspaceOSStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -69,7 +69,7 @@ export function WorkspaceOSStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -82,10 +82,10 @@ export function WorkspaceOSStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/workspace-os/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -102,10 +102,10 @@ export function WorkspaceOSStudio() {
         body: JSON.stringify({ type: selectedType }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Type update failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка обновления типа");
       setTypes(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Type update failed");
+      setError(e instanceof Error ? e.message : "Ошибка обновления типа");
     } finally {
       setBusy(false);
     }
@@ -122,10 +122,10 @@ export function WorkspaceOSStudio() {
         body: JSON.stringify({ query }),
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Search failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка поиска");
       setSearch(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Search failed");
+      setError(e instanceof Error ? e.message : "Ошибка поиска");
     } finally {
       setBusy(false);
     }
@@ -150,10 +150,10 @@ export function WorkspaceOSStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -161,7 +161,7 @@ export function WorkspaceOSStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Enterprise Workspace OS"
+      title="ОС рабочего пространства"
       subtitle="Unified workspace platform — multi-workspace, role aware, high performance."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -212,9 +212,9 @@ export function WorkspaceOSStudio() {
                     "Operator Workspace",
                     "Developer Workspace",
                     "Builder Workspace",
-                    "Analytics Workspace",
+                    "Аналитика Workspace",
                     "Support Workspace",
-                    "Organization Workspace",
+                    "Организация Workspace",
                   ].map((t) => (
                     <option key={t} value={t}>
                       {t}
@@ -225,7 +225,7 @@ export function WorkspaceOSStudio() {
                   Apply type
                 </Button>
                 <Button disabled={busy} onClick={() => void load("types", setTypes)}>
-                  Refresh
+                  Обновить
                 </Button>
               </div>
               {types ? (
@@ -307,13 +307,13 @@ export function WorkspaceOSStudio() {
           ) : null}
 
           {step === 7 ? (
-            <Card title="Workspace Search">
+            <Card title="Workspace Поиск">
               <div className="flex flex-wrap gap-2">
                 <input
                   className="eds-input"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search modules, types, commands"
+                  placeholder="Поиск modules, types, commands"
                 />
                 <Button disabled={busy} onClick={() => void runSearch()}>
                   Search
@@ -357,7 +357,7 @@ export function WorkspaceOSStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create">
+            <Card title="Создать">
               <Button disabled={busy} onClick={() => void runCreate()}>
                 Register Workspace OS
               </Button>

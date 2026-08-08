@@ -1,12 +1,12 @@
 export const WORKFLOW_INTELLIGENCE_STEPS = [
-  "Workflow Intelligence Core",
-  "Global Workflow Graph",
+  "Интеллект сценариев Core",
+  "Global Сценарий Graph",
   "Dependency Analysis",
   "Bottleneck Detection",
   "Critical Path Engine",
   "Resource Coordination",
-  "Workflow Recommendations",
+  "Сценарий Recommendations",
   "Enterprise Orchestration",
   "Performance",
-  "Create",
+  "Создать",
 ] as const;

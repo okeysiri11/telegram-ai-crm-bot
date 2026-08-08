@@ -57,7 +57,8 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5180,
+    port: Number(process.env.PORT || process.env.VITE_PORT || 5180),
+    strictPort: Boolean(process.env.VITE_STRICT_PORT === "1"),
     proxy: {
       "/api": {
         target: process.env.VITE_API_PROXY || "http://127.0.0.1:8080",

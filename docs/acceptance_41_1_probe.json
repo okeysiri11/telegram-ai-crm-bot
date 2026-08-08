@@ -1,0 +1,124 @@
+{
+  "sprint": "41.1",
+  "client": "GlobeFly",
+  "checked_at": "2026-08-06T07:21:06.232505+00:00",
+  "health": 200,
+  "ready": 200,
+  "journey": [
+    {
+      "step": "login",
+      "path": "/login",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "dashboard",
+      "path": "/dashboard",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "crm",
+      "path": "/crm",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "leads",
+      "path": "/crm?view=leads",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "clients",
+      "path": "/crm?view=clients",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "deals",
+      "path": "/crm?view=deals",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "documents",
+      "path": "/documents",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "ai",
+      "path": "/ai-agents",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "reports",
+      "path": "/analytics",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "tasks",
+      "path": "/tasks",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "calendar",
+      "path": "/calendar",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "settings",
+      "path": "/settings",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "profile",
+      "path": "/identity/profile",
+      "http": 200,
+      "ok": true
+    },
+    {
+      "step": "logout",
+      "path": "/auth/logout",
+      "http": 200,
+      "ok": true
+    }
+  ],
+  "client_hidden_routes_spa": [
+    {
+      "path": "/platform-builder/builder-studio",
+      "spa_http": 200
+    },
+    {
+      "path": "/command-runtime",
+      "spa_http": 200
+    },
+    {
+      "path": "/ai-studio",
+      "spa_http": 200
+    },
+    {
+      "path": "/kernel",
+      "spa_http": 200
+    },
+    {
+      "path": "/owner",
+      "spa_http": 200
+    }
+  ],
+  "crm_pipeline_unauth": 200,
+  "demo_login": "client@globefly.demo / demo (tenant globefly)",
+  "view_modes": [
+    "client",
+    "manager",
+    "company_admin",
+    "platform_owner",
+    "developer"
+  ]
+}

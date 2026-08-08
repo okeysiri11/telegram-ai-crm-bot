@@ -8,5 +8,5 @@ export const COMMAND_CENTER_STEPS = [
   "Command History",
   "AI Command Assistant",
   "Performance",
-  "Create",
+  "Создать",
 ] as const;

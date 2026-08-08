@@ -30,7 +30,7 @@ export function TwinIntelligenceStudio() {
     () => ({
       shortDescription: TWIN_INTELLIGENCE_STEPS[step],
       detailedExplanation:
-        "Digital Twin Intelligence analyzes verified twin data only. It never changes platform state, executes workflows, or modifies business logic.",
+        "Интеллект цифрового двойника analyzes verified twin data only. It never changes platform state, executes workflows, or modifies business logic.",
       example: `Example: complete «${TWIN_INTELLIGENCE_STEPS[step]}».`,
       popup: { title: TWIN_INTELLIGENCE_STEPS[step], body: "Read-only scenario intelligence." },
       tooltip: TWIN_INTELLIGENCE_STEPS[step],
@@ -50,7 +50,7 @@ export function TwinIntelligenceStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -67,7 +67,7 @@ export function TwinIntelligenceStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -80,10 +80,10 @@ export function TwinIntelligenceStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/twin-intelligence/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -125,10 +125,10 @@ export function TwinIntelligenceStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -136,7 +136,7 @@ export function TwinIntelligenceStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Digital Twin Intelligence"
+      title="Интеллект цифрового двойника"
       subtitle="Read-only analysis of verified Digital Twin data — never changes platform state."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -159,7 +159,7 @@ export function TwinIntelligenceStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Digital Twin Intelligence">
+            <Card title="Интеллект цифрового двойника">
               <Button disabled={busy} onClick={() => void load("engine", setOverview)}>
                 Load intelligence engine
               </Button>
@@ -307,9 +307,9 @@ export function TwinIntelligenceStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create">
+            <Card title="Создать">
               <Button disabled={busy} onClick={() => void runCreate()}>
-                Register Twin Intelligence
+                Зарегистрировать интеллект двойника
               </Button>
               {created ? (
                 <ul className="mt-3 eds-type-small space-y-1">

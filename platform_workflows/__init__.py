@@ -1,4 +1,5 @@
 # Unified Workflow Engine — single runtime for all business flows.
+# Epic 45.3 — Universal Automation façade exported alongside legacy YAML engine.
 
 from platform_workflows.context import WorkflowContext
 from platform_workflows.models import (
@@ -18,11 +19,19 @@ from platform_workflows.workflow_registry import WorkflowRegistry, workflow_regi
 from platform_workflows.workflow_steps import WorkflowSteps, evaluate_condition, workflow_steps
 from platform_workflows.workflow_validator import WorkflowValidator, WorkflowValidationError
 
+# Epic 45.3 Universal Automation
+from platform_workflows.workflow_manager import VERSION as UNIVERSAL_AUTOMATION_VERSION, WorkflowManager, workflow_manager
+from platform_workflows.ua_engine import UniversalWorkflowEngine, universal_workflow_engine
+from platform_workflows.planner import AIPlanner, ai_planner
+
 __all__ = [
+    "AIPlanner",
     "ExecutionStatus",
     "StepDefinition",
     "StepResult",
     "StepType",
+    "UNIVERSAL_AUTOMATION_VERSION",
+    "UniversalWorkflowEngine",
     "WorkflowContext",
     "WorkflowDefinition",
     "WorkflowEngine",
@@ -30,16 +39,20 @@ __all__ = [
     "WorkflowExecutionResult",
     "WorkflowExecutor",
     "WorkflowLoader",
+    "WorkflowManager",
     "WorkflowRegistry",
     "WorkflowSteps",
     "WorkflowValidationError",
     "WorkflowValidator",
+    "ai_planner",
     "evaluate_condition",
     "list_services",
     "parse_workflow_document",
     "register_service",
+    "universal_workflow_engine",
     "workflow_engine",
     "workflow_executor",
+    "workflow_manager",
     "workflow_registry",
     "workflow_steps",
 ]

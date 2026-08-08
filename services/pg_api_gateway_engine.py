@@ -43,6 +43,11 @@ API_KEY_PREFIX = "gw_live_"
 DEFAULT_CLIENT_PERMISSIONS: frozenset[str] = frozenset({
     "deal.read",
     "deal.write",
+    "lead.read",
+    "lead.write",
+    "client.read",
+    "client.write",
+    "report.read",
     "partner.read",
     "partner.write",
     "pricing.read",
@@ -61,6 +66,26 @@ DEFAULT_CLIENT_PERMISSIONS: frozenset[str] = frozenset({
 ENDPOINT_PERMISSIONS: dict[tuple[str, str], str] = {
     ("GET", "/v1/deals"): "deal.read",
     ("POST", "/v1/deals"): "deal.write",
+    ("GET", "/v1/deals/{id}"): "deal.read",
+    ("PATCH", "/v1/deals/{id}"): "deal.write",
+    ("DELETE", "/v1/deals/{id}"): "deal.write",
+    ("GET", "/v1/leads"): "lead.read",
+    ("POST", "/v1/leads"): "lead.write",
+    ("GET", "/v1/leads/{id}"): "lead.read",
+    ("PATCH", "/v1/leads/{id}"): "lead.write",
+    ("DELETE", "/v1/leads/{id}"): "lead.write",
+    ("GET", "/v1/clients"): "client.read",
+    ("POST", "/v1/clients"): "client.write",
+    ("GET", "/v1/clients/{id}"): "client.read",
+    ("PATCH", "/v1/clients/{id}"): "client.write",
+    ("DELETE", "/v1/clients/{id}"): "client.write",
+    ("GET", "/v1/crm/deals"): "deal.read",
+    ("POST", "/v1/crm/deals"): "deal.write",
+    ("GET", "/v1/crm/deals/{id}"): "deal.read",
+    ("PATCH", "/v1/crm/deals/{id}"): "deal.write",
+    ("DELETE", "/v1/crm/deals/{id}"): "deal.write",
+    ("GET", "/v1/reports"): "report.read",
+    ("GET", "/v1/reports/{id}"): "report.read",
     ("GET", "/v1/partners"): "partner.read",
     ("POST", "/v1/partners"): "partner.write",
     ("GET", "/v1/pricing"): "pricing.read",
@@ -150,7 +175,23 @@ class ApiGatewayEngineV1:
     @staticmethod
     def required_permission(method: str, path: str) -> str | None:
         normalized = path.rstrip("/") or "/"
-        return ENDPOINT_PERMISSIONS.get((method.upper(), normalized))
+        if normalized.startswith("/api/v1"):
+            normalized = "/v1" + normalized[len("/api/v1") :]
+        method_u = method.upper()
+        direct = ENDPOINT_PERMISSIONS.get((method_u, normalized))
+        if direct:
+            return direct
+        # Map /v1/resource/{uuid-or-id} → /v1/resource/{id}
+        parts = [p for p in normalized.split("/") if p]
+        if len(parts) >= 3:
+            # /v1/crm/deals/{id}
+            if parts[0] == "v1" and parts[1] == "crm" and len(parts) >= 4:
+                templated = f"/v1/crm/{parts[2]}/{{id}}"
+                return ENDPOINT_PERMISSIONS.get((method_u, templated))
+            if parts[0] == "v1":
+                templated = f"/v1/{parts[1]}/{{id}}"
+                return ENDPOINT_PERMISSIONS.get((method_u, templated))
+        return None
 
     @staticmethod
     def _resolve_permissions(client, key=None) -> set[str]:

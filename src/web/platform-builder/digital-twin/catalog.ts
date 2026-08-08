@@ -1,12 +1,12 @@
 export const DIGITAL_TWIN_STEPS = [
   "Digital Twin Core",
-  "Organization Mirror",
+  "Организация Mirror",
   "AI Mirror",
-  "Workflow Mirror",
-  "Knowledge Mirror",
+  "Сценарий Mirror",
+  "База знаний Mirror",
   "Resource Mirror",
   "Snapshot Engine",
   "State Comparison",
   "Performance",
-  "Create",
+  "Создать",
 ] as const;

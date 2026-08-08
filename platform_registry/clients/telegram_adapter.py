@@ -51,9 +51,15 @@ def telegram_menu_rows(
 
 def build_owner_keyboard_from_registry(*, show_automotive: bool = True) -> Any:
     """
-    Preferred owner keyboard builder.
-    Falls back to legacy keyboards.owner_main_menu if aiogram types unavailable in tests.
+    Preferred owner keyboard — Sprint 43.0 Super App shell (simple RU menu).
+    Full registry catalog remains available via «📂 Все разделы» / Developer Tools.
     """
+    try:
+        from services.telegram_ai_super_app.keyboards import main_menu_keyboard
+
+        return main_menu_keyboard(include_developer=False)
+    except Exception:
+        pass
     try:
         from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
     except Exception:
@@ -69,7 +75,6 @@ def build_owner_keyboard_from_registry(*, show_automotive: bool = True) -> Any:
 
     keyboard = [[KeyboardButton(text=cell) for cell in row] for row in rows_labels]
     if not keyboard:
-        # Safety: never return empty — legacy fallback
         from keyboards import owner_main_menu
 
         return owner_main_menu(show_automotive=show_automotive)

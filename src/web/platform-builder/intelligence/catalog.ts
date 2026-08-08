@@ -1,5 +1,5 @@
 export const INTELLIGENCE_STEPS = [
-  "Visual Intelligence Engine",
+  "Движок визуальной аналитики",
   "Pattern Detection",
   "Anomaly Detection",
   "Attention Recommendations",
@@ -8,5 +8,5 @@ export const INTELLIGENCE_STEPS = [
   "Trend Engine",
   "Visual Health Index",
   "Predictive Visualization Foundation",
-  "Create",
+  "Создать",
 ] as const;

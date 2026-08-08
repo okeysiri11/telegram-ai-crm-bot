@@ -29,39 +29,39 @@ from services.pg_tenant_billing_engine import PLAN_CATALOG, TenantBillingEngineV
 
 PLAN_MARKETING: dict[str, str] = {
     BillingPlanCode.STARTER.value: (
-        "STARTER\n"
-        "• 1 channel\n"
-        "• up to 20 leads/month"
+        "Старт\n"
+        "• 1 канал\n"
+        "• до 20 лидов/месяц"
     ),
     BillingPlanCode.PRO.value: (
-        "PRO\n"
-        "• up to 5 channels\n"
-        "• AI Sales Agent\n"
-        "• Analytics"
+        "Профессиональный\n"
+        "• до 5 каналов\n"
+        "• AI-агент продаж\n"
+        "• Аналитика"
     ),
     BillingPlanCode.BUSINESS.value: (
-        "BUSINESS\n"
-        "• unlimited channels\n"
-        "• AI ecosystem access"
+        "Бизнес\n"
+        "• безлимит каналов\n"
+        "• доступ к AI-экосистеме"
     ),
     BillingPlanCode.ENTERPRISE.value: (
-        "ENTERPRISE\n"
-        "• custom plan\n"
-        "• dedicated support"
+        "Корпоративный\n"
+        "• индивидуальный план\n"
+        "• выделенная поддержка"
     ),
 }
 
 PRICING_MODEL_LABELS: dict[str, str] = {
-    PricingModel.SUBSCRIPTION.value: "Subscription",
-    PricingModel.PER_LEAD.value: "Per Lead",
-    PricingModel.REVENUE_SHARE.value: "Revenue Share",
-    PricingModel.HYBRID.value: "Hybrid",
-    PricingModel.CUSTOM.value: "Custom Plan",
+    PricingModel.SUBSCRIPTION.value: "Подписка",
+    PricingModel.PER_LEAD.value: "За лид",
+    PricingModel.REVENUE_SHARE.value: "Доля от выручки",
+    PricingModel.HYBRID.value: "Гибрид",
+    PricingModel.CUSTOM.value: "Индивидуальный план",
 }
 
 PAYMENT_METHOD_LABELS: dict[str, str] = {
-    PaymentMethod.BANK_CARD.value: "Bank Card",
-    PaymentMethod.BANK_TRANSFER.value: "Bank Transfer",
+    PaymentMethod.BANK_CARD.value: "Банковская карта",
+    PaymentMethod.BANK_TRANSFER.value: "Банковский перевод",
     PaymentMethod.USDT_TRC20.value: "USDT TRC20",
     PaymentMethod.USDT_ERC20.value: "USDT ERC20",
 }

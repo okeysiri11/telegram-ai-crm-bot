@@ -15,3 +15,4 @@ export const useI18n = create<I18nState>((set, get) => ({
 }));
 
 export type { Locale };
+export { PLATFORM_GLOSSARY, term, localizeLabel, builderDisplayName, BUILDER_NAV_RU } from "./platformGlossary";

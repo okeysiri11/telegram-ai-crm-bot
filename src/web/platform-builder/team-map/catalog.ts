@@ -1,14 +1,14 @@
 export const TEAM_MAP_STEPS = [
-  "Live Organization Map",
+  "Live Карта организации",
   "AI Cards",
-  "Live Status",
+  "Live Статус",
   "Workload Engine",
   "Relationship Map",
   "Live Activity",
   "Visual Event Bus",
   "Visual Objects",
   "Foundation for AI City",
-  "Create",
+  "Создать",
 ] as const;
 
 export const LIVE_STATUSES = [

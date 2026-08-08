@@ -128,9 +128,9 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
     }
     return toHelpContent(
       makeHelp(
-        `This screen helps you set «${title}».`,
-        "Clear choices make your AI specialist easier to understand and use.",
-        `Example: complete «${title}» before moving to the next step.`,
+        `Этот экран помогает настроить «${title}».`,
+        "Чёткие настройки делают AI-специалиста понятнее и удобнее.",
+        `Пример: завершите «${title}» перед следующим шагом.`,
         title,
       ),
     );
@@ -172,7 +172,7 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
       }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -208,7 +208,7 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
         body: JSON.stringify(payload),
       });
       const patchBody = await patch.json();
-      if (!patch.ok) throw new Error(patchBody.error || "Could not save configuration");
+      if (!patch.ok) throw new Error(patchBody.error || "Не удалось сохранить configuration");
 
       const create = await fetch(`${PLATFORM_BUILDER_API}/ai-builder/sessions/${sid}/create`, {
         method: "POST",
@@ -216,10 +216,10 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
         body: "{}",
       });
       const createBody = await create.json();
-      if (!create.ok) throw new Error(createBody.error || "Could not create agents");
+      if (!create.ok) throw new Error(createBody.error || "Не удалось создать agents");
       setCreated(createBody);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : "Что-то пошло не так");
     } finally {
       setBusy(false);
     }
@@ -232,9 +232,9 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
   const body = (
       <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-3">
-        <Badge>Operational</Badge>
-        <Badge>Academy · {mode}</Badge>
-        <Switch checked={learning} onChange={(v) => toggleLearning("ai", v)} label="Learning mode" />
+        <Badge>Работает</Badge>
+        <Badge>Академия · {mode}</Badge>
+        <Switch checked={learning} onChange={(v) => toggleLearning("ai", v)} label="Режим обучения" />
       </div>
 
       <ProgressIndicator current={step} total={AI_WIZARD_STEPS.length} />
@@ -244,7 +244,7 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
         <div className="flex flex-wrap gap-2">
           {agents.map((a, i) => (
             <Button key={a.slot} variant={i === activeSlot ? "primary" : "ghost"} onClick={() => setActiveSlot(i)}>
-              Specialist {a.slot}
+              Специалист {a.slot}
               {a.name ? `: ${a.name}` : ""}
             </Button>
           ))}
@@ -288,7 +288,7 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
                   ))}
                 </div>
                 <p className="mt-2 eds-type-caption text-[var(--eds-text-muted)]">
-                  Visual illustration of an AI Team — independent specialists working together.
+                  Наглядная схема команды AI — независимые специалисты работают вместе.
                 </p>
                 <ul className="mt-2 space-y-1 eds-type-small">
                   {WHY_MULTI.points.map((p) => (
@@ -301,15 +301,19 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
 
           {step === 1 ? (
             <div className="space-y-3">
-              <p className="eds-type-small">Every AI Agent needs a name. Pick a suggestion or type your own.</p>
+              <p className="eds-type-small">У каждого AI-агента должно быть имя. Выберите подсказку или введите своё.</p>
               <div className="flex flex-wrap gap-2">
-                {(["male", "female", "neutral"] as const).map((g) => (
+                {([
+                  ["male", "Мужской"],
+                  ["female", "Женский"],
+                  ["neutral", "Нейтральный"],
+                ] as const).map(([g, label]) => (
                   <Button
                     key={g}
                     variant={agent.nameGender === g ? "primary" : "ghost"}
                     onClick={() => patchAgent({ nameGender: g })}
                   >
-                    {g}
+                    {label}
                   </Button>
                 ))}
               </div>
@@ -321,13 +325,13 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
                 ))}
               </div>
               <Input
-                placeholder="Custom name (required)"
+                placeholder="Своё имя (обязательно)"
                 value={agent.name}
                 onChange={(e) => patchAgent({ name: e.target.value })}
               />
-              <Card title="Live preview">
+              <Card title="Живой предпросмотр">
                 <p className="eds-type-small">
-                  Hello, I’m <strong>{agent.name || "…"}</strong> — ready to help your team.
+                  Здравствуйте, я <strong>{agent.name || "…"}</strong> — готов помочь вашей команде.
                 </p>
               </Card>
             </div>
@@ -349,7 +353,7 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
                   <div className="flex items-center justify-between gap-2">
                     <strong className="eds-type-small">{p.name}</strong>
                     <Tooltip label={p.help.tooltip}>
-                      <span className="eds-type-caption text-[var(--eds-primary)]">Info</span>
+                      <span className="eds-type-caption text-[var(--eds-primary)]">Справка</span>
                     </Tooltip>
                   </div>
                   <p className="eds-type-caption text-[var(--eds-text-muted)]">{p.help.shortDescription}</p>
@@ -358,7 +362,7 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
               {agent.profession === "custom" ? (
                 <Input
                   className="sm:col-span-2"
-                  placeholder="Describe the custom profession"
+                  placeholder="Опишите свою профессию"
                   value={agent.professionCustom}
                   onChange={(e) => patchAgent({ professionCustom: e.target.value })}
                 />
@@ -368,7 +372,7 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
 
           {step === 3 ? (
             <div className="space-y-2">
-              <p className="eds-type-small">Expand the tree and choose one or more specialties.</p>
+              <p className="eds-type-small">Раскройте дерево и выберите одну или несколько специализаций.</p>
               <SpecTree
                 nodes={tree}
                 selected={agent.specialization}
@@ -470,13 +474,13 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
                     variant={agent.personality.professionalTone === t ? "primary" : "secondary"}
                     onClick={() => patchPersonality({ professionalTone: t })}
                   >
-                    Tone · {t}
+                    Тон · {({ formal: "формальный", balanced: "сбалансированный", casual: "неформальный" } as Record<string, string>)[t] || t}
                   </Button>
                 ))}
               </div>
-              <Card title="Preview conversation">
+              <Card title="Пример диалога">
                 <p className="eds-type-small text-[var(--eds-text-muted)]">
-                  You: Can you help me with today’s priorities?
+                  Вы: Поможете с приоритетами на сегодня?
                 </p>
                 <p className="mt-2 eds-type-small">
                   <strong>{agent.name || "AI"}:</strong> {styleSample}
@@ -488,21 +492,21 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
           {step === 8 ? (
             <div className="space-y-3">
               {agents.map((a) => (
-                <Card key={a.slot} title={`AI Card · ${a.name || `Specialist ${a.slot}`}`}>
+                <Card key={a.slot} title={`Карточка AI · ${a.name || `Специалист ${a.slot}`}`}>
                   <ul className="space-y-1 eds-type-small">
-                    <li>Name: {a.name || "—"}</li>
+                    <li>Имя: {a.name || "—"}</li>
                     <li>
-                      Profession:{" "}
+                      Назначение:{" "}
                       {a.profession === "custom"
-                        ? a.professionCustom || "Custom"
+                        ? a.professionCustom || "Свой вариант"
                         : PROFESSIONS.find((p) => p.id === a.profession)?.name || "—"}
                     </li>
-                    <li>Specialization: {a.specialization.join(", ") || "—"}</li>
-                    <li>Knowledge: {a.knowledge.join(", ") || "—"}</li>
-                    <li>Skills: {a.skills.join(", ") || "—"}</li>
-                    <li>Permissions: {a.permissions.join(", ") || "—"}</li>
+                    <li>Специализация: {a.specialization.join(", ") || "—"}</li>
+                    <li>База знаний: {a.knowledge.join(", ") || "—"}</li>
+                    <li>Навыки: {a.skills.join(", ") || "—"}</li>
+                    <li>Права: {a.permissions.join(", ") || "—"}</li>
                     <li>
-                      Personality: {a.personality.communicationStyle} · {a.personality.professionalTone}
+                      Личность: {a.personality.communicationStyle} · {a.personality.professionalTone}
                     </li>
                   </ul>
                 </Card>
@@ -513,13 +517,13 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
           {step === 9 ? (
             <div className="space-y-3">
               <p className="eds-type-small">
-                Create will register each AI Agent, save the configuration, and add them to the AI Registry.
+                Создание зарегистрирует каждого AI-агента, сохранит конфигурацию и добавит их в реестр AI.
               </p>
               {error ? <p className="eds-type-small text-[var(--eds-danger)]">{error}</p> : null}
               {created ? (
-                <Card title="Created">
+                <Card title="Создано">
                   <p className="eds-type-small">
-                    {(created.created_count as number) || 0} agent(s) registered.
+                    Зарегистрировано агентов: {(created.created_count as number) || 0}
                   </p>
                   <pre className="mt-2 max-h-48 overflow-auto eds-type-caption">
                     {JSON.stringify(created.agents, null, 2)}
@@ -527,7 +531,7 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
                 </Card>
               ) : (
                 <Button variant="primary" disabled={busy} onClick={() => void syncAndCreate()}>
-                  {busy ? "Creating…" : "Create AI Agent(s)"}
+                  {busy ? "Создание…" : "Создать AI-агента"}
                 </Button>
               )}
             </div>
@@ -535,26 +539,26 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="ghost" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={step >= AI_WIZARD_STEPS.length - 1}
               onClick={() => setStep((s) => Math.min(AI_WIZARD_STEPS.length - 1, s + 1))}
             >
-              Next
+              Далее
             </Button>
           </div>
         </Card>
 
         <HelpPanel help={help} guided={guided} />
 
-        <Card title="Live preview">
+        <Card title="Предпросмотр">
           <p className="eds-type-small">
-            <strong>{agent.name || "Unnamed specialist"}</strong>
+            <strong>{agent.name || "Специалист без имени"}</strong>
           </p>
           <p className="eds-type-caption text-[var(--eds-text-muted)]">
-            {agent.profession || "Profession pending"} · {agent.specialization.length} specialties ·{" "}
-            {agent.skills.length} skills
+            {agent.profession || "Назначение не выбрано"} · {agent.specialization.length} спец. ·{" "}
+            {agent.skills.length} навыков
           </p>
           <p className="mt-2 eds-type-small">{styleSample}</p>
         </Card>
@@ -566,8 +570,8 @@ export function AIBuilderWizard({ embedded = false }: { embedded?: boolean } = {
 
   return (
     <PlatformBuilderLayout
-      title="AI Builder"
-      subtitle="Create AI specialists with a simple visual wizard — no technical knowledge required."
+      title="Конструктор AI-агентов"
+      subtitle="Создайте AI-специалистов простым мастером — без технических знаний."
     >
       {body}
     </PlatformBuilderLayout>

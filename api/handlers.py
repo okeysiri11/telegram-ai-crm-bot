@@ -47,17 +47,102 @@ async def deals_create_handler(request: web.Request) -> web.Response:
     from services.pg_deal_workflow import DealWorkflowService
 
     body = await request.json()
-    deal = await DealWorkflowService.create_deal(
-        _actor(request),
-        client_id=body.get("client_id"),
-        asset_in_type=body["asset_in_type"],
-        asset_in_amount=Decimal(str(body["asset_in_amount"])),
-        asset_out_type=body["asset_out_type"],
-        asset_out_amount=Decimal(str(body["asset_out_amount"])),
-        manager_id=body.get("manager_id"),
-        partner_id=body.get("partner_id"),
-    )
+    required = ("asset_in_type", "asset_in_amount", "asset_out_type", "asset_out_amount")
+    missing = [k for k in required if k not in body]
+    if missing:
+        return web.json_response(
+            {"error": f"missing fields: {', '.join(missing)}", "api_version": "v1"},
+            status=400,
+        )
+    try:
+        deal = await DealWorkflowService.create_deal(
+            _actor(request),
+            client_id=body.get("client_id"),
+            asset_in_type=body["asset_in_type"],
+            asset_in_amount=Decimal(str(body["asset_in_amount"])),
+            asset_out_type=body["asset_out_type"],
+            asset_out_amount=Decimal(str(body["asset_out_amount"])),
+            manager_id=body.get("manager_id"),
+            partner_id=body.get("partner_id"),
+        )
+    except (KeyError, ValueError, TypeError) as exc:
+        return web.json_response({"error": str(exc), "api_version": "v1"}, status=400)
+    except PermissionError as exc:
+        return web.json_response({"error": str(exc), "api_version": "v1"}, status=403)
     return _json({"id": str(deal.id), "status": deal.status}, status=201)
+
+
+@require_api_auth
+async def deals_get_handler(request: web.Request) -> web.Response:
+    from services.pg_deal_workflow import DealWorkflowService
+
+    try:
+        deal_id = uuid.UUID(request.match_info["deal_id"])
+    except ValueError:
+        return web.json_response({"error": "invalid deal_id", "api_version": "v1"}, status=400)
+    try:
+        deal = await DealWorkflowService.get_deal_info(_actor(request), deal_id)
+    except PermissionError as exc:
+        return web.json_response({"error": str(exc), "api_version": "v1"}, status=403)
+    if deal is None:
+        return web.json_response({"error": f"deal not found: {deal_id}", "api_version": "v1"}, status=404)
+    return _json(
+        {
+            "id": str(deal.id),
+            "status": deal.status,
+            "client_id": str(deal.client_id) if deal.client_id else None,
+            "manager_id": deal.manager_id,
+            "asset_in_type": deal.asset_in_type,
+            "asset_out_type": deal.asset_out_type,
+            "asset_in_amount": str(deal.asset_in_amount) if deal.asset_in_amount is not None else None,
+            "asset_out_amount": str(deal.asset_out_amount) if deal.asset_out_amount is not None else None,
+        }
+    )
+
+
+@require_api_auth
+async def deals_patch_handler(request: web.Request) -> web.Response:
+    from services.pg_deal_workflow import DealWorkflowService
+
+    try:
+        deal_id = uuid.UUID(request.match_info["deal_id"])
+    except ValueError:
+        return web.json_response({"error": "invalid deal_id", "api_version": "v1"}, status=400)
+    body = await request.json()
+    if not isinstance(body, dict):
+        return web.json_response({"error": "JSON body must be an object", "api_version": "v1"}, status=400)
+    new_status = body.get("status")
+    if not new_status:
+        return web.json_response({"error": "status is required", "api_version": "v1"}, status=400)
+    try:
+        deal = await DealWorkflowService.update_status(_actor(request), deal_id, str(new_status))
+    except ValueError as exc:
+        return web.json_response({"error": str(exc), "api_version": "v1"}, status=400)
+    except PermissionError as exc:
+        return web.json_response({"error": str(exc), "api_version": "v1"}, status=403)
+    if deal is None:
+        return web.json_response({"error": f"deal not found: {deal_id}", "api_version": "v1"}, status=404)
+    return _json({"id": str(deal.id), "status": deal.status})
+
+
+@require_api_auth
+async def deals_delete_handler(request: web.Request) -> web.Response:
+    """Soft-delete: cancel deal via workflow status transition."""
+    from services.pg_deal_workflow import DealWorkflowService
+
+    try:
+        deal_id = uuid.UUID(request.match_info["deal_id"])
+    except ValueError:
+        return web.json_response({"error": "invalid deal_id", "api_version": "v1"}, status=400)
+    try:
+        deal = await DealWorkflowService.update_status(_actor(request), deal_id, "CANCELLED")
+    except ValueError as exc:
+        return web.json_response({"error": str(exc), "api_version": "v1"}, status=400)
+    except PermissionError as exc:
+        return web.json_response({"error": str(exc), "api_version": "v1"}, status=403)
+    if deal is None:
+        return web.json_response({"error": f"deal not found: {deal_id}", "api_version": "v1"}, status=404)
+    return _json({"id": str(deal.id), "status": deal.status, "deleted": True})
 
 
 @require_api_auth

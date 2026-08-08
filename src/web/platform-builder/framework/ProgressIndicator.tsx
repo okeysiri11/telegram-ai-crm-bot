@@ -10,7 +10,7 @@ export function ProgressIndicator({
     <div className="space-y-1">
       <div className="flex justify-between eds-type-caption text-[var(--eds-text-muted)]">
         <span>
-          Step {current + 1} of {total}
+          Шаг {current + 1} из {total}
         </span>
         <span>{pct}%</span>
       </div>

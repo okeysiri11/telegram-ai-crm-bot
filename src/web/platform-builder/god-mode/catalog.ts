@@ -1,6 +1,6 @@
 export const CONTROL_CENTER_STEPS = [
-  "Global Platform Overview",
-  "Global Search",
+  "Global Platform Обзор",
+  "Global Поиск",
   "Object Inspector",
   "Live Object Editor",
   "Global Registry",
@@ -9,25 +9,25 @@ export const CONTROL_CENTER_STEPS = [
   "Architecture View",
   "Audit Center",
   "Explain Mode",
-  "Create",
+  "Создать",
 ] as const;
 
 export const SEARCH_SCOPES = [
   "AI",
-  "Organizations",
+  "Организации",
   "Documents",
-  "Knowledge",
+  "База знаний",
   "Registry",
-  "Users",
-  "Dashboards",
-  "Workflows",
-  "Marketplace",
+  "Пользователи",
+  "Панели управления",
+  "Сценарии",
+  "Маркетплейс",
 ] as const;
 
 export const REGISTRY_ACTIONS = [
   "Browse",
-  "Search",
-  "Filter",
+  "Поиск",
+  "Фильтр",
   "Repair",
   "Rebuild",
   "Synchronize",

@@ -31,13 +31,13 @@ export function NavigationIntelligenceStudio() {
     () => ({
       shortDescription: NAVIGATION_INTELLIGENCE_STEPS[step],
       detailedExplanation:
-        "Navigation Intelligence Engine predicts, optimizes and simplifies navigation from verified context. It never executes business logic.",
+        "Интеллект навигации predicts, optimizes and simplifies navigation from verified context. It never executes business logic.",
       example: `Example: complete «${NAVIGATION_INTELLIGENCE_STEPS[step]}».`,
       popup: { title: NAVIGATION_INTELLIGENCE_STEPS[step], body: "Context navigation platform." },
       tooltip: NAVIGATION_INTELLIGENCE_STEPS[step],
       purpose: "Intelligent navigation recommendations",
       benefits: "Context-aware routes, recommendations, and quick access",
-      typicalUse: "Navigation Hub and Recommendation Sidebar",
+      typicalUse: "Навигация Hub and Recommendation Sidebar",
       businessValue: "Faster orientation without business coupling",
     }),
     [step],
@@ -51,7 +51,7 @@ export function NavigationIntelligenceStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -68,7 +68,7 @@ export function NavigationIntelligenceStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -81,10 +81,10 @@ export function NavigationIntelligenceStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/navigation-intelligence/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -129,10 +129,10 @@ export function NavigationIntelligenceStudio() {
         },
       );
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -140,7 +140,7 @@ export function NavigationIntelligenceStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Navigation Intelligence Engine"
+      title="Интеллект навигации"
       subtitle="Context navigation platform — verified context only, Workspace OS & Command Center integrated."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -167,7 +167,7 @@ export function NavigationIntelligenceStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Navigation Intelligence Engine">
+            <Card title="Интеллект навигации">
               <Button disabled={busy} onClick={() => void load("engine", setOverview)}>
                 Load engine
               </Button>
@@ -182,7 +182,7 @@ export function NavigationIntelligenceStudio() {
           ) : null}
 
           {step === 1 ? (
-            <Card title="Global Navigation Graph">
+            <Card title="Global Навигация Graph">
               <Button disabled={busy} onClick={() => void load("graph", setGraph)}>
                 Load graphs
               </Button>
@@ -197,7 +197,7 @@ export function NavigationIntelligenceStudio() {
           ) : null}
 
           {step === 2 ? (
-            <Card title="Context Aware Navigation">
+            <Card title="Context Aware Навигация">
               <Button disabled={busy} onClick={() => void load("context", setContext)}>
                 Load context
               </Button>
@@ -225,7 +225,7 @@ export function NavigationIntelligenceStudio() {
           ) : null}
 
           {step === 4 ? (
-            <Card title="Navigation History">
+            <Card title="Навигация History">
               <Button disabled={busy} onClick={() => void load("history", setHistory)}>
                 Load history
               </Button>
@@ -254,7 +254,7 @@ export function NavigationIntelligenceStudio() {
           ) : null}
 
           {step === 6 ? (
-            <Card title="Cross Platform Navigation">
+            <Card title="Cross Platform Навигация">
               <Button disabled={busy} onClick={() => void load("cross-platform", setCrossPlatform)}>
                 Load targets
               </Button>
@@ -269,7 +269,7 @@ export function NavigationIntelligenceStudio() {
           ) : null}
 
           {step === 7 ? (
-            <Card title="Intelligent Search Routing">
+            <Card title="Intelligent Поиск Routing">
               <div className="flex flex-wrap gap-2">
                 <input
                   className="eds-input"
@@ -300,7 +300,7 @@ export function NavigationIntelligenceStudio() {
                   Load performance
                 </Button>
                 <Button disabled={busy} onClick={() => void load("ui", setUi)}>
-                  Load Navigation UI
+                  Load Навигация UI
                 </Button>
               </div>
               {performance ? (
@@ -319,9 +319,9 @@ export function NavigationIntelligenceStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create">
+            <Card title="Создать">
               <Button disabled={busy} onClick={() => void runCreate()}>
-                Register Navigation Intelligence
+                Зарегистрировать интеллект навигации
               </Button>
               {created ? (
                 <ul className="mt-3 eds-type-small space-y-1">

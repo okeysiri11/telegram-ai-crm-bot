@@ -98,7 +98,7 @@ export function VerticalWizard() {
       body: JSON.stringify({ organization_id: orgId }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start Vertical session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать Vertical session");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -132,7 +132,7 @@ export function VerticalWizard() {
       body: JSON.stringify(payload),
     });
     const patchBody = await patchRes.json();
-    if (!patchRes.ok) throw new Error(patchBody.error || "Could not save Vertical");
+    if (!patchRes.ok) throw new Error(patchBody.error || "Не удалось сохранить Vertical");
   }
 
   async function loadPreview() {
@@ -143,10 +143,10 @@ export function VerticalWizard() {
       await syncDraft(sid, 8);
       const res = await fetch(`${PLATFORM_BUILDER_API}/vertical/sessions/${sid}/preview`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Could not load preview");
+      if (!res.ok) throw new Error(body.error || "Не удалось загрузить preview");
       setPreview(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Preview failed");
+      setError(e instanceof Error ? e.message : "Ошибка предпросмотра");
     } finally {
       setBusy(false);
     }
@@ -164,11 +164,11 @@ export function VerticalWizard() {
         body: "{}",
       });
       const createBody = await create.json();
-      if (!create.ok) throw new Error(createBody.error || "Could not create Vertical");
+      if (!create.ok) throw new Error(createBody.error || "Не удалось создать Vertical");
       setCreated(createBody);
       setPreview((createBody.organization_preview as Record<string, unknown>) || null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : "Что-то пошло не так");
     } finally {
       setBusy(false);
     }
@@ -176,18 +176,18 @@ export function VerticalWizard() {
 
   return (
     <PlatformBuilderLayout
-      title="Vertical Builder"
-      subtitle="Visually create complete Enterprise Verticals without programming. Every object gets Logical + Visual representation."
+      title="Конструктор вертикалей"
+      subtitle="Visually create complete Enterprise Вертикали without programming. Every object gets Logical + Visual representation."
     >
       <div className="flex flex-wrap items-center gap-3">
         <Badge>Operational</Badge>
         <Badge>Platform Registry</Badge>
         <Badge>Visual Layer</Badge>
-        <Badge>Academy · {mode}</Badge>
+        <Badge>Академия · {mode}</Badge>
         <Switch
           checked={learning}
           onChange={(v) => toggleLearning("vertical", v)}
-          label="Learning mode"
+          label="Режим обучения"
         />
       </div>
 
@@ -199,7 +199,7 @@ export function VerticalWizard() {
           {step === 0 ? (
             <div className="space-y-3">
               <Input
-                placeholder="Organization ID"
+                placeholder="Организация ID"
                 value={orgId}
                 onChange={(e) => {
                   setOrgId(e.target.value);
@@ -207,12 +207,12 @@ export function VerticalWizard() {
                 }}
               />
               <Input
-                placeholder="Vertical name (required)"
+                placeholder="Название вертикали (обязательно)"
                 value={draft.name}
                 onChange={(e) => patch({ name: e.target.value })}
               />
               <Input
-                placeholder="Description"
+                placeholder="Описание"
                 value={draft.description}
                 onChange={(e) => patch({ description: e.target.value })}
               />
@@ -343,7 +343,7 @@ export function VerticalWizard() {
                 </Link>
               ) : (
                 <Link className="eds-type-small text-[var(--eds-primary)]" to="/platform-builder/ai-team">
-                  Open AI Team Center →
+                  Open Центр команды AI →
                 </Link>
               )}
             </div>
@@ -370,7 +370,7 @@ export function VerticalWizard() {
               </div>
               {draft.conciergeMode === "create_new" ? (
                 <Link className="eds-type-small text-[var(--eds-primary)]" to="/platform-builder/concierge">
-                  Open Concierge Builder →
+                  Open Конструктор AI Консьержа →
                 </Link>
               ) : null}
             </div>
@@ -417,7 +417,7 @@ export function VerticalWizard() {
                 onChange={(e) => patch({ workspaceName: e.target.value })}
               />
               <Input
-                placeholder="Departments (comma separated)"
+                placeholder="Отделы (comma separated)"
                 value={draft.departments.join(", ")}
                 onChange={(e) =>
                   patch({
@@ -451,14 +451,14 @@ export function VerticalWizard() {
           {step === 7 ? (
             <div className="space-y-3">
               <p className="eds-type-small text-[var(--eds-text-muted)]">
-                Organization Map shows Owner, Concierge, Departments, AI Team, Connections, and Future AI
-                City Position. Compatible with AI Operations Center.
+                Карта организации shows Owner, Concierge, Departments, AI Team, Connections, and Future AI
+                City Position. Compatible with Центр операций AI.
               </p>
               <Button disabled={busy} onClick={() => void loadPreview()}>
-                {busy ? "Loading…" : "Refresh organization preview"}
+                {busy ? "Загрузка…" : "Обновить предпросмотр организации"}
               </Button>
               {preview ? (
-                <Card title="Organization Map">
+                <Card title="Карта организации">
                   <ul className="space-y-1 eds-type-small">
                     <li>Owner: {String(preview.owner)}</li>
                     <li>
@@ -497,7 +497,7 @@ export function VerticalWizard() {
                 <li>Concierge: {draft.conciergeMode}</li>
                 <li>Dashboards: {draft.dashboardWidgets.join(", ")}</li>
                 <li>Workspace: {draft.workspaceName || `${draft.name || "Vertical"} Workspace`}</li>
-                <li>Knowledge: Industry playbooks, SOPs</li>
+                <li>База знаний: Industry playbooks, SOPs</li>
               </ul>
             </Card>
           ) : null}
@@ -505,12 +505,12 @@ export function VerticalWizard() {
           {step === 9 ? (
             <div className="space-y-3">
               <p className="eds-type-small">
-                Create registers Vertical, Modules, Workspace, AI, Concierge, Knowledge, Dashboard, and
-                Organization in Platform Registry, and prepares the Visual Layer.
+                Создать registers Vertical, Modules, Workspace, AI, Concierge, База знаний, Панель управления, and
+                Организация in Platform Registry, and prepares the Visual Layer.
               </p>
               {error ? <p className="eds-type-small text-[var(--eds-danger)]">{error}</p> : null}
               {created ? (
-                <Card title="Created">
+                <Card title="Создано">
                   <p className="eds-type-small">
                     Platform Registry connected · Visual Layer ready · AI Team connected · Concierge
                     connected
@@ -529,7 +529,7 @@ export function VerticalWizard() {
                 </Card>
               ) : (
                 <Button variant="primary" disabled={busy} onClick={() => void syncAndCreate()}>
-                  {busy ? "Creating…" : "Create Vertical"}
+                  {busy ? "Создание…" : "Создать вертикаль"}
                 </Button>
               )}
             </div>
@@ -537,27 +537,27 @@ export function VerticalWizard() {
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="ghost" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={step >= VERTICAL_WIZARD_STEPS.length - 1}
               onClick={() => setStep((s) => Math.min(VERTICAL_WIZARD_STEPS.length - 1, s + 1))}
             >
-              Next
+              Далее
             </Button>
           </div>
         </Card>
 
         <HelpPanel help={help} guided={guided} />
 
-        <Card title="Live preview">
+        <Card title="Живой предпросмотр">
           <div
             className="rounded-md border border-[var(--eds-border)] p-4"
             style={{ borderTop: `4px solid ${brand.hex}` }}
           >
             <p className="eds-type-small font-semibold">{draft.name || "Untitled Vertical"}</p>
             <p className="eds-type-caption text-[var(--eds-text-muted)]">
-              {draft.description || "Description appears here"}
+              {draft.description || "Описание appears here"}
             </p>
             <p className="mt-2 eds-type-caption">
               Size: {draft.businessSize} · Modules: {draft.modules.length} · Widgets:{" "}
@@ -569,7 +569,7 @@ export function VerticalWizard() {
         <Card title="Architecture">
           <p className="eds-type-small">Logical Representation + Visual Representation</p>
           <p className="eds-type-caption text-[var(--eds-text-muted)]">
-            Prepared for AI Operations Center, AI Team Center, 2D AI City, and future 3D visualization.
+            Prepared for Центр операций AI, Центр команды AI, 2D AI City, and future 3D visualization.
           </p>
         </Card>
       </div>

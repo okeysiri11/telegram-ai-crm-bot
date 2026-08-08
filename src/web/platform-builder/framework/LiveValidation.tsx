@@ -1,36 +1,33 @@
-import { Badge, Card } from "@/ui";
+import { Card } from "@/ui";
+import { bu } from "../i18n/builderUiRu";
 
 type Props = {
-  errors?: { field?: string; message: string; rule?: string }[];
-  suggestions?: string[];
+  errors?: Array<string | { message?: string; field?: string }>;
+  suggestions?: Array<string | { message?: string }>;
   ok?: boolean;
 };
 
-/** Live validation panel for Universal Builder Framework. */
+function asText(item: string | { message?: string; field?: string }): string {
+  if (typeof item === "string") return item;
+  const field = item.field ? `${item.field}: ` : "";
+  return `${field}${item.message || ""}`.trim() || "—";
+}
+
 export function LiveValidation({ errors = [], suggestions = [], ok }: Props) {
   return (
-    <Card title="Live Validation">
-      <div className="flex flex-wrap gap-2">
-        <Badge>{ok ? "Valid" : "Needs attention"}</Badge>
-        <Badge>Errors · {errors.length}</Badge>
-        <Badge>Suggestions · {suggestions.length}</Badge>
-      </div>
+    <Card title={bu("liveValidation")}>
+      {ok ? <p className="text-sm text-emerald-700">{bu("valid")}</p> : null}
       {errors.length ? (
-        <ul className="mt-3 space-y-1 eds-type-small text-[var(--eds-danger)]">
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-rose-700">
           {errors.map((e, i) => (
-            <li key={`${e.field || "err"}-${i}`}>
-              {e.field ? `${e.field}: ` : ""}
-              {e.message}
-            </li>
+            <li key={`${asText(e)}-${i}`}>{asText(e)}</li>
           ))}
         </ul>
-      ) : (
-        <p className="mt-3 eds-type-small text-[var(--eds-text-muted)]">No live errors detected.</p>
-      )}
+      ) : null}
       {suggestions.length ? (
-        <ul className="mt-2 space-y-1 eds-type-caption text-[var(--eds-text-muted)]">
-          {suggestions.map((s) => (
-            <li key={s}>Suggestion: {s}</li>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-600">
+          {suggestions.map((s, i) => (
+            <li key={`${asText(s)}-${i}`}>{asText(s)}</li>
           ))}
         </ul>
       ) : null}

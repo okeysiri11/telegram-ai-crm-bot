@@ -1,6 +1,7 @@
 import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import { useRef } from "react";
 import { Button } from "@/ui";
+import { useI18n } from "@/i18n";
 import { useShellLayoutStore, type DockSide } from "./shellLayoutStore";
 
 type DockPanelProps = {
@@ -9,12 +10,22 @@ type DockPanelProps = {
   subtitle?: string;
   children: ReactNode;
   className?: string;
+  /** Sprint 41.3 — Activity Center: no manual resize. */
+  resizable?: boolean;
 };
 
 /**
- * Sprint 27.4 — dockable panel chrome: collapse, resize, pin, auto-hide.
+ * Sprint 27.4 / 41.3 — dockable panel: collapse, pin, auto-hide; optional resize.
  */
-export function DockPanel({ side, title, subtitle, children, className = "" }: DockPanelProps) {
+export function DockPanel({
+  side,
+  title,
+  subtitle,
+  children,
+  className = "",
+  resizable,
+}: DockPanelProps) {
+  const t = useI18n((s) => s.t);
   const dock = useShellLayoutStore((s) => s.docks[side]);
   const toggleDockCollapse = useShellLayoutStore((s) => s.toggleDockCollapse);
   const toggleDockPin = useShellLayoutStore((s) => s.toggleDockPin);
@@ -22,14 +33,15 @@ export function DockPanel({ side, title, subtitle, children, className = "" }: D
   const resizeDock = useShellLayoutStore((s) => s.resizeDock);
   const setDock = useShellLayoutStore((s) => s.setDock);
   const dragStart = useRef<{ x: number; y: number; size: number } | null>(null);
+  const allowResize = resizable ?? side !== "right";
 
   if (!dock.open) return null;
 
   if (dock.collapsed) {
     return (
       <aside
-        className={`ews-dock ews-dock--${side} ews-dock--collapsed ews-glass ${className}`}
-        aria-label={`${title} collapsed`}
+        className={`ews-dock ews-dock--${side} ews-dock--collapsed ews-dock--anim ews-glass ${className}`}
+        aria-label={`${title} — свёрнуто`}
         onMouseEnter={() => {
           if (dock.autoHide) setDock(side, { collapsed: false });
         }}
@@ -39,7 +51,7 @@ export function DockPanel({ side, title, subtitle, children, className = "" }: D
           variant="ghost"
           className="ews-dock-expand"
           onClick={() => toggleDockCollapse(side)}
-          aria-label={`Expand ${title}`}
+          aria-label={t("dock.expand")}
         >
           {side === "left" ? "▸" : side === "right" ? "◂" : "▴"}
         </Button>
@@ -53,6 +65,7 @@ export function DockPanel({ side, title, subtitle, children, className = "" }: D
       : ({ width: dock.size } as const);
 
   function onResizeStart(e: ReactMouseEvent) {
+    if (!allowResize) return;
     e.preventDefault();
     dragStart.current = { x: e.clientX, y: e.clientY, size: dock.size };
     function onMove(ev: MouseEvent) {
@@ -76,20 +89,22 @@ export function DockPanel({ side, title, subtitle, children, className = "" }: D
 
   return (
     <aside
-      className={`ews-dock ews-dock--${side} ews-glass ${className}`}
+      className={`ews-dock ews-dock--${side} ews-dock--anim ews-glass ${className}`}
       style={sizeStyle}
       aria-label={title}
       onMouseLeave={() => {
         if (dock.autoHide && !dock.pinned) setDock(side, { collapsed: true });
       }}
     >
-      <div
-        className={`ews-dock-resize ews-dock-resize--${side}`}
-        onMouseDown={onResizeStart}
-        role="separator"
-        aria-orientation={side === "bottom" ? "horizontal" : "vertical"}
-        aria-label={`Resize ${title}`}
-      />
+      {allowResize ? (
+        <div
+          className={`ews-dock-resize ews-dock-resize--${side}`}
+          onMouseDown={onResizeStart}
+          role="separator"
+          aria-orientation={side === "bottom" ? "horizontal" : "vertical"}
+          aria-label={t("dock.resize")}
+        />
+      ) : null}
       <div className="ews-dock-head">
         <div>
           <p className="eds-type-section">{title}</p>
@@ -100,21 +115,26 @@ export function DockPanel({ side, title, subtitle, children, className = "" }: D
             size="sm"
             variant="ghost"
             aria-pressed={dock.pinned}
-            aria-label={dock.pinned ? "Unpin panel" : "Pin panel"}
+            aria-label={dock.pinned ? t("iface.panel.unpin") : t("iface.panel.pin")}
             onClick={() => toggleDockPin(side)}
           >
-            {dock.pinned ? "Pinned" : "Pin"}
+            {dock.pinned ? t("dock.pinned") : t("dock.pin")}
           </Button>
           <Button
             size="sm"
             variant="ghost"
             aria-pressed={dock.autoHide}
-            aria-label={dock.autoHide ? "Disable auto-hide" : "Enable auto-hide"}
+            aria-label={t("iface.panel.autoHide")}
             onClick={() => toggleDockAutoHide(side)}
           >
-            {dock.autoHide ? "Auto" : "Hold"}
+            {dock.autoHide ? t("dock.auto") : t("dock.hold")}
           </Button>
-          <Button size="sm" variant="ghost" onClick={() => toggleDockCollapse(side)} aria-label={`Collapse ${title}`}>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => toggleDockCollapse(side)}
+            aria-label={t("dock.collapse")}
+          >
             {side === "bottom" ? "▾" : side === "left" ? "◂" : "▸"}
           </Button>
         </div>

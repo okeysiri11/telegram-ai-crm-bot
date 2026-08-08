@@ -44,11 +44,11 @@ export function AcademyV2Studio() {
       detailedExplanation:
         "Academy 2.0 adapts every Builder to your experience level with contextual help, AI Guide, recommendations, and progress.",
       example: `Example: complete «${ACADEMY_V2_STEPS[step]}».`,
-      popup: { title: ACADEMY_V2_STEPS[step], body: "Never feel lost inside a Builder." },
+      popup: { title: ACADEMY_V2_STEPS[step], body: "Вы не потеряетесь внутри конструктора." },
       tooltip: ACADEMY_V2_STEPS[step],
-      purpose: "Interactive learning for every Builder",
+      purpose: "Интерактивное обучение для каждого конструктора",
       benefits: "Faster onboarding and better configurations",
-      typicalUse: "While creating Vertical, AI, or Concierge builders",
+      typicalUse: "При создании вертикалей, AI или консьержа",
       businessValue: "Higher builder quality with less rework",
     }),
     [step],
@@ -62,7 +62,7 @@ export function AcademyV2Studio() {
       body: JSON.stringify({ user_id: "owner" }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start Academy session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать Academy session");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -208,17 +208,17 @@ export function AcademyV2Studio() {
         }),
       });
       const patchBody = await patch.json();
-      if (!patch.ok) throw new Error(patchBody.error || "Save failed");
+      if (!patch.ok) throw new Error(patchBody.error || "Ошибка сохранения");
       const create = await fetch(`${PLATFORM_BUILDER_API}/academy/v2/sessions/${sid}/create`, {
         method: "POST",
         body: "{}",
       });
       const createBody = await create.json();
-      if (!create.ok) throw new Error(createBody.error || "Create failed");
+      if (!create.ok) throw new Error(createBody.error || "Ошибка создания");
       setCreated(createBody);
       setProgress(createBody.progress as Record<string, unknown>);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -226,8 +226,8 @@ export function AcademyV2Studio() {
 
   return (
     <PlatformBuilderLayout
-      title="Builder Academy 2.0"
-      subtitle="Interactive learning for every Builder — adaptive levels, AI Guide, recommendations, and progress."
+      title="Академия конструктора 2.0"
+      subtitle="Интерактивное обучение для каждого конструктора — adaptive levels, AI Guide, recommendations, and progress."
     >
       <div className="flex flex-wrap items-center gap-3">
         <Badge>Operational</Badge>
@@ -237,7 +237,7 @@ export function AcademyV2Studio() {
         <Switch
           checked={learningEnabled}
           onChange={(v) => toggleLearning("academy", v)}
-          label="Learning mode"
+          label="Режим обучения"
         />
       </div>
 
@@ -288,7 +288,7 @@ export function AcademyV2Studio() {
                 ))}
               </div>
               {help ? (
-                <Card title="Contextual Help">
+                <Card title="Contextual Справка">
                   <ul className="space-y-1 eds-type-small">
                     {Object.entries(help)
                       .filter(([k]) => HELP_FIELDS.includes(k as (typeof HELP_FIELDS)[number]))
@@ -384,7 +384,7 @@ export function AcademyV2Studio() {
                 Show business impact for CRM
               </Button>
               {impact ? (
-                <Card title="Business Impact Card">
+                <Card title="Карточка бизнес-эффекта">
                   <ul className="space-y-1 eds-type-small">
                     <li>Value: {String(impact.business_value)}</li>
                     <li>Benefits: {String(impact.expected_benefits)}</li>
@@ -399,7 +399,7 @@ export function AcademyV2Studio() {
           {step === 7 ? (
             <div className="space-y-3">
               <Button disabled={busy} onClick={() => void loadProgress()}>
-                Refresh progress timeline
+                Обновить progress timeline
               </Button>
               {progress ? (
                 <div className="space-y-2">
@@ -417,7 +417,7 @@ export function AcademyV2Studio() {
           ) : null}
 
           {step === 8 ? (
-            <Card title="Academy Summary">
+            <Card title="Итоги академии">
               <ul className="space-y-1 eds-type-small">
                 <li>Configuration: level {level}</li>
                 <li>Recommendations: {recs ? "loaded" : "pending"}</li>
@@ -444,7 +444,7 @@ export function AcademyV2Studio() {
                 </Card>
               ) : (
                 <Button variant="primary" disabled={busy} onClick={() => void syncAndCreate()}>
-                  {busy ? "Saving…" : "Register Academy Progress"}
+                  {busy ? "Saving…" : "Зарегистрировать прогресс академии"}
                 </Button>
               )}
             </div>
@@ -452,13 +452,13 @@ export function AcademyV2Studio() {
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="ghost" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={step >= ACADEMY_V2_STEPS.length - 1}
               onClick={() => setStep((s) => Math.min(ACADEMY_V2_STEPS.length - 1, s + 1))}
             >
-              Next
+              Далее
             </Button>
           </div>
         </Card>

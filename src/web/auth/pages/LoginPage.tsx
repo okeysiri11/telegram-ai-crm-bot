@@ -16,6 +16,8 @@ import { isDemoAuthEnabled } from "@/auth/demoAuthProvider";
 import { postAuthDestination } from "@/navigation/roleHome";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
+import { MULTI_ROLE_DEMO_USERS } from "@/multi-role/demoUsers";
+import { openClientDemoWorkspace } from "@/multi-role/applyDemoSession";
 
 export function LoginPage() {
   const t = useI18n((s) => s.t);
@@ -31,13 +33,13 @@ export function LoginPage() {
   const [mode, setMode] = useState<"chooser" | "email">("chooser");
   const [googleBusy, setGoogleBusy] = useState(false);
 
-  const { register, handleSubmit, formState, getValues } = useForm<LoginForm>({
+  const { register, handleSubmit, formState, getValues, setValue } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema) as never,
     defaultValues: {
-      identifier: isDemoAuthEnabled() ? "owner@demo.corp" : "",
+      identifier: isDemoAuthEnabled() ? "travel@globefly.demo" : "",
       password: isDemoAuthEnabled() ? "demo" : "",
       rememberMe: true,
-      tenantId: localStorage.getItem("ewp_remember_tenant") || (isDemoAuthEnabled() ? "demo-corp" : ""),
+      tenantId: localStorage.getItem("ewp_remember_tenant") || (isDemoAuthEnabled() ? "globefly" : ""),
       language: "ru",
     },
   });
@@ -60,12 +62,12 @@ export function LoginPage() {
       name: identity?.name || authUser?.name || email.split("@")[0] || "user",
     });
     localStorage.setItem("ewp_remember_tenant", tenantId);
-    useOrgSelector.getState().setOrganization(
-      ["demo-corp", "acme-ltd", "bidex"].includes(tenantId) ? tenantId : "demo-corp",
-    );
+    useOrgSelector.getState().setOrganization(tenantId || "ados");
 
-    // Seed first-run wizard for new sessions; do not skip Beta onboarding.
-    if (!isFirstEntryComplete()) {
+    // Seed first-run wizard for new sessions; clients use /onboarding/client.
+    const isClientUser =
+      authUser?.roleId === "client" || email.toLowerCase().includes("travel@") || email.toLowerCase().startsWith("client@");
+    if (!isClientUser && !isFirstEntryComplete()) {
       saveFirstEntry({
         completed: false,
         step: "welcome",
@@ -76,12 +78,9 @@ export function LoginPage() {
       });
     }
 
-    const roleHome = postAuthDestination(useRoleSwitcher.getState().activeRoleId);
-    const next = !isFirstEntryComplete()
-      ? "/onboarding/first-entry"
-      : from.startsWith("/onboarding") || from === "/login"
-        ? roleHome
-        : from || roleHome;
+    const roleHome = postAuthDestination(useRoleSwitcher.getState().activeRoleId || authUser?.roleId, email);
+    const next =
+      from.startsWith("/onboarding") || from === "/login" ? roleHome : from || roleHome;
     navigate(next, { replace: true });
   }
 
@@ -139,6 +138,48 @@ export function LoginPage() {
             добавлены позже.
             {isDemoAuthEnabled() ? " · Локальный demo-режим включён" : null}
           </p>
+          {isDemoAuthEnabled() ? (
+            <div className="rounded-md border border-[var(--ew-border)] p-2 space-y-2" data-testid="demo-accounts">
+              <p className="eds-type-caption font-medium">Демо-аккаунты (пароль: demo)</p>
+              <Select
+                className="eds-focus-ring w-full"
+                defaultValue=""
+                onChange={(e) => {
+                  const u = MULTI_ROLE_DEMO_USERS.find((x) => x.email === e.target.value);
+                  if (!u) return;
+                  setValue("identifier", u.email);
+                  setValue("password", u.password);
+                  setValue("tenantId", u.tenantId);
+                  setMode("email");
+                }}
+                aria-label="Демо-аккаунты"
+              >
+                <option value="">Выберите роль / компанию…</option>
+                {MULTI_ROLE_DEMO_USERS.map((u) => (
+                  <option key={u.email} value={u.email}>
+                    {u.company} — {u.email}
+                  </option>
+                ))}
+              </Select>
+              <Button
+                type="button"
+                size="sm"
+                className="ews-primary-cta w-full"
+                onClick={async () => {
+                  setError(null);
+                  try {
+                    const creds = openClientDemoWorkspace();
+                    await login(creds.email, creds.password, creds.tenantId);
+                    await afterAuth(creds.email, creds.tenantId, "ru");
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Ошибка демо-входа");
+                  }
+                }}
+              >
+                Открыть демо-пространство
+              </Button>
+            </div>
+          ) : null}
           {error ? (
             <p
               className="rounded-md border border-[var(--eds-danger)]/40 bg-[var(--eds-danger-soft)] px-3 py-2 eds-type-caption text-[var(--eds-danger)]"
@@ -166,7 +207,7 @@ export function LoginPage() {
           })}
         >
           <div>
-            <label className="eds-type-label mb-1 block">Email</label>
+            <label className="eds-type-label mb-1 block">{t("auth.email")}</label>
             <Input className="eds-focus-ring" {...register("identifier")} />
             {formState.errors.identifier ? (
               <p className="eds-type-caption text-[var(--eds-danger)]">
@@ -181,6 +222,15 @@ export function LoginPage() {
           <div>
             <label className="eds-type-label mb-1 block">{t("auth.tenant")}</label>
             <Select className="eds-focus-ring" {...register("tenantId")}>
+              <option value="ados">ados</option>
+              <option value="globefly">globefly</option>
+              <option value="crypto-desk">crypto-desk</option>
+              <option value="buildcorp">buildcorp</option>
+              <option value="skyfleet">skyfleet</option>
+              <option value="prime-auto">prime-auto</option>
+              <option value="lex">lex</option>
+              <option value="greenfield">greenfield</option>
+              <option value="seller-co">seller-co</option>
               <option value="demo-corp">demo-corp</option>
               <option value="acme-ltd">acme-ltd</option>
             </Select>

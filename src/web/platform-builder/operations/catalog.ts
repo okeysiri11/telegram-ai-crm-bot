@@ -1,14 +1,14 @@
 export const OPS_STEPS = [
-  "Operations Dashboard",
-  "Live Status Engine",
+  "Operations Панель управления",
+  "Live Статус Engine",
   "Realtime Activity",
   "Visual ID Support",
   "Wait Experience Engine",
-  "Team Overview",
+  "Team Обзор",
   "System Health",
   "Foundation for AI City",
-  "Summary",
-  "Create",
+  "Итоги",
+  "Создать",
 ] as const;
 
 export const LIVE_STATUSES = [

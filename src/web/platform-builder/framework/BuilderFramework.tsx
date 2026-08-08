@@ -9,6 +9,8 @@ import { HelpPanel } from "./HelpPanel";
 import { PreviewWindow } from "./PreviewWindow";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { PlatformBuilderLayout } from "../layouts/PlatformBuilderLayout";
+import { bu } from "../i18n/builderUiRu";
+import { builderDisplayName } from "@/i18n/platformGlossary";
 
 type Props = {
   builderId: string;
@@ -35,26 +37,30 @@ export function BuilderFramework({
   const learning = useAcademyStore((s) => s.isLearningEnabled(builderId));
   const toggleLearning = useAcademyStore((s) => s.toggleLearning);
   const step = steps[current] || steps[0];
-  const help = useMemo(() => helpFor(step, title), [step, title]);
+  const displayTitle = builderDisplayName(builderId, title);
+  const help = useMemo(() => helpFor(step, displayTitle), [step, displayTitle]);
   const guided = learning && mode === "guided_learning";
   const phase = FRAMEWORK_PHASES[Math.min(current, FRAMEWORK_PHASES.length - 1)];
   const isLastStep = current >= steps.length - 1;
+  const modeRu =
+    mode === "quick_start" ? "Быстрый старт" : mode === "guided_learning" ? "Обучение" : "Эксперт";
 
   return (
-    <PlatformBuilderLayout
-      title={title}
-      subtitle={purpose || "Builder Framework · Step → Explanation → Information → Example → Preview → Create"}
-    >
+    <PlatformBuilderLayout title={displayTitle} subtitle={purpose || bu("frameworkSubtitle")}>
       <div className="flex flex-wrap items-center gap-3">
-        <Badge>{frameOnly ? "Preview" : "Operational"}</Badge>
-        {frameOnly ? <Badge tone="warning">Coming soon</Badge> : null}
-        <Badge>Phase · {phase}</Badge>
-        <Badge>Academy · {mode}</Badge>
+        <Badge>{frameOnly ? bu("frame") : bu("ready")}</Badge>
+        {frameOnly ? <Badge tone="warning">{bu("planned")}</Badge> : null}
+        <Badge>
+          {bu("phase")} · {phase}
+        </Badge>
+        <Badge>
+          {bu("academy")} · {modeRu}
+        </Badge>
         {!frameOnly ? (
           <Switch
             checked={learning}
             onChange={(v) => toggleLearning(builderId, v)}
-            label="Learning mode"
+            label={bu("learningMode")}
           />
         ) : null}
       </div>
@@ -65,9 +71,9 @@ export function BuilderFramework({
       <BuilderStepNav steps={steps} current={current} onChange={setCurrent} />
 
       <div className="eds-grid eds-grid--dashboard">
-        <Card title={`Step · ${step}`}>
+        <Card title={`${bu("step")} · ${step}`}>
           <p className="eds-type-small">
-            Configure <strong>{step}</strong> using the shared Builder Framework.
+            {bu("configureStep")} <strong>{step}</strong>
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Button
@@ -75,53 +81,41 @@ export function BuilderFramework({
               disabled={current === 0}
               onClick={() => setCurrent((c) => Math.max(0, c - 1))}
             >
-              Back
+              {bu("back")}
             </Button>
             <Button
               disabled={current >= steps.length - 1}
               onClick={() => setCurrent((c) => Math.min(steps.length - 1, c + 1))}
             >
-              Next
+              {bu("next")}
             </Button>
             {frameOnly ? (
               isLastStep ? (
                 openWorkspaceRoute ? (
                   <Link to={openWorkspaceRoute}>
-                    <Button variant="primary">Open Workspace Version</Button>
+                    <Button variant="primary">{bu("openWorkspace")}</Button>
                   </Link>
                 ) : (
                   <Button variant="primary" disabled>
-                    Coming soon
+                    {bu("planned")}
                   </Button>
                 )
               ) : null
             ) : (
               <Button
                 variant="primary"
-                onClick={() => {
-                  setCurrent(steps.length - 1);
-                  setCreated(true);
-                }}
+                disabled={!isLastStep}
+                onClick={() => setCreated(true)}
               >
-                Create
+                {bu("create")}
               </Button>
             )}
           </div>
+          {created ? <p className="mt-3 eds-type-small text-[var(--eds-success)]">{bu("ready")}</p> : null}
         </Card>
 
         <HelpPanel help={help} guided={guided} />
-
-        <PreviewWindow
-          title={title}
-          summary={
-            frameOnly
-              ? `${title} — Preview only (no entities created). Next step: Open Workspace Version.`
-              : created
-                ? `${title} draft recorded — navigation frame complete.`
-                : `Live preview for «${step}».`
-          }
-          payload={{ builderId, step, phase, frameOnly }}
-        />
+        <PreviewWindow title={displayTitle} summary={`${bu("step")}: ${step}`} />
       </div>
     </PlatformBuilderLayout>
   );

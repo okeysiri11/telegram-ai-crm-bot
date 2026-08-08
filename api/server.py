@@ -110,6 +110,14 @@ def create_app() -> web.Application:
 
     register_enterprise_hub_routes(app)
 
+    # Sprint 40.4 — innermost: restore Auto CRM Bearer principal after vertical
+    # middlewares overwrite request["principal"] with X-Principal/None.
+    from applications.auto_marketplace.api.crm_handlers import (
+        crm_bearer_principal_restore_middleware,
+    )
+
+    app.middlewares.append(crm_bearer_principal_restore_middleware)
+
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager
 

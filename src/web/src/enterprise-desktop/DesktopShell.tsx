@@ -21,6 +21,7 @@ import { useWorkspaceManager } from "@/workspace-engine/workspaceManagerStore";
 import { useLiveDashboardStore } from "@/live-dashboard/liveDashboardStore";
 import { webConfig } from "@/config/webConfig";
 import { commandRuntime } from "@/runtime/commandRuntime";
+import { ModeIndicator, ModeSwitch } from "@/platform-modes";
 import "./enterprise-desktop.css";
 
 function DesktopMenubar() {
@@ -94,6 +95,8 @@ function DesktopMenubar() {
         </Link>
       </div>
       <div className="edt-menubar-right">
+        <ModeSwitch compact />
+        <ModeIndicator />
         <span className="eds-type-helper" title="Shared context">
           {ctx.organization} · {ctx.project} · {ctx.profileId}
         </span>

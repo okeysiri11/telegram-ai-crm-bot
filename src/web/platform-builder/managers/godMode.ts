@@ -33,5 +33,5 @@ export const CONTROL_CENTER_SURFACES = [
 
 export const OWNER_HEADERS = {
   "Content-Type": "application/json",
-  "X-Platform-Role": "platform_owner",
+  "X-Platform-Роль": "platform_owner",
 } as const;

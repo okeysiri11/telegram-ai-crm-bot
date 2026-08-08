@@ -1,10 +1,11 @@
 /**
- * Sprint 30.3 / 31.0 — resolve post-login / home route by active role.
- * Closed Beta: map first-entry role ids → role homes.
+ * Sprint 30.3 / 31.0 / 42.1 — resolve post-login / home route by active role.
  */
 
 import { loadFirstEntry, isFirstEntryComplete } from "@/onboarding/firstEntryStore";
 import { firstEntryRoleCatalog } from "@/onboarding/firstEntryRoles";
+import { isClientOnboardingComplete } from "@/multi-role/clientOnboardingStore";
+import { demoUserByEmail } from "@/multi-role/demoUsers";
 
 export type RoleHomeId =
   | "owner"
@@ -14,16 +15,19 @@ export type RoleHomeId =
   | "dealer"
   | "partner"
   | "client"
-  | "viewer";
+  | "viewer"
+  | "sales";
 
+/** Sprint 42.1 — role-based homes */
 const ROLE_HOME: Record<RoleHomeId, string> = {
   owner: "/owner",
   administrator: "/admin",
   manager: "/dashboards/manager",
+  sales: "/crm?view=pipeline",
   employee: "/dashboards/employee",
   dealer: "/dashboards/dealer",
   partner: "/dashboards/dealer",
-  client: "/dashboards/client",
+  client: "/dashboard",
   viewer: "/dashboard",
 };
 
@@ -39,7 +43,8 @@ export function mapToRoleHomeId(roleId: string | undefined | null): RoleHomeId {
     return "owner";
   }
   if (roleId === "administrator" || roleId === "admin" || roleId === "system_admin") return "administrator";
-  if (roleId === "manager" || roleId === "sales") return "manager";
+  if (roleId === "sales") return "sales";
+  if (roleId === "manager" || roleId === "support") return "manager";
   if (roleId === "employee" || roleId === "finance" || roleId === "production" || roleId === "ai_engineer") {
     return "employee";
   }
@@ -62,24 +67,44 @@ export function mapToRoleHomeId(roleId: string | undefined | null): RoleHomeId {
 
 /** Prefer explicit workspaceRoute from first-entry / UX catalog when present. */
 export function homeRouteForRole(roleId: string | undefined | null): string {
+  // Sprint 42.1 — canonical role homes win over first-entry catalog aliases
+  if (roleId && (roleId as RoleHomeId) in ROLE_HOME) {
+    return ROLE_HOME[roleId as RoleHomeId];
+  }
+  const mapped = mapToRoleHomeId(roleId);
+  if (ROLE_HOME[mapped]) return ROLE_HOME[mapped];
   const entry = roleId ? firstEntryRoleCatalog.get(roleId) : undefined;
   if (entry?.workspaceRoute) return entry.workspaceRoute;
-  const id = (roleId || "employee") as RoleHomeId;
-  return ROLE_HOME[id] || "/dashboard";
+  return "/dashboard";
 }
 
-/** After auth: first-run wizard if incomplete, else role home. */
-export function postAuthDestination(activeRoleId?: string | null): string {
-  if (!isFirstEntryComplete()) {
+function isClientLike(roleId?: string | null, email?: string | null): boolean {
+  if (roleId === "client") return true;
+  if (email && demoUserByEmail(email)?.viewMode === "client") return true;
+  return false;
+}
+
+/** After auth: client onboarding / first-run wizard if incomplete, else role home. */
+export function postAuthDestination(activeRoleId?: string | null, email?: string | null): string {
+  if (isClientLike(activeRoleId, email) && !isClientOnboardingComplete()) {
+    return "/onboarding/client";
+  }
+  if (!isClientLike(activeRoleId, email) && !isFirstEntryComplete()) {
     return "/onboarding/first-entry";
   }
   const first = loadFirstEntry();
   const mapped = mapToRoleHomeId(activeRoleId || first.roleId);
+  if (activeRoleId) {
+    return homeRouteForRole(mapped);
+  }
   const entry = firstEntryRoleCatalog.get(first.roleId);
-  // Prefer explicit workspaceRoute from first-entry catalog when present
-  if (!activeRoleId && entry?.workspaceRoute) {
+  if (entry?.workspaceRoute) {
     if (entry.workspaceRoute.startsWith("/workspace/")) return entry.workspaceRoute;
-    if (entry.workspaceRoute.startsWith("/dashboards/") || entry.workspaceRoute === "/owner" || entry.workspaceRoute === "/admin") {
+    if (
+      entry.workspaceRoute.startsWith("/dashboards/") ||
+      entry.workspaceRoute === "/owner" ||
+      entry.workspaceRoute === "/admin"
+    ) {
       return entry.workspaceRoute;
     }
   }

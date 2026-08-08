@@ -1,5 +1,6 @@
 import { Badge, Card, Tooltip } from "@/ui";
 import type { HelpContent } from "../types";
+import { term } from "@/i18n/platformGlossary";
 
 export function HelpPanel({ help, guided }: { help: HelpContent; guided?: boolean }) {
   return (
@@ -14,16 +15,16 @@ export function HelpPanel({ help, guided }: { help: HelpContent; guided?: boolea
           <>
             <p className="text-[var(--eds-text-muted)]">{help.detailedExplanation}</p>
             <p>
-              <Badge>Purpose</Badge> {help.purpose}
+              <Badge>{term("purpose")}</Badge> {help.purpose}
             </p>
             <p>
-              <Badge>Benefits</Badge> {help.benefits}
+              <Badge>{term("benefits")}</Badge> {help.benefits}
             </p>
             <p>
-              <Badge>Typical use</Badge> {help.typicalUse}
+              <Badge>{term("typicalUse")}</Badge> {help.typicalUse}
             </p>
             <p>
-              <Badge>Business value</Badge> {help.businessValue}
+              <Badge>{term("businessValue")}</Badge> {help.businessValue}
             </p>
             <p className="rounded-md border border-[var(--eds-border)] bg-[var(--eds-surface-muted,transparent)] p-2">
               {help.example}

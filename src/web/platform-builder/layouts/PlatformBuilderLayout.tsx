@@ -5,7 +5,11 @@ import { Badge } from "@/ui";
 import { buildersForMenu } from "../managers/builderRegistry";
 import { useIsPlatformOwner } from "../managers/platformOwner";
 import { PLATFORM_BUILDER_SPRINT, PLATFORM_BUILDER_VERSION } from "../types";
+import { builderDisplayName, term } from "@/i18n/platformGlossary";
 
+/**
+ * Hotfix 42.4.1 — все пункты меню берутся из BUILDER_NAV_RU (единый словарь).
+ */
 export function PlatformBuilderLayout({
   title,
   subtitle,
@@ -20,10 +24,10 @@ export function PlatformBuilderLayout({
 
   return (
     <WorkspaceLayout>
-      <div className="space-y-6 eds-anim-fade">
+      <div className="space-y-6 eds-anim-fade pb-layout" data-testid="platform-builder-layout-ru">
         <header className="space-y-2">
           <p className="eds-type-caption text-[var(--eds-text-muted)]">
-            Sprint {PLATFORM_BUILDER_SPRINT} · Platform Builder · v{PLATFORM_BUILDER_VERSION}
+            Спринт {PLATFORM_BUILDER_SPRINT} · Конструктор платформы · v{PLATFORM_BUILDER_VERSION}
           </p>
           <h1 className="eds-type-h1">{title}</h1>
           {subtitle ? (
@@ -31,19 +35,20 @@ export function PlatformBuilderLayout({
           ) : null}
         </header>
 
-        <nav className="flex flex-wrap gap-2">
+        <nav className="flex flex-wrap gap-2" aria-label="Навигация конструктора" data-testid="builder-nav-ru">
           {menu.map((item) => (
             <Link
               key={item.id}
               to={item.route}
               className="rounded-md border border-[var(--eds-border)] bg-[var(--eds-surface)] px-3 py-1.5 text-xs text-[var(--eds-text)] transition hover:border-[var(--eds-primary)] eds-anim-fade"
+              data-builder-id={item.id}
             >
               <span className="inline-flex items-center gap-2">
-                {item.name}
+                {builderDisplayName(item.id, item.name)}
                 {item.status === "frame" ? (
                   <>
-                    <Badge>Preview</Badge>
-                    <Badge tone="warning">Coming soon</Badge>
+                    <Badge>{term("preview")}</Badge>
+                    <Badge tone="warning">{term("comingSoon")}</Badge>
                   </>
                 ) : null}
               </span>

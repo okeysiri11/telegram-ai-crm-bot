@@ -47,3 +47,12 @@ export {
 } from "./intelligentNavGroups";
 export { useNavAccordionStore } from "./navAccordionStore";
 export { NavAccordionGroup } from "./NavAccordionGroup";
+export {
+  VIEW_MODE_OPTIONS,
+  isRouteAllowedForViewMode,
+  viewModeLabel,
+  type ViewModeId,
+  type ViewModeOption,
+} from "./viewModeCatalog";
+export { useViewModeStore, VIEW_MODE_KEY } from "./viewModeStore";
+export { ViewModeRouteGuard } from "./ViewModeRouteGuard";

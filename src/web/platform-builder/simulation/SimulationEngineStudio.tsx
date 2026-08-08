@@ -33,7 +33,7 @@ export function SimulationEngineStudio() {
     () => ({
       shortDescription: SIMULATION_STEPS[step],
       detailedExplanation:
-        "Visual Simulation Engine visualizes real platform activity from the Visual Event Bus only. Never creates fake events.",
+        "Движок визуальной симуляции visualizes real platform activity from the Visual Event Bus only. Never creates fake events.",
       example: `Example: complete «${SIMULATION_STEPS[step]}».`,
       popup: { title: SIMULATION_STEPS[step], body: "Live enterprise simulation." },
       tooltip: SIMULATION_STEPS[step],
@@ -53,7 +53,7 @@ export function SimulationEngineStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -70,7 +70,7 @@ export function SimulationEngineStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -83,10 +83,10 @@ export function SimulationEngineStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/simulation/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -151,10 +151,10 @@ export function SimulationEngineStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -162,7 +162,7 @@ export function SimulationEngineStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Visual Simulation Engine"
+      title="Движок визуальной симуляции"
       subtitle="Live enterprise simulation from Visual Event Bus — never creates fake events."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -173,7 +173,7 @@ export function SimulationEngineStudio() {
       </div>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        <span className="eds-type-small">Simulation</span>
+        <span className="eds-type-small">Симуляция</span>
         <Input value={simName} onChange={(e) => setSimName(e.target.value)} />
         <span className="eds-type-small">Speed</span>
         <Input value={speed} onChange={(e) => setSpeed(e.target.value)} />
@@ -191,7 +191,7 @@ export function SimulationEngineStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Simulation Engine">
+            <Card title="Движок симуляции">
               <div className="flex flex-wrap gap-2">
                 <Button disabled={busy} onClick={() => void load("engine", setOverview)}>
                   Load engine
@@ -217,7 +217,7 @@ export function SimulationEngineStudio() {
           ) : null}
 
           {step === 1 ? (
-            <Card title="Supported Simulations">
+            <Card title="Supported Симуляцияs">
               <div className="flex flex-wrap gap-2">
                 <Button disabled={busy} onClick={() => void load("supported", setSupported)}>
                   List simulations
@@ -240,7 +240,7 @@ export function SimulationEngineStudio() {
           ) : null}
 
           {step === 2 ? (
-            <Card title="Live Organization Simulation">
+            <Card title="Live Организация Симуляция">
               <Button disabled={busy} onClick={() => void load("live-organization", setLiveOrg)}>
                 Load live org
               </Button>
@@ -270,7 +270,7 @@ export function SimulationEngineStudio() {
           ) : null}
 
           {step === 4 ? (
-            <Card title="Workflow Simulation">
+            <Card title="Сценарий Симуляция">
               <Button disabled={busy} onClick={() => void load("workflow", setWorkflow)}>
                 Animate workflow
               </Button>
@@ -285,7 +285,7 @@ export function SimulationEngineStudio() {
           ) : null}
 
           {step === 5 ? (
-            <Card title="Knowledge Flow">
+            <Card title="База знаний Flow">
               <Button disabled={busy} onClick={() => void load("knowledge", setKnowledge)}>
                 Visualize knowledge
               </Button>
@@ -315,7 +315,7 @@ export function SimulationEngineStudio() {
           ) : null}
 
           {step === 7 ? (
-            <Card title="Simulation Timeline">
+            <Card title="Симуляция Timeline">
               <div className="flex flex-wrap gap-2">
                 <Button disabled={busy} onClick={() => void timelineAction("Pause")}>
                   Pause
@@ -356,9 +356,9 @@ export function SimulationEngineStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create — Register Simulation Stack">
+            <Card title="Создать — зарегистрировать Симуляция Stack">
               <p className="eds-type-small mb-3">
-                Registers Simulation Engine, Simulation Registry, Timeline Engine, and Simulation API.
+                Registers Движок симуляции, Симуляция Registry, Timeline Engine, and Симуляция API.
               </p>
               <Button disabled={busy} onClick={() => void runCreate()}>
                 Register
@@ -384,13 +384,13 @@ export function SimulationEngineStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= SIMULATION_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

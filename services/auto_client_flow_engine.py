@@ -12,7 +12,22 @@ REQUEST_LISTING = "listing"
 REQUEST_SERVICES = "services"
 REQUEST_MANAGER = "manager_callback"
 
-SKIP_TOKENS = frozenset({"-", "пропустить", "skip", "нет"})
+SKIP_TOKENS = frozenset({
+    "-",
+    "пропустить",
+    "skip",
+    "нет",
+    "no",
+    "2",
+    "не важно",
+    "неважно",
+    "без vin",
+    "без вин",
+    "не надо",
+    "не нужно",
+})
+
+YES_TOKENS = frozenset({"да", "yes", "1", "добавить", "vin", "добавить vin"})
 
 # Unified car questionnaire: VIN is always last and optional.
 _CAR_FLOW_STEPS = (

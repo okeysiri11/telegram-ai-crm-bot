@@ -1,8 +1,10 @@
 import { create } from "zustand";
+import { wsKey } from "@/multi-role/workspaceSlot";
 
 /** Sprint 27.4 — dock layout persistence (left / right / bottom). */
-export const DOCK_LAYOUT_KEY = "ews_dock_layout_v1";
-const PANEL_KEY = "ews_activity_panel_open_v1";
+export const DOCK_LAYOUT_KEY_BASE = "ews_dock_layout_v1";
+export const DOCK_LAYOUT_KEY = DOCK_LAYOUT_KEY_BASE;
+const PANEL_KEY_BASE = "ews_activity_panel_open_v1";
 
 export type DockSide = "left" | "right" | "bottom";
 
@@ -23,7 +25,7 @@ export type DockLayout = {
 
 const DEFAULT_LAYOUT: DockLayout = {
   left: { open: false, collapsed: true, pinned: false, autoHide: true, size: 220 },
-  right: { open: true, collapsed: false, pinned: false, autoHide: false, size: 300 },
+  right: { open: false, collapsed: true, pinned: false, autoHide: true, size: 300 },
   bottom: { open: false, collapsed: false, pinned: false, autoHide: true, size: 180 },
 };
 
@@ -34,7 +36,7 @@ function clampSize(side: DockSide, size: number): number {
 
 function readLegacyActivityOpen(): boolean | null {
   try {
-    const v = localStorage.getItem(PANEL_KEY);
+    const v = localStorage.getItem(wsKey(PANEL_KEY_BASE));
     if (v === null) return null;
     return v === "1";
   } catch {
@@ -44,7 +46,7 @@ function readLegacyActivityOpen(): boolean | null {
 
 function readLayout(): DockLayout {
   try {
-    const raw = localStorage.getItem(DOCK_LAYOUT_KEY);
+    const raw = localStorage.getItem(wsKey(DOCK_LAYOUT_KEY_BASE));
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<DockLayout>;
       return {
@@ -68,8 +70,8 @@ function readLayout(): DockLayout {
 
 function persistLayout(layout: DockLayout) {
   try {
-    localStorage.setItem(DOCK_LAYOUT_KEY, JSON.stringify(layout));
-    localStorage.setItem(PANEL_KEY, layout.right.open && !layout.right.collapsed ? "1" : "0");
+    localStorage.setItem(wsKey(DOCK_LAYOUT_KEY_BASE), JSON.stringify(layout));
+    localStorage.setItem(wsKey(PANEL_KEY_BASE), layout.right.open && !layout.right.collapsed ? "1" : "0");
   } catch {
     /* ignore */
   }

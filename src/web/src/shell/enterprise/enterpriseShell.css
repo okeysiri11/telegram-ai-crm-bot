@@ -444,6 +444,15 @@
   background: color-mix(in oklab, var(--eds-surface) 70%, transparent);
   backdrop-filter: blur(12px);
 }
+/* Sprint 42.6 — when tab strip is off, reclaim vertical space (no reserved gap). */
+.ews-shell[data-workspace-tabs="0"] .ews-tabbar {
+  display: none;
+  margin: 0;
+  padding: 0;
+  height: 0;
+  border: 0;
+  overflow: hidden;
+}
 .ews-tabbar-scroll {
   display: flex;
   flex: 1;
@@ -587,11 +596,14 @@
   background: color-mix(in oklab, var(--eds-warning-soft) 55%, transparent);
 }
 .ews-user-menu {
-  position: absolute;
-  right: 0;
-  top: calc(100% + 0.35rem);
-  z-index: 40;
+  /* Sprint 42.9 — fixed so dock/header overflow cannot clip the menu */
+  position: fixed;
+  right: 0.75rem;
+  top: 3.5rem;
+  z-index: 90;
   min-width: 10rem;
+  max-height: min(70vh, 24rem);
+  overflow: auto;
   display: flex;
   flex-direction: column;
   padding: 0.35rem;
@@ -866,4 +878,290 @@
 .ews-metric-card:hover {
   outline: 1px solid color-mix(in oklab, var(--eds-primary) 35%, transparent);
   border-radius: 0.85rem;
+}
+
+/* Sprint 41.3 — client UX: dock animation, toolbar, hierarchy, CTA, workspace dock */
+.ews-dock--anim {
+  transition: width 220ms ease, height 220ms ease, opacity 180ms ease, transform 220ms ease;
+}
+.ews-header--anim {
+  transition: padding 200ms ease, min-height 200ms ease;
+}
+.ews-header--collapsed {
+  min-height: 0;
+}
+.ews-header--collapsed .ews-logo-text {
+  display: none;
+}
+.ews-primary-cta,
+button.ews-primary-cta,
+.ews-primary-cta.eds-btn {
+  background: color-mix(in oklab, var(--eds-success) 88%, #0a7a3e) !important;
+  border-color: color-mix(in oklab, var(--eds-success) 70%, #065f2e) !important;
+  color: #fff !important;
+  font-weight: 650;
+  box-shadow: 0 4px 14px color-mix(in oklab, var(--eds-success) 28%, transparent);
+}
+.ews-primary-cta:hover {
+  filter: brightness(1.05);
+}
+.ews-workspace-dock {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 0.65rem;
+  border: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 92%, var(--eds-primary) 4%);
+}
+.ews-workspace-dock-label {
+  color: var(--eds-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.65rem;
+  font-weight: 650;
+}
+.ews-workspace-dock-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ews-workspace-dock-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.28rem 0.65rem;
+  border-radius: 0.45rem;
+  border: 1px solid var(--ew-border);
+  background: var(--eds-bg);
+  color: var(--eds-text);
+  font-size: 0.75rem;
+  font-weight: 550;
+  text-decoration: none;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.ews-workspace-dock-chip:hover {
+  border-color: color-mix(in oklab, var(--eds-primary) 45%, var(--ew-border));
+  background: color-mix(in oklab, var(--eds-primary) 8%, var(--eds-bg));
+}
+.ews-workspace-dock-chip.is-active {
+  border-color: var(--eds-primary);
+  background: color-mix(in oklab, var(--eds-primary) 14%, var(--eds-bg));
+  color: var(--eds-primary);
+  font-weight: 650;
+}
+.ews-hierarchy-header {
+  border-left: 3px solid var(--eds-primary);
+}
+.ews-hierarchy-nav {
+  border-left: 3px solid color-mix(in oklab, var(--eds-accent) 80%, var(--eds-primary));
+}
+.ews-hierarchy-actions {
+  padding: 0.5rem 0;
+}
+.ews-hierarchy-content {
+  border-top: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+  padding-top: 0.75rem;
+}
+.ews-module-landing .ews-module-hero {
+  box-shadow: 0 6px 20px color-mix(in oklab, #0b1220 6%, transparent);
+}
+.ews-welcome-card {
+  border-width: 1px;
+  border-style: solid;
+}
+.ews-activity-host {
+  display: flex;
+  flex-shrink: 0;
+  min-height: 0;
+}
+.ews-context-trail a:hover {
+  text-decoration: underline;
+}
+
+/* Sprint 42.0 — favourites dock ops + AI guide */
+.ews-workspace-dock-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+}
+.ews-workspace-dock-item.is-dragging {
+  opacity: 0.55;
+}
+.ews-workspace-dock-ops {
+  display: inline-flex;
+  gap: 0;
+}
+.ews-dock-mini {
+  border: 0;
+  background: transparent;
+  color: var(--eds-text-muted);
+  cursor: pointer;
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.15rem;
+}
+.ews-dock-mini:hover {
+  color: var(--eds-primary);
+}
+.ews-workspace-dock-chip.is-pinned {
+  border-color: color-mix(in oklab, var(--eds-accent) 50%, var(--ew-border));
+}
+.ews-workspace-dock-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+.ews-workspace-dock-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.ews-ai-guide {
+  background: color-mix(in oklab, var(--eds-success-soft, #e8f8ef) 55%, var(--eds-surface));
+}
+.ews-header--collapsed {
+  padding-top: 0;
+}
+.ews-action-header {
+  border-left-width: 4px;
+}
+
+/* Sprint 42.2 — Adaptive Enterprise Shell */
+.ews-sidebar--anim {
+  transition: width 220ms ease, padding 220ms ease, opacity 200ms ease;
+}
+.ews-sidebar.ews-glass {
+  width: var(--ews-sidebar-width, 300px);
+  max-width: 300px;
+}
+.ews-sidebar--collapsed {
+  width: 68px !important;
+  max-width: 68px !important;
+  padding: 0.65rem 0.35rem 1rem !important;
+  overflow-x: hidden;
+}
+.ews-nav-list--rail {
+  align-items: center;
+}
+.ews-nav-link--rail {
+  justify-content: center;
+  padding: 0.55rem !important;
+  width: 100%;
+}
+.ews-nav-link--rail .ews-nav-label {
+  display: none;
+}
+
+.ews-header--anim {
+  transition: min-height 220ms ease, max-height 220ms ease, padding 200ms ease;
+  overflow: hidden;
+}
+.ews-header:not(.ews-header--collapsed) {
+  min-height: 88px;
+}
+.ews-header--collapsed {
+  min-height: 34px !important;
+  max-height: 40px;
+  padding: 0 !important;
+}
+.ews-header-slim {
+  min-height: 34px;
+  height: 34px;
+}
+.ews-logo--slim .ews-logo-text {
+  display: inline !important;
+  font-size: 0.8rem;
+}
+
+.ews-activity-panel {
+  width: 320px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid color-mix(in oklab, var(--eds-border) 85%, transparent);
+  background: color-mix(in oklab, var(--eds-surface) 88%, transparent);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+.ews-activity--anim {
+  transition: width 220ms ease, opacity 200ms ease, transform 220ms ease;
+}
+.ews-activity-panel--compact {
+  width: 220px;
+}
+.ews-activity-panel--expanded {
+  width: 320px;
+}
+
+.ews-runtime--anim {
+  transition: max-height 220ms ease, opacity 200ms ease;
+}
+.ews-runtime-bar--compact .ews-runtime-metrics {
+  display: none !important;
+}
+.ews-runtime-bar-head {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  padding: 0 0.5rem;
+}
+.ews-runtime-peek {
+  display: flex;
+  justify-content: center;
+  border-top: 1px solid var(--ew-border);
+  background: var(--eds-surface);
+}
+
+.ews-shell[data-focus-mode="1"] .ews-workspace-dock,
+.ews-shell[data-focus-mode="1"] .eds-ops-chrome,
+.ews-shell[data-focus-mode="1"] [data-testid="workspace-slot-banner"] {
+  display: none !important;
+}
+
+/* Responsive breakpoints */
+@media (max-width: 1280px) {
+  .ews-sidebar.ews-glass:not(.ews-sidebar--collapsed) {
+    width: 248px;
+    max-width: 248px;
+  }
+  .ews-activity-panel--expanded {
+    width: 280px;
+  }
+}
+@media (max-width: 1024px) {
+  .ews-sidebar.ews-glass:not(.ews-sidebar--collapsed) {
+    width: 200px;
+    max-width: 200px;
+  }
+  .ews-activity-panel--expanded,
+  .ews-activity-panel--compact {
+    width: 200px;
+  }
+}
+@media (max-width: 768px) {
+  .ews-activity-panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 45;
+    box-shadow: -8px 0 24px color-mix(in oklab, #0b1220 18%, transparent);
+  }
+}
+@media (min-width: 1920px) {
+  .ews-sidebar.ews-glass:not(.ews-sidebar--collapsed) {
+    width: var(--ews-sidebar-width, 300px);
+  }
+  .ews-activity-panel--expanded {
+    width: 360px;
+  }
 }

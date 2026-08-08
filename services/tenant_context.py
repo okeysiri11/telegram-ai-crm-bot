@@ -90,5 +90,5 @@ class TenantContextService:
     async def require_tenant_id(user_id: int) -> uuid.UUID:
         ctx = await TenantContextService.resolve_for_user(user_id)
         if ctx is None:
-            raise PermissionError("No active tenant context")
+            raise PermissionError("tenant_context_missing")
         return ctx.tenant_id

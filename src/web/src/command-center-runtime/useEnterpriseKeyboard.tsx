@@ -3,13 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { useCommandCenterUi } from "../../command-center/components/CommandCenterProvider";
 import { useWorkspaceManager } from "@/workspace-engine/workspaceManagerStore";
 import { useShellLayoutStore, type DockSide } from "@/shell/enterprise/shellLayoutStore";
+import { useAdaptiveShellStore } from "@/shell/enterprise/adaptiveShellStore";
 import { logActivity } from "@/workspace-engine/activityJournal";
 
 const PANEL_ORDER: DockSide[] = ["left", "right", "bottom"];
 
 /**
- * Sprint 27.5 — keyboard-first workspace navigation.
- * Does not steal keys while typing in inputs.
+ * Sprint 27.5 / 42.2 — keyboard-first workspace + adaptive shell shortcuts.
+ * Ctrl+Shift+L/H/R/B/F — sidebar / header / activity / runtime / focus.
  */
 export function useEnterpriseKeyboard() {
   const navigate = useNavigate();
@@ -33,6 +34,39 @@ export function useEnterpriseKeyboard() {
       if (typingTarget(e.target) && e.key !== "Escape") return;
       const meta = e.metaKey || e.ctrlKey;
       const key = e.key.toLowerCase();
+      const adaptive = useAdaptiveShellStore.getState();
+
+      // Sprint 42.2 — adaptive shell shortcuts
+      if (meta && e.shiftKey && key === "l") {
+        e.preventDefault();
+        adaptive.toggleSidebar();
+        logActivity({ kind: "system", title: "Toggle sidebar", detail: "Ctrl+Shift+L" });
+        return;
+      }
+      if (meta && e.shiftKey && key === "h") {
+        e.preventDefault();
+        adaptive.toggleHeader();
+        logActivity({ kind: "system", title: "Toggle header", detail: "Ctrl+Shift+H" });
+        return;
+      }
+      if (meta && e.shiftKey && key === "r") {
+        e.preventDefault();
+        adaptive.cycleActivity();
+        logActivity({ kind: "system", title: "Toggle activity", detail: "Ctrl+Shift+R" });
+        return;
+      }
+      if (meta && e.shiftKey && key === "b") {
+        e.preventDefault();
+        adaptive.cycleRuntime();
+        logActivity({ kind: "system", title: "Toggle runtime", detail: "Ctrl+Shift+B" });
+        return;
+      }
+      if (meta && e.shiftKey && key === "f") {
+        e.preventDefault();
+        adaptive.toggleFocusMode();
+        logActivity({ kind: "system", title: "Toggle focus mode", detail: "Ctrl+Shift+F" });
+        return;
+      }
 
       // Search workspace
       if (meta && key === "f" && !e.shiftKey) {
@@ -92,7 +126,7 @@ export function useEnterpriseKeyboard() {
       }
 
       // Navigate workspace home
-      if (meta && key === "h") {
+      if (meta && key === "h" && !e.shiftKey) {
         e.preventDefault();
         navigate("/dashboard");
         return;

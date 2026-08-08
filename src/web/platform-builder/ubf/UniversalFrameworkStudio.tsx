@@ -48,7 +48,7 @@ export function UniversalFrameworkStudio() {
     () => ({
       shortDescription: UBF_STEPS[step],
       detailedExplanation:
-        "Universal Builder Framework gives every Platform Builder one lifecycle, UI kit, validation, preview, registry, templates, extensions, and SDK foundation.",
+        "Универсальный каркас конструктора gives every Platform Builder one lifecycle, UI kit, validation, preview, registry, templates, extensions, and SDK foundation.",
       example: `Example: complete «${UBF_STEPS[step]}» then continue.`,
       popup: { title: UBF_STEPS[step], body: "Shared architecture for all builders." },
       tooltip: UBF_STEPS[step],
@@ -74,7 +74,7 @@ export function UniversalFrameworkStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start UBF session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать UBF session");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -101,7 +101,7 @@ export function UniversalFrameworkStudio() {
       }),
     });
     const body = await res.json();
-    if (!res.ok) throw new Error(body.error || "Could not save session");
+    if (!res.ok) throw new Error(body.error || "Не удалось сохранить сессию");
   }
 
   async function runValidate() {
@@ -115,10 +115,10 @@ export function UniversalFrameworkStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Validation failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка проверки");
       setValidation(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Validation failed");
+      setError(e instanceof Error ? e.message : "Ошибка проверки");
     } finally {
       setBusy(false);
     }
@@ -132,11 +132,11 @@ export function UniversalFrameworkStudio() {
       await syncDraft(sid, 4);
       const res = await fetch(`${PLATFORM_BUILDER_API}/ubf/sessions/${sid}/preview`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Preview failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка предпросмотра");
       setPreview(body);
       setValidation((body.realtime_validation as typeof validation) || null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Preview failed");
+      setError(e instanceof Error ? e.message : "Ошибка предпросмотра");
     } finally {
       setBusy(false);
     }
@@ -154,10 +154,10 @@ export function UniversalFrameworkStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -165,18 +165,18 @@ export function UniversalFrameworkStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Universal Builder Framework"
+      title="Универсальный каркас конструктора"
       subtitle="One architecture for every Builder — lifecycle, UI, validation, preview, registry, templates, extensions, SDK."
     >
       <div className="flex flex-wrap items-center gap-3">
         <Badge>Operational</Badge>
         <Badge>Builder Registry</Badge>
         <Badge>SDK Foundation</Badge>
-        <Badge>Academy · {mode}</Badge>
+        <Badge>Академия · {mode}</Badge>
         <Switch
           checked={learning}
           onChange={(v) => toggleLearning("universal_framework", v)}
-          label="Learning mode"
+          label="Режим обучения"
         />
       </div>
 
@@ -206,7 +206,7 @@ export function UniversalFrameworkStudio() {
                 onChange={(e) => patch({ builderType: e.target.value })}
               />
               <Input
-                placeholder="Version"
+                placeholder="Версия"
                 value={draft.version}
                 onChange={(e) => patch({ version: e.target.value })}
               />
@@ -247,7 +247,7 @@ export function UniversalFrameworkStudio() {
                 ))}
               </div>
               <Button disabled={busy} onClick={() => void runValidate()}>
-                Run live validation
+                Запустить проверку
               </Button>
               {validation ? (
                 <LiveValidation
@@ -267,7 +267,7 @@ export function UniversalFrameworkStudio() {
                 ))}
               </div>
               <Button disabled={busy} onClick={() => void runPreview()}>
-                Refresh live preview
+                Обновить предпросмотр
               </Button>
               {preview ? (
                 <pre className="max-h-40 overflow-auto eds-type-caption">
@@ -280,8 +280,8 @@ export function UniversalFrameworkStudio() {
           {step === 4 ? (
             <div className="space-y-2">
               <p className="eds-type-small text-[var(--eds-text-muted)]">
-                Automatically register Builder Type, Version, Schema, Components, Templates, Validation
-                Rules.
+                Автоматически регистрирует тип конструктора, версию, схему, компоненты, шаблоны и
+                правила проверки.
               </p>
               <div className="flex flex-wrap gap-2">
                 {TARGET_BUILDERS.map((b) => (
@@ -294,14 +294,15 @@ export function UniversalFrameworkStudio() {
           {step === 5 ? (
             <div className="space-y-3">
               <p className="eds-type-small text-[var(--eds-text-muted)]">
-                Save Builders as Templates. Clone existing Builders. Duplicate configurations.
+                Сохраняйте конструкторы как шаблоны. Клонируйте существующие. Дублируйте
+                конфигурации.
               </p>
               <label className="flex items-center gap-2 eds-type-small">
                 <Checkbox
                   checked={draft.saveAsTemplate}
                   onChange={() => patch({ saveAsTemplate: !draft.saveAsTemplate })}
                 />
-                Save as template on create
+                Сохранить как шаблон при создании
               </label>
             </div>
           ) : null}
@@ -324,22 +325,24 @@ export function UniversalFrameworkStudio() {
 
           {step === 7 ? (
             <div className="space-y-2">
-              <Badge>Architecture only</Badge>
+              <Badge>Только архитектура</Badge>
               <p className="eds-type-small text-[var(--eds-text-muted)]">
-                Builder SDK foundation exposes Framework APIs: define_builder, register_steps,
+                Основа SDK конструктора открывает API каркаса: define_builder, register_steps,
                 attach_validation, attach_components, save_template, clone_builder, run_lifecycle.
               </p>
             </div>
           ) : null}
 
           {step === 8 ? (
-            <Card title="Framework Summary">
+            <Card title="Итоги каркаса">
               <ul className="space-y-1 eds-type-small">
-                <li>Configuration: {draft.name || "—"} · {draft.builderType || "—"} · v{draft.version}</li>
-                <li>Validation rules: {draft.validationRules.length}</li>
-                <li>Dependencies: builder_engine, help_system</li>
-                <li>Objects: builder, template, components, schema</li>
-                <li>Registry: platform_builder_builder_registry</li>
+                <li>
+                  Конфигурация: {draft.name || "—"} · {draft.builderType || "—"} · v{draft.version}
+                </li>
+                <li>Правила проверки: {draft.validationRules.length}</li>
+                <li>Зависимости: builder_engine, help_system</li>
+                <li>Объекты: конструктор, шаблон, компоненты, схема</li>
+                <li>Реестр: platform_builder_builder_registry</li>
               </ul>
             </Card>
           ) : null}
@@ -348,8 +351,10 @@ export function UniversalFrameworkStudio() {
             <div className="space-y-3">
               {error ? <p className="eds-type-small text-[var(--eds-danger)]">{error}</p> : null}
               {created ? (
-                <Card title="Registered">
-                  <p className="eds-type-small">Builder, template, components, and schema registered.</p>
+                <Card title="Зарегистрировано">
+                  <p className="eds-type-small">
+                    Конструктор, шаблон, компоненты и схема зарегистрированы.
+                  </p>
                   <pre className="mt-2 max-h-48 overflow-auto eds-type-caption">
                     {JSON.stringify(
                       {
@@ -364,9 +369,9 @@ export function UniversalFrameworkStudio() {
                 </Card>
               ) : (
                 <ConfirmationScreen
-                  title="Create & Register"
-                  message="Register Builder, Template, Components, and Schema in the Builder Registry."
-                  confirmLabel={busy ? "Creating…" : "Create Builder"}
+                  title="Создать и зарегистрировать"
+                  message="Зарегистрировать конструктор, шаблон, компоненты и схему в реестре конструкторов."
+                  confirmLabel={busy ? "Создание…" : "Создать конструктор"}
                   busy={busy}
                   onConfirm={() => void runCreate()}
                 />
@@ -376,13 +381,13 @@ export function UniversalFrameworkStudio() {
 
           <div className="mt-4 flex flex-wrap gap-2">
             <Button variant="ghost" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={step >= UBF_STEPS.length - 1}
               onClick={() => setStep((s) => Math.min(UBF_STEPS.length - 1, s + 1))}
             >
-              Next
+              Далее
             </Button>
           </div>
         </Card>
@@ -390,14 +395,14 @@ export function UniversalFrameworkStudio() {
         <HelpPanel help={help} guided={guided} />
 
         <PreviewWindow
-          title="Live Preview"
+          title="Живой предпросмотр"
           summary={`${draft.name || "Untitled"} · ${draft.builderType || "type"} · ${draft.components.length} components`}
         />
 
         <Card title="Target Builders">
           <p className="eds-type-caption text-[var(--eds-text-muted)]">
-            AI · Concierge · Vertical · Workflow · CRM · ERP · Knowledge · Marketplace · Dashboard ·
-            Automation · Document · Department · User · Future
+            AI · Concierge · Vertical · Сценарий · CRM · ERP · Knowledge · Маркетплейс · Панель управления ·
+            Автоматизация · Document · Department · User · Future
           </p>
         </Card>
       </div>

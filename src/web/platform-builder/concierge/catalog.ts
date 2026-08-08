@@ -1,3 +1,8 @@
+/**
+ * Legacy Concierge catalog (Sprint 42.5 — полная русификация).
+ * Активный мастер использует catalogV2.ts; этот файл — совместимость и справочник.
+ */
+
 export type HelpBits = {
   shortDescription: string;
   purpose: string;
@@ -21,138 +26,390 @@ function help(purpose: string, benefits: string, example: string, what = ""): He
 }
 
 export const CONCIERGE_WIZARD_STEPS = [
-  "Concierge Identity",
-  "Concierge Role",
-  "Organization Access",
-  "AI Team Center",
-  "AI Orchestration",
-  "Proactive Assistance",
-  "Owner Relationship",
-  "Smart Recommendation Engine",
-  "Group AI Chat Foundation",
-  "Summary",
-  "Create",
+  "Образ консьержа",
+  "Роль консьержа",
+  "Доступ к организации",
+  "Центр команды AI",
+  "Оркестрация AI",
+  "Проактивная помощь",
+  "Связь с владельцем",
+  "Умные рекомендации",
+  "Основа группового чата",
+  "Итоги",
+  "Создать",
 ] as const;
 
 export const AVATARS = [
-  { id: "avatar_exec", name: "Executive", emoji: "🧑‍💼" },
-  { id: "avatar_guide", name: "Guide", emoji: "🧭" },
-  { id: "avatar_spark", name: "Spark", emoji: "✨" },
-  { id: "avatar_shield", name: "Trusted", emoji: "🛡️" },
+  { id: "avatar_exec", name: "Деловой", emoji: "🧑‍💼" },
+  { id: "avatar_guide", name: "Навигатор", emoji: "🧭" },
+  { id: "avatar_spark", name: "Искра", emoji: "✨" },
+  { id: "avatar_shield", name: "Надёжный", emoji: "🛡️" },
 ];
 
 export const VOICE_PROFILES = [
-  { id: "warm", name: "Warm" },
-  { id: "clear", name: "Clear" },
-  { id: "confident", name: "Confident" },
-  { id: "soft", name: "Soft" },
+  { id: "warm", name: "Тёплый" },
+  { id: "clear", name: "Чёткий" },
+  { id: "confident", name: "Уверенный" },
+  { id: "soft", name: "Мягкий" },
 ];
 
 export const COMMUNICATION_STYLES = [
-  { id: "business_executive", name: "Business Executive", sample: "Good morning. Observation, why it matters, the action, and expected impact." },
-  { id: "professional", name: "Professional", sample: "Here is a clear update on today’s decision items." },
-  { id: "friendly", name: "Friendly", sample: "Here is a simple overview of what needs a decision." },
-  { id: "mentor", name: "Mentor", sample: "We will walk this in order: observation, action, impact." },
-  { id: "best_friend", name: "Best Friend", sample: "Here is what matters most right now — one clear next step." },
-  { id: "best_girlfriend", name: "Best Girlfriend", sample: "I am here. Let’s keep today focused on decisions that matter." },
-  { id: "direct", name: "Direct", sample: "Three priorities: close the deal, review cash, confirm the meeting." },
-  { id: "without_formalities", name: "Without Formalities", sample: "Quick take — here is what needs attention." },
-  { id: "very_informal", name: "Very Informal", sample: "Easy wins for today are listed below." },
-  { id: "technical", name: "Technical", sample: "Route CRM lead scoring to the Sales specialist, then open analytics." },
-  { id: "calm", name: "Calm", sample: "Steady plan: review Attention, then Mission Control health." },
-  { id: "energetic", name: "Energetic", sample: "Priorities are lined up — start with the highest-impact action." },
+  {
+    id: "business_executive",
+    name: "Деловой руководитель",
+    sample: "Доброе утро. Наблюдение, почему это важно, действие и ожидаемый эффект.",
+  },
+  {
+    id: "professional",
+    name: "Профессиональный",
+    sample: "Краткий статус по решениям на сегодня.",
+  },
+  {
+    id: "friendly",
+    name: "Дружелюбный",
+    sample: "Простой обзор того, что требует решения.",
+  },
+  {
+    id: "mentor",
+    name: "Наставник",
+    sample: "Пройдём по порядку: наблюдение → действие → эффект.",
+  },
+  {
+    id: "best_friend",
+    name: "Близкий друг",
+    sample: "Самое важное сейчас — один понятный следующий шаг.",
+  },
+  {
+    id: "best_girlfriend",
+    name: "Близкая подруга",
+    sample: "Я рядом. Держим фокус на решениях, которые важны.",
+  },
+  {
+    id: "direct",
+    name: "Прямой",
+    sample: "Три приоритета: закрыть сделку, проверить кассу, подтвердить встречу.",
+  },
+  {
+    id: "without_formalities",
+    name: "Без формальностей",
+    sample: "Коротко: вот что требует внимания.",
+  },
+  {
+    id: "very_informal",
+    name: "Очень неформальный",
+    sample: "Лёгкие победы на сегодня — ниже.",
+  },
+  {
+    id: "technical",
+    name: "Технический",
+    sample: "Направьте скоринг лидов CRM специалисту по продажам, затем откройте аналитику.",
+  },
+  {
+    id: "calm",
+    name: "Спокойный",
+    sample: "Спокойный план: сначала «Внимание», затем здоровье миссион-контроля.",
+  },
+  {
+    id: "energetic",
+    name: "Энергичный",
+    sample: "Приоритеты выстроены — начинаем с действия с наибольшим эффектом.",
+  },
 ];
 
 export const ROLES = [
-  { id: "executive_assistant", name: "Executive Assistant", help: help("Supports leadership with schedules, briefs, and follow-ups.", "Keeps the owner focused on decisions, not busywork.", "Example: prepares a morning meeting pack.") },
-  { id: "business_concierge", name: "Business Concierge", help: help("Guides people across the organization with helpful direction.", "Faster answers and smoother handoffs between teams.", "Example: routes a contract question to Legal AI.") },
-  { id: "personal_concierge", name: "Personal Concierge", help: help("Stays close to the owner’s preferences and daily rhythm.", "Feels personal and attentive.", "Example: reminds about a preferred weekly review time.") },
-  { id: "operations_manager", name: "Operations Manager", help: help("Watches workflows, tasks, and operational signals.", "Fewer missed follow-ups across departments.", "Example: flags overdue approvals.") },
-  { id: "business_advisor", name: "Business Advisor", help: help("Offers thoughtful guidance from organization activity.", "Better strategic conversations with less preparation.", "Example: suggests focusing on high-margin opportunities.") },
-  { id: "ceo_assistant", name: "CEO Assistant", help: help("Acts as a trusted partner for executive priorities.", "Clear leadership visibility across the company.", "Example: builds an executive report before the board call.") },
-  { id: "custom", name: "Custom", help: help("Define a Concierge role unique to your organization.", "Fits any operating style.", "Example: Clinic Concierge for medical practices.") },
+  {
+    id: "executive_assistant",
+    name: "Помощник руководителя",
+    help: help(
+      "Поддерживает руководство: расписание, брифы и контроль поручений.",
+      "Владелец фокусируется на решениях, а не на рутине.",
+      "Пример: готовит пакет к утренней встрече.",
+    ),
+  },
+  {
+    id: "business_concierge",
+    name: "Бизнес-консьерж",
+    help: help(
+      "Направляет людей по организации с полезными подсказками.",
+      "Быстрее ответы и мягче передачи между командами.",
+      "Пример: направляет вопрос по договору юридическому AI.",
+    ),
+  },
+  {
+    id: "personal_concierge",
+    name: "Личный консьерж",
+    help: help(
+      "Учитывает предпочтения и ритм владельца.",
+      "Ощущается лично и внимательно.",
+      "Пример: напоминает о любимом еженедельном разборе.",
+    ),
+  },
+  {
+    id: "operations_manager",
+    name: "Операционный менеджер",
+    help: help(
+      "Следит за сценариями, задачами и операционными сигналами.",
+      "Меньше пропущенных follow-up по отделам.",
+      "Пример: отмечает просроченные согласования.",
+    ),
+  },
+  {
+    id: "business_advisor",
+    name: "Бизнес-советник",
+    help: help(
+      "Даёт продуманные советы на основе активности организации.",
+      "Лучшие стратегические разговоры с меньшей подготовкой.",
+      "Пример: предлагает сфокусироваться на высокомаржинальных возможностях.",
+    ),
+  },
+  {
+    id: "ceo_assistant",
+    name: "Ассистент CEO",
+    help: help(
+      "Доверенный партнёр по приоритетам руководителя.",
+      "Прозрачность для руководства по всей компании.",
+      "Пример: собирает отчёт перед советом директоров.",
+    ),
+  },
+  {
+    id: "custom",
+    name: "Свой вариант",
+    help: help(
+      "Задайте уникальную роль консьержа для вашей организации.",
+      "Подходит под любой стиль работы.",
+      "Пример: консьерж клиники для медицинской практики.",
+    ),
+  },
 ];
 
 export const ORG_ACCESS = [
-  { id: "crm", name: "CRM", help: help("Customer records and pipeline.", "Concierge understands clients and deals.", "Example: checks open opportunities.", "What it is: customer system.") },
-  { id: "erp", name: "ERP", help: help("Core operations and resources.", "Answers reflect how the business runs.", "Example: reviews inventory signals.", "What it is: operations system.") },
-  { id: "documents", name: "Documents", help: help("Company files and folders.", "Finds important papers quickly.", "Example: opens the latest proposal.", "What it is: document library.") },
-  { id: "knowledge", name: "Knowledge", help: help("Approved company knowledge.", "Consistent guidance for everyone.", "Example: uses the refund policy.", "What it is: knowledge base.") },
-  { id: "ai_registry", name: "AI Registry", help: help("Directory of AI Specialists.", "Concierge can find the right expert.", "Example: invites Sales AI to help.", "What it is: specialist registry.") },
-  { id: "workflow_engine", name: "Workflow Engine", help: help("Business process engine.", "Starts and follows work flows.", "Example: launches onboarding.", "What it is: workflow system.") },
-  { id: "analytics", name: "Analytics", help: help("Business metrics and trends.", "Clearer insights for decisions.", "Example: highlights conversion drop.", "What it is: analytics.") },
-  { id: "calendar", name: "Calendar", help: help("Meetings and schedule.", "Reliable planning support.", "Example: prepares tomorrow’s agenda.", "What it is: calendar.") },
-  { id: "tasks", name: "Tasks", help: help("To-dos and assignments.", "Keeps work moving.", "Example: suggests next owner action.", "What it is: task list.") },
-  { id: "marketplace", name: "Marketplace", help: help("Listings and marketplace activity.", "Supports growth opportunities.", "Example: flags a hot listing.", "What it is: marketplace.") },
-  { id: "notifications", name: "Notifications", help: help("Alerts and messages.", "Important news reaches people in time.", "Example: notifies about a deadline.", "What it is: notifications.") },
-  { id: "automation", name: "Automation", help: help("Repeatable automated actions.", "Less manual busywork.", "Example: triggers a welcome sequence.", "What it is: automation.") },
-  { id: "dashboards", name: "Dashboards", help: help("Visual business boards.", "Quick understanding of status.", "Example: opens executive dashboard.", "What it is: dashboards.") },
-  { id: "departments", name: "Departments", help: help("Organization departments and teams.", "Coordinates across the company map.", "Example: routes a request to Finance.", "What it is: department map.") },
+  {
+    id: "crm",
+    name: "CRM",
+    help: help("Клиенты и воронка.", "Консьерж понимает клиентов и сделки.", "Пример: смотрит открытые возможности.", "Что это: клиентская система."),
+  },
+  {
+    id: "erp",
+    name: "ERP",
+    help: help("Операции и ресурсы.", "Ответы отражают, как работает бизнес.", "Пример: смотрит сигналы склада.", "Что это: операционная система."),
+  },
+  {
+    id: "documents",
+    name: "Документы",
+    help: help("Файлы и папки компании.", "Быстро находит важные бумаги.", "Пример: открывает последнее предложение.", "Что это: библиотека документов."),
+  },
+  {
+    id: "knowledge",
+    name: "База знаний",
+    help: help("Утверждённые знания компании.", "Единые ответы для всех.", "Пример: использует политику возвратов.", "Что это: база знаний."),
+  },
+  {
+    id: "ai_registry",
+    name: "Реестр AI",
+    help: help("Каталог AI-специалистов.", "Консьерж находит нужного эксперта.", "Пример: приглашает AI продаж.", "Что это: реестр специалистов."),
+  },
+  {
+    id: "workflow_engine",
+    name: "Движок сценариев",
+    help: help("Движок бизнес-процессов.", "Запускает и ведёт сценарии.", "Пример: стартует онбординг.", "Что это: система сценариев."),
+  },
+  {
+    id: "analytics",
+    name: "Аналитика",
+    help: help("Метрики и тренды.", "Понятнее инсайты для решений.", "Пример: подсвечивает падение конверсии.", "Что это: аналитика."),
+  },
+  {
+    id: "calendar",
+    name: "Календарь",
+    help: help("Встречи и расписание.", "Надёжная поддержка планирования.", "Пример: готовит повестку на завтра.", "Что это: календарь."),
+  },
+  {
+    id: "tasks",
+    name: "Задачи",
+    help: help("Дела и назначения.", "Работа не останавливается.", "Пример: предлагает следующее действие владельцу.", "Что это: список задач."),
+  },
+  {
+    id: "marketplace",
+    name: "Маркетплейс",
+    help: help("Объявления и активность магазина.", "Поддерживает рост.", "Пример: отмечает горячее объявление.", "Что это: маркетплейс."),
+  },
+  {
+    id: "notifications",
+    name: "Уведомления",
+    help: help("Оповещения и сообщения.", "Важные новости доходят вовремя.", "Пример: напоминает о дедлайне.", "Что это: уведомления."),
+  },
+  {
+    id: "automation",
+    name: "Автоматизация",
+    help: help("Повторяемые автоматические действия.", "Меньше ручной рутины.", "Пример: запускает приветственную цепочку.", "Что это: автоматизация."),
+  },
+  {
+    id: "dashboards",
+    name: "Панели управления",
+    help: help("Визуальные бизнес-панели.", "Быстрое понимание статуса.", "Пример: открывает панель руководителя.", "Что это: панели управления."),
+  },
+  {
+    id: "departments",
+    name: "Отделы",
+    help: help("Отделы и команды организации.", "Координация по карте компании.", "Пример: направляет запрос в финансы.", "Что это: карта отделов."),
+  },
 ];
 
 export const ORCHESTRATION = [
-  { id: "delegate_tasks", name: "Delegate Tasks", help: help("Hands work to the right specialist.", "Owner stays focused.", "Example: asks Legal AI to review a contract.") },
-  { id: "invite_specialists", name: "Invite Specialists", help: help("Brings specialists into the conversation.", "Faster expert answers.", "Example: invites Finance AI for a cash question.") },
-  { id: "coordinate_team", name: "Coordinate Team", help: help("Aligns several specialists as a team.", "Smoother multi-expert work.", "Example: Sales + Marketing joint brief.") },
-  { id: "summarize_discussions", name: "Summarize Discussions", help: help("Turns long chats into clear takeaways.", "Saves reading time.", "Example: summary of a specialist huddle.") },
-  { id: "recommend_specialists", name: "Recommend Specialists", help: help("Suggests who should help next.", "Right expert, faster.", "Example: recommends Construction AI for permits.") },
-  { id: "create_executive_reports", name: "Create Executive Reports", help: help("Produces leadership-ready reports.", "Better visibility.", "Example: weekly organization digest.") },
-  { id: "prepare_meetings", name: "Prepare Meetings", help: help("Builds agendas and prep packs.", "Meetings start ready.", "Example: CEO briefing before standup.") },
-  { id: "monitor_ai_team", name: "Monitor AI Team", help: help("Watches the full specialist team.", "Fewer stalled tasks across agents.", "Example: notices a report still pending.") },
+  {
+    id: "delegate_tasks",
+    name: "Делегировать задачи",
+    help: help("Передаёт работу нужному специалисту.", "Владелец остаётся в фокусе.", "Пример: просит юридического AI проверить договор."),
+  },
+  {
+    id: "invite_specialists",
+    name: "Приглашать специалистов",
+    help: help("Подключает экспертов к разговору.", "Быстрее ответы экспертов.", "Пример: приглашает финансового AI по кассе."),
+  },
+  {
+    id: "coordinate_team",
+    name: "Координировать команду",
+    help: help("Согласует работу нескольких специалистов.", "Плавнее мультиэкспертная работа.", "Пример: совместный бриф продаж и маркетинга."),
+  },
+  {
+    id: "summarize_discussions",
+    name: "Суммировать обсуждения",
+    help: help("Превращает длинные чаты в выводы.", "Экономит время на чтение.", "Пример: итог совещания специалистов."),
+  },
+  {
+    id: "recommend_specialists",
+    name: "Рекомендовать специалистов",
+    help: help("Подсказывает, кто поможет дальше.", "Нужный эксперт быстрее.", "Пример: рекомендует AI строительства по разрешениям."),
+  },
+  {
+    id: "create_executive_reports",
+    name: "Создавать отчёты для руководства",
+    help: help("Готовит отчёты для лидеров.", "Лучшая прозрачность.", "Пример: еженедельный дайджест организации."),
+  },
+  {
+    id: "prepare_meetings",
+    name: "Готовить встречи",
+    help: help("Собирает повестки и пакеты подготовки.", "Встречи начинаются готовыми.", "Пример: бриф CEO перед стендапом."),
+  },
+  {
+    id: "monitor_ai_team",
+    name: "Следить за командой AI",
+    help: help("Наблюдает за всей командой специалистов.", "Меньше зависших задач у агентов.", "Пример: замечает, что отчёт ещё не готов."),
+  },
 ];
 
 export const PROACTIVE = [
-  { id: "morning_briefing", name: "Morning Briefing", help: help("Starts the day with a clear overview.", "Owner begins informed.", "Example: top 3 priorities at 8:00.") },
-  { id: "evening_summary", name: "Evening Summary", help: help("Closes the day with progress notes.", "Easy end-of-day clarity.", "Example: what moved and what waits.") },
-  { id: "business_insights", name: "Business Insights", help: help("Shares meaningful business patterns.", "Better situational awareness.", "Example: margin trend this week.") },
-  { id: "important_reminders", name: "Important Reminders", help: help("Surfaces time-sensitive items.", "Fewer missed moments.", "Example: contract renewal reminder.") },
-  { id: "upcoming_meetings", name: "Upcoming Meetings", help: help("Highlights meetings ahead.", "Better preparation.", "Example: agenda for the next call.") },
-  { id: "organization_highlights", name: "Organization Highlights", help: help("Shows notable company moments.", "Keeps leadership connected.", "Example: team milestone update.") },
-  { id: "performance_overview", name: "Performance Overview", help: help("Summarizes results clearly.", "Motivation and focus.", "Example: record week for Sales.") },
-  { id: "daily_digest", name: "Daily Digest", help: help("One daily package of essentials.", "Less noise, more signal.", "Example: compact noon digest.") },
-  { id: "opportunity_detection", name: "Opportunity Detection", help: help("Points to promising openings.", "Growth awareness.", "Example: marketplace demand spike.") },
+  {
+    id: "morning_briefing",
+    name: "Утренний бриф",
+    help: help("Начинает день с понятного обзора.", "Владелец стартует информированным.", "Пример: топ-3 приоритета в 8:00."),
+  },
+  {
+    id: "evening_summary",
+    name: "Вечерние итоги",
+    help: help("Завершает день заметками о прогрессе.", "Ясность в конце дня.", "Пример: что сдвинулось и что ждёт."),
+  },
+  {
+    id: "business_insights",
+    name: "Бизнес-инсайты",
+    help: help("Делится значимыми паттернами бизнеса.", "Лучше понимание ситуации.", "Пример: тренд маржи за неделю."),
+  },
+  {
+    id: "important_reminders",
+    name: "Важные напоминания",
+    help: help("Подсвечивает срочные пункты.", "Меньше упущенных моментов.", "Пример: напоминание о продлении договора."),
+  },
+  {
+    id: "upcoming_meetings",
+    name: "Предстоящие встречи",
+    help: help("Подчёркивает ближайшие встречи.", "Лучшая подготовка.", "Пример: повестка следующего звонка."),
+  },
+  {
+    id: "organization_highlights",
+    name: "События организации",
+    help: help("Показывает заметные моменты компании.", "Руководство остаётся на связи.", "Пример: обновление о вехе команды."),
+  },
+  {
+    id: "performance_overview",
+    name: "Обзор результатов",
+    help: help("Кратко суммирует результаты.", "Мотивация и фокус.", "Пример: рекордная неделя продаж."),
+  },
+  {
+    id: "daily_digest",
+    name: "Ежедневный дайджест",
+    help: help("Один пакет essentials за день.", "Меньше шума, больше сигнала.", "Пример: компактный дайджест в полдень."),
+  },
+  {
+    id: "opportunity_detection",
+    name: "Поиск возможностей",
+    help: help("Указывает на перспективные открытия.", "Осознанность роста.", "Пример: всплеск спроса на маркетплейсе."),
+  },
 ];
 
 export const OWNER_RELATIONSHIPS = [
-  { id: "only_when_asked", name: "Only When Asked", help: help("Speaks when asked.", "Quiet and respectful.", "Example: waits for owner prompts.") },
-  { id: "balanced", name: "Balanced", help: help("Helpful without overwhelming.", "Comfortable everyday support.", "Example: a few timely nudges.") },
-  { id: "highly_proactive", name: "Highly Proactive", help: help("Actively brings useful updates.", "Owner stays ahead.", "Example: morning and evening outreach.") },
-  { id: "executive_assistant", name: "Executive Assistant", help: help("Protects the owner’s time and priorities.", "Executive-grade support.", "Example: filters noise before it reaches the owner.") },
-  { id: "business_partner", name: "Business Partner", help: help("Thinks with the owner about outcomes.", "Collaborative decisions.", "Example: discusses strategy options.") },
-  { id: "daily_strategic_advisor", name: "Daily Strategic Advisor", help: help("Offers daily strategic perspective.", "Continuous leadership clarity.", "Example: daily focus recommendation.") },
+  {
+    id: "only_when_asked",
+    name: "Только по запросу",
+    help: help("Говорит, когда спрашивают.", "Тихо и уважительно.", "Пример: ждёт запросов владельца."),
+  },
+  {
+    id: "balanced",
+    name: "Сбалансированный",
+    help: help("Полезен, но не перегружает.", "Комфортная ежедневная поддержка.", "Пример: несколько своевременных подсказок."),
+  },
+  {
+    id: "highly_proactive",
+    name: "Очень проактивный",
+    help: help("Активно приносит полезные обновления.", "Владелец опережает события.", "Пример: утренние и вечерние касания."),
+  },
+  {
+    id: "executive_assistant",
+    name: "Помощник руководителя",
+    help: help("Защищает время и приоритеты владельца.", "Поддержка уровня руководства.", "Пример: отфильтровывает шум до владельца."),
+  },
+  {
+    id: "business_partner",
+    name: "Бизнес-партнёр",
+    help: help("Думает вместе с владельцем о результатах.", "Совместные решения.", "Пример: обсуждает варианты стратегии."),
+  },
+  {
+    id: "daily_strategic_advisor",
+    name: "Ежедневный стратег",
+    help: help("Даёт ежедневный стратегический взгляд.", "Постоянная ясность для лидерства.", "Пример: рекомендация фокуса на день."),
+  },
 ];
 
 export const RECOMMENDATIONS = [
-  { id: "recommend_specialists", name: "Recommend Specialists" },
-  { id: "recommend_workflows", name: "Recommend Workflows" },
-  { id: "recommend_dashboards", name: "Recommend Dashboards" },
-  { id: "recommend_knowledge", name: "Recommend Knowledge" },
-  { id: "recommend_automations", name: "Recommend Automations" },
-  { id: "recommend_marketplace_apps", name: "Recommend Marketplace Apps" },
-  { id: "recommend_vertical_expansion", name: "Recommend Vertical Expansion" },
+  { id: "recommend_specialists", name: "Рекомендовать специалистов" },
+  { id: "recommend_workflows", name: "Рекомендовать сценарии" },
+  { id: "recommend_dashboards", name: "Рекомендовать панели" },
+  { id: "recommend_knowledge", name: "Рекомендовать базу знаний" },
+  { id: "recommend_automations", name: "Рекомендовать автоматизации" },
+  { id: "recommend_marketplace_apps", name: "Рекомендовать приложения магазина" },
+  { id: "recommend_vertical_expansion", name: "Рекомендовать расширение вертикали" },
 ];
 
 export const GROUP_AI_INVITE_ROLES = [
-  "Lawyer",
-  "Accountant",
-  "Marketing",
+  "Юрист",
+  "Бухгалтер",
+  "Маркетинг",
   "HR",
-  "Medical",
-  "Finance",
-  "Analytics",
-  "Custom Specialists",
+  "Медицина",
+  "Финансы",
+  "Аналитика",
+  "Свои специалисты",
 ] as const;
 
 export const TEAM_OWNER_ACTIONS = [
-  "Open Chat",
-  "Assign Task",
-  "View Knowledge",
-  "View Memory",
-  "Pause Agent",
-  "Resume Agent",
-  "Edit Agent",
-  "Replace Agent",
-  "Remove Agent",
+  "Открыть чат",
+  "Назначить задачу",
+  "Открыть знания",
+  "Открыть память",
+  "Приостановить агента",
+  "Возобновить агента",
+  "Изменить агента",
+  "Заменить агента",
+  "Удалить агента",
 ] as const;
 
 export type ConciergeDraft = {

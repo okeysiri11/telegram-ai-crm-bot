@@ -1,6 +1,6 @@
 export const BUSINESS_ECOSYSTEM_STEPS = [
   "Business Ecosystem Framework",
-  "Universal Modules",
+  "Universal Модули",
   "Extension Model",
   "Business Ecosystem Registry",
   "Automotive Capabilities",
@@ -8,5 +8,5 @@ export const BUSINESS_ECOSYSTEM_STEPS = [
   "Beauty & Cafe Capabilities",
   "Crypto · Legal · Drone",
   "Architecture Compatibility",
-  "Create",
+  "Создать",
 ] as const;

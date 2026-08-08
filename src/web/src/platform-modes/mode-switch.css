@@ -1,0 +1,89 @@
+.ados-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--ew-border, #d0d4dc);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ew-surface, #fff) 88%, transparent);
+}
+
+.ados-mode-switch--compact {
+  transform: scale(0.92);
+  transform-origin: right center;
+}
+
+.ados-mode-btn {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--ew-muted, #5b6472);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.ados-mode-btn:hover {
+  background: color-mix(in srgb, var(--ew-border, #d0d4dc) 40%, transparent);
+}
+
+.ados-mode-btn--active {
+  background: color-mix(in srgb, var(--ew-surface, #fff) 100%, transparent);
+  color: var(--ew-fg, #111);
+  box-shadow: 0 0 0 1px var(--ew-border, #d0d4dc);
+}
+
+.ados-mode-btn--ai {
+  color: #0b7a3b;
+  box-shadow: 0 0 0 1px #34c75966, 0 0 8px #34c75933;
+}
+
+.ados-mode-btn--voice {
+  color: #0b5fff;
+}
+
+.ados-mode-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--ew-muted, #5b6472);
+}
+
+.ados-mode-indicator--ai {
+  color: #0b7a3b;
+}
+
+.ados-mode-indicator--voice {
+  color: #0b5fff;
+}
+
+.ados-mode-indicator--human {
+  color: var(--ew-muted, #5b6472);
+}
+
+.ados-mode-mic {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #0b5fff;
+  animation: ados-mic-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes ados-mic-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.45);
+    opacity: 1;
+  }
+}

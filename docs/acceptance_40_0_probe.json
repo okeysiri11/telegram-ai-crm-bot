@@ -1,0 +1,380 @@
+{
+  "generated_at": "2026-08-05T13:22:10.095110+00:00",
+  "startup": {
+    "/health": {
+      "url": "http://127.0.0.1:8080/health",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"suite\": \"production_readiness\", \"version\": \"v1\", \"checked_at\": \"2026-08-05T13:22:10.596239+00:00\", \"ready\": true, \"ok\": true, \"status\": \"healthy\", \"duration_ms\": 466.56, \"checks\": {\"startup\": {\"name\": \"startup\", \"status\": \"healthy\", \"ok\":"
+    },
+    "/ready": {
+      "url": "http://127.0.0.1:8080/ready",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"status\": \"ready\", \"ready\": true, \"checks\": {\"startup\": \"healthy\", \"database\": \"healthy\", \"redis\": \"healthy\", \"api\": \"healthy\", \"scheduler\": \"healthy\", \"telegram\": \"healthy\", \"market_sources\": \"healthy\", \"bidex_quote_parser\": \"healthy\"}, \""
+    }
+  },
+  "web_routes": [
+    {
+      "url": "http://127.0.0.1/login",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/auth/logout",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/dashboard",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/crm",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/crm?view=deals",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/crm?view=clients",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/crm?view=companies",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/tasks",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/calendar",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/ai-agents",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/knowledge",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/documents",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/analytics",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/notifications",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/settings",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/deals",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/clients",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/companies",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    },
+    {
+      "url": "http://127.0.0.1/reports",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>Enterprise Web Platform</title>\n    <script type=\"module\" crossorigin src=\"/asset"
+    }
+  ],
+  "api": [
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/customers",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"items\": [{\"customer_id\": \"a193e67c-2f62-4fcc-8cc4-25a7dcf7370e\", \"first_name\": \"\", \"last_name\": \"\", \"email\": \"\", \"phone\": \"\", \"segment\": \"cold\", \"intent_score\": 0.0, \"lifetime_value\": 0.0, \"preferences\": {}, \"tags\": [], \"owner_agent_id\": "
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/leads",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"items\": [{\"lead_id\": \"4a6f4425-1f46-4868-9c36-2d744fedd42e\", \"customer_id\": \"\", \"vehicle_id\": \"\", \"dealer_id\": \"\", \"source\": \"web\", \"status\": \"new\", \"score\": 20.0, \"assigned_agent_id\": \"\", \"notes\": \"\", \"metadata\": {}, \"created_at\": 178593"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/deals",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"items\": [{\"deal_id\": \"b5fc7842-64e1-465a-b46d-584c7da4c48f\", \"opportunity_id\": \"\", \"customer_id\": \"\", \"dealer_id\": \"\", \"vehicle_id\": \"\", \"stage\": \"prospect\", \"amount\": 0.0, \"probability\": 0.1, \"win\": null, \"owner_agent_id\": \"\", \"created_a"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/pipeline",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"stages\": {\"prospect\": [{\"deal_id\": \"b5fc7842-64e1-465a-b46d-584c7da4c48f\", \"opportunity_id\": \"\", \"customer_id\": \"\", \"dealer_id\": \"\", \"vehicle_id\": \"\", \"stage\": \"prospect\", \"amount\": 0.0, \"probability\": 0.1, \"win\": null, \"owner_agent_id\": "
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/tasks",
+      "method": "GET",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"items\": [{\"task_id\": \"cc42a707-b47c-4ecc-9d8a-1da35547404f\", \"title\": \"Call GlobeFly\", \"description\": \"\", \"customer_id\": \"\", \"lead_id\": \"\", \"deal_id\": \"\", \"assigned_agent_id\": \"\", \"status\": \"pending\", \"due_at\": null, \"created_at\": 1785936"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/leads",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "body_prefix": "{\"lead_id\": \"bc8a8072-11cb-4f86-ba31-6c0b2e198d00\", \"customer_id\": \"\", \"vehicle_id\": \"\", \"dealer_id\": \"\", \"source\": \"web\", \"status\": \"new\", \"score\": 20.0, \"assigned_agent_id\": \"\", \"notes\": \"\", \"metadata\": {}, \"created_at\": 1785936131.428403"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/leads",
+      "method": "POST",
+      "status": 500,
+      "ok": false,
+      "body_prefix": "500 Internal Server Error\n\nServer got itself in trouble"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/deals",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "body_prefix": "{\"deal_id\": \"57d69580-4a41-451b-96b0-3a0fdbb54623\", \"opportunity_id\": \"\", \"customer_id\": \"\", \"dealer_id\": \"\", \"vehicle_id\": \"\", \"stage\": \"prospect\", \"amount\": 0.0, \"probability\": 0.1, \"win\": null, \"owner_agent_id\": \"\", \"created_at\": 1785936"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/customers",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "body_prefix": "{\"customer_id\": \"f4e6e70e-b368-48b5-9d0d-a69c95b7c2dc\", \"first_name\": \"\", \"last_name\": \"\", \"email\": \"\", \"phone\": \"\", \"segment\": \"cold\", \"intent_score\": 0.0, \"lifetime_value\": 0.0, \"preferences\": {}, \"tags\": [], \"owner_agent_id\": \"\", \"create"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/tasks",
+      "method": "POST",
+      "status": 201,
+      "ok": true,
+      "body_prefix": "{\"task_id\": \"8463c873-8cb1-4d9f-9186-e5fea72b3a20\", \"title\": \"Follow up\", \"description\": \"\", \"customer_id\": \"\", \"lead_id\": \"\", \"deal_id\": \"\", \"assigned_agent_id\": \"\", \"status\": \"pending\", \"due_at\": null, \"created_at\": 1785936131.4574153}"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/v1/leads",
+      "method": "GET",
+      "status": 501,
+      "ok": false,
+      "body_prefix": "{\"success\": false, \"timestamp\": \"2026-08-05T13:22:11.465065+00:00\", \"request_id\": \"0f2edc26-373a-4dcf-a9ac-1084558a8426\", \"api_version\": \"v1\", \"contract_version\": \"1.0.0\", \"data\": null, \"errors\": [\"Endpoint reserved for v1 migration\"]}"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/v1/deals",
+      "method": "GET",
+      "status": 401,
+      "ok": false,
+      "body_prefix": "{\"error\": \"authentication_failed\", \"request_id\": \"43721c62-2ff1-4609-bfff-32d9c72e1650\", \"api_version\": \"v1\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8080/management/v1/system",
+      "method": "GET",
+      "status": 401,
+      "ok": false,
+      "body_prefix": "{\"success\": false, \"timestamp\": \"2026-08-05T13:22:11.649356+00:00\", \"request_id\": \"fb7120d4-1f79-4cbe-853d-a5917e7e1c2d\", \"api_version\": \"v1\", \"contract_version\": \"1.0.0\", \"data\": null, \"errors\": [\"Authentication required: provide Authoriza"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/v1/does-not-exist-zzzz",
+      "method": "GET",
+      "status": 404,
+      "ok": false,
+      "body_prefix": "404: Not Found"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/auto/v1/crm/leads/missing-id-zzzz",
+      "method": "GET",
+      "status": 404,
+      "ok": false,
+      "body_prefix": "404: Not Found"
+    }
+  ],
+  "bugs": [
+    {
+      "id": "ACC-40-001",
+      "severity": "Critical",
+      "area": "API/CRM leads",
+      "summary": "Invalid LeadSource returns HTTP 500 instead of 400",
+      "evidence": {
+        "url": "http://127.0.0.1:8080/api/auto/v1/crm/leads",
+        "method": "POST",
+        "status": 500,
+        "ok": false,
+        "body_prefix": "500 Internal Server Error\n\nServer got itself in trouble"
+      }
+    },
+    {
+      "id": "ACC-40-002",
+      "severity": "Major",
+      "area": "API/v1",
+      "summary": "GET /api/v1/leads is reserved 501; real leads live under /api/auto/v1/crm/leads",
+      "evidence": {
+        "url": "http://127.0.0.1:8080/api/v1/leads",
+        "method": "GET",
+        "status": 501,
+        "ok": false,
+        "body_prefix": "{\"success\": false, \"timestamp\": \"2026-08-05T13:22:11.465065+00:00\", \"request_id\": \"0f2edc26-373a-4dcf-a9ac-1084558a8426\", \"api_version\": \"v1\", \"contract_version\": \"1.0.0\", \"data\": null, \"errors\": [\"Endpoint reserved for v1 migration\"]}"
+      }
+    },
+    {
+      "id": "ACC-40-003",
+      "severity": "Critical",
+      "area": "Security/CRM",
+      "summary": "Auto CRM write endpoints accept unauthenticated POST (201) \u2014 not acceptable for commercial GlobeFly traffic without gateway auth",
+      "evidence": [
+        {
+          "url": "http://127.0.0.1:8080/api/auto/v1/crm/leads",
+          "method": "POST",
+          "status": 201,
+          "ok": true,
+          "body_prefix": "{\"lead_id\": \"bc8a8072-11cb-4f86-ba31-6c0b2e198d00\", \"customer_id\": \"\", \"vehicle_id\": \"\", \"dealer_id\": \"\", \"source\": \"web\", \"status\": \"new\", \"score\": 20.0, \"assigned_agent_id\": \"\", \"notes\": \"\", \"metadata\": {}, \"created_at\": 1785936131.428403"
+        },
+        {
+          "url": "http://127.0.0.1:8080/api/auto/v1/crm/deals",
+          "method": "POST",
+          "status": 201,
+          "ok": true,
+          "body_prefix": "{\"deal_id\": \"57d69580-4a41-451b-96b0-3a0fdbb54623\", \"opportunity_id\": \"\", \"customer_id\": \"\", \"dealer_id\": \"\", \"vehicle_id\": \"\", \"stage\": \"prospect\", \"amount\": 0.0, \"probability\": 0.1, \"win\": null, \"owner_agent_id\": \"\", \"created_at\": 1785936"
+        },
+        {
+          "url": "http://127.0.0.1:8080/api/auto/v1/crm/customers",
+          "method": "POST",
+          "status": 201,
+          "ok": true,
+          "body_prefix": "{\"customer_id\": \"f4e6e70e-b368-48b5-9d0d-a69c95b7c2dc\", \"first_name\": \"\", \"last_name\": \"\", \"email\": \"\", \"phone\": \"\", \"segment\": \"cold\", \"intent_score\": 0.0, \"lifetime_value\": 0.0, \"preferences\": {}, \"tags\": [], \"owner_agent_id\": \"\", \"create"
+        }
+      ]
+    },
+    {
+      "id": "ACC-40-004",
+      "severity": "Major",
+      "area": "WEB routing",
+      "summary": "Top-level /deals /clients /companies /reports are not App routes; SPA falls through to PlatformErrorPage 404 (nginx still returns 200 HTML shell)",
+      "evidence": {
+        "routes": [
+          "/deals",
+          "/clients",
+          "/companies",
+          "/reports"
+        ],
+        "canonical": "/crm?view=*"
+      }
+    },
+    {
+      "id": "ACC-40-005",
+      "severity": "Major",
+      "area": "WEB navigation",
+      "summary": "Enterprise shell nav still links some modules to /workspace/* while Ru/catalog use /crm /documents /analytics \u2014 path drift for operators",
+      "evidence": {
+        "shell": "/workspace/crm",
+        "catalog": "/crm"
+      }
+    },
+    {
+      "id": "ACC-40-006",
+      "severity": "Major",
+      "area": "WEB analytics/reports",
+      "summary": "/analytics mounts generic EnterpriseModulePage; dedicated /reports route missing (workspace shell only)",
+      "evidence": {
+        "analytics": "/analytics",
+        "reports": "/workspace/reports/weekly"
+      }
+    },
+    {
+      "id": "ACC-40-007",
+      "severity": "Major",
+      "area": "Marketing tags",
+      "summary": "No Google Tag Manager, GA4, or Meta Pixel integration found in frontend or docs",
+      "evidence": {
+        "search": "none"
+      }
+    },
+    {
+      "id": "ACC-40-008",
+      "severity": "Minor",
+      "area": "Email",
+      "summary": "SMTP connector exists but outbound email is not validated as configured for GlobeFly (SMTP_HOST may be empty)",
+      "evidence": {
+        "connector": "applications/enterprise_hub/integrations/connectors/smtp.py"
+      }
+    },
+    {
+      "id": "ACC-40-009",
+      "severity": "Cosmetic",
+      "area": "WEB shell",
+      "summary": "Enterprise City nav item marked comingSoon in enterpriseNav while other catalogs mark City GA",
+      "evidence": {
+        "file": "src/web/src/shell/enterprise/enterpriseNav.ts"
+      }
+    }
+  ]
+}

@@ -76,7 +76,7 @@ export function MissionControlLivePanel() {
       const obs = (await obsRes.json()) as Dict;
       const met = (await metRes.json()) as Dict;
       const log = (await logRes.json()) as Dict;
-      if (!mcRes.ok) throw new Error(String(mc.error || "Mission Control status failed"));
+      if (!mcRes.ok) throw new Error(String(mc.error || "Ошибка статуса миссион-контроля"));
       setMcStatus(mc);
       setObsHealth(obsRes.ok ? obs : null);
       setMetrics(metRes.ok ? met : null);
@@ -128,11 +128,11 @@ export function MissionControlLivePanel() {
           Ecosystems {ecoOk}/{WORKSPACE_HEALTH_PROBES.length}
         </Badge>
         <Button size="sm" variant="secondary" disabled={busy} onClick={() => void refresh()}>
-          Refresh status
+          Обновить status
         </Button>
         <Link to="/pilot">
           <Button size="sm" variant="secondary">
-            Pilot Dashboard
+            Pilot Панель управления
           </Button>
         </Link>
         <Link to="/pilot/production">
@@ -162,12 +162,12 @@ export function MissionControlLivePanel() {
         </Link>
         <Link to="/platform-builder/okr">
           <Button size="sm" variant="secondary">
-            Enterprise Goals
+            Enterprise Цели
           </Button>
         </Link>
         <Link to="/platform-builder/governance">
           <Button size="sm" variant="secondary">
-            Governance
+            Управление
           </Button>
         </Link>
       </div>
@@ -209,7 +209,7 @@ export function MissionControlLivePanel() {
             <li>Tenants probe: {tenants ? "ok" : "—"}</li>
           </ul>
         </Card>
-        <Card title="Organization / AI / API">
+        <Card title="Организация / AI / API">
           <ul className="eds-type-small space-y-1">
             <li>
               AI status:{" "}
@@ -252,7 +252,7 @@ export function MissionControlLivePanel() {
       </div>
 
       <Card title="Pilot organizations">
-        <Table headers={["Tenant", "Name", "Status"]}>
+        <Table headers={["Tenant", "Название", "Статус"]}>
           {tenantRows(tenants).map((t) => (
             <tr key={t.id} className="border-t border-[var(--ew-border)]">
               <td className="px-3 py-2 eds-type-small">{t.id}</td>
@@ -276,7 +276,7 @@ export function MissionControlLivePanel() {
         <ul className="eds-type-small space-y-1">
           <li>Sessions: {pilotSnap?.sessions ?? "—"}</li>
           <li>
-            Workflow completion:{" "}
+            Сценарий completion:{" "}
             {pilotSnap?.workflowCompletionRate != null ? `${pilotSnap.workflowCompletionRate}%` : "—"}
           </li>
           <li>AI samples: {pilotSnap?.aiResponseSamples ?? "—"}</li>
@@ -321,7 +321,7 @@ export function MissionControlLivePanel() {
       </Card>
 
       <Card title="Module status">
-        <Table headers={["Module", "Health", "Version", "Route"]}>
+        <Table headers={["Module", "Health", "Версия", "Route"]}>
           {moduleRegistry.healthSummary().map((h) => (
             <tr key={h.id} className="border-t border-[var(--ew-border)]">
               <td className="px-3 py-2">{h.name}</td>

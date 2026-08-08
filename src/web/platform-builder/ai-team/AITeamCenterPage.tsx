@@ -3,6 +3,8 @@ import { Badge, Button, Card, EmptyState, Input } from "@/ui";
 import { PlatformBuilderLayout } from "../layouts/PlatformBuilderLayout";
 import { PLATFORM_BUILDER_API } from "../types";
 import { AITeamCollaborationWorkspace } from "@/ai-team-collaboration";
+import { bu } from "../i18n/builderUiRu";
+import { builderDisplayName } from "@/i18n/platformGlossary";
 
 type TeamMember = {
   agent_id: string;
@@ -18,7 +20,7 @@ type TeamMember = {
   paused?: boolean;
 };
 
-type Dashboard = {
+type TeamDashboard = {
   title: string;
   organization_id: string;
   count: number;
@@ -31,20 +33,20 @@ type Dashboard = {
 };
 
 const ACTION_LABELS: Record<string, string> = {
-  open_chat: "Open Chat",
-  assign_task: "Assign Task",
-  view_knowledge: "View Knowledge",
-  view_memory: "View Memory",
-  pause_agent: "Pause Agent",
-  resume_agent: "Resume Agent",
-  edit_agent: "Edit Agent",
-  replace_agent: "Replace Agent",
-  remove_agent: "Remove Agent",
+  open_chat: "Открыть чат",
+  assign_task: "Назначить задачу",
+  view_knowledge: "Открыть знания",
+  view_memory: "Открыть память",
+  pause_agent: "Приостановить агента",
+  resume_agent: "Возобновить агента",
+  edit_agent: "Изменить агента",
+  replace_agent: "Заменить агента",
+  remove_agent: "Удалить агента",
 };
 
 export function AITeamCenterPage() {
   const [orgId, setOrgId] = useState("org_demo");
-  const [dash, setDash] = useState<Dashboard | null>(null);
+  const [dash, setDash] = useState<TeamDashboard | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -56,10 +58,10 @@ export function AITeamCenterPage() {
         `${PLATFORM_BUILDER_API}/ai-team/organizations/${encodeURIComponent(orgId)}/dashboard`,
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Could not load AI Team");
-      setDash(data as Dashboard);
+      if (!res.ok) throw new Error(data.error || "Не удалось загрузить команду AI");
+      setDash(data as TeamDashboard);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Load failed");
+      setMessage(e instanceof Error ? e.message : bu("loadFailed"));
     } finally {
       setBusy(false);
     }
@@ -74,7 +76,7 @@ export function AITeamCenterPage() {
     setMessage(null);
     try {
       const payload: Record<string, unknown> = {};
-      if (action === "assign_task") payload.task = "Owner-assigned follow-up";
+      if (action === "assign_task") payload.task = "Задача от владельца";
       if (action === "edit_agent") payload.name = undefined;
       const res = await fetch(
         `${PLATFORM_BUILDER_API}/ai-team/organizations/${encodeURIComponent(orgId)}/actions`,
@@ -85,11 +87,11 @@ export function AITeamCenterPage() {
         },
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Action failed");
-      setDash(data.dashboard as Dashboard);
-      setMessage(`${ACTION_LABELS[action] || action} completed`);
+      if (!res.ok) throw new Error(data.error || "Ошибка действия");
+      setDash(data.dashboard as TeamDashboard);
+      setMessage(`${ACTION_LABELS[action] || action} — выполнено`);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Action failed");
+      setMessage(e instanceof Error ? e.message : "Ошибка действия");
     } finally {
       setBusy(false);
     }
@@ -97,22 +99,22 @@ export function AITeamCenterPage() {
 
   return (
     <PlatformBuilderLayout
-      title="AI Team Center"
-      subtitle="All AI Specialists for the organization. Concierge manages. Specialists execute."
+      title={builderDisplayName("ai_team")}
+      subtitle="Все AI-специалисты организации. Консьерж управляет. Специалисты выполняют."
     >
       <div className="flex flex-wrap items-center gap-3">
-        <Badge>Operational</Badge>
-        <Badge>Unlimited Specialists</Badge>
-        <Badge>Group AI Foundation</Badge>
-        <Badge tone="success">Multi-Agent Workspace</Badge>
+        <Badge tone="success">{bu("ready")}</Badge>
+        <Badge>Без лимита специалистов</Badge>
+        <Badge>Групповой AI-чат</Badge>
+        <Badge>Мультиагентное пространство</Badge>
         <Input
           className="max-w-xs"
           value={orgId}
           onChange={(e) => setOrgId(e.target.value)}
-          placeholder="Organization ID"
+          placeholder="ID организации"
         />
         <Button disabled={busy} onClick={() => void load()}>
-          Refresh
+          {bu("refresh")}
         </Button>
       </div>
 
@@ -123,9 +125,9 @@ export function AITeamCenterPage() {
       {dash ? (
         <>
           <div className="flex flex-wrap gap-4 eds-type-small">
-            <span>Specialists: {dash.count}</span>
-            <span>Active: {dash.active}</span>
-            <span>Paused: {dash.paused}</span>
+            <span>Специалисты: {dash.count}</span>
+            <span>Активные: {dash.active}</span>
+            <span>На паузе: {dash.paused}</span>
           </div>
 
           <div className="eds-grid eds-grid--dashboard">
@@ -133,13 +135,13 @@ export function AITeamCenterPage() {
               dash.members.map((m) => (
                 <Card key={m.agent_id} title={`${m.avatar} ${m.name}`}>
                   <ul className="space-y-1 eds-type-small">
-                    <li>Profession: {m.profession}</li>
-                    <li>Specialization: {m.specialization}</li>
-                    <li>Status: {m.status}</li>
-                    <li>Current task: {m.current_task || "—"}</li>
-                    <li>Memory: {Math.round((m.memory_usage || 0) * 100)}%</li>
-                    <li>Last activity: {m.last_activity || "—"}</li>
-                    <li>Capabilities: {(m.capabilities || []).join(", ") || "—"}</li>
+                    <li>Назначение: {m.profession}</li>
+                    <li>Специализация: {m.specialization}</li>
+                    <li>Статус: {m.status}</li>
+                    <li>Текущая задача: {m.current_task || "—"}</li>
+                    <li>Память: {Math.round((m.memory_usage || 0) * 100)}%</li>
+                    <li>Активность: {m.last_activity || "—"}</li>
+                    <li>Навыки: {(m.capabilities || []).join(", ") || "—"}</li>
                   </ul>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {(dash.owner_actions || []).map((action) => (
@@ -158,9 +160,9 @@ export function AITeamCenterPage() {
             ) : (
               <div>
                 <EmptyState
-                  title="No AI specialists yet"
-                  description="AI Team Center is ready, but this organization doesn’t have specialists configured. Create your first agent in Builder Studio."
-                  actionLabel="Open Builder Studio Wizard"
+                  title="Пока нет AI-специалистов"
+                  description="Центр команды AI готов, но в организации ещё нет специалистов. Создайте первого агента в студии AI."
+                  actionLabel="Открыть мастер студии AI"
                   actionTo="/platform-builder/builder-studio?mode=wizard"
                   illustration="◇"
                 />
@@ -168,14 +170,14 @@ export function AITeamCenterPage() {
             )}
           </div>
 
-          <Card title="Group AI Chat Foundation">
-            <Badge>Architecture only</Badge>
+          <Card title="Основа группового AI-чата">
+            <Badge>Архитектура</Badge>
             <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">
               {(dash.group_ai_chat as { description?: string })?.description ||
-                "Owner invites specialists to discuss together."}
+                "Владелец приглашает специалистов для совместного обсуждения."}
             </p>
             <p className="mt-1 eds-type-caption">
-              Invite roles:{" "}
+              Роли для приглашения:{" "}
               {((dash.group_ai_chat as { invite_roles?: string[] })?.invite_roles || []).join(", ")}
             </p>
           </Card>
@@ -183,12 +185,12 @@ export function AITeamCenterPage() {
       ) : (
         <div>
           {busy ? (
-            <p className="eds-type-small">Loading AI Team Center…</p>
+            <p className="eds-type-small">Загрузка центра команды AI…</p>
           ) : (
             <EmptyState
-              title="AI Team Center"
-              description="This screen composes specialists for your organization. If you haven’t created agents yet, start with the Builder Studio wizard."
-              actionLabel="Create an Agent"
+              title={builderDisplayName("ai_team")}
+              description="Здесь собираются специалисты организации. Если агентов ещё нет — начните с мастера студии AI."
+              actionLabel="Создать агента"
               actionTo="/platform-builder/builder-studio?mode=wizard"
               illustration="◇"
             />

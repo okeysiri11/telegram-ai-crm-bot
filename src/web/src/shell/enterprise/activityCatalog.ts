@@ -1,6 +1,5 @@
 /**
- * Sprint 27.1 — Activity Center seed data (right panel).
- * Complements live-ops SEED_ACTIVITY without duplicating engines.
+ * Sprint 27.1 / 41.3 — Activity Center seed (Russian-first; locale-aware helpers).
  */
 
 export type ActivityTabId = "recent" | "notifications" | "tasks" | "ai" | "system";
@@ -14,94 +13,104 @@ export type ActivityEntry = {
   tone?: "ok" | "warn" | "info";
 };
 
-export const ACTIVITY_TABS: { id: ActivityTabId; label: string }[] = [
-  { id: "recent", label: "Recent Activity" },
-  { id: "notifications", label: "Notifications" },
-  { id: "tasks", label: "Running Tasks" },
-  { id: "ai", label: "AI Messages" },
-  { id: "system", label: "System Events" },
+/** Tab label i18n keys (UI uses t()). */
+export const ACTIVITY_TAB_I18N: Record<ActivityTabId, string> = {
+  recent: "activity.tab.recent",
+  notifications: "activity.tab.notifications",
+  tasks: "activity.tab.tasks",
+  ai: "activity.tab.ai",
+  system: "activity.tab.system",
+};
+
+export const ACTIVITY_TABS: { id: ActivityTabId; labelKey: string }[] = [
+  { id: "recent", labelKey: "activity.tab.recent" },
+  { id: "notifications", labelKey: "activity.tab.notifications" },
+  { id: "tasks", labelKey: "activity.tab.tasks" },
+  { id: "ai", labelKey: "activity.tab.ai" },
+  { id: "system", labelKey: "activity.tab.system" },
 ];
 
 const ago = (m: number) => new Date(Date.now() - m * 60_000).toISOString();
 
+/** Default Russian seed — shown when live feeds empty. */
 export const SHELL_ACTIVITY_SEED: ActivityEntry[] = [
   {
     id: "r1",
     tab: "recent",
-    title: "Dashboard opened",
-    detail: "Command Center session",
+    title: "Открыта главная",
+    detail: "Сессия рабочего пространства",
     at: ago(1),
     tone: "info",
   },
   {
     id: "r2",
     tab: "recent",
-    title: "CRM pipeline sync",
-    detail: "186 active deals",
+    title: "Синхронизация CRM",
+    detail: "Активные сделки обновлены",
     at: ago(8),
     tone: "ok",
   },
   {
     id: "n1",
     tab: "notifications",
-    title: "Escalation waiting",
-    detail: "Control Tower · 2 items",
+    title: "Ожидает согласования",
+    detail: "2 элемента требуют внимания",
     at: ago(12),
     tone: "warn",
   },
   {
     id: "n2",
     tab: "notifications",
-    title: "Invite accepted",
-    detail: "Pilot workspace",
+    title: "Приглашение принято",
+    detail: "Новый участник в пространстве",
     at: ago(40),
     tone: "ok",
   },
   {
     id: "t1",
     tab: "tasks",
-    title: "Sales Specialist",
-    detail: "Running · brief generation",
+    title: "Фоновая задача",
+    detail: "Выполняется · генерация сводки",
     at: ago(3),
     tone: "info",
   },
   {
     id: "t2",
     tab: "tasks",
-    title: "Risk Monitor",
-    detail: "Running · health probes",
+    title: "Проверка состояния",
+    detail: "Выполняется · мониторинг",
     at: ago(5),
     tone: "ok",
   },
   {
     id: "a1",
     tab: "ai",
-    title: "Advisor",
-    detail: "Morning priorities ready",
+    title: "AI-консьерж",
+    detail: "Приоритеты на сегодня готовы",
     at: ago(6),
     tone: "info",
   },
   {
     id: "a2",
     tab: "ai",
-    title: "Concierge",
-    detail: "Suggested CRM → Analytics route",
+    title: "Рекомендация AI",
+    detail: "Откройте CRM → Отчёты",
     at: ago(15),
     tone: "ok",
   },
   {
     id: "s1",
     tab: "system",
-    title: "Providers",
-    detail: "Gateway heartbeat OK",
+    title: "Провайдеры",
+    detail: "Сигнал среды в норме",
     at: ago(2),
     tone: "ok",
   },
   {
     id: "s2",
     tab: "system",
-    title: "Build",
-    detail: "enterprise-web-platform ready",
+    title: "Готовность",
+    detail: "Платформа готова к работе",
     at: ago(20),
     tone: "info",
   },

@@ -35,14 +35,14 @@ export function CollaborativeAIStudio() {
     () => ({
       shortDescription: COLLAB_STEPS[step],
       detailedExplanation:
-        "Collaborative AI lets specialists work as one organization. The Concierge orchestrates discussion, delegates work, and delivers a unified answer.",
+        "Совместная работа AI lets specialists work as one organization. The Concierge orchestrates discussion, delegates work, and delivers a unified answer.",
       example: `Example: complete «${COLLAB_STEPS[step]}».`,
       popup: { title: COLLAB_STEPS[step], body: "Enterprise Collective Intelligence." },
       tooltip: COLLAB_STEPS[step],
       purpose: "Coordinate AI Specialists",
       benefits: "Faster, safer cross-domain decisions",
       typicalUse: "Complex organizational recommendations",
-      businessValue: "Foundation for AI Operations Center and AI City",
+      businessValue: "Foundation for Центр операций AI and AI City",
     }),
     [step],
   );
@@ -55,7 +55,7 @@ export function CollaborativeAIStudio() {
       body: JSON.stringify({ owner_id: "owner" }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start wizard");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать wizard");
     setWizardId(data.session_id);
     return data.session_id as string;
   }
@@ -87,7 +87,7 @@ export function CollaborativeAIStudio() {
       await patchWizard(next);
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -267,14 +267,14 @@ export function CollaborativeAIStudio() {
         { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" },
       );
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
       if (body.ai_team?.team_id) setTeam(body.ai_team);
       if (body.collaborative_session?.session_id) {
         setCollabSessionId(body.collaborative_session.session_id);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -284,7 +284,7 @@ export function CollaborativeAIStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Collaborative AI"
+      title="Совместная работа AI"
       subtitle="Enterprise Collective Intelligence — Concierge-orchestrated specialist teams."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -332,9 +332,9 @@ export function CollaborativeAIStudio() {
                     </Button>
                   ))}
                 </div>
-                <p className="eds-type-small opacity-70">Concierge: Organization Concierge (orchestrator)</p>
+                <p className="eds-type-small opacity-70">Concierge: Организация Concierge (orchestrator)</p>
                 <Button disabled={busy} onClick={() => void createTeam()}>
-                  Create AI Team
+                  Создать AI Team
                 </Button>
                 {team ? (
                   <pre className="overflow-auto rounded-md border border-[var(--eds-border)] p-3 eds-type-caption">
@@ -350,7 +350,7 @@ export function CollaborativeAIStudio() {
           ) : null}
 
           {step === 1 ? (
-            <Card title="Role Assignment">
+            <Card title="Роль Assignment">
               <Button disabled={busy || !team} onClick={() => void assignRoles()}>
                 Assign roles
               </Button>
@@ -422,7 +422,7 @@ export function CollaborativeAIStudio() {
           ) : null}
 
           {step === 4 ? (
-            <Card title="Shared Knowledge">
+            <Card title="Shared База знаний">
               <Button disabled={busy || !collabSessionId} onClick={() => void runKnowledge()}>
                 Exchange findings
               </Button>
@@ -464,14 +464,14 @@ export function CollaborativeAIStudio() {
           ) : null}
 
           {step === 6 ? (
-            <Card title="Executive Summary">
+            <Card title="Executive Итоги">
               <Button disabled={busy || !collabSessionId} onClick={() => void loadReport()}>
                 Prepare report
               </Button>
               {report ? (
                 <dl className="mt-3 space-y-2 eds-type-small">
                   <div>
-                    <dt className="opacity-60">Executive Summary</dt>
+                    <dt className="opacity-60">Executive Итоги</dt>
                     <dd>{String(report.executive_summary)}</dd>
                   </div>
                   <div>
@@ -536,7 +536,7 @@ export function CollaborativeAIStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="AI Operations Center Foundation">
+            <Card title="Центр операций AI Foundation">
               <Button disabled={busy} onClick={() => void loadOps()}>
                 Load visual foundation
               </Button>
@@ -560,9 +560,9 @@ export function CollaborativeAIStudio() {
           ) : null}
 
           {step === 10 ? (
-            <Card title="Create — Register Collective Intelligence">
+            <Card title="Создать — зарегистрировать Collective Intelligence">
               <p className="eds-type-small mb-3">
-                Registers AI Team, Collaborative Session, Decision Engine, and Knowledge Exchange.
+                Registers AI Team, Collaborative Session, Decision Engine, and База знаний Exchange.
               </p>
               <Button disabled={busy} onClick={() => void runCreate()}>
                 Register
@@ -586,13 +586,13 @@ export function CollaborativeAIStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= COLLAB_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

@@ -2,7 +2,8 @@
 
 **Effective from:** Sprint 38.4  
 **Baseline:** `v0.9.4-rc1` / branch `release/0.9.4`  
-**Working branch:** `develop`
+**Working branch:** `develop`  
+**Execution modes (Sprint 39.0+):** see [`docs/DEVELOPMENT_EXECUTION_POLICY.md`](DEVELOPMENT_EXECUTION_POLICY.md)
 
 This policy protects the Release Candidate platform. Feature sprints build **on top of**
 the frozen baseline. They must not casually rewrite architecture, rename public APIs,

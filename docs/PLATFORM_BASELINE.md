@@ -16,6 +16,7 @@ Do not edit casually — update only in an infrastructure sprint.
 | Tag | `v0.9.4-rc1` |
 | Release branch | `release/0.9.4` |
 | Working branch | `develop` |
+| Freeze commit | `9fb65dddcca64599f7b57c97d281f271069f4454` |
 | Pre-freeze tip (before freeze commit) | `574d168460f517b893fbb20d19c920f142a67e8d` |
 
 ---

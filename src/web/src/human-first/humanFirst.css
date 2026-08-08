@@ -1,0 +1,33 @@
+/* Sprint 42.3 — Human-First Auto */
+
+.hf-ai-bar .hf-ai-input {
+  min-height: 2.75rem;
+}
+
+.hf-mic-btn.is-listening {
+  animation: hf-pulse 1.2s ease-in-out infinite;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--eds-danger, #c44) 35%, transparent);
+}
+
+@keyframes hf-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+.hf-chip {
+  background: var(--eds-surface, transparent);
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.hf-unified-hero {
+  max-width: 52rem;
+}
+
+.hf-auto-landing[data-experience-mode="simple"] .hf-quick-actions {
+  margin-bottom: 1rem;
+}

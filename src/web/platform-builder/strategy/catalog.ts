@@ -1,12 +1,12 @@
 export const STRATEGY_STEPS = [
-  "Strategy Engine Core",
+  "Движок стратегии Core",
   "Data Sources",
-  "Strategic Overview",
+  "Strategic Обзор",
   "Strategic Priorities",
   "Executive Recommendations",
   "Enterprise Scorecard",
   "Executive Timeline",
   "Decision Support",
   "Performance",
-  "Create",
+  "Создать",
 ] as const;

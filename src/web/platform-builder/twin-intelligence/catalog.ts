@@ -1,5 +1,5 @@
 export const TWIN_INTELLIGENCE_STEPS = [
-  "Digital Twin Intelligence",
+  "Интеллект цифрового двойника",
   "Scenario Analysis",
   "What-If Engine",
   "Impact Analysis",
@@ -8,5 +8,5 @@ export const TWIN_INTELLIGENCE_STEPS = [
   "Recommendation Engine",
   "Scenario Comparison",
   "Performance",
-  "Create",
+  "Создать",
 ] as const;

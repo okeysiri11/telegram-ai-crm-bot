@@ -136,7 +136,7 @@ export function KnowledgeModulePage() {
   return (
     <BusinessModuleShell
       title="Знания"
-      subtitle="База знаний · wiki · документация · семантический и AI-поиск"
+      subtitle="Knowledge · wiki · документация · семантический и AI-поиск"
       tabs={[...TABS]}
       activeTab={active}
       onTab={setTab}

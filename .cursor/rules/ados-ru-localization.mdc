@@ -1,0 +1,52 @@
+---
+description: Forbid hardcoded English UI in production surfaces
+globs: src/web/**/*.{tsx,ts},platform-builder/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# RU-First UI Localization (Sprint 42.5)
+
+## Rule
+
+A new screen **must not** ship to Production with any English user-facing string
+(except brand/model acronyms: AI, CRM, ERP, API, MCP, JWT, OAuth, OpenAI, Anthropic, Gemini, Telegram, WhatsApp).
+
+## Required
+
+- Use `term()` / `localizeLabel()` / `builderDisplayName()` from `@/i18n/platformGlossary`
+- Use `bu()` from `platform-builder/i18n/builderUiRu` for builder chrome
+- Put shared terms in `platformGlossary.ts` (alias `platformGlossary.ru.ts`)
+
+## Forbidden
+
+```tsx
+// ❌
+<Button>Create</Button>
+<h1>Dashboard</h1>
+title="Coming Soon"
+
+// ✅
+<Button>{term("create")}</Button>
+<h1>{term("dashboard")}</h1>
+title={term("comingSoon")}
+```
+
+## Never auto-replace short English tokens in source
+
+Do **not** global-replace `Create`, `Type`, `Name`, `Preview`, etc. inside the codebase —
+this corrupts identifiers and HTTP headers (`Content-Type`).
+
+## Gate
+
+Before merge of UI work:
+
+```bash
+cd src/web && node scripts/localization_audit.mjs
+```
+
+Critical surfaces (Concierge, AI Builder, AI Team, Framework, glossary) must report:
+
+- English strings: 0
+- Hardcoded English: 0
+- Missing translation: 0
+- Localization coverage: 100%

@@ -1,0 +1,83 @@
+/* Sprint 42.8 — Universal Vertical Workspace shell */
+
+.uvw-shell {
+  display: grid;
+  grid-template-columns: minmax(12rem, 15rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+  min-height: 60vh;
+}
+
+.uvw-side {
+  position: sticky;
+  top: 0.5rem;
+  border: 1px solid var(--ew-border, var(--eds-border));
+  border-radius: 0.85rem;
+  background: var(--eds-surface);
+  padding: 0.85rem;
+}
+
+.uvw-side-head {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.65rem;
+  border-bottom: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+}
+
+.uvw-side-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.uvw-side-link {
+  display: block;
+  border-radius: 0.55rem;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--eds-text);
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+
+.uvw-side-link:hover {
+  background: color-mix(in oklab, var(--eds-primary) 8%, transparent);
+}
+
+.uvw-side-link.is-active {
+  background: color-mix(in oklab, var(--eds-primary) 14%, transparent);
+  color: var(--eds-primary);
+  font-weight: 650;
+}
+
+.uvw-side-foot {
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid color-mix(in oklab, var(--eds-border) 80%, transparent);
+}
+
+.uvw-main {
+  min-width: 0;
+}
+
+.uvw-switcher {
+  border: 1px solid var(--ew-border, var(--eds-border));
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--eds-surface) 88%, transparent);
+  padding: 0.35rem 0.55rem;
+}
+
+@media (max-width: 900px) {
+  .uvw-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .uvw-side {
+    position: static;
+  }
+
+  .uvw-side-nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}

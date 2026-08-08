@@ -29,7 +29,7 @@ export function IntelligenceEngineStudio() {
     () => ({
       shortDescription: INTELLIGENCE_STEPS[step],
       detailedExplanation:
-        "Visual Intelligence Engine analyzes verified platform events and produces visual recommendations. It never changes business logic or generates business events.",
+        "Движок визуальной аналитики analyzes verified platform events and produces visual recommendations. It never changes business logic or generates business events.",
       example: `Example: complete «${INTELLIGENCE_STEPS[step]}».`,
       popup: { title: INTELLIGENCE_STEPS[step], body: "Enterprise visual analytics." },
       tooltip: INTELLIGENCE_STEPS[step],
@@ -49,7 +49,7 @@ export function IntelligenceEngineStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -66,7 +66,7 @@ export function IntelligenceEngineStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -79,10 +79,10 @@ export function IntelligenceEngineStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/intelligence/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -104,10 +104,10 @@ export function IntelligenceEngineStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -115,7 +115,7 @@ export function IntelligenceEngineStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Visual Intelligence Engine"
+      title="Движок визуальной аналитики"
       subtitle="Patterns · Anomalies · Health · Recommendations — visual analytics only, no business events."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -137,7 +137,7 @@ export function IntelligenceEngineStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Visual Intelligence Engine">
+            <Card title="Движок визуальной аналитики">
               <Button disabled={busy} onClick={() => void load("engine", setOverview)}>
                 Load engine
               </Button>
@@ -275,9 +275,9 @@ export function IntelligenceEngineStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create — Register Intelligence Stack">
+            <Card title="Создать — зарегистрировать стек интеллекта">
               <p className="eds-type-small mb-3">
-                Registers Visual Intelligence Engine, Insight Registry, Analytics Registry, and
+                Registers Движок визуальной аналитики, Insight Registry, Аналитика Registry, and
                 Recommendation Registry.
               </p>
               <Button disabled={busy} onClick={() => void runCreate()}>
@@ -305,13 +305,13 @@ export function IntelligenceEngineStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= INTELLIGENCE_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

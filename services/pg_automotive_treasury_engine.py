@@ -143,7 +143,7 @@ class AutomotiveTreasuryEngineV1:
             row = await AutomotiveTreasuryRepository(session).get_active_sheet(tenant_id=tenant_id)
         if row is None:
             raise AutomotiveTreasuryEngineError(
-                "Dealer rates not configured. Update rates in the Telegram dealer channel."
+                "Курсы дилера пока не настроены."
             )
         return AutomotiveTreasuryEngineV1._sheet_snapshot(row)
 
@@ -274,7 +274,7 @@ class AutomotiveTreasuryEngineV1:
             row = await AutomotiveTreasuryRepository(session).get_active_sheet(tenant_id=tenant_id)
         if row is None:
             raise AutomotiveTreasuryEngineError(
-                "Dealer rates not configured. Update rates in the Telegram dealer channel."
+                "Курсы дилера пока не настроены."
             )
         rates = AutomotiveTreasuryEngineV1._rates_from_sheet(row)
         return AutomotiveTreasuryEngineV1.calculate_equivalents(

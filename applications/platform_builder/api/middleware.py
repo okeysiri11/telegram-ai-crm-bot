@@ -32,6 +32,10 @@ def _allow_header_auth() -> bool:
 
 @web.middleware
 async def auth_middleware(request: web.Request, handler):
+    # Preserve principal set by outer middlewares (e.g. auto-marketplace auth).
+    prior_principal = request.get("principal")
+    prior_role = request.get("platform_role")
+
     request["principal"] = None
     request["platform_role"] = None
     request["auth_source"] = None
@@ -42,6 +46,10 @@ async def auth_middleware(request: web.Request, handler):
     has_live_creds = auth_header.startswith("Bearer ") or bool(api_key)
 
     if has_live_creds:
+        bearer = auth_header[7:].strip() if auth_header.lower().startswith("bearer ") else ""
+        # Opaque ISAM tokens look like "access_<uuid>" — not JWT (no dots). Treating them as
+        # hard JWT failures caused SPA login → 401 storm → logout → redirect loop (Sprint 40.4).
+        opaque_bearer = bool(bearer) and bearer.count(".") != 2 and not api_key
         try:
             from platform_identity.identity_service import identity_service
 
@@ -52,6 +60,13 @@ async def auth_middleware(request: web.Request, handler):
             request["auth_source"] = "jwt_or_api_key"
             return await handler(request)
         except Exception as exc:
+            if opaque_bearer:
+                logger.info("platform_builder_skip_non_jwt_bearer: %s", exc)
+                # Restore outer principal so CRM mutating checks still see authenticated ISAM session.
+                request["principal"] = prior_principal
+                request["platform_role"] = prior_role
+                request["auth_source"] = "passthrough_non_jwt"
+                return await handler(request)
             logger.info("platform_builder_live_auth_failed: %s", exc)
             return web.json_response(
                 {"success": False, "error": "authentication_required", "detail": str(exc)},
@@ -73,6 +88,13 @@ async def auth_middleware(request: web.Request, handler):
         request["principal"] = header_principal
         request["platform_role"] = header_role
         request["auth_source"] = "header_compat"
+        return await handler(request)
+
+    # Restore any outer principal when no builder-level credentials were supplied.
+    if prior_principal is not None:
+        request["principal"] = prior_principal
+        request["platform_role"] = prior_role
+        request["auth_source"] = "outer_middleware"
         return await handler(request)
 
     # Unauthenticated — handlers that need roles continue to see None (same as before)

@@ -18,21 +18,21 @@ describe("Sprint 27.1 enterprise shell catalogs", () => {
   it("exposes required sidebar sections", () => {
     const labels = ENTERPRISE_SHELL_NAV.map((n) => n.label);
     for (const required of [
-      "Dashboard",
+      "Панель управления",
       "CRM",
       "ERP",
-      "Projects",
-      "AI Studio",
-      "AI Agents",
-      "Knowledge Base",
-      "Documents",
-      "Analytics",
-      "Marketplace",
-      "Automation",
-      "Integrations",
-      "Security",
-      "Enterprise City",
-      "Settings",
+      "Проекты",
+      "Студия AI",
+      "AI-агенты",
+      "База знаний",
+      "Документы",
+      "Аналитика",
+      "Маркетплейс",
+      "Автоматизация",
+      "Интеграции",
+      "Безопасность",
+      "Корпоративный город",
+      "Настройки",
     ]) {
       expect(labels).toContain(required);
     }

@@ -14,6 +14,8 @@ export { BottomDock } from "./BottomDock";
 export { RuntimeHealthWidget } from "./RuntimeHealthWidget";
 export { useRuntimeHealth } from "./useRuntimeHealth";
 export { shellModuleRegistry, SHELL_MODULE_REGISTRY_VERSION } from "./shellModuleRegistry";
+export { useAdaptiveShellStore, ADAPTIVE_SHELL_KEY, normalizeLayoutRole } from "./adaptiveShellStore";
+export type { PanelMode, AdaptiveLayoutSnapshot, LayoutRoleKey } from "./adaptiveShellStore";
 export { useShellPreferences, SHELL_PREFS_KEY } from "./shellPreferencesStore";
 export { enterpriseShellRuntime } from "./enterpriseShellRuntime";
 export { SHELL_QUICK_ACTIONS, executeShellQuickAction } from "./shellQuickActions";

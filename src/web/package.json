@@ -5,10 +5,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:owner": "VITE_WORKSPACE_SLOT=owner VITE_STRICT_PORT=1 VITE_DEV_ROLE_SWITCHER=true PORT=3000 vite --port 3000",
+    "dev:travel": "VITE_WORKSPACE_SLOT=travel VITE_STRICT_PORT=1 PORT=3001 vite --port 3001",
+    "dev:crypto": "VITE_WORKSPACE_SLOT=crypto VITE_STRICT_PORT=1 PORT=3002 vite --port 3002",
+    "dev:build": "VITE_WORKSPACE_SLOT=build VITE_STRICT_PORT=1 PORT=3003 vite --port 3003",
+    "dev:drone": "VITE_WORKSPACE_SLOT=drone VITE_STRICT_PORT=1 PORT=3004 vite --port 3004",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "tsc -b --pretty false"
+    "lint": "tsc -b --pretty false",
+    "typecheck": "tsc -b --pretty false",
+    "audit:i18n": "node scripts/localization_audit.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

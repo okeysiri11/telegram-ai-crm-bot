@@ -1,11 +1,9 @@
 /**
- * AI Builder Studio — Sprint 32.8.
- * Constructor UX over existing AI Team / Workflow / catalogs.
- * No new Builder / Workflow Engine / AI Core.
+ * Sprint 42.4 — AI Builder Studio hub (4 крупные карточки) + секции на русском.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Input } from "@/ui";
 import { PlatformBuilderLayout } from "../../platform-builder/layouts/PlatformBuilderLayout";
 import { PLATFORM_BUILDER_API } from "../../platform-builder/types";
@@ -13,8 +11,8 @@ import { AIBuilderWizard } from "../../platform-builder/ai-builder/AIBuilderWiza
 import { useLiveEnterprise } from "@/live-ops";
 import { deriveWorkflowAutomation } from "@/enterprise-workflow";
 import { telemetry } from "@/integrations/telemetry";
+import { term } from "@/i18n/platformGlossary";
 import {
-  STUDIO_HOME_CARDS,
   DOMAIN_SKILL_PACKS,
   PROMPT_LIBRARY,
   ECOSYSTEM_TEMPLATES,
@@ -25,6 +23,7 @@ import {
   PRIORITIES,
   BUSINESS_WORKFLOW_TEMPLATES,
   studioCatalogStats,
+  HUB_CARDS,
   type StudioSectionId,
   type PromptKind,
 } from "./studioCatalog";
@@ -49,15 +48,15 @@ type Dashboard = {
 };
 
 const SECTIONS: Array<{ id: StudioSectionId; label: string }> = [
-  { id: "home", label: "Home" },
-  { id: "team", label: "AI Team" },
-  { id: "workflow", label: "Workflow" },
-  { id: "skills", label: "Skills" },
-  { id: "prompts", label: "Prompts" },
-  { id: "templates", label: "Templates" },
-  { id: "integrations", label: "Integrations" },
-  { id: "knowledge", label: "Knowledge" },
-  { id: "wizard", label: "Wizard" },
+  { id: "home", label: "Главная" },
+  { id: "team", label: term("aiTeam") },
+  { id: "workflow", label: term("workflow") },
+  { id: "skills", label: "Навыки" },
+  { id: "prompts", label: "Подсказки" },
+  { id: "templates", label: "Шаблоны" },
+  { id: "integrations", label: "Интеграции" },
+  { id: "knowledge", label: term("knowledge") },
+  { id: "wizard", label: "Мастер агента" },
 ];
 
 export function AIBuilderStudioPage() {
@@ -85,22 +84,24 @@ export function AIBuilderStudioPage() {
 
   return (
     <PlatformBuilderLayout
-      title="AI Builder Studio"
-      subtitle="Собирайте платформу как конструктор: AI Team, Workflow, Skills, Prompts и Templates — без нового Builder Engine."
+      title="Студия AI-конструктора"
+      subtitle="Четыре понятных направления: консьерж, команда AI, настройки и интеграции."
     >
-      <div className="abs-studio eds-anim-fade">
-        <nav className="abs-tabs" aria-label="Builder Studio sections">
-          {SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`abs-tab${section === s.id ? " is-active" : ""}`}
-              onClick={() => go(s.id)}
-            >
-              {s.label}
-            </button>
-          ))}
-        </nav>
+      <div className="abs-studio eds-anim-fade pb-studio" data-testid="ai-builder-studio-ru">
+        {section !== "home" ? (
+          <nav className="abs-tabs" aria-label="Разделы конструктора">
+            {SECTIONS.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                className={`abs-tab${section === s.id ? " is-active" : ""}`}
+                onClick={() => go(s.id)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </nav>
+        ) : null}
 
         {section === "home" ? <BuilderHome onOpen={go} /> : null}
         {section === "team" ? <TeamBuilderPanel /> : null}
@@ -111,9 +112,9 @@ export function AIBuilderStudioPage() {
         {section === "integrations" ? <IntegrationsPanel /> : null}
         {section === "knowledge" ? <KnowledgePanel /> : null}
         {section === "wizard" ? (
-          <Card title="Classic AI Builder Wizard" className="abs-card">
+          <Card title="Мастер создания AI-агента" className="abs-card pb-card">
             <p className="eds-type-small text-[var(--eds-text-muted)] mb-3">
-              Существующий wizard создания агентов — без изменений архитектуры.
+              Единый мастер: имя → описание → назначение → навыки → инструменты → права → модули → тест → готово.
             </p>
             <AIBuilderWizard embedded />
           </Card>
@@ -124,56 +125,40 @@ export function AIBuilderStudioPage() {
 }
 
 function BuilderHome({ onOpen }: { onOpen: (id: StudioSectionId) => void }) {
-  const { snapshot } = useLiveEnterprise(true);
-  const wf = useMemo(() => deriveWorkflowAutomation(snapshot), [snapshot]);
-  const [teamCount, setTeamCount] = useState(0);
+  const navigate = useNavigate();
   const catalog = studioCatalogStats();
-
-  useEffect(() => {
-    void fetch(`${PLATFORM_BUILDER_API}/ai-team/organizations/org_demo/dashboard`)
-      .then((r) => r.json())
-      .then((d) => setTeamCount(Number(d.count) || 0))
-      .catch(() => setTeamCount(0));
-  }, []);
 
   return (
     <div className="space-y-4">
-      <Card title="Builder Dashboard" className="abs-dash">
-        <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5 eds-type-small">
-          <li>
-            <Badge tone="success">AI {teamCount || catalog.professions}</Badge>
-          </li>
-          <li>
-            <Badge>Workflow {wf.templates.length}</Badge>
-          </li>
-          <li>
-            <Badge>Skills {catalog.skills}</Badge>
-          </li>
-          <li>
-            <Badge>Prompts {catalog.prompts}</Badge>
-          </li>
-          <li>
-            <Badge>Templates {catalog.templates}</Badge>
-          </li>
-        </ul>
+      <Card title="С чего начать" className="pb-card">
+        <p className="eds-type-body text-[var(--eds-text-muted)]">
+          Выберите одно направление. Настройка AI Консьержа обычно занимает меньше 5 минут.
+        </p>
+        <p className="mt-2 eds-type-helper">
+          В каталоге: {catalog.professions} профессий · {catalog.skills} навыков · {catalog.templates} шаблонов
+        </p>
       </Card>
 
-      <div className="abs-home-grid">
-        {STUDIO_HOME_CARDS.map((c) => (
+      <div className="pb-hub-grid" data-testid="ai-builder-hub-cards">
+        {HUB_CARDS.map((c) => (
           <button
             key={c.id}
             type="button"
-            className="abs-home-card"
+            className="pb-hub-card"
+            data-testid={`hub-${c.id}`}
             onClick={() => {
-              if (c.route && c.id === "knowledge") {
-                window.location.assign(c.route);
+              if (c.externalRoute) {
+                navigate(c.externalRoute);
                 return;
               }
-              onOpen(c.id);
+              if (c.section) onOpen(c.section);
             }}
           >
-            <span className="font-semibold">{c.title}</span>
-            <span className="block eds-type-small text-[var(--eds-text-muted)]">{c.detail}</span>
+            <span className="pb-hub-icon" aria-hidden>
+              {c.icon}
+            </span>
+            <span className="pb-hub-title">{c.title}</span>
+            <span className="pb-hub-detail">{c.detail}</span>
           </button>
         ))}
       </div>
@@ -200,12 +185,12 @@ function TeamBuilderPanel() {
         `${PLATFORM_BUILDER_API}/ai-team/organizations/${encodeURIComponent(orgId)}/dashboard`,
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Load failed");
+      if (!res.ok) throw new Error(data.error || "Ошибка загрузки");
       setDash(data as Dashboard);
       const first = (data as Dashboard).members?.[0];
       if (first) applyMember(first);
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Load failed");
+      setMessage(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -249,12 +234,12 @@ function TeamBuilderPanel() {
         },
       );
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Edit failed");
+      if (!res.ok) throw new Error(data.error || "Ошибка сохранения");
       setDash(data.dashboard as Dashboard);
-      setMessage("AI обновлён (роль / навыки / приоритет / доступ)");
+      setMessage("AI обновлён");
       void telemetry.userActivity("abs_team_edit");
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : "Edit failed");
+      setMessage(e instanceof Error ? e.message : "Ошибка сохранения");
     } finally {
       setBusy(false);
     }
@@ -271,20 +256,20 @@ function TeamBuilderPanel() {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2 items-center">
-        <Input className="max-w-xs" value={orgId} onChange={(e) => setOrgId(e.target.value)} placeholder="org id" />
+        <Input className="max-w-xs" value={orgId} onChange={(e) => setOrgId(e.target.value)} placeholder="ID организации" />
         <Button size="sm" disabled={busy} onClick={() => void load()}>
-          Refresh
+          Обновить
         </Button>
         <Link to="/platform-builder/ai-team">
           <Button size="sm" variant="ghost">
-            AI Team Center →
+            Центр команды AI →
           </Button>
         </Link>
       </div>
       {message ? <p className="eds-type-small text-[var(--eds-text-muted)]">{message}</p> : null}
 
       <div className="abs-split">
-        <Card title="Команда" className="abs-card">
+        <Card title="Команда" className="abs-card pb-card">
           <ul className="space-y-2 eds-type-small">
             {(dash?.members || []).map((m) => (
               <li key={m.agent_id}>
@@ -302,7 +287,9 @@ function TeamBuilderPanel() {
                 </button>
               </li>
             ))}
-            {!dash?.members?.length ? <li className="text-[var(--eds-text-muted)]">· Нет агентов — создайте через Wizard</li> : null}
+            {!dash?.members?.length ? (
+              <li className="text-[var(--eds-text-muted)]">Нет агентов — создайте через мастер</li>
+            ) : null}
           </ul>
           <div className="mt-3">
             <Link to="/platform-builder/builder-studio?section=wizard&mode=wizard">
@@ -313,14 +300,14 @@ function TeamBuilderPanel() {
           </div>
         </Card>
 
-        <Card title="Визуальный редактор" className="abs-card">
+        <Card title="Редактор" className="abs-card pb-card">
           <div className="space-y-3 eds-type-small">
             <label className="block">
               Имя
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </label>
             <label className="block">
-              Роль / Profession
+              Назначение
               <select
                 className="mt-1 w-full rounded-md border border-[var(--eds-border)] bg-[var(--eds-surface)] px-2 py-1.5"
                 value={profession}
@@ -363,7 +350,7 @@ function TeamBuilderPanel() {
               </div>
             </div>
             <div>
-              <p className="font-medium mb-1">Доступ</p>
+              <p className="font-medium mb-1">Права</p>
               <div className="flex flex-wrap gap-1">
                 {PERMISSIONS.slice(0, 8).map((p) => (
                   <button
@@ -378,7 +365,7 @@ function TeamBuilderPanel() {
               </div>
             </div>
             <Button disabled={busy || !selectedId} onClick={() => void saveEdit()}>
-              Сохранить изменения
+              Сохранить
             </Button>
           </div>
         </Card>
@@ -398,14 +385,14 @@ function WorkflowBuilderPanel() {
       <div className="flex flex-wrap gap-2">
         <Link to="/platform-builder/workflow-center">
           <Button size="sm" variant="secondary">
-            Workflow Center →
+            Центр сценариев →
           </Button>
         </Link>
-        <Badge>{bundle.metrics.activeCount} active</Badge>
-        <Badge tone="success">{bundle.metrics.completedToday} done</Badge>
+        <Badge>{bundle.metrics.activeCount} активных</Badge>
+        <Badge tone="success">{bundle.metrics.completedToday} готово</Badge>
       </div>
       <div className="abs-split">
-        <Card title="Шаблоны Workflow" className="abs-card">
+        <Card title="Шаблоны сценариев" className="abs-card pb-card">
           <ul className="space-y-1">
             {BUSINESS_WORKFLOW_TEMPLATES.map((t) => (
               <li key={t.id}>
@@ -421,7 +408,7 @@ function WorkflowBuilderPanel() {
             ))}
           </ul>
         </Card>
-        <Card title="Визуальный процесс" className="abs-card">
+        <Card title="Процесс" className="abs-card pb-card">
           <p className="eds-type-small text-[var(--eds-text-muted)] mb-2">{tpl?.description}</p>
           <ol className="abs-chain">
             {(tpl?.steps || []).map((s, i) => (
@@ -431,16 +418,6 @@ function WorkflowBuilderPanel() {
               </li>
             ))}
           </ol>
-          <p className="mt-3 eds-type-caption text-[var(--eds-text-muted)]">
-            Только визуализация существующих шаблонов — без нового Workflow Engine.
-          </p>
-          <div className="mt-2">
-            <Link to={`/enterprise-city?wf=${tpl?.id}`}>
-              <Button size="sm" variant="ghost">
-                Показать на City →
-              </Button>
-            </Link>
-          </div>
         </Card>
       </div>
     </div>
@@ -450,7 +427,7 @@ function WorkflowBuilderPanel() {
 function SkillLibraryPanel() {
   return (
     <div className="space-y-3">
-      <Card title="Skill Library · Domain Packs" className="abs-card">
+      <Card title="Библиотека навыков" className="abs-card pb-card">
         <div className="abs-home-grid">
           {DOMAIN_SKILL_PACKS.map((pack) => (
             <div key={pack.id} className="abs-home-card is-static">
@@ -465,13 +442,6 @@ function SkillLibraryPanel() {
           ))}
         </div>
       </Card>
-      <Card title="All Skills" className="abs-card">
-        <div className="flex flex-wrap gap-1">
-          {SKILLS.map((s) => (
-            <Badge key={s.id}>{s.name}</Badge>
-          ))}
-        </div>
-      </Card>
     </div>
   );
 }
@@ -479,35 +449,37 @@ function SkillLibraryPanel() {
 function PromptLibraryPanel() {
   const [filter, setFilter] = useState<PromptKind | "all">("all");
   const items = PROMPT_LIBRARY.filter((p) => filter === "all" || p.kind === filter);
+  const labels: Record<string, string> = {
+    all: "Все",
+    system: "Системные",
+    user: "Пользователь",
+    corporate: "Корпоративные",
+    favorite: "Избранные",
+  };
   return (
-    <div className="space-y-3">
-      <Card title="Prompt Library" className="abs-card">
-        <div className="flex flex-wrap gap-2 mb-3">
+    <Card title="Библиотека подсказок" className="abs-card pb-card">
+      <div className="flex flex-wrap gap-2 mb-3">
         {(["all", "system", "user", "corporate", "favorite"] as const).map((k) => (
           <Button key={k} size="sm" variant={filter === k ? "secondary" : "ghost"} onClick={() => setFilter(k)}>
-            {k}
+            {labels[k]}
           </Button>
         ))}
-        </div>
-        <div className="abs-home-grid">
-          {items.map((p) => (
-            <Card key={p.id} title={p.title} className="abs-card">
-              <Badge>{p.kind}</Badge>
-              <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">{p.body}</p>
-            </Card>
-          ))}
-        </div>
-      </Card>
-    </div>
+      </div>
+      <div className="abs-home-grid">
+        {items.map((p) => (
+          <Card key={p.id} title={p.title} className="abs-card">
+            <Badge>{labels[p.kind] || p.kind}</Badge>
+            <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">{p.body}</p>
+          </Card>
+        ))}
+      </div>
+    </Card>
   );
 }
 
 function TemplateLibraryPanel() {
   return (
-    <Card title="Ecosystem Templates" className="abs-card">
-      <p className="eds-type-small text-[var(--eds-text-muted)] mb-3">
-        Семь Business Ecosystems — готовые шаблоны запуска.
-      </p>
+    <Card title="Шаблоны экосистем" className="abs-card pb-card">
       <div className="abs-home-grid">
         {ECOSYSTEM_TEMPLATES.map((t) => (
           <Link key={t.id} to={t.route} className="abs-home-card">
@@ -522,7 +494,7 @@ function TemplateLibraryPanel() {
 
 function IntegrationsPanel() {
   return (
-    <Card title="Integrations" className="abs-card">
+    <Card title="Интеграции" className="abs-card pb-card">
       <div className="abs-home-grid">
         {INTEGRATION_CARDS.map((c) => (
           <Link key={c.id} to={c.route} className="abs-home-card">
@@ -537,17 +509,17 @@ function IntegrationsPanel() {
 
 function KnowledgePanel() {
   return (
-    <Card title="Knowledge" className="abs-card">
+    <Card title={term("knowledge")} className="abs-card pb-card">
       <p className="eds-type-small text-[var(--eds-text-muted)] mb-3">
-        Используйте существующую Knowledge Base и источники AI Builder.
+        Подключите базу знаний и документы для ответов AI.
       </p>
       <div className="flex flex-wrap gap-2">
         <Link to="/platform-builder/knowledge">
-          <Button size="sm">Open Knowledge Base</Button>
+          <Button size="sm">Открыть базу знаний</Button>
         </Link>
-        <Link to="/workspace/docs">
+        <Link to="/documents">
           <Button size="sm" variant="secondary">
-            Documents
+            Документы
           </Button>
         </Link>
       </div>

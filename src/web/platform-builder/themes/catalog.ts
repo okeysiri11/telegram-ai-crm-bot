@@ -8,5 +8,5 @@ export const THEME_STEPS = [
   "Accessibility",
   "Live Theme Switching",
   "Foundation for AI City",
-  "Create",
+  "Создать",
 ] as const;

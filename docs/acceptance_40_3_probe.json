@@ -1,0 +1,236 @@
+{
+  "generated_at": "2026-08-05T14:35:23.716768+00:00",
+  "sprint": "40.3",
+  "web": [
+    {
+      "url": "http://127.0.0.1/login",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/auth/logout",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/auth/unauthorized",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/dashboard",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/crm",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/crm?view=leads",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/crm?view=clients",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/crm?view=deals",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/crm?view=companies",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/deals",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/clients",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/companies",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/leads",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/reports",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/tasks",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/calendar",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/documents",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/knowledge",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/ai-agents",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/ai-studio",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/analytics",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/notifications",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/settings",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/profile",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/identity/profile",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/admin",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/marketplace",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/desktop",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>E"
+    },
+    {
+      "url": "http://127.0.0.1/api/v1/docs",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!DOCTYPE html>\n<html><head><title>Platform Public API v1</title>\n<link rel=\"stylesheet\" href=\"https://unpkg.com/swagger-ui-dist@5/swagger-ui.css\">\n</head><body"
+    }
+  ],
+  "api": [
+    {
+      "url": "http://127.0.0.1:8080/health",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"suite\": \"production_readiness\", \"version\": \"v1\", \"checked_at\": \"2026-08-05T14:35:24.431502+00:00\", \"ready\": true, \"ok\": true, \"status\": \"healthy\", \"duration_m"
+    },
+    {
+      "url": "http://127.0.0.1:8080/ready",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"status\": \"ready\", \"ready\": true, \"checks\": {\"startup\": \"healthy\", \"database\": \"healthy\", \"redis\": \"healthy\", \"api\": \"healthy\", \"scheduler\": \"healthy\", \"telegr"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/v1/openapi.json",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "{\"openapi\": \"3.0.3\", \"info\": {\"title\": \"Platform Public API\", \"version\": \"1.0.0\", \"description\": \"Frozen public API (/api/v1).\"}, \"servers\": [{\"url\": \"/\"}], \"pa"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/v1/docs",
+      "status": 200,
+      "ok": true,
+      "body_prefix": "<!DOCTYPE html>\n<html><head><title>Platform Public API v1</title>\n<link rel=\"stylesheet\" href=\"https://unpkg.com/swagger-ui-dist@5/swagger-ui.css\">\n</head><body"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/v1/leads",
+      "status": 401,
+      "ok": false,
+      "body_prefix": "{\"error\": \"authentication_failed\", \"request_id\": \"1383275f-68ce-4036-93a3-da16c77e3ffe\", \"api_version\": \"v1\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/v1/clients",
+      "status": 401,
+      "ok": false,
+      "body_prefix": "{\"error\": \"authentication_failed\", \"request_id\": \"c34da27e-0fd6-4cba-86ee-6d65ed77d2d5\", \"api_version\": \"v1\"}"
+    },
+    {
+      "url": "http://127.0.0.1:8080/api/v1/reports",
+      "status": 401,
+      "ok": false,
+      "body_prefix": "{\"error\": \"authentication_failed\", \"request_id\": \"96f85aa2-a39a-4605-a97d-52cfb5715402\", \"api_version\": \"v1\"}"
+    }
+  ],
+  "notes": [
+    "SPA paths return HTTP 200 from nginx even when React redirects; use vitest for in-app alias checks.",
+    "GET /api/v1/leads without auth expects 401 (registered, not 501)."
+  ],
+  "checks": {
+    "leads_not_501": true,
+    "openapi_ok": true,
+    "docs_ok": true,
+    "health_ok": true,
+    "ready_ok": true,
+    "web_all_reachable": true
+  }
+}

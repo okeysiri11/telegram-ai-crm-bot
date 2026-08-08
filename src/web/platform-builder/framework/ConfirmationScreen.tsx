@@ -1,4 +1,5 @@
 import { Badge, Button, Card } from "@/ui";
+import { bu } from "../i18n/builderUiRu";
 
 type Props = {
   title?: string;
@@ -12,10 +13,10 @@ type Props = {
 
 /** Reusable confirmation screen for Universal Builder Framework. */
 export function ConfirmationScreen({
-  title = "Confirm",
+  title = bu("confirm"),
   message,
-  confirmLabel = "Confirm",
-  cancelLabel = "Cancel",
+  confirmLabel = bu("confirm"),
+  cancelLabel = bu("cancel"),
   onConfirm,
   onCancel,
   busy,
@@ -31,12 +32,12 @@ export function ConfirmationScreen({
         ) : null}
         {onConfirm ? (
           <Button variant="primary" disabled={busy} onClick={onConfirm}>
-            {busy ? "Working…" : confirmLabel}
+            {busy ? bu("working") : confirmLabel}
           </Button>
         ) : null}
       </div>
       <div className="mt-3">
-        <Badge>Confirmation Screen</Badge>
+        <Badge>{bu("confirmationScreen")}</Badge>
       </div>
     </Card>
   );

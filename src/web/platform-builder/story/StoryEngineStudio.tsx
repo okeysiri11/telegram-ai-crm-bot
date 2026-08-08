@@ -31,7 +31,7 @@ export function StoryEngineStudio() {
     () => ({
       shortDescription: STORY_STEPS[step],
       detailedExplanation:
-        "Visual Story Engine groups verified Visual Event Bus events into narratives. It never creates, modifies, or reorders business events.",
+        "Движок визуальных историй groups verified Visual Event Bus events into narratives. It never creates, modifies, or reorders business events.",
       example: `Example: complete «${STORY_STEPS[step]}».`,
       popup: { title: STORY_STEPS[step], body: "Enterprise visual storytelling." },
       tooltip: STORY_STEPS[step],
@@ -51,7 +51,7 @@ export function StoryEngineStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -68,7 +68,7 @@ export function StoryEngineStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -81,10 +81,10 @@ export function StoryEngineStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/story/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -146,10 +146,10 @@ export function StoryEngineStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -157,7 +157,7 @@ export function StoryEngineStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Visual Story Engine"
+      title="Движок визуальных историй"
       subtitle="Enterprise storytelling from verified Event Bus events — never creates or reorders business events."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -240,7 +240,7 @@ export function StoryEngineStudio() {
           ) : null}
 
           {step === 3 ? (
-            <Card title="Organization Evolution">
+            <Card title="Организация Evolution">
               <Button disabled={busy} onClick={() => void load("organization", setOrg)}>
                 Visualize org story
               </Button>
@@ -268,7 +268,7 @@ export function StoryEngineStudio() {
           ) : null}
 
           {step === 5 ? (
-            <Card title="Workflow Stories">
+            <Card title="Сценарий Stories">
               <Button disabled={busy} onClick={() => void load("workflow", setWorkflow)}>
                 Display workflow story
               </Button>
@@ -283,7 +283,7 @@ export function StoryEngineStudio() {
           ) : null}
 
           {step === 6 ? (
-            <Card title="Knowledge Stories">
+            <Card title="База знаний Stories">
               <Button disabled={busy} onClick={() => void load("knowledge", setKnowledge)}>
                 Animate knowledge story
               </Button>
@@ -317,7 +317,7 @@ export function StoryEngineStudio() {
           ) : null}
 
           {step === 8 ? (
-            <Card title="Story Navigation">
+            <Card title="Story Навигация">
               <div className="flex flex-wrap gap-2">
                 <Button disabled={busy} onClick={() => void navigate("Play")}>
                   Play
@@ -346,7 +346,7 @@ export function StoryEngineStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create — Register Story Stack">
+            <Card title="Создать — зарегистрировать Story Stack">
               <p className="eds-type-small mb-3">
                 Registers Story Engine, Registry, Builder, Timeline, and Executive Story API.
               </p>
@@ -374,13 +374,13 @@ export function StoryEngineStudio() {
 
           <div className="flex justify-between">
             <Button disabled={busy || step === 0} onClick={() => void go(step - 1)}>
-              Back
+              Назад
             </Button>
             <Button
               disabled={busy || step >= STORY_STEPS.length - 1}
               onClick={() => void go(step + 1)}
             >
-              Next
+              Далее
             </Button>
           </div>
         </div>

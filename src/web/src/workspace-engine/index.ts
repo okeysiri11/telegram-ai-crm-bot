@@ -1,5 +1,10 @@
 export { useWorkspaceManager } from "./workspaceManagerStore";
 export { WorkspaceTabBar } from "./WorkspaceTabBar";
+export {
+  useWorkspaceTabChromeStore,
+  shouldShowWorkspaceTabBar,
+  WORKSPACE_TAB_CHROME_KEY,
+} from "./workspaceTabChromeStore";
 export { useWorkspaceRouteSync, useWorkspaceNavigation } from "./useWorkspaceTabs";
 export { logActivity, listActivity, clearActivity } from "./activityJournal";
 export type { ActivityEntry, ActivityKind } from "./activityJournal";

@@ -49,6 +49,22 @@ class DealService:
         await publish(DealUpdatedEvent(deal_id=deal_id, stage=stage.value, probability=saved.probability))
         return saved
 
+    async def update(self, deal_id: str, **updates: object) -> CRMDeal:
+        deal = self.get(deal_id)
+        for key, value in updates.items():
+            if hasattr(deal, key) and value is not None:
+                setattr(deal, key, value)
+        deal.probability = await self._ai.predict_deal_probability(deal)
+        saved = self._store.crm_deals.save(deal_id, deal)
+        await publish(
+            DealUpdatedEvent(deal_id=deal_id, stage=saved.stage.value, probability=saved.probability)
+        )
+        return saved
+
+    def delete(self, deal_id: str) -> bool:
+        self.get(deal_id)
+        return self._store.crm_deals.delete(deal_id)
+
     async def mark_won(self, deal_id: str, *, amount: float | None = None) -> CRMDeal:
         deal = self.get(deal_id)
         deal.stage = DealStage.CLOSED_WON

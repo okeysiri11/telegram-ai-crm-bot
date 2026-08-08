@@ -43,9 +43,9 @@ class LeadService:
     def list_leads(self, *, status: CRMLeadStatus | None = None, dealer_id: str | None = None) -> list[CRMLead]:
         items = self._store.crm_leads.list_all()
         if status:
-            items = [l for l in items if l.status == status]
+            items = [lead for lead in items if lead.status == status]
         if dealer_id:
-            items = [l for l in items if l.dealer_id == dealer_id]
+            items = [lead for lead in items if lead.dealer_id == dealer_id]
         return items
 
     async def qualify(self, lead_id: str, *, agent_id: str = "") -> CRMLead:
@@ -64,6 +64,10 @@ class LeadService:
             if hasattr(lead, key) and value is not None:
                 setattr(lead, key, value)
         return self._store.crm_leads.save(lead_id, lead)
+
+    def delete(self, lead_id: str) -> bool:
+        self.get(lead_id)
+        return self._store.crm_leads.delete(lead_id)
 
 
 lead_service = LeadService()

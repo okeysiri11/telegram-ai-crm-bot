@@ -682,6 +682,14 @@ def register_management_routes(app: web.Application) -> None:
 
     register_jobs_routes(app)
 
+    from platform_hercules.api.router import register_hercules_routes
+
+    register_hercules_routes(app)
+
+    from platform_ai_command.api.router import register_ai_command_routes
+
+    register_ai_command_routes(app)
+
     from platform_observability.telemetry_router import register_observability_routes
 
     register_observability_routes(app)

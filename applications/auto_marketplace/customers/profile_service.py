@@ -58,5 +58,10 @@ class CustomerProfileService:
         profile.segment = await self._ai.segment_customer(profile)
         return self._store.customer_profiles.save(customer_id, profile)
 
+    def delete(self, customer_id: str) -> bool:
+        self.get(customer_id)
+        self._store.customers.delete(customer_id)
+        return self._store.customer_profiles.delete(customer_id)
+
 
 customer_profile_service = CustomerProfileService()

@@ -41,3 +41,18 @@ AUTO_CLIENT_PENDING_RESTORE: dict[str, tuple[State, str]] = _build_pending_resto
 class AutoDealerFlow(StatesGroup):
     language_select = State()
     dealer_onboarding = State()
+
+
+class AutoAddVehicleFlow(StatesGroup):
+    """HOTFIX 46.2.2 — durable Add-car FSM (Redis / MemoryStorage), not process dict."""
+
+    make = State()
+    model = State()
+    year = State()
+    color = State()
+    mileage = State()
+    purchase_price = State()
+    optional_costs = State()
+    vin_decision = State()  # VIN_DECISION
+    waiting_vin = State()  # WAITING_VIN
+    finalize_retry = State()

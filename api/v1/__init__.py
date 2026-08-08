@@ -20,9 +20,8 @@ def register_api_v1_routes(app: web.Application) -> None:
     """Register all frozen /api/v1 routes and legacy compatibility aliases."""
     register_public_api_v1_routes(app)
 
+    # Remaining reserved surfaces (not CRM foundation — Sprint 40.2 completed leads/clients).
     for path in (
-        "/api/v1/leads",
-        "/api/v1/clients",
         "/api/v1/managers",
         "/api/v1/inventory/crm",
         "/api/v1/analytics/crm",

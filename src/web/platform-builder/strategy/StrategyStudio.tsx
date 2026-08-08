@@ -30,13 +30,13 @@ export function StrategyStudio() {
     () => ({
       shortDescription: STRATEGY_STEPS[step],
       detailedExplanation:
-        "The Enterprise Strategy Engine aggregates existing intelligence systems into strategic analysis and executive recommendations. It never executes business logic or changes platform state.",
+        "The Движок стратегии предприятия aggregates existing intelligence systems into strategic analysis and executive recommendations. It never executes business logic or changes platform state.",
       example: `Example: complete «${STRATEGY_STEPS[step]}».`,
       popup: { title: STRATEGY_STEPS[step], body: "Read-only executive strategy." },
       tooltip: STRATEGY_STEPS[step],
       purpose: "Strategic analysis and executive decision support",
       benefits: "Scorecard, priorities, roadmap and decision comparisons",
-      typicalUse: "Executive Strategy Center and Decision Support Panel",
+      typicalUse: "Executive Стратегия Center and Decision Support Panel",
       businessValue: "Aligned priorities without operational side effects",
     }),
     [step],
@@ -50,7 +50,7 @@ export function StrategyStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -67,7 +67,7 @@ export function StrategyStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -80,10 +80,10 @@ export function StrategyStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/strategy/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -125,10 +125,10 @@ export function StrategyStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -136,7 +136,7 @@ export function StrategyStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Enterprise Strategy Engine"
+      title="Движок стратегии предприятия"
       subtitle="Read-only strategic intelligence — aggregates existing systems, never changes platform state."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -159,7 +159,7 @@ export function StrategyStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Strategy Engine Core">
+            <Card title="Движок стратегии Core">
               <Button disabled={busy} onClick={() => void load("engine", setOverview)}>
                 Load strategy engine
               </Button>
@@ -194,7 +194,7 @@ export function StrategyStudio() {
           ) : null}
 
           {step === 2 ? (
-            <Card title="Strategic Overview">
+            <Card title="Strategic Обзор">
               <Button disabled={busy} onClick={() => void load("overview", setStrategic)}>
                 Load strategic overview
               </Button>
@@ -305,9 +305,9 @@ export function StrategyStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create">
+            <Card title="Создать">
               <Button disabled={busy} onClick={() => void runCreate()}>
-                Register Strategy Engine
+                Register Движок стратегии
               </Button>
               {created ? (
                 <ul className="mt-3 eds-type-small space-y-1">

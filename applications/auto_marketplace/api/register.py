@@ -35,6 +35,10 @@ from applications.auto_marketplace.api import (
     webhooks,
 )
 from applications.auto_marketplace.api.middleware import auth_middleware
+from applications.auto_marketplace.api.crm_handlers import (
+    crm_error_middleware,
+    crm_mutating_auth_middleware,
+)
 from applications.auto_marketplace.config import DEFAULT_CONFIG
 
 
@@ -45,7 +49,11 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     internal = config.internal_prefix
     webhooks_prefix = config.webhook_prefix
 
+    # aiohttp (this version): first registered middleware is outermost.
+    # Outer error mapping → auth principal → CRM mutating gate → handler.
+    app.middlewares.append(crm_error_middleware)
     app.middlewares.append(auth_middleware)
+    app.middlewares.append(crm_mutating_auth_middleware)
 
     # Public REST API
     app.router.add_get(f"{prefix}/health", rest_handlers.health_handler)

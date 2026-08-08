@@ -2,6 +2,10 @@ export { ENTERPRISE_MODULES, getModuleBySlug, getModuleByRoute, shellNavFromCata
 export type { EnterpriseModuleDef, ModuleReadiness } from "./moduleCatalog";
 export { EnterpriseModulePage } from "./EnterpriseModulePage";
 export { ModuleHubRoute, ModulePageById } from "./ModuleHubRoute";
+export { WorkspaceLandingGate } from "./WorkspaceLandingGate";
+export { ModuleLandingView } from "./ModuleLandingView";
+export { MODULE_LANDINGS, landingForPath } from "./moduleLandingCatalog";
+export type { ModuleLandingDef } from "./moduleLandingCatalog";
 export { SearchWorkspacePage } from "./SearchWorkspacePage";
 export { PlatformPulsePanel } from "./PlatformPulsePanel";
 export { useLastModuleStore, rememberModuleRoute } from "./lastModuleStore";

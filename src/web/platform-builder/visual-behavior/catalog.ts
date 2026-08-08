@@ -1,5 +1,5 @@
 export const VB_STEPS = [
-  "Visual Behavior Engine",
+  "Движок визуального поведения",
   "Supported Behaviors",
   "Transition Engine",
   "Animation Framework",
@@ -8,7 +8,7 @@ export const VB_STEPS = [
   "Wait Experience",
   "Performance",
   "Foundation for AI City",
-  "Create",
+  "Создать",
 ] as const;
 
 export const BEHAVIORS = [
@@ -31,6 +31,6 @@ export const ANIMATIONS = [
   "Movement",
   "Connection Animation",
   "Progress Animation",
-  "Knowledge Animation",
+  "База знаний Animation",
   "Task Animation",
 ] as const;

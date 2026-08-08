@@ -12,6 +12,7 @@ import { telemetry } from "@/integrations/telemetry";
 import { useIntegrationBoot } from "@/integration-hub";
 import { EnterpriseShell } from "@/shell/enterprise/EnterpriseShell";
 import { enterpriseShellRuntime } from "@/shell/enterprise/enterpriseShellRuntime";
+import { InterfacePreferencesBoot } from "@/preferences/InterfacePreferencesBoot";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ export function Providers({ children }: { children: ReactNode }) {
           <NavigationProvider>
             <WebCoreProvider>
               <IntegrationHubBridge />
+              <InterfacePreferencesBoot />
               <EnterpriseShell>{children}</EnterpriseShell>
             </WebCoreProvider>
           </NavigationProvider>

@@ -17,13 +17,34 @@ from applications.auto_marketplace.crm.models import (
     LeadSource,
     Meeting,
     PhoneCall,
-    Reminder,
 )
-from applications.auto_marketplace.shared.exceptions import AuthorizationError, AutoMarketplaceError, NotFoundError
+from applications.auto_marketplace.shared.exceptions import (
+    AuthenticationError,
+    AuthorizationError,
+    AutoMarketplaceError,
+    NotFoundError,
+    ValidationError,
+)
+
+_MUTATING_MARKERS = (".write", ".manage", ".delete", ".create", ".update")
+
+
+def _parse_lead_source(raw: object) -> LeadSource:
+    if raw is None or raw == "":
+        return LeadSource.WEB
+    try:
+        return LeadSource(str(raw))
+    except ValueError as exc:
+        allowed = ", ".join(s.value for s in LeadSource)
+        raise ValidationError(f"invalid lead source: {raw!r}; allowed: {allowed}") from exc
 
 
 def _check_perm(request: web.Request, permission: str) -> None:
-    principal = request.get("principal") or {}
+    principal = request.get("principal")
+    mutating = any(marker in permission for marker in _MUTATING_MARKERS)
+    if mutating and (not isinstance(principal, dict) or not principal.get("authenticated")):
+        raise AuthenticationError("Authentication required")
+    principal = principal if isinstance(principal, dict) else {}
     role = principal.get("role", CRMRole.SALES_AGENT.value)
     if not auto_marketplace.crm_engine.security.authorize(role, permission):
         raise AuthorizationError(f"Permission denied: {permission}")
@@ -71,9 +92,14 @@ async def list_leads_handler(request: web.Request) -> web.Response:
     status = request.query.get("status")
     from applications.auto_marketplace.crm.models import CRMLeadStatus
 
-    st = CRMLeadStatus(status) if status else None
+    st = None
+    if status:
+        try:
+            st = CRMLeadStatus(status)
+        except ValueError as exc:
+            raise ValidationError(f"invalid lead status: {status!r}") from exc
     items = auto_marketplace.crm_engine.leads.list_leads(status=st, dealer_id=request.query.get("dealer_id"))
-    return json_response({"items": [l.to_dict() for l in items]})
+    return json_response({"items": [lead.to_dict() for lead in items]})
 
 
 async def create_lead_handler(request: web.Request) -> web.Response:
@@ -84,7 +110,7 @@ async def create_lead_handler(request: web.Request) -> web.Response:
         customer_id=data.get("customer_id", ""),
         vehicle_id=data.get("vehicle_id", ""),
         dealer_id=data.get("dealer_id", ""),
-        source=LeadSource(source) if source else LeadSource.WEB,
+        source=_parse_lead_source(source),
         notes=data.get("notes", ""),
     )
     customer = None
@@ -111,7 +137,12 @@ async def qualify_lead_handler(request: web.Request) -> web.Response:
 async def list_deals_handler(request: web.Request) -> web.Response:
     _check_perm(request, "deals.read")
     stage = request.query.get("stage")
-    st = DealStage(stage) if stage else None
+    st = None
+    if stage:
+        try:
+            st = DealStage(stage)
+        except ValueError as exc:
+            raise ValidationError(f"invalid deal stage: {stage!r}") from exc
     items = auto_marketplace.crm_engine.deals.list_deals(stage=st, dealer_id=request.query.get("dealer_id"))
     return json_response({"items": [d.to_dict() for d in items]})
 
@@ -242,12 +273,62 @@ async def ai_next_action_handler(request: web.Request) -> web.Response:
     return json_response({"next_best_action": action, "follow_up": follow_up})
 
 
+_CRM_WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
+_CRM_API_ROOT = "/api/auto/v1/crm"
+
+
+def _is_auto_crm_path(path: str) -> bool:
+    return path == _CRM_API_ROOT or path.startswith(_CRM_API_ROOT + "/")
+
+
+@web.middleware
+async def crm_mutating_auth_middleware(request: web.Request, handler):
+    """Require Bearer auth for all mutating Auto CRM routes (foundation + engine)."""
+    if request.method in _CRM_WRITE_METHODS and _is_auto_crm_path(request.path):
+        principal = request.get("principal")
+        if not isinstance(principal, dict) or not principal.get("authenticated"):
+            return error_response("Authentication required", status=401)
+    return await handler(request)
+
+
+@web.middleware
+async def crm_bearer_principal_restore_middleware(request: web.Request, handler):
+    """Restore Bearer principal wiped by later vertical auth middlewares (Sprint 40.4).
+
+    Several apps append auth middleware that sets ``request["principal"]`` to
+    ``X-Principal`` or ``None``. Those run *after* auto-marketplace auth (aiohttp:
+    first registered = outermost), so CRM handlers would see a cleared principal
+    even when Authorization Bearer was valid. Register this middleware last
+    (innermost) from ``api.server.create_app``.
+    """
+    if _is_auto_crm_path(request.path):
+        auth = request.headers.get("Authorization")
+        principal = request.get("principal")
+        if auth and auth.startswith("Bearer ") and (
+            not isinstance(principal, dict) or not principal.get("authenticated")
+        ):
+            from applications.auto_marketplace.integrations.platform_bridge import (
+                platform_bridge,
+            )
+
+            request["principal"] = await platform_bridge.authenticate_request(auth)
+    return await handler(request)
+
+
+@web.middleware
 async def crm_error_middleware(request: web.Request, handler):
     try:
         return await handler(request)
     except NotFoundError as exc:
         return error_response(str(exc), status=404)
+    except AuthenticationError as exc:
+        return error_response(str(exc), status=401)
     except AuthorizationError as exc:
         return error_response(str(exc), status=403)
+    except ValidationError as exc:
+        return error_response(str(exc), status=400)
+    except ValueError as exc:
+        # Enum / parse errors must never surface as 500 on CRM routes.
+        return error_response(str(exc), status=400)
     except AutoMarketplaceError as exc:
         return error_response(str(exc), status=400)

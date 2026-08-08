@@ -17,6 +17,22 @@ import { matchAiNavigationIntent, ensureProMode } from "@/ux-revolution";
 
 type Mode = "palette" | "omnibox" | "ai" | "commands";
 
+const MODE_LABEL_RU: Record<Mode, string> = {
+  palette: "Быстрый доступ",
+  omnibox: "Поиск",
+  commands: "Команды",
+  ai: "AI",
+};
+
+const KIND_LABEL_RU: Record<string, string> = {
+  navigate: "Переход",
+  open_module: "Раздел",
+  create: "Создать",
+  command: "Команда",
+  action: "Действие",
+  ai: "AI",
+};
+
 type Props = {
   open: boolean;
   onClose: () => void;
@@ -56,8 +72,8 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
     if (mode === "omnibox") {
       return hits.map((h) => ({
         key: h.id,
-        label: `${h.type}: ${h.title}`,
-        meta: `${h.score}`,
+        label: h.title,
+        meta: KIND_LABEL_RU[h.type] || "",
         run: () => {
           navigationIndex.recordUse(h.id);
           commandRecent.push(h.id);
@@ -92,7 +108,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
       return sectionSearch.map((c) => ({
         key: c.id,
         label: c.label,
-        meta: c.kind,
+        meta: KIND_LABEL_RU[c.kind || ""] || "",
         run: () => {
           void runCommand(c, navigate, onClose);
         },
@@ -128,7 +144,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
       .map((c) => ({
         key: c.id,
         label: c.label,
-        meta: c.kind ?? "command",
+        meta: KIND_LABEL_RU[c.kind || ""] || "",
         run: () => {
           void (async () => {
             const intent = matchAiNavigationIntent(c.label) || (c.id.startsWith("ai_intent_") ? matchAiNavigationIntent(query) : null);
@@ -219,7 +235,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
       className="fixed inset-0 z-[var(--eds-z-modal,50)] flex items-start justify-center bg-black/40 p-4 pt-[10vh]"
       role="dialog"
       aria-modal="true"
-      aria-label="Universal command palette"
+      aria-label="Быстрый доступ"
     >
       <div className="w-full max-w-2xl overflow-hidden rounded-[var(--eds-radius-lg)] bg-[var(--eds-surface)] shadow-[var(--eds-shadow-lg)] edm-overlay-panel">
         <div className="flex items-center gap-2 border-b border-[var(--eds-border)] px-3 pt-3">
@@ -228,7 +244,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
               key={m}
               type="button"
               className={cn(
-                "rounded-md px-2 py-1 eds-type-caption capitalize",
+                "rounded-md px-2 py-1 eds-type-caption",
                 mode === m ? "bg-[var(--eds-primary-soft)] text-[var(--eds-primary)]" : "text-[var(--eds-text-muted)]",
               )}
               onClick={() => {
@@ -236,7 +252,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
                 setActive(0);
               }}
             >
-              {m}
+              {MODE_LABEL_RU[m]}
             </button>
           ))}
         </div>
@@ -262,7 +278,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
         <div className="max-h-96 overflow-auto p-2" role="listbox">
           {mode === "ai" ? (
             <p className="px-3 py-2 eds-type-small text-[var(--eds-text-muted)]">
-              Press Enter to execute AI command. Context: {contextEngine.get().workspace} / {contextEngine.get().role}
+              Enter — выполнить. Для повседневных задач используйте строку «Что хотите сделать?» в шапке.
             </p>
           ) : (
             rows.map((row, i) => {
@@ -300,7 +316,7 @@ export function UniversalCommandPalette({ open, onClose, initialMode = "palette"
               <div className="eds-empty-art" aria-hidden>
                 ◇
               </div>
-              <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">Nothing found</p>
+              <p className="mt-2 eds-type-small text-[var(--eds-text-muted)]">Ничего не найдено</p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button
                   size="sm"

@@ -9,6 +9,7 @@ import {
   type AuthSessionPayload,
 } from "./identityApi";
 import { telemetry } from "@/integrations/telemetry";
+import { wsKey } from "@/multi-role/workspaceSlot";
 
 export type UserProfile = {
   id: string;
@@ -46,7 +47,10 @@ type AuthState = {
   validateSession: () => Promise<boolean>;
 };
 
-const STORAGE_KEY = "ewp_session_v1";
+const STORAGE_KEY_BASE = "ewp_session_v1";
+function sessionKey() {
+  return wsKey(STORAGE_KEY_BASE);
+}
 
 function persist(payload: {
   user: UserProfile;
@@ -55,7 +59,7 @@ function persist(payload: {
   authMode: "platform_jwt" | "isam";
   accessExpiresAt?: string | null;
 }) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  localStorage.setItem(sessionKey(), JSON.stringify(payload));
 }
 
 function fromLogin(session: AuthSessionPayload) {
@@ -89,7 +93,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       accessExpiresAt: payload.accessExpiresAt,
     });
     try {
-      localStorage.setItem("ews_last_login_at", new Date().toISOString());
+      localStorage.setItem(wsKey("ews_last_login_at"), new Date().toISOString());
     } catch {
       /* ignore */
     }
@@ -97,6 +101,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       "auth_login",
       `${email}; mode=${session.authMode}; tenant=${tenantId}`,
     );
+    try {
+      const { applyDemoUserSession } = await import("@/multi-role/applyDemoSession");
+      applyDemoUserSession(email);
+    } catch {
+      try {
+        const { applyGlobeFlySession } = await import("@/demo/globefly");
+        applyGlobeFlySession(email);
+      } catch {
+        /* ignore */
+      }
+    }
     try {
       const { logActivity } = await import("@/workspace-engine/activityJournal");
       logActivity({ kind: "login", title: "User signed in", detail: email });
@@ -116,7 +131,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       accessExpiresAt: payload.accessExpiresAt,
     });
     try {
-      localStorage.setItem("ews_last_login_at", new Date().toISOString());
+      localStorage.setItem(wsKey("ews_last_login_at"), new Date().toISOString());
     } catch {
       /* ignore */
     }
@@ -141,7 +156,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: () => {
     const email = get().user?.email;
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(sessionKey());
     set({
       user: null,
       accessToken: null,
@@ -153,7 +168,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   restoreSession: () => {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(sessionKey());
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as {
@@ -201,6 +216,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       void telemetry.audit("auth_refresh", authMode);
       return true;
     } catch {
+      // Sprint 40.4 — ISAM opaque sessions live in localStorage; do not wipe on soft refresh failure
+      // (prevents login → 401 telemetry → refresh fail → logout → redirect loop).
+      if (authMode === "isam" && get().accessToken && get().user) {
+        return false;
+      }
       get().logout();
       return false;
     }

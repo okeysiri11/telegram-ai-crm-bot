@@ -5,8 +5,8 @@ export const RENDER_STEPS = [
   "Layer System",
   "Object Priority",
   "Animation Optimization",
-  "Live Organization Support",
+  "Live Организация Support",
   "Foundation for AI City",
   "Performance",
-  "Create",
+  "Создать",
 ] as const;

@@ -31,7 +31,7 @@ export function ExperienceEngineStudio() {
     () => ({
       shortDescription: EXPERIENCE_STEPS[step],
       detailedExplanation:
-        "Visual Experience Engine unifies every visual subsystem into one seamless enterprise experience. It coordinates presentation, consistency, accessibility and user perception — never business logic.",
+        "Движок визуального опыта unifies every visual subsystem into one seamless enterprise experience. It coordinates presentation, consistency, accessibility and user perception — never business logic.",
       example: `Example: complete «${EXPERIENCE_STEPS[step]}».`,
       popup: { title: EXPERIENCE_STEPS[step], body: "Unified enterprise UX coordination." },
       tooltip: EXPERIENCE_STEPS[step],
@@ -51,7 +51,7 @@ export function ExperienceEngineStudio() {
       body: "{}",
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Could not start session");
+    if (!res.ok) throw new Error(data.error || "Не удалось начать сессию");
     setSessionId(data.session_id);
     return data.session_id as string;
   }
@@ -68,7 +68,7 @@ export function ExperienceEngineStudio() {
       });
       setStep(next);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Navigation failed");
+      setError(e instanceof Error ? e.message : "Ошибка навигации");
     } finally {
       setBusy(false);
     }
@@ -81,10 +81,10 @@ export function ExperienceEngineStudio() {
       await ensureSession();
       const res = await fetch(`${PLATFORM_BUILDER_API}/experience/${path}`);
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Load failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка загрузки");
       setter(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Load failed");
+      setError(e instanceof Error ? e.message : "Ошибка загрузки");
     } finally {
       setBusy(false);
     }
@@ -129,10 +129,10 @@ export function ExperienceEngineStudio() {
         body: "{}",
       });
       const body = await res.json();
-      if (!res.ok) throw new Error(body.error || "Create failed");
+      if (!res.ok) throw new Error(body.error || "Ошибка создания");
       setCreated(body);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Create failed");
+      setError(e instanceof Error ? e.message : "Ошибка создания");
     } finally {
       setBusy(false);
     }
@@ -140,7 +140,7 @@ export function ExperienceEngineStudio() {
 
   return (
     <PlatformBuilderLayout
-      title="Visual Experience Engine"
+      title="Движок визуального опыта"
       subtitle="Unified enterprise UX — presentation coordination only, no business logic."
     >
       <div className="mb-4 flex flex-wrap gap-2">
@@ -163,7 +163,7 @@ export function ExperienceEngineStudio() {
           ) : null}
 
           {step === 0 ? (
-            <Card title="Visual Experience Engine">
+            <Card title="Движок визуального опыта">
               <Button disabled={busy} onClick={() => void load("engine", setOverview)}>
                 Load engine
               </Button>
@@ -217,7 +217,7 @@ export function ExperienceEngineStudio() {
                   Apply context
                 </Button>
                 <Button disabled={busy} onClick={() => void load("context", setContext)}>
-                  Refresh
+                  Обновить
                 </Button>
               </div>
               {context ? (
@@ -326,9 +326,9 @@ export function ExperienceEngineStudio() {
           ) : null}
 
           {step === 9 ? (
-            <Card title="Create">
+            <Card title="Создать">
               <Button disabled={busy} onClick={() => void runCreate()}>
-                Register Experience Engine
+                Зарегистрировать движок опыта
               </Button>
               {created ? (
                 <ul className="mt-3 eds-type-small space-y-1">

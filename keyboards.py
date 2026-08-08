@@ -8,10 +8,15 @@ from aiogram.types import (
 
 def owner_main_menu(*, show_automotive: bool = True):
     """
-    Owner ReplyKeyboard.
-    Sprint 34.2B: prefer Platform Registry catalog; fall back to legacy layout
-    so existing Telegram handlers keep matching button texts.
+    Owner ReplyKeyboard — Sprint 43.0 Telegram AI Super App (simple RU menu).
+    Engineering tools are not on the first screen.
     """
+    try:
+        from services.telegram_ai_super_app.keyboards import main_menu_keyboard
+
+        return main_menu_keyboard(include_developer=False)
+    except Exception:
+        pass
     try:
         from platform_registry.clients.telegram_adapter import build_owner_keyboard_from_registry
 
@@ -24,72 +29,28 @@ def owner_main_menu(*, show_automotive: bool = True):
 
 
 def _owner_main_menu_legacy(*, show_automotive: bool = True):
+    """Sprint 43.0 simplified legacy fallback — Russian Super App shell."""
     keyboard_rows = [
         [
-            KeyboardButton(text="💰 Crypto OTC"),
-            KeyboardButton(text="🚁 Drone Engineering")
+            KeyboardButton(text="🤖 AI Консьерж"),
+            KeyboardButton(text="📊 Дашборд"),
         ],
         [
-            KeyboardButton(text="⚖ Юриспруденция"),
-            KeyboardButton(text="☕ Cafe & Beauty")
+            KeyboardButton(text="📋 Задачи"),
+            KeyboardButton(text="🔔 Уведомления"),
         ],
         [
-            KeyboardButton(text="🌾 Agro Trading"),
-            KeyboardButton(text="🏢 Company Core"),
+            KeyboardButton(text="🏢 Бизнес"),
+            KeyboardButton(text="🎨 AI Studio"),
+        ],
+        [
+            KeyboardButton(text="⚙ Настройки"),
+            KeyboardButton(text="📂 Все разделы"),
         ],
     ]
     if show_automotive:
-        keyboard_rows.append([KeyboardButton(text=AUTO_VERTICAL_MAIN_BUTTON)])
-    keyboard_rows.extend([
-            [
-                KeyboardButton(text="👥 Пользователи"),
-            ],
-            [
-                KeyboardButton(text="📅 Календарь"),
-                KeyboardButton(text="📊 Аналитика")
-            ],
-            [
-                KeyboardButton(text="🤖 AI Агенты"),
-                KeyboardButton(text="🤖 AI помощник")
-            ],
-            [
-                KeyboardButton(text="🔔 Уведомления"),
-                KeyboardButton(text="✅ Задачи")
-            ],
-            [
-                KeyboardButton(text="📂 Файлы"),
-                KeyboardButton(text="🔎 Поиск")
-            ],
-            [
-                KeyboardButton(text="📊 Отчеты"),
-                KeyboardButton(text="📁 Файлы и документы")
-            ],
-            [
-                KeyboardButton(text="🔎 Глобальный поиск")
-            ],
-            [
-                KeyboardButton(text="⚙️ Бизнес-процессы")
-            ],
-            [
-                KeyboardButton(text="⚙ Администрирование")
-            ],
-            [
-                KeyboardButton(text="👑 Owner Panel"),
-            ],
-            [
-                KeyboardButton(text="🤝 Partner Cabinet"),
-            ],
-            [
-                KeyboardButton(text="📊 Owner Dashboard"),
-            ],
-            [
-                KeyboardButton(text="⚙ Настройки"),
-            ],
-            [
-                KeyboardButton(text="🧪 Тестовый центр"),
-                KeyboardButton(text="❤️ System Health"),
-            ],
-    ])
+        # Automotive remains reachable via Бизнес / Все разделы — not first screen.
+        pass
     keyboard = ReplyKeyboardMarkup(
         keyboard=keyboard_rows,
         resize_keyboard=True
@@ -1049,21 +1010,55 @@ def drone_module_actions_inline(section_key: str = "overview") -> InlineKeyboard
 
 
 def cafe_beauty_module_menu():
+    """Existing Cafe & Beauty workspace menu (operational, not AI Studio)."""
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [
                 KeyboardButton(text="☕ Cafe"),
-                KeyboardButton(text="💄 Beauty")
+                KeyboardButton(text="💄 Салон"),
+            ],
+            [
+                KeyboardButton(text="👥 Клиенты"),
+                KeyboardButton(text="📅 Записи"),
             ],
             [
                 KeyboardButton(text="📦 Склад"),
-                KeyboardButton(text="📅 Календарь")
+                KeyboardButton(text="📅 Календарь"),
             ],
             [
-                KeyboardButton(text="⬅️ Назад")
-            ]
+                KeyboardButton(text="⬅️ Назад"),
+            ],
         ],
-        resize_keyboard=True
+        resize_keyboard=True,
+    )
+    return keyboard
+
+
+def travel_module_menu():
+    """Travel workspace menu — aligned with vertical-workspace Travel nav (not AI stub)."""
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
+            [
+                KeyboardButton(text="🗺 Туры"),
+                KeyboardButton(text="📅 Бронирования"),
+            ],
+            [
+                KeyboardButton(text="👥 Клиенты Travel"),
+                KeyboardButton(text="🏨 Отели"),
+            ],
+            [
+                KeyboardButton(text="✈ Авиабилеты"),
+                KeyboardButton(text="📄 Документы Travel"),
+            ],
+            [
+                KeyboardButton(text="💳 Платежи Travel"),
+                KeyboardButton(text="📊 Аналитика Travel"),
+            ],
+            [
+                KeyboardButton(text="⬅️ Назад"),
+            ],
+        ],
+        resize_keyboard=True,
     )
     return keyboard
 
@@ -1778,9 +1773,45 @@ def auto_client_vin_inline() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Да", callback_data="vin_yes"),
-                InlineKeyboardButton(text="Нет", callback_data="vin_no"),
+                InlineKeyboardButton(text="✅ Да", callback_data="vin_yes"),
+                InlineKeyboardButton(text="❌ Нет", callback_data="vin_no"),
             ],
+        ]
+    )
+
+
+def auto_add_car_vin_inline() -> InlineKeyboardMarkup:
+    """Add-vehicle FSM VIN decision (HOTFIX 46.2.2 — primary path = callbacks)."""
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="✅ Да", callback_data="auto:add:vin:yes"),
+                InlineKeyboardButton(text="❌ Нет", callback_data="auto:add:vin:no"),
+            ],
+        ]
+    )
+
+
+def auto_add_car_after_create_inline(car_id: str | None = None) -> InlineKeyboardMarkup:
+    cid = car_id or "new"
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="📸 Добавить фото", callback_data=f"addcar:photos:{cid}"),
+                InlineKeyboardButton(text="🚗 Открыть авто", callback_data=f"car:view:{cid}"),
+            ],
+            [
+                InlineKeyboardButton(text="➕ Добавить ещё", callback_data="car:action:add"),
+                InlineKeyboardButton(text="🏠 Главное меню", callback_data="addcar:menu"),
+            ],
+        ]
+    )
+
+
+def auto_add_car_vin_skip_inline() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Пропустить", callback_data="auto:add:vin:no")],
         ]
     )
 
@@ -1908,26 +1939,27 @@ def dealer_onboarding_resume_inline(current_step: str) -> InlineKeyboardMarkup:
 
 def auto_billing_plans_inline() -> InlineKeyboardMarkup:
     from database.models.tenant_billing_engine import BillingPlanCode
+    from services.auto_dealer_settings import plan_label_ru
 
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text="STARTER",
+                    text=plan_label_ru(BillingPlanCode.STARTER.value),
                     callback_data=f"billing:plan:{BillingPlanCode.STARTER.value}",
                 ),
                 InlineKeyboardButton(
-                    text="PRO",
+                    text=plan_label_ru(BillingPlanCode.PRO.value),
                     callback_data=f"billing:plan:{BillingPlanCode.PRO.value}",
                 ),
             ],
             [
                 InlineKeyboardButton(
-                    text="BUSINESS",
+                    text=plan_label_ru(BillingPlanCode.BUSINESS.value),
                     callback_data=f"billing:plan:{BillingPlanCode.BUSINESS.value}",
                 ),
                 InlineKeyboardButton(
-                    text="ENTERPRISE",
+                    text=plan_label_ru(BillingPlanCode.ENTERPRISE.value),
                     callback_data=f"billing:plan:{BillingPlanCode.ENTERPRISE.value}",
                 ),
             ],
@@ -1936,6 +1968,67 @@ def auto_billing_plans_inline() -> InlineKeyboardMarkup:
             ],
         ]
     )
+
+
+def auto_dealer_settings_inline(lang: str | None = None) -> InlineKeyboardMarkup:
+    """Авто → Настройки дилера (разделы Sprint 46.1)."""
+    from services.auto_dealer_settings import DEALER_SETTINGS_SECTIONS
+
+    _ = lang
+    rows = []
+    row: list[InlineKeyboardButton] = []
+    for code, title in DEALER_SETTINGS_SECTIONS:
+        row.append(
+            InlineKeyboardButton(
+                text=title,
+                callback_data=f"dealer_cfg:{code}",
+            )
+        )
+        if len(row) == 2:
+            rows.append(row)
+            row = []
+    if row:
+        rows.append(row)
+    rows.append(
+        [InlineKeyboardButton(text="💱 Курсы дилера", callback_data="dealer_cfg:rates")]
+    )
+    rows.append([InlineKeyboardButton(text="◀ Назад", callback_data="billing:back:menu")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def auto_search_sources_inline(lang: str | None = None) -> InlineKeyboardMarkup:
+    """Owner: Настройки → Авто → Источники поиска."""
+    from services.auto_source_registry import OWNER_SOURCE_SECTIONS, auto_source_registry
+
+    _ = lang
+    rows: list[list[InlineKeyboardButton]] = []
+    for cat, title in OWNER_SOURCE_SECTIONS:
+        rows.append(
+            [InlineKeyboardButton(text=title, callback_data=f"src_cat:{cat}")]
+        )
+    rows.append(
+        [
+            InlineKeyboardButton(text="+ Telegram-канал", callback_data="src_act:add_tg"),
+            InlineKeyboardButton(text="+ Веб-источник", callback_data="src_act:add_web"),
+        ]
+    )
+    # Quick toggles for enabled telegram builtins
+    for s in auto_source_registry.list_all()[:8]:
+        flag = "🟢" if s.enabled else "⚪"
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text=f"{flag} {s.name}",
+                    callback_data=f"src_tog:{s.id}",
+                ),
+                InlineKeyboardButton(
+                    text="Проверить",
+                    callback_data=f"src_probe:{s.id}",
+                ),
+            ]
+        )
+    rows.append([InlineKeyboardButton(text="◀ Назад", callback_data="dealer_cfg:sources")])
+    return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def auto_billing_pricing_inline(plan_code: str) -> InlineKeyboardMarkup:

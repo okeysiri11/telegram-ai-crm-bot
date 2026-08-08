@@ -7,16 +7,22 @@ import uuid
 from decimal import Decimal, InvalidOperation
 
 from aiogram import Bot, F, Router
+from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 
 from config import BOT_TOKEN, OWNER_ID
 from services.handler_auth import log_audit
 from keyboards import (
     AUTO_VERTICAL_MAIN_BUTTON,
+    auto_add_car_after_create_inline,
+    auto_add_car_vin_inline,
+    auto_add_car_vin_skip_inline,
     auto_billing_owner_actions_inline,
     auto_billing_payment_inline,
     auto_billing_plans_inline,
     auto_billing_pricing_inline,
+    auto_dealer_settings_inline,
+    auto_search_sources_inline,
     auto_vertical_actions_inline,
     auto_vertical_car_list_inline,
     auto_vertical_hub_menu,
@@ -95,45 +101,46 @@ def _format_car_card(car: dict) -> str:
     lines = [
         f"🚗 {car.get('year', '—')} {car.get('make', '')} {car.get('model', '')}".strip(),
         f"VIN: {car.get('vin', '—')}",
-        f"Status: {car.get('status', '—')}",
+        f"Статус: {car.get('status', '—')}",
     ]
     if car.get("color"):
-        lines.append(f"Color: {car['color']}")
+        lines.append(f"Цвет: {car['color']}")
     if car.get("mileage") is not None:
-        lines.append(f"Mileage: {car['mileage']}")
+        lines.append(f"Пробег: {car['mileage']}")
     if car.get("purchase_price"):
-        lines.append(f"Purchase: {car['purchase_price']}")
+        lines.append(f"Закупка: {car['purchase_price']}")
     if car.get("total_cost"):
-        lines.append(f"Total cost: {car['total_cost']}")
+        lines.append(f"Себестоимость: {car['total_cost']}")
     if car.get("sale_price"):
-        lines.append(f"Sale: {car['sale_price']}")
+        lines.append(f"Продажа: {car['sale_price']}")
     if car.get("expected_profit"):
-        lines.append(f"Expected profit: {car['expected_profit']}")
+        lines.append(f"Ожидаемая прибыль: {car['expected_profit']}")
     equivalents = car.get("price_equivalents")
     if equivalents:
         lines.append(
-            "FX (dealer): "
+            "Курс дилера: "
             f"UAH {equivalents.get('UAH')} | "
             f"USD {equivalents.get('USD')} | "
             f"EUR {equivalents.get('EUR')} | "
             f"USDT {equivalents.get('USDT')}"
         )
     elif car.get("rates_error"):
-        lines.append("FX: dealer rates not configured in Telegram channel")
+        # Never show English technical rates error on cards
+        pass
     return "\n".join(lines)
 
 
 def _format_profit_breakdown(profit: dict) -> str:
     return (
-        "🧮 Profit Calculator\n\n"
-        f"Purchase: {profit.get('purchase_price', '0')}\n"
-        f"Delivery: {profit.get('delivery_cost', '0')}\n"
-        f"Customs: {profit.get('customs_cost', '0')}\n"
-        f"Repair: {profit.get('repair_cost', '0')}\n"
-        f"Advertising: {profit.get('advertising_cost', '0')}\n"
-        f"Total cost: {profit.get('total_cost', '0')}\n"
-        f"Sale price: {profit.get('sale_price', '—')}\n"
-        f"Expected profit: {profit.get('expected_profit', '—')}"
+        "🧮 Калькулятор прибыли\n\n"
+        f"Закупка: {profit.get('purchase_price', '0')}\n"
+        f"Доставка: {profit.get('delivery_cost', '0')}\n"
+        f"Таможня: {profit.get('customs_cost', '0')}\n"
+        f"Ремонт: {profit.get('repair_cost', '0')}\n"
+        f"Реклама: {profit.get('advertising_cost', '0')}\n"
+        f"Себестоимость: {profit.get('total_cost', '0')}\n"
+        f"Цена продажи: {profit.get('sale_price', '—')}\n"
+        f"Ожидаемая прибыль: {profit.get('expected_profit', '—')}"
     )
 
 
@@ -163,7 +170,14 @@ async def _show_car_list(message: Message, user_id: int) -> None:
     await message.answer("Выберите автомобиль:", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
 
 
-async def _start_add_car(message: Message, user_id: int) -> None:
+async def _start_add_car(message: Message, user_id: int, state: FSMContext | None = None) -> None:
+    """HOTFIX 46.2.2 — durable FSM entry (Redis). Falls back to process dict only if no state."""
+    if state is not None:
+        from routers.auto_add_vehicle_router import start_add_vehicle
+
+        await start_add_vehicle(message, state, user_id)
+        return
+    # Legacy fallback (should not run in production dispatcher)
     auto_vertical_flow[user_id] = {"step": "make", "data": {}}
     await message.answer(
         "🚗 Добавить авто\n\nУкажите марку автомобиля:",
@@ -171,36 +185,176 @@ async def _start_add_car(message: Message, user_id: int) -> None:
     )
 
 
-async def _finalize_add_car(message: Message, user_id: int, data: dict) -> None:
+async def _finalize_add_car(message: Message, user_id: int, data: dict) -> bool:
+    """
+    Persist vehicle. Returns True if created.
+    Does NOT clear FSM until success — prevents VIN deadlock on tenant/DB errors.
+    """
+    from services.auto_client_output import user_facing_tenant_error_ru
+    from services.auto_telegram_tenant import ensure_telegram_tenant_session
+
     fields = dict(data.get("fields") or {})
+    # Strip non-DB helper keys
+    fields.pop("extra_costs_total", None)
     vin = data.get("vin")
-    _clear_flow(user_id)
+    make = data.get("make") or "Авто"
+    model = data.get("model") or "—"
+    year = data.get("year")
+    if year is None:
+        year = 0
+
+    logger.info(
+        "AUTO_ADD_STATE user_id=%s previous_state=FINALIZE_VEHICLE decision=%s "
+        "make=%s model=%s year=%s vin=%s",
+        user_id,
+        "WITH_VIN" if vin else "SKIP_VIN",
+        make,
+        model,
+        year,
+        "set" if vin else "null",
+    )
+
+    # Ensure tenant before create (PermissionError was the silent killer)
+    try:
+        tenant = await ensure_telegram_tenant_session(user_id)
+        if not tenant.get("ok"):
+            # Keep draft — user can retry
+            auto_vertical_flow[user_id] = {"step": "finalize_retry", "data": data}
+            await message.answer(
+                tenant.get("message_ru") or user_facing_tenant_error_ru(),
+                reply_markup=auto_vertical_menu(await _user_lang(user_id)),
+            )
+            logger.info(
+                "AUTO_ADD_STATE user_id=%s next_state=finalize_retry finalized=false error=tenant",
+                user_id,
+            )
+            return False
+    except Exception:
+        logger.warning("AUTO_ADD tenant ensure failed user=%s", user_id, exc_info=True)
+
     try:
         car = await CarEngineV1.create_car(
             user_id,
             vin=vin,
-            make=data["make"],
-            model=data["model"],
-            year=data["year"],
+            make=make,
+            model=model,
+            year=int(year) if year else 0,
             **fields,
         )
     except CarEngineError as exc:
-        await message.answer(f"❌ {exc}", reply_markup=auto_vertical_menu(await _user_lang(user_id)))
-        return
+        auto_vertical_flow[user_id] = {"step": "finalize_retry", "data": data}
+        await message.answer(
+            f"❌ Не удалось сохранить: {exc}",
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
+        )
+        logger.info(
+            "AUTO_ADD_STATE user_id=%s next_state=finalize_retry finalized=false error=car_engine",
+            user_id,
+        )
+        return False
+    except PermissionError:
+        auto_vertical_flow[user_id] = {"step": "finalize_retry", "data": data}
+        await message.answer(
+            user_facing_tenant_error_ru(),
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
+        )
+        logger.info(
+            "AUTO_ADD_STATE user_id=%s next_state=finalize_retry finalized=false error=permission",
+            user_id,
+        )
+        return False
+    except Exception as exc:
+        auto_vertical_flow[user_id] = {"step": "finalize_retry", "data": data}
+        logger.exception("AUTO_ADD create failed user=%s", user_id)
+        await message.answer(
+            "❌ Не удалось сохранить автомобиль. Данные сохранены — напишите «сохранить» или повторите позже.",
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
+        )
+        logger.info(
+            "AUTO_ADD_STATE user_id=%s next_state=finalize_retry finalized=false error=%s",
+            user_id,
+            type(exc).__name__,
+        )
+        return False
 
     if vin:
-        await AutoVerticalService.record_vin_intake(
-            vin=vin,
-            car_id=uuid.UUID(car["id"]),
-            created_by=user_id,
-        )
+        try:
+            await AutoVerticalService.record_vin_intake(
+                vin=vin,
+                car_id=uuid.UUID(car["id"]),
+                created_by=user_id,
+            )
+        except Exception:
+            logger.debug("VIN intake record skipped", exc_info=True)
+
+    _clear_flow(user_id)
+    auto_vertical_section[user_id] = "cars"
+
+    from services.auto_add_vehicle_flow import format_vehicle_created_ru
+
+    success = format_vehicle_created_ru(data, vin=vin)
 
     await message.answer(
-        "✅ Автомобиль добавлен\n\n" + _format_car_card(car),
+        success,
+        reply_markup=auto_add_car_after_create_inline(car.get("id")),
+    )
+    await message.answer(
+        "Автомобиль в списке. Фото можно добавить позже — это необязательно.",
         reply_markup=auto_vertical_menu(await _user_lang(user_id)),
     )
     log_audit(user_id, "create", "auto_vertical", vin or car["id"])
+    logger.info(
+        "AUTO_ADD_STATE user_id=%s next_state=IDLE vehicle_id=%s finalized=true",
+        user_id,
+        car.get("id"),
+    )
+    return True
 
+
+async def _handle_add_car_vin_decision(
+    message: Message,
+    user_id: int,
+    *,
+    decision: str,
+    input_normalized: str,
+) -> None:
+    """YES → WAITING_VIN; NO → vin=null → FINALIZE immediately (no fallthrough)."""
+    flow = auto_vertical_flow.get(user_id) or {}
+    data = flow.setdefault("data", {})
+    previous = flow.get("step")
+
+    logger.info(
+        "AUTO_ADD_STATE user_id=%s previous_state=%s input_normalized=%s decision=%s",
+        user_id,
+        previous,
+        input_normalized,
+        decision,
+    )
+
+    if decision == "yes":
+        flow["step"] = "vin_input"
+        auto_vertical_flow[user_id] = flow
+        await message.answer(
+            "Отправьте VIN автомобиля.",
+            reply_markup=auto_add_car_vin_skip_inline(),
+        )
+        logger.info(
+            "AUTO_ADD_STATE user_id=%s next_state=WAITING_VIN finalized=false",
+            user_id,
+        )
+        return
+
+    if decision == "no":
+        data["vin"] = None
+        flow["step"] = "finalize"
+        auto_vertical_flow[user_id] = flow
+        await _finalize_add_car(message, user_id, data)
+        return
+
+    await message.answer(
+        "Хотите добавить VIN автомобиля?",
+        reply_markup=auto_add_car_vin_inline(),
+    )
 
 async def _start_search(message: Message, user_id: int) -> None:
     auto_vertical_flow[user_id] = {"step": "search", "data": {}}
@@ -291,12 +445,12 @@ async def _show_analytics(message: Message, user_id: int) -> None:
         await message.answer(
             "📊 Аналитика\n\n"
             f"Дата: {dashboard.get('metric_date', '—')}\n"
-            f"Leads: {lead.get('total_leads', 0)}\n"
+            f"Лиды: {lead.get('total_leads', 0)}\n"
             f"CPL: {lead.get('cpl', '—')}\n"
-            f"Conversion: {lead.get('conversion_rate', '—')}\n"
-            f"Deals won: {sales.get('deals_won', 0)}\n"
-            f"Avg deal: {sales.get('average_deal_size', '—')}\n"
-            f"Vehicle turnover: {sales.get('vehicle_turnover', '—')}",
+            f"Конверсия: {lead.get('conversion_rate', '—')}\n"
+            f"Сделки: {sales.get('deals_won', 0)}\n"
+            f"Средний чек: {sales.get('average_deal_size', '—')}\n"
+            f"Оборачиваемость: {sales.get('vehicle_turnover', '—')}",
             reply_markup=auto_vertical_menu(await _user_lang(user_id)),
         )
     except Exception as exc:
@@ -310,9 +464,7 @@ async def _show_ai_manager(message: Message, user_id: int) -> None:
     lang = await _user_lang(user_id)
     auto_vertical_section[user_id] = "ai_manager"
     await message.answer(
-        "🤖 AI Менеджер\n\n"
-        "Задайте вопрос — AI поможет с подбором авто, услугами и квалификацией заявки.\n"
-        "Пример: «Ищу BMW X5 дизель до 40000$ в Одессе»",
+        "🤖 AI Менеджер\n\n" + t("telegram.auto.ai_welcome", lang),
         reply_markup=auto_vertical_menu(lang),
     )
 
@@ -342,6 +494,8 @@ async def _show_leads(message: Message, user_id: int) -> None:
 
 
 async def _show_billing(message: Message, user_id: int) -> None:
+    from services.auto_dealer_settings import plan_label_ru
+
     view = await CommercialBillingEngineV1.get_user_subscription_view(user_id)
     lines = [
         "💳 Тарифы и услуги",
@@ -351,10 +505,14 @@ async def _show_billing(message: Message, user_id: int) -> None:
     ]
     if view.get("active_payment"):
         ap = view["active_payment"]
-        lines.append(f"✅ Активный план: {ap['plan_code']} ({ap['status']})")
+        lines.append(
+            f"✅ Активный план: {plan_label_ru(ap['plan_code'])} ({ap['status']})"
+        )
     elif view.get("pending_payment"):
         pp = view["pending_payment"]
-        lines.append(f"⏳ Ожидает подтверждения: {pp['plan_code']}")
+        lines.append(
+            f"⏳ Ожидает подтверждения: {plan_label_ru(pp['plan_code'])}"
+        )
     else:
         lines.append("Выберите тариф для подключения:")
     await message.answer("\n".join(lines), reply_markup=auto_vertical_menu(await _user_lang(user_id)))
@@ -362,34 +520,51 @@ async def _show_billing(message: Message, user_id: int) -> None:
     if await is_billing_owner(user_id):
         pending = await CommercialBillingEngineV1.list_pending_for_owner(user_id)
         if pending:
-            await message.answer(f"🔐 Owner: pending payments — {len(pending)}")
+            await message.answer(f"🔐 Владелец: ожидающих платежей — {len(pending)}")
 
 
 async def _show_settings(message: Message, user_id: int) -> None:
     lang = await _user_lang(user_id)
-    dealer_sources = await AutomotivePartnerIntegrationEngineV1.list_dealer_sources(actor_id=user_id)
-    sources_text = AutomotivePartnerIntegrationEngineV1.format_dealer_sources_report(dealer_sources)
+    from services.auto_dealer_settings import auto_dealer_settings
+
     await message.answer(
-        "⚙ Настройки авто\n\n"
-        "• Каналы продвижения: Telegram, Instagram, Facebook, TikTok\n"
-        "• Уведомления о SLA и лидах\n"
-        "• Интеграция с Car Engine и Marketing Engine\n\n"
-        f"{sources_text}\n\n"
-        "Расширенные настройки — через админ-панель.",
+        auto_dealer_settings.menu_text_ru(),
         reply_markup=auto_vertical_menu(lang),
+    )
+    await message.answer(
+        "Выберите раздел или откройте курсы:",
+        reply_markup=auto_dealer_settings_inline(lang),
     )
 
 
 async def _show_dealer_rates(message: Message, user_id: int) -> None:
+    from services.auto_client_output import user_facing_rates_missing_ru
     from services.pg_automotive_treasury_engine import AutomotiveTreasuryEngineV1
 
     lang = await _user_lang(user_id)
+    is_owner = False
+    try:
+        from services.automotive_telegram_access import is_billing_owner
+
+        is_owner = await is_billing_owner(user_id)
+    except Exception:
+        is_owner = False
     try:
         rates = await DealerRateService.get_authoritative_rates()
         text = AutomotiveTreasuryEngineV1.format_rates_report(rates)
-    except Exception as exc:
-        text = str(exc)
-    await message.answer(text, reply_markup=auto_vertical_menu(lang))
+    except Exception:
+        text = user_facing_rates_missing_ru(is_owner=is_owner)
+        if not text and is_owner:
+            text = t("telegram.auto.rates_missing_owner", lang)
+        elif not text:
+            # Client: do not show technical rates error at all
+            await message.answer(
+                "Курсы доступны менеджеру после настройки.",
+                reply_markup=auto_vertical_menu(lang),
+            )
+            return
+    if text:
+        await message.answer(text, reply_markup=auto_vertical_menu(lang))
 
 
 async def _show_treasury(message: Message, user_id: int) -> None:
@@ -519,13 +694,24 @@ async def _schedule_marketing_for_car(
     log_audit(user_id, "create", "marketing_campaign", campaign["id"])
 
 
-async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: str) -> None:
+async def _handle_auto_vertical_screen(
+    message: Message,
+    user_id: int,
+    screen: str,
+    state: FSMContext | None = None,
+) -> None:
     screen_key = _normalize_screen(screen)
     lang = await _user_lang(user_id)
     section = auto_vertical_section.get(user_id, "hub")
 
     if screen_key == "back":
         _clear_flow(user_id)
+        if state is not None:
+            from services.auto_add_vehicle_flow import clear_add_vehicle, is_auto_add_vehicle_state
+
+            cur = await state.get_state()
+            if is_auto_add_vehicle_state(cur):
+                await clear_add_vehicle(state)
         auto_billing_flow.pop(user_id, None)
         if section == "cars":
             await _return_to_auto_hub(message, user_id)
@@ -567,7 +753,7 @@ async def _handle_auto_vertical_screen(message: Message, user_id: int, screen: s
         return
 
     if screen_key == "add_car":
-        await _start_add_car(message, user_id)
+        await _start_add_car(message, user_id, state)
         return
 
     if screen_key == "list_cars":
@@ -659,7 +845,7 @@ async def open_auto_vertical_callback(callback: CallbackQuery) -> None:
     user_id = callback.from_user.id
     logger.info("Auto menu requested by %s (callback)", user_id)
     if callback.message is None:
-        await callback.answer("Automotive module temporarily unavailable.", show_alert=True)
+        await callback.answer("Автомобильный модуль временно недоступен.", show_alert=True)
         return
     try:
         if not await can_access_automotive_ui(user_id):
@@ -673,7 +859,7 @@ async def open_auto_vertical_callback(callback: CallbackQuery) -> None:
         await callback.answer()
     except Exception:
         logger.exception("Automotive module unavailable for user %s (callback)", user_id)
-        await callback.answer("Automotive module temporarily unavailable.", show_alert=True)
+        await callback.answer("Автомобильный модуль временно недоступен.", show_alert=True)
 
 
 @auto_vertical_router.message(
@@ -684,20 +870,123 @@ async def open_auto_vertical_callback(callback: CallbackQuery) -> None:
         and not auto_vertical_flow.get(m.from_user.id)
     )
 )
-async def auto_vertical_screen(message: Message) -> None:
-    await _handle_auto_vertical_screen(message, message.from_user.id, message.text)
+async def auto_vertical_screen(message: Message, state: FSMContext) -> None:
+    await _handle_auto_vertical_screen(message, message.from_user.id, message.text, state)
 
 
 @auto_vertical_router.message(
     lambda m: auto_vertical_active.get(m.from_user.id) and auto_vertical_flow.get(m.from_user.id)
 )
-async def auto_vertical_flow_handler(message: Message) -> None:
+async def auto_vertical_flow_handler(message: Message, state: FSMContext) -> None:
+    """Legacy in-memory flow. Add-car steps prefer durable FSM on auto_add_vehicle router."""
+    from services.auto_add_vehicle_flow import is_auto_add_vehicle_state
+
+    fsm_state = await state.get_state()
+    if is_auto_add_vehicle_state(fsm_state):
+        # Durable router owns this update — should not reach here if registered first.
+        logger.warning(
+            "TELEGRAM_UPDATE handler_selected=auto_vertical_flow_handler_skipped "
+            "reason=durable_fsm_active fsm=%s",
+            fsm_state,
+        )
+        return
+
     user_id = message.from_user.id
     flow = auto_vertical_flow.get(user_id, {})
     step = flow.get("step")
     data = flow.setdefault("data", {})
     text = (message.text or "").strip()
     lang = await _user_lang(user_id)
+
+    # HOTFIX 46.2.2 — migrate in-memory add-car onto durable FSM immediately
+    if step in {
+        "make",
+        "model",
+        "year",
+        "color",
+        "mileage",
+        "purchase_price",
+        "optional_costs",
+        "vin_optional",
+        "vin_input",
+        "finalize_retry",
+    }:
+        from routers import auto_add_vehicle_router as aavr
+        from services.auto_add_vehicle_flow import persist_add_vehicle
+
+        await persist_add_vehicle(state, step=step, draft=data)
+        logger.info(
+            "TELEGRAM_UPDATE migrated_inmemory_to_fsm user=%s step=%s handler=auto_vertical_flow→durable",
+            user_id,
+            step,
+        )
+        step_handlers = {
+            "make": aavr.step_make,
+            "model": aavr.step_model,
+            "year": aavr.step_year,
+            "color": aavr.step_color,
+            "mileage": aavr.step_mileage,
+            "purchase_price": aavr.step_purchase_price,
+            "optional_costs": aavr.step_optional_costs,
+            "vin_optional": aavr.vin_decision_text,
+            "vin_input": aavr.waiting_vin_text,
+            "finalize_retry": aavr.finalize_retry_text,
+        }
+        handler = step_handlers.get(step)
+        if handler is not None:
+            await handler(message, state)
+            return
+
+    # HOTFIX 46.2.1 — VIN FSM absolute priority (before menu / intent)
+    if step in {"vin_optional", "vin_input", "finalize_retry"}:
+        from services.auto_add_vehicle_vin import normalize_vin_decision_input, resolve_vin_decision
+
+        if step == "finalize_retry":
+            low = text.lower()
+            if low in {"сохранить", "повторить", "да", "ок", "нет", "2", "пропустить"}:
+                if low in {"нет", "2", "пропустить"}:
+                    data["vin"] = None
+                await _finalize_add_car(message, user_id, data)
+                return
+            await message.answer(
+                "Черновик сохранён. Напишите «сохранить», чтобы создать автомобиль.",
+                reply_markup=auto_vertical_menu(lang),
+            )
+            return
+
+        if step == "vin_optional":
+            decision = resolve_vin_decision(text)
+            await _handle_add_car_vin_decision(
+                message,
+                user_id,
+                decision=decision,
+                input_normalized=normalize_vin_decision_input(text),
+            )
+            return
+
+        if step == "vin_input":
+            decision = resolve_vin_decision(text)
+            if decision == "no":
+                await _handle_add_car_vin_decision(
+                    message,
+                    user_id,
+                    decision="no",
+                    input_normalized=normalize_vin_decision_input(text),
+                )
+                return
+            result = validate_vin(text)
+            if not result["is_valid"]:
+                await message.answer(
+                    "VIN выглядит некорректно. Проверьте его или нажмите «Пропустить».",
+                    reply_markup=auto_add_car_vin_skip_inline(),
+                )
+                return
+            data["vin"] = result["vin"]
+            flow["step"] = "finalize"
+            auto_vertical_flow[user_id] = flow
+            logger.info("ADD_CAR VIN_PRESENT=True user=%s", user_id)
+            await _finalize_add_car(message, user_id, data)
+            return
 
     screen_key = resolve_auto_screen(text)
     if screen_key is not None:
@@ -777,63 +1066,28 @@ async def auto_vertical_flow_handler(message: Message) -> None:
         await message.answer(
             "Доп. расходы одной строкой через пробел "
             "(delivery customs repair advertising) или «-»:\n"
-            "Пример: 800 1200 500 200"
+            "Пример: 800 1200 500 200\n"
+            "Можно одно число, например: 100"
         )
         return
 
     if step == "optional_costs":
-        fields = data.get("fields", {})
-        if text != "-":
-            parts = text.split()
-            labels = ("delivery_cost", "customs_cost", "repair_cost", "advertising_cost")
-            try:
-                for idx, label in enumerate(labels):
-                    if idx < len(parts):
-                        fields[label] = Decimal(parts[idx].replace(",", "."))
-            except InvalidOperation:
-                await message.answer("Введите до 4 чисел или «-»:")
-                return
+        from services.auto_add_vehicle_vin import parse_extra_costs_line
+
+        fields = dict(data.get("fields") or {})
+        try:
+            fields.update(parse_extra_costs_line(text))
+        except ValueError:
+            await message.answer("Введите до 4 чисел или «-»:")
+            return
         data["fields"] = fields
         flow["step"] = "vin_optional"
+        auto_vertical_flow[user_id] = flow
         await message.answer(
-            "Хотите добавить VIN автомобиля?\n\n"
-            "• Да\n"
-            "• Нет"
+            "Хотите добавить VIN автомобиля?",
+            reply_markup=auto_add_car_vin_inline(),
         )
-        return
-
-    if step == "vin_optional":
-        lowered = text.lower()
-        if lowered in {"нет", "пропустить", "skip", "-"}:
-            data["vin"] = None
-            logger.info("ADD_CAR VIN_PRESENT=False user=%s", user_id)
-            await _finalize_add_car(message, user_id, data)
-            return
-        if lowered in {"да", "yes", "добавить vin", "vin"}:
-            flow["step"] = "vin_input"
-            await message.answer("Введите VIN автомобиля:")
-            return
-        await message.answer("Выберите:\n• Да\n• Нет")
-        return
-
-    if step == "vin_input":
-        lowered = text.lower()
-        if lowered in {"нет", "пропустить", "skip", "-"}:
-            data["vin"] = None
-            logger.info("ADD_CAR VIN_PRESENT=False user=%s", user_id)
-            await _finalize_add_car(message, user_id, data)
-            return
-        result = validate_vin(text)
-        if not result["is_valid"]:
-            await message.answer(
-                "❌ Некорректный VIN:\n"
-                + "\n".join(f"• {err}" for err in result["errors"])
-                + "\n\nВведите VIN ещё раз или «Нет»:"
-            )
-            return
-        data["vin"] = result["vin"]
-        logger.info("ADD_CAR VIN_PRESENT=True user=%s", user_id)
-        await _finalize_add_car(message, user_id, data)
+        logger.info("AUTO_ADD_STATE user_id=%s next_state=WAITING_VIN_DECISION", user_id)
         return
 
     if step == "search":
@@ -970,7 +1224,7 @@ async def auto_vertical_flow_handler(message: Message) -> None:
 
 
 @auto_vertical_router.callback_query(F.data.startswith("car:"))
-async def auto_vertical_callback(callback: CallbackQuery) -> None:
+async def auto_vertical_callback(callback: CallbackQuery, state: FSMContext) -> None:
     user_id = callback.from_user.id
     data = callback.data or ""
 
@@ -1009,6 +1263,7 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
             callback.message,
             user_id,
             action_map[data],
+            state,
         )
         await callback.answer()
         return
@@ -1017,6 +1272,179 @@ async def auto_vertical_callback(callback: CallbackQuery) -> None:
         await callback.message.answer(
             "🚗 Авто",
             reply_markup=auto_vertical_menu(await _user_lang(user_id)),
+        )
+        await callback.answer()
+        return
+
+    await callback.answer()
+
+
+@auto_vertical_router.callback_query(F.data.startswith("addcar:"))
+async def auto_add_car_vin_callback(callback: CallbackQuery, state: FSMContext) -> None:
+    """Legacy addcar:* callbacks — migrate to durable FSM handlers."""
+    if callback.message is None or callback.from_user is None:
+        await callback.answer()
+        return
+    user_id = callback.from_user.id
+    data = callback.data or ""
+
+    if data == "addcar:menu":
+        from services.auto_add_vehicle_flow import clear_add_vehicle
+
+        _clear_flow(user_id)
+        await clear_add_vehicle(state)
+        await _return_to_cars_menu(callback.message, user_id)
+        await callback.answer()
+        return
+
+    if data.startswith("addcar:photos:"):
+        await callback.message.answer(
+            "Пришлите фото автомобиля в этот чат позже через карточку авто. "
+            "Сейчас автомобиль уже сохранён.",
+            reply_markup=auto_vertical_menu(await _user_lang(user_id)),
+        )
+        await callback.answer()
+        return
+
+    # VIN yes/no — prefer durable router path (also registered on auto_add_vehicle)
+    from routers.auto_add_vehicle_router import handle_vin_no, handle_vin_yes
+    from services.auto_add_vehicle_flow import persist_add_vehicle
+    from services.auto_add_vehicle_vin import resolve_vin_decision
+
+    flow = auto_vertical_flow.get(user_id)
+    if flow and flow.get("step") in {"vin_optional", "vin_input", "finalize_retry"}:
+        await persist_add_vehicle(state, step=flow["step"], draft=flow.get("data") or {})
+    decision = resolve_vin_decision(callback_data=data)
+    await callback.answer()
+    try:
+        await callback.message.edit_reply_markup(reply_markup=None)
+    except Exception:
+        pass
+    if decision == "yes":
+        await handle_vin_yes(callback.message, state, user_id)
+    elif decision == "no":
+        await handle_vin_no(callback.message, state, user_id)
+    else:
+        await callback.message.answer(
+            "Хотите добавить VIN автомобиля?",
+            reply_markup=auto_add_car_vin_inline(),
+        )
+
+
+@auto_vertical_router.callback_query(F.data.startswith("dealer_cfg:"))
+async def auto_dealer_settings_callback(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+    lang = await _user_lang(user_id)
+    data = callback.data or ""
+    section = data.split(":", 1)[-1]
+    from services.auto_dealer_settings import DEALER_SETTINGS_SECTIONS
+
+    titles = dict(DEALER_SETTINGS_SECTIONS)
+    title = titles.get(section, section)
+    if section == "rates":
+        await _show_dealer_rates(callback.message, user_id)
+        await callback.answer()
+        return
+    if section == "tariffs":
+        await _show_billing(callback.message, user_id)
+        await callback.answer()
+        return
+    if section == "ai_rules":
+        from services.auto_dealer_settings import auto_dealer_settings
+        from services.auto_human_conversation_policy import style_menu_text_ru
+
+        cfg = auto_dealer_settings.get(user_id)
+        await callback.message.answer(
+            style_menu_text_ru(cfg),
+            reply_markup=auto_vertical_menu(lang),
+        )
+        await callback.answer()
+        return
+    if section in {"sources", "telegram_channels"}:
+        from services.auto_source_registry import auto_source_registry
+
+        await callback.message.answer(
+            auto_source_registry.menu_text_ru(),
+            reply_markup=auto_search_sources_inline(lang),
+        )
+        await callback.answer()
+        return
+    await callback.message.answer(
+        f"⚙ {title}\n\nРаздел будет доступен в панели владельца. "
+        "Сейчас можно настроить через «Курсы дилера» и «Правила AI».",
+        reply_markup=auto_vertical_menu(lang),
+    )
+    await callback.answer()
+
+
+@auto_vertical_router.callback_query(
+    F.data.startswith("src_tog:")
+    | F.data.startswith("src_probe:")
+    | F.data.startswith("src_cat:")
+    | F.data.startswith("src_act:")
+)
+async def auto_search_sources_callback(callback: CallbackQuery) -> None:
+    user_id = callback.from_user.id
+    lang = await _user_lang(user_id)
+    data = callback.data or ""
+    from services.auto_source_registry import auto_source_registry
+
+    if data.startswith("src_tog:"):
+        sid = data.split(":", 1)[1]
+        cur = auto_source_registry.get(sid)
+        if not cur:
+            await callback.answer("Источник не найден", show_alert=True)
+            return
+        auto_source_registry.set_enabled(sid, not cur.enabled)
+        await callback.message.answer(
+            auto_source_registry.menu_text_ru(),
+            reply_markup=auto_search_sources_inline(lang),
+        )
+        await callback.answer("Обновлено")
+        return
+
+    if data.startswith("src_probe:"):
+        sid = data.split(":", 1)[1]
+        result = auto_source_registry.probe(sid)
+        await callback.message.answer(
+            result.get("message_ru") or "Готово.",
+            reply_markup=auto_search_sources_inline(lang),
+        )
+        await callback.answer()
+        return
+
+    if data.startswith("src_cat:"):
+        cat = data.split(":", 1)[1]
+        lines = [f"Раздел: {cat}", ""]
+        for s in auto_source_registry.by_category(cat):
+            lines.append(
+                f"{'🟢' if s.enabled else '⚪'} {s.name}\n"
+                f"{s.source_url}\n"
+                f"Приоритет: {s.priority}"
+            )
+            lines.append("")
+        await callback.message.answer(
+            "\n".join(lines).strip() or "Пусто.",
+            reply_markup=auto_search_sources_inline(lang),
+        )
+        await callback.answer()
+        return
+
+    if data == "src_act:add_tg":
+        await callback.message.answer(
+            "Чтобы добавить Telegram-канал, пришлите ссылку вида https://t.me/channel "
+            "в настройках владельца (API) или используйте реестр источников.\n"
+            "Уже активны: KEEP CAR, IsAuto, KIEVAVTO.",
+            reply_markup=auto_search_sources_inline(lang),
+        )
+        await callback.answer()
+        return
+
+    if data == "src_act:add_web":
+        await callback.message.answer(
+            "Веб-источники AUTO.RIA, OLX Auto и RST уже включены и участвуют в поиске.\n"
+            "Дополнительные сайты добавляются через реестр источников владельца.",
+            reply_markup=auto_search_sources_inline(lang),
         )
         await callback.answer()
         return
@@ -1266,25 +1694,67 @@ async def _process_billing_receipt(
         and not m.text.startswith("/")
     )
 )
-async def auto_vertical_ai_manager_chat(message: Message) -> None:
+async def auto_vertical_ai_manager_chat(message: Message, state: FSMContext) -> None:
     user_id = message.from_user.id
+    # HOTFIX 46.2.2 — never AI while Add-car FSM active
+    try:
+        from services.auto_add_vehicle_flow import ActiveFlowRoutingRequired, assert_no_active_add_vehicle
+
+        await assert_no_active_add_vehicle(state, user_id=user_id)
+    except ActiveFlowRoutingRequired:
+        logger.error(
+            "TELEGRAM_UPDATE handler_selected=ai_manager_BLOCKED user=%s reason=ACTIVE_FLOW",
+            user_id,
+        )
+        return
+
     lang = await _user_lang(user_id)
-    from services.pg_ai_manager_engine import AiManagerEngineV1
+    from services.auto_client_output import is_staff_role, sanitize_ai_reply_for_client
+    from services.auto_conversation_engine import auto_conversation_engine
+    from services.auto_dealer_settings import auto_dealer_settings
+    from services.auto_telegram_tenant import ensure_telegram_tenant_session
+
+    tenant = await ensure_telegram_tenant_session(user_id)
+    if not tenant.get("ok"):
+        await message.answer(
+            tenant.get("message_ru") or t("telegram.auto.tenant_missing", lang),
+            reply_markup=auto_vertical_menu(lang),
+        )
+        return
+
+    role = "client"
+    try:
+        # Owners/managers may enable debug
+        from services.automotive_telegram_access import is_billing_owner
+
+        if await is_billing_owner(user_id):
+            role = "owner"
+    except Exception:
+        role = "client"
+    debug = bool(auto_dealer_settings.get(user_id).get("debug_mode")) and is_staff_role(role)
 
     try:
-        result = await AiManagerEngineV1.qualify_message(message.text or "")
-        reply = result.get("reply") or "Спасибо за сообщение."
-        meta = (
-            f"\n\n📊 Score: {result.get('lead_score')} | "
-            f"Priority: {result.get('priority')} | "
-            f"Dept: {result.get('department')} | "
-            f"Intent: {result.get('intent')}"
+        result = await auto_conversation_engine.handle(
+            user_id,
+            message.text or "",
+            role=role,
+            debug=debug,
         )
-        await message.answer(reply + meta, reply_markup=auto_vertical_menu(lang))
-    except Exception as exc:
+        reply = sanitize_ai_reply_for_client(
+            result.get("reply_ru") or "Спасибо за сообщение.",
+            role=role,
+            debug=debug,
+        )
+        await message.answer(reply, reply_markup=auto_vertical_menu(lang))
+    except PermissionError:
+        await message.answer(
+            t("telegram.auto.tenant_missing", lang),
+            reply_markup=auto_vertical_menu(lang),
+        )
+    except Exception:
         logger.warning("AI manager chat failed user=%s", user_id, exc_info=True)
         await message.answer(
-            "AI Manager временно недоступен. Попробуйте позже.",
+            t("telegram.auto.ai_unavailable", lang),
             reply_markup=auto_vertical_menu(lang),
         )
 

@@ -17,7 +17,12 @@ from middleware.tenant_middleware import TenantMiddleware
 logger = logging.getLogger(__name__)
 
 # Registered bot routers (order matters — first match wins).
+# HOTFIX 46.2.2: durable Auto Add Vehicle FSM before Super App / AI catch-alls.
 BOT_ROUTER_PATHS: tuple[str, ...] = (
+    "routers.auto_add_vehicle_router",
+    # Sprint 46.5 — vertical nav / role selector BEFORE Super App AI / Hercules
+    "routers.vertical_nav_router",
+    "routers.telegram_super_app_router",
     "routers.auto_client_router",
     "routers.auto_dealer_router",
     "routers.client_history_router",

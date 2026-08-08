@@ -68,7 +68,7 @@
     {
       "name": "compose_up",
       "ok": true,
-      "detail": "g\n Container telegrambotcourse-grafana-1  Running\n Container ai-ecosystem-postgres  Waiting\n Container ai-ecosystem-redis  Waiting\n Container ai-ecosystem-redis  Healthy\n Container ai-ecosystem-postgres  Healthy\n Container telegrambotcourse-bot-1  Waiting\n Container telegrambotcourse-bot-1  Healthy\n"
+      "detail": "g\n Container telegrambotcourse-grafana-1  Running\n Container ai-ecosystem-redis  Waiting\n Container ai-ecosystem-postgres  Waiting\n Container ai-ecosystem-postgres  Healthy\n Container ai-ecosystem-redis  Healthy\n Container telegrambotcourse-bot-1  Waiting\n Container telegrambotcourse-bot-1  Healthy\n"
     },
     {
       "name": "http://127.0.0.1:8080/liveness",
@@ -103,37 +103,37 @@
     {
       "name": "http://127.0.0.1/health",
       "ok": true,
-      "detail": "HTTP 200 (2479 bytes)"
+      "detail": "HTTP 200 (2480 bytes)"
     },
     {
       "name": "service:postgres",
       "ok": true,
-      "detail": "Up 3 hours (healthy)"
+      "detail": "Up 2 hours (healthy)"
     },
     {
       "name": "service:redis",
       "ok": true,
-      "detail": "Up 3 hours (healthy)"
+      "detail": "Up 2 hours (healthy)"
     },
     {
       "name": "service:bot",
       "ok": true,
-      "detail": "Up 2 hours (healthy)"
+      "detail": "Up 2 minutes (healthy)"
     },
     {
       "name": "service:nginx",
       "ok": true,
-      "detail": "Up 3 hours (healthy)"
+      "detail": "Up 2 hours (healthy)"
     },
     {
       "name": "service:prometheus",
       "ok": true,
-      "detail": "Up 3 hours (healthy)"
+      "detail": "Up 2 hours (healthy)"
     },
     {
       "name": "service:grafana",
       "ok": true,
-      "detail": "Up 3 hours (healthy)"
+      "detail": "Up 2 hours (healthy)"
     },
     {
       "name": "postgres_select",

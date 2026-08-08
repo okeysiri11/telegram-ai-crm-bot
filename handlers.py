@@ -1,6 +1,7 @@
 from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.filters.command import CommandObject
+from aiogram.fsm.context import FSMContext
 from aiogram.types import (
     Message,
     CallbackQuery,
@@ -431,6 +432,9 @@ MODULE_STUB_BUTTONS = {
     # Cafe & Beauty
     "☕ Cafe",
     "💄 Beauty",
+    "💄 Салон",
+    "👥 Клиенты",
+    "📅 Записи",
     "📦 Склад",
 }
 
@@ -4477,12 +4481,26 @@ async def back_to_main(message: Message):
     )
 
 @router.message(F.text)
-async def handle_text(message: Message) -> None:
+async def handle_text(message: Message, state: FSMContext) -> None:
     # Не перехватывать slash-команды — их обрабатывают Command-роутеры.
     if message.text and message.text.startswith("/"):
         return
 
     user_id = message.from_user.id
+
+    # HOTFIX 46.2.2 — architectural invariant: never AI/general catch-all during Add-car FSM
+    try:
+        from services.auto_add_vehicle_flow import ActiveFlowRoutingRequired, assert_no_active_add_vehicle
+
+        await assert_no_active_add_vehicle(state, user_id=user_id)
+    except ActiveFlowRoutingRequired:
+        logging.getLogger(__name__).error(
+            "TELEGRAM_UPDATE handler_selected=handle_text_BLOCKED "
+            "user_id=%s text=%r reason=ACTIVE_FLOW_ROUTING_REQUIRED",
+            user_id,
+            message.text,
+        )
+        return
 
     # Auto Client menu — обрабатывается routers/auto_client_router (подключён раньше).
     from services.entry_point_routing import EntryPoint
