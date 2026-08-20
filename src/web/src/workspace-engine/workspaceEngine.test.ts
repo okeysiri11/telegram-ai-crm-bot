@@ -87,6 +87,37 @@ describe("Sprint 27.4 workspace runtime", () => {
   });
 
   it("filters notification center buckets", () => {
+    useNotificationStore.setState({
+      items: [
+        {
+          id: "n1",
+          kind: "mention",
+          level: "mention",
+          title: "mention",
+          body: "x",
+          createdAt: new Date().toISOString(),
+          read: false,
+        },
+        {
+          id: "n2",
+          kind: "job",
+          level: "job",
+          title: "job",
+          body: "x",
+          createdAt: new Date().toISOString(),
+          read: false,
+        },
+        {
+          id: "n3",
+          kind: "error",
+          level: "error",
+          title: "error",
+          body: "x",
+          createdAt: new Date().toISOString(),
+          read: false,
+        },
+      ],
+    });
     const items = useNotificationStore.getState().items;
     expect(filterByBucket(items, "mentions").length).toBeGreaterThan(0);
     expect(filterByBucket(items, "jobs").length).toBeGreaterThan(0);

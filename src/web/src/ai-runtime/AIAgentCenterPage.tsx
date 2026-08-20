@@ -110,9 +110,33 @@ export function AIAgentCenterPage() {
           </div>
         </header>
 
-        <AgentOsMonitor />
+        <div className="hidden md:block">
+          <AgentOsMonitor />
+        </div>
 
-        <div className="art-dash" aria-label="AI Dashboard">
+        <div className="ados-mobile-card md:hidden" data-testid="ai-agents-mobile-summary">
+          <h2 className="font-semibold">AI Agents</h2>
+          <p className="mt-1 eds-type-body">
+            Статус: {health.healthy} OK · {health.warning} Warning · {health.critical} Critical
+          </p>
+          <p className="eds-type-caption text-[var(--eds-text-muted)]">Выполняются: {running.length}</p>
+          <div className="mt-3 flex flex-col gap-2">
+            <Button variant="secondary" onClick={() => document.getElementById("ai-agent-list")?.scrollIntoView()}>
+              Посмотреть всех
+            </Button>
+            <Button
+              onClick={() =>
+                void run("Задача создана", async () => {
+                  await taskExecution.create(ctx, { title: taskTitle, agentId: selectedAgent });
+                })
+              }
+            >
+              + Новая AI-задача
+            </Button>
+          </div>
+        </div>
+
+        <div className="art-dash hidden md:grid" aria-label="AI Dashboard">
           <DashCard label="Активные агенты" value={String(activeAgents.length)} />
           <DashCard label="Завершено" value={String(dash.completedTasks)} />
           <DashCard label="Ср. время" value={`${dash.avgRuntimeSec}s`} />
@@ -122,7 +146,11 @@ export function AIAgentCenterPage() {
           <DashCard label="Успех" value={`${dash.successRate}%`} />
         </div>
 
-        {isOwner ? <OwnerAiDashboard ctx={ctx} onChanged={refresh} /> : null}
+        {isOwner ? (
+          <div className="hidden md:block">
+            <OwnerAiDashboard ctx={ctx} onChanged={refresh} />
+          </div>
+        ) : null}
 
         <div className="art-split">
           <Card aria-label="Active Agents">
@@ -146,6 +174,7 @@ export function AIAgentCenterPage() {
             </ul>
           </Card>
 
+          <div id="ai-agent-list">
           <Card aria-label="Available Agents">
             <div className="art-section-head">
               <h2>Доступные агенты</h2>
@@ -186,9 +215,10 @@ export function AIAgentCenterPage() {
               })}
             </ul>
           </Card>
+          </div>
         </div>
 
-        <Card aria-label="Agent Health">
+        <Card aria-label="Agent Health" className="hidden md:block">
           <div className="art-section-head">
             <h2>Здоровье агентов</h2>
           </div>
@@ -201,7 +231,7 @@ export function AIAgentCenterPage() {
           </div>
         </Card>
 
-        <Card title="Создать задачу">
+        <Card title="Создать задачу" className="hidden md:block">
           <div className="row" style={{ gap: 8, flexWrap: "wrap", alignItems: "center" }}>
             <Input
               className="min-w-[220px] flex-1"

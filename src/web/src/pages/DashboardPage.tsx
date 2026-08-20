@@ -59,6 +59,9 @@ import {
 import { LiveDashboardShell } from "@/live-dashboard";
 import { BetaHomeDashboard } from "@/dashboard/BetaHomeDashboard";
 import { ExecutiveSummaryDashboard, useExperienceModeStore } from "@/ux-revolution";
+import { MobileHome, useIsMobile, isDemoAccount, verticalIdFromPath, workspaceLabel } from "@/shell/mobile";
+import { resolveRoleLabel, useRoleSwitcher } from "@/navigation/roleSwitcherStore";
+import { useVerticalWorkspaceStore } from "@/vertical-workspace/verticalWorkspaceStore";
 
 const KPI_ROUTES: Record<string, string> = {
   sales: "/workspace/crm",
@@ -94,6 +97,9 @@ export function DashboardPage() {
   const personal = personalizationEngine.get();
   const { snapshot, busy, error, refresh } = useLiveEnterprise(true);
   const uxMode = useExperienceModeStore((s) => s.mode);
+  const isMobile = useIsMobile();
+  const storedVertical = useVerticalWorkspaceStore((s) => s.verticalId);
+  const roleId = useRoleSwitcher((s) => s.activeRoleId);
   const preferExecutiveSummary =
     params.get("mode") === "executive" ||
     (uxMode === "simple" && params.get("mode") !== "full");
@@ -104,7 +110,7 @@ export function DashboardPage() {
   }, []);
 
   const company = first.companyName || ws.company;
-  const roleLabel = role?.label || user?.roleId || user?.roles?.[0] || "User";
+  const roleLabel = role?.label || resolveRoleLabel(roleId) || user?.roleId || user?.roles?.[0] || "User";
 
   const executive = resolveExecutiveMode({
     queryMode: params.get("mode"),
@@ -167,6 +173,20 @@ export function DashboardPage() {
     saveExecutivePref(on);
     void telemetry.userActivity(on ? "executive_on" : "executive_off");
     navigate(on ? "/dashboard?mode=executive" : "/dashboard?mode=full");
+  }
+
+  if (isMobile) {
+    const verticalId = storedVertical || verticalIdFromPath("/", storedVertical);
+    return (
+      <WorkspaceLayout>
+        <MobileHome
+          workspaceId={verticalId}
+          workspaceLabel={workspaceLabel(verticalId)}
+          roleLabel={roleLabel}
+          demo={isDemoAccount(user?.email, user?.tenantId)}
+        />
+      </WorkspaceLayout>
+    );
   }
 
   return (

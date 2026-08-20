@@ -23,6 +23,7 @@ import { PageOrientationBar } from "@/help/PageOrientationBar";
 import { WorkspaceSlotBanner } from "@/multi-role/WorkspaceSlotBanner";
 import { useAdaptiveShellStore } from "@/shell/enterprise/adaptiveShellStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
+import { MobileChrome, useIsMobile } from "@/shell/mobile";
 
 /**
  * Sprint 27.1 / 42.3 / 42.6 — Application Shell.
@@ -50,6 +51,7 @@ export function FullLayout({ children }: { children: ReactNode }) {
   const activeRoleId = useRoleSwitcher((s) => s.activeRoleId);
   const focusMode = useAdaptiveShellStore((s) => s.focusMode);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   useWorkspaceRouteSync();
   useEnterpriseKeyboard();
@@ -77,17 +79,17 @@ export function FullLayout({ children }: { children: ReactNode }) {
     >
       <ViewModeRouteGuard />
       <div className="ews-shell-body">
-        <Sidebar mobileOpen={mobileOpen} onNavigate={() => setMobileOpen(false)} />
-        {!isClientChrome ? <LeftDock /> : null}
+        <Sidebar mobileOpen={!isMobile && mobileOpen} onNavigate={() => setMobileOpen(false)} />
+        {!isClientChrome && !isMobile ? <LeftDock /> : null}
         <div className="ews-workspace">
-          <TopNavigation onMenuToggle={() => setMobileOpen((v) => !v)} />
+          {isMobile ? <MobileChrome /> : <TopNavigation onMenuToggle={() => setMobileOpen((v) => !v)} />}
           <main className="ews-main eds-main">
             <div className="eds-page">
               <OfflineBanner />
               <WorkspaceSlotBanner />
-              <WorkspaceQuickDock />
+              {!isMobile ? <WorkspaceQuickDock /> : null}
               {showWorkspaceTabs ? <WorkspaceTabBar /> : null}
-              {showOwnerDevChrome ? (
+              {showOwnerDevChrome && !isMobile ? (
                 <div
                   className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-[var(--ew-border)] px-3 py-2"
                   data-testid="owner-ops-hint"
@@ -114,12 +116,12 @@ export function FullLayout({ children }: { children: ReactNode }) {
               </div>
             </div>
           </main>
-          {!isClientChrome ? <BottomDock /> : null}
+          {!isClientChrome && !isMobile ? <BottomDock /> : null}
         </div>
         <ActivityPanel />
       </div>
-      {!isClientChrome ? <QuickCreateButton /> : null}
-      {showOwnerDevChrome ? <ShellRuntimeBar /> : null}
+      {!isClientChrome && !isMobile ? <QuickCreateButton /> : null}
+      {showOwnerDevChrome && !isMobile ? <ShellRuntimeBar /> : null}
     </div>
   );
 }

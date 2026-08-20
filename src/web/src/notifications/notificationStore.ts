@@ -71,72 +71,85 @@ export function filterByBucket(items: AppNotification[], bucket: NotificationBuc
   return items.filter((n) => notificationBucket(n).includes(bucket));
 }
 
+/** Demo/test cards — never auto-loaded for normal users. Opt-in via VITE_DEBUG_NOTIFICATIONS or localStorage. */
+export const DEBUG_NOTIFICATION_FIXTURES: AppNotification[] = [
+  {
+    id: "n1",
+    kind: "ai",
+    level: "ai",
+    title: "AI insight ready",
+    body: "Weekly forecast available",
+    createdAt: new Date().toISOString(),
+    read: false,
+  },
+  {
+    id: "n2",
+    kind: "warning",
+    level: "warning",
+    title: "Approval pending",
+    body: "Invoice workflow awaits owner",
+    createdAt: new Date().toISOString(),
+    read: false,
+  },
+  {
+    id: "n3",
+    kind: "runtime",
+    level: "runtime",
+    title: "Runtime heartbeat",
+    body: "Local demo auth active · ISAM offline",
+    createdAt: new Date().toISOString(),
+    read: false,
+  },
+  {
+    id: "n4",
+    kind: "mention",
+    level: "mention",
+    title: "@you in Projects",
+    body: "Ops Manager mentioned you on Migration review",
+    createdAt: new Date().toISOString(),
+    read: false,
+  },
+  {
+    id: "n5",
+    kind: "job",
+    level: "job",
+    title: "Background job finished",
+    body: "Knowledge reindex completed",
+    createdAt: new Date().toISOString(),
+    read: true,
+  },
+  {
+    id: "n6",
+    kind: "success",
+    level: "success",
+    title: "Client created",
+    body: "Demo Corp lead saved in CRM",
+    createdAt: new Date().toISOString(),
+    read: true,
+  },
+  {
+    id: "n7",
+    kind: "error",
+    level: "error",
+    title: "Provider timeout",
+    body: "Voice provider probe timed out (local)",
+    createdAt: new Date().toISOString(),
+    read: false,
+  },
+];
+
+export function shouldSeedDebugNotifications(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    if (window.localStorage?.getItem("ADOS_DEBUG_NOTIFICATIONS") === "1") return true;
+  } catch {
+    /* ignore */
+  }
+  return import.meta.env.DEV === true && import.meta.env.VITE_DEBUG_NOTIFICATIONS === "true";
+}
+
 export const useNotificationStore = create<NotifState>((set) => ({
-  items: [
-    {
-      id: "n1",
-      kind: "ai",
-      level: "ai",
-      title: "AI insight ready",
-      body: "Weekly forecast available",
-      createdAt: new Date().toISOString(),
-      read: false,
-    },
-    {
-      id: "n2",
-      kind: "warning",
-      level: "warning",
-      title: "Approval pending",
-      body: "Invoice workflow awaits owner",
-      createdAt: new Date().toISOString(),
-      read: false,
-    },
-    {
-      id: "n3",
-      kind: "runtime",
-      level: "runtime",
-      title: "Runtime heartbeat",
-      body: "Local demo auth active · ISAM offline",
-      createdAt: new Date().toISOString(),
-      read: false,
-    },
-    {
-      id: "n4",
-      kind: "mention",
-      level: "mention",
-      title: "@you in Projects",
-      body: "Ops Manager mentioned you on Migration review",
-      createdAt: new Date().toISOString(),
-      read: false,
-    },
-    {
-      id: "n5",
-      kind: "job",
-      level: "job",
-      title: "Background job finished",
-      body: "Knowledge reindex completed",
-      createdAt: new Date().toISOString(),
-      read: true,
-    },
-    {
-      id: "n6",
-      kind: "success",
-      level: "success",
-      title: "Client created",
-      body: "Demo Corp lead saved in CRM",
-      createdAt: new Date().toISOString(),
-      read: true,
-    },
-    {
-      id: "n7",
-      kind: "error",
-      level: "error",
-      title: "Provider timeout",
-      body: "Voice provider probe timed out (local)",
-      createdAt: new Date().toISOString(),
-      read: false,
-    },
-  ],
+  items: shouldSeedDebugNotifications() ? DEBUG_NOTIFICATION_FIXTURES.map((n) => ({ ...n })) : [],
   push: (n) =>
     set((s) => ({
       items: [

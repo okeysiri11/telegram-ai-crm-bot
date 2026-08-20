@@ -75,6 +75,7 @@ export function ActivityPanel() {
         tone: (n.read ? "info" : "warn") as "info" | "warn" | "ok",
       }));
       if (fromStore.length) return fromStore;
+      return [];
     }
     if (tab === "recent") {
       const timeline = buildActivityTimeline(mode === "compact" ? 6 : 16).map((e) => ({
@@ -88,8 +89,12 @@ export function ActivityPanel() {
           | "ok",
       }));
       if (timeline.length) return timeline;
+      return [];
     }
-    return SHELL_ACTIVITY_SEED.filter((e) => e.tab === tab).slice(0, mode === "compact" ? 4 : 12);
+    if (import.meta.env.DEV && import.meta.env.VITE_DEBUG_NOTIFICATIONS === "true") {
+      return SHELL_ACTIVITY_SEED.filter((e) => e.tab === tab).slice(0, mode === "compact" ? 4 : 12);
+    }
+    return [];
   }, [tab, notifications, t, mode]);
 
   if (mode === "hidden") return null;

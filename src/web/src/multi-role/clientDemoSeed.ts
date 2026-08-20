@@ -49,6 +49,9 @@ export function seedClientDemoData(user: DemoUserDef): ClientDemoSeed {
   }
 
   try {
+    if (!import.meta.env.DEV || import.meta.env.VITE_DEBUG_NOTIFICATIONS !== "true") {
+      return seed;
+    }
     const store = useNotificationStore.getState();
     store.push({
       kind: "info",

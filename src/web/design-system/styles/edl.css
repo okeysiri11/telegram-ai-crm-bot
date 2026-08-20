@@ -229,13 +229,17 @@ textarea.eds-control {
 /* —— Tables —— */
 .eds-table-wrap {
   overflow: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: var(--eds-radius-lg);
   border: 1px solid var(--eds-border);
   background: var(--eds-surface);
 }
+.eds-table-wrap--wide .eds-table {
+  min-width: 720px;
+}
 .eds-table {
   width: 100%;
-  min-width: 100%;
+  min-width: 40rem;
   border-collapse: collapse;
   text-align: left;
   font-size: 0.875rem;
@@ -391,6 +395,16 @@ textarea.eds-control {
   :root {
     --eds-page-pad: var(--eds-space-4);
     --eds-section-gap: var(--eds-space-4);
+    --eds-control-h: 2.75rem;
+  }
+  .eds-table {
+    min-width: 0;
+  }
+  .eds-table-wrap--wide .eds-table {
+    min-width: 0;
+  }
+  .eds-table-wrap {
+    max-width: 100%;
   }
 }
 
