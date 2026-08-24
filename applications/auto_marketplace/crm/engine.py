@@ -8,7 +8,6 @@ from applications.auto_marketplace.activities.service import ActivityService, ac
 from applications.auto_marketplace.calendar.service import CalendarService, calendar_service
 from applications.auto_marketplace.communications.service import CommunicationService, communication_service
 from applications.auto_marketplace.crm.ai_assistant import AISalesAssistant, ai_sales_assistant
-from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.crm.security import CRMSecurity, crm_security
 from applications.auto_marketplace.crm.workflow_bridge import CRMWorkflowBridge, crm_workflow_bridge
 from applications.auto_marketplace.customers.profile_service import CustomerProfileService, customer_profile_service
@@ -51,16 +50,22 @@ class CRMEngine:
         self.workflow = workflow or crm_workflow_bridge
 
     async def metrics(self) -> dict[str, Any]:
-        records = get_crm_persistence()
+        from applications.auto_marketplace.crm.metrics import crm_metrics
+
+        counts = await crm_metrics.refresh()
         return {
-            "customers": await records.count_customers(),
-            "leads": await records.count_leads(),
-            "deals": await records.count_deals(),
-            "tasks": await records.count_tasks(),
-            "calls": await records.count_calls(),
-            "emails": await records.count_emails(),
-            "meetings": await records.count_meetings(),
-            "reminders": await records.count_reminders(),
+            "customers": counts["customers"],
+            "leads": counts["leads"],
+            "deals": counts["deals"],
+            "tasks": counts["tasks"],
+            "activities": counts["activities"],
+            "calls": counts["calls"],
+            "emails": counts["emails"],
+            "meetings": counts["meetings"],
+            "reminders": counts["reminders"],
+            "opportunities": counts["opportunities"],
+            "leads_by_status": counts["leads_by_status"],
+            "deals_by_stage": counts["deals_by_stage"],
             "conversion": await self.pipeline.conversion_analytics(),
             "forecast": await self.pipeline.forecast(),
         }

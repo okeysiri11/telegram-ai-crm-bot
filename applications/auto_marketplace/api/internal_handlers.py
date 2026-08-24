@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.auto_marketplace import auto_marketplace
 from applications.auto_marketplace.api.middleware import json_response
+from applications.auto_marketplace.crm.metrics import crm_metrics
 from applications.auto_marketplace.shared.models import Deal, Payment
 
 
@@ -13,7 +14,8 @@ async def internal_health_handler(_request: web.Request) -> web.Response:
     return json_response({"status": "ok", "layer": "internal"})
 
 
-async def internal_pipeline_handler(_request: web.Request) -> web.Response:
+async def internal_pipeline_handler(request: web.Request) -> web.Response:
+    await crm_metrics.refresh_for_request(request)
     return json_response(auto_marketplace.analytics.sales_pipeline())
 
 

@@ -71,6 +71,12 @@ from applications.auto_marketplace.vehicle_catalog.service import VehicleCatalog
 from applications.auto_marketplace.vehicles.engine import VehiclesEngine, vehicles_engine
 
 
+def _crm_health_counts() -> dict[str, Any]:
+    from applications.auto_marketplace.crm.metrics import crm_metrics
+
+    return crm_metrics.cached()
+
+
 class AutoMarketplaceApplication:
     """Auto Marketplace — Platform Core v3 + Ecosystem v1.5 via bridges only."""
 
@@ -186,6 +192,7 @@ class AutoMarketplaceApplication:
         reset_crm_persistence()
 
     def health(self) -> dict[str, Any]:
+        crm_counts = _crm_health_counts()
         return {
             "application": "auto_marketplace",
             "application_name": self.config.application_name,
@@ -298,8 +305,16 @@ class AutoMarketplaceApplication:
             "enterprise_certification": self.enterprise_certification.status(),
             "health_deep": self.enterprise.health.deep(),
             "catalog_vehicles": self.store.catalog_vehicles.count(),
-            "crm_leads": self.store.crm_leads.count(),
-            "crm_deals": self.store.crm_deals.count(),
+            "crm_leads": crm_counts["leads"],
+            "crm_deals": crm_counts["deals"],
+            "crm_customers": crm_counts["customers"],
+            "crm_tasks": crm_counts["tasks"],
+            "crm_activities": crm_counts["activities"],
+            "crm_calls": crm_counts["calls"],
+            "crm_emails": crm_counts["emails"],
+            "crm_meetings": crm_counts["meetings"],
+            "crm_reminders": crm_counts["reminders"],
+            "crm_opportunities": crm_counts["opportunities"],
             "ai_conversations": self.store.conversation_sessions.count(),
             "ai_offers": self.store.ai_offers.count(),
             "finance_documents": self.store.finance_documents.count(),

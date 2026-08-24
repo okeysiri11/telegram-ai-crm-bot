@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.auto_marketplace import auto_marketplace
 from applications.auto_marketplace.api.middleware import error_response, json_response
+from applications.auto_marketplace.crm.metrics import crm_metrics
 from applications.auto_marketplace.shared.exceptions import AutoMarketplaceError, NotFoundError
 from applications.auto_marketplace.shared.models import (
     Customer,
@@ -17,7 +18,8 @@ from applications.auto_marketplace.shared.models import (
 )
 
 
-async def health_handler(_request: web.Request) -> web.Response:
+async def health_handler(request: web.Request) -> web.Response:
+    await crm_metrics.refresh_for_request(request)
     return json_response(auto_marketplace.health())
 
 
@@ -126,13 +128,15 @@ async def recommendations_handler(request: web.Request) -> web.Response:
     return json_response({"items": items})
 
 
-async def analytics_handler(_request: web.Request) -> web.Response:
+async def analytics_handler(request: web.Request) -> web.Response:
+    await crm_metrics.refresh_for_request(request)
     return json_response(auto_marketplace.analytics.dashboard_metrics())
 
 
-async def dashboard_handler(_request: web.Request) -> web.Response:
+async def dashboard_handler(request: web.Request) -> web.Response:
     from applications.auto_marketplace.dashboard import dashboard_service
 
+    await crm_metrics.refresh_for_request(request)
     return json_response(dashboard_service.overview())
 
 

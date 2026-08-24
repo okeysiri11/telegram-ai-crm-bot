@@ -69,10 +69,15 @@ class AnalyticsEngine:
 
     async def workflow_analytics(self) -> dict[str, Any]:
         records = get_crm_persistence()
+        deal_count = await records.count_deals()
         return {
             "crm_tasks": await records.count_tasks(),
+            "activities": await records.count_activities(),
+            "calls": await records.count_calls(),
+            "emails": await records.count_emails(),
             "meetings": await records.count_meetings(),
             "reminders": await records.count_reminders(),
+            "opportunities": deal_count,
         }
 
     async def agent_analytics(self) -> dict[str, Any]:

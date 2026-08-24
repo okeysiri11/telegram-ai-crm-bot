@@ -1033,3 +1033,6 @@ def reset_crm_persistence() -> None:
     """Drop the cached backend so tests can switch memory/postgres."""
     global _persist
     _persist = None
+    from applications.auto_marketplace.crm.metrics import crm_metrics
+
+    crm_metrics.reset()

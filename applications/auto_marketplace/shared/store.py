@@ -58,7 +58,6 @@ class MarketplaceStore:
         self.customer_profiles: EntityStore = EntityStore()
         self.crm_leads: EntityStore = EntityStore()
         self.crm_deals: EntityStore = EntityStore()
-        self.opportunities: EntityStore = EntityStore()
         self.interactions: EntityStore = EntityStore()
         self.contacts: EntityStore = EntityStore()
         self.phone_calls: EntityStore = EntityStore()

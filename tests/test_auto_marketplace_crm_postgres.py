@@ -28,6 +28,7 @@ from applications.auto_marketplace.activities.service import ActivityService
 from applications.auto_marketplace.calendar.service import CalendarService
 from applications.auto_marketplace.communications.service import CommunicationService
 from applications.auto_marketplace.tasks.service import TaskService
+from applications.auto_marketplace.crm.metrics import crm_metrics
 from applications.auto_marketplace.crm.persistence import (
     PostgresCRMPersistence,
     crm_persistence_mode,
@@ -727,3 +728,89 @@ async def test_opportunity_is_deal_projection_across_restart(postgres_crm_mode):
         await pipeline2.get_opportunity(opp.opportunity_id)
     listed = await pipeline2.list_opportunities()
     assert all(item.opportunity_id != opp.opportunity_id for item in listed)
+
+
+@pytest.mark.asyncio
+async def test_crm_metrics_survive_restart_and_ignore_store_overlays(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant = f"metrics-{suffix}"
+    bind_crm_tenant(tenant)
+    persist = PostgresCRMPersistence()
+    customers = CustomerProfileService(persistence=persist)
+    leads = LeadService(persistence=persist)
+    deals = DealService(persistence=persist)
+    tasks = TaskService(persistence=persist)
+    activities = ActivityService(persistence=persist)
+    comms = CommunicationService(persistence=persist)
+    calendar = CalendarService(persistence=persist)
+
+    profile = await customers.create(CustomerProfile(first_name="Met", last_name="User", email=f"m-{suffix}@ex.com"))
+    await leads.create(CRMLead(customer_id=profile.customer_id, notes=suffix))
+    await deals.create(CRMDeal(customer_id=profile.customer_id, amount=3300, opportunity_id=""))
+    await tasks.create(CRMTask(title=f"task-{suffix}", customer_id=profile.customer_id))
+    await activities.record(Interaction(subject="note", customer_id=profile.customer_id))
+    await comms.log_call(PhoneCall(customer_id=profile.customer_id, direction="inbound"))
+    await comms.log_email(EmailMessage(customer_id=profile.customer_id, subject=suffix))
+    await calendar.schedule_meeting(Meeting(customer_id=profile.customer_id, title=suffix))
+    await calendar.create_reminder(Reminder(customer_id=profile.customer_id, message=suffix, trigger_at=2.0))
+
+    before = await crm_metrics.collect(tenant)
+    assert before["leads"] == 1
+    assert before["customers"] == 1
+    assert before["deals"] == 1
+    assert before["tasks"] == 1
+    assert before["calls"] == 1
+    assert before["emails"] == 1
+    assert before["meetings"] == 1
+    assert before["reminders"] == 1
+    assert before["opportunities"] == before["deals"]
+    assert before["activities"] >= 1
+
+    from applications.auto_marketplace.shared.store import marketplace_store
+
+    marketplace_store.crm_leads.reset()
+    marketplace_store.crm_deals.reset()
+    still = await crm_metrics.collect(tenant)
+    assert still["leads"] == 1
+    assert still["deals"] == 1
+
+    from database.session import shutdown_db
+
+    await shutdown_db()
+    reset_crm_persistence()
+    bind_crm_tenant(tenant)
+    after = await crm_metrics.collect(tenant)
+    assert after["leads"] == before["leads"]
+    assert after["customers"] == before["customers"]
+    assert after["deals"] == before["deals"]
+    assert after["tasks"] == before["tasks"]
+    assert after["calls"] == before["calls"]
+    assert after["emails"] == before["emails"]
+    assert after["meetings"] == before["meetings"]
+    assert after["reminders"] == before["reminders"]
+    assert after["opportunities"] == after["deals"]
+    await crm_metrics.refresh(tenant)
+    from applications.auto_marketplace import auto_marketplace
+
+    health = auto_marketplace.health()
+    assert health["crm_leads"] == 1
+    assert health["crm_opportunities"] == 1
+
+
+@pytest.mark.asyncio
+async def test_crm_metrics_tenant_isolation_postgres(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    persist = PostgresCRMPersistence()
+    leads = LeadService(persistence=persist)
+    bind_crm_tenant(f"ma-{suffix}")
+    await leads.create(CRMLead(notes="alpha"))
+    counts_a = await crm_metrics.collect(f"ma-{suffix}")
+    counts_b = await crm_metrics.collect(f"mb-{suffix}")
+    assert counts_a["leads"] == 1
+    assert counts_b["leads"] == 0
+    assert counts_b["deals"] == 0
+    assert counts_b["calls"] == 0
+    assert counts_b["tasks"] == 0
+    assert counts_b["activities"] == 0
