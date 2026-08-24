@@ -181,6 +181,9 @@ class AutoMarketplaceApplication:
         self.store.reset()
         self.notifications.reset()
         self.production_engine.maintenance.disable()
+        from applications.auto_marketplace.crm.persistence import reset_crm_persistence
+
+        reset_crm_persistence()
 
     def health(self) -> dict[str, Any]:
         return {

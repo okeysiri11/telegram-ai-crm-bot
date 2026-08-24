@@ -43,8 +43,8 @@ def upgrade() -> None:
         if not _exists(table):
             return
         exists = conn.exec_driver_sql(
-            "SELECT 1 FROM information_schema.columns WHERE table_name=%s AND column_name=%s",
-            (table, column.name),
+            "SELECT 1 FROM information_schema.columns "
+            f"WHERE table_schema = 'public' AND table_name = '{table}' AND column_name = '{column.name}'"
         ).scalar()
         if not exists:
             op.add_column(table, column)

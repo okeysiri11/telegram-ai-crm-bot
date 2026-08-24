@@ -20,9 +20,10 @@ class MonitoringService:
 
     def readiness_probe(self) -> dict[str, Any]:
         from applications.auto_marketplace.application import auto_marketplace
+        from applications.auto_marketplace.crm.persistence import crm_persistence_mode
 
         checks = {
-            "crm": auto_marketplace.crm_engine.metrics(),
+            "crm": {"backend": crm_persistence_mode()},
             "finance": auto_marketplace.finance_engine.metrics(),
             "portal": auto_marketplace.portal_engine.metrics(),
             "bi": auto_marketplace.bi_engine.metrics(),

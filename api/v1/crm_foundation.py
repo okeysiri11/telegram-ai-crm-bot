@@ -19,6 +19,7 @@ from applications.auto_marketplace.crm.models import (
     DealStage,
     LeadSource,
 )
+from applications.auto_marketplace.crm.tenant import bind_crm_tenant, tenant_from_request
 from applications.auto_marketplace.shared.exceptions import NotFoundError, ValidationError
 from platform_api.pagination import PaginationMeta, PaginationParams
 from platform_api.responses import error_response, success_response
@@ -90,7 +91,13 @@ def _paginate(items: list[Any], params: PaginationParams) -> dict[str, Any]:
     }
 
 
-async def _safe(handler_coro) -> web.Response:
+def _bind_tenant(request: web.Request) -> None:
+    bind_crm_tenant(tenant_from_request(request))
+
+
+async def _safe(handler_coro, request: web.Request | None = None) -> web.Response:
+    if request is not None:
+        _bind_tenant(request)
     try:
         return await handler_coro
     except ValidationError as exc:
@@ -120,7 +127,7 @@ async def leads_list_handler(request: web.Request) -> web.Response:
         sort = request.query.get("sort", "created_at")
         order = request.query.get("order", "desc")
 
-        items = auto_marketplace.crm_engine.leads.list_leads(status=status, dealer_id=dealer_id)
+        items = await auto_marketplace.crm_engine.leads.list_leads(status=status, dealer_id=dealer_id)
         if source is not None:
             items = [lead for lead in items if lead.source == source]
         if customer_id:
@@ -140,16 +147,16 @@ async def leads_list_handler(request: web.Request) -> web.Response:
         page["items"] = [lead.to_dict() for lead in page["items"]]
         return _ok(page)
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
 async def leads_get_handler(request: web.Request) -> web.Response:
     async def _run() -> web.Response:
-        lead = auto_marketplace.crm_engine.leads.get(request.match_info["lead_id"])
+        lead = await auto_marketplace.crm_engine.leads.get(request.match_info["lead_id"])
         return _ok(lead.to_dict())
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
@@ -174,13 +181,13 @@ async def leads_create_handler(request: web.Request) -> web.Response:
         customer = None
         if lead.customer_id:
             try:
-                customer = auto_marketplace.crm_engine.customers.get(lead.customer_id)
+                customer = await auto_marketplace.crm_engine.customers.get(lead.customer_id)
             except NotFoundError:
                 customer = None
         created = await auto_marketplace.crm_engine.leads.create(lead, customer)
         return _ok(created.to_dict(), status=201)
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
@@ -209,7 +216,7 @@ async def leads_patch_handler(request: web.Request) -> web.Response:
         if "metadata" in data:
             if not isinstance(data["metadata"], dict):
                 raise ValidationError("metadata must be an object")
-            existing = auto_marketplace.crm_engine.leads.get(lead_id)
+            existing = await auto_marketplace.crm_engine.leads.get(lead_id)
             merged = dict(existing.metadata)
             merged.update(data["metadata"])
             updates["metadata"] = merged
@@ -218,17 +225,17 @@ async def leads_patch_handler(request: web.Request) -> web.Response:
         updated = await auto_marketplace.crm_engine.leads.update(lead_id, **updates)
         return _ok(updated.to_dict())
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
 async def leads_delete_handler(request: web.Request) -> web.Response:
     async def _run() -> web.Response:
         lead_id = request.match_info["lead_id"]
-        deleted = auto_marketplace.crm_engine.leads.delete(lead_id)
+        deleted = await auto_marketplace.crm_engine.leads.delete(lead_id)
         return _ok({"lead_id": lead_id, "deleted": deleted})
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 # ---------------------------------------------------------------------------
@@ -244,7 +251,7 @@ async def clients_list_handler(request: web.Request) -> web.Response:
         email = (request.query.get("email") or "").lower().strip() or None
         sort = request.query.get("sort", "created_at")
         order = request.query.get("order", "desc")
-        items = auto_marketplace.crm_engine.customers.list_profiles(segment=segment)
+        items = await auto_marketplace.crm_engine.customers.list_profiles(segment=segment)
         if email:
             items = [c for c in items if (c.email or "").lower() == email]
         items = _sort_items(
@@ -265,18 +272,18 @@ async def clients_list_handler(request: web.Request) -> web.Response:
             item["client_id"] = item.get("customer_id")
         return _ok(page)
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
 async def clients_get_handler(request: web.Request) -> web.Response:
     async def _run() -> web.Response:
-        profile = auto_marketplace.crm_engine.customers.get(request.match_info["client_id"])
+        profile = await auto_marketplace.crm_engine.customers.get(request.match_info["client_id"])
         payload = profile.to_dict()
         payload["client_id"] = payload["customer_id"]
         return _ok(payload)
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
@@ -297,7 +304,7 @@ async def clients_create_handler(request: web.Request) -> web.Response:
         payload["client_id"] = payload["customer_id"]
         return _ok(payload, status=201)
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
@@ -314,17 +321,17 @@ async def clients_patch_handler(request: web.Request) -> web.Response:
         payload["client_id"] = payload["customer_id"]
         return _ok(payload)
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
 async def clients_delete_handler(request: web.Request) -> web.Response:
     async def _run() -> web.Response:
         client_id = request.match_info["client_id"]
-        deleted = auto_marketplace.crm_engine.customers.delete(client_id)
+        deleted = await auto_marketplace.crm_engine.customers.delete(client_id)
         return _ok({"client_id": client_id, "deleted": deleted})
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 # ---------------------------------------------------------------------------
@@ -340,7 +347,7 @@ async def crm_deals_list_handler(request: web.Request) -> web.Response:
         dealer_id = request.query.get("dealer_id") or None
         sort = request.query.get("sort", "created_at")
         order = request.query.get("order", "desc")
-        items = auto_marketplace.crm_engine.deals.list_deals(stage=stage, dealer_id=dealer_id)
+        items = await auto_marketplace.crm_engine.deals.list_deals(stage=stage, dealer_id=dealer_id)
         items = _sort_items(
             items,
             sort=sort,
@@ -356,16 +363,16 @@ async def crm_deals_list_handler(request: web.Request) -> web.Response:
         page["items"] = [d.to_dict() for d in page["items"]]
         return _ok(page)
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
 async def crm_deals_get_handler(request: web.Request) -> web.Response:
     async def _run() -> web.Response:
-        deal = auto_marketplace.crm_engine.deals.get(request.match_info["deal_id"])
+        deal = await auto_marketplace.crm_engine.deals.get(request.match_info["deal_id"])
         return _ok(deal.to_dict())
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
@@ -388,7 +395,7 @@ async def crm_deals_create_handler(request: web.Request) -> web.Response:
         created = await auto_marketplace.crm_engine.deals.create(deal)
         return _ok(created.to_dict(), status=201)
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
@@ -416,17 +423,17 @@ async def crm_deals_patch_handler(request: web.Request) -> web.Response:
         updated = await auto_marketplace.crm_engine.deals.update(deal_id, **updates)
         return _ok(updated.to_dict())
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 @require_api_auth
 async def crm_deals_delete_handler(request: web.Request) -> web.Response:
     async def _run() -> web.Response:
         deal_id = request.match_info["deal_id"]
-        deleted = auto_marketplace.crm_engine.deals.delete(deal_id)
+        deleted = await auto_marketplace.crm_engine.deals.delete(deal_id)
         return _ok({"deal_id": deal_id, "deleted": deleted})
 
-    return await _safe(_run())
+    return await _safe(_run(), request)
 
 
 # ---------------------------------------------------------------------------
@@ -452,20 +459,20 @@ async def reports_get_handler(request: web.Request) -> web.Response:
         report_id = request.match_info["report_id"]
         engine = auto_marketplace.crm_engine
         if report_id == "pipeline":
-            payload = engine.pipeline.pipeline_view(dealer_id=request.query.get("dealer_id"))
+            payload = await engine.pipeline.pipeline_view(dealer_id=request.query.get("dealer_id"))
         elif report_id == "forecast":
             days_raw = request.query.get("days", "30")
             try:
                 days = max(1, min(int(days_raw), 365))
             except ValueError as exc:
                 raise ValidationError("days must be an integer") from exc
-            payload = engine.pipeline.forecast(days=days)
+            payload = await engine.pipeline.forecast(days=days)
         elif report_id == "conversion":
-            payload = engine.pipeline.conversion_analytics()
+            payload = await engine.pipeline.conversion_analytics()
         elif report_id == "crm-metrics":
-            payload = engine.metrics()
+            payload = await engine.metrics()
         else:
             raise NotFoundError("Report", report_id)
         return _ok({"report_id": report_id, "data": payload})
 
-    return await _safe(_run())
+    return await _safe(_run(), request)

@@ -10,6 +10,8 @@ import pytest
 
 # Tests always use PostgreSQL policy; SQLite must not bootstrap.
 os.environ.setdefault("POSTGRES_ONLY", "true")
+# Isolated CRM unit tests keep the in-memory backend. Production default is Postgres.
+os.environ.setdefault("AUTO_CRM_PERSISTENCE", "memory")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 os.environ.setdefault("REDIS_REQUIRED", "false")
 

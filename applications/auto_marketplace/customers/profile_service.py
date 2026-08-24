@@ -6,6 +6,7 @@ from events.publisher import publish
 from applications.auto_marketplace.crm.ai_assistant import AISalesAssistant, ai_sales_assistant
 from applications.auto_marketplace.crm.events import CustomerCreatedEvent
 from applications.auto_marketplace.crm.models import CustomerProfile
+from applications.auto_marketplace.crm.persistence import CRMPersistence, get_crm_persistence
 from applications.auto_marketplace.shared.exceptions import NotFoundError
 from applications.auto_marketplace.shared.models import Customer
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
@@ -16,14 +17,16 @@ class CustomerProfileService:
         self,
         store: MarketplaceStore | None = None,
         ai: AISalesAssistant | None = None,
+        persistence: CRMPersistence | None = None,
     ) -> None:
         self._store = store or marketplace_store
         self._ai = ai or ai_sales_assistant
+        self._persistence = persistence
 
-    async def create(self, profile: CustomerProfile) -> CustomerProfile:
-        profile.segment = await self._ai.segment_customer(profile)
-        saved = self._store.customer_profiles.save(profile.customer_id, profile)
-        # Sync legacy customer store
+    def _records(self) -> CRMPersistence:
+        return self._persistence or get_crm_persistence()
+
+    def _sync_legacy_customer(self, profile: CustomerProfile) -> None:
         self._store.customers.save(
             profile.customer_id,
             Customer(
@@ -35,33 +38,40 @@ class CustomerProfileService:
                 preferences=profile.preferences,
             ),
         )
+
+    async def create(self, profile: CustomerProfile) -> CustomerProfile:
+        profile.segment = await self._ai.segment_customer(profile)
+        saved = await self._records().save_customer(profile)
+        self._sync_legacy_customer(saved)
         await publish(CustomerCreatedEvent(customer_id=saved.customer_id, email=saved.email))
         return saved
 
-    def get(self, customer_id: str) -> CustomerProfile:
-        profile = self._store.customer_profiles.get(customer_id)
+    async def get(self, customer_id: str) -> CustomerProfile:
+        profile = await self._records().get_customer(customer_id)
         if profile is None:
             raise NotFoundError("CustomerProfile", customer_id)
         return profile
 
-    def list_profiles(self, *, segment: str | None = None) -> list[CustomerProfile]:
-        items = self._store.customer_profiles.list_all()
+    async def list_profiles(self, *, segment: str | None = None) -> list[CustomerProfile]:
+        items = await self._records().list_customers()
         if segment:
             items = [p for p in items if p.segment == segment]
         return items
 
     async def update(self, customer_id: str, **updates: object) -> CustomerProfile:
-        profile = self.get(customer_id)
+        profile = await self.get(customer_id)
         for key, value in updates.items():
             if hasattr(profile, key) and value is not None:
                 setattr(profile, key, value)
         profile.segment = await self._ai.segment_customer(profile)
-        return self._store.customer_profiles.save(customer_id, profile)
+        saved = await self._records().save_customer(profile)
+        self._sync_legacy_customer(saved)
+        return saved
 
-    def delete(self, customer_id: str) -> bool:
-        self.get(customer_id)
+    async def delete(self, customer_id: str) -> bool:
+        await self.get(customer_id)
         self._store.customers.delete(customer_id)
-        return self._store.customer_profiles.delete(customer_id)
+        return await self._records().delete_customer(customer_id)
 
 
 customer_profile_service = CustomerProfileService()

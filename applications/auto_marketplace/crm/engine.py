@@ -8,6 +8,7 @@ from applications.auto_marketplace.activities.service import ActivityService, ac
 from applications.auto_marketplace.calendar.service import CalendarService, calendar_service
 from applications.auto_marketplace.communications.service import CommunicationService, communication_service
 from applications.auto_marketplace.crm.ai_assistant import AISalesAssistant, ai_sales_assistant
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.crm.security import CRMSecurity, crm_security
 from applications.auto_marketplace.crm.workflow_bridge import CRMWorkflowBridge, crm_workflow_bridge
 from applications.auto_marketplace.customers.profile_service import CustomerProfileService, customer_profile_service
@@ -49,14 +50,15 @@ class CRMEngine:
         self.security = security or crm_security
         self.workflow = workflow or crm_workflow_bridge
 
-    def metrics(self) -> dict[str, Any]:
+    async def metrics(self) -> dict[str, Any]:
+        records = get_crm_persistence()
         return {
-            "customers": self._store.customer_profiles.count(),
-            "leads": self._store.crm_leads.count(),
-            "deals": self._store.crm_deals.count(),
+            "customers": await records.count_customers(),
+            "leads": await records.count_leads(),
+            "deals": await records.count_deals(),
             "tasks": self._store.crm_tasks.count(),
-            "conversion": self.pipeline.conversion_analytics(),
-            "forecast": self.pipeline.forecast(),
+            "conversion": await self.pipeline.conversion_analytics(),
+            "forecast": await self.pipeline.forecast(),
         }
 
 

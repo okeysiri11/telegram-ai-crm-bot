@@ -12,6 +12,8 @@ from applications.auto_marketplace import auto_marketplace
 from applications.auto_marketplace.api.register import register_auto_marketplace_routes
 from applications.auto_marketplace.crm.models import CRMDeal, CRMLead, CRMTask, CustomerProfile, DealStage, LeadSource
 from applications.auto_marketplace.crm.security import crm_security
+from applications.auto_marketplace.crm.tenant import bind_crm_tenant
+from applications.auto_marketplace.shared.exceptions import NotFoundError
 
 
 @pytest.fixture
@@ -29,9 +31,11 @@ async def client(app: web.Application):
 
 @pytest.fixture(autouse=True)
 def reset_store():
+    bind_crm_tenant("default")
     auto_marketplace.reset()
     yield
     auto_marketplace.reset()
+    bind_crm_tenant("default")
 
 
 def test_crm_security_roles():
@@ -46,7 +50,7 @@ async def test_customer_profile_crud():
         CustomerProfile(first_name="John", last_name="Doe", email="john@example.com", phone="+1234")
     )
     assert profile.segment in {"cold", "warm", "hot", "vip", "standard"}
-    fetched = auto_marketplace.crm_engine.customers.get(profile.customer_id)
+    fetched = await auto_marketplace.crm_engine.customers.get(profile.customer_id)
     assert fetched.email == "john@example.com"
 
 
@@ -79,9 +83,9 @@ async def test_sales_pipeline_deal_lifecycle():
 @pytest.mark.asyncio
 async def test_pipeline_analytics():
     await auto_marketplace.crm_engine.leads.create(CRMLead(customer_id="c1", dealer_id="d1"))
-    conversion = auto_marketplace.crm_engine.pipeline.conversion_analytics()
+    conversion = await auto_marketplace.crm_engine.pipeline.conversion_analytics()
     assert "leads_total" in conversion
-    forecast = auto_marketplace.crm_engine.pipeline.forecast()
+    forecast = await auto_marketplace.crm_engine.pipeline.forecast()
     assert "weighted_pipeline" in forecast
 
 
@@ -141,3 +145,15 @@ async def test_lead_created_event():
     await auto_marketplace.crm_engine.leads.create(CRMLead(customer_id="c1"))
     await asyncio.sleep(0.05)
     assert len(received) >= 1
+
+
+@pytest.mark.asyncio
+async def test_memory_backend_tenant_isolation():
+    bind_crm_tenant("tenant-alpha")
+    lead = await auto_marketplace.crm_engine.leads.create(CRMLead(customer_id="c-iso", notes="alpha-only"))
+    bind_crm_tenant("tenant-beta")
+    with pytest.raises(NotFoundError):
+        await auto_marketplace.crm_engine.leads.get(lead.lead_id)
+    bind_crm_tenant("tenant-alpha")
+    restored = await auto_marketplace.crm_engine.leads.get(lead.lead_id)
+    assert restored.notes == "alpha-only"

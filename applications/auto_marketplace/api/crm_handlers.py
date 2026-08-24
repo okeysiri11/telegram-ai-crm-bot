@@ -6,6 +6,7 @@ from aiohttp import web
 
 from applications.auto_marketplace import auto_marketplace
 from applications.auto_marketplace.api.middleware import error_response, json_response
+from applications.auto_marketplace.crm.tenant import bind_crm_tenant, tenant_from_request
 from applications.auto_marketplace.crm.models import (
     CRMDeal,
     CRMLead,
@@ -40,6 +41,7 @@ def _parse_lead_source(raw: object) -> LeadSource:
 
 
 def _check_perm(request: web.Request, permission: str) -> None:
+    bind_crm_tenant(tenant_from_request(request))
     principal = request.get("principal")
     mutating = any(marker in permission for marker in _MUTATING_MARKERS)
     if mutating and (not isinstance(principal, dict) or not principal.get("authenticated")):
@@ -51,13 +53,14 @@ def _check_perm(request: web.Request, permission: str) -> None:
 
 
 async def crm_metrics_handler(_request: web.Request) -> web.Response:
-    return json_response(auto_marketplace.crm_engine.metrics())
+    bind_crm_tenant(tenant_from_request(_request))
+    return json_response(await auto_marketplace.crm_engine.metrics())
 
 
 async def list_customers_handler(request: web.Request) -> web.Response:
     _check_perm(request, "customers.read")
     segment = request.query.get("segment")
-    items = auto_marketplace.crm_engine.customers.list_profiles(segment=segment)
+    items = await auto_marketplace.crm_engine.customers.list_profiles(segment=segment)
     return json_response({"items": [c.to_dict() for c in items]})
 
 
@@ -77,7 +80,7 @@ async def create_customer_handler(request: web.Request) -> web.Response:
 
 async def get_customer_handler(request: web.Request) -> web.Response:
     _check_perm(request, "customers.read")
-    profile = auto_marketplace.crm_engine.customers.get(request.match_info["customer_id"])
+    profile = await auto_marketplace.crm_engine.customers.get(request.match_info["customer_id"])
     return json_response(profile.to_dict())
 
 
@@ -98,7 +101,7 @@ async def list_leads_handler(request: web.Request) -> web.Response:
             st = CRMLeadStatus(status)
         except ValueError as exc:
             raise ValidationError(f"invalid lead status: {status!r}") from exc
-    items = auto_marketplace.crm_engine.leads.list_leads(status=st, dealer_id=request.query.get("dealer_id"))
+    items = await auto_marketplace.crm_engine.leads.list_leads(status=st, dealer_id=request.query.get("dealer_id"))
     return json_response({"items": [lead.to_dict() for lead in items]})
 
 
@@ -116,7 +119,7 @@ async def create_lead_handler(request: web.Request) -> web.Response:
     customer = None
     if lead.customer_id:
         try:
-            customer = auto_marketplace.crm_engine.customers.get(lead.customer_id)
+            customer = await auto_marketplace.crm_engine.customers.get(lead.customer_id)
         except NotFoundError:
             pass
     created = await auto_marketplace.crm_engine.leads.create(lead, customer)
@@ -143,7 +146,7 @@ async def list_deals_handler(request: web.Request) -> web.Response:
             st = DealStage(stage)
         except ValueError as exc:
             raise ValidationError(f"invalid deal stage: {stage!r}") from exc
-    items = auto_marketplace.crm_engine.deals.list_deals(stage=st, dealer_id=request.query.get("dealer_id"))
+    items = await auto_marketplace.crm_engine.deals.list_deals(stage=st, dealer_id=request.query.get("dealer_id"))
     return json_response({"items": [d.to_dict() for d in items]})
 
 
@@ -186,17 +189,17 @@ async def lose_deal_handler(request: web.Request) -> web.Response:
 
 async def pipeline_view_handler(request: web.Request) -> web.Response:
     _check_perm(request, "pipeline.read")
-    return json_response(auto_marketplace.crm_engine.pipeline.pipeline_view(dealer_id=request.query.get("dealer_id")))
+    return json_response(await auto_marketplace.crm_engine.pipeline.pipeline_view(dealer_id=request.query.get("dealer_id")))
 
 
 async def pipeline_forecast_handler(_request: web.Request) -> web.Response:
     _check_perm(_request, "reports.view")
-    return json_response(auto_marketplace.crm_engine.pipeline.forecast())
+    return json_response(await auto_marketplace.crm_engine.pipeline.forecast())
 
 
 async def pipeline_conversion_handler(_request: web.Request) -> web.Response:
     _check_perm(_request, "reports.view")
-    return json_response(auto_marketplace.crm_engine.pipeline.conversion_analytics())
+    return json_response(await auto_marketplace.crm_engine.pipeline.conversion_analytics())
 
 
 async def list_tasks_handler(request: web.Request) -> web.Response:
@@ -267,7 +270,7 @@ async def schedule_meeting_handler(request: web.Request) -> web.Response:
 
 async def ai_next_action_handler(request: web.Request) -> web.Response:
     _check_perm(request, "crm.read")
-    lead = auto_marketplace.crm_engine.leads.get(request.match_info["lead_id"])
+    lead = await auto_marketplace.crm_engine.leads.get(request.match_info["lead_id"])
     action = await auto_marketplace.crm_engine.ai.next_best_action(lead)
     follow_up = await auto_marketplace.crm_engine.ai.suggest_follow_up(lead)
     return json_response({"next_best_action": action, "follow_up": follow_up})
