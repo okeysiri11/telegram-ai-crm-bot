@@ -221,6 +221,7 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     # Sprint 6.3 — CRM & Sales Pipeline Engine
     crm = f"{prefix}/crm"
     app.router.add_get(f"{crm}/metrics", crm_handlers.crm_metrics_handler)
+    app.router.add_get(f"{crm}/intelligence", crm_handlers.crm_intelligence_overview_handler)
     app.router.add_get(f"{crm}/customers", crm_handlers.list_customers_handler)
     app.router.add_post(f"{crm}/customers", crm_handlers.create_customer_handler)
     app.router.add_get(f"{crm}/customers/{{customer_id}}", crm_handlers.get_customer_handler)
@@ -235,9 +236,11 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_post(f"{crm}/leads/{{lead_id}}/qualify", crm_handlers.qualify_lead_handler)
     app.router.add_post(f"{crm}/leads/{{lead_id}}/convert", crm_handlers.convert_lead_handler)
     app.router.add_get(f"{crm}/leads/{{lead_id}}/next-action", crm_handlers.ai_next_action_handler)
+    app.router.add_get(f"{crm}/leads/{{lead_id}}/intelligence", crm_handlers.lead_sales_intelligence_handler)
     app.router.add_get(f"{crm}/deals", crm_handlers.list_deals_handler)
     app.router.add_post(f"{crm}/deals", crm_handlers.create_deal_handler)
     app.router.add_get(f"{crm}/deals/{{deal_id}}", crm_handlers.get_deal_handler)
+    app.router.add_get(f"{crm}/deals/{{deal_id}}/intelligence", crm_handlers.deal_sales_intelligence_handler)
     app.router.add_patch(f"{crm}/deals/{{deal_id}}", crm_handlers.update_deal_handler)
     app.router.add_delete(f"{crm}/deals/{{deal_id}}", crm_handlers.delete_deal_handler)
     app.router.add_post(f"{crm}/deals/{{deal_id}}/advance", crm_handlers.advance_deal_handler)

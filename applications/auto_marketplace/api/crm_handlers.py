@@ -141,6 +141,13 @@ def _check_perm(request: web.Request, permission: str) -> None:
         raise AuthorizationError(f"Permission denied: {permission}")
 
 
+def _require_authenticated_read(request: web.Request, permission: str) -> None:
+    _check_perm(request, permission)
+    principal = request.get("principal")
+    if not isinstance(principal, dict) or not principal.get("authenticated"):
+        raise AuthenticationError("Authentication required")
+
+
 async def crm_metrics_handler(_request: web.Request) -> web.Response:
     bind_crm_tenant(tenant_from_request(_request))
     return json_response(await auto_marketplace.crm_engine.metrics())
@@ -936,7 +943,33 @@ async def ai_next_action_handler(request: web.Request) -> web.Response:
     action = await auto_marketplace.crm_engine.ai.next_best_action(lead)
     follow_up = await auto_marketplace.crm_engine.ai.suggest_follow_up(lead)
     durable = await auto_marketplace.crm_engine.automation.next_action(lead_id=lead.lead_id)
-    return json_response({"next_best_action": action, "follow_up": follow_up, "next_action": durable})
+    recommended = await auto_marketplace.crm_engine.intelligence.next_best_action(lead_id=lead.lead_id)
+    return json_response(
+        {
+            "next_best_action": action,
+            "follow_up": follow_up,
+            "next_action": durable,
+            "recommended_action": recommended,
+        }
+    )
+
+
+async def crm_intelligence_overview_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    overview = await auto_marketplace.crm_engine.intelligence.manager_overview()
+    return json_response(overview)
+
+
+async def lead_sales_intelligence_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    report = await auto_marketplace.crm_engine.intelligence.lead_intelligence(request.match_info["lead_id"])
+    return json_response(report)
+
+
+async def deal_sales_intelligence_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    report = await auto_marketplace.crm_engine.intelligence.deal_intelligence(request.match_info["deal_id"])
+    return json_response(report)
 
 
 _CRM_WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
@@ -947,10 +980,18 @@ def _is_auto_crm_path(path: str) -> bool:
     return path == _CRM_API_ROOT or path.startswith(_CRM_API_ROOT + "/")
 
 
+def _is_crm_intelligence_path(path: str) -> bool:
+    if not _is_auto_crm_path(path):
+        return False
+    return path == f"{_CRM_API_ROOT}/intelligence" or path.endswith("/intelligence")
+
+
 @web.middleware
 async def crm_mutating_auth_middleware(request: web.Request, handler):
-    """Require Bearer auth for all mutating Auto CRM routes (foundation + engine)."""
-    if request.method in _CRM_WRITE_METHODS and _is_auto_crm_path(request.path):
+    """Require Bearer auth for mutating Auto CRM routes and intelligence reads."""
+    if _is_auto_crm_path(request.path) and (
+        request.method in _CRM_WRITE_METHODS or _is_crm_intelligence_path(request.path)
+    ):
         principal = request.get("principal")
         if not isinstance(principal, dict) or not principal.get("authenticated"):
             return error_response("Authentication required", status=401)
