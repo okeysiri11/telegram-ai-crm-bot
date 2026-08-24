@@ -7,10 +7,10 @@ import time
 from events.publisher import publish
 from applications.auto_marketplace.crm.ai_assistant import AISalesAssistant, ai_sales_assistant
 from applications.auto_marketplace.crm.events import LeadCreatedEvent, LeadQualifiedEvent
-from applications.auto_marketplace.crm.models import CRMLead, CRMLeadStatus, CustomerProfile
+from applications.auto_marketplace.crm.models import CRMLead, CRMLeadStatus, CustomerProfile, LeadSource
 from applications.auto_marketplace.crm.persistence import CRMPersistence, get_crm_persistence
 from applications.auto_marketplace.crm.workflow_bridge import CRMWorkflowBridge, crm_workflow_bridge
-from applications.auto_marketplace.shared.exceptions import NotFoundError
+from applications.auto_marketplace.shared.exceptions import NotFoundError, ValidationError
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -46,29 +46,64 @@ class LeadService:
             raise NotFoundError("CRMLead", lead_id)
         return lead
 
-    async def list_leads(self, *, status: CRMLeadStatus | None = None, dealer_id: str | None = None) -> list[CRMLead]:
+    async def list_leads(
+        self,
+        *,
+        status: CRMLeadStatus | None = None,
+        dealer_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> list[CRMLead]:
         items = await self._records().list_leads()
         if status:
             items = [lead for lead in items if lead.status == status]
         if dealer_id:
             items = [lead for lead in items if lead.dealer_id == dealer_id]
+        if customer_id:
+            items = [lead for lead in items if lead.customer_id == customer_id]
         return items
 
     async def qualify(self, lead_id: str, *, agent_id: str = "") -> CRMLead:
         lead = await self.get(lead_id)
+        already = lead.status == CRMLeadStatus.QUALIFIED
         lead.status = CRMLeadStatus.QUALIFIED
-        lead.qualified_at = time.time()
+        if lead.qualified_at is None:
+            lead.qualified_at = time.time()
         lead.assigned_agent_id = agent_id or lead.assigned_agent_id
         lead.score = await self._ai.score_lead(lead)
         saved = await self._records().save_lead(lead)
-        await publish(LeadQualifiedEvent(lead_id=lead_id, score=saved.score, agent_id=saved.assigned_agent_id))
+        if not already:
+            await publish(LeadQualifiedEvent(lead_id=lead_id, score=saved.score, agent_id=saved.assigned_agent_id))
         return saved
+
+    async def set_status(self, lead_id: str, status: CRMLeadStatus) -> CRMLead:
+        return await self.update(lead_id, status=status)
+
+    async def assign(self, lead_id: str, agent_id: str) -> CRMLead:
+        return await self.update(lead_id, assigned_agent_id=agent_id)
+
+    @staticmethod
+    def _coerce_update(key: str, value: object) -> object:
+        if key == "status":
+            if isinstance(value, CRMLeadStatus):
+                return value
+            try:
+                return CRMLeadStatus(str(value))
+            except ValueError as exc:
+                raise ValidationError(f"invalid lead status: {value!r}") from exc
+        if key == "source":
+            if isinstance(value, LeadSource):
+                return value
+            try:
+                return LeadSource(str(value))
+            except ValueError as exc:
+                raise ValidationError(f"invalid lead source: {value!r}") from exc
+        return value
 
     async def update(self, lead_id: str, **updates: object) -> CRMLead:
         lead = await self.get(lead_id)
         for key, value in updates.items():
             if hasattr(lead, key) and value is not None:
-                setattr(lead, key, value)
+                setattr(lead, key, self._coerce_update(key, value))
         return await self._records().save_lead(lead)
 
     async def delete(self, lead_id: str) -> bool:

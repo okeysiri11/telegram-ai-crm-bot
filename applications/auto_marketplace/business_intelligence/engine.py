@@ -43,13 +43,13 @@ class BIEngine:
         self.insights = insights or ai_insights_service
         self.security = security or bi_security
 
-    def metrics(self) -> dict[str, Any]:
+    async def metrics(self) -> dict[str, Any]:
         return {
             "dashboards": self._store.bi_dashboards.count(),
             "reports": self._store.bi_reports.count(),
             "forecasts": self._store.bi_forecasts.count(),
             "insights": self._store.bi_insights.count(),
-            "kpis": len(self.kpi.compute_all()),
+            "kpis": len(await self.kpi.compute_all()),
         }
 
 

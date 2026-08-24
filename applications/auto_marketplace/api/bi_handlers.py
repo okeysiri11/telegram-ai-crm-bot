@@ -18,7 +18,7 @@ def _check_bi_perm(request: web.Request, permission: str = "bi.read") -> None:
 
 
 async def bi_metrics_handler(_request: web.Request) -> web.Response:
-    return json_response(auto_marketplace.bi_engine.metrics())
+    return json_response(await auto_marketplace.bi_engine.metrics())
 
 
 async def dashboard_handler(request: web.Request) -> web.Response:
@@ -30,12 +30,12 @@ async def dashboard_handler(request: web.Request) -> web.Response:
 
 async def kpi_handler(_request: web.Request) -> web.Response:
     _check_bi_perm(_request, "kpi.all")
-    return json_response({"items": [k.to_dict() for k in auto_marketplace.bi_engine.kpi.compute_all()]})
+    return json_response({"items": [k.to_dict() for k in await auto_marketplace.bi_engine.kpi.compute_all()]})
 
 
 async def kpi_single_handler(request: web.Request) -> web.Response:
     _check_bi_perm(request, "kpi.all")
-    kpi = auto_marketplace.bi_engine.kpi.get_kpi(request.match_info["name"])
+    kpi = await auto_marketplace.bi_engine.kpi.get_kpi(request.match_info["name"])
     if kpi is None:
         return json_response({"error": "KPI not found"}, status=404)
     return json_response(kpi.to_dict())
@@ -56,8 +56,11 @@ async def analytics_handler(request: web.Request) -> web.Response:
         "agent": engine.agent_analytics,
     }
     if domain and domain in mapping:
-        return json_response(mapping[domain]())
-    return json_response(engine.all_analytics())
+        result = mapping[domain]()
+        if hasattr(result, "__await__"):
+            result = await result
+        return json_response(result)
+    return json_response(await engine.all_analytics())
 
 
 async def forecast_handler(request: web.Request) -> web.Response:
@@ -97,8 +100,8 @@ async def export_report_handler(request: web.Request) -> web.Response:
 
 async def insights_handler(_request: web.Request) -> web.Response:
     _check_bi_perm(_request, "insights.generate")
-    kpis = auto_marketplace.bi_engine.kpi.as_dict()
-    analytics = auto_marketplace.bi_engine.analytics.all_analytics()
+    kpis = await auto_marketplace.bi_engine.kpi.as_dict()
+    analytics = await auto_marketplace.bi_engine.analytics.all_analytics()
     insights_svc = auto_marketplace.bi_engine.insights
     all_insights = []
     all_insights.extend(await insights_svc.detect_anomalies({"revenue": kpis.get("revenue", 0), "revenue_target": 50000}))
@@ -112,7 +115,7 @@ async def insights_handler(_request: web.Request) -> web.Response:
 
 async def statistics_handler(_request: web.Request) -> web.Response:
     _check_bi_perm(_request, "bi.read")
-    return json_response(auto_marketplace.bi_engine.statistics.summary())
+    return json_response(await auto_marketplace.bi_engine.statistics.summary())
 
 
 async def visualizations_handler(request: web.Request) -> web.Response:
@@ -124,5 +127,6 @@ async def visualizations_handler(request: web.Request) -> web.Response:
         "pipeline": viz.pipeline_chart,
         "leads": viz.lead_source_chart,
     }
-    chart = charts.get(chart_type, viz.revenue_chart)()
+    chart_fn = charts.get(chart_type, viz.revenue_chart)
+    chart = await chart_fn()
     return json_response(chart.to_dict())

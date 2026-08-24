@@ -7,6 +7,7 @@ from typing import Any
 from applications.auto_marketplace.ai_sales.integration import ai_sales_platform_bridge
 from applications.auto_marketplace.ai_sales.models import CustomerIntelligenceProfile
 from applications.auto_marketplace.crm.models import CustomerProfile
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -14,11 +15,13 @@ class CustomerIntelligenceService:
     def __init__(self, store: MarketplaceStore | None = None) -> None:
         self._store = store or marketplace_store
 
-    def _get_customer(self, customer_id: str) -> CustomerProfile | None:
-        return self._store.customer_profiles.get(customer_id)
+    async def _load_customer(self, customer_id: str) -> CustomerProfile | None:
+        if not customer_id:
+            return None
+        return await get_crm_persistence().get_customer(customer_id)
 
     async def analyze_profile(self, customer_id: str) -> CustomerIntelligenceProfile:
-        customer = self._get_customer(customer_id)
+        customer = await self._load_customer(customer_id)
         prefs = customer.preferences if customer else {}
         interactions = [
             i.to_dict() for i in self._store.interactions.list_all() if i.customer_id == customer_id

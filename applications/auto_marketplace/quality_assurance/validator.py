@@ -94,7 +94,7 @@ class ProductionValidator:
                 elif check_id == "finance.documents":
                     fn()
                 elif check_id == "bi.kpi":
-                    fn()
+                    await fn()
                 else:
                     fn()
                 status = ValidationStatus.PASSED

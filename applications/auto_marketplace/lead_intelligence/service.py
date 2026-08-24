@@ -7,7 +7,8 @@ from events.publisher import publish
 from applications.auto_marketplace.ai_sales.events import AISalesLeadQualifiedEvent, CustomerIntentDetectedEvent
 from applications.auto_marketplace.ai_sales.integration import ai_sales_platform_bridge
 from applications.auto_marketplace.ai_sales.models import LeadIntelligenceReport, LeadTemperature
-from applications.auto_marketplace.crm.models import CRMLead, CustomerProfile
+from applications.auto_marketplace.crm.models import CRMLead, CRMLeadStatus, CustomerProfile
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -18,10 +19,11 @@ class LeadIntelligenceService:
         self._store = store or marketplace_store
 
     async def analyze_lead(self, lead_id: str) -> LeadIntelligenceReport:
-        lead = self._store.crm_leads.get(lead_id)
+        records = get_crm_persistence()
+        lead = await records.get_lead(lead_id)
         if lead is None:
             raise ValueError(f"Lead not found: {lead_id}")
-        customer = self._store.customer_profiles.get(lead.customer_id)
+        customer = await records.get_customer(lead.customer_id) if lead.customer_id else None
         score = await self._compute_score(lead, customer)
         temperature = self._classify_temperature(score)
         probability = min(score / 100.0, 0.95)
@@ -41,7 +43,7 @@ class LeadIntelligenceService:
         )
         lead.score = score
         lead.metadata["intelligence"] = report.to_dict()
-        self._store.crm_leads.save(lead_id, lead)
+        await records.save_lead(lead)
         return report
 
     async def _compute_score(self, lead: CRMLead, customer: CustomerProfile | None) -> float:
@@ -92,14 +94,13 @@ class LeadIntelligenceService:
     async def qualify_lead(self, lead_id: str, *, agent_id: str = "ai-agent") -> LeadIntelligenceReport:
         report = await self.analyze_lead(lead_id)
         if report.qualified:
-            lead = self._store.crm_leads.get(lead_id)
+            records = get_crm_persistence()
+            lead = await records.get_lead(lead_id)
             if lead:
-                from applications.auto_marketplace.crm.models import CRMLeadStatus
-
                 lead.status = CRMLeadStatus.QUALIFIED
                 lead.assigned_agent_id = agent_id
-                self._store.crm_leads.save(lead_id, lead)
-                customer = self._store.customer_profiles.get(lead.customer_id)
+                await records.save_lead(lead)
+                customer = await records.get_customer(lead.customer_id) if lead.customer_id else None
                 if customer:
                     await publish(
                         CustomerIntentDetectedEvent(

@@ -5,6 +5,7 @@ from __future__ import annotations
 from applications.auto_marketplace.authentication.models import PortalUser
 from applications.auto_marketplace.authentication.service import AuthenticationService, authentication_service
 from applications.auto_marketplace.crm.models import CustomerProfile
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -24,17 +25,20 @@ class ProfileService:
             user.metadata.update(metadata)
         return self._store.portal_users.save(user_id, user)
 
-    def get_customer_profile(self, customer_id: str) -> CustomerProfile | None:
-        return self._store.customer_profiles.get(customer_id)
+    async def get_customer_profile(self, customer_id: str) -> CustomerProfile | None:
+        if not customer_id:
+            return None
+        return await get_crm_persistence().get_customer(customer_id)
 
     async def update_customer_profile(self, customer_id: str, **fields) -> CustomerProfile:
-        profile = self._store.customer_profiles.get(customer_id)
+        records = get_crm_persistence()
+        profile = await records.get_customer(customer_id)
         if profile is None:
             profile = CustomerProfile(customer_id=customer_id)
         for key, value in fields.items():
             if hasattr(profile, key) and value is not None:
                 setattr(profile, key, value)
-        return self._store.customer_profiles.save(customer_id, profile)
+        return await records.save_customer(profile)
 
 
 profile_service = ProfileService()

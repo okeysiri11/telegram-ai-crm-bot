@@ -9,7 +9,7 @@ from applications.auto_marketplace.crm.ai_assistant import AISalesAssistant, ai_
 from applications.auto_marketplace.crm.events import DealLostEvent, DealOpenedEvent, DealUpdatedEvent, DealWonEvent
 from applications.auto_marketplace.crm.models import CRMDeal, DealStage
 from applications.auto_marketplace.crm.persistence import CRMPersistence, get_crm_persistence
-from applications.auto_marketplace.shared.exceptions import NotFoundError
+from applications.auto_marketplace.shared.exceptions import NotFoundError, ValidationError
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -39,12 +39,20 @@ class DealService:
             raise NotFoundError("CRMDeal", deal_id)
         return deal
 
-    async def list_deals(self, *, stage: DealStage | None = None, dealer_id: str | None = None) -> list[CRMDeal]:
+    async def list_deals(
+        self,
+        *,
+        stage: DealStage | None = None,
+        dealer_id: str | None = None,
+        customer_id: str | None = None,
+    ) -> list[CRMDeal]:
         items = await self._records().list_deals()
         if stage:
             items = [d for d in items if d.stage == stage]
         if dealer_id:
             items = [d for d in items if d.dealer_id == dealer_id]
+        if customer_id:
+            items = [d for d in items if d.customer_id == customer_id]
         return items
 
     async def update_stage(self, deal_id: str, stage: DealStage) -> CRMDeal:
@@ -59,6 +67,11 @@ class DealService:
         deal = await self.get(deal_id)
         for key, value in updates.items():
             if hasattr(deal, key) and value is not None:
+                if key == "stage" and not isinstance(value, DealStage):
+                    try:
+                        value = DealStage(str(value))
+                    except ValueError as exc:
+                        raise ValidationError(f"invalid deal stage: {value!r}") from exc
                 setattr(deal, key, value)
         deal.probability = await self._ai.predict_deal_probability(deal)
         saved = await self._records().save_deal(deal)

@@ -157,3 +157,105 @@ async def test_memory_backend_tenant_isolation():
     bind_crm_tenant("tenant-alpha")
     restored = await auto_marketplace.crm_engine.leads.get(lead.lead_id)
     assert restored.notes == "alpha-only"
+
+
+@pytest.mark.asyncio
+async def test_crm_api_lead_customer_deal_lifecycle(client: TestClient):
+    headers = {"Authorization": "Bearer test"}
+    created_customer = await client.post(
+        "/api/auto/v1/crm/customers",
+        json={"first_name": "Ann", "last_name": "Lee", "email": "ann@test.com", "phone": "+1"},
+        headers=headers,
+    )
+    assert created_customer.status == 201
+    customer = await created_customer.json()
+    customer_id = customer["customer_id"]
+
+    patched_customer = await client.patch(
+        f"/api/auto/v1/crm/customers/{customer_id}",
+        json={"phone": "+1999"},
+        headers=headers,
+    )
+    assert patched_customer.status == 200
+    assert (await patched_customer.json())["phone"] == "+1999"
+
+    listed_customers = await client.get("/api/auto/v1/crm/customers?email=ann@test.com", headers=headers)
+    assert listed_customers.status == 200
+    assert any(item["customer_id"] == customer_id for item in (await listed_customers.json())["items"])
+
+    created_lead = await client.post(
+        "/api/auto/v1/crm/leads",
+        json={"customer_id": customer_id, "dealer_id": "d1", "notes": "hot lead"},
+        headers=headers,
+    )
+    assert created_lead.status == 201
+    lead = await created_lead.json()
+    lead_id = lead["lead_id"]
+
+    got_lead = await client.get(f"/api/auto/v1/crm/leads/{lead_id}", headers=headers)
+    assert got_lead.status == 200
+    patched_lead = await client.patch(
+        f"/api/auto/v1/crm/leads/{lead_id}",
+        json={"status": "contacted", "assigned_agent_id": "mgr-1", "notes": "called"},
+        headers=headers,
+    )
+    assert patched_lead.status == 200
+    lead_body = await patched_lead.json()
+    assert lead_body["status"] == "contacted"
+    assert lead_body["assigned_agent_id"] == "mgr-1"
+
+    listed_leads = await client.get(f"/api/auto/v1/crm/leads?status=contacted&customer_id={customer_id}", headers=headers)
+    assert listed_leads.status == 200
+    assert any(item["lead_id"] == lead_id for item in (await listed_leads.json())["items"])
+
+    converted = await client.post(
+        f"/api/auto/v1/crm/leads/{lead_id}/convert",
+        json={"amount": 18000},
+        headers=headers,
+    )
+    assert converted.status == 201
+    deal = await converted.json()
+    deal_id = deal["deal_id"]
+    assert deal["customer_id"] == customer_id
+    assert deal["stage"] == "qualification"
+
+    again = await client.post(
+        f"/api/auto/v1/crm/leads/{lead_id}/convert",
+        json={"amount": 99999},
+        headers=headers,
+    )
+    assert again.status == 201
+    assert (await again.json())["deal_id"] == deal_id
+
+    got_deal = await client.get(f"/api/auto/v1/crm/deals/{deal_id}", headers=headers)
+    assert got_deal.status == 200
+    staged = await client.patch(
+        f"/api/auto/v1/crm/deals/{deal_id}",
+        json={"stage": "proposal"},
+        headers=headers,
+    )
+    assert staged.status == 200
+    assert (await staged.json())["stage"] == "proposal"
+
+    pipeline = await client.get("/api/auto/v1/crm/pipeline", headers=headers)
+    assert pipeline.status == 200
+    stages = (await pipeline.json())["stages"]
+    assert any(item["deal_id"] == deal_id for item in stages.get("proposal", []))
+
+
+@pytest.mark.asyncio
+async def test_crm_api_tenant_header_isolation(client: TestClient):
+    headers_a = {"Authorization": "Bearer test", "X-Tenant-Id": "web-a"}
+    headers_b = {"Authorization": "Bearer test", "X-Tenant-Id": "web-b"}
+    created = await client.post(
+        "/api/auto/v1/crm/leads",
+        json={"notes": "tenant-a-secret", "dealer_id": "d-iso"},
+        headers=headers_a,
+    )
+    assert created.status == 201
+    lead_id = (await created.json())["lead_id"]
+    hidden = await client.get(f"/api/auto/v1/crm/leads/{lead_id}", headers=headers_b)
+    assert hidden.status == 404
+    visible = await client.get(f"/api/auto/v1/crm/leads/{lead_id}", headers=headers_a)
+    assert visible.status == 200
+    assert (await visible.json())["notes"] == "tenant-a-secret"

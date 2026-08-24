@@ -38,8 +38,8 @@ class BIReportService:
             title=title or self._PERIOD_TITLES.get(period, "Business Report"),
             period=period,
             sections={
-                "kpis": [k.to_dict() for k in self._kpi.compute_all()],
-                "analytics": self._analytics.all_analytics(),
+                "kpis": [k.to_dict() for k in await self._kpi.compute_all()],
+                "analytics": await self._analytics.all_analytics(),
             },
             export_urls={
                 ExportFormat.PDF.value: f"/reports/{{id}}.pdf",

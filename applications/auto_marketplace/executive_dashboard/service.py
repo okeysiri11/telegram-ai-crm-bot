@@ -35,25 +35,25 @@ class ExecutiveDashboardService:
     async def get_dashboard(self, role: DashboardRole | str) -> DashboardSnapshot:
         if isinstance(role, str):
             role = DashboardRole(role)
-        kpis = self._kpi.compute_all()
+        kpis = await self._kpi.compute_all()
         widgets: list[dict] = []
 
         if role in {DashboardRole.OWNER, DashboardRole.ADMINISTRATOR}:
             widgets = [
                 {"type": "kpi_grid", "data": [k.to_dict() for k in kpis]},
-                {"type": "sales_chart", "data": self._analytics.sales_analytics()},
+                {"type": "sales_chart", "data": await self._analytics.sales_analytics()},
                 {"type": "financial_chart", "data": self._analytics.financial_analytics()},
             ]
         elif role == DashboardRole.SALES_MANAGER:
             widgets = [
-                {"type": "pipeline", "data": self._analytics.sales_analytics()},
+                {"type": "pipeline", "data": await self._analytics.sales_analytics()},
                 {"type": "kpis", "data": [k.to_dict() for k in kpis if k.name in {"lead_conversion", "average_deal_size", "vehicle_sales"}]},
             ]
         elif role == DashboardRole.FINANCE_MANAGER:
             widgets = [{"type": "financial", "data": self._analytics.financial_analytics()}]
             kpis = [k for k in kpis if k.name in {"revenue", "profit", "gross_margin"}]
         elif role == DashboardRole.DEALER:
-            widgets = [{"type": "dealer", "data": self._analytics.dealer_analytics()}]
+            widgets = [{"type": "dealer", "data": await self._analytics.dealer_analytics()}]
             kpis = [k for k in kpis if k.name in {"dealer_performance", "vehicle_sales"}]
         elif role == DashboardRole.OPERATIONS:
             widgets = [
@@ -62,7 +62,7 @@ class ExecutiveDashboardService:
             ]
         elif role == DashboardRole.AI_AGENT:
             widgets = [
-                {"type": "agent", "data": self._analytics.agent_analytics()},
+                {"type": "agent", "data": await self._analytics.agent_analytics()},
                 {"type": "ai_accuracy", "data": {"ai_recommendation_accuracy": next((k.value for k in kpis if k.name == "ai_recommendation_accuracy"), 0)}},
             ]
 

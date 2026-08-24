@@ -46,7 +46,7 @@ def test_bi_security_roles():
 async def test_kpi_computation():
     payment = FinancePayment(deal_id="d1", customer_id="c1", amount=30000, status="completed")
     auto_marketplace.store.finance_payments.save(payment.payment_id, payment)
-    kpis = auto_marketplace.bi_engine.kpi.compute_all()
+    kpis = await auto_marketplace.bi_engine.kpi.compute_all()
     names = {k.name for k in kpis}
     assert "revenue" in names
     assert "lead_conversion" in names
@@ -65,7 +65,7 @@ async def test_executive_dashboards():
 async def test_analytics_domains():
     await auto_marketplace.crm_engine.customers.create(CustomerProfile(email="bi@test.com"))
     await auto_marketplace.crm_engine.leads.create(CRMLead(customer_id="c1", source=LeadSource.WEB))
-    all_data = auto_marketplace.bi_engine.analytics.all_analytics()
+    all_data = await auto_marketplace.bi_engine.analytics.all_analytics()
     assert "sales" in all_data
     assert "financial" in all_data
     assert "customer" in all_data
@@ -90,14 +90,14 @@ async def test_bi_report_generation():
 
 @pytest.mark.asyncio
 async def test_ai_insights():
-    kpis = auto_marketplace.bi_engine.kpi.as_dict()
+    kpis = await auto_marketplace.bi_engine.kpi.as_dict()
     insights = await auto_marketplace.bi_engine.insights.executive_recommendations(kpis)
     assert isinstance(insights, list)
 
 
 @pytest.mark.asyncio
 async def test_visualizations():
-    chart = auto_marketplace.bi_engine.visualizations.revenue_chart()
+    chart = await auto_marketplace.bi_engine.visualizations.revenue_chart()
     assert chart.chart_type == "bar"
     assert chart.labels
 

@@ -82,9 +82,9 @@ async def test_dealer_portal():
     user, _ = await auto_marketplace.portal_engine.auth.register_dealer(
         email="dealer@test.com", password="pass", dealer_id="d1", display_name="Test Dealer"
     )
-    dash = auto_marketplace.portal_engine.dealer.dashboard("d1")
+    dash = await auto_marketplace.portal_engine.dealer.dashboard("d1")
     assert dash["dealer_id"] == "d1"
-    sales = auto_marketplace.portal_engine.dealer.sales_tracking("d1")
+    sales = await auto_marketplace.portal_engine.dealer.sales_tracking("d1")
     assert "total_deals" in sales
 
 

@@ -18,7 +18,7 @@ class MonitoringService:
         health["timestamp"] = time.time()
         return health
 
-    def readiness_probe(self) -> dict[str, Any]:
+    async def readiness_probe(self) -> dict[str, Any]:
         from applications.auto_marketplace.application import auto_marketplace
         from applications.auto_marketplace.crm.persistence import crm_persistence_mode
 
@@ -26,7 +26,7 @@ class MonitoringService:
             "crm": {"backend": crm_persistence_mode()},
             "finance": auto_marketplace.finance_engine.metrics(),
             "portal": auto_marketplace.portal_engine.metrics(),
-            "bi": auto_marketplace.bi_engine.metrics(),
+            "bi": await auto_marketplace.bi_engine.metrics(),
         }
         ready = all(isinstance(v, dict) for v in checks.values())
         return {"ready": ready, "checks": checks, "timestamp": time.time()}

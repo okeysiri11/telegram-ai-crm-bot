@@ -10,6 +10,8 @@ from applications.auto_marketplace.ai_sales.models import AgentType
 from applications.auto_marketplace.authentication.models import OfferRequest, TestDriveBooking, TradeInRequest
 from applications.auto_marketplace.customer_portal.events import OfferRequestedEvent, TestDriveBookedEvent, VehicleViewedEvent
 from applications.auto_marketplace.crm.models import CRMLead, LeadSource
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
+from applications.auto_marketplace.leads.service import lead_service
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -65,7 +67,7 @@ class CustomerPortalService:
         )
         self._store.test_drive_bookings.save(booking.booking_id, booking)
         lead = CRMLead(customer_id=customer_id, vehicle_id=vehicle_id, dealer_id=dealer_id, source=LeadSource.WEB)
-        self._store.crm_leads.save(lead.lead_id, lead)
+        await lead_service.create(lead)
         await publish(TestDriveBookedEvent(booking_id=booking.booking_id, customer_id=customer_id, vehicle_id=vehicle_id))
         return booking
 
@@ -103,8 +105,12 @@ class CustomerPortalService:
         await publish(OfferRequestedEvent(request_id=req.request_id, customer_id=customer_id, vehicle_id=vehicle_id))
         return req
 
-    def purchase_history(self, customer_id: str) -> list[dict]:
-        deals = [d for d in self._store.crm_deals.list_all() if d.customer_id == customer_id and d.stage.value == "closed_won"]
+    async def purchase_history(self, customer_id: str) -> list[dict]:
+        deals = [
+            d
+            for d in await get_crm_persistence().list_deals()
+            if d.customer_id == customer_id and d.stage.value == "closed_won"
+        ]
         payments = [p for p in self._store.finance_payments.list_all() if p.customer_id == customer_id]
         return {
             "deals": [d.to_dict() for d in deals],

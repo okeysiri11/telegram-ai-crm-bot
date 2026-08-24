@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from applications.auto_marketplace.business_intelligence.models import KPIValue
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -10,13 +11,14 @@ class KPIService:
     def __init__(self, store: MarketplaceStore | None = None) -> None:
         self._store = store or marketplace_store
 
-    def compute_all(self) -> list[KPIValue]:
+    async def compute_all(self) -> list[KPIValue]:
+        records = get_crm_persistence()
         revenue = sum(p.amount for p in self._store.finance_payments.list_all() if p.status == "completed")
-        deals = self._store.crm_deals.list_all()
+        deals = await records.list_deals()
         won = [d for d in deals if d.stage.value == "closed_won"]
         vehicle_sales = len(won)
         avg_deal = sum(d.amount for d in won) / max(len(won), 1)
-        leads = self._store.crm_leads.list_all()
+        leads = await records.list_leads()
         qualified = [l for l in leads if l.status.value == "qualified"]
         conversion = len(qualified) / max(len(leads), 1)
         inventory = self._store.catalog_vehicles.count() or self._store.vehicles.count()
@@ -39,14 +41,14 @@ class KPIService:
             KPIValue(name="agent_performance", value=round(len(won) / max(self._store.sales_agents.count(), 1), 2), unit="deals"),
         ]
 
-    def get_kpi(self, name: str) -> KPIValue | None:
-        for kpi in self.compute_all():
+    async def get_kpi(self, name: str) -> KPIValue | None:
+        for kpi in await self.compute_all():
             if kpi.name == name:
                 return kpi
         return None
 
-    def as_dict(self) -> dict[str, float]:
-        return {k.name: k.value for k in self.compute_all()}
+    async def as_dict(self) -> dict[str, float]:
+        return {k.name: k.value for k in await self.compute_all()}
 
 
 kpi_service = KPIService()

@@ -9,7 +9,10 @@ from applications.auto_marketplace.crm.models import CRMDeal, CRMLead, CRMLeadSt
 from applications.auto_marketplace.crm.persistence import CRMPersistence, get_crm_persistence
 from applications.auto_marketplace.deals.service import DealService, deal_service
 from applications.auto_marketplace.leads.service import LeadService, lead_service
+from applications.auto_marketplace.shared.exceptions import NotFoundError
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
+
+_CONVERTED_DEAL_ID_KEY = "converted_deal_id"
 
 _STAGE_ORDER = [
     DealStage.PROSPECT,
@@ -40,25 +43,69 @@ class SalesPipelineEngine:
     async def qualify_lead(self, lead_id: str, *, agent_id: str = "") -> CRMLead:
         return await self._leads.qualify(lead_id, agent_id=agent_id)
 
+    async def convert_lead_to_deal(self, lead_id: str, *, amount: float = 0.0, agent_id: str = "") -> CRMDeal:
+        """Idempotent lead → durable deal. Deal id is stored on lead.metadata."""
+        lead = await self._leads.get(lead_id)
+        existing_id = str(lead.metadata.get(_CONVERTED_DEAL_ID_KEY) or "")
+        if existing_id:
+            try:
+                return await self._deals.get(existing_id)
+            except NotFoundError:
+                pass
+        deal = CRMDeal(
+            customer_id=lead.customer_id,
+            dealer_id=lead.dealer_id,
+            vehicle_id=lead.vehicle_id,
+            amount=amount,
+            owner_agent_id=agent_id or lead.assigned_agent_id,
+            stage=DealStage.QUALIFICATION,
+        )
+        created = await self._deals.create(deal)
+        meta = dict(lead.metadata)
+        meta[_CONVERTED_DEAL_ID_KEY] = created.deal_id
+        await self._leads.update(lead_id, status=CRMLeadStatus.CONVERTED, metadata=meta)
+        return created
+
     async def convert_lead_to_opportunity(self, lead_id: str, *, amount: float = 0.0) -> SalesOpportunity:
         lead = await self._leads.get(lead_id)
+        deal = await self.convert_lead_to_deal(lead_id, amount=amount)
+        if deal.opportunity_id:
+            existing = self._store.opportunities.get(deal.opportunity_id)
+            if existing is not None:
+                return existing
         opp = SalesOpportunity(
             lead_id=lead_id,
             customer_id=lead.customer_id,
             dealer_id=lead.dealer_id,
             vehicle_id=lead.vehicle_id,
-            stage=DealStage.QUALIFICATION,
-            amount=amount,
-            probability=0.25,
+            stage=deal.stage,
+            amount=amount or deal.amount,
+            probability=deal.probability,
         )
-        return self._store.opportunities.save(opp.opportunity_id, opp)
+        saved = self._store.opportunities.save(opp.opportunity_id, opp)
+        if not deal.opportunity_id:
+            await self._deals.update(deal.deal_id, opportunity_id=saved.opportunity_id)
+        return saved
 
     async def open_deal_from_opportunity(self, opportunity_id: str) -> CRMDeal:
+        for deal in await self._deals.list_deals():
+            if deal.opportunity_id == opportunity_id:
+                return deal
         opp = self._store.opportunities.get(opportunity_id)
         if opp is None:
-            from applications.auto_marketplace.shared.exceptions import NotFoundError
-
             raise NotFoundError("SalesOpportunity", opportunity_id)
+        if opp.lead_id:
+            existing_id = ""
+            try:
+                lead = await self._leads.get(opp.lead_id)
+                existing_id = str(lead.metadata.get(_CONVERTED_DEAL_ID_KEY) or "")
+            except NotFoundError:
+                existing_id = ""
+            if existing_id:
+                try:
+                    return await self._deals.get(existing_id)
+                except NotFoundError:
+                    pass
         deal = CRMDeal(
             opportunity_id=opportunity_id,
             customer_id=opp.customer_id,
@@ -68,7 +115,16 @@ class SalesPipelineEngine:
             amount=opp.amount,
             probability=opp.probability,
         )
-        return await self._deals.create(deal)
+        created = await self._deals.create(deal)
+        if opp.lead_id:
+            try:
+                lead = await self._leads.get(opp.lead_id)
+                meta = dict(lead.metadata)
+                meta[_CONVERTED_DEAL_ID_KEY] = created.deal_id
+                await self._leads.update(opp.lead_id, status=CRMLeadStatus.CONVERTED, metadata=meta)
+            except NotFoundError:
+                pass
+        return created
 
     async def advance_stage(self, deal_id: str) -> CRMDeal:
         deal = await self._deals.get(deal_id)

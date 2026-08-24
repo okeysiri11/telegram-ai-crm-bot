@@ -7,7 +7,7 @@ import uuid
 
 import pytest
 
-from applications.auto_marketplace.crm.models import CRMDeal, CRMLead, CustomerProfile
+from applications.auto_marketplace.crm.models import CRMDeal, CRMLead, CRMLeadStatus, CustomerProfile, DealStage, LeadSource
 from applications.auto_marketplace.crm.persistence import (
     PostgresCRMPersistence,
     crm_persistence_mode,
@@ -18,6 +18,7 @@ from applications.auto_marketplace.crm.tenant import bind_crm_tenant, current_cr
 from applications.auto_marketplace.customers.profile_service import CustomerProfileService
 from applications.auto_marketplace.deals.service import DealService
 from applications.auto_marketplace.leads.service import LeadService
+from applications.auto_marketplace.sales_pipeline.service import SalesPipelineEngine
 from applications.auto_marketplace.shared.exceptions import NotFoundError
 
 
@@ -191,3 +192,101 @@ async def test_tenant_isolation_on_get_and_list(postgres_crm_mode):
     assert any(item.lead_id == lead.lead_id for item in listed_a)
 
     await leads.delete(lead.lead_id)
+
+
+@pytest.mark.asyncio
+async def test_lead_customer_deal_lifecycle_survives_restart(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant = f"life-{suffix}"
+    bind_crm_tenant(tenant)
+    persist = PostgresCRMPersistence()
+    leads = LeadService(persistence=persist)
+    deals = DealService(persistence=persist)
+    customers = CustomerProfileService(persistence=persist)
+
+    profile = await customers.create(CustomerProfile(first_name="Pat", last_name="Ng", email=f"pat-{suffix}@ex.com"))
+    updated_customer = await customers.update(profile.customer_id, phone="+1555")
+    assert updated_customer.phone == "+1555"
+    lead = await leads.create(
+        CRMLead(customer_id=profile.customer_id, dealer_id="d-life", notes="open", source=LeadSource.WEB)
+    )
+    contacted = await leads.set_status(lead.lead_id, CRMLeadStatus.CONTACTED)
+    assigned = await leads.assign(lead.lead_id, "mgr-life")
+    assert contacted.status == CRMLeadStatus.CONTACTED
+    assert assigned.assigned_agent_id == "mgr-life"
+    listed_contacted = await leads.list_leads(status=CRMLeadStatus.CONTACTED, customer_id=profile.customer_id)
+    assert any(item.lead_id == lead.lead_id for item in listed_contacted)
+    await leads.qualify(lead.lead_id, agent_id="mgr-life")
+
+    pipeline = SalesPipelineEngine(leads=leads, deals=deals, persistence=persist)
+    deal = await pipeline.convert_lead_to_deal(lead.lead_id, amount=22000)
+    again = await pipeline.convert_lead_to_deal(lead.lead_id, amount=1)
+    assert again.deal_id == deal.deal_id
+    staged = await deals.update_stage(deal.deal_id, DealStage.PROPOSAL)
+
+    listed_leads = await leads.list_leads(status=CRMLeadStatus.CONVERTED, customer_id=profile.customer_id)
+    listed_customers = await customers.list_profiles(email=f"pat-{suffix}@ex.com")
+    listed_deals = await deals.list_deals(stage=DealStage.PROPOSAL, customer_id=profile.customer_id)
+    assert any(item.lead_id == lead.lead_id for item in listed_leads)
+    assert any(item.customer_id == profile.customer_id for item in listed_customers)
+    assert any(item.deal_id == staged.deal_id for item in listed_deals)
+
+    ids = (profile.customer_id, lead.lead_id, deal.deal_id)
+    from database.session import shutdown_db
+
+    await shutdown_db()
+    reset_crm_persistence()
+    bind_crm_tenant(tenant)
+    persist2 = PostgresCRMPersistence()
+    leads2 = LeadService(persistence=persist2)
+    deals2 = DealService(persistence=persist2)
+    customers2 = CustomerProfileService(persistence=persist2)
+
+    restored_customer = await customers2.get(ids[0])
+    restored_lead = await leads2.get(ids[1])
+    restored_deal = await deals2.get(ids[2])
+    assert restored_customer.phone == "+1555"
+    assert restored_customer.email == f"pat-{suffix}@ex.com"
+    assert restored_lead.status.value == "converted"
+    assert restored_lead.assigned_agent_id == "mgr-life"
+    assert restored_lead.metadata.get("converted_deal_id") == ids[2]
+    assert restored_deal.stage.value == "proposal"
+    assert restored_deal.amount == 22000
+    assert restored_deal.customer_id == ids[0]
+    listed_after = await leads2.list_leads(customer_id=ids[0])
+    assert any(item.lead_id == ids[1] for item in listed_after)
+
+    await customers2.delete(ids[0])
+    await leads2.delete(ids[1])
+    await deals2.delete(ids[2])
+
+
+@pytest.mark.asyncio
+async def test_tenant_isolation_customers_and_deals(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant_a = f"iso-a-{suffix}"
+    tenant_b = f"iso-b-{suffix}"
+    persist = PostgresCRMPersistence()
+    customers = CustomerProfileService(persistence=persist)
+    deals = DealService(persistence=persist)
+
+    bind_crm_tenant(tenant_a)
+    profile = await customers.create(CustomerProfile(email=f"a-{suffix}@ex.com", first_name="A"))
+    deal = await deals.create(CRMDeal(customer_id=profile.customer_id, amount=111, dealer_id="d-a"))
+
+    bind_crm_tenant(tenant_b)
+    with pytest.raises(NotFoundError):
+        await customers.get(profile.customer_id)
+    with pytest.raises(NotFoundError):
+        await deals.get(deal.deal_id)
+    assert all(item.customer_id != profile.customer_id for item in await customers.list_profiles())
+    assert all(item.deal_id != deal.deal_id for item in await deals.list_deals())
+
+    bind_crm_tenant(tenant_a)
+    assert (await customers.get(profile.customer_id)).email == f"a-{suffix}@ex.com"
+    assert (await deals.get(deal.deal_id)).amount == 111
+
+    await deals.delete(deal.deal_id)
+    await customers.delete(profile.customer_id)

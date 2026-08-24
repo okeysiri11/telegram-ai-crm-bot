@@ -6,6 +6,7 @@ from events.publisher import publish
 
 from applications.auto_marketplace.business_intelligence.events import ForecastCompletedEvent
 from applications.auto_marketplace.business_intelligence.models import ForecastResult
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -37,7 +38,8 @@ class ForecastingService:
         return result
 
     async def sales_forecast(self, *, period_days: int = 30) -> ForecastResult:
-        won = len([d for d in self._store.crm_deals.list_all() if d.stage.value == "closed_won"])
+        deals = await get_crm_persistence().list_deals()
+        won = len([d for d in deals if d.stage.value == "closed_won"])
         return await self._base_forecast("sales", float(max(won, 1)), period_days=period_days)
 
     async def revenue_forecast(self, *, period_days: int = 30) -> ForecastResult:
@@ -49,7 +51,7 @@ class ForecastingService:
         return await self._base_forecast("inventory", float(max(count, 1)), period_days=period_days)
 
     async def demand_forecast(self, *, period_days: int = 30) -> ForecastResult:
-        leads = self._store.crm_leads.count()
+        leads = await get_crm_persistence().count_leads()
         return await self._base_forecast("demand", float(max(leads, 1)), period_days=period_days)
 
     async def cashflow_forecast(self, *, period_days: int = 30) -> ForecastResult:
@@ -58,7 +60,7 @@ class ForecastingService:
         return await self._base_forecast("cashflow", inflow - outflow, period_days=period_days)
 
     async def growth_forecast(self, *, period_days: int = 30) -> ForecastResult:
-        customers = self._store.customer_profiles.count()
+        customers = await get_crm_persistence().count_customers()
         return await self._base_forecast("growth", float(max(customers, 1)), period_days=period_days)
 
     async def all_forecasts(self, *, period_days: int = 30) -> dict[str, ForecastResult]:

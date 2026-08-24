@@ -65,7 +65,7 @@ class PerformanceBenchmarks:
         from applications.auto_marketplace.application import auto_marketplace
 
         profile = CustomerProfile(email=f"perf-{time.time()}@test.com")
-        auto_marketplace.store.customer_profiles.save(profile.customer_id, profile)
+        await auto_marketplace.crm_engine.customers.create(profile)
         await auto_marketplace.crm_engine.leads.create(
             CRMLead(customer_id=profile.customer_id, source=LeadSource.WEB), profile
         )

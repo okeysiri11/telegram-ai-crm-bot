@@ -52,10 +52,13 @@ class CustomerProfileService:
             raise NotFoundError("CustomerProfile", customer_id)
         return profile
 
-    async def list_profiles(self, *, segment: str | None = None) -> list[CustomerProfile]:
+    async def list_profiles(self, *, segment: str | None = None, email: str | None = None) -> list[CustomerProfile]:
         items = await self._records().list_customers()
         if segment:
             items = [p for p in items if p.segment == segment]
+        if email:
+            needle = email.lower().strip()
+            items = [p for p in items if (p.email or "").lower() == needle]
         return items
 
     async def update(self, customer_id: str, **updates: object) -> CustomerProfile:

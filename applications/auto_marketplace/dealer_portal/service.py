@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -11,9 +12,10 @@ class DealerPortalService:
     def __init__(self, store: MarketplaceStore | None = None) -> None:
         self._store = store or marketplace_store
 
-    def dashboard(self, dealer_id: str) -> dict[str, Any]:
-        leads = [l for l in self._store.crm_leads.list_all() if l.dealer_id == dealer_id]
-        deals = [d for d in self._store.crm_deals.list_all() if d.dealer_id == dealer_id]
+    async def dashboard(self, dealer_id: str) -> dict[str, Any]:
+        records = get_crm_persistence()
+        leads = [l for l in await records.list_leads() if l.dealer_id == dealer_id]
+        deals = [d for d in await records.list_deals() if d.dealer_id == dealer_id]
         vehicles = [v for v in self._store.catalog_vehicles.list_all() if getattr(v, "dealer_id", "") == dealer_id]
         return {
             "dealer_id": dealer_id,
@@ -39,11 +41,12 @@ class DealerPortalService:
         except Exception:
             return {"dealer_id": dealer_id, "status": "published", **vehicle_data}
 
-    def manage_leads(self, dealer_id: str) -> list[dict]:
-        return [l.to_dict() for l in self._store.crm_leads.list_all() if l.dealer_id == dealer_id]
+    async def manage_leads(self, dealer_id: str) -> list[dict]:
+        leads = await get_crm_persistence().list_leads()
+        return [l.to_dict() for l in leads if l.dealer_id == dealer_id]
 
-    def sales_tracking(self, dealer_id: str) -> dict:
-        deals = [d for d in self._store.crm_deals.list_all() if d.dealer_id == dealer_id]
+    async def sales_tracking(self, dealer_id: str) -> dict:
+        deals = [d for d in await get_crm_persistence().list_deals() if d.dealer_id == dealer_id]
         return {
             "total_deals": len(deals),
             "won": len([d for d in deals if d.stage.value == "closed_won"]),
@@ -51,10 +54,10 @@ class DealerPortalService:
             "pipeline_value": sum(d.amount for d in deals),
         }
 
-    def analytics_overview(self, dealer_id: str) -> dict:
+    async def analytics_overview(self, dealer_id: str) -> dict:
         from applications.auto_marketplace.business_intelligence.engine import bi_engine
 
-        dealer_data = bi_engine.analytics.dealer_analytics()
+        dealer_data = await bi_engine.analytics.dealer_analytics()
         return {"dealer_id": dealer_id, "platform": dealer_data}
 
     def financial_overview(self, dealer_id: str) -> dict:

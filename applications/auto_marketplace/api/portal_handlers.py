@@ -64,7 +64,7 @@ async def customer_profile_handler(request: web.Request) -> web.Response:
     _check_perm(ctx["role"], "profile.read")
     if request.method == "GET":
         user = auto_marketplace.portal_engine.profiles.get_portal_user(ctx["user_id"])
-        profile = auto_marketplace.portal_engine.profiles.get_customer_profile(ctx["customer_id"])
+        profile = await auto_marketplace.portal_engine.profiles.get_customer_profile(ctx["customer_id"])
         return json_response({"user": user.to_dict(), "profile": profile.to_dict() if profile else {}})
     data = await request.json()
     user = auto_marketplace.portal_engine.profiles.update_portal_user(ctx["user_id"], display_name=data.get("display_name", ""))
@@ -125,7 +125,7 @@ async def garage_handler(request: web.Request) -> web.Response:
 async def purchase_history_handler(request: web.Request) -> web.Response:
     ctx = _portal_user(request)
     _check_perm(ctx["role"], "history.read")
-    history = auto_marketplace.portal_engine.customer.purchase_history(ctx["customer_id"])
+    history = await auto_marketplace.portal_engine.customer.purchase_history(ctx["customer_id"])
     return json_response(history)
 
 
@@ -195,7 +195,7 @@ async def dealer_dashboard_handler(request: web.Request) -> web.Response:
     ctx = _portal_user(request)
     _check_perm(ctx["role"], "dealer.dashboard")
     dealer_id = ctx["dealer_id"] or request.query.get("dealer_id", "")
-    return json_response(auto_marketplace.portal_engine.dealer.dashboard(dealer_id))
+    return json_response(await auto_marketplace.portal_engine.dealer.dashboard(dealer_id))
 
 
 async def dealer_inventory_handler(request: web.Request) -> web.Response:
@@ -212,19 +212,19 @@ async def dealer_inventory_handler(request: web.Request) -> web.Response:
 async def dealer_leads_handler(request: web.Request) -> web.Response:
     ctx = _portal_user(request)
     _check_perm(ctx["role"], "leads.manage")
-    return json_response({"items": auto_marketplace.portal_engine.dealer.manage_leads(ctx["dealer_id"])})
+    return json_response({"items": await auto_marketplace.portal_engine.dealer.manage_leads(ctx["dealer_id"])})
 
 
 async def dealer_sales_handler(request: web.Request) -> web.Response:
     ctx = _portal_user(request)
     _check_perm(ctx["role"], "sales.read")
-    return json_response(auto_marketplace.portal_engine.dealer.sales_tracking(ctx["dealer_id"]))
+    return json_response(await auto_marketplace.portal_engine.dealer.sales_tracking(ctx["dealer_id"]))
 
 
 async def dealer_analytics_handler(request: web.Request) -> web.Response:
     ctx = _portal_user(request)
     _check_perm(ctx["role"], "analytics.read")
-    return json_response(auto_marketplace.portal_engine.dealer.analytics_overview(ctx["dealer_id"]))
+    return json_response(await auto_marketplace.portal_engine.dealer.analytics_overview(ctx["dealer_id"]))
 
 
 async def dealer_finance_handler(request: web.Request) -> web.Response:

@@ -10,6 +10,7 @@ from applications.auto_marketplace.crm.tenant import bind_crm_tenant, tenant_fro
 from applications.auto_marketplace.crm.models import (
     CRMDeal,
     CRMLead,
+    CRMLeadStatus,
     CRMRole,
     CRMTask,
     CustomerProfile,
@@ -28,6 +29,24 @@ from applications.auto_marketplace.shared.exceptions import (
 )
 
 _MUTATING_MARKERS = (".write", ".manage", ".delete", ".create", ".update")
+
+
+def _parse_lead_status(raw: object) -> CRMLeadStatus | None:
+    if raw is None or raw == "":
+        return None
+    try:
+        return CRMLeadStatus(str(raw))
+    except ValueError as exc:
+        raise ValidationError(f"invalid lead status: {raw!r}") from exc
+
+
+def _parse_deal_stage(raw: object) -> DealStage | None:
+    if raw is None or raw == "":
+        return None
+    try:
+        return DealStage(str(raw))
+    except ValueError as exc:
+        raise ValidationError(f"invalid deal stage: {raw!r}") from exc
 
 
 def _parse_lead_source(raw: object) -> LeadSource:
@@ -60,7 +79,8 @@ async def crm_metrics_handler(_request: web.Request) -> web.Response:
 async def list_customers_handler(request: web.Request) -> web.Response:
     _check_perm(request, "customers.read")
     segment = request.query.get("segment")
-    items = await auto_marketplace.crm_engine.customers.list_profiles(segment=segment)
+    email = request.query.get("email") or None
+    items = await auto_marketplace.crm_engine.customers.list_profiles(segment=segment, email=email)
     return json_response({"items": [c.to_dict() for c in items]})
 
 
@@ -84,6 +104,24 @@ async def get_customer_handler(request: web.Request) -> web.Response:
     return json_response(profile.to_dict())
 
 
+async def update_customer_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "customers.write")
+    data = await request.json()
+    allowed = ("first_name", "last_name", "email", "phone", "preferences", "tags", "owner_agent_id", "segment")
+    updates = {k: data[k] for k in allowed if k in data}
+    if not updates:
+        raise ValidationError("no updatable fields provided")
+    updated = await auto_marketplace.crm_engine.customers.update(request.match_info["customer_id"], **updates)
+    return json_response(updated.to_dict())
+
+
+async def delete_customer_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "customers.write")
+    customer_id = request.match_info["customer_id"]
+    deleted = await auto_marketplace.crm_engine.customers.delete(customer_id)
+    return json_response({"customer_id": customer_id, "deleted": deleted})
+
+
 async def customer_timeline_handler(request: web.Request) -> web.Response:
     _check_perm(request, "crm.read")
     timeline = auto_marketplace.crm_engine.activities.customer_timeline(request.match_info["customer_id"])
@@ -101,7 +139,11 @@ async def list_leads_handler(request: web.Request) -> web.Response:
             st = CRMLeadStatus(status)
         except ValueError as exc:
             raise ValidationError(f"invalid lead status: {status!r}") from exc
-    items = await auto_marketplace.crm_engine.leads.list_leads(status=st, dealer_id=request.query.get("dealer_id"))
+    items = await auto_marketplace.crm_engine.leads.list_leads(
+        status=st,
+        dealer_id=request.query.get("dealer_id"),
+        customer_id=request.query.get("customer_id") or None,
+    )
     return json_response({"items": [lead.to_dict() for lead in items]})
 
 
@@ -137,6 +179,70 @@ async def qualify_lead_handler(request: web.Request) -> web.Response:
     return json_response(lead.to_dict())
 
 
+async def get_lead_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "leads.read")
+    lead = await auto_marketplace.crm_engine.leads.get(request.match_info["lead_id"])
+    return json_response(lead.to_dict())
+
+
+async def update_lead_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "leads.write")
+    data = await request.json()
+    lead_id = request.match_info["lead_id"]
+    updates: dict = {}
+    if "notes" in data:
+        updates["notes"] = str(data["notes"])
+    if "customer_id" in data:
+        updates["customer_id"] = str(data["customer_id"] or "")
+    if "vehicle_id" in data:
+        updates["vehicle_id"] = str(data["vehicle_id"] or "")
+    if "dealer_id" in data:
+        updates["dealer_id"] = str(data["dealer_id"] or "")
+    if "assigned_agent_id" in data:
+        updates["assigned_agent_id"] = str(data["assigned_agent_id"] or "")
+    if "source" in data:
+        updates["source"] = _parse_lead_source(data["source"])
+    if "status" in data:
+        st = _parse_lead_status(data["status"])
+        if st is None:
+            raise ValidationError("status cannot be empty")
+        updates["status"] = st
+    if "metadata" in data:
+        if not isinstance(data["metadata"], dict):
+            raise ValidationError("metadata must be an object")
+        existing = await auto_marketplace.crm_engine.leads.get(lead_id)
+        merged = dict(existing.metadata)
+        merged.update(data["metadata"])
+        updates["metadata"] = merged
+    if not updates:
+        raise ValidationError("no updatable fields provided")
+    updated = await auto_marketplace.crm_engine.leads.update(lead_id, **updates)
+    return json_response(updated.to_dict())
+
+
+async def delete_lead_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "leads.write")
+    lead_id = request.match_info["lead_id"]
+    deleted = await auto_marketplace.crm_engine.leads.delete(lead_id)
+    return json_response({"lead_id": lead_id, "deleted": deleted})
+
+
+async def convert_lead_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "leads.write")
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    if not isinstance(data, dict):
+        data = {}
+    deal = await auto_marketplace.crm_engine.pipeline.convert_lead_to_deal(
+        request.match_info["lead_id"],
+        amount=float(data.get("amount", 0) or 0),
+        agent_id=str(data.get("agent_id") or data.get("assigned_agent_id") or ""),
+    )
+    return json_response(deal.to_dict(), status=201)
+
+
 async def list_deals_handler(request: web.Request) -> web.Response:
     _check_perm(request, "deals.read")
     stage = request.query.get("stage")
@@ -146,7 +252,11 @@ async def list_deals_handler(request: web.Request) -> web.Response:
             st = DealStage(stage)
         except ValueError as exc:
             raise ValidationError(f"invalid deal stage: {stage!r}") from exc
-    items = await auto_marketplace.crm_engine.deals.list_deals(stage=st, dealer_id=request.query.get("dealer_id"))
+    items = await auto_marketplace.crm_engine.deals.list_deals(
+        stage=st,
+        dealer_id=request.query.get("dealer_id"),
+        customer_id=request.query.get("customer_id") or None,
+    )
     return json_response({"items": [d.to_dict() for d in items]})
 
 
@@ -162,6 +272,44 @@ async def create_deal_handler(request: web.Request) -> web.Response:
     )
     created = await auto_marketplace.crm_engine.deals.create(deal)
     return json_response(created.to_dict(), status=201)
+
+
+async def get_deal_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "deals.read")
+    deal = await auto_marketplace.crm_engine.deals.get(request.match_info["deal_id"])
+    return json_response(deal.to_dict())
+
+
+async def update_deal_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "deals.write")
+    data = await request.json()
+    deal_id = request.match_info["deal_id"]
+    if "stage" in data:
+        stage = _parse_deal_stage(data["stage"])
+        if stage is None:
+            raise ValidationError("stage cannot be empty")
+        updated = await auto_marketplace.crm_engine.deals.update_stage(deal_id, stage)
+        return json_response(updated.to_dict())
+    updates: dict = {}
+    for key in ("customer_id", "dealer_id", "vehicle_id", "owner_agent_id"):
+        if key in data:
+            updates[key] = str(data[key] or "")
+    if "amount" in data:
+        try:
+            updates["amount"] = float(data["amount"])
+        except (TypeError, ValueError) as exc:
+            raise ValidationError("amount must be a number") from exc
+    if not updates:
+        raise ValidationError("no updatable fields provided")
+    updated = await auto_marketplace.crm_engine.deals.update(deal_id, **updates)
+    return json_response(updated.to_dict())
+
+
+async def delete_deal_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "deals.write")
+    deal_id = request.match_info["deal_id"]
+    deleted = await auto_marketplace.crm_engine.deals.delete(deal_id)
+    return json_response({"deal_id": deal_id, "deleted": deleted})
 
 
 async def advance_deal_handler(request: web.Request) -> web.Response:

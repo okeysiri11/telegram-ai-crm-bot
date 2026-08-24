@@ -13,7 +13,7 @@ async def ops_health_handler(_request: web.Request) -> web.Response:
 
 
 async def ops_readiness_handler(_request: web.Request) -> web.Response:
-    return json_response(auto_marketplace.production_engine.monitoring.readiness_probe())
+    return json_response(await auto_marketplace.production_engine.monitoring.readiness_probe())
 
 
 async def ops_liveness_handler(_request: web.Request) -> web.Response:

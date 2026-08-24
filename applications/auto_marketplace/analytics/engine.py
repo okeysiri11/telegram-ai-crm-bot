@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.kpi.service import KPIService, kpi_service
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
@@ -13,9 +14,10 @@ class AnalyticsEngine:
         self._store = store or marketplace_store
         self._kpi = kpi or kpi_service
 
-    def sales_analytics(self) -> dict[str, Any]:
-        leads = self._store.crm_leads.list_all()
-        deals = self._store.crm_deals.list_all()
+    async def sales_analytics(self) -> dict[str, Any]:
+        records = get_crm_persistence()
+        leads = await records.list_leads()
+        deals = await records.list_deals()
         by_source: dict[str, int] = {}
         for lead in leads:
             by_source[lead.source.value] = by_source.get(lead.source.value, 0) + 1
@@ -34,8 +36,8 @@ class AnalyticsEngine:
             "settlements": self._store.dealer_settlements.count(),
         }
 
-    def customer_analytics(self) -> dict[str, Any]:
-        profiles = self._store.customer_profiles.list_all()
+    async def customer_analytics(self) -> dict[str, Any]:
+        profiles = await get_crm_persistence().list_customers()
         segments: dict[str, int] = {}
         for p in profiles:
             segments[p.segment] = segments.get(p.segment, 0) + 1
@@ -46,8 +48,8 @@ class AnalyticsEngine:
         total_value = sum(getattr(v, "price", 0) or 0 for v in vehicles)
         return {"total_units": len(vehicles), "total_inventory_value": round(total_value, 2), "avg_price": round(total_value / max(len(vehicles), 1), 2)}
 
-    def marketing_analytics(self) -> dict[str, Any]:
-        leads = self._store.crm_leads.list_all()
+    async def marketing_analytics(self) -> dict[str, Any]:
+        leads = await get_crm_persistence().list_leads()
         channels = {"web": 0, "mobile": 0, "referral": 0, "other": 0}
         for lead in leads:
             src = lead.source.value
@@ -55,36 +57,38 @@ class AnalyticsEngine:
             channels[key] = channels.get(key, 0) + 1
         return {"leads_by_channel": channels}
 
-    def dealer_analytics(self) -> dict[str, Any]:
+    async def dealer_analytics(self) -> dict[str, Any]:
         dealers = self._store.dealers.list_all()
+        deals = await get_crm_persistence().list_deals()
         result: list[dict] = []
         for dealer in dealers:
             did = getattr(dealer, "dealer_id", "")
-            deals = [d for d in self._store.crm_deals.list_all() if d.dealer_id == did]
-            result.append({"dealer_id": did, "name": getattr(dealer, "name", ""), "deals": len(deals), "revenue": sum(d.amount for d in deals)})
+            dealer_deals = [d for d in deals if d.dealer_id == did]
+            result.append({"dealer_id": did, "name": getattr(dealer, "name", ""), "deals": len(dealer_deals), "revenue": sum(d.amount for d in dealer_deals)})
         return {"dealers": result}
 
     def workflow_analytics(self) -> dict[str, Any]:
         return {"crm_tasks": self._store.crm_tasks.count(), "meetings": self._store.meetings.count(), "reminders": self._store.reminders.count()}
 
-    def agent_analytics(self) -> dict[str, Any]:
+    async def agent_analytics(self) -> dict[str, Any]:
         agents = self._store.sales_agents.list_all()
+        leads = await get_crm_persistence().list_leads()
         return {
             "total_agents": len(agents),
             "ai_conversations": self._store.conversation_sessions.count(),
-            "avg_lead_score": round(sum(l.score for l in self._store.crm_leads.list_all()) / max(self._store.crm_leads.count(), 1), 2),
+            "avg_lead_score": round(sum(l.score for l in leads) / max(len(leads), 1), 2),
         }
 
-    def all_analytics(self) -> dict[str, Any]:
+    async def all_analytics(self) -> dict[str, Any]:
         return {
-            "sales": self.sales_analytics(),
+            "sales": await self.sales_analytics(),
             "financial": self.financial_analytics(),
-            "customer": self.customer_analytics(),
+            "customer": await self.customer_analytics(),
             "inventory": self.inventory_analytics(),
-            "marketing": self.marketing_analytics(),
-            "dealer": self.dealer_analytics(),
+            "marketing": await self.marketing_analytics(),
+            "dealer": await self.dealer_analytics(),
             "workflow": self.workflow_analytics(),
-            "agent": self.agent_analytics(),
+            "agent": await self.agent_analytics(),
         }
 
 

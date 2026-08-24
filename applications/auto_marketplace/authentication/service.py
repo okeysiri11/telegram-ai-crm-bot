@@ -10,6 +10,7 @@ from events.publisher import publish
 from applications.auto_marketplace.authentication.models import AuthToken, PortalRole, PortalUser, generate_token, hash_password
 from applications.auto_marketplace.customer_portal.events import CustomerRegisteredEvent, DealerLoggedInEvent
 from applications.auto_marketplace.crm.models import CustomerProfile
+from applications.auto_marketplace.crm.persistence import get_crm_persistence
 from applications.auto_marketplace.shared.exceptions import NotFoundError, ValidationError
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
@@ -37,7 +38,7 @@ class AuthenticationService:
         if self._find_by_email(email):
             raise ValidationError("Email already registered")
         profile = CustomerProfile(first_name=first_name, last_name=last_name, email=email)
-        self._store.customer_profiles.save(profile.customer_id, profile)
+        await get_crm_persistence().save_customer(profile)
         user = PortalUser(
             email=email,
             password_hash=hash_password(password),
