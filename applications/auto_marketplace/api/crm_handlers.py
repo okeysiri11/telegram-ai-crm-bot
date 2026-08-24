@@ -972,6 +972,46 @@ async def deal_sales_intelligence_handler(request: web.Request) -> web.Response:
     return json_response(report)
 
 
+async def crm_execution_summary_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    return json_response(await auto_marketplace.crm_engine.execution.summary())
+
+
+async def crm_execution_queue_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    overdue = None
+    if "overdue" in request.query:
+        overdue = _query_flag(request, "overdue")
+    limit_raw = request.query.get("limit") or "100"
+    try:
+        limit = int(limit_raw)
+    except (TypeError, ValueError):
+        raise ValidationError("limit must be an integer")
+    queue = await auto_marketplace.crm_engine.execution.queue(
+        owner=request.query.get("owner") or None,
+        priority=request.query.get("priority") or None,
+        temperature=request.query.get("temperature") or None,
+        overdue=overdue,
+        sla_status=request.query.get("sla_status") or None,
+        escalation_level=request.query.get("escalation_level") or None,
+        entity_type=request.query.get("entity_type") or None,
+        limit=limit,
+    )
+    return json_response(queue)
+
+
+async def lead_sales_execution_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    report = await auto_marketplace.crm_engine.execution.lead_execution(request.match_info["lead_id"])
+    return json_response(report)
+
+
+async def deal_sales_execution_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    report = await auto_marketplace.crm_engine.execution.deal_execution(request.match_info["deal_id"])
+    return json_response(report)
+
+
 _CRM_WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 _CRM_API_ROOT = "/api/auto/v1/crm"
 
@@ -986,11 +1026,21 @@ def _is_crm_intelligence_path(path: str) -> bool:
     return path == f"{_CRM_API_ROOT}/intelligence" or path.endswith("/intelligence")
 
 
+def _is_crm_execution_path(path: str) -> bool:
+    if not _is_auto_crm_path(path):
+        return False
+    if path == f"{_CRM_API_ROOT}/execution" or path.startswith(f"{_CRM_API_ROOT}/execution/"):
+        return True
+    return path.endswith("/execution")
+
+
 @web.middleware
 async def crm_mutating_auth_middleware(request: web.Request, handler):
-    """Require Bearer auth for mutating Auto CRM routes and intelligence reads."""
+    """Require Bearer auth for mutating Auto CRM routes and intelligence/execution reads."""
     if _is_auto_crm_path(request.path) and (
-        request.method in _CRM_WRITE_METHODS or _is_crm_intelligence_path(request.path)
+        request.method in _CRM_WRITE_METHODS
+        or _is_crm_intelligence_path(request.path)
+        or _is_crm_execution_path(request.path)
     ):
         principal = request.get("principal")
         if not isinstance(principal, dict) or not principal.get("authenticated"):

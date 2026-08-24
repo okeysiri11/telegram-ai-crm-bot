@@ -51,6 +51,7 @@ class ExecutiveDashboardService:
                 {"type": "pipeline", "data": await self._analytics.sales_analytics()},
                 {"type": "kpis", "data": [k.to_dict() for k in kpis if k.name in {"lead_conversion", "average_deal_size", "vehicle_sales"}]},
                 {"type": "sales_intelligence", "data": await crm_engine.intelligence.manager_overview()},
+                {"type": "sales_execution", "data": await crm_engine.execution.summary()},
             ]
         elif role == DashboardRole.FINANCE_MANAGER:
             widgets = [{"type": "financial", "data": self._analytics.financial_analytics()}]
