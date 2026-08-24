@@ -769,8 +769,8 @@ async def test_crm_metrics_survive_restart_and_ignore_store_overlays(postgres_cr
 
     from applications.auto_marketplace.shared.store import marketplace_store
 
-    marketplace_store.crm_leads.reset()
-    marketplace_store.crm_deals.reset()
+    assert not hasattr(marketplace_store, "crm_leads")
+    assert not hasattr(marketplace_store, "crm_deals")
     still = await crm_metrics.collect(tenant)
     assert still["leads"] == 1
     assert still["deals"] == 1

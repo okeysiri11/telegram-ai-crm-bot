@@ -124,7 +124,7 @@ async def create_lead_handler(request: web.Request) -> web.Response:
 
 async def recommendations_handler(request: web.Request) -> web.Response:
     customer_id = request.match_info["customer_id"]
-    items = auto_marketplace.recommendations.recommend_for_customer(customer_id)
+    items = await auto_marketplace.recommendations.recommend_for_crm_customer(customer_id)
     return json_response({"items": items})
 
 

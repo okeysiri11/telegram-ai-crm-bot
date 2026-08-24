@@ -8,7 +8,6 @@ from applications.auto_marketplace.crm.events import CustomerCreatedEvent
 from applications.auto_marketplace.crm.models import CustomerProfile
 from applications.auto_marketplace.crm.persistence import CRMPersistence, get_crm_persistence
 from applications.auto_marketplace.shared.exceptions import NotFoundError
-from applications.auto_marketplace.shared.models import Customer
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 
@@ -26,23 +25,9 @@ class CustomerProfileService:
     def _records(self) -> CRMPersistence:
         return self._persistence or get_crm_persistence()
 
-    def _sync_legacy_customer(self, profile: CustomerProfile) -> None:
-        self._store.customers.save(
-            profile.customer_id,
-            Customer(
-                customer_id=profile.customer_id,
-                first_name=profile.first_name,
-                last_name=profile.last_name,
-                email=profile.email,
-                phone=profile.phone,
-                preferences=profile.preferences,
-            ),
-        )
-
     async def create(self, profile: CustomerProfile) -> CustomerProfile:
         profile.segment = await self._ai.segment_customer(profile)
         saved = await self._records().save_customer(profile)
-        self._sync_legacy_customer(saved)
         await publish(CustomerCreatedEvent(customer_id=saved.customer_id, email=saved.email))
         from applications.auto_marketplace.activities.service import activity_service
 
@@ -78,12 +63,10 @@ class CustomerProfileService:
                 setattr(profile, key, value)
         profile.segment = await self._ai.segment_customer(profile)
         saved = await self._records().save_customer(profile)
-        self._sync_legacy_customer(saved)
         return saved
 
     async def delete(self, customer_id: str) -> bool:
         await self.get(customer_id)
-        self._store.customers.delete(customer_id)
         return await self._records().delete_customer(customer_id)
 
 

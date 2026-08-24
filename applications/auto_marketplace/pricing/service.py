@@ -62,6 +62,21 @@ class RecommendationService:
     def recommend_for_customer(self, customer_id: str, *, limit: int = 5) -> list[dict[str, Any]]:
         customer = self._store.customers.get(customer_id)
         prefs = customer.preferences if customer else {}
+        return self._recommend(prefs, limit=limit)
+
+    async def recommend_for_crm_customer(self, customer_id: str, *, limit: int = 5) -> list[dict[str, Any]]:
+        from applications.auto_marketplace.crm.persistence import get_crm_persistence
+
+        prefs: dict[str, Any] = {}
+        profile = await get_crm_persistence().get_customer(customer_id) if customer_id else None
+        if profile is not None:
+            prefs = dict(profile.preferences or {})
+        else:
+            customer = self._store.customers.get(customer_id)
+            prefs = dict(customer.preferences) if customer else {}
+        return self._recommend(prefs, limit=limit)
+
+    def _recommend(self, prefs: dict[str, Any], *, limit: int = 5) -> list[dict[str, Any]]:
         budget = float(prefs.get("budget_max", 1_000_000))
         make = str(prefs.get("make", "")).lower()
 

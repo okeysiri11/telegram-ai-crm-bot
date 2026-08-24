@@ -27,7 +27,7 @@ from applications.auto_marketplace.crm.models import (
     TaskStatus,
 )
 from applications.auto_marketplace.crm.tenant import current_crm_tenant
-from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
+from applications.auto_marketplace.shared.store import EntityStore
 
 _MEMORY_MODES = frozenset({"memory", "mem", "in_memory", "in-memory"})
 
@@ -302,12 +302,24 @@ def _tid(tenant_id: str | None) -> str:
 
 
 class MemoryCRMPersistence:
-    """In-process store used only when AUTO_CRM_PERSISTENCE=memory (unit tests)."""
+    """Isolated in-process backend for AUTO_CRM_PERSISTENCE=memory (unit tests only).
+
+    Production never uses this class. Collections are private so MarketplaceStore
+    cannot act as a stale CRM shadow.
+    """
 
     backend = "memory"
 
-    def __init__(self, store: MarketplaceStore | None = None) -> None:
-        self._store = store or marketplace_store
+    def __init__(self) -> None:
+        self._customers = EntityStore()
+        self._leads = EntityStore()
+        self._deals = EntityStore()
+        self._tasks = EntityStore()
+        self._activities = EntityStore()
+        self._calls = EntityStore()
+        self._emails = EntityStore()
+        self._meetings = EntityStore()
+        self._reminders = EntityStore()
         self._customer_tenants: dict[str, str] = {}
         self._lead_tenants: dict[str, str] = {}
         self._deal_tenants: dict[str, str] = {}
@@ -324,11 +336,11 @@ class MemoryCRMPersistence:
     async def save_customer(self, profile: CustomerProfile, tenant_id: str | None = None) -> CustomerProfile:
         tid = _tid(tenant_id)
         self._customer_tenants[profile.customer_id] = tid
-        return self._store.customer_profiles.save(profile.customer_id, profile)
+        return self._customers.save(profile.customer_id, profile)
 
     async def get_customer(self, customer_id: str, tenant_id: str | None = None) -> CustomerProfile | None:
         tid = _tid(tenant_id)
-        profile = self._store.customer_profiles.get(customer_id)
+        profile = self._customers.get(customer_id)
         if profile is None or not self._visible(customer_id, self._customer_tenants, tid):
             return None
         return profile
@@ -337,7 +349,7 @@ class MemoryCRMPersistence:
         tid = _tid(tenant_id)
         return [
             p
-            for p in self._store.customer_profiles.list_all()
+            for p in self._customers.list_all()
             if self._visible(p.customer_id, self._customer_tenants, tid)
         ]
 
@@ -345,7 +357,7 @@ class MemoryCRMPersistence:
         if await self.get_customer(customer_id, tenant_id) is None:
             return False
         self._customer_tenants.pop(customer_id, None)
-        return self._store.customer_profiles.delete(customer_id)
+        return self._customers.delete(customer_id)
 
     async def count_customers(self, tenant_id: str | None = None) -> int:
         return len(await self.list_customers(tenant_id))
@@ -353,24 +365,24 @@ class MemoryCRMPersistence:
     async def save_lead(self, lead: CRMLead, tenant_id: str | None = None) -> CRMLead:
         tid = _tid(tenant_id)
         self._lead_tenants[lead.lead_id] = tid
-        return self._store.crm_leads.save(lead.lead_id, lead)
+        return self._leads.save(lead.lead_id, lead)
 
     async def get_lead(self, lead_id: str, tenant_id: str | None = None) -> CRMLead | None:
         tid = _tid(tenant_id)
-        lead = self._store.crm_leads.get(lead_id)
+        lead = self._leads.get(lead_id)
         if lead is None or not self._visible(lead_id, self._lead_tenants, tid):
             return None
         return lead
 
     async def list_leads(self, tenant_id: str | None = None) -> list[CRMLead]:
         tid = _tid(tenant_id)
-        return [lead for lead in self._store.crm_leads.list_all() if self._visible(lead.lead_id, self._lead_tenants, tid)]
+        return [lead for lead in self._leads.list_all() if self._visible(lead.lead_id, self._lead_tenants, tid)]
 
     async def delete_lead(self, lead_id: str, tenant_id: str | None = None) -> bool:
         if await self.get_lead(lead_id, tenant_id) is None:
             return False
         self._lead_tenants.pop(lead_id, None)
-        return self._store.crm_leads.delete(lead_id)
+        return self._leads.delete(lead_id)
 
     async def count_leads(self, tenant_id: str | None = None) -> int:
         return len(await self.list_leads(tenant_id))
@@ -378,24 +390,24 @@ class MemoryCRMPersistence:
     async def save_deal(self, deal: CRMDeal, tenant_id: str | None = None) -> CRMDeal:
         tid = _tid(tenant_id)
         self._deal_tenants[deal.deal_id] = tid
-        return self._store.crm_deals.save(deal.deal_id, deal)
+        return self._deals.save(deal.deal_id, deal)
 
     async def get_deal(self, deal_id: str, tenant_id: str | None = None) -> CRMDeal | None:
         tid = _tid(tenant_id)
-        deal = self._store.crm_deals.get(deal_id)
+        deal = self._deals.get(deal_id)
         if deal is None or not self._visible(deal_id, self._deal_tenants, tid):
             return None
         return deal
 
     async def list_deals(self, tenant_id: str | None = None) -> list[CRMDeal]:
         tid = _tid(tenant_id)
-        return [d for d in self._store.crm_deals.list_all() if self._visible(d.deal_id, self._deal_tenants, tid)]
+        return [d for d in self._deals.list_all() if self._visible(d.deal_id, self._deal_tenants, tid)]
 
     async def delete_deal(self, deal_id: str, tenant_id: str | None = None) -> bool:
         if await self.get_deal(deal_id, tenant_id) is None:
             return False
         self._deal_tenants.pop(deal_id, None)
-        return self._store.crm_deals.delete(deal_id)
+        return self._deals.delete(deal_id)
 
     async def count_deals(self, tenant_id: str | None = None) -> int:
         return len(await self.list_deals(tenant_id))
@@ -403,24 +415,24 @@ class MemoryCRMPersistence:
     async def save_task(self, task: CRMTask, tenant_id: str | None = None) -> CRMTask:
         tid = _tid(tenant_id)
         self._task_tenants[task.task_id] = tid
-        return self._store.crm_tasks.save(task.task_id, task)
+        return self._tasks.save(task.task_id, task)
 
     async def get_task(self, task_id: str, tenant_id: str | None = None) -> CRMTask | None:
         tid = _tid(tenant_id)
-        task = self._store.crm_tasks.get(task_id)
+        task = self._tasks.get(task_id)
         if task is None or not self._visible(task_id, self._task_tenants, tid):
             return None
         return task
 
     async def list_tasks(self, tenant_id: str | None = None) -> list[CRMTask]:
         tid = _tid(tenant_id)
-        return [t for t in self._store.crm_tasks.list_all() if self._visible(t.task_id, self._task_tenants, tid)]
+        return [t for t in self._tasks.list_all() if self._visible(t.task_id, self._task_tenants, tid)]
 
     async def delete_task(self, task_id: str, tenant_id: str | None = None) -> bool:
         if await self.get_task(task_id, tenant_id) is None:
             return False
         self._task_tenants.pop(task_id, None)
-        return self._store.crm_tasks.delete(task_id)
+        return self._tasks.delete(task_id)
 
     async def count_tasks(self, tenant_id: str | None = None) -> int:
         return len(await self.list_tasks(tenant_id))
@@ -428,11 +440,11 @@ class MemoryCRMPersistence:
     async def save_activity(self, activity: Interaction, tenant_id: str | None = None) -> Interaction:
         tid = _tid(tenant_id)
         self._activity_tenants[activity.interaction_id] = tid
-        return self._store.interactions.save(activity.interaction_id, activity)
+        return self._activities.save(activity.interaction_id, activity)
 
     async def get_activity(self, activity_id: str, tenant_id: str | None = None) -> Interaction | None:
         tid = _tid(tenant_id)
-        item = self._store.interactions.get(activity_id)
+        item = self._activities.get(activity_id)
         if item is None or not self._visible(activity_id, self._activity_tenants, tid):
             return None
         return item
@@ -449,7 +461,7 @@ class MemoryCRMPersistence:
         tid = _tid(tenant_id)
         return [
             i
-            for i in self._store.interactions.list_all()
+            for i in self._activities.list_all()
             if self._visible(i.interaction_id, self._activity_tenants, tid)
         ]
 
@@ -457,7 +469,7 @@ class MemoryCRMPersistence:
         if await self.get_activity(activity_id, tenant_id) is None:
             return False
         self._activity_tenants.pop(activity_id, None)
-        return self._store.interactions.delete(activity_id)
+        return self._activities.delete(activity_id)
 
     async def count_activities(self, tenant_id: str | None = None) -> int:
         return len(await self.list_activities(tenant_id))
@@ -465,24 +477,24 @@ class MemoryCRMPersistence:
     async def save_call(self, call: PhoneCall, tenant_id: str | None = None) -> PhoneCall:
         tid = _tid(tenant_id)
         self._call_tenants[call.call_id] = tid
-        return self._store.phone_calls.save(call.call_id, call)
+        return self._calls.save(call.call_id, call)
 
     async def get_call(self, call_id: str, tenant_id: str | None = None) -> PhoneCall | None:
         tid = _tid(tenant_id)
-        item = self._store.phone_calls.get(call_id)
+        item = self._calls.get(call_id)
         if item is None or not self._visible(call_id, self._call_tenants, tid):
             return None
         return item
 
     async def list_calls(self, tenant_id: str | None = None) -> list[PhoneCall]:
         tid = _tid(tenant_id)
-        return [c for c in self._store.phone_calls.list_all() if self._visible(c.call_id, self._call_tenants, tid)]
+        return [c for c in self._calls.list_all() if self._visible(c.call_id, self._call_tenants, tid)]
 
     async def delete_call(self, call_id: str, tenant_id: str | None = None) -> bool:
         if await self.get_call(call_id, tenant_id) is None:
             return False
         self._call_tenants.pop(call_id, None)
-        return self._store.phone_calls.delete(call_id)
+        return self._calls.delete(call_id)
 
     async def count_calls(self, tenant_id: str | None = None) -> int:
         return len(await self.list_calls(tenant_id))
@@ -490,24 +502,24 @@ class MemoryCRMPersistence:
     async def save_email(self, email: EmailMessage, tenant_id: str | None = None) -> EmailMessage:
         tid = _tid(tenant_id)
         self._email_tenants[email.email_id] = tid
-        return self._store.email_messages.save(email.email_id, email)
+        return self._emails.save(email.email_id, email)
 
     async def get_email(self, email_id: str, tenant_id: str | None = None) -> EmailMessage | None:
         tid = _tid(tenant_id)
-        item = self._store.email_messages.get(email_id)
+        item = self._emails.get(email_id)
         if item is None or not self._visible(email_id, self._email_tenants, tid):
             return None
         return item
 
     async def list_emails(self, tenant_id: str | None = None) -> list[EmailMessage]:
         tid = _tid(tenant_id)
-        return [e for e in self._store.email_messages.list_all() if self._visible(e.email_id, self._email_tenants, tid)]
+        return [e for e in self._emails.list_all() if self._visible(e.email_id, self._email_tenants, tid)]
 
     async def delete_email(self, email_id: str, tenant_id: str | None = None) -> bool:
         if await self.get_email(email_id, tenant_id) is None:
             return False
         self._email_tenants.pop(email_id, None)
-        return self._store.email_messages.delete(email_id)
+        return self._emails.delete(email_id)
 
     async def count_emails(self, tenant_id: str | None = None) -> int:
         return len(await self.list_emails(tenant_id))
@@ -515,24 +527,24 @@ class MemoryCRMPersistence:
     async def save_meeting(self, meeting: Meeting, tenant_id: str | None = None) -> Meeting:
         tid = _tid(tenant_id)
         self._meeting_tenants[meeting.meeting_id] = tid
-        return self._store.meetings.save(meeting.meeting_id, meeting)
+        return self._meetings.save(meeting.meeting_id, meeting)
 
     async def get_meeting(self, meeting_id: str, tenant_id: str | None = None) -> Meeting | None:
         tid = _tid(tenant_id)
-        item = self._store.meetings.get(meeting_id)
+        item = self._meetings.get(meeting_id)
         if item is None or not self._visible(meeting_id, self._meeting_tenants, tid):
             return None
         return item
 
     async def list_meetings(self, tenant_id: str | None = None) -> list[Meeting]:
         tid = _tid(tenant_id)
-        return [m for m in self._store.meetings.list_all() if self._visible(m.meeting_id, self._meeting_tenants, tid)]
+        return [m for m in self._meetings.list_all() if self._visible(m.meeting_id, self._meeting_tenants, tid)]
 
     async def delete_meeting(self, meeting_id: str, tenant_id: str | None = None) -> bool:
         if await self.get_meeting(meeting_id, tenant_id) is None:
             return False
         self._meeting_tenants.pop(meeting_id, None)
-        return self._store.meetings.delete(meeting_id)
+        return self._meetings.delete(meeting_id)
 
     async def count_meetings(self, tenant_id: str | None = None) -> int:
         return len(await self.list_meetings(tenant_id))
@@ -540,24 +552,24 @@ class MemoryCRMPersistence:
     async def save_reminder(self, reminder: Reminder, tenant_id: str | None = None) -> Reminder:
         tid = _tid(tenant_id)
         self._reminder_tenants[reminder.reminder_id] = tid
-        return self._store.reminders.save(reminder.reminder_id, reminder)
+        return self._reminders.save(reminder.reminder_id, reminder)
 
     async def get_reminder(self, reminder_id: str, tenant_id: str | None = None) -> Reminder | None:
         tid = _tid(tenant_id)
-        item = self._store.reminders.get(reminder_id)
+        item = self._reminders.get(reminder_id)
         if item is None or not self._visible(reminder_id, self._reminder_tenants, tid):
             return None
         return item
 
     async def list_reminders(self, tenant_id: str | None = None) -> list[Reminder]:
         tid = _tid(tenant_id)
-        return [r for r in self._store.reminders.list_all() if self._visible(r.reminder_id, self._reminder_tenants, tid)]
+        return [r for r in self._reminders.list_all() if self._visible(r.reminder_id, self._reminder_tenants, tid)]
 
     async def delete_reminder(self, reminder_id: str, tenant_id: str | None = None) -> bool:
         if await self.get_reminder(reminder_id, tenant_id) is None:
             return False
         self._reminder_tenants.pop(reminder_id, None)
-        return self._store.reminders.delete(reminder_id)
+        return self._reminders.delete(reminder_id)
 
     async def count_reminders(self, tenant_id: str | None = None) -> int:
         return len(await self.list_reminders(tenant_id))

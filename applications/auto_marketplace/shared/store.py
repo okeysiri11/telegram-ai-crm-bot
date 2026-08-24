@@ -54,17 +54,8 @@ class MarketplaceStore:
         self.media: EntityStore = EntityStore()
         self.warehouses: EntityStore = EntityStore()
         self.brands: EntityStore = EntityStore()
-        # Sprint 6.3 — CRM & Sales Pipeline
-        self.customer_profiles: EntityStore = EntityStore()
-        self.crm_leads: EntityStore = EntityStore()
-        self.crm_deals: EntityStore = EntityStore()
-        self.interactions: EntityStore = EntityStore()
+        # Sprint 6.3 — sales agents remain marketplace metadata (not Web CRM SoT)
         self.contacts: EntityStore = EntityStore()
-        self.phone_calls: EntityStore = EntityStore()
-        self.email_messages: EntityStore = EntityStore()
-        self.meetings: EntityStore = EntityStore()
-        self.crm_tasks: EntityStore = EntityStore()
-        self.reminders: EntityStore = EntityStore()
         self.sales_agents: EntityStore = EntityStore()
         self.sales_teams: EntityStore = EntityStore()
         # Sprint 6.4 — AI Sales & Customer Intelligence

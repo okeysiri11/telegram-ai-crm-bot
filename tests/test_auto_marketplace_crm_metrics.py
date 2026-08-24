@@ -90,6 +90,28 @@ async def test_durable_metrics_and_health_snapshot():
     assert workflow["calls"] == 1
     assert workflow["opportunities"] == 1
     assert not hasattr(marketplace_store, "opportunities")
+    for name in (
+        "crm_leads",
+        "crm_deals",
+        "crm_tasks",
+        "customer_profiles",
+        "phone_calls",
+        "email_messages",
+        "meetings",
+        "reminders",
+        "interactions",
+    ):
+        assert not hasattr(marketplace_store, name)
+
+
+@pytest.mark.asyncio
+async def test_web_crm_does_not_dual_write_foundation_customers():
+    profile = await auto_marketplace.crm_engine.customers.create(
+        CustomerProfile(first_name="No", last_name="Shadow", email="noshadow@ex.com", preferences={"make": "Honda"})
+    )
+    assert marketplace_store.customers.get(profile.customer_id) is None
+    recs = await auto_marketplace.recommendations.recommend_for_crm_customer(profile.customer_id)
+    assert isinstance(recs, list)
 
 
 @pytest.mark.asyncio
