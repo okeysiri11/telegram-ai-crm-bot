@@ -1026,6 +1026,54 @@ async def deal_sales_execution_handler(request: web.Request) -> web.Response:
     return json_response(report)
 
 
+def _manager_filters(request: web.Request) -> dict[str, str | None]:
+    return {
+        "owner": request.query.get("owner") or None,
+        "stage": request.query.get("stage") or None,
+        "forecast_category": request.query.get("forecast_category") or None,
+        "risk_level": request.query.get("risk_level") or None,
+        "temperature": request.query.get("temperature") or None,
+        "relationship_health": request.query.get("relationship_health") or None,
+    }
+
+
+def _parse_bounded_int(raw: str | None, *, default: int, field: str) -> int:
+    value = raw or str(default)
+    try:
+        return int(value)
+    except (TypeError, ValueError) as exc:
+        raise ValidationError(f"{field} must be an integer") from exc
+
+
+async def crm_manager_command_center_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    return json_response(await auto_marketplace.crm_engine.manager.command_center(**_manager_filters(request)))
+
+
+async def crm_manager_pipeline_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    limit = _parse_bounded_int(request.query.get("limit"), default=50, field="limit")
+    offset = _parse_bounded_int(request.query.get("offset"), default=0, field="offset")
+    return json_response(
+        await auto_marketplace.crm_engine.manager.pipeline_snapshot(
+            **_manager_filters(request),
+            limit=limit,
+            offset=offset,
+        )
+    )
+
+
+async def crm_manager_forecast_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    return json_response(await auto_marketplace.crm_engine.manager.forecast(**_manager_filters(request)))
+
+
+async def crm_manager_team_performance_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    owner = request.query.get("owner") or None
+    return json_response(await auto_marketplace.crm_engine.manager.team_performance(owner=owner))
+
+
 _CRM_WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 _CRM_API_ROOT = "/api/auto/v1/crm"
 
@@ -1054,14 +1102,21 @@ def _is_crm_customer_360_path(path: str) -> bool:
     return path.endswith("/360")
 
 
+def _is_crm_manager_path(path: str) -> bool:
+    if not _is_auto_crm_path(path):
+        return False
+    return path.startswith(f"{_CRM_API_ROOT}/manager/") or path == f"{_CRM_API_ROOT}/manager"
+
+
 @web.middleware
 async def crm_mutating_auth_middleware(request: web.Request, handler):
-    """Require Bearer auth for mutating Auto CRM routes and intelligence/execution/360 reads."""
+    """Require Bearer auth for mutating Auto CRM routes and intelligence/execution/360/manager reads."""
     if _is_auto_crm_path(request.path) and (
         request.method in _CRM_WRITE_METHODS
         or _is_crm_intelligence_path(request.path)
         or _is_crm_execution_path(request.path)
         or _is_crm_customer_360_path(request.path)
+        or _is_crm_manager_path(request.path)
     ):
         principal = request.get("principal")
         if not isinstance(principal, dict) or not principal.get("authenticated"):

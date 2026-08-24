@@ -92,6 +92,35 @@ def _clamp(score: int) -> int:
     return max(0, min(100, score))
 
 
+def score_relationship(*, signal_codes: list[str], hot: bool = False, open_deal: bool = False) -> dict[str, Any]:
+    """Deterministic relationship result consumed by Customer 360 and manager intelligence."""
+    reasons: list[str] = []
+    score = 50
+    if "NO_RECENT_CONTACT" not in signal_codes:
+        reasons.append("RECENT_CONTACT")
+        score += _HEALTH_WEIGHTS["RECENT_CONTACT"]
+    if hot:
+        reasons.append("HOT_LEAD")
+        score += _HEALTH_WEIGHTS["HOT_LEAD"]
+    if open_deal:
+        reasons.append("OPEN_DEAL")
+        score += _HEALTH_WEIGHTS["OPEN_DEAL"]
+    for code in signal_codes:
+        if code in _HEALTH_WEIGHTS:
+            reasons.append(code)
+            score += _HEALTH_WEIGHTS[code]
+    reasons = sorted(set(reasons))
+    score = _clamp(score)
+    health = classify_relationship(score)
+    explanation = ", ".join(code.replace("_", " ").lower() for code in reasons) or "No relationship signals"
+    return {
+        "relationship_health": health.value,
+        "relationship_score": score,
+        "reason_codes": reasons,
+        "explanation": explanation,
+    }
+
+
 class Customer360Service:
     """Read-only Customer 360. PostgreSQL facts only. No lifecycle mutations."""
 
@@ -318,32 +347,11 @@ class Customer360Service:
         *,
         now: float,
     ) -> dict[str, Any]:
-        codes = [item["code"] for item in signals]
-        reasons: list[str] = []
-        score = 50
-        if "NO_RECENT_CONTACT" not in codes:
-            reasons.append("RECENT_CONTACT")
-            score += _HEALTH_WEIGHTS["RECENT_CONTACT"]
-        if any(item.get("temperature") == "hot" and item.get("active") for item in executions):
-            reasons.append("HOT_LEAD")
-            score += _HEALTH_WEIGHTS["HOT_LEAD"]
-        if any(deal.stage not in _CLOSED_STAGES for deal in deals):
-            reasons.append("OPEN_DEAL")
-            score += _HEALTH_WEIGHTS["OPEN_DEAL"]
-        for code in codes:
-            if code in _HEALTH_WEIGHTS:
-                reasons.append(code)
-                score += _HEALTH_WEIGHTS[code]
-        reasons = sorted(set(reasons))
-        score = _clamp(score)
-        health = classify_relationship(score)
-        explanation = ", ".join(code.replace("_", " ").lower() for code in reasons) or "No relationship signals"
-        return {
-            "relationship_health": health.value,
-            "relationship_score": score,
-            "reason_codes": reasons,
-            "explanation": explanation,
-        }
+        return score_relationship(
+            signal_codes=[item["code"] for item in signals],
+            hot=any(item.get("temperature") == "hot" and item.get("active") for item in executions),
+            open_deal=any(deal.stage not in _CLOSED_STAGES for deal in deals),
+        )
 
     @staticmethod
     def _primary_execution(executions: list[dict[str, Any]]) -> dict[str, Any] | None:

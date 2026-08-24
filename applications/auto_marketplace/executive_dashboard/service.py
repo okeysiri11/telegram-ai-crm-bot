@@ -53,6 +53,7 @@ class ExecutiveDashboardService:
                 {"type": "sales_intelligence", "data": await crm_engine.intelligence.manager_overview()},
                 {"type": "sales_execution", "data": await crm_engine.execution.summary()},
                 {"type": "customer_360", "data": {"available": True, "endpoint": "/api/auto/v1/crm/customers/{customer_id}/360"}},
+                {"type": "pipeline_forecast", "data": await crm_engine.manager.executive_summary()},
             ]
         elif role == DashboardRole.FINANCE_MANAGER:
             widgets = [{"type": "financial", "data": self._analytics.financial_analytics()}]
