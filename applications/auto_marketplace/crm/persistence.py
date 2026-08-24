@@ -13,9 +13,14 @@ from applications.auto_marketplace.crm.models import (
     CRMDeal,
     CRMLead,
     CRMLeadStatus,
+    CRMTask,
     CustomerProfile,
     DealStage,
+    Interaction,
+    InteractionType,
     LeadSource,
+    TaskPriority,
+    TaskStatus,
 )
 from applications.auto_marketplace.crm.tenant import current_crm_tenant
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
@@ -79,6 +84,58 @@ def _deal_from_payload(data: dict) -> CRMDeal:
     )
 
 
+def _task_from_payload(data: dict) -> CRMTask:
+    try:
+        status = TaskStatus(str(data.get("status") or TaskStatus.PENDING.value))
+    except ValueError:
+        status = TaskStatus.PENDING
+    try:
+        priority = TaskPriority(str(data.get("priority") or TaskPriority.NORMAL.value))
+    except ValueError:
+        priority = TaskPriority.NORMAL
+    due = data.get("due_at")
+    completed = data.get("completed_at")
+    return CRMTask(
+        task_id=str(data.get("task_id") or ""),
+        title=str(data.get("title") or ""),
+        description=str(data.get("description") or ""),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        assigned_agent_id=str(data.get("assigned_agent_id") or data.get("assigned_to") or ""),
+        created_by=str(data.get("created_by") or ""),
+        status=status,
+        priority=priority,
+        due_at=float(due) if due not in (None, "") else None,
+        completed_at=float(completed) if completed not in (None, "") else None,
+        created_at=float(data.get("created_at") or 0.0),
+        updated_at=float(data.get("updated_at") or data.get("created_at") or 0.0),
+    )
+
+
+def _activity_from_payload(data: dict) -> Interaction:
+    type_raw = data.get("activity_type") or data.get("interaction_type") or InteractionType.NOTE.value
+    try:
+        itype = InteractionType(str(type_raw))
+    except ValueError:
+        itype = InteractionType.NOTE
+    activity_id = str(data.get("activity_id") or data.get("interaction_id") or "")
+    return Interaction(
+        interaction_id=activity_id,
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        task_id=str(data.get("task_id") or ""),
+        interaction_type=itype,
+        subject=str(data.get("subject") or ""),
+        body=str(data.get("body") or ""),
+        agent_id=str(data.get("agent_id") or ""),
+        idempotency_key=str(data.get("idempotency_key") or ""),
+        metadata=dict(data.get("metadata") or {}) if isinstance(data.get("metadata"), dict) else {},
+        created_at=float(data.get("created_at") or 0.0),
+    )
+
+
 def _customer_from_payload(data: dict) -> CustomerProfile:
     return CustomerProfile(
         customer_id=str(data.get("customer_id") or ""),
@@ -117,6 +174,19 @@ class CRMPersistence(Protocol):
     async def delete_deal(self, deal_id: str, tenant_id: str | None = None) -> bool: ...
     async def count_deals(self, tenant_id: str | None = None) -> int: ...
 
+    async def save_task(self, task: CRMTask, tenant_id: str | None = None) -> CRMTask: ...
+    async def get_task(self, task_id: str, tenant_id: str | None = None) -> CRMTask | None: ...
+    async def list_tasks(self, tenant_id: str | None = None) -> list[CRMTask]: ...
+    async def delete_task(self, task_id: str, tenant_id: str | None = None) -> bool: ...
+    async def count_tasks(self, tenant_id: str | None = None) -> int: ...
+
+    async def save_activity(self, activity: Interaction, tenant_id: str | None = None) -> Interaction: ...
+    async def get_activity(self, activity_id: str, tenant_id: str | None = None) -> Interaction | None: ...
+    async def get_activity_by_idempotency(self, key: str, tenant_id: str | None = None) -> Interaction | None: ...
+    async def list_activities(self, tenant_id: str | None = None) -> list[Interaction]: ...
+    async def delete_activity(self, activity_id: str, tenant_id: str | None = None) -> bool: ...
+    async def count_activities(self, tenant_id: str | None = None) -> int: ...
+
 
 def _tid(tenant_id: str | None) -> str:
     return tenant_id or current_crm_tenant()
@@ -132,6 +202,8 @@ class MemoryCRMPersistence:
         self._customer_tenants: dict[str, str] = {}
         self._lead_tenants: dict[str, str] = {}
         self._deal_tenants: dict[str, str] = {}
+        self._task_tenants: dict[str, str] = {}
+        self._activity_tenants: dict[str, str] = {}
 
     def _visible(self, entity_id: str, tenant_map: dict[str, str], tenant_id: str) -> bool:
         return tenant_map.get(entity_id, "default") == tenant_id
@@ -214,6 +286,68 @@ class MemoryCRMPersistence:
 
     async def count_deals(self, tenant_id: str | None = None) -> int:
         return len(await self.list_deals(tenant_id))
+
+    async def save_task(self, task: CRMTask, tenant_id: str | None = None) -> CRMTask:
+        tid = _tid(tenant_id)
+        self._task_tenants[task.task_id] = tid
+        return self._store.crm_tasks.save(task.task_id, task)
+
+    async def get_task(self, task_id: str, tenant_id: str | None = None) -> CRMTask | None:
+        tid = _tid(tenant_id)
+        task = self._store.crm_tasks.get(task_id)
+        if task is None or not self._visible(task_id, self._task_tenants, tid):
+            return None
+        return task
+
+    async def list_tasks(self, tenant_id: str | None = None) -> list[CRMTask]:
+        tid = _tid(tenant_id)
+        return [t for t in self._store.crm_tasks.list_all() if self._visible(t.task_id, self._task_tenants, tid)]
+
+    async def delete_task(self, task_id: str, tenant_id: str | None = None) -> bool:
+        if await self.get_task(task_id, tenant_id) is None:
+            return False
+        self._task_tenants.pop(task_id, None)
+        return self._store.crm_tasks.delete(task_id)
+
+    async def count_tasks(self, tenant_id: str | None = None) -> int:
+        return len(await self.list_tasks(tenant_id))
+
+    async def save_activity(self, activity: Interaction, tenant_id: str | None = None) -> Interaction:
+        tid = _tid(tenant_id)
+        self._activity_tenants[activity.interaction_id] = tid
+        return self._store.interactions.save(activity.interaction_id, activity)
+
+    async def get_activity(self, activity_id: str, tenant_id: str | None = None) -> Interaction | None:
+        tid = _tid(tenant_id)
+        item = self._store.interactions.get(activity_id)
+        if item is None or not self._visible(activity_id, self._activity_tenants, tid):
+            return None
+        return item
+
+    async def get_activity_by_idempotency(self, key: str, tenant_id: str | None = None) -> Interaction | None:
+        if not key:
+            return None
+        for item in await self.list_activities(tenant_id):
+            if item.idempotency_key == key:
+                return item
+        return None
+
+    async def list_activities(self, tenant_id: str | None = None) -> list[Interaction]:
+        tid = _tid(tenant_id)
+        return [
+            i
+            for i in self._store.interactions.list_all()
+            if self._visible(i.interaction_id, self._activity_tenants, tid)
+        ]
+
+    async def delete_activity(self, activity_id: str, tenant_id: str | None = None) -> bool:
+        if await self.get_activity(activity_id, tenant_id) is None:
+            return False
+        self._activity_tenants.pop(activity_id, None)
+        return self._store.interactions.delete(activity_id)
+
+    async def count_activities(self, tenant_id: str | None = None) -> int:
+        return len(await self.list_activities(tenant_id))
 
 
 class PostgresCRMPersistence:
@@ -364,6 +498,115 @@ class PostgresCRMPersistence:
         async with get_session() as session:
             repo = AutoMarketplaceCrmRepository(session)
             return await repo.count_deals(tid)
+
+
+    async def save_task(self, task: CRMTask, tenant_id: str | None = None) -> CRMTask:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            await repo.upsert_task(tid, task.to_dict())
+        return task
+
+    async def get_task(self, task_id: str, tenant_id: str | None = None) -> CRMTask | None:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            data = await repo.get_task(tid, task_id)
+        return _task_from_payload(data) if data else None
+
+    async def list_tasks(self, tenant_id: str | None = None) -> list[CRMTask]:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            rows = await repo.list_tasks(tid)
+        return [_task_from_payload(row) for row in rows]
+
+    async def delete_task(self, task_id: str, tenant_id: str | None = None) -> bool:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.delete_task(tid, task_id)
+
+    async def count_tasks(self, tenant_id: str | None = None) -> int:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.count_tasks(tid)
+
+    async def save_activity(self, activity: Interaction, tenant_id: str | None = None) -> Interaction:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            await repo.upsert_activity(tid, activity.to_dict())
+        return activity
+
+    async def get_activity(self, activity_id: str, tenant_id: str | None = None) -> Interaction | None:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            data = await repo.get_activity(tid, activity_id)
+        return _activity_from_payload(data) if data else None
+
+    async def get_activity_by_idempotency(self, key: str, tenant_id: str | None = None) -> Interaction | None:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        if not key:
+            return None
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            data = await repo.get_activity_by_idempotency(tid, key)
+        return _activity_from_payload(data) if data else None
+
+    async def list_activities(self, tenant_id: str | None = None) -> list[Interaction]:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            rows = await repo.list_activities(tid)
+        return [_activity_from_payload(row) for row in rows]
+
+    async def delete_activity(self, activity_id: str, tenant_id: str | None = None) -> bool:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.delete_activity(tid, activity_id)
+
+    async def count_activities(self, tenant_id: str | None = None) -> int:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.count_activities(tid)
 
 
 _persist: CRMPersistence | None = None

@@ -92,10 +92,10 @@ async def test_pipeline_analytics():
 @pytest.mark.asyncio
 async def test_tasks_and_reminders():
     task = await auto_marketplace.crm_engine.tasks.create(
-        CRMTask(title="Follow up", customer_id="c1", assigned_agent_id="agent-1")
+        CRMTask(title="Follow up", assigned_agent_id="agent-1")
     )
     assert task.task_id
-    completed = auto_marketplace.crm_engine.tasks.complete(task.task_id)
+    completed = await auto_marketplace.crm_engine.tasks.complete(task.task_id)
     assert completed.status.value == "completed"
 
 

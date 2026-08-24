@@ -15,8 +15,19 @@ class CalendarService:
     def __init__(self, store: MarketplaceStore | None = None) -> None:
         self._store = store or marketplace_store
 
-    def schedule_meeting(self, meeting: Meeting) -> Meeting:
-        return self._store.meetings.save(meeting.meeting_id, meeting)
+    async def schedule_meeting(self, meeting: Meeting) -> Meeting:
+        saved = self._store.meetings.save(meeting.meeting_id, meeting)
+        from applications.auto_marketplace.activities.service import activity_service
+
+        await activity_service.record_event(
+            "meeting",
+            subject=saved.title or "Meeting",
+            body=saved.location,
+            customer_id=saved.customer_id,
+            agent_id=saved.agent_id,
+            idempotency_key=f"meeting:{saved.meeting_id}",
+        )
+        return saved
 
     def get_meeting(self, meeting_id: str) -> Meeting:
         meeting = self._store.meetings.get(meeting_id)

@@ -34,6 +34,17 @@ class LeadService:
         lead.score = await self._ai.score_lead(lead, customer)
         saved = await self._records().save_lead(lead)
         await publish(LeadCreatedEvent(lead_id=saved.lead_id, customer_id=saved.customer_id, source=saved.source.value))
+        from applications.auto_marketplace.activities.service import activity_service
+
+        await activity_service.record_event(
+            "lead_created",
+            subject="Lead created",
+            body=saved.notes,
+            customer_id=saved.customer_id,
+            lead_id=saved.lead_id,
+            agent_id=saved.assigned_agent_id,
+            idempotency_key=f"lead_created:{saved.lead_id}",
+        )
         wf_id = await self._workflow.assign_lead(saved.lead_id, dealer_id=saved.dealer_id)
         if wf_id:
             saved.metadata["assignment_workflow_id"] = wf_id
@@ -73,6 +84,17 @@ class LeadService:
         saved = await self._records().save_lead(lead)
         if not already:
             await publish(LeadQualifiedEvent(lead_id=lead_id, score=saved.score, agent_id=saved.assigned_agent_id))
+            from applications.auto_marketplace.activities.service import activity_service
+
+            await activity_service.record_event(
+                "status_change",
+                subject="Lead qualified",
+                body="qualified",
+                customer_id=saved.customer_id,
+                lead_id=saved.lead_id,
+                agent_id=saved.assigned_agent_id,
+                idempotency_key=f"lead_status:{saved.lead_id}:qualified",
+            )
         return saved
 
     async def set_status(self, lead_id: str, status: CRMLeadStatus) -> CRMLead:
@@ -101,10 +123,24 @@ class LeadService:
 
     async def update(self, lead_id: str, **updates: object) -> CRMLead:
         lead = await self.get(lead_id)
+        previous_status = lead.status
         for key, value in updates.items():
             if hasattr(lead, key) and value is not None:
                 setattr(lead, key, self._coerce_update(key, value))
-        return await self._records().save_lead(lead)
+        saved = await self._records().save_lead(lead)
+        if "status" in updates and saved.status != previous_status:
+            from applications.auto_marketplace.activities.service import activity_service
+
+            await activity_service.record_event(
+                "status_change",
+                subject="Lead status changed",
+                body=f"{previous_status.value}->{saved.status.value}",
+                customer_id=saved.customer_id,
+                lead_id=saved.lead_id,
+                agent_id=saved.assigned_agent_id,
+                idempotency_key=f"lead_status:{saved.lead_id}:{saved.status.value}",
+            )
+        return saved
 
     async def delete(self, lead_id: str) -> bool:
         await self.get(lead_id)

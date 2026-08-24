@@ -44,6 +44,16 @@ class CustomerProfileService:
         saved = await self._records().save_customer(profile)
         self._sync_legacy_customer(saved)
         await publish(CustomerCreatedEvent(customer_id=saved.customer_id, email=saved.email))
+        from applications.auto_marketplace.activities.service import activity_service
+
+        await activity_service.record_event(
+            "customer_created",
+            subject="Customer created",
+            body=saved.email,
+            customer_id=saved.customer_id,
+            agent_id=saved.owner_agent_id,
+            idempotency_key=f"customer_created:{saved.customer_id}",
+        )
         return saved
 
     async def get(self, customer_id: str) -> CustomerProfile:

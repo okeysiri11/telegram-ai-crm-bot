@@ -13,6 +13,7 @@ from applications.auto_marketplace.shared.exceptions import NotFoundError
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
 _CONVERTED_DEAL_ID_KEY = "converted_deal_id"
+_CONVERTED_CUSTOMER_ID_KEY = "converted_customer_id"
 
 _STAGE_ORDER = [
     DealStage.PROSPECT,
@@ -43,27 +44,84 @@ class SalesPipelineEngine:
     async def qualify_lead(self, lead_id: str, *, agent_id: str = "") -> CRMLead:
         return await self._leads.qualify(lead_id, agent_id=agent_id)
 
+    def _customers(self):
+        from applications.auto_marketplace.customers.profile_service import CustomerProfileService, customer_profile_service
+
+        if self._persistence is not None:
+            return CustomerProfileService(store=self._store, persistence=self._persistence)
+        return customer_profile_service
+
+    async def _ensure_conversion_customer(self, lead: CRMLead, *, agent_id: str) -> tuple[CRMLead, str]:
+        from applications.auto_marketplace.crm.models import CustomerProfile
+
+        customers = self._customers()
+        meta = dict(lead.metadata)
+        customer_id = str(lead.customer_id or meta.get(_CONVERTED_CUSTOMER_ID_KEY) or "")
+        if customer_id:
+            try:
+                await customers.get(customer_id)
+                if not lead.customer_id or _CONVERTED_CUSTOMER_ID_KEY not in meta:
+                    meta[_CONVERTED_CUSTOMER_ID_KEY] = customer_id
+                    lead = await self._leads.update(lead.lead_id, customer_id=customer_id, metadata=meta)
+                return lead, customer_id
+            except NotFoundError:
+                customer_id = ""
+        name = (lead.notes or "").strip() or f"Lead {lead.lead_id[:8]}"
+        profile = CustomerProfile(
+            first_name=name[:80],
+            last_name="",
+            owner_agent_id=agent_id or lead.assigned_agent_id,
+            tags=["converted-from-lead"],
+            preferences={"source_lead_id": lead.lead_id},
+        )
+        created = await customers.create(profile)
+        meta[_CONVERTED_CUSTOMER_ID_KEY] = created.customer_id
+        lead = await self._leads.update(lead.lead_id, customer_id=created.customer_id, metadata=meta)
+        return lead, created.customer_id
+
     async def convert_lead_to_deal(self, lead_id: str, *, amount: float = 0.0, agent_id: str = "") -> CRMDeal:
-        """Idempotent lead → durable deal. Deal id is stored on lead.metadata."""
+        """Idempotent lead → durable customer + deal. Ids stored on lead.metadata."""
+        from applications.auto_marketplace.activities.service import activity_service
+
         lead = await self._leads.get(lead_id)
+        lead, customer_id = await self._ensure_conversion_customer(lead, agent_id=agent_id)
         existing_id = str(lead.metadata.get(_CONVERTED_DEAL_ID_KEY) or "")
+        created: CRMDeal | None = None
         if existing_id:
             try:
-                return await self._deals.get(existing_id)
+                created = await self._deals.get(existing_id)
             except NotFoundError:
-                pass
-        deal = CRMDeal(
-            customer_id=lead.customer_id,
-            dealer_id=lead.dealer_id,
-            vehicle_id=lead.vehicle_id,
-            amount=amount,
-            owner_agent_id=agent_id or lead.assigned_agent_id,
-            stage=DealStage.QUALIFICATION,
-        )
-        created = await self._deals.create(deal)
+                created = None
+        if created is None:
+            deal = CRMDeal(
+                customer_id=customer_id,
+                dealer_id=lead.dealer_id,
+                vehicle_id=lead.vehicle_id,
+                amount=amount,
+                owner_agent_id=agent_id or lead.assigned_agent_id,
+                stage=DealStage.QUALIFICATION,
+            )
+            created = await self._deals.create(deal)
         meta = dict(lead.metadata)
         meta[_CONVERTED_DEAL_ID_KEY] = created.deal_id
-        await self._leads.update(lead_id, status=CRMLeadStatus.CONVERTED, metadata=meta)
+        meta[_CONVERTED_CUSTOMER_ID_KEY] = customer_id
+        if lead.status != CRMLeadStatus.CONVERTED or lead.customer_id != customer_id or lead.metadata.get(_CONVERTED_DEAL_ID_KEY) != created.deal_id:
+            await self._leads.update(
+                lead_id,
+                status=CRMLeadStatus.CONVERTED,
+                customer_id=customer_id,
+                metadata=meta,
+            )
+        await activity_service.record_event(
+            "lead_converted",
+            subject="Lead converted",
+            body=created.deal_id,
+            customer_id=customer_id,
+            lead_id=lead_id,
+            deal_id=created.deal_id,
+            agent_id=agent_id or lead.assigned_agent_id,
+            idempotency_key=f"lead_converted:{lead_id}",
+        )
         return created
 
     async def convert_lead_to_opportunity(self, lead_id: str, *, amount: float = 0.0) -> SalesOpportunity:

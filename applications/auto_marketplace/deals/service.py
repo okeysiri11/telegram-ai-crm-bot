@@ -31,6 +31,17 @@ class DealService:
         deal.probability = await self._ai.predict_deal_probability(deal)
         saved = await self._records().save_deal(deal)
         await publish(DealOpenedEvent(deal_id=saved.deal_id, customer_id=saved.customer_id, amount=saved.amount))
+        from applications.auto_marketplace.activities.service import activity_service
+
+        await activity_service.record_event(
+            "deal_created",
+            subject="Deal created",
+            body=str(saved.amount),
+            customer_id=saved.customer_id,
+            deal_id=saved.deal_id,
+            agent_id=saved.owner_agent_id,
+            idempotency_key=f"deal_created:{saved.deal_id}",
+        )
         return saved
 
     async def get(self, deal_id: str) -> CRMDeal:
@@ -61,6 +72,17 @@ class DealService:
         deal.probability = await self._ai.predict_deal_probability(deal)
         saved = await self._records().save_deal(deal)
         await publish(DealUpdatedEvent(deal_id=deal_id, stage=stage.value, probability=saved.probability))
+        from applications.auto_marketplace.activities.service import activity_service
+
+        await activity_service.record_event(
+            "stage_change",
+            subject="Deal stage changed",
+            body=stage.value,
+            customer_id=saved.customer_id,
+            deal_id=saved.deal_id,
+            agent_id=saved.owner_agent_id,
+            idempotency_key=f"deal_stage:{saved.deal_id}:{stage.value}",
+        )
         return saved
 
     async def update(self, deal_id: str, **updates: object) -> CRMDeal:
@@ -94,6 +116,17 @@ class DealService:
         deal.probability = 1.0
         saved = await self._records().save_deal(deal)
         await publish(DealWonEvent(deal_id=deal_id, amount=saved.amount, customer_id=saved.customer_id))
+        from applications.auto_marketplace.activities.service import activity_service
+
+        await activity_service.record_event(
+            "stage_change",
+            subject="Deal won",
+            body=DealStage.CLOSED_WON.value,
+            customer_id=saved.customer_id,
+            deal_id=saved.deal_id,
+            agent_id=saved.owner_agent_id,
+            idempotency_key=f"deal_stage:{saved.deal_id}:{DealStage.CLOSED_WON.value}",
+        )
         return saved
 
     async def mark_lost(self, deal_id: str, *, reason: str = "") -> CRMDeal:
@@ -104,6 +137,17 @@ class DealService:
         deal.probability = 0.0
         saved = await self._records().save_deal(deal)
         await publish(DealLostEvent(deal_id=deal_id, reason=reason))
+        from applications.auto_marketplace.activities.service import activity_service
+
+        await activity_service.record_event(
+            "stage_change",
+            subject="Deal lost",
+            body=DealStage.CLOSED_LOST.value,
+            customer_id=saved.customer_id,
+            deal_id=saved.deal_id,
+            agent_id=saved.owner_agent_id,
+            idempotency_key=f"deal_stage:{saved.deal_id}:{DealStage.CLOSED_LOST.value}",
+        )
         return saved
 
 

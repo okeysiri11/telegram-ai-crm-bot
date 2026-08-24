@@ -248,9 +248,18 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_get(f"{crm}/pipeline/conversion", crm_handlers.pipeline_conversion_handler)
     app.router.add_get(f"{crm}/tasks", crm_handlers.list_tasks_handler)
     app.router.add_post(f"{crm}/tasks", crm_handlers.create_task_handler)
+    app.router.add_get(f"{crm}/tasks/{{task_id}}", crm_handlers.get_task_handler)
+    app.router.add_patch(f"{crm}/tasks/{{task_id}}", crm_handlers.update_task_handler)
+    app.router.add_delete(f"{crm}/tasks/{{task_id}}", crm_handlers.delete_task_handler)
+    app.router.add_post(f"{crm}/tasks/{{task_id}}/complete", crm_handlers.complete_task_handler)
+    app.router.add_post(f"{crm}/tasks/{{task_id}}/reopen", crm_handlers.reopen_task_handler)
     app.router.add_post(f"{crm}/activities/calls", crm_handlers.log_call_handler)
     app.router.add_post(f"{crm}/activities/emails", crm_handlers.log_email_handler)
+    app.router.add_get(f"{crm}/activities", crm_handlers.list_activities_handler)
+    app.router.add_post(f"{crm}/activities", crm_handlers.create_activity_handler)
+    app.router.add_get(f"{crm}/activities/{{activity_id}}", crm_handlers.get_activity_handler)
     app.router.add_post(f"{crm}/calendar/meetings", crm_handlers.schedule_meeting_handler)
+    app.router.add_get(f"{crm}/follow-up", crm_handlers.follow_up_handler)
 
     # Sprint 6.4 — AI Sales Agents & Customer Intelligence
     ai = f"{prefix}/ai"

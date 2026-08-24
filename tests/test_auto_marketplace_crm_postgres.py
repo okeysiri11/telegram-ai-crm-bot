@@ -7,7 +7,9 @@ import uuid
 
 import pytest
 
-from applications.auto_marketplace.crm.models import CRMDeal, CRMLead, CRMLeadStatus, CustomerProfile, DealStage, LeadSource
+from applications.auto_marketplace.crm.models import CRMDeal, CRMLead, CRMLeadStatus, CRMTask, CustomerProfile, DealStage, Interaction, InteractionType, LeadSource, TaskPriority, TaskStatus
+from applications.auto_marketplace.activities.service import ActivityService
+from applications.auto_marketplace.tasks.service import TaskService
 from applications.auto_marketplace.crm.persistence import (
     PostgresCRMPersistence,
     crm_persistence_mode,
@@ -85,6 +87,46 @@ async def _ensure_postgres_tables() -> None:
             owner_agent_id VARCHAR(64) NOT NULL DEFAULT '',
             created_ts FLOAT NOT NULL DEFAULT 0,
             closed_at FLOAT NULL,
+            payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS auto_marketplace_crm_tasks (
+            task_id VARCHAR(64) PRIMARY KEY,
+            tenant_id VARCHAR(128) NOT NULL DEFAULT 'default',
+            title VARCHAR(255) NOT NULL DEFAULT '',
+            description TEXT NOT NULL DEFAULT '',
+            status VARCHAR(64) NOT NULL DEFAULT 'pending',
+            priority VARCHAR(64) NOT NULL DEFAULT 'normal',
+            customer_id VARCHAR(64) NOT NULL DEFAULT '',
+            lead_id VARCHAR(64) NOT NULL DEFAULT '',
+            deal_id VARCHAR(64) NOT NULL DEFAULT '',
+            assigned_agent_id VARCHAR(64) NOT NULL DEFAULT '',
+            created_by VARCHAR(64) NOT NULL DEFAULT '',
+            due_at FLOAT NULL,
+            completed_at FLOAT NULL,
+            created_ts FLOAT NOT NULL DEFAULT 0,
+            payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS auto_marketplace_crm_activities (
+            activity_id VARCHAR(64) PRIMARY KEY,
+            tenant_id VARCHAR(128) NOT NULL DEFAULT 'default',
+            activity_type VARCHAR(64) NOT NULL DEFAULT 'note',
+            customer_id VARCHAR(64) NOT NULL DEFAULT '',
+            lead_id VARCHAR(64) NOT NULL DEFAULT '',
+            deal_id VARCHAR(64) NOT NULL DEFAULT '',
+            task_id VARCHAR(64) NOT NULL DEFAULT '',
+            agent_id VARCHAR(64) NOT NULL DEFAULT '',
+            subject VARCHAR(255) NOT NULL DEFAULT '',
+            body TEXT NOT NULL DEFAULT '',
+            idempotency_key VARCHAR(255) NOT NULL DEFAULT '',
+            created_ts FLOAT NOT NULL DEFAULT 0,
             payload JSONB NOT NULL DEFAULT '{}'::jsonb,
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -290,3 +332,193 @@ async def test_tenant_isolation_customers_and_deals(postgres_crm_mode):
 
     await deals.delete(deal.deal_id)
     await customers.delete(profile.customer_id)
+
+
+@pytest.mark.asyncio
+async def test_tasks_and_activities_survive_engine_restart(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant = f"wf-{suffix}"
+    bind_crm_tenant(tenant)
+    persist = PostgresCRMPersistence()
+    tasks = TaskService(persistence=persist)
+    activities = ActivityService(persistence=persist)
+    customers = CustomerProfileService(persistence=persist)
+    leads = LeadService(persistence=persist)
+    deals = DealService(persistence=persist)
+
+    profile = await customers.create(CustomerProfile(first_name="Task", last_name="Owner", email=f"task-{suffix}@ex.com"))
+    lead = await leads.create(CRMLead(customer_id=profile.customer_id, notes=f"wf-{suffix}"))
+    deal = await deals.create(CRMDeal(customer_id=profile.customer_id, amount=9000, stage=DealStage.PROSPECT))
+    task = await tasks.create(
+        CRMTask(
+            title=f"Call {suffix}",
+            description="follow up",
+            customer_id=profile.customer_id,
+            lead_id=lead.lead_id,
+            deal_id=deal.deal_id,
+            assigned_agent_id="agent-wf",
+            priority=TaskPriority.HIGH,
+            due_at=1.0,
+        )
+    )
+    await tasks.complete(task.task_id)
+    note = await activities.record(
+        Interaction(
+            customer_id=profile.customer_id,
+            lead_id=lead.lead_id,
+            deal_id=deal.deal_id,
+            interaction_type=InteractionType.NOTE,
+            subject="Manual note",
+            body=suffix,
+        )
+    )
+    ids = (profile.customer_id, lead.lead_id, deal.deal_id, task.task_id, note.interaction_id)
+
+    from database.session import shutdown_db
+
+    await shutdown_db()
+    reset_crm_persistence()
+    bind_crm_tenant(tenant)
+    persist2 = PostgresCRMPersistence()
+    tasks2 = TaskService(persistence=persist2)
+    activities2 = ActivityService(persistence=persist2)
+    deals2 = DealService(persistence=persist2)
+
+    restored_task = await tasks2.get(ids[3])
+    assert restored_task.title == f"Call {suffix}"
+    assert restored_task.status == TaskStatus.COMPLETED
+    assert restored_task.customer_id == ids[0]
+    assert restored_task.lead_id == ids[1]
+    assert restored_task.deal_id == ids[2]
+    restored_note = await activities2.get_interaction(ids[4])
+    assert restored_note.body == suffix
+    timeline = await activities2.entity_timeline(customer_id=ids[0])
+    assert any(item["activity_id"] == ids[4] for item in timeline)
+    restored_deal = await deals2.get(ids[2])
+    assert restored_deal.stage == DealStage.PROSPECT
+
+    await tasks2.delete(ids[3])
+    await activities2._records().delete_activity(ids[4])
+    await deals2.delete(ids[2])
+
+
+@pytest.mark.asyncio
+async def test_pipeline_stage_survives_restart_and_tenant_isolation(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant_a = f"pipe-a-{suffix}"
+    tenant_b = f"pipe-b-{suffix}"
+    persist = PostgresCRMPersistence()
+    deals = DealService(persistence=persist)
+    pipeline = SalesPipelineEngine(deals=deals, persistence=persist)
+
+    bind_crm_tenant(tenant_a)
+    deal = await deals.create(CRMDeal(amount=3333, dealer_id="d-pipe"))
+    moved = await pipeline.set_stage(deal.deal_id, DealStage.NEGOTIATION)
+    assert moved.stage == DealStage.NEGOTIATION
+    view_a = await pipeline.pipeline_view()
+    assert any(item["deal_id"] == deal.deal_id for item in view_a["stages"].get("negotiation", []))
+
+    bind_crm_tenant(tenant_b)
+    view_b = await pipeline.pipeline_view()
+    assert all(item["deal_id"] != deal.deal_id for rows in view_b["stages"].values() for item in rows)
+    with pytest.raises(NotFoundError):
+        await deals.get(deal.deal_id)
+
+    from database.session import shutdown_db
+
+    await shutdown_db()
+    reset_crm_persistence()
+    bind_crm_tenant(tenant_a)
+    persist2 = PostgresCRMPersistence()
+    deals2 = DealService(persistence=persist2)
+    pipeline2 = SalesPipelineEngine(deals=deals2, persistence=persist2)
+    restored = await deals2.get(deal.deal_id)
+    assert restored.stage == DealStage.NEGOTIATION
+    view2 = await pipeline2.pipeline_view()
+    assert any(item["deal_id"] == deal.deal_id for item in view2["stages"].get("negotiation", []))
+    await deals2.delete(deal.deal_id)
+
+
+@pytest.mark.asyncio
+async def test_conversion_creates_customer_and_is_idempotent_across_restart(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant = f"cvt-{suffix}"
+    bind_crm_tenant(tenant)
+    persist = PostgresCRMPersistence()
+    leads = LeadService(persistence=persist)
+    deals = DealService(persistence=persist)
+    customers = CustomerProfileService(persistence=persist)
+    activities = ActivityService(persistence=persist)
+    pipeline = SalesPipelineEngine(leads=leads, deals=deals, persistence=persist)
+
+    lead = await leads.create(CRMLead(notes=f"Walk-in {suffix}", dealer_id="d-cvt"))
+    assert lead.customer_id == ""
+    deal = await pipeline.convert_lead_to_deal(lead.lead_id, amount=15000, agent_id="agt-cvt")
+    again = await pipeline.convert_lead_to_deal(lead.lead_id, amount=1)
+    assert again.deal_id == deal.deal_id
+    assert deal.customer_id
+    profiles = await customers.list_profiles()
+    assert sum(1 for p in profiles if p.customer_id == deal.customer_id) == 1
+    assert sum(1 for d in await deals.list_deals() if d.customer_id == deal.customer_id) == 1
+    converted_events = await activities.list_activities(lead_id=lead.lead_id, activity_type=InteractionType.LEAD_CONVERTED)
+    assert len(converted_events) == 1
+
+    ids = (lead.lead_id, deal.deal_id, deal.customer_id)
+    from database.session import shutdown_db
+
+    await shutdown_db()
+    reset_crm_persistence()
+    bind_crm_tenant(tenant)
+    persist2 = PostgresCRMPersistence()
+    leads2 = LeadService(persistence=persist2)
+    deals2 = DealService(persistence=persist2)
+    customers2 = CustomerProfileService(persistence=persist2)
+    pipeline2 = SalesPipelineEngine(leads=leads2, deals=deals2, persistence=persist2)
+
+    restored_lead = await leads2.get(ids[0])
+    restored_deal = await deals2.get(ids[1])
+    restored_customer = await customers2.get(ids[2])
+    assert restored_lead.status == CRMLeadStatus.CONVERTED
+    assert restored_lead.metadata.get("converted_deal_id") == ids[1]
+    assert restored_lead.metadata.get("converted_customer_id") == ids[2]
+    assert restored_lead.customer_id == ids[2]
+    assert restored_deal.amount == 15000
+    assert restored_customer.preferences.get("source_lead_id") == ids[0]
+    third = await pipeline2.convert_lead_to_deal(ids[0], amount=99)
+    assert third.deal_id == ids[1]
+    assert sum(1 for p in await customers2.list_profiles() if p.customer_id == ids[2]) == 1
+
+    await deals2.delete(ids[1])
+    await leads2.delete(ids[0])
+    await customers2.delete(ids[2])
+
+
+@pytest.mark.asyncio
+async def test_task_and_activity_tenant_isolation(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant_a = f"ta-{suffix}"
+    tenant_b = f"tb-{suffix}"
+    persist = PostgresCRMPersistence()
+    tasks = TaskService(persistence=persist)
+    activities = ActivityService(persistence=persist)
+
+    bind_crm_tenant(tenant_a)
+    task = await tasks.create(CRMTask(title=f"secret-{suffix}", assigned_agent_id="a"))
+    note = await activities.record(Interaction(subject="secret", body=suffix, interaction_type=InteractionType.NOTE))
+
+    bind_crm_tenant(tenant_b)
+    with pytest.raises(NotFoundError):
+        await tasks.get(task.task_id)
+    with pytest.raises(NotFoundError):
+        await activities.get_interaction(note.interaction_id)
+    assert all(item.task_id != task.task_id for item in await tasks.list_tasks())
+    assert all(item.interaction_id != note.interaction_id for item in await activities.list_activities())
+
+    bind_crm_tenant(tenant_a)
+    assert (await tasks.get(task.task_id)).title == f"secret-{suffix}"
+    await tasks.delete(task.task_id)
+    await activities._records().delete_activity(note.interaction_id)

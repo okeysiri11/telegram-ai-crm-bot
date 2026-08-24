@@ -56,9 +56,19 @@ class CRMEngine:
             "customers": await records.count_customers(),
             "leads": await records.count_leads(),
             "deals": await records.count_deals(),
-            "tasks": self._store.crm_tasks.count(),
+            "tasks": await records.count_tasks(),
             "conversion": await self.pipeline.conversion_analytics(),
             "forecast": await self.pipeline.forecast(),
+        }
+
+    async def follow_up(self) -> dict[str, Any]:
+        overdue = await self.tasks.list_tasks(overdue=True)
+        due = await self.tasks.list_tasks(due=True)
+        recent = await self.activities.list_activities()
+        return {
+            "overdue_tasks": [t.to_dict() for t in overdue],
+            "due_tasks": [t.to_dict() for t in due],
+            "recent_activities": [a.to_dict() for a in recent[:50]],
         }
 
 

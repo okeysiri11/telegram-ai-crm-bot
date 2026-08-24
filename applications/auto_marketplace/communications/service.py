@@ -21,28 +21,30 @@ class CommunicationService:
 
     async def log_call(self, call: PhoneCall) -> PhoneCall:
         saved = self._store.phone_calls.save(call.call_id, call)
-        interactions = [i.to_dict() for i in self._store.interactions.list_all() if i.customer_id == call.customer_id]
-        saved.summary = await self._ai.summarize_conversation(interactions)
-        self._activities.log_interaction(
+        history = await self._activities.list_activities(customer_id=call.customer_id)
+        saved.summary = await self._ai.summarize_conversation([i.to_dict() for i in history])
+        await self._activities.log_interaction(
             Interaction(
                 customer_id=call.customer_id,
                 interaction_type=InteractionType.CALL,
                 subject=f"Phone call ({call.direction})",
                 body=saved.summary,
                 agent_id=call.agent_id,
+                idempotency_key=f"call:{saved.call_id}",
             )
         )
         return self._store.phone_calls.save(call.call_id, saved)
 
-    def log_email(self, email: EmailMessage) -> EmailMessage:
+    async def log_email(self, email: EmailMessage) -> EmailMessage:
         saved = self._store.email_messages.save(email.email_id, email)
-        self._activities.log_interaction(
+        await self._activities.log_interaction(
             Interaction(
                 customer_id=email.customer_id,
                 interaction_type=InteractionType.EMAIL,
                 subject=email.subject,
                 body=email.body,
                 agent_id=email.agent_id,
+                idempotency_key=f"email:{saved.email_id}",
             )
         )
         return saved

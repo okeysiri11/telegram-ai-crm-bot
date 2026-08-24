@@ -64,6 +64,13 @@ class TaskStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class TaskPriority(str, enum.Enum):
+    LOW = "low"
+    NORMAL = "normal"
+    HIGH = "high"
+    URGENT = "urgent"
+
+
 class InteractionType(str, enum.Enum):
     CALL = "call"
     EMAIL = "email"
@@ -71,6 +78,15 @@ class InteractionType(str, enum.Enum):
     NOTE = "note"
     SMS = "sms"
     CHAT = "chat"
+    MESSAGE = "message"
+    STATUS_CHANGE = "status_change"
+    STAGE_CHANGE = "stage_change"
+    TASK_CREATED = "task_created"
+    TASK_COMPLETED = "task_completed"
+    LEAD_CREATED = "lead_created"
+    LEAD_CONVERTED = "lead_converted"
+    CUSTOMER_CREATED = "customer_created"
+    DEAL_CREATED = "deal_created"
 
 
 @dataclass
@@ -216,22 +232,30 @@ class Interaction:
     customer_id: str = ""
     lead_id: str = ""
     deal_id: str = ""
+    task_id: str = ""
     interaction_type: InteractionType = InteractionType.NOTE
     subject: str = ""
     body: str = ""
     agent_id: str = ""
+    idempotency_key: str = ""
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: float = field(default_factory=_ts)
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "interaction_id": self.interaction_id,
+            "activity_id": self.interaction_id,
             "customer_id": self.customer_id,
             "lead_id": self.lead_id,
             "deal_id": self.deal_id,
+            "task_id": self.task_id,
             "interaction_type": self.interaction_type.value,
+            "activity_type": self.interaction_type.value,
             "subject": self.subject,
             "body": self.body,
             "agent_id": self.agent_id,
+            "idempotency_key": self.idempotency_key,
+            "metadata": dict(self.metadata),
             "created_at": self.created_at,
         }
 
@@ -288,9 +312,13 @@ class CRMTask:
     lead_id: str = ""
     deal_id: str = ""
     assigned_agent_id: str = ""
+    created_by: str = ""
     status: TaskStatus = TaskStatus.PENDING
+    priority: TaskPriority = TaskPriority.NORMAL
     due_at: float | None = None
+    completed_at: float | None = None
     created_at: float = field(default_factory=_ts)
+    updated_at: float = field(default_factory=_ts)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -301,9 +329,14 @@ class CRMTask:
             "lead_id": self.lead_id,
             "deal_id": self.deal_id,
             "assigned_agent_id": self.assigned_agent_id,
+            "assigned_to": self.assigned_agent_id,
+            "created_by": self.created_by,
             "status": self.status.value,
+            "priority": self.priority.value,
             "due_at": self.due_at,
+            "completed_at": self.completed_at,
             "created_at": self.created_at,
+            "updated_at": self.updated_at,
         }
 
 

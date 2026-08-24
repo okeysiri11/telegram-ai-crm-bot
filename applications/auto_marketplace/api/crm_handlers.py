@@ -16,9 +16,13 @@ from applications.auto_marketplace.crm.models import (
     CustomerProfile,
     DealStage,
     EmailMessage,
+    Interaction,
+    InteractionType,
     LeadSource,
     Meeting,
     PhoneCall,
+    TaskPriority,
+    TaskStatus,
 )
 from applications.auto_marketplace.shared.exceptions import (
     AuthenticationError,
@@ -47,6 +51,46 @@ def _parse_deal_stage(raw: object) -> DealStage | None:
         return DealStage(str(raw))
     except ValueError as exc:
         raise ValidationError(f"invalid deal stage: {raw!r}") from exc
+
+
+def _parse_task_status(raw: object) -> TaskStatus | None:
+    if raw is None or raw == "":
+        return None
+    try:
+        return TaskStatus(str(raw))
+    except ValueError as exc:
+        raise ValidationError(f"invalid task status: {raw!r}") from exc
+
+
+def _parse_task_priority(raw: object) -> TaskPriority | None:
+    if raw is None or raw == "":
+        return None
+    try:
+        return TaskPriority(str(raw))
+    except ValueError as exc:
+        raise ValidationError(f"invalid task priority: {raw!r}") from exc
+
+
+def _parse_interaction_type(raw: object) -> InteractionType:
+    if raw is None or raw == "":
+        return InteractionType.NOTE
+    try:
+        return InteractionType(str(raw))
+    except ValueError as exc:
+        raise ValidationError(f"invalid activity type: {raw!r}") from exc
+
+
+def _query_flag(request: web.Request, name: str) -> bool:
+    return str(request.query.get(name) or "").strip().lower() in {"1", "true", "yes"}
+
+
+def _optional_float(value: object, field: str) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValidationError(f"{field} must be a unix timestamp") from exc
 
 
 def _parse_lead_source(raw: object) -> LeadSource:
@@ -124,7 +168,7 @@ async def delete_customer_handler(request: web.Request) -> web.Response:
 
 async def customer_timeline_handler(request: web.Request) -> web.Response:
     _check_perm(request, "crm.read")
-    timeline = auto_marketplace.crm_engine.activities.customer_timeline(request.match_info["customer_id"])
+    timeline = await auto_marketplace.crm_engine.activities.customer_timeline(request.match_info["customer_id"])
     return json_response(timeline)
 
 
@@ -352,9 +396,16 @@ async def pipeline_conversion_handler(_request: web.Request) -> web.Response:
 
 async def list_tasks_handler(request: web.Request) -> web.Response:
     _check_perm(request, "tasks.read")
-    items = auto_marketplace.crm_engine.tasks.list_tasks(
-        agent_id=request.query.get("agent_id"),
-        customer_id=request.query.get("customer_id"),
+    items = await auto_marketplace.crm_engine.tasks.list_tasks(
+        agent_id=request.query.get("agent_id") or None,
+        assigned_to=request.query.get("assigned_to") or None,
+        customer_id=request.query.get("customer_id") or None,
+        lead_id=request.query.get("lead_id") or None,
+        deal_id=request.query.get("deal_id") or None,
+        status=_parse_task_status(request.query.get("status")),
+        priority=_parse_task_priority(request.query.get("priority")),
+        overdue=_query_flag(request, "overdue"),
+        due=_query_flag(request, "due"),
     )
     return json_response({"items": [t.to_dict() for t in items]})
 
@@ -362,17 +413,118 @@ async def list_tasks_handler(request: web.Request) -> web.Response:
 async def create_task_handler(request: web.Request) -> web.Response:
     _check_perm(request, "tasks.write")
     data = await request.json()
+    principal = request.get("principal") if isinstance(request.get("principal"), dict) else {}
     task = CRMTask(
-        title=data.get("title", ""),
-        description=data.get("description", ""),
-        customer_id=data.get("customer_id", ""),
-        lead_id=data.get("lead_id", ""),
-        deal_id=data.get("deal_id", ""),
-        assigned_agent_id=data.get("assigned_agent_id", ""),
-        due_at=data.get("due_at"),
+        title=str(data.get("title") or ""),
+        description=str(data.get("description") or ""),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        assigned_agent_id=str(data.get("assigned_to") or data.get("assigned_agent_id") or ""),
+        created_by=str(data.get("created_by") or principal.get("user_id") or principal.get("sub") or ""),
+        status=_parse_task_status(data.get("status")) or TaskStatus.PENDING,
+        priority=_parse_task_priority(data.get("priority")) or TaskPriority.NORMAL,
+        due_at=_optional_float(data.get("due_at"), "due_at"),
     )
     created = await auto_marketplace.crm_engine.tasks.create(task)
     return json_response(created.to_dict(), status=201)
+
+
+async def get_task_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "tasks.read")
+    task = await auto_marketplace.crm_engine.tasks.get(request.match_info["task_id"])
+    return json_response(task.to_dict())
+
+
+async def update_task_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "tasks.write")
+    data = await request.json()
+    updates: dict = {}
+    for key in ("title", "description", "customer_id", "lead_id", "deal_id", "created_by"):
+        if key in data:
+            updates[key] = str(data[key] or "")
+    if "assigned_to" in data or "assigned_agent_id" in data:
+        updates["assigned_agent_id"] = str(data.get("assigned_to") or data.get("assigned_agent_id") or "")
+    if "status" in data:
+        status = _parse_task_status(data["status"])
+        if status is None:
+            raise ValidationError("status cannot be empty")
+        updates["status"] = status
+    if "priority" in data:
+        priority = _parse_task_priority(data["priority"])
+        if priority is None:
+            raise ValidationError("priority cannot be empty")
+        updates["priority"] = priority
+    if "due_at" in data:
+        updates["due_at"] = _optional_float(data.get("due_at"), "due_at")
+    if not updates:
+        raise ValidationError("no updatable fields provided")
+    updated = await auto_marketplace.crm_engine.tasks.update(request.match_info["task_id"], **updates)
+    return json_response(updated.to_dict())
+
+
+async def delete_task_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "tasks.write")
+    task_id = request.match_info["task_id"]
+    deleted = await auto_marketplace.crm_engine.tasks.delete(task_id)
+    return json_response({"task_id": task_id, "deleted": deleted})
+
+
+async def complete_task_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "tasks.write")
+    task = await auto_marketplace.crm_engine.tasks.complete(request.match_info["task_id"])
+    return json_response(task.to_dict())
+
+
+async def reopen_task_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "tasks.write")
+    task = await auto_marketplace.crm_engine.tasks.reopen(request.match_info["task_id"])
+    return json_response(task.to_dict())
+
+
+async def list_activities_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    type_raw = request.query.get("activity_type") or request.query.get("interaction_type")
+    activity_type = _parse_interaction_type(type_raw) if type_raw else None
+    items = await auto_marketplace.crm_engine.activities.list_activities(
+        customer_id=request.query.get("customer_id") or None,
+        lead_id=request.query.get("lead_id") or None,
+        deal_id=request.query.get("deal_id") or None,
+        task_id=request.query.get("task_id") or None,
+        activity_type=activity_type,
+    )
+    return json_response({"items": [i.to_dict() for i in items]})
+
+
+async def get_activity_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    item = await auto_marketplace.crm_engine.activities.get_interaction(request.match_info["activity_id"])
+    return json_response(item.to_dict())
+
+
+async def create_activity_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    data = await request.json()
+    principal = request.get("principal") if isinstance(request.get("principal"), dict) else {}
+    created = await auto_marketplace.crm_engine.activities.record(
+        Interaction(
+            customer_id=str(data.get("customer_id") or ""),
+            lead_id=str(data.get("lead_id") or ""),
+            deal_id=str(data.get("deal_id") or ""),
+            task_id=str(data.get("task_id") or ""),
+            interaction_type=_parse_interaction_type(data.get("activity_type") or data.get("interaction_type")),
+            subject=str(data.get("subject") or data.get("title") or ""),
+            body=str(data.get("body") or data.get("note") or ""),
+            agent_id=str(data.get("agent_id") or principal.get("user_id") or principal.get("sub") or ""),
+            idempotency_key=str(data.get("idempotency_key") or ""),
+        )
+    )
+    return json_response(created.to_dict(), status=201)
+
+
+async def follow_up_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    return json_response(await auto_marketplace.crm_engine.follow_up())
 
 
 async def log_call_handler(request: web.Request) -> web.Response:
@@ -397,7 +549,7 @@ async def log_email_handler(request: web.Request) -> web.Response:
         subject=data.get("subject", ""),
         body=data.get("body", ""),
     )
-    saved = auto_marketplace.crm_engine.communications.log_email(email)
+    saved = await auto_marketplace.crm_engine.communications.log_email(email)
     return json_response(saved.to_dict(), status=201)
 
 
@@ -412,7 +564,7 @@ async def schedule_meeting_handler(request: web.Request) -> web.Response:
         duration_min=int(data.get("duration_min", 30)),
         location=data.get("location", ""),
     )
-    saved = auto_marketplace.crm_engine.calendar.schedule_meeting(meeting)
+    saved = await auto_marketplace.crm_engine.calendar.schedule_meeting(meeting)
     return json_response(saved.to_dict(), status=201)
 
 
