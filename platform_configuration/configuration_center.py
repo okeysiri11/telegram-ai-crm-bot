@@ -180,7 +180,7 @@ class ConfigurationCenter:
             realtime=RealtimeSettings(websocket_enabled=getenv_bool("REALTIME_ENABLED", True)),
             management=ManagementSettings(
                 api_host=getenv("API_HOST", "0.0.0.0"),
-                api_port=getenv_int("API_PORT", 8080),
+                api_port=getenv_int("API_PORT", getenv_int("PORT", 8080)),
                 build_version=getenv("PLATFORM_BUILD_VERSION", "1.0.0"),
                 platform_version=getenv("PLATFORM_VERSION", "2.0.0"),
                 git_revision=getenv("GIT_REVISION", getenv("GIT_COMMIT", "unknown")),

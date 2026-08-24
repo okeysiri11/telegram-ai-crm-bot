@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+	<title>Agri-food data portal | Agricultural markets</title>
+	<meta name="agrititle" content="Agri-food data portal | Agricultural markets" />
+	<meta name="description" content="Market data on national and European agriculture provided by the European Commission's agricultural and rural development department. Browse visualisations about imports, exports, prices, production and aid schemes.">
+	<meta name="keywords" content="market data, national agriculture, European agriculture, European Commission, agriculture, rural development , exports, imports, prices, sector, market, aid scheme, beef, Pigmeat, Eggs and poultry, Sheep and goat meat, Milk and dairy products, Fruit and vegetables, Cereals, Rice, Oilseeds and protein crops, Sugar, Olive oil and table olives, Wine">
+	<meta name="author" content="European Commission - Directorate-General for Agriculture and Rural Development">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+	<meta property="og:image:type" content="image/png"/>
+	<meta property="og:image" content="https://agridata.ec.europa.eu/extensions/CommonImages/social_cover.png"/>
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="600" />
+	<meta property="og:title" content="Agri-food data portal | Agricultural markets"/>
+	<meta property="og:type" content="website"/>	
+	<meta property="og:title" content="Agri-food Markets" />
+	<meta property="og:description" content="Market data on national and European agriculture provided by the European Commission's agricultural and rural development department. Browse visualisations about imports, exports, prices, production and aid schemes." />
+	<meta name="twitter:image:alt" content="Agri-food Markets" />
+	<meta property="twitter:card" content="summary_large_image" />	
+	<link type="text/css" rel="stylesheet" media="all" crossorigin="anonymous" href="https://webtools.europa.eu/webtools.sbkm.css?utilities=true"/>
+	<link rel="icon" type="image/png" sizes="96x96" href="../CommonImages/favicon-96x96.png"/>
+	<link rel="shortcut icon" href="../CommonImages/favicon.ico" type="image/ico"/>
+
+	<!-- Europa Guidelines --> 
+	<link
+      rel="stylesheet"
+      href="https://cdn1.fpfis.tech.ec.europa.eu/ecl/v2.10.0/ec-preset-website/styles/ecl-ec-preset-website.css"
+      integrity="sha256-D76hr+ETQxRcQFuqMRDLhDziqoVkZtGrtpDkJGuuZrs="
+      crossorigin="anonymous"
+      media="screen"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn1.fpfis.tech.ec.europa.eu/ecl/v2.10.0/ec-preset-website/styles/ecl-ec-preset-website-print.css"
+      integrity="sha256-ooOQ+NF+4jyFKTbs0W1QXsmJJnyIPn/kw0OBPoaIjXs="
+      crossorigin="anonymous"
+      media="print"
+    />
+	
+	<script defer src="https://webtools.europa.eu/load.js?globan=1000"></script>
+	
+	<script type="application/json">{
+	  "utility": "cck",
+	  "url": "https://commission.europa.eu/cookies-policy_en",
+	  "target": true
+	}</script>
+	
+	<script type="application/json">{
+	"utility": "piwik",
+	"siteID": "527",
+	"sitePath": ["agridata.ec.europa.eu"]
+	}</script>
+	
+	<script>
+	  window.frctl = {
+		env: 'static'
+	  };
+	</script>
+	<!-- Europa Guidelines -->
+	
+	<link id="bootstrapCSS" href="../CommonStyles/bootstrap.min.css" rel="stylesheet">
+	<link id="europaCSS" href="../CommonStyles/europa.css" rel="stylesheet"/>
+	<link id="dataportalCSS" href="dataportal.css" rel="stylesheet"/>
+	<link id="finalCSS" href="../CommonStyles/fractal.css?cachebust=0.11.2" rel="stylesheet"  type="text/css"/>
+	
+	<script src="../CommonScripts/jquery.min.js"></script>
+	<script src="html_elements.js"></script>
+	<script>var cl = document.querySelector('html').classList; cl.remove('no-js'); cl.add('has-js');</script>
+
+</head>
+
+<!-- message/alert box -->  
+<div id='divAlert'  class="category_title_h3_link alertBox alertHide">
+	<span id='spnAlertText' class="alertHide" onclick="$('#divAlert').hide();" onmouseover="style.cursor='pointer'"></span>
+	<span class="alertHide strongx" onclick="$('#divAlert').hide();" id="alert_x" onmouseover="style.cursor='pointer'" title="Close">x</span>
+</div>
+
+<div id="marketPageMarker"></div>
+
+<div id="content">
+	<div id="headerHTML"></div>
+
+<script
+      src="https://cdn1.fpfis.tech.ec.europa.eu/ecl/v2.10.0/ec-preset-website/scripts/ecl-ec-preset-website.js"
+      integrity="sha256-5TAbV5Zc4vkWUldTK8bQupMClLaRM8hi7R/G2x2fdRE="
+      crossorigin="anonymous">
+	</script>
+	
+	<!-- page header -->
+	<div class="ecl-page-header" id="header-background">
+	  <div class="container-fluid">
+	  
+	    <!-- breadcrumbs -->
+		<nav class="ecl-breadcrumbs" aria-label="breadcrumbs">
+		  <span class="ecl-sr-only">You are here:</span>
+		  <ol class="ecl-breadcrumbs__segments-wrapper">
+			<li class="ecl-breadcrumbs__segment ecl-breadcrumbs__segment--first">
+			  <a href="https://ec.europa.eu/info/" class="ecl-breadcrumbs__link">Home</a>
+			</li>
+			<li class="ecl-breadcrumbs__segment">
+				<a href="https://agriculture.ec.europa.eu/index_en" class="ecl-breadcrumbs__link">Agriculture and rural development</a>
+			</li>
+			<li class="ecl-breadcrumbs__segment">
+				<a href="https://agriculture.ec.europa.eu/data-and-analysis_en" class="ecl-breadcrumbs__link">Data and analysis</a>
+			</li>
+			<li class="ecl-breadcrumbs__segment">
+			  <a href="home.html" class="ecl-breadcrumbs__link">Agri-food data portal</a>
+			</li>
+			<li class="ecl-breadcrumbs__segment ecl-breadcrumbs__segment--last">
+			  <span class="selected_breadcrumb">Agri-food markets</span>
+			</li>
+		  </ol>
+		</nav>
+		<!-- breadcrumbs -->
+
+		<!-- page header body -->
+		
+		<div class="ecl-page-header__body">
+			  <div class="ecl-page-header__title">
+				<h1 id="divPageTitle" class="ecl-heading ecl-heading--h1 ecl-u-color-white">Agri-Food Markets</h1>
+			  </div>
+			  <div class="ecl-page-header__intro" >
+				<p class="ecl-paragraph ecl-paragraph--l">Market data on national and European agriculture provided by the European Commission's agricultural and rural development department. Browse visualisations about imports, exports, prices, production and aid schemes.</p>
+				<p class="ecl-paragraph ecl-paragraph--l">Are you making intensive use of our data and searching for a “Machine to Machine” interface? <br>
+					Here's how our Application Programming Interface (API) works:  <a href="API_Documentation.html"  class="whatsnew_btn"> API Documentation</a>
+					&nbsp; <a id="vidbtn" href="#videotutorial" class="whatsnew_btn" onclick="showModal()">API vs Manual Download</a>
+					<br><br>
+					<span style="color:white;">Not sure where to start? Visit our help page to understand more about the portal.  &nbsp; </span>
+					<a href="help.html"  class="whatsnew_btn">Help</a>
+				</p>
+			</div>
+
+			<div id="videotutorial" class="overlay">
+				<div id="tutorial" class="tutorial popup">
+					<a id="closemodal" class="close" onclick="closevid()" style="z-index: 9999;" href="#">&times;</a>
+					<video id="videoplayer" width="100%" controls="controls">
+						<source src="https://agridata.ec.europa.eu/Qlik_Downloads/videos/API_tutorial.mp4" type="video/mp4">
+					</video>
+				</div>
+			</div>
+
+		</div>
+		<!-- page header body -->
+
+	  </div>
+	</div>
+	<!-- page header -->
+	
+
+	<main>
+	
+	  <a id="main-content" tabindex="-1"></a>
+	  
+	  <div class="container">
+	  	<div class="topic-pages-container">
+			<img src="../CommonImages/Food_Markets_v2.png" alt="food markets">
+			<div class = "topic-pages-content">
+				<h3 class="page-heading">Browse by Topic </h3>
+				<p class="listing__description">Information on imports, exports, prices, production and aid schemes, organized by theme while covering all agricultural sectors. Dashboards provide an overview of the current situation in one sector.</p>
+			</div>		
+		</div>
+		<div class="topic-pages-links">
+			<div class="topic-page">
+				<a href="prices.html" class="euro-btn icon-s topic-page-link" aria-label="Prices"></a>
+				<a href="prices.html"><p>Prices</p></a>
+			</div>
+			<div class="topic-page">
+				<a href="production.html" class="prod-btn icon-s topic-page-link" aria-label="Production"></a>
+				<a href="production.html"><p>Production and use</p></a>
+			</div>
+			<div class="topic-page">
+				<a href="trade.html" class="trade-btn icon-s topic-page-link" aria-label="Trade and Quotas"></a>
+				<a href="trade.html"><p>Trade and Quotas</p></a>
+			</div>
+			<div class="topic-page">
+				<a href="dashboards.html" class="dash-btn icon-s topic-page-link" aria-label="Dashboards"></a>
+				<a href="dashboards.html"><p>Dashboards</p></a>
+			</div>
+			<div class="topic-page">
+				<a href="outlook.html" class="outlook-btn icon-s topic-page-link" aria-label="Short-term outlook"></a>
+				<a href="outlook.html"><p>Outlook</p></a>
+			</div>
+			<div class="topic-page">
+				<a href="food-chain.html" class="chain-btn icon-s topic-page-link" aria-label="Along the food chain"></a>
+				<a href="food-chain.html"><p>Along the food chain</p></a>
+			</div>
+			<div class="topic-page">
+				<a href="../SchoolSchemeMonitoring/SchoolSchemeMonitoring.html" class="school-btn icon-s mashup-link" aria-label="School schemes"></a>
+				<a href="../SchoolSchemeMonitoring/SchoolSchemeMonitoring.html" class="mashup-link"><p>School schemes</p></a>
+			</div>
+		</div>
+	  </div>
+	  
+	  
+	  <div class="container-fluid">		
+				
+		 <div class="sector-headline-separator">
+		 	<h3 class="subtitle">Browse by Market Sector</h3>
+		 </div>
+		 <div class ="sector-container">
+		  
+		  		<!-- BEEF -->
+				<div class="sector-card">
+					<a class="category-icon-link" href="beef.html"><img class="category-icon-markets" src="../CommonImages/cow.png" alt="cow"></a>
+					<a class="category-icon-link" href="beef.html"><h4>Beef</h4></a>
+					<div class="sector_description">
+						<p>Price and production reports offer a refined view into animal categories and meat quality classes.</p>
+					</div>
+					<div class = "icon-holder">
+						<div class="dropdown">
+							<a class="dropbtn euro-btn" id="euro-btn" ></a>
+							<div class="dropdown-content" style="clear:left !important">
+								<a href="../DashboardBeef/BeefPricesExt.html" title="Beef prices (carcasses)" class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;">Beef prices (carcasses)</a>
+								<a href="../DashboardBeef/LiveAnimalPricesExt.html" title="Beef prices (live animals)" class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;">Beef prices (live animals)</a>
+								<a href="../DashboardBeef/BeefCutsPrices.html" title="Beef prices (cuts)" class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;">Beef prices (cuts)</a>
+							</div>
+						</div>				
+						<a href="../DashboardBeef/BeefProduction.html" title="Beef production" class="mashup-link prod-btn  icon-s"></a> 						
+						<a href="../DashboardBeef/BeefTrade.html" title="Beef trade" class="mashup-link trade-btn  icon-s"></a>
+						<a href="../DashboardBeef/Dashboard.html" title="Beef and veal dashboard" class="dash-btn mashup-link icon-s"></a>
+						<a href="../DashboardSTO/STO_Meat.html" title="Beef short-term outlook" class="mashup-link outlook-btn icon-s"></a>
+					</div>					
+				</div>
+				
+		  		<!-- PIGMEAT -->
+			  	<div class="sector-card">
+					<a class="category-icon-link" href="pigmeat.html" ><img class="category-icon-markets" src="../CommonImages/pig.png" alt="pig"></a>
+					<a class="category-icon-link" href="pigmeat.html" ><h4 class="ecl-list-item__title">Pigmeat</h4></a>
+					<div class="sector_description">
+					<p>Statistics regarding live piglets as well as different categories and qualities of pork.</p>
+					</div>
+					<div class = "icon-holder">
+						<div class="dropdown">
+							<a class="dropbtn euro-btn icon-s"></a>
+							<div class="dropdown-content" style="clear:left !important">
+								<a href="../DashboardPigmeat/PigmeatPricesCarcases.html" title="Pigmeat prices (carcasses)" class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;">Pigmeat prices (carcasses)</a>						
+								<a href="../DashboardPigmeat/PigmeatPricesPiglets.html" title="Pigmeat prices (piglets)" class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;">Pigmeat prices (piglets)</a>
+								<a href="../DashboardPigmeat/PigCutsPrices.html" title="Pigmeat prices (cuts)" class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;">Pigmeat prices (cuts)</a>
+							</div>
+						</div>
+						<a href="../DashboardPigmeat/PigmeatProduction.html" title="Pigmeat production" class="mashup-link prod-btn icon-s" ></a>
+						<a href="../DashboardPigmeat/PigmeatTrade.html" title="Pigmeat trade" class="mashup-link trade-btn icon-s"></a>
+						<a href="../DashboardPigmeat/PigmeatCombined.html" title="Pigmeat combined data" class="mashup-link chart-btn icon-s"></a>
+						<a href="https://agridata.ec.europa.eu/Reports/Pigmeat_Dashboard.pdf" title="Pigmeat dashboard" class="dash-btn icon-s"></a>
+						<a href="../DashboardSTO/STO_Meat.html" title="Pigmeat short-term outlook" class="mashup-link outlook-btn icon-s"></a>
+					</div>
+					<div style="clear:both"></div>
+
+				</div>
+			  			  
+		  		<!-- EGGS AND POULTRY -->
+				<div class="sector-card">
+					<a class="category-icon-link" href="eggs-and-poultry.html" ><img class="category-icon-markets" src="../CommonImages/eggs-poultry.png" alt="eggs-poultry"></a>
+					<a class="category-icon-link" href="eggs-and-poultry.html" ><h4 class="ecl-list-item__title">Eggs and poultry</h4></a>
+					<div class="sector_description">
+					<p>Statistics for eggs and poultry products and PDF files about the current state of the markets.</p>
+					</div>
+					<div class = "icon-holder">
+						<div class="dropdown">
+							<a class="dropbtn euro-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-small" style="clear:left !important">
+								<a class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;" href="../DashboardEggs/EggsPrice.html" title="Eggs Prices">Eggs prices</a>
+								<a class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;" href="../DashboardPoultry/PoultryPrices.html" title="Poultry prices">Poultry prices</a>
+							</div>
+						</div>
+						<div class="dropdown">
+							<a class="dropbtn prod-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-small" style="clear:left !important">
+								<a class="listing__description2 mashup-link prod-btn icon-s" style="width:100%;" href="../DashboardEggs/EggsProduction.html" title="Eggs production">Eggs production</a>
+								<a class="listing__description2 mashup-link prod-btn icon-s" style="width:100%;" href="../DashboardPoultry/PoultryProduction.html" title="Poultry production">Poultry production</a>
+							</div>
+						</div> 
+						<div class="dropdown">
+							<a class="dropbtn trade-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-small" style="clear:left !important">
+								<a class="listing__description2 mashup-link trade-btn icon-s" style="width:100%;" href="../DashboardEggs/EggsTrade.html" title="Eggs Trade">Eggs trade</a>
+								<a class="listing__description2 mashup-link trade-btn icon-s" style="width:100%;" href="../DashboardPoultry/PoultryTrade.html" title="Poultry Trade">Poultry trade</a>
+							</div>
+						</div>
+						
+						<div class="dropdown">
+							<a class="dropbtn dash-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-small" style="clear:left !important">
+								<a class="listing__description2 dash-btn icon-s" style="width:100%;" href="https://agriculture.ec.europa.eu/document/download/9bdf9842-1eb6-41a2-8845-49738b812b2b_en?filename=eggs-dashboard_en.pdf" title="Eggs Dashboard" >Eggs dashboard</a>
+								<a class="listing__description2 dash-btn icon-s" style="width:100%;" href="https://agriculture.ec.europa.eu/document/download/0ce25b9f-1571-4310-8531-3fe3346c49e0_en?filename=poultry-meat-dashboard_en.pdf" title="Poultry Dashboard">Poultry dashboard</a>
+							</div>
+						</div>
+						<a href="../DashboardSTO/STO_Meat.html" title="Poultry short-term outlook" class="mashup-link outlook-btn icon-s"></a>
+					
+					</div>
+				</div>			
+				
+					<!-- Sheep and Goat Meat -->
+				<div class="sector-card">
+					<a class="category-icon-link" href="sheep-and-goat-meat.html"><img class="category-icon-markets" src="../CommonImages/mutton.png" alt="sheep"></a>
+					<a class="category-icon-link" href="sheep-and-goat-meat.html"><h4 class="ecl-list-item__title" >Sheep and goat meat</h4></a>
+					<div class="sector_description">
+					<p>Detailed monthly trade data as well as a weekly PDF dashboard with the latest market info.</p>
+					</div>
+					<div class = "icon-holder">					
+						<a href="../DashboardSheepmeat/LambPrices.html" title="Sheep and goat meat prices" class="mashup-link euro-btn icon-s"></a>
+						<a href="../DashboardSheepmeat/SheepmeatProduction.html" title="Sheep and goat meat production" class="mashup-link prod-btn icon-s"></a>
+						<a href="../DashboardSheepmeat/SheepmeatTrade.html" title="Sheep and goat meat trade" class="mashup-link trade-btn icon-s"></a>						
+						<a href="https://agriculture.ec.europa.eu/document/download/a486ae9e-3077-47f3-9993-762fdc3e14c8_en?filename=sheep-meat-dashboard_en.pdf" title="Sheep and goat meat dashboard" class="dash-btn icon-s"></a>						
+						<a href="../DashboardSTO/STO_Meat.html" title="Sheep and goat meat short-term outlook" class="mashup-link outlook-btn icon-s"></a>
+					</div>
+				</div>
+
+		  
+		  		<!-- MILK -->
+			  	<div class="sector-card">
+					<a class="category-icon-link" href="milk.html" ><img class="category-icon-markets" src="../CommonImages/milk.png" alt="milk"></a>
+					<a class="category-icon-link" href="milk.html" ><h4 class="ecl-list-item__title">Milk and dairy products</h4></a>
+					<div class="sector_description">
+					<p>Dedicated apps for prices of milk and dairy products, and a weekly sectoral PDF file.</p>
+					</div>
+					<div class = "icon-holder">
+						<div class="dropdown">
+							<a class="dropbtn euro-btn icon-s" ></a>
+							<div class="dropdown-content dropdown-content-small" style="clear:left !important">
+								<a href="../DashboardRawMilk/RawMilkPrices.html" title="Raw milk prices" class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;">Raw milk prices</a>
+								<a href="../DashboardDairy/DairyPrices.html" title="Dairy prices" class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;">Dairy prices</a>						
+							</div>
+						</div>
+						<a href="../DashboardDairy/DairyProduction.html" title="Dairy production" class="mashup-link prod-btn icon-s"></a> 
+						<a href="../DashboardDairy/DairyTrade.html" title="Dairy trade" class="mashup-link trade-btn icon-s"></a>
+						<a href="https://agriculture.ec.europa.eu/document/download/c9474932-d061-4169-80f1-38951aa8615e_en?filename=dashboard-dairy_en.pdf" title="Milk and dairy products dashboard" class="dash-btn icon-s"></a>
+						<a href="../DashboardSTO/STO_Dairy.html" title="Milk and dairy short-term outlook" class="mashup-link outlook-btn icon-s"></a>
+					</div>
+					<div style="clear:both"></div>
+					<div class="other_links_holder">
+					</div>
+				</div>
+				
+				<!-- FRUIT & VEGETABLES -->
+			   	<div class="sector-card">
+					<a class="category-icon-link" href="fruit-and-vegetables.html"><img class="category-icon-markets" src="../CommonImages/tomatoes.png" alt="tomatoes"></a>
+					<a class="category-icon-link" href="fruit-and-vegetables.html"><h4 class="ecl-list-item__title" >Fruit and vegetables</h4></a>
+					<div class="sector_description">
+					<p>Market data on production, trade and prices of certain fruits and vegetables, bananas and potatoes.</p>
+					</div>
+					<div class = "icon-holder">
+					
+						<a href="../DashboardFruitAndVeg/FruitAndVegetablePricesSC.html" title="Fruit and vegetables prices (supply chain)" class="mashup-link euro-btn icon-s"></a>
+						<a href="../DashboardFruitAndVeg/FruitandVegetableProduction.html" title="Fruit and vegetables production" class="mashup-link prod-btn icon-s"></a> 
+						<div class="dropdown">
+							<a class="dropbtn trade-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-extra-wide" style="clear:left !important">
+								<a class="listing__description2 mashup-link trade-btn icon-s" style="width:100%;" href="../DashboardTomato/TomatoTrade.html" title="Tomatoes trade">Tomatoes trade</a>
+								<a class="listing__description2 mashup-link trade-btn icon-s" style="width:100%;" href="../DashboardTomato/MoroccanTomatoes.html" title="Tomato imports from Morocco and Western Sahara">Tomato imports from Morocco & Western Sahara</a>
+								<a class="listing__description2 mashup-link trade-btn icon-s" style="width:100%;" href="../DashboardTomato/ProcessedTomatoTrade.html" title="Tomatoes trade">Processed tomatoes trade</a>
+								<a class="listing__description2 mashup-link trade-btn icon-s" style="width:100%;" href="../DashboardApples/ApplesTrade.html" title="Apples trade">Apples trade</a>
+								<a class="listing__description2 mashup-link trade-btn icon-s" style="width:100%;" href="../DashboardCitrus/CitrusTrade.html" title="Citrus fruit trade">Citrus fruit trade</a>
+								<a class="listing__description2 mashup-link trade-btn icon-s" style="width:100%;" href="../DashboardPeach/PeachTrade.html" title="Peach and nectarine trade">Peaches and nectarines trade</a>								
+							</div>
+						</div>					
+						<div class="dropdown">
+							<a class="dropbtn dash-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-wide" style="clear:left !important">
+								<a class="listing__description2 dash-btn icon-s" style="width:100%;" href="../DashboardTomato/Dashboard.html" title="Fresh tomatoes dashboard">Fresh tomatoes dashboard</a>
+								<a class="listing__description2 dash-btn icon-s" style="width:100%;" href="https://agriculture.ec.europa.eu/document/download/17a7b758-e5fc-457c-a7ab-4c387db82f90_en?filename=apple-dashboard_en.pdf" title="Apples dashboard">Apples dashboard</a>
+								<a class="listing__description2 dash-btn icon-s" style="width:100%;" href="https://agriculture.ec.europa.eu/document/download/4f371046-f466-4b8c-b1b8-f3d6d51dc467_en?filename=citrus-dashboard_en.pdf" title="Citrus fruit dashboard">Citrus fruit dashboard</a>
+								<a class="listing__description2 dash-btn icon-s" style="width:100%;" href="https://circabc.europa.eu/ui/group/a6df5bd5-efdf-40cc-a42d-8292eedd0201/library/64418381-7ad3-45e4-8bd0-d1465bce5cd9/details?open=true" title="Peaches and nectarines dashboard">Peaches and nectarines dashboard</a>				
+								<a class="listing__description2 dash-btn icon-s" style="width:100%;" href="bananas-statistics.html" title="Bananas statistics">Bananas statistics</a>
+								<a class="listing__description2 dash-btn icon-s" style="width:100%;" href="https://circabc.europa.eu/ui/group/a6df5bd5-efdf-40cc-a42d-8292eedd0201/library/20e25999-05e6-43e5-8470-ba79f87c41e7/details" title="Potatoes market report">Potatoes market report</a>
+							</div>
+						</div>					
+						<a href="https://circabc.europa.eu/ui/group/3511fca9-58fd-42f2-8769-03f7713cb567/library/4452faa5-e022-4a01-af7c-69924fe1856d/details" title="Standard Import Values (SIVs)" class="mashup-link siv-btn icon-s" style="width:100%;"></a>
+						<div class="dropdown">
+							<a class="dropbtn outlook-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-wide" style="clear:left !important">
+								<a class="listing__description2 mashup-link outlook-btn icon-s" style="width:100%;" href="../dashboardSTO/STO_Apples.html" title="Apples short-term outlook">Apples short-term outlook</a>
+								<a class="listing__description2 mashup-link outlook-btn icon-s" style="width:100%;" href="../dashboardSTO/STO_Oranges.html" title="Oranges short-term outlook">Oranges short-term outlook</a>
+								<a class="listing__description2 mashup-link outlook-btn icon-s" style="width:100%;" href="../dashboardSTO/STO_Tomatoes.html" title="Tomatoes short-term outlook">Tomatoes short-term outlook</a>
+								<a class="listing__description2 mashup-link outlook-btn icon-s" style="width:100%;" href="../dashboardSTO/STO_Peaches.html" title="Peaches and nectarines short-term outlook">Peaches and nectarines short-term outlook</a>				
+							</div>
+						</div>					
+					</div>
+				</div>
+						  
+		  		<!-- CEREALS -->
+				<div class="sector-card">
+					<a class="category-icon-link" href="cereals.html" ><img class="category-icon-markets" src="../CommonImages/cereals.png" alt="cereals"></a>
+					<a class="category-icon-link" href="cereals.html" ><h4 class="ecl-list-item__title">Cereals</h4></a>
+					<div class="sector_description">
+					<p>Market data on production, price and trade for wheat, barley, maize, oats, rye and other cereals.</p>
+					</div>
+					<div class = "icon-holder">
+						<a href="../DashboardCereals/ExtCerealsPrice.html" title="Cereals prices" class="mashup-link euro-btn icon-s"></a>
+						<a href="../DashboardCereals/CerealsProduction.html" title="Cereals production" class="mashup-link prod-btn icon-s"></a>
+						<a href="../DashboardCereals/CerealsTrade.html" title="Cereals trade" class="mashup-link trade-btn icon-s"></a>		
+						<a href="https://agridata.ec.europa.eu/Reports/Cereals_Dashboard.pdf" title="Cereals dashboard" class="dash-btn icon-s"></a>
+						<a href="../DashboardSTO/STO_Cereals.html" title="Cereals short-term outlook" class="mashup-link outlook-btn icon-s"></a>
+					</div>
+				</div>
+				
+				<!-- RICE -->
+			   	<div class="sector-card">
+					<a class="category-icon-link" href="rice.html"><img class="category-icon-markets" src="../CommonImages/rice.png" alt="rice"></a>
+					<a class="category-icon-link" href="rice.html"><h4 class="ecl-list-item__title" >Rice</h4></a>
+					<div class="sector_description">
+					<p>Market data for different rice types and stages of production (paddy, husked, semi-milled and milled).</p>
+					</div>
+					<div class = "icon-holder">
+						<a href="../DashboardRice/RicePrice.html" title="Rice prices" class="mashup-link euro-btn icon-s"></a>
+						<a href="../DashboardRice/RiceProduction.html" title="Rice production" class="mashup-link prod-btn icon-s"></a>
+						<a href="../DashboardRice/RiceTrade.html" title="Rice trade" class="mashup-link trade-btn icon-s"></a>				  
+					</div>
+				</div>			
+										  	
+			 
+				<!-- OILSEEDS & PROTEIN CROPS -->
+			  	<div class="sector-card">
+					<a class="category-icon-link" href="oilseeds-protein-crops.html"><img class="category-icon-markets" src="../CommonImages/sunflower.png" alt="sunflower"></a>
+					<a class="category-icon-link" href="oilseeds-protein-crops.html"><h4 class="ecl-list-item__title" >Oilseeds and protein crops</h4></a>
+					<div class="sector_description">
+					<p>Market data for rapeseed, soya beans, sunflower seeds, broad beans and peas.</p>
+					</div>
+					<div class = "icon-holder">
+						<div class="dropdown">
+							<a class="dropbtn euro-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-small" style="clear:left !important">
+								<a class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;" href="../DashboardCereals/OilseedPrices.html" title="Oilseeds prices">Oilseeds prices</a>
+								<a class="listing__description2 mashup-link euro-btn icon-s" style="width:100%;" href="../DashboardCereals/ProteinCropPrices.html" title="Protein crops prices">Protein crops prices</a>
+							</div>
+						</div>
+						<a href="../DashboardCereals/OilseedProduction.html" title="Oilseeds and protein crops production" class="mashup-link prod-btn icon-s"></a> 					
+						<a href="../DashboardCereals/OilseedTrade.html" title="Oilseeds and protein crops trade" class="mashup-link trade-btn icon-s"></a>
+						<a href="../DashboardCereals/OilseedDashboard.html" title="Oilseeds dashboard" class="dash-btn icon-s"></a>						
+						<div class="dropdown">
+							<a class="dropbtn outlook-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-wide" style="clear:left !important">
+								<a class="listing__description2 outlook-btn mashup-link icon-s" style="width:100%;" href="../DashboardSTO/STO_Oilseeds.html" title="Oilseeds short-term outlook">Oilseeds short-term outlook</a>
+								<a class="listing__description2 outlook-btn mashup-link icon-s" style="width:100%;" href="../DashboardSTO/STO_ProteinCrops.html" title="Protein crops short-term outlook">Protein crops short-term outlook</a>
+							</div>
+						</div>	
+					</div>
+				</div>
+					
+				<!-- SUGAR -->
+				<div class="sector-card">
+					<a class="category-icon-link" href="sugar.html"><img class="category-icon-markets" src="../CommonImages/sugar.png" alt="sugar"></a>
+					<a class="category-icon-link" href="sugar.html"><h4 class="ecl-list-item__title">Sugar</h4></a>
+					<div class="sector_description">
+					<p>Detailed monthly trade data as well as a weekly PDF dashboard with the latest market info.</p>
+					</div>
+					<div class = "icon-holder">
+						<a href="../DashboardSugar/SugarPrice.html" title="Sugar prices" class="mashup-link euro-btn icon-s"></a>
+						<div class="dropdown">
+							<a class="dropbtn prod-btn icon-s"></a>
+							<div class="dropdown-content" style="clear:left !important">
+								<a class="listing__description2 prod-btn icon-s mashup-link" style="width:100%;" href="../DashboardSugar/SugarProduction.html" title="Sugar production" class="mashup-link prod-btn icon-s">Sugar production</a>
+								<a class="listing__description2 prod-btn icon-s mashup-link" style="width:100%;" href="../DashboardSugar/SugarUse.html" title="Sugar use" class="mashup-link prod-btn icon-s">Sugar use</a>								
+								<a class="listing__description2 prod-btn icon-s mashup-link" style="width:100%;" href="../DashboardSugar/SugarStocks.html" title="Sugar stocks" class="mashup-link prod-btn icon-s">Sugar stocks</a>
+							</div>
+						</div>
+						<a href="../DashboardSugar/SugarTrade.html" title="Sugar trade" class="mashup-link trade-btn icon-s"></a>
+						<a href="https://agriculture.ec.europa.eu/document/download/166100ca-001d-4a6c-9c96-52af7d0e78c5_en?filename=sugar-dashboard_en.pdf" title="Sugar dashboard" class="dash-btn icon-s"></a>
+						<a href="../DashboardSTO/STO_Sugar.html" title="Sugar short-term outlook" class="mashup-link outlook-btn icon-s"></a>						
+					</div>
+					
+				</div>
+								
+				<!-- OLIVES -->
+			   	<div class="sector-card">
+					<a class="category-icon-link" href="olive-oil.html"><img class="category-icon-markets" src="../CommonImages/olives.png" alt="olives"></a>
+					<a class="category-icon-link" href="olive-oil.html"><h4 class="ecl-list-item__title" >Olive oil and table olives</h4></a>
+					<div class="sector_description">
+					<p>Imports, exports, prices and production of olives and different qualities of oil.</p>
+					</div>
+					<div class = "icon-holder">
+						<a href="../DashboardOliveOil/OliveOilPrices.html" title="Olive oil prices" class="mashup-link euro-btn icon-s"></a>
+						<a href="../DashboardOliveOil/OliveOilProduction.html" title="Olive oil production" class="mashup-link prod-btn icon-s"></a>												
+						<a href="../DashboardOliveOil/OliveOilTrade.html" title="Olive oil and table olives trade" class="mashup-link trade-btn icon-s"></a>
+						<a href="https://agriculture.ec.europa.eu/document/download/306cf510-5934-4488-b9c1-d6abf264c381_en?filename=olive-oil-dashboard_en.pdf" title="Olive oil dashboard" class="dash-btn icon-s"></a>
+						<a href="../DashboardSTO/STO_OliveOil.html" title="Olive oil short-term outlook" class="mashup-link outlook-btn icon-s"></a>
+					</div>
+				</div>
+				
+				<!-- WINE -->
+				<div class="sector-card">
+					<a class="category-icon-link" href="wine.html"><img class="category-icon-markets" src="../CommonImages/wine.png" alt="wine"></a>
+					<a class="category-icon-link" href="wine.html"><h4 class="ecl-list-item__title" >Wine</h4></a>
+					<div class="sector_description">
+					<p>Representative prices from certain Member States and information on production volumes and area.</p>
+					</div>
+					<div class = "icon-holder">					
+						<a href="../DashboardWine/WinePrice.html" title="Wine prices" class="mashup-link euro-btn icon-s"></a>
+						<div class="dropdown">
+							<a class="dropbtn prod-btn icon-s"></a>
+							<div class="dropdown-content dropdown-content-wide" style="clear:left !important">
+								<a class="listing__description2 prod-btn icon-s mashup-link" style="width:100%;" href="../DashboardWine/Wine_Production.html" title="Wine production" class="mashup-link prod-btn icon-s">Wine production</a>
+								<a class="listing__description2 prod-btn icon-s mashup-link" style="width:100%;" href="../DashboardWine/WineProduction.html" title="Wine opening stocks and areas" class="mashup-link prod-btn icon-s">Wine opening stocks and areas</a>
+							</div>
+						</div>
+						<a href="../DashboardWine/WineTrade.html" title="Wine trade" class="mashup-link trade-btn icon-s"></a>
+						<a href="../DashboardSTO/STO_Wine.html" title="Wine short-term outlook" class="mashup-link outlook-btn icon-s"></a>
+					</div>
+				</div>	
+				
+				<!-- FERTILISER -->
+				<div class="sector-card">
+					<a class="category-icon-link" href="fertiliser.html"><img class="category-icon-markets" src="../CommonImages/fertiliser.png" alt="fertiliser"></a>
+					<a class="category-icon-link" href="fertiliser.html"><h4 class="ecl-list-item__title" >Fertiliser</h4></a>
+					<div class="sector_description">
+					<p>Market data on imports, exports, average prices and production of fertilisers across the EU.</p>
+					</div>
+					
+					<div class = "icon-holder">					
+						<a href="../DashboardFertiliser/FertiliserPrices.html" title="Fertiliser prices" class="mashup-link euro-btn icon-s"></a>
+						<a href="../DashboardFertiliser/FertiliserProduction.html" title="Fertiliser production" class="mashup-link prod-btn icon-s"></a>
+						<a href="../DashboardFertiliser/FertiliserTrade.html" title="Fertiliser trade" class="mashup-link trade-btn icon-s"></a>
+						<a href="../FertiliserReport/FertiliserReport.html" title="Fertiliser use and costs in EU farms" class="mashup-link db-btn icon-s"></a>
+					</div>
+					
+				</div>	
+	 
+	 		  </div>	
+
+		<h4 class="legend-header">Legend</h4>
+		
+		<div class="legend-tabs">
+
+		   <div class="tab">
+			   <input type="radio" id="tab-1" name="tab-group-1" checked>
+				<label for="tab-1"><img class="" style="width:20px" src="../CommonImages/euro_dblue.svg" alt="euro"></label>
+			   <div class="content">Prices - Current and historical market price data provided by EU Member States.</div> 
+		   </div>
+
+		   <div class="tab">
+			   <input type="radio" id="tab-2" name="tab-group-1">
+			   <label for="tab-2"><img class="" style="width:20px" src="../CommonImages/prod_dblue.svg" alt="prod"></label>     
+			   <div class="content">Production - Country-by-country information on agricultural production, including both current and historical data.</div> 
+		   </div>
+
+			<div class="tab">
+			   <input type="radio" id="tab-3" name="tab-group-1">
+			   <label for="tab-3"><img class="" style="width:20px" src="../CommonImages/trade_dblue.svg" alt="trade"></label> 
+			   <div class="content">Trade - EU imports and exports.</div> 
+		   </div>
+		   
+		   <div class="tab">
+			   <input type="radio" id="tab-4" name="tab-group-1">
+			   <label for="tab-4"><img class="" style="width:20px" src="../CommonImages/dash_dblue.svg" alt="dashboard"></label> 
+			   <div class="content">Dashboards - Comprehensive information about each market sector, including the latest developments and comparisons with previous years.</div> 
+		   </div>
+		   
+		   <div class="tab">
+			   <input type="radio" id="tab-5" name="tab-group-1">
+			   <label for="tab-5"><img class="" style="width:20px" src="../CommonImages/outlook_dblue.svg" alt="outlook"></label> 
+			   <div class="content">Short-term outlook - The short-term outlook is based on reflections of market experts within the European Commission's Department for Agriculture and Rural Development.</div> 
+		   </div>
+		   
+		   <div class="tab">
+			   <input type="radio" id="tab-6" name="tab-group-1">
+			   <label for="tab-6">TRQ</label> 
+			   <div class="content"> Tariff Rate Quotas(TRQs) - Coefficients of allocation for the issuing of import or export licences calculated based on the quantities available within the 
+			   TRQ and the quantity applied for, as notified to the Commission by national authorities.</div> 
+		   </div>
+
+		   	<div class="tab">
+				<input type="radio" id="tab-7" name="tab-group-1">
+				<label for="tab-7">SIV</label> 
+				<div class="content"> Standard Import Value (SIV) - Calculated daily on working days, the SIV represents an estimate for the customs value of the goods in the context of the
+				Entry Price System, a special procedure designed for imports of certain fruit and vegetables.</div> 
+			</div>
+			
+			<div class="tab">
+				<input type="radio" id="tab-8" name="tab-group-1">
+				<label for="tab-8"><img class="" style="width:20px;" src="../CommonImages/db_dblue.svg" alt="dashboard"></label> 
+				<div class="content">Economic reports on EU farming, based on data from the Farm Accountancy Data Network (FADN).</div> 
+			</div>
+
+		</div>	
+		
+		<section class="bottom-section-container">
+			<div class="bottom-section">
+				<a class="bottom-section-icon" href="mailto:agri-ext-helpdesk@ec.europa.eu"><img src="../CommonImages/email-us.png" alt="email"></a>
+				<div class="bottom-section-content">
+					<h3 class="bottom-section-title">Email us</h3>
+					<p class="bottom-section-text"><a href="mailto:agri-ext-helpdesk@ec.europa.eu">agri-ext-helpdesk@ec.europa.eu</a></p>
+				</div>
+			</div>
+
+			<div class="bottom-section">
+				<a class="bottom-section-icon" href="API_Documentation.html"><img src="../CommonImages/api_gears.svg" alt="api documentation"></a>
+				<div class="bottom-section-content">
+					<h3 class="bottom-section-title"><a href="API_Documentation.html">API Documentation</a></h3>
+					<p class="bottom-section-text"><a href="API_Documentation.html">Access our data directly</a></p>
+				</div>
+			</div>
+    	</section>
+
+	  </div>
+	
+	</main>
+
+	<script>
+		function closevid() {
+			const modal = document.getElementById('videotutorial');
+			const vid = document.getElementById('videoplayer');
+			const closebtn = document.getElementById('closemodal');
+			vid.pause();
+			modal.style.display = "none";
+		}
+		function showModal() {
+			const modal = document.getElementById('videotutorial');
+			const btn = document.getElementById('vidbtn');
+			btn.addEventListener("click", modal.style.display="block");					
+		}
+	</script>
+	
+	</div>	
+	<!-- site footer -->
+	<footer class="ecl-footer">
+
+		<script src="../CommonScripts/bootstrap.min.js"></script>
+		<script src="home_new.js"></script>
+		<script src="alert.js"></script>
+		<script src="../CommonScripts/europa.js"></script>
+		<script src="../CommonScripts/jquery-resizable.min.js?cachebust=0.11.2"></script>
+		<script src="../CommonScripts/ecl-fractal-theme.js?cachebust=0.11.2"></script>	
+		<script>document.addEventListener('DOMContentLoaded', function () { ECL.initExpandables(); ECL.navigationInpages(); });</script>				
+		<div id="footerHTML" class="ecl-footer"></div>
+	</footer>
+	<!-- site footer -->
+	</body>
+</html>

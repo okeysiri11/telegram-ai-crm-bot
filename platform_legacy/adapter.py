@@ -191,10 +191,12 @@ class TelegramAdapter(TracedAdapter, LegacyTelegram):
             from auto_vertical_handlers import auto_vertical_router as auto_router
             from handlers import router
             from routers.auto_add_vehicle_router import router as auto_add_vehicle_router
+            from routers.auto_ops_telegram_router import router as auto_ops_telegram_router
             from routers.auto_client_router import router as auto_client_entry_router
             from routers.auto_dealer_router import router as auto_dealer_entry_router
             from routers.auto_hub_router import router as auto_hub_router
             from routers.client_history_router import router as client_history_router
+            from routers.crypto_tx_antifraud_router import router as crypto_tx_antifraud_router
             from routers.manager_crm_router import router as manager_crm_router
             from routers.manager_dashboard_router import router as manager_dashboard_router
             from routers.manager_debug_router import router as manager_debug_router
@@ -204,6 +206,10 @@ class TelegramAdapter(TracedAdapter, LegacyTelegram):
 
             # HOTFIX 46.2.2 — Add-car FSM before Super App / AI (active form never leaks to LLM)
             dispatcher.include_router(auto_add_vehicle_router)
+            # AUTO 1.4 — private Auto OS staff commands (authorized users only)
+            dispatcher.include_router(auto_ops_telegram_router)
+            # Sprint 48.0 — crypto tx idempotency callbacks (narrow prefix, deterministic)
+            dispatcher.include_router(crypto_tx_antifraud_router)
             # Sprint 46.5 — vertical navigation / role selector before AI Command / Hercules
             dispatcher.include_router(vertical_nav_router)
             # Sprint 43.0 — Super App (owner shell / AI Studio / Concierge)

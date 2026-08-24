@@ -16,7 +16,7 @@ from platform_memory.long_term_memory import long_term_memory
 from platform_memory.memory_cards import memory_cards
 from platform_memory.memory_cleanup import memory_cleanup
 from platform_memory.memory_embeddings import memory_embeddings
-from platform_memory.memory_permissions import MemoryPrincipal, can_delete, can_write
+from platform_memory.memory_permissions import MemoryPrincipal, can_delete, can_write, filter_readable
 from platform_memory.memory_search import memory_search
 from platform_memory.memory_summary import memory_summary
 from platform_memory.memory_timeline import memory_timeline
@@ -62,11 +62,11 @@ class MemoryManager:
             "company_id": p.company_id,
             "levels": ["session", "working", "project", "long_term", "knowledge"],
             "counts": {
-                "session": len(continuity_store.list_for(owner_id, level="session", limit=1000)),
-                "working": len(continuity_store.list_for(owner_id, level="working", limit=1000)),
-                "project": len(continuity_store.list_for(owner_id, level="project", limit=1000)),
-                "long_term": len(continuity_store.list_for(owner_id, level="long_term", limit=1000)),
-                "knowledge": len(continuity_store.list_for(owner_id, level="knowledge", limit=1000)),
+                "session": len(continuity_store.list_for(owner_id, level="session", limit=1000, principal=p)),
+                "working": len(continuity_store.list_for(owner_id, level="working", limit=1000, principal=p)),
+                "project": len(continuity_store.list_for(owner_id, level="project", limit=1000, principal=p)),
+                "long_term": len(continuity_store.list_for(owner_id, level="long_term", limit=1000, principal=p)),
+                "knowledge": len(continuity_store.list_for(owner_id, level="knowledge", limit=1000, principal=p)),
             },
             "cross_platform": True,
             "channels": ["telegram", "web", "desktop", "voice"],
@@ -106,26 +106,32 @@ class MemoryManager:
             embedding=emb,
             metadata=dict(metadata or {}),
         )
-        continuity_store.save(rec)
+        continuity_store.save(rec, principal=p)
         memory_timeline.record(
             p, action="memory_saved", title=title, channel=channel, project_id=project_id, ref_id=rec.id
         )
         return rec.to_dict()
 
-    def pin(self, owner_id: str, memory_id: str, *, company_id: str = "default") -> dict[str, Any] | None:
-        rec = continuity_store.get(memory_id)
-        if not rec or rec.owner_id != owner_id:
+    def pin(
+        self, owner_id: str, memory_id: str, *, company_id: str = "default", role: str = "owner"
+    ) -> dict[str, Any] | None:
+        # Sprint 47.1 — this previously bypassed MemoryPrincipal ACL entirely
+        # (only checked rec.owner_id == owner_id, no can_write gate). Fixed to
+        # match every other write path in this facade.
+        p = self.principal(owner_id, company_id=company_id, role=role)
+        rec = continuity_store.get(memory_id, principal=p)
+        if not rec or not can_write(p, rec):
             return None
         rec.pinned = True
-        continuity_store.save(rec)
+        continuity_store.save(rec, principal=p)
         return rec.to_dict()
 
     def remove(self, owner_id: str, memory_id: str, *, company_id: str = "default", role: str = "owner") -> bool:
         p = self.principal(owner_id, company_id=company_id, role=role)
-        rec = continuity_store.get(memory_id)
+        rec = continuity_store.get(memory_id, principal=p)
         if not rec or not can_delete(p, rec):
             return False
-        return continuity_store.remove(memory_id)
+        return continuity_store.remove(memory_id, principal=p)
 
     def search(self, owner_id: str, query: str, **kwargs: Any) -> dict[str, Any]:
         p = self.principal(owner_id, **{k: kwargs[k] for k in ("company_id", "role") if k in kwargs})
@@ -199,7 +205,7 @@ class MemoryManager:
 
     def workspace(self, owner_id: str, **kwargs: Any) -> dict[str, Any]:
         p = self.principal(owner_id, company_id=kwargs.get("company_id", "default"))
-        all_items = continuity_store.list_for(owner_id, company_id=p.company_id, limit=200)
+        all_items = continuity_store.list_for(owner_id, company_id=p.company_id, limit=200, principal=p)
         def by_kind(*kinds: str) -> list[dict[str, Any]]:
             return [r.to_dict() for r in all_items if r.kind in kinds][:12]
 

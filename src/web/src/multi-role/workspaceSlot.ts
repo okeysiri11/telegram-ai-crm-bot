@@ -60,7 +60,7 @@ export function workspaceSlotLabel(slot: WorkspaceSlotId = getWorkspaceSlot()): 
     drone: "Drone Company",
     auto: "Auto Dealer",
     legal: "Law Office",
-    agro: "Agro Company",
+    agro: "Агрокомпания",
     seller: "Marketplace Seller",
   };
   return labels[slot] || slot;

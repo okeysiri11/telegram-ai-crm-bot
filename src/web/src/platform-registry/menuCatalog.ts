@@ -67,8 +67,9 @@ export const PLATFORM_MENU_CATALOG: PlatformMenuItem[] = [
   { id: "vert_auto", title: "Авто", titleEn: "Automotive", icon: "crm", route: "/workspace/auto", group: "business" },
   { id: "vert_crypto", title: "Crypto OTC", icon: "analytics", route: "/workspace/crypto", group: "business" },
   { id: "vert_drone", title: "Drone", icon: "projects", route: "/workspace/drone", group: "business" },
-  { id: "vert_agro", title: "Agro", icon: "marketplace", route: "/workspace/agro", group: "business" },
-  { id: "vert_cafe", title: "Cafe & Beauty", icon: "marketplace", route: "/workspace/cafe", group: "business" },
+  { id: "vert_agro", title: "Агро", icon: "marketplace", route: "/workspace/agro", group: "business" },
+  { id: "vert_cafe", title: "Cafe", icon: "marketplace", route: "/workspace/cafe", group: "business" },
+  { id: "vert_beauty", title: "Beauty", icon: "marketplace", route: "/workspace/beauty", group: "business" },
   { id: "own_dashboard", title: "Owner Dashboard", icon: "dashboard", route: "/owner", group: "owner", ownerOnly: true },
   { id: "own_god", title: "God Mode", icon: "security", route: "/platform-builder/god-mode", group: "owner", ownerOnly: true },
 ];

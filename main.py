@@ -17,6 +17,9 @@ async def main() -> None:
     context = await run_startup()
 
     try:
+        from services.auto_ops.telegram import note_telegram_mode
+
+        note_telegram_mode(mode="polling")
         await dp.start_polling(bot)
     finally:
         await shutdown_startup(context)

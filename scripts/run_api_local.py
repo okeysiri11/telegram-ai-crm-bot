@@ -93,11 +93,12 @@ async def _main() -> int:
         logger.warning("IAM JWT soft-fail in local API mode: %s", exc)
         logger.warning("Set IAM_JWT_SECRET or JWT_SECRET in .env for signed management tokens")
 
+    from api.bind import resolve_api_host, resolve_api_port
     from api.server import start_api_server
     from config import API_HOST, API_PORT
 
-    host = os.getenv("API_HOST", API_HOST or "127.0.0.1")
-    port = int(os.getenv("API_PORT", str(API_PORT or 8080)))
+    host = resolve_api_host(API_HOST or "127.0.0.1")
+    port = resolve_api_port(API_PORT or 8080)
 
     # Optional light workers — skip if Redis/deps unavailable.
     try:

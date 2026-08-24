@@ -690,6 +690,10 @@ def register_management_routes(app: web.Application) -> None:
 
     register_ai_command_routes(app)
 
+    from platform_management.crypto_tx_antifraud_routes import register_crypto_tx_antifraud_routes
+
+    register_crypto_tx_antifraud_routes(app)
+
     from platform_observability.telemetry_router import register_observability_routes
 
     register_observability_routes(app)

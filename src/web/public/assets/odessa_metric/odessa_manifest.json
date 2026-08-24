@@ -1,0 +1,658 @@
+{
+ "name": "Odessa 3D Web Map (metric rebuild STEP 29.9)",
+ "version": 1,
+ "packageFormat": "blender_web_v1_metric",
+ "coordinate_system": {
+  "height_axis": "Y",
+  "map_plane": [
+   "X",
+   "Z"
+  ]
+ },
+ "loading_strategy": "stream_by_camera_distance",
+ "notes": [
+  "TILE_04_00.glb is intentionally excluded.",
+  "Its non-heavy objects are in FINAL_TILE_04_REST batches.",
+  "The single heavy source mesh is represented by STEP-12 and STEP-13 chunks.",
+  "ODESSA_TILE_OUTLIERS are intentionally excluded from this first web package.",
+  "STEP 29.9: unit-interpretation rebuild. Vendor FBX declares cm but authors meters; node scale 0.01 removed, translations x100. 1 world unit = 1 meter. Geometry buffers byte-identical to the Blender export."
+ ],
+ "stats": {
+  "asset_count": 45,
+  "top_level_tiles": 14,
+  "tile04_rest_batches": 10,
+  "heavy_step12_chunks": 13,
+  "heavy_step13_chunks": 8,
+  "total_manifest_mb": 382.428,
+  "largest_asset_mb": 24.829
+ },
+ "geoTransform": {
+  "originLat": 46.4825,
+  "originLng": 30.7233,
+  "calibrated": false
+ },
+ "cityBounds": {
+  "minX": -41779.22668457031,
+  "maxX": 31764.459228515625,
+  "minZ": -38948.49853515625,
+  "maxZ": 65809.0087890625,
+  "minY": -16.493037343025208,
+  "maxY": 199.0004062652588
+ },
+ "priorityAssets": [
+  "TILE_04_00_REST_BATCH_07",
+  "TILE_04_00_REST_BATCH_03",
+  "TILE_04_00_REST_BATCH_02",
+  "TILE_04_00_REST_BATCH_08",
+  "TILE_04_00_REST_BATCH_09",
+  "TILE_04_00_REST_BATCH_10",
+  "TILE_04_00_REST_BATCH_05",
+  "TILE_03_01"
+ ],
+ "layers": [
+  {
+   "id": "city",
+   "label": "Odessa city",
+   "defaultVisible": true
+  },
+  {
+   "id": "heavy",
+   "label": "Heavy buildings",
+   "defaultVisible": true
+  },
+  {
+   "id": "dynamic",
+   "label": "Live data",
+   "defaultVisible": true,
+   "dynamic": true
+  }
+ ],
+ "assets": [
+  {
+   "id": "TILE_02_00",
+   "type": "top_level_tile",
+   "path": "TILE_02_00.glb",
+   "size_mb": 8.264,
+   "objects": 34,
+   "bounds": {
+    "min_x": -35307.80029296875,
+    "max_x": 5343.299865722656,
+    "min_y": -32899.30114746094,
+    "max_y": 34104.1015625,
+    "min_z": -0.299094314686954,
+    "max_z": 0.5024838261306286
+   },
+   "url": "/assets/odessa_metric/TILE_02_00.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_02_01",
+   "type": "top_level_tile",
+   "path": "TILE_02_01.glb",
+   "size_mb": 1.497,
+   "objects": 2,
+   "bounds": {
+    "min_x": -29929.00390625,
+    "max_x": -11554.320526123047,
+    "min_y": -10678.536224365234,
+    "max_y": 14654.373168945312,
+    "min_z": -0.0011110279956483282,
+    "max_z": 22.753870487213135
+   },
+   "url": "/assets/odessa_metric/TILE_02_01.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_03_00",
+   "type": "top_level_tile",
+   "path": "TILE_03_00.glb",
+   "size_mb": 15.674,
+   "objects": 146,
+   "bounds": {
+    "min_x": -41779.22668457031,
+    "max_x": 19669.918823242188,
+    "min_y": -33218.03283691406,
+    "max_y": 30329.901123046875,
+    "min_z": -1.0018962435424328,
+    "max_z": 8.000417053699493
+   },
+   "url": "/assets/odessa_metric/TILE_03_00.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_03_01",
+   "type": "top_level_tile",
+   "path": "TILE_03_01.glb",
+   "size_mb": 11.18,
+   "objects": 38,
+   "bounds": {
+    "min_x": -28783.819580078125,
+    "max_x": 14155.517578125,
+    "min_y": -30046.270751953125,
+    "max_y": 29857.80029296875,
+    "min_z": -0.1459289458580315,
+    "max_z": 56.70223832130432
+   },
+   "url": "/assets/odessa_metric/TILE_03_01.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_03_02",
+   "type": "top_level_tile",
+   "path": "TILE_03_02.glb",
+   "size_mb": 0.843,
+   "objects": 2,
+   "bounds": {
+    "min_x": -19370.797729492188,
+    "max_x": 3379.967498779297,
+    "min_y": -29034.381103515625,
+    "max_y": 13688.212585449219,
+    "min_z": -0.0010405283319414593,
+    "max_z": 75.00181198120117
+   },
+   "url": "/assets/odessa_metric/TILE_03_02.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_01",
+   "type": "top_level_tile",
+   "path": "TILE_04_01.glb",
+   "size_mb": 22.595,
+   "objects": 109,
+   "bounds": {
+    "min_x": -29987.454223632812,
+    "max_x": 29791.39404296875,
+    "min_y": -30039.68505859375,
+    "max_y": 29982.943725585938,
+    "min_z": -0.14592555817216635,
+    "max_z": 64.80112075805664
+   },
+   "url": "/assets/odessa_metric/TILE_04_01.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_02",
+   "type": "top_level_tile",
+   "path": "TILE_04_02.glb",
+   "size_mb": 0.181,
+   "objects": 3,
+   "bounds": {
+    "min_x": -28179.739379882812,
+    "max_x": 26447.335815429688,
+    "min_y": -29887.09716796875,
+    "max_y": 25324.47052001953,
+    "min_z": -0.001917285771924071,
+    "max_z": 85.00708937644958
+   },
+   "url": "/assets/odessa_metric/TILE_04_02.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_04",
+   "type": "top_level_tile",
+   "path": "TILE_04_04.glb",
+   "size_mb": 0.002,
+   "objects": 1,
+   "bounds": {
+    "min_x": 1981.1716079711914,
+    "max_x": 2018.3076858520508,
+    "min_y": -5248.786926269531,
+    "max_y": -5212.886810302734,
+    "min_z": 0.0003860749984596623,
+    "max_z": 199.0004062652588
+   },
+   "url": "/assets/odessa_metric/TILE_04_04.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_05_00",
+   "type": "top_level_tile",
+   "path": "TILE_05_00.glb",
+   "size_mb": 4.325,
+   "objects": 111,
+   "bounds": {
+    "min_x": -13175.411987304688,
+    "max_x": 31764.459228515625,
+    "min_y": -30743.191528320312,
+    "max_y": 32652.81982421875,
+    "min_z": -0.40092156268656254,
+    "max_z": 7.000274211168289
+   },
+   "url": "/assets/odessa_metric/TILE_05_00.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_05_01",
+   "type": "top_level_tile",
+   "path": "TILE_05_01.glb",
+   "size_mb": 3.482,
+   "objects": 19,
+   "bounds": {
+    "min_x": -17984.201049804688,
+    "max_x": 30087.04833984375,
+    "min_y": -30021.810913085938,
+    "max_y": 30000.662231445312,
+    "min_z": -0.0022733032892574556,
+    "max_z": 54.00076508522034
+   },
+   "url": "/assets/odessa_metric/TILE_05_01.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_05_02",
+   "type": "top_level_tile",
+   "path": "TILE_05_02.glb",
+   "size_mb": 0.022,
+   "objects": 2,
+   "bounds": {
+    "min_x": 242.44956970214844,
+    "max_x": 9877.107238769531,
+    "min_y": -10216.490173339844,
+    "max_y": 18022.479248046875,
+    "min_z": -0.0013689746083400678,
+    "max_z": 94.99884843826294
+   },
+   "url": "/assets/odessa_metric/TILE_05_02.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_06_00",
+   "type": "top_level_tile",
+   "path": "TILE_06_00.glb",
+   "size_mb": 2.041,
+   "objects": 8,
+   "bounds": {
+    "min_x": 3721.099853515625,
+    "max_x": 31208.697509765625,
+    "min_y": 13513.999938964844,
+    "max_y": 31750.198364257812,
+    "min_z": -0.0035173772630514577,
+    "max_z": 0.9994183667004108
+   },
+   "url": "/assets/odessa_metric/TILE_06_00.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_06_01",
+   "type": "top_level_tile",
+   "path": "TILE_06_01.glb",
+   "size_mb": 1.031,
+   "objects": 2,
+   "bounds": {
+    "min_x": 3801.4892578125,
+    "max_x": 30034.576416015625,
+    "min_y": 14625.67138671875,
+    "max_y": 29065.49072265625,
+    "min_z": -0.0021980507881380618,
+    "max_z": 22.96365797519684
+   },
+   "url": "/assets/odessa_metric/TILE_06_01.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_07_00",
+   "type": "top_level_tile",
+   "path": "TILE_07_00.glb",
+   "size_mb": 0.632,
+   "objects": 452,
+   "bounds": {
+    "min_x": 22401.199340820312,
+    "max_x": 30489.999389648438,
+    "min_y": 15425.999450683594,
+    "max_y": 21775.41961669922,
+    "min_z": -0.30168150551617146,
+    "max_z": 0.49883536994457245
+   },
+   "url": "/assets/odessa_metric/TILE_07_00.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_01",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_01.glb",
+   "size_mb": 22.839,
+   "objects": 1,
+   "triangles": 370936,
+   "bounds": {
+    "min_x": -20784.576416015625,
+    "max_x": 20878.257751464844,
+    "min_y": -30126.742553710938,
+    "max_y": 24295.103454589844,
+    "min_z": -16.493037343025208,
+    "max_z": 22.16183841228485
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_01.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_02",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_02.glb",
+   "size_mb": 8.625,
+   "objects": 2,
+   "triangles": 210146,
+   "bounds": {
+    "min_x": -33488.897705078125,
+    "max_x": 30636.4990234375,
+    "min_y": -30092.2119140625,
+    "max_y": 38460.101318359375,
+    "min_z": -0.0029036567866569385,
+    "max_z": 0.502813421189785
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_02.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_03",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_03.glb",
+   "size_mb": 8.004,
+   "objects": 5,
+   "triangles": 233898,
+   "bounds": {
+    "min_x": -39968.798828125,
+    "max_x": 30889.398193359375,
+    "min_y": -38948.49853515625,
+    "max_y": 56997.39990234375,
+    "min_z": -0.004303183595766313,
+    "max_z": 0.5029405001550913
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_03.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_04",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_04.glb",
+   "size_mb": 9.295,
+   "objects": 6,
+   "triangles": 226266,
+   "bounds": {
+    "min_x": -11662.40005493164,
+    "max_x": 11319.400024414062,
+    "min_y": -23919.300842285156,
+    "max_y": 22053.099060058594,
+    "min_z": -0.0016649626559228636,
+    "max_z": 0.5018058232963085
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_04.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_05",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_05.glb",
+   "size_mb": 9.131,
+   "objects": 9,
+   "triangles": 247656,
+   "bounds": {
+    "min_x": -32051.300048828125,
+    "max_x": 31497.39990234375,
+    "min_y": -32325.698852539062,
+    "max_y": 33478.39660644531,
+    "min_z": -0.0025275487132603303,
+    "max_z": 0.502440519630909
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_05.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_06",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_06.glb",
+   "size_mb": 9.71,
+   "objects": 17,
+   "triangles": 243412,
+   "bounds": {
+    "min_x": -35556.79931640625,
+    "max_x": 30859.63134765625,
+    "min_y": -35303.6376953125,
+    "max_y": 34585.455322265625,
+    "min_z": -0.1926382421515882,
+    "max_z": 8.10186117887497
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_06.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_07",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_07.glb",
+   "size_mb": 9.768,
+   "objects": 29,
+   "triangles": 246553,
+   "bounds": {
+    "min_x": -34808.416748046875,
+    "max_x": 30488.247680664062,
+    "min_y": -33997.1923828125,
+    "max_y": 65809.0087890625,
+    "min_z": -0.31128604896366596,
+    "max_z": 1.002376340329647
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_07.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_08",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_08.glb",
+   "size_mb": 10.172,
+   "objects": 54,
+   "triangles": 248376,
+   "bounds": {
+    "min_x": -31986.614990234375,
+    "max_x": 30144.915771484375,
+    "min_y": -30233.938598632812,
+    "max_y": 36936.87744140625,
+    "min_z": -0.3125918563455343,
+    "max_z": 0.5021225195378065
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_08.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_09",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_09.glb",
+   "size_mb": 9.943,
+   "objects": 100,
+   "triangles": 248999,
+   "bounds": {
+    "min_x": -31891.009521484375,
+    "max_x": 30456.7626953125,
+    "min_y": -30412.0361328125,
+    "max_y": 32125.717163085938,
+    "min_z": -0.2614970551803708,
+    "max_z": 0.5022593308240175
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_09.glb",
+   "layer": "city"
+  },
+  {
+   "id": "TILE_04_00_REST_BATCH_10",
+   "type": "tile04_rest",
+   "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_10.glb",
+   "size_mb": 9.568,
+   "objects": 660,
+   "triangles": 227379,
+   "bounds": {
+    "min_x": -30841.665649414062,
+    "max_x": 30841.665649414062,
+    "min_y": -30841.665649414062,
+    "max_y": 32560.092163085938,
+    "min_z": -0.5023284815251827,
+    "max_z": 8.001252263784409
+   },
+   "url": "/assets/odessa_metric/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_10.glb",
+   "layer": "city"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_00_00",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_00.glb",
+   "size_mb": 0.001,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_00.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_00_01",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_01.glb",
+   "size_mb": 5.887,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_01.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_00_02",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_02.glb",
+   "size_mb": 24.731,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_02.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_00_03",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_03.glb",
+   "size_mb": 4.015,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_03.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_01_00",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_00.glb",
+   "size_mb": 0.002,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_00.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_01_01",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_01.glb",
+   "size_mb": 18.376,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_01.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_01_03",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_03.glb",
+   "size_mb": 12.471,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_03.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_02_00",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_00.glb",
+   "size_mb": 0.002,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_00.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_02_01",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_01.glb",
+   "size_mb": 8.719,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_01.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_02_03",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_03.glb",
+   "size_mb": 5.926,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_03.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_03_01",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_01.glb",
+   "size_mb": 2.135,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_01.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_03_02",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_02.glb",
+   "size_mb": 8.942,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_02.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_03_03",
+   "type": "heavy_mesh_chunk_step12",
+   "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_03.glb",
+   "size_mb": 1.284,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_03.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_01_02_SUB_00_00",
+   "type": "heavy_mesh_chunk_step13",
+   "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_00_00.glb",
+   "size_mb": 13.159,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_00_00.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_01_02_SUB_00_01",
+   "type": "heavy_mesh_chunk_step13",
+   "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_00_01.glb",
+   "size_mb": 23.52,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_00_01.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_01_02_SUB_01_00",
+   "type": "heavy_mesh_chunk_step13",
+   "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_01_00.glb",
+   "size_mb": 13.968,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_01_00.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_01_02_SUB_01_01",
+   "type": "heavy_mesh_chunk_step13",
+   "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_01_01.glb",
+   "size_mb": 24.829,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_01_01.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_02_02_SUB_00_00",
+   "type": "heavy_mesh_chunk_step13",
+   "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_00_00.glb",
+   "size_mb": 9.874,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_00_00.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_02_02_SUB_00_01",
+   "type": "heavy_mesh_chunk_step13",
+   "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_00_01.glb",
+   "size_mb": 17.785,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_00_01.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_02_02_SUB_01_00",
+   "type": "heavy_mesh_chunk_step13",
+   "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_01_00.glb",
+   "size_mb": 2.831,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_01_00.glb",
+   "layer": "heavy"
+  },
+  {
+   "id": "HEAVY_BUILDING_CHUNK_02_02_SUB_01_01",
+   "type": "heavy_mesh_chunk_step13",
+   "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_01_01.glb",
+   "size_mb": 5.147,
+   "url": "/assets/odessa_metric/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_01_01.glb",
+   "layer": "heavy"
+  }
+ ]
+}

@@ -102,7 +102,7 @@ class CommandCenterLibrary:
             {"id": "mod_mkt", "type": "modules", "title": "Marketplace", "route": "/workspace/marketplace", "keywords": ["marketplace", "plugins"]},
             {"id": "mod_beauty", "type": "modules", "title": "Beauty OS", "route": "/workspace/beauty", "keywords": ["beauty"]},
             {"id": "mod_auto", "type": "verticals", "title": "Auto Vertical", "route": "/workspace/auto", "keywords": ["auto", "automotive"]},
-            {"id": "mod_agro", "type": "verticals", "title": "Agro Vertical", "route": "/workspace/agro", "keywords": ["agro", "farm"]},
+            {"id": "mod_agro", "type": "verticals", "title": "Агро", "route": "/workspace/agro", "keywords": ["agro", "farm", "агро"]},
             {"id": "dash_main", "type": "dashboards", "title": "Personal Dashboard", "route": "/workspace/dashboards", "keywords": ["dashboard"]},
             {"id": "rep_weekly", "type": "reports", "title": "Weekly KPI Report", "route": "/workspace/reports/weekly", "keywords": ["report", "weekly"]},
             {"id": "an_main", "type": "analytics", "title": "Analytics", "route": "/workspace/analytics", "keywords": ["analytics"]},

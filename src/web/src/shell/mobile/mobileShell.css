@@ -49,6 +49,15 @@
     padding-inline: 0.55rem;
   }
 
+  .ados-mobile-live {
+    flex: 0 0 auto;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--eds-primary);
+    white-space: nowrap;
+  }
+
   .ados-mobile-back {
     display: flex;
     align-items: center;
@@ -88,14 +97,14 @@
   }
 
   .ados-mobile-drawer__head {
-    padding: 1rem 1rem 0.75rem;
+    padding: 0.65rem 0.85rem 0.5rem;
     border-bottom: 1px solid var(--ew-border);
   }
 
   .ados-mobile-drawer__nav {
     flex: 1;
     overflow-y: auto;
-    padding: 0.75rem;
+    padding: 0.2rem 0.35rem 0.5rem;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -103,12 +112,18 @@
   .ados-mobile-drawer button.ados-mobile-link {
     display: flex;
     align-items: center;
-    min-height: 44px;
+    min-height: 50px;
     width: 100%;
-    border-radius: 0.5rem;
-    padding: 0.5rem 0.75rem;
+    border-radius: 0.4rem;
+    padding: 0.2rem 0.75rem;
     text-align: left;
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+  }
+
+  .ados-mobile-drawer__platform {
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--ew-border);
+    padding-top: 0.35rem;
   }
 
   .ados-mobile-drawer a.is-active,
@@ -214,6 +229,8 @@
 
   .ados-mobile-qa a,
   .ados-mobile-qa button {
+    position: relative;
+    z-index: 2;
     min-height: 3.25rem;
     border-radius: 0.75rem;
     border: 1px solid var(--ew-border);
@@ -221,6 +238,8 @@
     font-weight: 600;
     text-align: left;
     background: var(--eds-surface);
+    pointer-events: auto;
+    cursor: pointer;
   }
 
   .ados-mobile-fav {
@@ -240,6 +259,71 @@
     border-radius: 0.75rem;
     padding: 0.85rem 1rem;
     background: var(--eds-surface);
+  }
+
+  .ados-mobile-qa a:active,
+  .ados-mobile-qa button:active,
+  .ados-mobile-card:active,
+  .ados-mobile-fav:active,
+  .ados-mobile-hub__card:active {
+    transform: scale(0.98);
+    background: var(--eds-primary-soft);
+  }
+
+  .ados-mobile-hub {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .ados-mobile-hub__card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    min-height: 5.5rem;
+    border-radius: 0.75rem;
+    border: 1px solid var(--ew-border);
+    padding: 0.75rem;
+    text-align: left;
+    background: var(--eds-surface);
+  }
+
+  .ados-mobile-hub__icon {
+    font-size: 1.25rem;
+  }
+
+  .ados-mobile-hub__name {
+    font-weight: 700;
+  }
+
+  .ados-mobile-hub__status {
+    color: var(--eds-text-muted);
+    font-size: 0.72rem;
+    line-height: 1.3;
+  }
+
+  .ados-mobile-thumb {
+    width: 4.5rem;
+    height: 3rem;
+    border-radius: 0.4rem;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
+  }
+
+  .ados-mobile-extra {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.85rem;
+    margin-top: 0.75rem;
+  }
+
+  .ados-mobile-extra a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--eds-accent);
   }
 
   .ados-mobile-card dt {
@@ -268,9 +352,17 @@
 
   .eds-control,
   select.eds-control,
-  textarea.eds-control,
+  textarea.eds-control {
+    min-height: 44px;
+    width: 100%;
+  }
+
   .eds-btn:not(.eds-btn--icon) {
     min-height: 44px;
+  }
+
+  .ados-mobile-home .eds-btn,
+  form .eds-btn:not(.eds-btn--icon) {
     width: 100%;
   }
 

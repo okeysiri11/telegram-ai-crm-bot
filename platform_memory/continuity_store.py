@@ -6,7 +6,12 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+from platform_memory.scope import MemoryScope, resolve_memory_scope
+
+if TYPE_CHECKING:
+    from platform_memory.memory_permissions import MemoryPrincipal
 
 
 def _now() -> float:
@@ -19,6 +24,13 @@ def new_id(prefix: str = "m") -> str:
 
 @dataclass
 class MemoryRecord:
+    """Sprint 47.0 (Decision 5): tenant_id is the canonical org identifier going
+    forward; company_id is kept for backward compatibility and tenant_id mirrors it
+    via __post_init__ when not explicitly supplied. "level" (session/working/project/
+    long_term/knowledge) is a durability axis, distinct from the memory *scope*
+    (PLATFORM/ORGANIZATION/VERTICAL/USER/CUSTOMER) introduced in Sprint 47.1 — do not
+    conflate the two."""
+
     id: str
     owner_id: str
     company_id: str
@@ -37,12 +49,32 @@ class MemoryRecord:
     embedding: list[float] = field(default_factory=list)
     created_at: float = field(default_factory=_now)
     updated_at: float = field(default_factory=_now)
+    tenant_id: str | None = None
+    vertical: str | None = None
+    customer_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.tenant_id is None:
+            self.tenant_id = self.company_id
+
+    @property
+    def scope(self) -> MemoryScope:
+        return resolve_memory_scope(
+            tenant_id=self.tenant_id,
+            vertical=self.vertical,
+            customer_id=self.customer_id,
+            user_id=self.owner_id,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "owner_id": self.owner_id,
             "company_id": self.company_id,
+            "tenant_id": self.tenant_id,
+            "vertical": self.vertical,
+            "customer_id": self.customer_id,
+            "scope": self.scope.value,
             "level": self.level,
             "kind": self.kind,
             "title": self.title,
@@ -72,12 +104,18 @@ class TimelineEvent:
     ref_id: str | None = None
     created_at: float = field(default_factory=_now)
     metadata: dict[str, Any] = field(default_factory=dict)
+    tenant_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.tenant_id is None:
+            self.tenant_id = self.company_id
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "owner_id": self.owner_id,
             "company_id": self.company_id,
+            "tenant_id": self.tenant_id,
             "action": self.action,
             "title": self.title,
             "channel": self.channel,
@@ -105,17 +143,51 @@ class ContinuityStore:
             self.sessions.clear()
             self.summaries.clear()
 
-    def save(self, record: MemoryRecord) -> MemoryRecord:
+    def save(
+        self, record: MemoryRecord, *, principal: "MemoryPrincipal | None" = None
+    ) -> MemoryRecord | None:
+        """Sprint 47.1: pass `principal` to enforce MemoryPrincipal ACL (can_write)
+        centrally, here, instead of requiring every caller across platform_memory to
+        remember to check it themselves. Omitting `principal` (the default) preserves
+        every pre-Sprint-47.1 caller's exact behavior. Returns None if the write is
+        denied — callers passing `principal` must handle that; callers not passing it
+        keep getting the record back unconditionally, as before."""
+        if principal is not None:
+            from platform_memory.memory_permissions import can_write
+
+            existing = self.records.get(record.id)
+            if not can_write(principal, existing):
+                return None
         with self._lock:
             record.updated_at = _now()
             self.records[record.id] = record
             return record
 
-    def get(self, memory_id: str) -> MemoryRecord | None:
+    def get(
+        self, memory_id: str, *, principal: "MemoryPrincipal | None" = None
+    ) -> MemoryRecord | None:
+        """Sprint 47.1: pass `principal` to enforce can_read centrally (see save())."""
         with self._lock:
-            return self.records.get(memory_id)
+            rec = self.records.get(memory_id)
+        if rec is None or principal is None:
+            return rec
+        from platform_memory.memory_permissions import can_read
 
-    def remove(self, memory_id: str) -> bool:
+        return rec if can_read(principal, rec) else None
+
+    def remove(
+        self, memory_id: str, *, principal: "MemoryPrincipal | None" = None
+    ) -> bool:
+        """Sprint 47.1: pass `principal` to enforce can_delete centrally (see save())."""
+        if principal is not None:
+            with self._lock:
+                rec = self.records.get(memory_id)
+            if rec is None:
+                return False
+            from platform_memory.memory_permissions import can_delete
+
+            if not can_delete(principal, rec):
+                return False
         with self._lock:
             return self.records.pop(memory_id, None) is not None
 
@@ -130,7 +202,15 @@ class ContinuityStore:
         pinned: bool | None = None,
         favorite: bool | None = None,
         limit: int = 100,
+        principal: "MemoryPrincipal | None" = None,
     ) -> list[MemoryRecord]:
+        """Sprint 47.1: pass `principal` to additionally apply filter_readable — the
+        richer, role/project-aware ACL (admin/owner cross-project visibility etc.),
+        on top of the existing owner_id/company_id pre-filter below. For every
+        pre-Sprint-47.1 caller (which always queries its own owner_id/company_id),
+        this is a no-op: can_read's first check already matches. It only changes
+        behavior for calls that start passing a principal whose scope differs from
+        the raw owner_id/company_id filter."""
         with self._lock:
             items = []
             for r in self.records.values():
@@ -150,7 +230,12 @@ class ContinuityStore:
                     continue
                 items.append(r)
             items.sort(key=lambda x: x.updated_at, reverse=True)
-            return items[:limit]
+            items = items[:limit]
+        if principal is None:
+            return items
+        from platform_memory.memory_permissions import filter_readable
+
+        return filter_readable(principal, items)
 
     def add_timeline(self, event: TimelineEvent) -> TimelineEvent:
         with self._lock:

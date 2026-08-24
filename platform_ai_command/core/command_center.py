@@ -92,6 +92,7 @@ class AiCommandCenter:
         active_vertical: str | None = None,
         active_persona: str | None = None,
         authenticated_role: str | None = None,
+        tenant_id: str | None = None,
     ) -> dict[str, Any]:
         raw = parse_voice_transcript(text) if voice or channel == "voice" else text
         # Prefer live vertical session over sticky memory
@@ -110,6 +111,7 @@ class AiCommandCenter:
             session_id=session_id,
             attachments=list(attachments or []),
             role=role,
+            tenant_id=tenant_id,
             meta={
                 "active_vertical": active_vertical
                 or context_memory.get(owner_id).get("vertical"),

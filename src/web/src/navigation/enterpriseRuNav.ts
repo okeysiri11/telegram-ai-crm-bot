@@ -65,14 +65,17 @@ export type RoleSwitcherOption = {
 export const ROLE_SWITCHER_OPTIONS: RoleSwitcherOption[] = [
   { id: "owner", label: "Владелец", roleIds: ["owner", "platform_owner", "company_owner"] },
   { id: "administrator", label: "Администратор", roleIds: ["administrator", "admin", "system_admin"] },
-  { id: "manager", label: "Менеджер", roleIds: ["manager"] },
+  { id: "accountant", label: "Бухгалтер", roleIds: ["accountant", "auto_accountant", "agro_accountant"] },
+  { id: "managing_partner", label: "Управляющий партнер", roleIds: ["managing_partner", "managing-partner"] },
+  { id: "lawyer", label: "Юрист", roleIds: ["lawyer", "attorney"] },
+  { id: "paralegal", label: "Помощник юриста", roleIds: ["paralegal", "legal_assistant"] },
   { id: "sales", label: "Продажи", roleIds: ["sales"] },
   { id: "support", label: "Поддержка", roleIds: ["support"] },
   { id: "employee", label: "Сотрудник", roleIds: ["employee"] },
   { id: "dealer", label: "Дилер", roleIds: ["dealer"] },
   { id: "partner", label: "Партнёр", roleIds: ["partner"] },
   { id: "client", label: "Клиент", roleIds: ["client"] },
-  { id: "viewer", label: "Наблюдатель", roleIds: ["viewer", "read_only"] },
+  { id: "viewer", label: "Наблюдатель", roleIds: ["viewer", "read_only", "observer"] },
 ];
 
 export const ORG_SELECTOR_OPTIONS = [

@@ -12,6 +12,8 @@ import { useAuthStore } from "@/auth/authStore";
 import { useWorkspaceManager } from "@/workspace-engine/workspaceManagerStore";
 import { useWorkspaceStore } from "@/workspace/workspaceStore";
 import { webConfig } from "@/config/webConfig";
+import { MobileRouteGate } from "@/shell/mobile/MobileRouteGate";
+import { MobileSettingsPage } from "@/shell/mobile/MobileSettingsPage";
 
 /**
  * Settings — единый раздел настроек (Epic 46.0).
@@ -323,5 +325,9 @@ export function SettingsPage() {
     return <div className="edt-embed-root p-4">{body}</div>;
   }
 
-  return <FullLayout>{body}</FullLayout>;
+  return (
+    <FullLayout>
+      <MobileRouteGate mobile={tab === "general" ? <MobileSettingsPage /> : body} desktop={body} />
+    </FullLayout>
+  );
 }

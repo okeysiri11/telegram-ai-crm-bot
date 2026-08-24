@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Float, Index, Integer, String, Text, UniqueConstraint
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import DateTime, Float, ForeignKey, Index, Integer, String, Text, UniqueConstraint
+from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from database.base import Base
@@ -19,6 +20,7 @@ class ProjectMemoryRow(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
         Index("ix_project_memory_kind", "kind"),
         Index("ix_project_memory_layer", "layer"),
         Index("ix_project_memory_project_id", "project_id"),
+        Index("ix_project_memory_tenant_id", "tenant_id"),
     )
 
     memory_key: Mapped[str] = mapped_column(String(64), nullable=False)
@@ -35,6 +37,17 @@ class ProjectMemoryRow(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):
     importance: Mapped[float] = mapped_column(Float, nullable=False, default=0.5)
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     payload_json: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    # Sprint 47.1 — AI Agent Memory Architecture scope columns (nullable/additive,
+    # see migrations/versions/v5p678901234_memory_scope_47_1.py and
+    # platform_memory.scope.MemoryScope). tenant_id is the canonical org
+    # identifier (Sprint 47.0 Decision 5); client_id above already covers the
+    # CUSTOMER identifier for this table, so no separate customer_id column.
+    tenant_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("partner_tenant_engine_v1_tenants.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    vertical: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 class MemoryChunkRow(UUIDPrimaryKeyMixin, TimestampMixin, VersionMixin, Base):

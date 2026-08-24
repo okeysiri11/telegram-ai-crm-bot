@@ -59,7 +59,7 @@ import {
 import { LiveDashboardShell } from "@/live-dashboard";
 import { BetaHomeDashboard } from "@/dashboard/BetaHomeDashboard";
 import { ExecutiveSummaryDashboard, useExperienceModeStore } from "@/ux-revolution";
-import { MobileHome, useIsMobile, isDemoAccount, verticalIdFromPath, workspaceLabel } from "@/shell/mobile";
+import { MobileHome, useIsMobile, isDemoAccount, workspaceLabel, resolveMobileHomeWorkspace } from "@/shell/mobile";
 import { resolveRoleLabel, useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import { useVerticalWorkspaceStore } from "@/vertical-workspace/verticalWorkspaceStore";
 
@@ -176,7 +176,7 @@ export function DashboardPage() {
   }
 
   if (isMobile) {
-    const verticalId = storedVertical || verticalIdFromPath("/", storedVertical);
+    const verticalId = resolveMobileHomeWorkspace(storedVertical, "/");
     return (
       <WorkspaceLayout>
         <MobileHome

@@ -62,11 +62,11 @@ def switch_role_keyboard(vertical_id: str, active_persona: str | None) -> ReplyK
 
 
 def _agro_client_menu() -> ReplyKeyboardMarkup:
-    """Client subset of existing Agro buttons — no mock module."""
+    """Client subset of existing Agro buttons — only wired labels."""
     return ReplyKeyboardMarkup(
         keyboard=[
-            [KeyboardButton(text="🌾 Товары"), KeyboardButton(text="📈 Цены")],
-            [KeyboardButton(text="📑 Контракты"), KeyboardButton(text="👥 Контрагенты")],
+            [KeyboardButton(text="🌾 Товары"), KeyboardButton(text="👥 Контрагенты")],
+            [KeyboardButton(text="📑 Контракты"), KeyboardButton(text="📑 Сделки")],
             [KeyboardButton(text=BTN_SWITCH_ROLE), KeyboardButton(text=BTN_MAIN_MENU)],
             [KeyboardButton(text=BTN_CONCIERGE_OPTIONAL)],
             [KeyboardButton(text=BTN_BACK)],
@@ -225,15 +225,13 @@ async def enter_persona_home(message: Message, persona: str) -> VerticalSession:
     elif vertical == "crypto":
         await _enter_crypto(message, user_id, persona)
     elif vertical == "legal":
-        from keyboards import law_module_menu
-
-        await message.answer(
-            "⚖ Юриспруденция — рабочее меню",
-            reply_markup=_with_nav_row(law_module_menu()),
-        )
+        await _enter_legal(message, user_id, persona)
     elif vertical == "drone":
         from keyboards import drone_module_menu
 
+        import handlers as h
+
+        h.active_module[user_id] = "drone"
         await message.answer(
             "🚁 Дроны — рабочее меню",
             reply_markup=_with_nav_row(drone_module_menu()),
@@ -280,10 +278,13 @@ async def _enter_auto(message: Message, user_id: int, persona: str) -> None:
             reply_markup=_with_nav_row(auto_vertical_menu()),
         )
         return
-    # owner — full hub via existing opener
+    # owner — full hub via existing opener, then attach nav chrome
     await handle_auto_menu_request(message)
+    from keyboards import auto_vertical_hub_menu
+
     await message.answer(
-        f"{BTN_SWITCH_ROLE} — сменить роль просмотра · {BTN_MAIN_MENU} — выход",
+        f"🚗 Auto · Owner\n{BTN_SWITCH_ROLE} · {BTN_MAIN_MENU}",
+        reply_markup=_with_nav_row(auto_vertical_hub_menu()),
     )
 
 
@@ -301,7 +302,6 @@ async def _enter_agro(message: Message, user_id: int, persona: str) -> None:
             reply_markup=_agro_client_menu(),
         )
         return
-    # owner + trader → real agro_menu
     label = "Owner" if persona == "owner" else "Trader"
     await message.answer(
         f"🌾 Agro · {label}\n\nРаздел Agro Trading",
@@ -311,8 +311,12 @@ async def _enter_agro(message: Message, user_id: int, persona: str) -> None:
 
 async def _enter_beauty(message: Message, user_id: int, persona: str) -> None:
     import handlers as h
-    from keyboards import cafe_beauty_module_menu
+    from keyboards import beauty_client_menu, beauty_module_menu
 
+    # Internal module key stays "cafe_beauty" — shared tenant/calendar/workflow
+    # scoping (services/tenant_routing.py, services/calendar_access.py,
+    # services/workflow_triggers.py) already keys off this value; renaming it
+    # is a data-layer change out of scope for this navigation repair.
     h.active_module[user_id] = "cafe_beauty"
     labels = {
         "owner": "Owner",
@@ -320,20 +324,72 @@ async def _enter_beauty(message: Message, user_id: int, persona: str) -> None:
         "specialist": "Specialist",
         "client": "Client",
     }
+    if persona == "client":
+        await message.answer(
+            f"💄 Beauty · {labels['client']}\n\nЗаписи и салон.",
+            reply_markup=_with_nav_row(beauty_client_menu()),
+        )
+        return
+    # Beauty is its own vertical — must not show the Cafe-only button/branding.
     await message.answer(
-        f"💄 Beauty · {labels.get(persona, persona)}\n\nCafe & Beauty — рабочее меню",
-        reply_markup=_with_nav_row(cafe_beauty_module_menu()),
+        f"💄 Beauty · {labels.get(persona, persona)}\n\nСалон — рабочее меню\n"
+        "(Beauty AI — дополнительно: 💅 Beauty AI в Студии AI)",
+        reply_markup=_with_nav_row(beauty_module_menu()),
     )
 
 
 async def _enter_crypto(message: Message, user_id: int, persona: str) -> None:
-    from handlers import open_crypto_otc
+    import handlers as h
+    from keyboards import crypto_client_menu, crypto_otc_menu, owner_main_menu
+    from services.crypto_auth import CryptoAuthService
 
-    await open_crypto_otc(message)
-    # Tip only — do not replace crypto_otc_menu keyboard
+    try:
+        h._init_ai_user(message)
+    except Exception:
+        pass
+    if not CryptoAuthService.can_access_crypto(user_id):
+        await message.answer(
+            "💰 Crypto OTC\n\nНет доступа к модулю.",
+            reply_markup=owner_main_menu(),
+        )
+        return
+    h.active_module[user_id] = "crypto"
+    if hasattr(h, "crypto_otc_flow"):
+        h.crypto_otc_flow.pop(user_id, None)
+
+    if persona == "client":
+        await message.answer(
+            "💰 Crypto · Client\n\nПокупка / продажа.",
+            reply_markup=_with_nav_row(crypto_client_menu()),
+        )
+        return
+    label = "Owner" if persona == "owner" else "Trader"
     await message.answer(
-        f"Просмотр: {PERSONA_LABEL_RU.get(persona, persona)}\n"
-        f"{BTN_SWITCH_ROLE} · {BTN_MAIN_MENU} · {BTN_CONCIERGE_OPTIONAL}",
+        f"💰 Crypto · {label}\n\nCrypto OTC ERP",
+        reply_markup=_with_nav_row(crypto_otc_menu()),
+    )
+
+
+async def _enter_legal(message: Message, user_id: int, persona: str) -> None:
+    import handlers as h
+    from keyboards import law_module_menu, lawyer_menu, legal_client_menu
+
+    h.active_module[user_id] = "law"
+    if persona == "client":
+        await message.answer(
+            "⚖ Legal · Client\n\nДела и документы.",
+            reply_markup=_with_nav_row(legal_client_menu()),
+        )
+        return
+    if persona == "lawyer":
+        await message.answer(
+            "⚖ Legal · Lawyer\n\nРабочее место юриста.",
+            reply_markup=_with_nav_row(lawyer_menu()),
+        )
+        return
+    await message.answer(
+        "⚖ Legal · Owner\n\nЮриспруденция — полный модуль.",
+        reply_markup=_with_nav_row(law_module_menu()),
     )
 
 

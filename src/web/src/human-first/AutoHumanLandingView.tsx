@@ -9,12 +9,12 @@ import { SimpleProModeToggle, useExperienceModeStore } from "@/ux-revolution";
 import { HumanAiCommandBar } from "./HumanAiCommandBar";
 
 const SIMPLE_QUICK: Array<{ label: string; route: string; primary?: boolean }> = [
-  { label: "Добавить автомобиль", route: "/workspace/auto?action=vehicle", primary: true },
-  { label: "Автомобили", route: "/workspace/auto?view=cars" },
+  { label: "Добавить автомобиль", route: "/workspace/auto?view=vehicles&action=vehicle", primary: true },
+  { label: "Обзор", route: "/workspace/auto?view=overview" },
+  { label: "Автомобили", route: "/workspace/auto?view=vehicles" },
+  { label: "Закупки", route: "/workspace/auto?view=purchases" },
   { label: "Клиенты", route: "/workspace/auto?view=clients" },
-  { label: "Продажи", route: "/workspace/auto?view=sales" },
-  { label: "Импорт", route: "/workspace/auto?view=import" },
-  { label: "Склад", route: "/workspace/auto?view=warehouse" },
+  { label: "Платежи и расходы", route: "/workspace/auto?view=expenses" },
 ];
 
 export function AutoHumanLandingView({ landing }: { landing: ModuleLandingDef }) {
@@ -29,7 +29,7 @@ export function AutoHumanLandingView({ landing }: { landing: ModuleLandingDef })
       data-experience-mode={mode}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="eds-type-caption text-[var(--eds-text-muted)]">Авто · дилерское пространство</p>
+        <p className="eds-type-caption text-[var(--eds-text-muted)]">Авто · закрытая операционная система компании</p>
         <SimpleProModeToggle />
       </div>
 

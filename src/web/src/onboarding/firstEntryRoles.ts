@@ -92,7 +92,7 @@ const ROLES: FirstEntryRole[] = [
   {
     id: "agro_business",
     label: "Агробизнес",
-    description: "Agriculture ecosystem — урожай, логистика, экспорт",
+    description: "Урожай, логистика и экспорт",
     icon: "AG",
     ecosystemHint: "agro",
     workspaceRoute: "/workspace/agro",
@@ -186,7 +186,7 @@ export const INDUSTRY_OPTIONS = [
   { id: "beauty", label: "Beauty" },
   { id: "automotive", label: "Automotive" },
   { id: "legal", label: "Legal" },
-  { id: "agriculture", label: "Agriculture" },
+  { id: "agriculture", label: "Агро" },
   { id: "cafe", label: "Cafe / F&B" },
   { id: "crypto", label: "Bidex / Crypto" },
   { id: "drone", label: "Drone" },

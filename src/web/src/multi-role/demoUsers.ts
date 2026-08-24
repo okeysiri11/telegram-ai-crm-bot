@@ -139,7 +139,7 @@ export const MULTI_ROLE_DEMO_USERS: DemoUserDef[] = [
   },
   {
     email: "agro@ados.demo",
-    name: "Agro Company",
+    name: "Агрокомпания",
     company: "GreenField Agro",
     tenantId: "greenfield",
     password: MULTI_ROLE_DEMO_PASSWORD,

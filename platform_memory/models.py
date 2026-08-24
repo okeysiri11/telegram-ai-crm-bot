@@ -8,6 +8,8 @@ from enum import Enum
 from typing import Any
 from uuid import uuid4
 
+from platform_memory.scope import MemoryScope, resolve_memory_scope
+
 
 class MemoryCategory(str, Enum):
     CONVERSATION = "conversation"
@@ -76,17 +78,44 @@ class UserFact:
 
 @dataclass(frozen=True)
 class BusinessFact:
+    """Sprint 47.0 (Decision 5): tenant_id is the canonical org identifier going
+    forward (matches services/tenant_context.py and middleware/tenant_middleware.py).
+    organization_id is kept as the existing required field for backward compatibility
+    with every current call site; tenant_id defaults to mirror it via __post_init__ so
+    new code can read/write tenant_id without a rename touching every constructor.
+    Do not add a third parallel name (e.g. company_id) here."""
+
     fact_id: str
     organization_id: str
     key: str
     value: str
     metadata: dict[str, Any] = field(default_factory=dict)
     updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    tenant_id: str | None = None
+    # Sprint 47.1 — additive, optional; narrows .scope when set (see
+    # platform_memory.scope.resolve_memory_scope). A BusinessFact with neither
+    # set is ORGANIZATION-scoped (tenant-wide), which is the common case.
+    vertical: str | None = None
+    customer_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.tenant_id is None:
+            object.__setattr__(self, "tenant_id", self.organization_id)
+
+    @property
+    def scope(self) -> MemoryScope:
+        return resolve_memory_scope(
+            tenant_id=self.tenant_id, vertical=self.vertical, customer_id=self.customer_id
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "fact_id": self.fact_id,
             "organization_id": self.organization_id,
+            "tenant_id": self.tenant_id,
+            "vertical": self.vertical,
+            "customer_id": self.customer_id,
+            "scope": self.scope.value,
             "key": self.key,
             "value": self.value,
             "metadata": self.metadata,
@@ -150,12 +179,27 @@ class SessionMemoryRecord:
 
 @dataclass(frozen=True)
 class ProjectMemoryRecord:
+    """Sprint 47.1 — tenant_id/vertical/customer_id are additive and optional
+    (this record type had no org/scope identifiers at all before this sprint).
+    customer_id is distinct from project_id: a project can be internal
+    (customer_id unset, VERTICAL- or ORGANIZATION-scoped) or tied to one
+    customer (customer_id set, CUSTOMER-scoped) — see platform_memory.scope."""
+
     memory_id: str
     project_id: str
     content: str
     memory_key: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
     updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    tenant_id: str | None = None
+    vertical: str | None = None
+    customer_id: str | None = None
+
+    @property
+    def scope(self) -> MemoryScope:
+        return resolve_memory_scope(
+            tenant_id=self.tenant_id, vertical=self.vertical, customer_id=self.customer_id
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -165,6 +209,10 @@ class ProjectMemoryRecord:
             "memory_key": self.memory_key,
             "metadata": self.metadata,
             "updated_at": self.updated_at,
+            "tenant_id": self.tenant_id,
+            "vertical": self.vertical,
+            "customer_id": self.customer_id,
+            "scope": self.scope.value,
         }
 
 
@@ -179,6 +227,15 @@ class ContextAssemblyRequest:
     current_message: str | None = None
     query: str | None = None
     configuration: dict[str, Any] = field(default_factory=dict)
+    # Sprint 47.0 (Decision 5): canonical org identifier going forward; mirrors
+    # organization_id when only the legacy field is supplied. See BusinessFact above.
+    tenant_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.tenant_id is None and self.organization_id is not None:
+            self.tenant_id = self.organization_id
+        elif self.organization_id is None and self.tenant_id is not None:
+            self.organization_id = self.tenant_id
 
 
 @dataclass

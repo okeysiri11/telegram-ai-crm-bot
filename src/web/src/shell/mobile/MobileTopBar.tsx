@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Badge, Button } from "@/ui";
 import { useNotificationStore } from "@/notifications/notificationStore";
-import { useAdaptiveShellStore } from "@/shell/enterprise/adaptiveShellStore";
+import { liveBuildLabel } from "./liveBuildLabel";
 import { useMobileChromeStore } from "./mobileChromeStore";
 
 export function MobileTopBar({
@@ -14,8 +14,9 @@ export function MobileTopBar({
   const unread = useNotificationStore((s) => s.items.filter((i) => !i.read).length);
   const setDrawerOpen = useMobileChromeStore((s) => s.setDrawerOpen);
   const setMoreOpen = useMobileChromeStore((s) => s.setMoreOpen);
-  const setActivityMode = useAdaptiveShellStore((s) => s.setActivityMode);
-  const activityMode = useAdaptiveShellStore((s) => s.activityMode);
+  const setSearchOpen = useMobileChromeStore((s) => s.setSearchOpen);
+  const navigate = useNavigate();
+  const live = liveBuildLabel();
 
   return (
     <header className="ados-mobile-top" data-testid="mobile-top-bar">
@@ -34,6 +35,11 @@ export function MobileTopBar({
       <p className="ados-mobile-top__ws" data-testid="mobile-workspace-name">
         {workspaceLabel}
       </p>
+      {live ? (
+        <span className="ados-mobile-live" data-testid="mobile-live-build">
+          {live}
+        </span>
+      ) : null}
       {demo ? (
         <Badge tone="warning" data-testid="demo-badge">
           DEMO
@@ -42,9 +48,18 @@ export function MobileTopBar({
       <Button
         size="sm"
         variant="ghost"
+        aria-label="Поиск"
+        data-testid="mobile-search-toggle"
+        onClick={() => setSearchOpen(true)}
+      >
+        ⌕
+      </Button>
+      <Button
+        size="sm"
+        variant="ghost"
         aria-label="Уведомления"
         data-testid="mobile-notifications"
-        onClick={() => setActivityMode(activityMode === "hidden" ? "expanded" : "hidden")}
+        onClick={() => navigate("/notifications")}
       >
         🔔{unread ? <span className="ml-0.5 text-xs">{unread}</span> : null}
       </Button>

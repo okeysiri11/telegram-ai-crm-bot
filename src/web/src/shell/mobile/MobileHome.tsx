@@ -1,11 +1,24 @@
-import { Link } from "react-router-dom";
-import { Badge, Button, Card } from "@/ui";
+import { Link, useNavigate } from "react-router-dom";
+import { Badge, Card } from "@/ui";
+import { useAuthStore } from "@/auth/authStore";
+import { useLastModuleStore } from "@/modules/lastModuleStore";
+import { openClientDemoWorkspace } from "@/multi-role/applyDemoSession";
 import { useNotificationStore } from "@/notifications/notificationStore";
-import { getVertical } from "@/vertical-workspace/catalog";
+import { MobileActionButton } from "./MobileActionButton";
 import { useMobileChromeStore } from "./mobileChromeStore";
 import { MobileFavoritesRow } from "./MobileFavoritesRow";
-import { quickActionsForWorkspace, workspaceHomePath } from "./mobileWorkspace";
-import { useState } from "react";
+import { MobileWorkspaceCards } from "./MobileWorkspaceHub";
+import {
+  demoWorkspaceAvailable,
+  importantTodayFromLive,
+  isClientDemoSession,
+  isOperationalWorkspaceRoute,
+  isOwnerSystemContext,
+  MOBILE_EXTRA_ACTIONS,
+  mobileHomeQuickActions,
+  workspaceContextCopy,
+  workspaceHomePath,
+} from "./mobileWorkspace";
 
 export function MobileHome({
   workspaceId,
@@ -18,84 +31,141 @@ export function MobileHome({
   roleLabel: string;
   demo?: boolean;
 }) {
+  const navigate = useNavigate();
+  const login = useAuthStore((s) => s.login);
+  const email = useAuthStore((s) => s.user?.email);
   const home = workspaceHomePath(workspaceId);
-  const vertical = getVertical(workspaceId);
-  const actions = [...quickActionsForWorkspace(workspaceId), { id: "more", label: "Ещё", href: "__drawer__" }];
+  const context = workspaceContextCopy(workspaceId, workspaceLabel);
+  const actions = mobileHomeQuickActions(workspaceId);
+  const setMoreOpen = useMobileChromeStore((s) => s.setMoreOpen);
   const setDrawerOpen = useMobileChromeStore((s) => s.setDrawerOpen);
-  const unread = useNotificationStore((s) => s.items.filter((i) => !i.read).length);
-  const [analyticsOpen, setAnalyticsOpen] = useState(false);
-  const important = (vertical?.tasks || []).slice(0, 3);
+  const lastRoute = useLastModuleStore((s) => s.lastRoute);
+  const notifications = useNotificationStore((s) => s.items);
+  const unread = notifications.filter((i) => !i.read).length;
+  const unreadTasks = notifications.filter((i) => !i.read && i.kind === "task").length;
+  const unreadAlerts = notifications.filter((i) => !i.read && (i.kind === "alert" || i.kind === "toast")).length;
+  const important = importantTodayFromLive({ unread, healthFailed: 0, unreadTasks, unreadAlerts });
+  const continueHref = isOperationalWorkspaceRoute(lastRoute) ? lastRoute : null;
+  const showDemo = demoWorkspaceAvailable();
+  const demoDisabled = isClientDemoSession(email);
+  const owner = isOwnerSystemContext(workspaceId) || context.systemOwner;
+  const workspaceCta = owner ? "Открыть рабочее пространство" : `Перейти в ${context.title}`;
 
   return (
     <div className="ados-mobile-home" data-testid="mobile-home">
+      {showDemo ? (
+        <MobileActionButton
+          testId="mobile-open-demo"
+          variant="secondary"
+          disabled={demoDisabled}
+          disabledReason={demoDisabled ? "Вы уже в демо-пространстве" : undefined}
+          onClick={async () => {
+            const creds = openClientDemoWorkspace();
+            try {
+              await login(creds.email, creds.password, creds.tenantId);
+            } catch {
+              /* demo seed still applied */
+            }
+            navigate("/dashboard");
+          }}
+        >
+          Открыть демо-пространство
+        </MobileActionButton>
+      ) : null}
+
       <Card>
         {demo ? (
           <div className="mb-2">
             <Badge tone="warning">DEMO</Badge>
           </div>
         ) : null}
-        <p className="eds-type-caption text-[var(--eds-text-muted)]">Workspace</p>
+        <p className="eds-type-caption text-[var(--eds-text-muted)]">{context.kicker}</p>
         <h1 className="text-2xl font-semibold" data-testid="mobile-home-workspace">
-          {workspaceLabel}
+          {context.title}
         </h1>
-        <p className="mt-1 eds-type-body">Роль: {roleLabel}</p>
-        <Link to={home} className="mt-3 block">
-          <Button className="w-full">Открыть рабочее пространство</Button>
-        </Link>
+        <p className="mt-1 eds-type-body">
+          {context.roleKicker}: {owner ? "Владелец" : roleLabel}
+        </p>
+        {context.hint ? <p className="mt-1 eds-type-caption text-[var(--eds-text-muted)]">{context.hint}</p> : null}
+        <div className="mt-3">
+          <MobileActionButton testId="mobile-open-workspace" to={home} disabled={false}>
+            {workspaceCta}
+          </MobileActionButton>
+        </div>
       </Card>
+
+      {owner ? (
+        <section data-testid="mobile-continue-work">
+          <h2 className="mb-2 font-semibold">Продолжить работу</h2>
+          {continueHref ? (
+            <Link to={continueHref} className="ados-mobile-card block">
+              Недавнее рабочее пространство
+            </Link>
+          ) : (
+            <p className="eds-type-body text-[var(--eds-text-muted)]">Откройте рабочее пространство ниже.</p>
+          )}
+        </section>
+      ) : null}
+
+      <section data-testid="mobile-important-today">
+        <h2 className="mb-2 font-semibold">Важное сегодня</h2>
+        {important.length ? (
+          <div className="space-y-2">
+            {important.map((item) => (
+              <Link key={item.id} to={item.href} className="ados-mobile-card block">
+                {item.label}
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="eds-type-body text-[var(--eds-text-muted)]">На сегодня критичных событий нет.</p>
+        )}
+      </section>
+
+      {owner ? <MobileWorkspaceCards /> : null}
 
       <section>
         <h2 className="mb-2 font-semibold">Быстрые действия</h2>
         <div className="ados-mobile-qa">
           {actions.map((action) =>
-            action.href === "__drawer__" ? (
-              <button key={action.id} type="button" onClick={() => setDrawerOpen(true)}>
+            action.action === "more" ? (
+              <button key={action.id} type="button" data-testid="mobile-open-more" onClick={() => setMoreOpen(true)}>
+                {action.label}
+              </button>
+            ) : action.action === "panel" ? (
+              <button
+                key={action.id}
+                type="button"
+                data-testid="mobile-open-panel"
+                aria-label="Открыть операционную панель"
+                onClick={() => setDrawerOpen(true)}
+              >
                 {action.label}
               </button>
             ) : (
-              <Link key={action.id} to={action.href}>
+              <button
+                key={action.id}
+                type="button"
+                data-testid={
+                  action.id === "ai" ? "mobile-open-ai" : action.id === "settings" ? "mobile-open-settings" : undefined
+                }
+                onClick={() => navigate(action.href)}
+              >
                 {action.label}
-              </Link>
+              </button>
             ),
           )}
+        </div>
+        <div className="ados-mobile-extra">
+          {MOBILE_EXTRA_ACTIONS.map((item) => (
+            <Link key={item.id} to={item.href}>
+              {item.label}
+            </Link>
+          ))}
         </div>
       </section>
 
       <MobileFavoritesRow />
-
-      <section>
-        <h2 className="mb-2 font-semibold">Важное сегодня</h2>
-        <div className="space-y-2">
-          <Link to="/crm?view=deals" className="ados-mobile-card block">
-            Активные сделки
-          </Link>
-          {important.map((task) => (
-            <div key={task.title} className="ados-mobile-card">
-              <p>{task.title}</p>
-              <p className="eds-type-caption text-[var(--eds-text-muted)]">{task.status}</p>
-            </div>
-          ))}
-          <Link to="/notifications" className="ados-mobile-card block">
-            Уведомления · {unread}
-          </Link>
-        </div>
-      </section>
-
-      <section>
-        <Button variant="secondary" className="w-full" onClick={() => setAnalyticsOpen((v) => !v)}>
-          {analyticsOpen ? "Скрыть аналитику" : "Показать аналитику"}
-        </Button>
-        {analyticsOpen && vertical?.stats?.length ? (
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {vertical.stats.map((stat) => (
-              <div key={stat.label} className="ados-mobile-card">
-                <p className="eds-type-caption">{stat.label}</p>
-                <p className="text-xl font-semibold">{stat.value}</p>
-              </div>
-            ))}
-          </div>
-        ) : null}
-      </section>
     </div>
   );
 }

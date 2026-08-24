@@ -42,6 +42,47 @@ async def cmd_history(request: web.Request, ctx=None) -> web.Response:
     return _ok({"history": command_history.list(owner)})
 
 
+async def _resolve_server_side_scope(
+    ctx: Any,
+) -> tuple[str | None, str | None, str | None, str | None]:
+    """Sprint 47.0 (CC-3): resolve the caller's real active_vertical/active_persona/
+    authenticated_role/tenant_id from server-side state (the same
+    vertical_role_registry the Telegram bot uses, plus TenantContextService), instead
+    of trusting whatever the client claims in the request body. Returns
+    (active_vertical, active_persona, authenticated_role, tenant_id) — any of which
+    may be None if there is no authenticated Telegram identity to resolve a session
+    for (e.g. a pure API-key caller with no bot-side session)."""
+    telegram_id = getattr(ctx, "actor_telegram_id", None)
+    if not telegram_id:
+        return None, None, None, None
+
+    active_vertical: str | None = None
+    active_persona: str | None = None
+    authenticated_role: str | None = None
+    tenant_id: str | None = None
+
+    try:
+        from services.vertical_role_registry import vertical_role_registry
+
+        sess = vertical_role_registry.get(int(telegram_id))
+        active_vertical = sess.active_vertical
+        active_persona = sess.active_persona
+        authenticated_role = sess.authenticated_role
+    except Exception:  # noqa: BLE001
+        logger.exception("ai_command_vertical_session_resolve_failed telegram_id=%s", telegram_id)
+
+    try:
+        from services.tenant_context import TenantContextService
+
+        tenant_ctx = await TenantContextService.resolve_for_user(int(telegram_id))
+        if tenant_ctx is not None:
+            tenant_id = str(tenant_ctx.tenant_id)
+    except Exception:  # noqa: BLE001
+        logger.exception("ai_command_tenant_resolve_failed telegram_id=%s", telegram_id)
+
+    return active_vertical, active_persona, authenticated_role, tenant_id
+
+
 @require_role(ManagementRole.ADMINISTRATOR)
 async def cmd_chat(request: web.Request, ctx=None) -> web.Response:
     try:
@@ -52,14 +93,24 @@ async def cmd_chat(request: web.Request, ctx=None) -> web.Response:
     if not text:
         return _err("text required")
     owner = str(body.get("owner_id") or getattr(ctx, "actor_telegram_id", None) or "api")
+
+    active_vertical, active_persona, authenticated_role, tenant_id = await _resolve_server_side_scope(ctx)
+
     result = await ai_command_center.handle(
         text,
         owner_id=owner,
         channel=str(body.get("channel") or "api"),
         session_id=body.get("session_id"),
-        role=str(body.get("role") or "owner"),
+        # authenticated_role (server-resolved) takes precedence over the client-
+        # declared body.role for tool-availability filtering; only fall back to the
+        # client value when there is no server-side session to resolve one from.
+        role=authenticated_role or str(body.get("role") or "owner"),
         voice=bool(body.get("voice")),
         max_steps=body.get("max_steps"),
+        active_vertical=active_vertical,
+        active_persona=active_persona,
+        authenticated_role=authenticated_role,
+        tenant_id=tenant_id,
     )
     return _ok(result, status=201)
 

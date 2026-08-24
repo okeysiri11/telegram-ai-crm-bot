@@ -49,6 +49,16 @@ class AuditAction(str, enum.Enum):
     TENANT_RESOURCE_BIND = "TENANT_RESOURCE_BIND"
     TENANT_BILLING_PROVISION = "TENANT_BILLING_PROVISION"
 
+    # Sprint 48.0 — Crypto/OTC transaction idempotency & duplicate-payout
+    # protection (security-critical). See services/pg_crypto_tx_antifraud_engine.py.
+    CRYPTO_TX_REGISTERED = "crypto_tx_registered"
+    DUPLICATE_TX_DETECTED = "duplicate_tx_detected"
+    DUPLICATE_TX_BLOCKED = "duplicate_tx_blocked"
+    DUPLICATE_TX_REVIEW_REQUESTED = "duplicate_tx_review_requested"
+    DUPLICATE_TX_OVERRIDE_APPROVED = "duplicate_tx_override_approved"
+    DUPLICATE_TX_OVERRIDE_REJECTED = "duplicate_tx_override_rejected"
+    PAYOUT_COMPLETED = "payout_completed"
+
 
 class AuditLog(UUIDPrimaryKeyMixin, CreatedAtMixin, VersionMixin, Base):
     __tablename__ = "audit_engine_logs"

@@ -88,6 +88,8 @@ async def cos_menu_handler(request: web.Request) -> web.Response:
 
 async def cos_staff_handler(request: web.Request) -> web.Response:
     try:
+        if request.method == "GET":
+            return json_response(_suite().list_staff())
         body = await _read_json(request)
         return json_response(
             _suite().create_staff(
@@ -103,6 +105,8 @@ async def cos_staff_handler(request: web.Request) -> web.Response:
 
 async def cos_customers_handler(request: web.Request) -> web.Response:
     try:
+        if request.method == "GET":
+            return json_response(_suite().list_customers())
         body = await _read_json(request)
         return json_response(
             _suite().create_customer(
@@ -117,6 +121,8 @@ async def cos_customers_handler(request: web.Request) -> web.Response:
 
 async def cos_reservations_handler(request: web.Request) -> web.Response:
     try:
+        if request.method == "GET":
+            return json_response(_suite().list_reservations())
         body = await _read_json(request)
         if body.get("reservation_id") and body.get("status"):
             return json_response(
@@ -140,6 +146,8 @@ async def cos_reservations_handler(request: web.Request) -> web.Response:
 
 async def cos_orders_handler(request: web.Request) -> web.Response:
     try:
+        if request.method == "GET":
+            return json_response(_suite().list_orders())
         body = await _read_json(request)
         return json_response(
             _suite().place_order(
@@ -148,6 +156,29 @@ async def cos_orders_handler(request: web.Request) -> web.Response:
                 items=list(body.get("items") or []),
                 reservation_id=body.get("reservation_id", ""),
                 channel=body.get("channel", "dine_in"),
+                order_type=body.get("order_type", body.get("type", "Обычный заказ")),
+                guests=int(body.get("guests", 0) or 0),
+                comment=body.get("comment", ""),
+                responsible=body.get("responsible", ""),
+            ),
+            status=201,
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def cos_shifts_handler(request: web.Request) -> web.Response:
+    try:
+        if request.method == "GET":
+            return json_response(_suite().list_shifts())
+        body = await _read_json(request)
+        if body.get("shift_id") and body.get("action") == "close":
+            return json_response(_suite().close_shift(shift_id=body["shift_id"]))
+        return json_response(
+            _suite().open_shift(
+                staff_id=body.get("staff_id", ""),
+                role=body.get("role", ""),
+                date=body.get("date", ""),
             ),
             status=201,
         )

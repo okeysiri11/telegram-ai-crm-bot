@@ -51,7 +51,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   let containerId = "";
 
   steps.push(
-    await timedStep("login", "Login (production auth)", async () => {
+    await timedStep("login", "Вход в систему", async () => {
       const isam = await apiFetch(`${ISAM()}/health`);
       const body = isam.ok ? ((await isam.json()) as Record<string, unknown>) : {};
       return { detail: "Staff session + ISAM health", data: { gate: "production_auth", isam: body } };
@@ -59,7 +59,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("farm_crm", "Farm CRM", async () => {
+    await timedStep("farm_crm", "Клиенты фермы", async () => {
       const farmer = await apiFetch(`${AGRO()}/farmers`, {
         method: "POST",
         body: JSON.stringify({
@@ -113,7 +113,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("products", "Products", async () => {
+    await timedStep("products", "Товары", async () => {
       const res = await apiFetch(`${AGRO()}/products`, {
         method: "POST",
         body: JSON.stringify({
@@ -132,7 +132,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("harvest", "Harvest", async () => {
+    await timedStep("harvest", "Урожай", async () => {
       const season = await apiFetch(`${AGRO()}/harvest/seasons`, {
         method: "POST",
         body: JSON.stringify({ name: "Main Season", year: 2026, region: "KE" }),
@@ -169,7 +169,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("warehouse", "Warehouse + inventory", async () => {
+    await timedStep("warehouse", "Склад и остатки", async () => {
       const wh = await apiFetch(`${AGRO()}/warehouse/warehouses`, {
         method: "POST",
         body: JSON.stringify({
@@ -209,7 +209,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("commodity_sale", "Commodity sale (grain marketplace)", async () => {
+    await timedStep("commodity_sale", "Продажа зерна", async () => {
       const buyer = await apiFetch(`${AGRO()}/crm/buyers`, {
         method: "POST",
         body: JSON.stringify({
@@ -278,7 +278,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("contract", "Trade contract", async () => {
+    await timedStep("contract", "Торговый договор", async () => {
       // Supply-chain export contract (existing enterprise trading surface)
       const contract = await apiFetch(`${SC()}/export`, {
         method: "POST",
@@ -322,7 +322,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("shipment", "Shipment + logistics", async () => {
+    await timedStep("shipment", "Поставка и логистика", async () => {
       const ports = await apiFetch(`${AGRO()}/logistics/ports`);
       const portsBody = (await ports.json()) as Record<string, unknown>;
       if (!ports.ok) throw new Error(String(portsBody.error || "Ports failed"));
@@ -452,9 +452,10 @@ export async function runAgricultureLiveWorkflow(opts: {
       source: "agriculture_pilot_workflow",
       event: "shipment_dispatched",
       recipient: opts.farmerEmail,
-      subject: "Agriculture shipment dispatched",
-      body: `Shipment ${shipmentId} for harvest ${harvestId} is underway. Contract ${contractId}.`,
+      subject: "Поставка агро отправлена",
+      body: `Поставка ${shipmentId} по урожаю ${harvestId} в пути. Договор ${contractId}.`,
       payload: { shipment_id: shipmentId, contract_id: contractId, order_id: orderId },
+      stepLabel: "Уведомление",
     }),
   );
 
@@ -463,11 +464,11 @@ export async function runAgricultureLiveWorkflow(opts: {
       organizationId: opts.organizationId,
       ecosystem: "agriculture",
       tasks: [
-        { label: "AI Agronomist", task: "Advise wheat moisture and quality for export lot" },
-        { label: "AI Trader", task: "Recommend FOB wheat price vs regional quote" },
-        { label: "AI Logistics", task: "Optimize sea freight container load for AE" },
-        { label: "AI Marketing", task: "Promote surplus grain listing to mill buyers" },
-        { label: "AI Analytics", task: "Summarize harvest-to-shipment KPIs for owner" },
+        { label: "Агроном-помощник", task: "Оценить влажность и качество пшеницы для экспортной партии" },
+        { label: "Трейдер-помощник", task: "Рекомендовать цену пшеницы FOB относительно региональной котировки" },
+        { label: "Логист-помощник", task: "Оптимизировать загрузку контейнера для морской перевозки" },
+        { label: "Маркетолог-помощник", task: "Предложить излишки зерна покупателям-мельницам" },
+        { label: "Аналитик-помощник", task: "Свести показатели от урожая до поставки для владельца" },
       ],
     }),
   );
@@ -475,20 +476,21 @@ export async function runAgricultureLiveWorkflow(opts: {
   steps.push(
     await stepAiConcierge({
       organizationId: opts.organizationId,
-      name: "Agriculture Pilot Concierge",
+      name: "Агро-консьерж",
       role: "business_concierge",
-      roleCustom: "Agriculture trade concierge",
+      roleCustom: "Консьерж агроторговли",
       recommendations: [
-        `harvest:${harvestId}`,
-        `contract:${contractId}`,
-        `shipment:${shipmentId}`,
-        "Confirm phyto certificate before customs",
+        `урожай:${harvestId}`,
+        `договор:${contractId}`,
+        `поставка:${shipmentId}`,
+        "Подтвердите фитосанитарный сертификат до таможни",
       ],
+      stepLabel: "Консьерж",
     }),
   );
 
   steps.push(
-    await timedStep("ai_agronomist", "AI Agronomist probe", async () => {
+    await timedStep("ai_agronomist", "Проверка агронома-помощника", async () => {
       const health = await apiFetch(`${AA()}/health`);
       const healthBody = (await health.json()) as Record<string, unknown>;
       if (!health.ok) throw new Error(String(healthBody.error || "AI Agronomist health failed"));
@@ -497,7 +499,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("ai_marketing", "AI Marketing (AMO)", async () => {
+    await timedStep("ai_marketing", "Маркетинг-помощник", async () => {
       const health = await apiFetch(`${AMO()}/health`);
       const healthBody = (await health.json()) as Record<string, unknown>;
       if (!health.ok) throw new Error(String(healthBody.error || "AMO health failed"));
@@ -517,7 +519,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("owner_dashboard", "Owner dashboard", async () => {
+    await timedStep("owner_dashboard", "Панель владельца", async () => {
       const [exec, kpi, scDash, aeHealth, afHealth] = await Promise.all([
         apiFetch(`${AGRO()}/dashboards/executive`),
         apiFetch(`${AGRO()}/kpi`),
@@ -545,7 +547,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   steps.push(await stepMissionControl());
 
   steps.push(
-    await timedStep("analytics", "Analytics", async () => {
+    await timedStep("analytics", "Аналитика", async () => {
       const analytics = await apiFetch(`${AGRO()}/analytics`);
       const body = (await analytics.json()) as Record<string, unknown>;
       if (!analytics.ok) throw new Error(String(body.error || "Analytics failed"));
@@ -556,7 +558,7 @@ export async function runAgricultureLiveWorkflow(opts: {
   );
 
   steps.push(
-    await timedStep("quality_gates", "Quality gates", async () => {
+    await timedStep("quality_gates", "Проверки качества", async () => {
       const probes = await Promise.all([
         apiFetch(`${AGRO()}/health`),
         apiFetch(`${SC()}/health`),

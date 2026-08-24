@@ -39,7 +39,7 @@ class WorkingMemory:
             tags=list(tags or []),
             metadata={"status": status},
         )
-        continuity_store.save(rec)
+        continuity_store.save(rec, principal=principal)
         continuity_store.add_timeline(
             TimelineEvent(
                 id=new_id("tl"),
@@ -68,7 +68,9 @@ class WorkingMemory:
             return {"error": "forbidden"}
         existing = [
             r
-            for r in continuity_store.list_for(principal.owner_id, level="project", kind="project")
+            for r in continuity_store.list_for(
+                principal.owner_id, level="project", kind="project", principal=principal
+            )
             if r.project_id == project_id
         ]
         if existing:
@@ -77,7 +79,7 @@ class WorkingMemory:
             rec.content = content or title
             rec.metadata["status"] = status
             rec.channel = channel
-            continuity_store.save(rec)
+            continuity_store.save(rec, principal=principal)
             return rec.to_dict()
         rec = MemoryRecord(
             id=new_id("proj"),
@@ -92,12 +94,19 @@ class WorkingMemory:
             role=principal.role,
             metadata={"status": status},
         )
-        continuity_store.save(rec)
+        continuity_store.save(rec, principal=principal)
         return rec.to_dict()
 
     def open_tasks(self, principal: MemoryPrincipal, *, limit: int = 50) -> list[dict[str, Any]]:
         day_ago = time.time() - 86400
-        items = continuity_store.list_for(principal.owner_id, company_id=principal.company_id, level="working", kind="task", limit=limit)
+        items = continuity_store.list_for(
+            principal.owner_id,
+            company_id=principal.company_id,
+            level="working",
+            kind="task",
+            limit=limit,
+            principal=principal,
+        )
         return [
             r.to_dict()
             for r in items
@@ -108,7 +117,12 @@ class WorkingMemory:
         out: list[dict[str, Any]] = []
         for level, kind in (("working", "task"), ("project", "project"), ("working", "generation"), ("working", "document")):
             for r in continuity_store.list_for(
-                principal.owner_id, company_id=principal.company_id, level=level, kind=kind, limit=limit
+                principal.owner_id,
+                company_id=principal.company_id,
+                level=level,
+                kind=kind,
+                limit=limit,
+                principal=principal,
             ):
                 if r.metadata.get("status") in ("done", "closed", "published"):
                     continue
@@ -117,11 +131,11 @@ class WorkingMemory:
         return out[:limit]
 
     def mark_done(self, principal: MemoryPrincipal, memory_id: str) -> dict[str, Any] | None:
-        rec = continuity_store.get(memory_id)
-        if not rec or rec.owner_id != principal.owner_id:
+        rec = continuity_store.get(memory_id, principal=principal)
+        if not rec or not can_write(principal, rec):
             return None
         rec.metadata["status"] = "done"
-        continuity_store.save(rec)
+        continuity_store.save(rec, principal=principal)
         return rec.to_dict()
 
 

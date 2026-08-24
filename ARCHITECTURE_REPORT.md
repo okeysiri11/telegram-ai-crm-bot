@@ -1,51 +1,50 @@
 # Architecture Report
 
-> Generated automatically on 2026-08-05 10:32:37 UTC
+> Generated automatically on 2026-08-10 08:03:19 UTC
 
 ## Executive Summary
 
 - **Grade:** FAIL
-- **Architecture Score:** 73.85/100
+- **Architecture Score:** 80.25/100
 - **Quality Gates:** FAILED
-- **Modules in graph:** 1749
-- **Dependency edges:** 4597
+- **Modules in graph:** 1910
+- **Dependency edges:** 4920
 - **Cycles:** 0
 
-Architecture score 73.85/100 — FAIL. Modules=1749, edges=4597, cycles=0.
+Architecture score 80.25/100 — FAIL. Modules=1910, edges=4920, cycles=0.
 
 ## Quality Gate Failures
 
-- Architecture score 73.85 < 90
-- 22 critical boundary/import violations
-- 0 dependency cycles and 2 strict layer violations detected
-- Legacy CI validation failed
+- Architecture score 80.25 < 90
+- 29 critical boundary/import violations
+- 0 dependency cycles and 4 strict layer violations detected
 
 ## Validation Summary
 
 | Domain | Status | Coverage | Violations |
 |--------|--------|----------|------------|
-| boundaries | FAIL | 66.67% | 20 critical / 24 total |
+| boundaries | FAIL | 66.67% | 29 critical / 33 total |
 | plugins | PASS | 100.0% | 0 critical / 0 total |
 | workflows | PASS | 100.0% | 0 critical / 1 total |
 | api | PASS | 100.0% | 0 critical / 0 total |
 | sdk | PASS | 100.0% | 0 critical / 0 total |
-| dependencies | FAIL | 87.77% | 2 critical / 582 total |
-| legacy | FAIL | 0.0% | 2 critical / 2 total |
+| dependencies | FAIL | 88.37% | 4 critical / 592 total |
+| legacy | PASS | 100.0% | 0 critical / 0 total |
 
 ## Dependency Graph
 
 ```mermaid
 flowchart TD
   subgraph api[api]
+    platform_ai_command_router_command_router_py[platform_ai_command/router/command_router.py]
+    platform_ai_command_router_vertical_router_py[platform_ai_command/router/vertical_router.py]
     platform_identity_identity_router_py[platform_identity/identity_router.py]
     platform_integrations_integration_router_py[platform_integrations/integration_router.py]
     platform_integrations_webhook_router_py[platform_integrations/webhook_router.py]
     platform_jobs_jobs_router_py[platform_jobs/jobs_router.py]
     platform_management_management_router_py[platform_management/management_router.py]
     platform_memory_project_memory_router_py[platform_memory/project_memory_router.py]
-    platform_observability_telemetry_router_py[platform_observability/telemetry_router.py]
-    platform_orchestrator_city_runtime_router_py[platform_orchestrator/city_runtime_router.py]
-    api_more[...+4 modules]
+    api_more[...+6 modules]
   end
   subgraph database[database]
     database_async_bridge_py[database/async_bridge.py]
@@ -56,7 +55,7 @@ flowchart TD
     database_models_ai_advertising_agent_py[database/models/ai_advertising_agent.py]
     database_models_ai_agents_py[database/models/ai_agents.py]
     database_models_ai_conversation_skills_py[database/models/ai_conversation_skills.py]
-    database_more[...+132 modules]
+    database_more[...+133 modules]
   end
   subgraph legacy[legacy]
     platform_events_legacy_py[platform_events_legacy.py]
@@ -67,7 +66,7 @@ flowchart TD
     services_pg_ai_manager_engine_py[services/pg_ai_manager_engine.py]
     services_pg_ai_procurement_agent_engine_py[services/pg_ai_procurement_agent_engine.py]
     services_pg_ai_procurement_agent_v1_py[services/pg_ai_procurement_agent_v1.py]
-    legacy_more[...+94 modules]
+    legacy_more[...+95 modules]
   end
   subgraph plugins[plugins]
     plugins__scaffold_py[plugins/_scaffold.py]
@@ -89,7 +88,7 @@ flowchart TD
     repositories_ai_skill_repository_py[repositories/ai_skill_repository.py]
     repositories_analytics_automation_repository_py[repositories/analytics_automation_repository.py]
     repositories_analytics_engine_repository_py[repositories/analytics_engine_repository.py]
-    repositories_more[...+102 modules]
+    repositories_more[...+103 modules]
   end
   subgraph services[services]
     events_adapters_crm_adapter_py[events/adapters/crm_adapter.py]
@@ -100,7 +99,7 @@ flowchart TD
     events_event_bus_py[events/event_bus.py]
     events_event_bus_policy_py[events/event_bus_policy.py]
     events_generic_events_py[events/generic_events.py]
-    services_more[...+679 modules]
+    services_more[...+762 modules]
   end
   subgraph shared[shared]
     database___init___py[database/__init__.py]
@@ -111,7 +110,7 @@ flowchart TD
     events_handlers___init___py[events/handlers/__init__.py]
     platform_agents___init___py[platform_agents/__init__.py]
     platform_agents_agents___init___py[platform_agents/agents/__init__.py]
-    shared_more[...+539 modules]
+    shared_more[...+563 modules]
   end
   subgraph unknown[unknown]
     services_agro_deal_lifecycle_py[services/agro_deal_lifecycle.py]
@@ -122,53 +121,53 @@ flowchart TD
     services_ai_agents_py[services/ai_agents.py]
     services_anti_loss_layer_test_py[services/anti_loss_layer_test.py]
     services_attachments_py[services/attachments.py]
-    unknown_more[...+122 modules]
+    unknown_more[...+154 modules]
   end
   subgraph workflow[workflow]
     platform_workflows_adapters_legacy_rules_py[platform_workflows/adapters/legacy_rules.py]
     platform_workflows_adapters_python_definitions_py[platform_workflows/adapters/python_definitions.py]
+    platform_workflows_approval_engine_py[platform_workflows/approval_engine.py]
     platform_workflows_context_py[platform_workflows/context.py]
+    platform_workflows_cost_optimizer_py[platform_workflows/cost_optimizer.py]
     platform_workflows_exceptions_py[platform_workflows/exceptions.py]
+    platform_workflows_job_runner_py[platform_workflows/job_runner.py]
     platform_workflows_models_py[platform_workflows/models.py]
-    platform_workflows_services_py[platform_workflows/services.py]
-    platform_workflows_workflow_engine_py[platform_workflows/workflow_engine.py]
-    platform_workflows_workflow_executor_py[platform_workflows/workflow_executor.py]
-    workflow_more[...+4 modules]
+    workflow_more[...+21 modules]
   end
 ```
 
 ## Layer Violations
 
+- **[reverse_layer_dependency]** `platform_workflows/job_runner.py` — workflow imports shared via platform_hercules
 - **[reverse_layer_dependency]** `platform_enterprise_event_bus/router.py` — services imports shared via platform_management.permissions
 - **[reverse_layer_dependency]** `platform_enterprise_event_bus/router.py` — services imports shared via platform_api.versioning
 - **[reverse_layer_dependency]** `database/engine.py` — database imports services via platform_configuration.configuration_center
 - **[reverse_layer_dependency]** `platform_operations/timeline_service.py` — services imports shared via platform_management.management_service
-- **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.health
 - **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.system_info
-- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
+- **[reverse_layer_dependency]** `platform_operations/status_service.py` — services imports shared via platform_management.health
 - **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.statistics
-- **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.performance
+- **[reverse_layer_dependency]** `platform_operations/activity_service.py` — services imports shared via platform_management.management_service
+- **[reverse_layer_dependency]** `platform_vertical_ai/registry.py` — services imports shared via platform_vertical_ai.configs
 - **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.integrations
 - **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.opportunities
-- **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.calendar
+- **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.creative
 - **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.approval
+- **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.campaigns
 - **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.content
 - **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.brand
-- **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.campaigns
-- **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.creative
-- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.e2e
+- **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.performance
+- **[reverse_layer_dependency]** `platform_ai_marketing_os/facade.py` — services imports shared via platform_ai_marketing_os.calendar
+- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.regression
 - **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.security
+- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.ai
+- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.e2e
+- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.reporting
 - **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.unit
+- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.contract
 - **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.coverage
 - **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.performance
-- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.regression
-- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.integration
 - **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.fixtures
-- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.ai
-- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.workflow
-- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.reporting
-- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.contract
-- **[reverse_layer_dependency]** `platform_enterprise_knowledge_graph/facade.py` — services imports shared via platform_enterprise_knowledge_graph.owner
+- **[reverse_layer_dependency]** `platform_quality/facade.py` — services imports shared via platform_quality.integration
 
 ## Boundaries Violations
 
@@ -176,7 +175,17 @@ flowchart TD
 - **[env_access_outside_center]** `api/crm_api.py:83` — \bos\.getenv\s*\(
 - **[env_access_outside_center]** `applications/enterprise_hub/security/providers/google.py:39` — \bos\.environ\.get\s*\(
 - **[env_access_outside_center]** `applications/enterprise_hub/security/providers/google.py:86` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_ai/providers/adapters.py:20` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_ai/providers/vault.py:76` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_ai/providers/vault.py:97` — \bos\.environ\.get\s*\(
 - **[env_access_outside_center]** `platform_ai/skills_sdk_models.py:44` — \bos\.getenv\s*\(
+- **[env_access_outside_center]** `platform_hercules/config/settings.py:11` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_hercules/config/settings.py:12` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_hercules/config/settings.py:13` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_hercules/core/resources.py:37` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_hercules/cpu/pool.py:34` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_hercules/executor/executor.py:94` — \bos\.environ\.get\s*\(
+- **[env_access_outside_center]** `platform_hercules/gpu/pool.py:14` — \bos\.environ\.get\s*\(
 - **[env_access_outside_center]** `platform_performance/measured_workload.py:460` — \bos\.getenv\s*\(
 - **[env_access_outside_center]** `platform_security/external_ai_guard.py:31` — \bos\.environ\.get\s*\(
 - **[env_access_outside_center]** `platform_security/external_ai_guard.py:32` — \bos\.environ\.get\s*\(
@@ -187,21 +196,14 @@ flowchart TD
 - **[env_access_outside_center]** `platform_state/event_store.py:259` — \bos\.environ\.get\s*\(
 - **[env_access_outside_center]** `platform_state/event_store.py:262` — \bos\.environ\.get\s*\(
 - **[env_access_outside_center]** `platform_state/event_store_postgres.py:18` — \bos\.environ\.get\s*\(
-- **[env_access_outside_center]** `platform_state/event_store_postgres.py:28` — \bos\.environ\.get\s*\(
-- **[env_access_outside_center]** `platform_state/version_engine.py:369` — \bos\.environ\.get\s*\(
-- **[env_access_outside_center]** `platform_state/version_engine.py:374` — \bos\.environ\.get\s*\(
-- **[env_access_outside_center]** `platform_state/version_engine.py:392` — \bos\.environ\.get\s*\(
-- **[direct_legacy_import]** `platform_validation/enterprise_integration_suite.py:286` — services.pg_scheduler_engine
+- ... and 4 more
 
 ## Dependencies Violations
 
 - **[reverse_layer_dependency]** `platform_validation/enterprise_integration_suite.py` — services imports api via platform_jobs.jobs_router
 - **[reverse_layer_dependency]** `platform_validation/enterprise_integration_suite.py` — services imports api via platform_realtime.websocket_router
-
-## Legacy Violations
-
-- **[direct_legacy_import]** `platform_validation/enterprise_integration_suite.py:286` — services.pg_scheduler_engine
-- **[deprecated_without_adapter]** `platform_validation/enterprise_integration_suite.py:286` — import services.pg_scheduler_engine must use platform_legacy compatibility layer
+- **[reverse_layer_dependency]** `platform_ai_command/core/command_center.py` — services imports api via platform_ai_command.router.vertical_router
+- **[reverse_layer_dependency]** `platform_ai_command/core/command_center.py` — services imports api via platform_ai_command.router.command_router
 
 ## Certification Categories
 
@@ -210,12 +212,12 @@ flowchart TD
 | Security | 100.0 | 0.12 | PASS |
 | Architecture | 100.0 | 0.15 | PASS |
 | Boundaries | 0 | 0.15 | WARN |
-| Dependencies | 84 | 0.1 | WARN |
+| Dependencies | 68 | 0.1 | WARN |
 | API | 100.0 | 0.1 | PASS |
 | Workflow | 100.0 | 0.08 | PASS |
 | Plugin SDK | 100.0 | 0.08 | PASS |
 | Configuration | 85.0 | 0.07 | WARN |
-| Legacy | 0.0 | 0.08 | WARN |
+| Legacy | 100.0 | 0.08 | PASS |
 | Observability | 95.0 | 0.04 | PASS |
 | Testing | 90.0 | 0.03 | PASS |
 

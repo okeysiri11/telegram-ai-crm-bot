@@ -130,7 +130,7 @@ const MODULES: Record<string, RegisteredModule> = {
     purpose: "Automotive industry module shell — prepares Customer/Dealer portals for auto APIs.",
     builderRoute: "/platform-builder/business-ecosystem",
     portalHint: "/portals/customer",
-    apiHint: "/api/auto/v1",
+    apiHint: "/api/auto-ops/v1 · /api/auto/v1",
     ecosystem: "automotive",
     version: "4.2.0-enterprise",
     dependencies: ["enterprise_web_platform", "auto_marketplace", "platform_builder"],

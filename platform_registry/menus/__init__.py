@@ -148,11 +148,39 @@ MENU_CATALOG: list[MenuItem] = [
     _item("tg_all_sections", "Все разделы", "apps", "/desktop", tg="📂 Все разделы", group="workspace", simple=True, title_en="All sections"),
     _item("tg_developer", "Developer Tools", "settings", "/platform-builder", tg="⚙ Developer Tools", perms=("platform.config.read",), group="platform", roles=("owner", "administrator", "developer"), owner_only=True, title_en="Developer Tools"),
     # Verticals
-    _item("vert_auto", "Авто", "auto", "/workspace/auto", tg="🚗 Авто", perms=("crm.read",), group="verticals", vertical="auto", title_en="Automotive"),
+    _item(
+        "vert_auto", "Авто", "auto", "/workspace/auto", tg="🚗 Авто", perms=("crm.read",), group="verticals", vertical="auto", title_en="Automotive",
+        children=[
+            _item("vert_auto_cars", "Автомобили", "auto", "/workspace/auto/cars", vertical="auto"),
+            _item("vert_auto_insurance", "Страхование", "shield", "/workspace/auto/insurance", vertical="auto"),
+            _item("vert_auto_credit", "Кредит", "finance", "/workspace/auto/credit", vertical="auto"),
+            _item("vert_auto_leasing", "Лизинг", "finance", "/workspace/auto/leasing", vertical="auto"),
+            _item("vert_auto_logistics", "Логистика", "logistics", "/workspace/auto/logistics", vertical="auto"),
+            _item("vert_auto_legal", "Юридическая поддержка", "legal", "/workspace/auto/legal", vertical="auto"),
+        ],
+    ),
     _item("vert_crypto", "Crypto OTC", "crypto", "/workspace/crypto", tg="💰 Crypto OTC", perms=("crm.read",), group="verticals", vertical="crypto_otc"),
     _item("vert_drone", "Drone", "drone", "/workspace/drone", tg="🚁 Drone Engineering", perms=("crm.read",), group="verticals", vertical="drone"),
-    _item("vert_agro", "Agro", "agro", "/workspace/agro", tg="🌾 Agro Trading", perms=("crm.read",), group="verticals", vertical="agro"),
-    _item("vert_cafe", "Cafe & Beauty", "beauty", "/workspace/cafe", tg="☕ Cafe & Beauty", perms=("crm.read",), group="verticals", vertical="cafe_beauty"),
+    _item(
+        "vert_agro", "Агро", "agro", "/workspace/agro", tg="🌾 Agro Trading", perms=("crm.read",), group="verticals", vertical="agro",
+        children=[
+            _item("vert_agro_goods", "Товары (закупка / продажа)", "marketplace", "/workspace/agro/goods", vertical="agro"),
+            _item("vert_agro_counterparties", "Контрагенты", "users", "/workspace/agro/counterparties", vertical="agro"),
+            _item("vert_agro_contracts", "Контракты", "documents", "/workspace/agro/contracts", vertical="agro"),
+            _item("vert_agro_deals", "Сделки", "deals", "/workspace/agro/deals", vertical="agro"),
+            _item("vert_agro_logistics", "Логистика", "logistics", "/workspace/agro/logistics", vertical="agro"),
+        ],
+    ),
+    _item("vert_cafe", "Cafe", "cafe", "/workspace/cafe", tg="☕ Cafe", perms=("crm.read",), group="verticals", vertical="cafe_beauty"),
+    _item(
+        "vert_beauty", "Beauty", "beauty", "/workspace/beauty", tg="💄 Beauty", perms=("crm.read",), group="verticals", vertical="beauty", title_en="Beauty",
+        children=[
+            _item("vert_beauty_salon", "Салон", "beauty", "/workspace/beauty/salon", vertical="beauty"),
+            _item("vert_beauty_clients", "Клиенты", "users", "/workspace/beauty/clients", vertical="beauty"),
+            _item("vert_beauty_appointments", "Записи", "calendar", "/workspace/beauty/appointments", vertical="beauty"),
+            _item("vert_beauty_calendar", "Календарь", "calendar", "/workspace/beauty/calendar", vertical="beauty"),
+        ],
+    ),
     _item("vert_legal", "Legal", "legal", "/workspace/legal", tg="⚖ Юриспруденция", perms=("knowledge.read",), group="verticals", vertical="legal"),
     _item("vert_company", "Company Core", "building", "/workspace/company-core", tg="🏢 Company Core", group="verticals", vertical="company_core", roles=("owner", "administrator", "manager", "ceo")),
     _item("vert_construction", "Construction", "construction", "/workspace/construction", tg=None, group="verticals", vertical="construction", clients=WEB_DESKTOP_MOBILE),

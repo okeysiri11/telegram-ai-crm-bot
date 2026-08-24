@@ -2,7 +2,10 @@
 
 from aiohttp import web
 
+from api.bind import client_max_size_bytes
+from api.cors_middleware import cors_middleware
 from api.health_handlers import health_handler, liveness_handler, readiness_handler
+from api.web_static import register_web_static
 from database.session import check_db_health
 
 
@@ -18,7 +21,10 @@ def create_app() -> web.Application:
     from middleware.security_middleware import security_middleware_stack
     from services.observability import metrics_handler, prometheus_middleware
 
-    app = web.Application(middlewares=[*security_middleware_stack(), prometheus_middleware])
+    app = web.Application(
+        middlewares=[cors_middleware, *security_middleware_stack(), prometheus_middleware],
+        client_max_size=client_max_size_bytes(),
+    )
 
     # System / production readiness
     app.router.add_get("/liveness", liveness_handler)
@@ -102,6 +108,10 @@ def create_app() -> web.Application:
 
     register_legal_enterprise_routes(app)
 
+    from applications.auto_enterprise.api.register import register_auto_enterprise_routes
+
+    register_auto_enterprise_routes(app)
+
     from applications.finance_enterprise.api.register import register_finance_enterprise_routes
 
     register_finance_enterprise_routes(app)
@@ -117,6 +127,8 @@ def create_app() -> web.Application:
     )
 
     app.middlewares.append(crm_bearer_principal_restore_middleware)
+
+    register_web_static(app)
 
     async def _init_plugins(_app: web.Application) -> None:
         from platform_plugins.plugin_manager import plugin_manager

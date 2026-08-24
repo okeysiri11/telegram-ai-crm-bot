@@ -35,8 +35,8 @@ export function WorkspaceSlotBanner() {
       <p className="eds-type-caption">
         <span className="text-[var(--eds-text-muted)]">{t("workspace.slot")}: </span>
         <strong>{workspaceSlotLabel(slot)}</strong>
-        {typeof window !== "undefined" ? (
-          <span className="text-[var(--eds-text-muted)]"> · :{window.location.port || "5180"}</span>
+        {typeof window !== "undefined" && window.location.port && !/trycloudflare|cloudflare/.test(window.location.hostname) ? (
+          <span className="text-[var(--eds-text-muted)]"> · :{window.location.port}</span>
         ) : null}
       </p>
       <div className="flex flex-wrap gap-2">

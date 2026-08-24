@@ -109,6 +109,10 @@ class CafeOSLibrary:
         items: list[dict[str, Any]],
         reservation_id: str = "",
         channel: str = "dine_in",
+        order_type: str = "Обычный заказ",
+        guests: int = 0,
+        comment: str = "",
+        responsible: str = "",
     ) -> dict[str, Any]:
         if not customer_id or not items:
             raise ValueError("order requires customer and items")
@@ -119,7 +123,11 @@ class CafeOSLibrary:
             "reservation_id": reservation_id,
             "items": items,
             "channel": channel,
-            "status": "placed",
+            "order_type": order_type or "Обычный заказ",
+            "guests": int(guests or 0),
+            "comment": comment or "",
+            "responsible": responsible or "",
+            "status": "Новый",
             "total": total,
             "kitchen_ref": "kitchen_queue",
         }

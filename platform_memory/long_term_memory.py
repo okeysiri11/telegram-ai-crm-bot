@@ -36,7 +36,11 @@ class LongTermMemory:
         existing = [
             r
             for r in continuity_store.list_for(
-                principal.owner_id, company_id=principal.company_id, level="long_term", kind="preference"
+                principal.owner_id,
+                company_id=principal.company_id,
+                level="long_term",
+                kind="preference",
+                principal=principal,
             )
             if r.metadata.get("key") == key
         ]
@@ -45,7 +49,7 @@ class LongTermMemory:
             rec.content = value
             rec.title = key
             rec.channel = channel
-            continuity_store.save(rec)
+            continuity_store.save(rec, principal=principal)
             return rec.to_dict()
         rec = MemoryRecord(
             id=new_id("ltm"),
@@ -60,12 +64,16 @@ class LongTermMemory:
             tags=list(tags or ["preference"]),
             metadata={"key": key},
         )
-        continuity_store.save(rec)
+        continuity_store.save(rec, principal=principal)
         return rec.to_dict()
 
     def get(self, principal: MemoryPrincipal, key: str) -> str | None:
         for r in continuity_store.list_for(
-            principal.owner_id, company_id=principal.company_id, level="long_term", kind="preference"
+            principal.owner_id,
+            company_id=principal.company_id,
+            level="long_term",
+            kind="preference",
+            principal=principal,
         ):
             if r.metadata.get("key") == key:
                 return r.content
@@ -74,7 +82,12 @@ class LongTermMemory:
     def all_preferences(self, principal: MemoryPrincipal) -> dict[str, str]:
         out: dict[str, str] = {}
         for r in continuity_store.list_for(
-            principal.owner_id, company_id=principal.company_id, level="long_term", kind="preference", limit=200
+            principal.owner_id,
+            company_id=principal.company_id,
+            level="long_term",
+            kind="preference",
+            limit=200,
+            principal=principal,
         ):
             k = r.metadata.get("key") or r.title
             out[str(k)] = r.content

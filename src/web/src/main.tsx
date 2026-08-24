@@ -7,6 +7,12 @@ import "./index.css";
 import "./vertical-workspace/verticalWorkspace.css";
 import "./owner-experience/ownerExperience.css";
 
+if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+  void navigator.serviceWorker.getRegistrations().then((regs) => {
+    for (const reg of regs) void reg.unregister();
+  });
+}
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ErrorBoundary>

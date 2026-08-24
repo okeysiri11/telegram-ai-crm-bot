@@ -1,0 +1,289 @@
+.agro-wx {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+  overflow-x: hidden;
+  color: var(--ew-text);
+}
+
+.agro-wx-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.agro-wx-title {
+  margin: 0;
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+  font-weight: 650;
+}
+
+.agro-wx-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.agro-wx-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.agro-wx-banner {
+  border: 1px solid var(--ew-border);
+  border-radius: 0.6rem;
+  padding: 0.65rem 0.8rem;
+  background: #14352e;
+}
+
+.agro-wx-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 0.9fr);
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.agro-wx-map-wrap {
+  position: relative;
+  min-height: 420px;
+  border: 1px solid var(--ew-border);
+  border-radius: 0.75rem;
+  background: #0b1220;
+  overflow: hidden;
+}
+
+.agro-wx-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 68vh;
+}
+
+.agro-wx-oblast {
+  cursor: pointer;
+  transition: fill 180ms ease, stroke 180ms ease, opacity 180ms ease, filter 180ms ease;
+}
+
+.agro-wx-oblast:hover {
+  filter: brightness(1.12);
+}
+
+.agro-wx-labels,
+.agro-wx-capitals {
+  pointer-events: none;
+}
+
+.agro-wx-region-label {
+  fill: #e8eef7;
+  font-size: 12px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: rgba(11, 18, 32, 0.88);
+  stroke-width: 3.2px;
+  stroke-linejoin: round;
+}
+
+.agro-wx-region-label.is-active {
+  fill: #ffffff;
+  stroke-width: 3.6px;
+}
+
+.agro-wx-capital-dot {
+  fill: #f8fafc;
+  stroke: #0b1220;
+  stroke-width: 1.25px;
+}
+
+.agro-wx-capital-dot.is-active {
+  fill: #3ecfad;
+}
+
+.agro-wx-capital-name {
+  fill: #d7e3f2;
+  font-size: 10px;
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: rgba(11, 18, 32, 0.9);
+  stroke-width: 2.6px;
+  stroke-linejoin: round;
+}
+
+.agro-wx-map-skel {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #121a2a 0%, #1a2740 50%, #121a2a 100%);
+  background-size: 200% 100%;
+  animation: agro-wx-shimmer 1.2s ease infinite;
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+@keyframes agro-wx-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+.agro-wx-tooltip {
+  position: absolute;
+  transform: translate(-10%, -110%);
+  min-width: 180px;
+  max-width: 240px;
+  padding: 0.55rem 0.7rem;
+  border-radius: 0.5rem;
+  border: 1px solid #3ecfad;
+  background: rgba(12, 20, 34, 0.96);
+  color: #e8eef7;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  pointer-events: none;
+  z-index: 3;
+  box-shadow: 0 0 18px rgba(62, 207, 173, 0.18);
+}
+
+.agro-wx-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  color: var(--ew-muted);
+}
+
+.agro-wx-swatch {
+  width: 1.1rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.agro-wx-panel {
+  border: 1px solid var(--ew-border);
+  border-radius: 0.75rem;
+  background: var(--ew-surface);
+  padding: 0.85rem;
+  min-width: 0;
+  transition: opacity 180ms ease;
+}
+
+.agro-wx-temp {
+  font-size: 2rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+}
+
+.agro-wx-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem 0.7rem;
+  font-size: 0.8rem;
+}
+
+.agro-wx-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.4rem;
+}
+
+.agro-wx-day {
+  border: 1px solid var(--ew-border);
+  border-radius: 0.5rem;
+  padding: 0.45rem 0.3rem;
+  text-align: center;
+  font-size: 0.75rem;
+  background: #0f1726;
+}
+
+.agro-wx-icon {
+  font-size: 1.15rem;
+  display: inline-block;
+  animation: agro-wx-float 2.8s ease-in-out infinite;
+}
+
+@keyframes agro-wx-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.agro-wx-cards {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.agro-wx-card {
+  border: 1px solid var(--ew-border);
+  border-radius: 0.65rem;
+  padding: 0.7rem;
+  background: #121a2a;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.agro-wx-card.is-active {
+  border-color: #3ecfad;
+  box-shadow: 0 0 14px rgba(62, 207, 173, 0.16);
+}
+
+.agro-wx-risk-high { color: #f87171; }
+.agro-wx-risk-medium { color: #fbbf24; }
+.agro-wx-risk-low { color: #34d399; }
+
+.agro-wx-rec-grid,
+.agro-wx-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.55rem;
+}
+
+@media (max-width: 1440px) {
+  .agro-wx-stage {
+    grid-template-columns: minmax(0, 1.4fr) minmax(240px, 0.95fr);
+  }
+  .agro-wx-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1366px) {
+  .agro-wx-stage {
+    grid-template-columns: 1fr;
+  }
+  .agro-wx-map-wrap { min-height: 360px; }
+  .agro-wx-days { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .agro-wx-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .agro-wx-region-label { font-size: 10px; }
+  .agro-wx-capital-name { font-size: 9px; }
+}
+
+@media (max-width: 900px) {
+  .agro-wx {
+    font-size: 0.95rem;
+  }
+  .agro-wx-title {
+    font-size: 1.05rem;
+  }
+  .agro-wx-temp {
+    font-size: 1.6rem;
+  }
+  .agro-wx-days,
+  .agro-wx-cards,
+  .agro-wx-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+  .agro-wx-actions button,
+  .agro-wx-tabs button {
+    min-height: 2.75rem;
+  }
+  .agro-wx-region-label { font-size: 9px; }
+  .agro-wx-capital-name { display: none; }
+  .agro-wx-panel {
+    max-height: none;
+  }
+}

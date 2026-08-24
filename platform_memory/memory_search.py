@@ -70,7 +70,9 @@ class MemorySearch:
     def search_knowledge(self, principal: MemoryPrincipal, query: str, *, limit: int = 20) -> list[dict[str, Any]]:
         knowledge = [
             r
-            for r in continuity_store.list_for(principal.owner_id, company_id=principal.company_id, limit=300)
+            for r in continuity_store.list_for(
+                principal.owner_id, company_id=principal.company_id, limit=300, principal=principal
+            )
             if r.level in ("knowledge", "long_term", "project")
         ]
         docs = [(r.id, f"{r.title}\n{r.content}") for r in knowledge]

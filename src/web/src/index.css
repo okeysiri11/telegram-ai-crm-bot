@@ -513,6 +513,70 @@ body {
     radial-gradient(ellipse at 80% 70%, color-mix(in oklab, var(--eds-info) 10%, transparent), transparent 50%),
     var(--eds-surface);
 }
+.ec-3d-shell {
+  display: grid;
+  gap: var(--eds-space-2);
+  min-height: 28rem;
+  border-radius: var(--eds-radius-2xl);
+  border: 1px solid var(--eds-border);
+  background: var(--eds-surface);
+  padding: var(--eds-space-2);
+}
+.ec-3d-canvas-wrap {
+  min-height: 28rem;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--eds-primary) 8%, var(--eds-surface)), var(--eds-surface));
+}
+.ec-3d-object-panel {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 5;
+  width: min(22rem, calc(100% - 1.5rem));
+}
+.ec-3d-city-debug {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  z-index: 4;
+  max-width: 18rem;
+  pointer-events: none;
+  border-radius: 0.5rem;
+  background: rgb(8 12 18 / 0.72);
+  color: #d7e2ea;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  line-height: 1.35;
+  padding: 0.55rem 0.7rem;
+}
+.ec-3d-city-debug p {
+  margin: 0 0 0.35rem;
+  opacity: 0.7;
+}
+.ec-3d-city-debug dl {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.6rem;
+  margin: 0;
+}
+.ec-3d-city-debug dt {
+  opacity: 0.6;
+}
+.ec-3d-city-debug dd {
+  margin: 0;
+  word-break: break-all;
+}
+.ec-3d-calibration-panel {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 6;
+  width: min(20rem, calc(100% - 1.5rem));
+  max-height: min(32rem, calc(100% - 1.5rem));
+  overflow: auto;
+}
+.ec-3d-fallback {
+  min-height: 12rem;
+}
 .ec-plane {
   position: absolute;
   inset: 0;
@@ -956,12 +1020,14 @@ body {
   .ec-stage {
     grid-template-columns: minmax(0, 1fr) 18rem;
   }
-  .ec-map-shell {
+  .ec-map-shell,
+  .ec-3d-canvas-wrap {
     min-height: 36rem;
   }
 }
 @media (min-width: 1280px) {
-  .ec-map-shell {
+  .ec-map-shell,
+  .ec-3d-canvas-wrap {
     min-height: 40rem;
   }
 }
@@ -969,7 +1035,8 @@ body {
   .ec-header {
     padding: 1.75rem 2rem;
   }
-  .ec-map-shell {
+  .ec-map-shell,
+  .ec-3d-canvas-wrap {
     min-height: 46rem;
   }
   .ec-building-label {

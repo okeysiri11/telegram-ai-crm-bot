@@ -41,7 +41,9 @@ class MemoryCards:
             return {"error": "forbidden"}
         existing = [
             r
-            for r in continuity_store.list_for(principal.owner_id, kind="card", limit=500)
+            for r in continuity_store.list_for(
+                principal.owner_id, kind="card", limit=500, principal=principal
+            )
             if r.metadata.get("object_id") == object_id and r.metadata.get("object_kind") == object_kind
         ]
         text = content or title
@@ -52,7 +54,7 @@ class MemoryCards:
             rec.content = text
             rec.embedding = emb
             rec.channel = channel
-            continuity_store.save(rec)
+            continuity_store.save(rec, principal=principal)
             return rec.to_dict()
         rec = MemoryRecord(
             id=new_id("card"),
@@ -69,11 +71,11 @@ class MemoryCards:
             embedding=emb,
             metadata={"object_kind": object_kind, "object_id": object_id},
         )
-        continuity_store.save(rec)
+        continuity_store.save(rec, principal=principal)
         return rec.to_dict()
 
     def for_object(self, principal: MemoryPrincipal, object_kind: str, object_id: str) -> dict[str, Any] | None:
-        for r in continuity_store.list_for(principal.owner_id, kind="card", limit=500):
+        for r in continuity_store.list_for(principal.owner_id, kind="card", limit=500, principal=principal):
             if r.metadata.get("object_kind") == object_kind and r.metadata.get("object_id") == object_id:
                 if r.company_id == principal.company_id:
                     return r.to_dict()
@@ -81,7 +83,9 @@ class MemoryCards:
 
     def list_cards(self, principal: MemoryPrincipal, *, object_kind: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
         out = []
-        for r in continuity_store.list_for(principal.owner_id, company_id=principal.company_id, kind="card", limit=limit):
+        for r in continuity_store.list_for(
+            principal.owner_id, company_id=principal.company_id, kind="card", limit=limit, principal=principal
+        ):
             if object_kind and r.metadata.get("object_kind") != object_kind:
                 continue
             out.append(r.to_dict())

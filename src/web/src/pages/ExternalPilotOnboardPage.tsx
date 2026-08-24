@@ -20,7 +20,7 @@ const INDUSTRIES = [
   { value: "automotive", label: "Automotive" },
   { value: "beauty", label: "Beauty" },
   { value: "cafe", label: "Cafe / F&B" },
-  { value: "agriculture", label: "Agriculture" },
+  { value: "agriculture", label: "Агро" },
   { value: "legal", label: "Legal" },
   { value: "crypto", label: "Bidex / Crypto" },
   { value: "drone", label: "Drone" },

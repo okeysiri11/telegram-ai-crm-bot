@@ -25,7 +25,7 @@ export function AgricultureLiveWorkflowPage() {
   const org = useWorkspaceStore((s) => s.workspace.company);
   const core = useWebCore();
 
-  const [farmerName, setFarmerName] = useState("Pilot Farmer");
+  const [farmerName, setFarmerName] = useState("Пилотный фермер");
   const [farmerEmail, setFarmerEmail] = useState(
     `pilot.agro+${Date.now().toString(36)}@demo.corp`,
   );
@@ -48,7 +48,7 @@ export function AgricultureLiveWorkflowPage() {
     try {
       const sessionOk = await validateSession();
       if (!sessionOk || !authUser) {
-        throw new Error("Staff session invalid — login with production authentication first.");
+        throw new Error("Сессия сотрудника недействительна — сначала войдите в систему.");
       }
       await telemetry.businessEvent("agriculture_workflow_start");
       await telemetry.aiActivity("concierge", "agriculture_pilot_execution_begin");
@@ -96,38 +96,38 @@ export function AgricultureLiveWorkflowPage() {
   return (
     <WorkspaceLayout>
       <div className="mb-4 flex flex-wrap gap-2">
-        <Badge tone="success">Operational Pilot</Badge>
-        <Badge>Sprint 31.1</Badge>
-        <Badge>Agriculture</Badge>
-        <Badge tone="success">Reuse {reuseAudit.reusePercent}%</Badge>
-        <Badge>Cross {reuseAudit.crossEcosystemPercent}%</Badge>
+        <Badge tone="success">Рабочий пилот</Badge>
+        <Badge>Спринт 31.1</Badge>
+        <Badge>Агро</Badge>
+        <Badge tone="success">Повторное использование {reuseAudit.reusePercent}%</Badge>
+        <Badge>Сквозные {reuseAudit.crossEcosystemPercent}%</Badge>
         <Badge>{authMode || "—"}</Badge>
-        {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge tone="warning">ISAM token</Badge>}
+        {isJwtToken(accessToken) ? <Badge tone="success">JWT</Badge> : <Badge tone="warning">Токен ISAM</Badge>}
       </div>
 
-      <h1 className="eds-type-title text-[var(--eds-text)]">Agriculture Pilot Execution</h1>
+      <h1 className="eds-type-title text-[var(--eds-text)]">Пилот агробизнеса</h1>
       <p className="mt-1 max-w-3xl eds-type-body text-[var(--eds-text-muted)]">
-        Fourth operational Business Ecosystem: Farmer → CRM → Harvest → Warehouse → Commodity Sale →
-        Contract → Shipment (sea freight / containers / customs) → Mission Control → Analytics. Reuses
-        existing Agro Marketplace + Supply Chain APIs. Auto / Beauty / Cafe unchanged.
+        Цепочка: фермер → клиенты → урожай → склад → продажа зерна → договор → поставка
+        (море / контейнеры / таможня) → центр управления → аналитика. Используются уже существующие
+        сервисы агро-маркетплейса и логистики. Авто, красота и кафе не меняются.
       </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <Card title="Staff session">
+        <Card title="Сессия сотрудника">
           <ul className="eds-type-small space-y-1">
-            <li>User: {authUser?.email || "—"}</li>
-            <li>Role: {authUser?.roleId || "—"}</li>
-            <li>Org: {core.organization}</li>
-            <li>Permissions: {(authUser?.permissions || core.permissions).join(", ") || "—"}</li>
+            <li>Пользователь: {authUser?.email || "—"}</li>
+            <li>Роль: {authUser?.roleId || "—"}</li>
+            <li>Организация: {core.organization}</li>
+            <li>Права: {(authUser?.permissions || core.permissions).join(", ") || "—"}</li>
           </ul>
         </Card>
-        <Card title="Farmer">
+        <Card title="Фермер">
           <div className="grid gap-2">
-            <Input value={farmerName} onChange={(e) => setFarmerName(e.target.value)} aria-label="Farmer name" />
+            <Input value={farmerName} onChange={(e) => setFarmerName(e.target.value)} aria-label="Имя фермера" />
             <Input
               value={farmerEmail}
               onChange={(e) => setFarmerEmail(e.target.value)}
-              aria-label="Farmer email"
+              aria-label="Эл. почта фермера"
             />
           </div>
         </Card>
@@ -135,40 +135,40 @@ export function AgricultureLiveWorkflowPage() {
 
       <div className="mt-4 flex flex-wrap gap-2">
         <Button disabled={busy} onClick={() => void run()}>
-          {busy ? "Running…" : "Execute Agriculture pilot"}
+          {busy ? "Выполняется…" : "Запустить пилот агро"}
         </Button>
         <Link to="/workspace/auto">
           <Button size="sm" variant="secondary">
-            Automotive
+            Авто
           </Button>
         </Link>
         <Link to="/workspace/beauty">
           <Button size="sm" variant="secondary">
-            Beauty
+            Красота
           </Button>
         </Link>
         <Link to="/workspace/cafe">
           <Button size="sm" variant="secondary">
-            Cafe
+            Кафе
           </Button>
         </Link>
         <Link to="/platform-builder/mission-control">
           <Button size="sm" variant="secondary">
-            Mission Control
+            Центр управления
           </Button>
         </Link>
         <Link to="/pilot">
           <Button size="sm" variant="secondary">
-            Pilot Dashboard
+            Панель пилота
           </Button>
         </Link>
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
         <Card
-          title={`Enterprise reuse — ${reuseAudit.reusePercent}% (${reuseAudit.sharedCount}/${reuseAudit.totalCount})`}
+          title={`Повторное использование платформы — ${reuseAudit.reusePercent}% (${reuseAudit.sharedCount}/${reuseAudit.totalCount})`}
         >
-          <Table headers={["Dimension", "Auto", "Beauty", "Cafe", "Agro", "Legal", "Bidex", "Drone"]}>
+          <Table headers={["Раздел", "Авто", "Красота", "Кафе", "Агро", "Юристы", "Крипто", "Дроны"]}>
             {reuseAudit.dimensions.map((d) => (
               <tr key={d.id} className="border-t border-[var(--ew-border)]">
                 <td className="px-3 py-2 eds-type-small">{d.id}</td>
@@ -183,7 +183,7 @@ export function AgricultureLiveWorkflowPage() {
             ))}
           </Table>
         </Card>
-        <Card title="Reusable patterns (4 ecosystems)">
+        <Card title="Общие шаблоны (4 направления)">
           <ul className="eds-type-small space-y-1">
             {CROSS_ECOSYSTEM_PATTERNS.map((p) => (
               <li key={p}>• {p}</li>
@@ -194,32 +194,32 @@ export function AgricultureLiveWorkflowPage() {
 
       {error ? (
         <div className="mt-4">
-          <EmptyState title="Workflow warnings / errors" description={error} />
+          <EmptyState title="Предупреждения и ошибки" description={error} />
         </div>
       ) : null}
 
       {totalMs !== null ? (
         <div className="mt-4 flex flex-wrap gap-2">
           <Badge tone={success ? "success" : "warning"}>
-            {success ? "All steps succeeded" : "Completed with failures"}
+            {success ? "Все шаги выполнены" : "Завершено с ошибками"}
           </Badge>
-          <Badge>Total {totalMs} ms</Badge>
+          <Badge>Всего {totalMs} мс</Badge>
           <Badge>
-            {steps.filter((s) => s.ok).length}/{steps.length} steps
+            {steps.filter((s) => s.ok).length}/{steps.length} шагов
           </Badge>
-          {reusePercent != null ? <Badge tone="success">Reuse {reusePercent}%</Badge> : null}
+          {reusePercent != null ? <Badge tone="success">Повторное использование {reusePercent}%</Badge> : null}
         </div>
       ) : null}
 
       {steps.length ? (
         <div className="mt-6">
-          <Card title="Execution log">
-            <Table headers={["Step", "Status", "ms", "Detail"]}>
+          <Card title="Журнал выполнения">
+            <Table headers={["Шаг", "Статус", "мс", "Подробности"]}>
               {steps.map((s) => (
                 <tr key={s.id} className="border-t border-[var(--ew-border)]">
                   <td className="px-3 py-2">{s.label}</td>
                   <td className="px-3 py-2">
-                    <Badge tone={s.ok ? "success" : "danger"}>{s.ok ? "ok" : "error"}</Badge>
+                    <Badge tone={s.ok ? "success" : "danger"}>{s.ok ? "готово" : "ошибка"}</Badge>
                   </td>
                   <td className="px-3 py-2">{s.durationMs}</td>
                   <td className="px-3 py-2 eds-type-small text-[var(--eds-text-muted)]">
@@ -233,8 +233,8 @@ export function AgricultureLiveWorkflowPage() {
       ) : (
         <div className="mt-6">
           <EmptyState
-            title="Ready to execute Agriculture pilot"
-            description="Validates farm CRM, harvest, warehouse, grain marketplace sale, export contracts, sea freight, containers, customs, AI Team, and Mission Control on existing agro APIs."
+            title="Готово к запуску пилота агро"
+            description="Проверяет клиентов фермы, урожай, склад, продажу зерна, экспортные договоры, морскую перевозку, контейнеры, таможню, ИИ-команду и центр управления на существующих агро-сервисах."
           />
         </div>
       )}

@@ -560,6 +560,7 @@ class EnterpriseHubStore:
         self.cos_deliveries: EntityStore = EntityStore()
         self.cos_crm: EntityStore = EntityStore()
         self.cos_dashboards: EntityStore = EntityStore()
+        self.cos_shifts: EntityStore = EntityStore()
         # Sprint 22.3 — Beauty Workspace
         self.bws_bootstraps: EntityStore = EntityStore()
         self.bws_dashboards: EntityStore = EntityStore()

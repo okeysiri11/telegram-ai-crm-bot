@@ -1,10 +1,23 @@
+function publicApiOrigin(): string {
+  const raw = String(import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_BASE || "").trim();
+  if (!raw || raw === "/api") return "";
+  if (raw.startsWith("http://") || raw.startsWith("https://")) {
+    return raw.replace(/\/$/, "").replace(/\/api$/i, "");
+  }
+  return "";
+}
+
+const PUBLIC_API_ORIGIN = publicApiOrigin();
+
 export const webConfig = {
   application: "enterprise_web_platform",
   version: "9.5.0",
   sprint: "33.2.1",
   n8nUrl: import.meta.env.VITE_N8N_URL || "http://localhost:5678",
   litellmUrl: import.meta.env.VITE_LITELLM_URL || "http://localhost:4000",
-  apiBase: import.meta.env.VITE_API_BASE || "/api",
+  /** Empty in local/dev and same-origin HTTPS. Absolute origin only when VITE_API_BASE(_URL) is set. */
+  publicApiOrigin: PUBLIC_API_ORIGIN,
+  apiBase: PUBLIC_API_ORIGIN ? `${PUBLIC_API_ORIGIN}/api` : import.meta.env.VITE_API_BASE || "/api",
   hubPrefix: "/api/enterprise-hub/v1",
   ebnPrefix: "/api/enterprise-ebn/v1",
   edcPrefix: "/api/enterprise-edc/v1",
@@ -22,6 +35,7 @@ export const webConfig = {
   ewsPrefix: "/api/enterprise-ews/v1",
   enpPrefix: "/api/enterprise-enp/v1",
   autoPrefix: "/api/auto/v1",
+  autoOpsPrefix: "/api/auto-ops/v1",
   beautyOsPrefix: "/api/enterprise-bos/v1",
   beautyWorkspacePrefix: "/api/enterprise-bws/v1",
   beautyClientJourneyPrefix: "/api/enterprise-bcj/v1",
@@ -29,9 +43,11 @@ export const webConfig = {
   agroPrefix: "/api/agro/v1",
   agroSupplyChainPrefix: "/api/agro-supply-chain/v1",
   agroEnterprisePrefix: "/api/agro-enterprise/v1",
+  agroOpsPrefix: "/api/agro-ops/v1",
   agroFinancePrefix: "/api/agro-finance/v1",
   aiAgronomistPrefix: "/api/ai-agronomist/v1",
   legalEnterprisePrefix: "/api/legal-enterprise/v1",
+  legalOpsPrefix: "/api/legal-ops/v1",
   legalCasePrefix: "/api/legal-cm/v1",
   legalDocumentsPrefix: "/api/legal-di/v1",
   legalCompliancePrefix: "/api/legal-cp/v1",
@@ -43,6 +59,8 @@ export const webConfig = {
   financeIntegrationPrefix: "/api/finance-int/v1",
   financeCfoPrefix: "/api/finance-cfo/v1",
   cryptoEnterprisePrefix: "/api/crypto-enterprise/v1",
+  cryptoTaPrefix: "/api/crypto-ta/v1",
+  cryptoMiPrefix: "/api/crypto-mi/v1",
   cryptoRiskPrefix: "/api/crypto-rm/v1",
   dronePrefix: "/api/drone/v1",
   precisionAgriculturePrefix: "/api/precision-agriculture/v1",

@@ -56,7 +56,7 @@ export const COMMAND_CATALOG: CommandItem[] = [
   { id: "ai_recommendations", kind: "ai_execute", action: "ai_recommendations", label: "AI: рекомендации", route: "/dashboard", keywords: ["ai", "recommend", "рекомендации"] },
   { id: "ai_open_beauty", kind: "ai_execute", action: "open_beauty", label: "AI: Beauty", route: "/workspace/beauty", keywords: ["ai", "beauty"] },
   { id: "ai_open_auto", kind: "ai_execute", action: "open_auto", label: "AI: Auto", route: "/workspace/auto", keywords: ["ai", "auto"] },
-  { id: "ai_open_agro", kind: "ai_execute", action: "open_agro", label: "AI: Agro", route: "/workspace/agro", keywords: ["ai", "agro"] },
+  { id: "ai_open_agro", kind: "ai_execute", action: "open_agro", label: "ИИ: Агро", route: "/workspace/agro", keywords: ["ai", "agro", "агро"] },
   { id: "ai_weekly", kind: "ai_execute", action: "generate_weekly_report", label: "AI: недельный отчёт", route: "/workspace/reports/weekly", keywords: ["ai", "weekly", "report", "отчёт"] },
   { id: "ai_summarize", kind: "ai_execute", action: "summarize_workspace", label: "AI: сводка workspace", route: "/workspace", keywords: ["ai", "summarize", "сводка"] },
   { id: "ai_invoice", kind: "ai_execute", action: "create_invoice", label: "AI: создать счёт", route: "/workspace?action=create_invoice", keywords: ["ai", "invoice", "счёт"] },

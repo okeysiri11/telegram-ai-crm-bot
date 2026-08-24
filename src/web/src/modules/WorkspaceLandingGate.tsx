@@ -9,6 +9,13 @@ import { MODULE_LANDINGS } from "./moduleLandingCatalog";
 import { ModuleLandingView } from "./ModuleLandingView";
 import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { AutoHumanLandingView } from "@/human-first";
+import { useIsMobile } from "@/shell/mobile/useIsMobile";
+
+/** On phone these open the live ops cabinet, not the catalog landing (menu A). */
+const MOBILE_OPS_CABINET_LANDINGS = new Set(["agro", "auto", "cafe", "legal", "crypto", "drone"]);
+
+/** Agro Command Center is the desktop home — refresh must not bounce to the catalog landing. */
+const ALWAYS_OPS_CABINET_LANDINGS = new Set(["agro"]);
 
 export function WorkspaceLandingGate({
   landingId,
@@ -17,6 +24,7 @@ export function WorkspaceLandingGate({
   landingId: string;
   children: ReactNode;
 }) {
+  const isMobile = useIsMobile();
   const [params] = useSearchParams();
   const { sub } = useParams<{ sub?: string }>();
   const landing = MODULE_LANDINGS.find((m) => m.id === landingId);
@@ -25,6 +33,10 @@ export function WorkspaceLandingGate({
     Boolean(params.get("view")) ||
     Boolean(params.get("action")) ||
     params.get("demo") === "1";
+
+  if (ALWAYS_OPS_CABINET_LANDINGS.has(landingId) || (isMobile && MOBILE_OPS_CABINET_LANDINGS.has(landingId))) {
+    return <>{children}</>;
+  }
 
   if (landing && !deep) {
     return (

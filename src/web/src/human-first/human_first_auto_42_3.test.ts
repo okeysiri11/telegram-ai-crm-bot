@@ -22,15 +22,15 @@ describe("Sprint 42.3 Human-First Auto", () => {
   it("auto landing has short AI guide and fix CTA", () => {
     const auto = MODULE_LANDINGS.find((m) => m.id === "auto");
     expect(auto).toBeTruthy();
-    expect(auto!.aiGuide.bullets).toEqual(["Новые заявки", "Сделки", "Автомобили без фото"]);
-    expect(auto!.aiGuide.recommendedAction.label).toBe("Исправить");
+    expect(auto!.aiGuide.bullets).toEqual(["Парк", "Логистика", "Расходы по факту"]);
+    expect(auto!.aiGuide.recommendedAction.label).toBe("Открыть автомобили");
     expect(auto!.primaryAction.label).toBe("Добавить автомобиль");
     expect(auto!.actions.map((a) => a.label)).toEqual([
+      "Обзор",
       "Автомобили",
+      "Закупки",
       "Клиенты",
-      "Продажи",
-      "Импорт",
-      "Склад",
+      "Платежи и расходы",
     ]);
   });
 
@@ -38,8 +38,8 @@ describe("Sprint 42.3 Human-First Auto", () => {
     expect(matchAutoAiIntent("Добавь автомобиль")?.route).toContain("action=vehicle");
     expect(matchAutoAiIntent("Найди клиента")?.route).toContain("view=clients");
     expect(matchAutoAiIntent("Покажи продажи")?.route).toContain("view=sales");
-    expect(matchAutoAiIntent("Импортируй VIN")?.route).toContain("import");
-    expect(matchAutoAiIntent("Создай договор")?.label).toMatch(/договор/i);
+    expect(matchAutoAiIntent("Импортируй VIN")?.route).toContain("purchases");
+    expect(matchAutoAiIntent("Создай договор")?.label).toMatch(/документ/i);
     expect(AUTO_AI_CHIPS).toHaveLength(5);
     expect(AUTO_AI_INTENTS.length).toBeGreaterThanOrEqual(5);
   });

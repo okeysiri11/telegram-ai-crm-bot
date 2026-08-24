@@ -210,7 +210,9 @@ def test_startup_registers_add_vehicle_before_super_app():
     from startup import BOT_ROUTER_PATHS
 
     assert BOT_ROUTER_PATHS[0] == "routers.auto_add_vehicle_router"
-    assert BOT_ROUTER_PATHS[1] == "routers.telegram_super_app_router"
+    assert BOT_ROUTER_PATHS.index("routers.auto_ops_telegram_router") < BOT_ROUTER_PATHS.index(
+        "routers.telegram_super_app_router"
+    )
 
 
 def test_canonical_vin_question_site():

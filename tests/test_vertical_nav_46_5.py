@@ -245,6 +245,305 @@ def test_vertical_is_workspace_not_ai_intent():
 
 
 @pytest.mark.asyncio
+async def test_crypto_legal_persona_menus(monkeypatch):
+    uid = 4605300
+    monkeypatch.setattr(
+        "services.crypto_auth.CryptoAuthService.can_access_crypto",
+        staticmethod(lambda _uid: True),
+    )
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.ensure_authenticated_role(uid, "platform_owner")
+
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+
+    vertical_role_registry.begin_vertical(uid, "crypto")
+    await enter_persona_home(msg, "client")
+    assert vertical_role_registry.get(uid).active_persona == "client"
+    markups = [c.kwargs.get("reply_markup") for c in msg.answer.await_args_list if c.kwargs.get("reply_markup")]
+    assert markups
+    texts = {b.text for row in markups[-1].keyboard for b in row}
+    assert "🟢 Buy USDT" in texts
+    assert "🤖 Crypto Agent" not in texts
+
+    msg.answer.reset_mock()
+    vertical_role_registry.begin_vertical(uid, "legal")
+    await enter_persona_home(msg, "lawyer")
+    assert vertical_role_registry.get(uid).authenticated_role == "platform_owner"
+    assert vertical_role_registry.get(uid).active_persona == "lawyer"
+    markups = [c.kwargs.get("reply_markup") for c in msg.answer.await_args_list if c.kwargs.get("reply_markup")]
+    texts = {b.text for row in markups[-1].keyboard for b in row}
+    assert "📂 Дела" in texts
+
+
+#
+# Sprint 46.6 — navigation stabilization regressions (Beauty/Auto/Agro).
+#
+
+
+@pytest.mark.asyncio
+async def test_beauty_owner_menu_is_distinct_from_cafe(monkeypatch):
+    """Beauty owner/manager/specialist must not see the Cafe-only button
+    or 'Cafe & Beauty' branding — Beauty is its own vertical."""
+    uid = 4605400
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.ensure_authenticated_role(uid, "platform_owner")
+    vertical_role_registry.begin_vertical(uid, "beauty")
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+
+    for persona in ("owner", "manager", "specialist"):
+        msg.answer.reset_mock()
+        vertical_role_registry.begin_vertical(uid, "beauty")
+        await enter_persona_home(msg, persona)
+        markups = [
+            c.kwargs.get("reply_markup")
+            for c in msg.answer.await_args_list
+            if c.kwargs.get("reply_markup")
+        ]
+        assert markups
+        texts = {b.text for row in markups[-1].keyboard for b in row}
+        assert "☕ Cafe" not in texts
+        assert "💄 Салон" in texts
+        for call in msg.answer.await_args_list:
+            text = (call.args[0] if call.args else "") or ""
+            assert "Cafe & Beauty" not in text
+
+
+@pytest.mark.asyncio
+async def test_beauty_client_menu_booking_oriented():
+    uid = 4605401
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.begin_vertical(uid, "beauty")
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+    await enter_persona_home(msg, "client")
+    markups = [
+        c.kwargs.get("reply_markup")
+        for c in msg.answer.await_args_list
+        if c.kwargs.get("reply_markup")
+    ]
+    texts = {b.text for row in markups[-1].keyboard for b in row}
+    assert "📅 Записи" in texts
+    assert "☕ Cafe" not in texts
+
+
+@pytest.mark.asyncio
+async def test_beauty_stub_screen_keeps_beauty_keyboard():
+    """Tapping a not-yet-wired Beauty button must fall back to the Beauty
+    keyboard, not silently revert to the Cafe & Beauty one (module_stub_screen
+    used to always use MODULE_MENUS['cafe_beauty'] = cafe_beauty_module_menu)."""
+    import handlers as h
+    from keyboards import beauty_module_menu
+
+    uid = 4605402
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.begin_vertical(uid, "beauty")
+    h.active_module[uid] = "cafe_beauty"
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+
+    await h.module_stub_screen(msg)
+
+    beauty_texts = {b.text for row in beauty_module_menu().keyboard for b in row}
+    call = msg.answer.await_args
+    reply_markup = call.kwargs.get("reply_markup")
+    texts = {b.text for row in reply_markup.keyboard for b in row}
+    assert texts == beauty_texts
+    assert "☕ Cafe" not in texts
+
+
+def test_beauty_ai_studio_is_separate_from_business_menu():
+    """Beauty AI Studio must remain reachable, but as a distinct additional
+    capability — not the same button/path as the Beauty business workspace."""
+    from services.telegram_ai_super_app.catalog import AI_STUDIO_OPTIONS
+    from keyboards import beauty_module_menu
+
+    studio_option = next((o for o in AI_STUDIO_OPTIONS if o.id == "beauty"), None)
+    assert studio_option is not None
+    assert studio_option.vertical == "beauty"
+
+    business_texts = {b.text for row in beauty_module_menu().keyboard for b in row}
+    assert studio_option.label not in business_texts
+
+
+@pytest.mark.asyncio
+async def test_auto_owner_hub_exposes_insurance_leasing_credit(monkeypatch):
+    """Auto owner must reach insurance/leasing/credit/logistics/legal —
+    not just cars — via the real hub menu."""
+    monkeypatch.setattr(
+        "auto_vertical_handlers.VerticalOnboardingEngineV1.get_language",
+        AsyncMock(return_value="ru"),
+    )
+    monkeypatch.setattr(
+        "auto_vertical_handlers.can_access_automotive_ui",
+        AsyncMock(return_value=True),
+    )
+    uid = 4605403
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.ensure_authenticated_role(uid, "platform_owner")
+    vertical_role_registry.begin_vertical(uid, "auto")
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+    await enter_persona_home(msg, "owner")
+    markups = [
+        c.kwargs.get("reply_markup")
+        for c in msg.answer.await_args_list
+        if c.kwargs.get("reply_markup")
+    ]
+    assert markups
+    texts = {b.text for row in markups[-1].keyboard for b in row}
+    assert "🛡 Страхование" in texts
+    assert "💳 Лизинг" in texts
+    assert "🏦 Кредит" in texts
+    assert "🚚 Логистика" in texts
+
+
+@pytest.mark.asyncio
+async def test_auto_client_has_buy_and_sell():
+    uid = 4605404
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.begin_vertical(uid, "auto")
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+    await enter_persona_home(msg, "client")
+    markups = [
+        c.kwargs.get("reply_markup")
+        for c in msg.answer.await_args_list
+        if c.kwargs.get("reply_markup")
+    ]
+    texts = {b.text for row in markups[-1].keyboard for b in row}
+    from services.automotive_localization import btn
+
+    assert btn("client_buy_car", "ru") in texts
+    assert btn("client_sell_car", "ru") in texts
+
+
+@pytest.mark.asyncio
+async def test_agro_owner_has_buy_sell_marketplace():
+    uid = 4605405
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.ensure_authenticated_role(uid, "platform_owner")
+    vertical_role_registry.begin_vertical(uid, "agro")
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+    await enter_persona_home(msg, "owner")
+    markups = [
+        c.kwargs.get("reply_markup")
+        for c in msg.answer.await_args_list
+        if c.kwargs.get("reply_markup")
+    ]
+    texts = {b.text for row in markups[-1].keyboard for b in row}
+    # Buy/sell/marketplace (products+deals+counterparties) — not flattened
+    # to farm-ops, which this vertical does not implement in the bot at all.
+    assert "🌾 Товары" in texts
+    assert "👥 Контрагенты" in texts
+    assert "📑 Сделки" in texts
+
+
+@pytest.mark.asyncio
+async def test_agro_client_has_buy_oriented_menu():
+    uid = 4605406
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.begin_vertical(uid, "agro")
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+    await enter_persona_home(msg, "client")
+    markups = [
+        c.kwargs.get("reply_markup")
+        for c in msg.answer.await_args_list
+        if c.kwargs.get("reply_markup")
+    ]
+    texts = {b.text for row in markups[-1].keyboard for b in row}
+    assert "🌾 Товары" in texts
+
+
+@pytest.mark.asyncio
+async def test_switching_beauty_auto_agro_crypto_is_deterministic(monkeypatch):
+    """Repeated switching must not leak state between verticals."""
+    uid = 4605407
+    monkeypatch.setattr(
+        "services.crypto_auth.CryptoAuthService.can_access_crypto",
+        staticmethod(lambda _uid: True),
+    )
+    monkeypatch.setattr(
+        "auto_vertical_handlers.VerticalOnboardingEngineV1.get_language",
+        AsyncMock(return_value="ru"),
+    )
+    monkeypatch.setattr(
+        "auto_vertical_handlers.can_access_automotive_ui",
+        AsyncMock(return_value=True),
+    )
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.ensure_authenticated_role(uid, "platform_owner")
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+
+    sequence = [
+        ("beauty", "owner", "💄 Салон"),
+        ("auto", "owner", "🛡 Страхование"),
+        ("agro", "owner", "🌾 Товары"),
+        ("crypto", "owner", "🟢 Buy USDT"),
+    ]
+    for vertical, persona, expected_text in sequence:
+        msg.answer.reset_mock()
+        vertical_role_registry.begin_vertical(uid, vertical)
+        await enter_persona_home(msg, persona)
+        sess = vertical_role_registry.get(uid)
+        assert sess.active_vertical == vertical
+        assert sess.active_persona == persona
+        assert sess.authenticated_role == "platform_owner"
+        markups = [
+            c.kwargs.get("reply_markup")
+            for c in msg.answer.await_args_list
+            if c.kwargs.get("reply_markup")
+        ]
+        assert markups
+        texts = {b.text for row in markups[-1].keyboard for b in row}
+        assert expected_text in texts
+
+
+def test_unknown_vertical_fails_safely():
+    assert vertical_role_registry.personas_for("does_not_exist") == ("owner", "client")
+
+
+@pytest.mark.asyncio
+async def test_unknown_persona_rejected_without_crash():
+    uid = 4605408
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.begin_vertical(uid, "beauty")
+    with pytest.raises(ValueError):
+        vertical_role_registry.set_persona(uid, "not_a_real_persona")
+
+
+@pytest.mark.asyncio
+async def test_main_menu_clears_vertical_state():
+    from services.vertical_nav_service import go_main_menu
+
+    uid = 4605409
+    vertical_role_registry.clear_vertical(uid)
+    vertical_role_registry.begin_vertical(uid, "beauty")
+    vertical_role_registry.set_persona(uid, "owner")
+    msg = MagicMock()
+    msg.from_user = MagicMock(id=uid)
+    msg.answer = AsyncMock()
+    await go_main_menu(msg, state=None)
+    sess = vertical_role_registry.get(uid)
+    assert sess.active_vertical is None
+    assert sess.active_persona is None
+    assert sess.fsm_state == "platform_home"
+
+
+@pytest.mark.asyncio
 async def test_travel_entry_has_functional_menu(monkeypatch):
     uid = 4605200
     vertical_role_registry.clear_vertical(uid)
@@ -255,7 +554,6 @@ async def test_travel_entry_has_functional_menu(monkeypatch):
     msg.answer = AsyncMock()
     await enter_persona_home(msg, "owner")
     assert vertical_role_registry.get(uid).active_persona == "owner"
-    # All answer texts must avoid forbidden AI-replacement phrases
     from services.vertical_nav_service import FORBIDDEN_VERTICAL_NAV_PHRASES
 
     for call in msg.answer.await_args_list:
@@ -263,7 +561,6 @@ async def test_travel_entry_has_functional_menu(monkeypatch):
         low = text.lower()
         for phrase in FORBIDDEN_VERTICAL_NAV_PHRASES:
             assert phrase not in low, text
-    # Last/menu reply should attach travel keyboard
     markups = [c.kwargs.get("reply_markup") for c in msg.answer.await_args_list if c.kwargs.get("reply_markup")]
     assert markups
     texts = {b.text for row in markups[-1].keyboard for b in row}

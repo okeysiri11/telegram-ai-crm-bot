@@ -66,7 +66,11 @@ async def secure_headers_middleware(request: web.Request, handler):
         response.headers.setdefault("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
         response.headers.setdefault("X-XSS-Protection", "0")
         if not response.headers.get("Content-Security-Policy"):
-            response.headers["Content-Security-Policy"] = "default-src 'self'"
+            response.headers["Content-Security-Policy"] = (
+                "default-src 'self'; img-src 'self' data: blob:; "
+                "style-src 'self' 'unsafe-inline'; script-src 'self'; "
+                "connect-src 'self'; frame-ancestors 'none'"
+            )
     return response
 
 

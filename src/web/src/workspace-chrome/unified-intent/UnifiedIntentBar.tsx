@@ -3,7 +3,7 @@
  * После submit input всегда очищается; задача уходит в историю со статусом.
  */
 
-import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/ui";
 import { useModeStore } from "@/platform-modes/modeStore";
@@ -67,12 +67,16 @@ export function UnifiedIntentBar({
   const [lastResultId, setLastResultId] = useState<string | null>(null);
 
   const hydrate = useUnifiedIntentStore((s) => s.hydrate);
-  const recent = useUnifiedIntentStore((s) => s.recent(5));
   const inboxOpen = useUnifiedIntentStore((s) => s.inboxOpen);
   const setInboxOpen = useUnifiedIntentStore((s) => s.setInboxOpen);
   const showTech = useUnifiedIntentStore((s) => s.showTech);
   const items = useUnifiedIntentStore((s) => s.items);
   const mode = useModeStore((s) => s.mode);
+  // Sprint 46.6 — select the stable `items` array and derive locally; calling
+  // s.recent(5) (Array.prototype.slice) directly as a selector returns a new
+  // array reference on every snapshot check, which triggers React's
+  // useSyncExternalStore infinite-update-depth loop.
+  const recent = useMemo(() => items.slice(0, 5), [items]);
 
   const session =
     sessionId ||

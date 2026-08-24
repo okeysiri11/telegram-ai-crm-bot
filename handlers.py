@@ -38,6 +38,7 @@ from services.dashboard import DashboardService
 from services.search_service import SearchService
 from services.crypto_auth import CryptoAuthService
 from services.crypto_otc_agent import CryptoOTCAgent
+from routers.crypto_tx_antifraud_router import start_payout_confirmation
 from services.hr_agent import HRAgent
 from services.company_core import CompanyCoreService
 from services.user_memory_service import UserMemoryService
@@ -386,6 +387,15 @@ active_agro_sub = {}
 agro_nav_state = {}
 admin_permissions_flow = {}
 crypto_otc_flow = {}
+# Sprint 48.1 — last real deal a user viewed, so "confirm payout" (offered
+# only from the deal-detail screen) knows which deal it applies to. No
+# antifraud/state-transition logic here — this dict only remembers which
+# deal is on screen; routers.crypto_tx_antifraud_router.start_payout_confirmation
+# and services.crypto_payout_orchestrator.CryptoPayoutOrchestrator own the rest.
+crypto_last_deal: dict[int, int] = {}
+
+CRYPTO_PAYOUT_TERMINAL_DEAL_STATUSES = ("COMPLETED", "CANCELLED")
+CRYPTO_PAYOUT_ALREADY_CONFIRMED_STATUSES = ("PAYMENT_RECEIVED", "PAYMENT_CONFIRMED", "DELIVERED")
 
 CRYPTO_DIRECTION_BUTTONS = {
     "🟢 Buy USDT": "BUY_USDT",
@@ -429,6 +439,7 @@ MODULE_STUB_BUTTONS = {
     "📑 Документы",
     "📚 Законодательство",
     "⚖ Судебная практика",
+    "👤 Профиль",
     # Cafe & Beauty
     "☕ Cafe",
     "💄 Beauty",
@@ -436,6 +447,18 @@ MODULE_STUB_BUTTONS = {
     "👥 Клиенты",
     "📅 Записи",
     "📦 Склад",
+}
+
+# Agro labels without dedicated handlers yet — stub when active_module=agro
+AGRO_STUB_BUTTONS = {
+    "🌍 Страны",
+    "📈 Цены",
+    "🗄 База данных",
+    "🧮 Фрахт",
+    "🚛 Автологистика",
+    "🛳 Морская логистика",
+    "📦 Склады",
+    "🚢 Логистика",
 }
 
 DRONE_MENU_BUTTONS = {
@@ -1002,6 +1025,89 @@ async def crypto_otc_agent_screen(message: Message):
     )
 
 
+@router.message(
+    lambda m: (
+        m.text == "💵 Курсы"
+        and active_module.get(m.from_user.id) == "crypto"
+    )
+)
+async def crypto_otc_rates_screen(message: Message):
+    user_id = message.from_user.id
+    if not CryptoAuthService.can_view_finance(user_id):
+        await message.answer(CryptoAuthService.deny_message("CRYPTO_VIEW_FINANCE", user_id))
+        return
+    lines = ["💵 Курсы", "", "AI-анализ, не является гарантией результата."]
+    try:
+        from services.dealer_rate_service import DealerRateService
+
+        usdt_mid = await DealerRateService.get_otc_usdt_mid()
+        lines.append(f"USDT/UAH mid: {usdt_mid:.4f}")
+    except Exception:
+        lines.append("USDT/UAH: недоступно (нужен канал котировок)")
+    try:
+        from services.fx_market_intel import get_fx_market_intel
+
+        intel = get_fx_market_intel()
+        eurusd = await intel.quote("EUR/USD")
+        dxy = await intel.quote("DXY")
+        lines.append(intel.format_telegram_quote(eurusd))
+        lines.append(intel.format_telegram_quote(dxy))
+    except Exception as exc:
+        lines.append(f"EUR/USD · DXY: временно недоступно ({exc})")
+    await message.answer("\n".join(lines), reply_markup=crypto_otc_menu())
+
+
+@router.message(
+    lambda m: (
+        m.text
+        in {
+            "EURUSD",
+            "EUR/USD",
+            "EUR/USD сейчас",
+            "DXY",
+            "DXY сейчас",
+            "Утренний обзор",
+            "Утренний анализ",
+            "Анализ сейчас",
+            "Анализ перед торговлей",
+            "Сигналы",
+            "Новости",
+            "Новости EUR/USD",
+            "Календарь",
+        }
+        and active_module.get(m.from_user.id) == "crypto"
+    )
+)
+async def crypto_fx_intel_commands(message: Message):
+    """Telegram → same FxMarketIntelService as Web (no duplicated analysis)."""
+    user_id = message.from_user.id
+    if not CryptoAuthService.can_view_finance(user_id):
+        await message.answer(CryptoAuthService.deny_message("CRYPTO_VIEW_FINANCE", user_id))
+        return
+    from services.fx_market_intel import get_fx_market_intel
+
+    text = await get_fx_market_intel().telegram_brief(
+        message.text or "",
+        tenant_id=f"tg_{user_id}",
+    )
+    await message.answer(text, reply_markup=crypto_otc_menu())
+
+
+@router.message(
+    lambda m: (
+        m.text == "📊 PnL"
+        and active_module.get(m.from_user.id) == "crypto"
+    )
+)
+async def crypto_otc_pnl_screen(message: Message):
+    user_id = message.from_user.id
+    if not CryptoAuthService.can_view_finance(user_id):
+        await message.answer(CryptoAuthService.deny_message("CRYPTO_VIEW_FINANCE", user_id))
+        return
+    report = CryptoOTCAgent.format_agent_report(user_id)
+    await message.answer(f"📊 PnL\n\n{report}", reply_markup=crypto_otc_menu())
+
+
 @router.message(Command("crypto_test"))
 async def crypto_erp_cycle_test(message: Message):
     user_id = message.from_user.id
@@ -1050,7 +1156,25 @@ async def crypto_otc_deal_or_request(message: Message):
             text += "\n\n📅 События:"
             for link in cal:
                 text += f"\n  · {link[3]} → event #{link[2]}"
-        await message.answer(text, reply_markup=crypto_otc_menu())
+
+        # Sprint 48.1 — offer "confirm payout" only when it's a real,
+        # actionable state (deal not terminal, payment not already
+        # confirmed) and the operator is allowed to edit deals. deal[10] =
+        # status, deal[11] = payment_status (see format_crypto_deal_text's
+        # own unpack a few lines above for this column order).
+        extra_row = None
+        deal_status, deal_payment_status = deal[10], deal[11]
+        if (
+            CryptoAuthService.can_edit_deals(user_id)
+            and deal_status not in CRYPTO_PAYOUT_TERMINAL_DEAL_STATUSES
+            and deal_payment_status not in CRYPTO_PAYOUT_ALREADY_CONFIRMED_STATUSES
+        ):
+            crypto_last_deal[user_id] = num
+            extra_row = ["✅ Подтвердить платёж (tx_hash)"]
+        else:
+            crypto_last_deal.pop(user_id, None)
+
+        await message.answer(text, reply_markup=crypto_otc_menu(extra_row=extra_row))
         return
 
     if CryptoAuthService.can_edit_deals(user_id):
@@ -1063,6 +1187,31 @@ async def crypto_otc_deal_or_request(message: Message):
             )
             return
     await message.answer("Сделка или запрос не найдены.", reply_markup=crypto_otc_menu())
+
+
+@router.message(
+    lambda m: (
+        m.text == "✅ Подтвердить платёж (tx_hash)"
+        and active_module.get(m.from_user.id) == "crypto"
+    )
+)
+async def crypto_otc_confirm_payout_start(message: Message, state: FSMContext) -> None:
+    """Sprint 48.1 — presentation-only: decides *when* to start the payout
+    confirmation flow (a real deal is on screen, operator can edit deals).
+    All antifraud/business logic lives behind start_payout_confirmation ->
+    services.crypto_payout_orchestrator.CryptoPayoutOrchestrator, not here."""
+    user_id = message.from_user.id
+    if not CryptoAuthService.can_edit_deals(user_id):
+        await message.answer(CryptoAuthService.deny_message("CRYPTO_EDIT_DEALS", user_id))
+        return
+    deal_id = crypto_last_deal.get(user_id)
+    if not deal_id:
+        await message.answer(
+            "Сначала откройте сделку (введите её номер), затем подтвердите платёж.",
+            reply_markup=crypto_otc_menu(),
+        )
+        return
+    await start_payout_confirmation(message, state, deal_id=deal_id)
 
 
 @router.message(F.text == "🏢 Company Core")
@@ -2559,6 +2708,14 @@ async def open_files_alias(message: Message):
 
 @router.message(F.text == "📊 Аналитика")
 async def open_dashboard_module(message: Message):
+    # When inside Agro workspace, keep Agro analytics (do not jump to global dashboard)
+    if active_module.get(message.from_user.id) == "agro":
+        await message.answer(
+            "📊 Аналитика Agro\n\nСводка по товарам, сделкам и логистике.\n"
+            "Откройте «📊 Отчеты Agro» для детальных отчётов.",
+            reply_markup=agro_menu(),
+        )
+        return
     _init_ai_user(message)
     _clear_ai_state(message.from_user.id)
     active_module[message.from_user.id] = "dashboard"
@@ -3255,10 +3412,40 @@ async def module_stub_screen(message: Message):
     screen = message.text
     module_key = active_module.get(message.from_user.id, "unknown")
 
+    fallback_menu = MODULE_MENUS.get(module_key, owner_main_menu)
+    if module_key == "cafe_beauty":
+        # Beauty and (legacy) Cafe share the "cafe_beauty" module key, but
+        # must not share a keyboard — Beauty users must never see the
+        # Cafe-only button reappear after opening a stub screen.
+        try:
+            from services.vertical_role_registry import vertical_role_registry
+
+            if vertical_role_registry.get(message.from_user.id).active_vertical == "beauty":
+                from keyboards import beauty_module_menu
+
+                fallback_menu = beauty_module_menu
+        except Exception:
+            pass
+
     log_audit(message.from_user.id, "open_stub", module_key, screen)
     await message.answer(
         f"{screen}\n\nРаздел находится в разработке.",
-        reply_markup=MODULE_MENUS.get(module_key, owner_main_menu)(),
+        reply_markup=fallback_menu(),
+    )
+
+
+@router.message(
+    lambda m: (
+        m.text in AGRO_STUB_BUTTONS
+        and active_module.get(m.from_user.id) == "agro"
+    )
+)
+async def agro_stub_screen(message: Message):
+    screen = message.text or ""
+    log_audit(message.from_user.id, "open_stub", "agro", screen)
+    await message.answer(
+        f"{screen}\n\nРаздел Agro — экран подключен. Данные появятся по мере наполнения.",
+        reply_markup=agro_menu(),
     )
 
 

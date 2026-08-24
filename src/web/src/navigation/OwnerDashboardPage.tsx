@@ -11,6 +11,8 @@ import { RoleDashboardPolish } from "@/dashboard/RoleDashboardPolish";
 import { ProductionOwnerStrip } from "@/ai-production-studio/ProductionOwnerStrip";
 import { AgentOsMonitor } from "@/ai-runtime/AgentOsMonitor";
 import type { AiTaskSecurityContext } from "@/ai-runtime/aiTaskSecurity";
+import { MobileRouteGate } from "@/shell/mobile/MobileRouteGate";
+import { MobilePlatformHome } from "@/shell/mobile/MobilePlatformHome";
 
 /**
  * Sprint 30.2–31.1 — Owner Mode dashboard with live metrics + God Mode strip.
@@ -34,6 +36,9 @@ export function OwnerDashboardPage() {
 
   return (
     <DashboardLayout>
+      <MobileRouteGate
+        mobile={<MobilePlatformHome />}
+        desktop={
       <div className="space-y-4 edm-page" data-testid="owner-dashboard">
         <div>
           <h1 className="eds-type-h1">Панель владельца</h1>
@@ -160,6 +165,8 @@ export function OwnerDashboardPage() {
           </ul>
         </Card>
       </div>
+        }
+      />
     </DashboardLayout>
   );
 }

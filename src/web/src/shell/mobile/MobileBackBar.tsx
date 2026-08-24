@@ -19,15 +19,17 @@ export function MobileBackBar({
   const home = workspaceHomePath(verticalId);
 
   function back() {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
     if (section) {
       navigate(home);
       return;
     }
     if (pathname !== "/dashboard") {
       navigate("/dashboard");
-      return;
     }
-    navigate(-1);
   }
 
   return (

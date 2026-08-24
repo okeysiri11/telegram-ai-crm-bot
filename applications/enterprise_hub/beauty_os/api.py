@@ -83,6 +83,8 @@ async def bos_branch_handler(request: web.Request) -> web.Response:
 
 async def bos_employee_handler(request: web.Request) -> web.Response:
     try:
+        if request.method == "GET":
+            return json_response(_suite().list_employees())
         body = await _read_json(request)
         return json_response(
             _suite().create_employee(
@@ -102,6 +104,8 @@ async def bos_employee_handler(request: web.Request) -> web.Response:
 
 async def bos_service_handler(request: web.Request) -> web.Response:
     try:
+        if request.method == "GET":
+            return json_response(_suite().list_services())
         body = await _read_json(request)
         return json_response(
             _suite().create_service(
@@ -122,6 +126,8 @@ async def bos_service_handler(request: web.Request) -> web.Response:
 
 async def bos_customer_handler(request: web.Request) -> web.Response:
     try:
+        if request.method == "GET":
+            return json_response(_suite().list_customers())
         body = await _read_json(request)
         return json_response(
             _suite().create_customer(
@@ -137,26 +143,40 @@ async def bos_customer_handler(request: web.Request) -> web.Response:
 
 async def bos_appointment_handler(request: web.Request) -> web.Response:
     try:
+        if request.method == "GET":
+            return json_response(_suite().list_appointments())
         body = await _read_json(request)
-        if request.method == "POST" and body.get("status") and body.get("appointment_id"):
+        if body.get("status") and body.get("appointment_id"):
             return json_response(
                 _suite().transition_appointment(
                     appointment_id=body["appointment_id"],
                     status=body["status"],
                 )
             )
+        branch_id = body.get("branch_id", "")
+        if not branch_id:
+            branches = _suite().list_branches().get("items") or []
+            if branches:
+                branch_id = str(branches[-1].get("branch_id") or "")
         return json_response(
             _suite().book_appointment(
                 customer_id=body.get("customer_id", ""),
                 service_id=body.get("service_id", ""),
                 employee_id=body.get("employee_id", ""),
-                branch_id=body.get("branch_id", ""),
+                branch_id=branch_id,
                 start=body.get("start", ""),
                 end=body.get("end", ""),
                 resource_id=body.get("resource_id", ""),
             ),
             status=201,
         )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
+async def bos_branches_list_handler(request: web.Request) -> web.Response:
+    try:
+        return json_response(_suite().list_branches())
     except Exception as exc:
         return _handle_error(exc)
 

@@ -7834,6 +7834,19 @@ def create_crypto_payment(
     return cursor.lastrowid
 
 
+def get_crypto_payment_for_deal(deal_id: int):
+    """Latest crypto_payments row for a deal — Sprint 48.1. Read-only helper
+    used by services/crypto_payout_orchestrator.py so the orchestrator does
+    not need to embed a raw SELECT against legacy internals itself."""
+    cursor.execute(
+        "SELECT id, deal_id, amount, currency, payment_status, created_by, "
+        "confirmed_at, delivered_at FROM crypto_payments WHERE deal_id = ? "
+        "ORDER BY id DESC LIMIT 1",
+        (deal_id,),
+    )
+    return cursor.fetchone()
+
+
 def update_crypto_payment_status(
     payment_id: int,
     payment_status: str,

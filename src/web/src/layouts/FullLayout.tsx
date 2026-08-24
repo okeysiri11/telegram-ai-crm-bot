@@ -79,14 +79,14 @@ export function FullLayout({ children }: { children: ReactNode }) {
     >
       <ViewModeRouteGuard />
       <div className="ews-shell-body">
-        <Sidebar mobileOpen={!isMobile && mobileOpen} onNavigate={() => setMobileOpen(false)} />
+        {!isMobile ? <Sidebar mobileOpen={mobileOpen} onNavigate={() => setMobileOpen(false)} /> : null}
         {!isClientChrome && !isMobile ? <LeftDock /> : null}
         <div className="ews-workspace">
           {isMobile ? <MobileChrome /> : <TopNavigation onMenuToggle={() => setMobileOpen((v) => !v)} />}
           <main className="ews-main eds-main">
             <div className="eds-page">
               <OfflineBanner />
-              <WorkspaceSlotBanner />
+              {!isMobile ? <WorkspaceSlotBanner /> : null}
               {!isMobile ? <WorkspaceQuickDock /> : null}
               {showWorkspaceTabs ? <WorkspaceTabBar /> : null}
               {showOwnerDevChrome && !isMobile ? (

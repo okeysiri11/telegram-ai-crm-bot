@@ -1,0 +1,4613 @@
+{
+  "step": "30.5",
+  "osmSource": "overpass-api.de",
+  "osmBuildingCount": 2568,
+  "osmRoadCount": 867,
+  "modelBuildingCandidates": 23,
+  "modelRoadCandidates": 4,
+  "rawMatches": 2522,
+  "accepted": [],
+  "rejected": [
+    {
+      "model": "WEB_building78",
+      "osmId": 160458312,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -13097.989,
+        "y": 11.995,
+        "z": -6597.24
+      },
+      "geo": {
+        "lat": 46.4870727,
+        "lon": 30.73172645
+      },
+      "modelFootprint": [
+        85.028,
+        112.585
+      ],
+      "osmFootprint": [
+        83.81517420247252,
+        96.55992618328571
+      ]
+    },
+    {
+      "model": "WEB_building78",
+      "osmId": 160458321,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -13097.989,
+        "y": 11.995,
+        "z": -6597.24
+      },
+      "geo": {
+        "lat": 46.4879795,
+        "lon": 30.73054495
+      },
+      "modelFootprint": [
+        85.028,
+        112.585
+      ],
+      "osmFootprint": [
+        92.48570946501525,
+        98.04959820546452
+      ]
+    },
+    {
+      "model": "WEB_building78",
+      "osmId": 160470705,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -13097.989,
+        "y": 11.995,
+        "z": -6597.24
+      },
+      "geo": {
+        "lat": 46.4791017,
+        "lon": 30.72562655
+      },
+      "modelFootprint": [
+        85.028,
+        112.585
+      ],
+      "osmFootprint": [
+        98.91079841506894,
+        106.8033410165012
+      ]
+    },
+    {
+      "model": "WEB_building78",
+      "osmId": 188826853,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -13097.989,
+        "y": 11.995,
+        "z": -6597.24
+      },
+      "geo": {
+        "lat": 46.477888300000004,
+        "lon": 30.73698325
+      },
+      "modelFootprint": [
+        85.028,
+        112.585
+      ],
+      "osmFootprint": [
+        85.08240627907486,
+        128.48805127821277
+      ]
+    },
+    {
+      "model": "WEB_building78",
+      "osmId": 396693208,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -13097.989,
+        "y": 11.995,
+        "z": -6597.24
+      },
+      "geo": {
+        "lat": 46.491376849999995,
+        "lon": 30.73277365
+      },
+      "modelFootprint": [
+        85.028,
+        112.585
+      ],
+      "osmFootprint": [
+        72.73245156591508,
+        104.3461500519279
+      ]
+    },
+    {
+      "model": "WEB_building78",
+      "osmId": 971797009,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -13097.989,
+        "y": 11.995,
+        "z": -6597.24
+      },
+      "geo": {
+        "lat": 46.494390800000005,
+        "lon": 30.728499
+      },
+      "modelFootprint": [
+        85.028,
+        112.585
+      ],
+      "osmFootprint": [
+        84.65999558661065,
+        125.93103693090399
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160111172,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4851992,
+        "lon": 30.739187899999997
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.960445856578076,
+        11.70237196852463
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160111182,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48583755,
+        "lon": 30.7403167
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.337325665105709,
+        11.038258353431274
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160116253,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4851345,
+        "lon": 30.7400026
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.671428015072536,
+        11.02664445330106
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160116255,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48511665,
+        "lon": 30.7402324
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.28281191181054,
+        13.637409853040936
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160141143,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48057,
+        "lon": 30.74397155
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.053212959788652,
+        14.473124245669226
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160157407,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4771499,
+        "lon": 30.73650115
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.249327384333355,
+        14.851070654217096
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160351758,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4799579,
+        "lon": 30.748107949999998
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.449106597861487,
+        13.936880001792815
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160351823,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4765487,
+        "lon": 30.7481608
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.894195808548488,
+        12.961682337817138
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160482278,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4755507,
+        "lon": 30.7291205
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.805267242296054,
+        13.790984288207369
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 160489838,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.475834,
+        "lon": 30.726993649999997
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.249463699663238,
+        14.459033081849952
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 187993264,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.478767250000004,
+        "lon": 30.749448649999998
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.020731902183115,
+        12.705668980539599
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 188330030,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4757972,
+        "lon": 30.729574200000002
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.715445921933906,
+        13.069184442679386
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 233875692,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48854855,
+        "lon": 30.743676299999997
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.272363549622014,
+        11.28281191181054
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 332542190,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48454555,
+        "lon": 30.74969965
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.638526178400411,
+        12.616139858488168
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 396683162,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4837093,
+        "lon": 30.74684345
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.226338805175345,
+        12.785071737089538
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 396688051,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.47620655,
+        "lon": 30.7439091
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.104954777725766,
+        14.067418271943552
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 396708885,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.481414,
+        "lon": 30.74681645
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.373953103366148,
+        12.983570751855893
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 405745719,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.493118499999994,
+        "lon": 30.72975765
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        12.094285083801424,
+        13.70651834863395
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 408070152,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48223385,
+        "lon": 30.73530855
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.482008433743786,
+        14.919756387622101
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 408070153,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4822061,
+        "lon": 30.735672549999997
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.315267371427879,
+        14.827611726467694
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 440422499,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48666435,
+        "lon": 30.737654
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.438436903937259,
+        13.115256772983912
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 440422503,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48654395,
+        "lon": 30.737651800000002
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.815936936220226,
+        13.145971660126179
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 454746298,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.489098600000005,
+        "lon": 30.7420169
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.405088691000174,
+        11.779159186244215
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 467838293,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4780027,
+        "lon": 30.7341007
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.22629121904481,
+        13.250356452193216
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 467986931,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4834438,
+        "lon": 30.74629345
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.38196379651221,
+        11.525761367796804
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 468017211,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4767361,
+        "lon": 30.75157375
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.983124375590933,
+        13.952237445500487
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 468027087,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.47822395,
+        "lon": 30.7491045
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        8.837276324858522,
+        11.80987407311386
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 468173873,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4793383,
+        "lon": 30.731355999999998
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.886661290833558,
+        12.272142217096473
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 468173875,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.47940525,
+        "lon": 30.7316419
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.594061896063977,
+        13.284188651857903
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 468173985,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.479740500000005,
+        "lon": 30.733518500000002
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        8.999461907630462,
+        13.961784986162797
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 468558709,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48863265,
+        "lon": 30.736039050000002
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.082722636557492,
+        13.73723323577633
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 480220740,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.47929075,
+        "lon": 30.73873725
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.31428949981705,
+        12.372186855117889
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 486546519,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4783697,
+        "lon": 30.7260044
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.917376177975939,
+        12.739017193476627
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 488496808,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4772615,
+        "lon": 30.7387965
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.87107091406051,
+        13.668124739910354
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 495660982,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.47527075,
+        "lon": 30.73379175
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.549151235093063,
+        13.000075946540733
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 504487113,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48101415,
+        "lon": 30.75399875
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.483221378691269,
+        11.327276195726682
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 504487165,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.47911445,
+        "lon": 30.75407005
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.495046480927158,
+        11.638526179190308
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 504983742,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.47843885,
+        "lon": 30.752099
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.168393786231718,
+        12.37218685432805
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 516852226,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48212615,
+        "lon": 30.735157049999998
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.283574612947518,
+        10.993794069515168
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 522543972,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4846583,
+        "lon": 30.7384287
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.489133929536365,
+        11.538481541958674
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 526222199,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48582975,
+        "lon": 30.7404223
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.060891681642488,
+        10.993794069515161
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 529801675,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.476892449999994,
+        "lon": 30.72527865
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.756123020682878,
+        11.90531187952763
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 531726449,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48466575,
+        "lon": 30.72982595
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.038258353431274,
+        11.940412343264597
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 531726450,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.484733399999996,
+        "lon": 30.7297059
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.982677998536133,
+        12.869537676662844
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 540510235,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4866472,
+        "lon": 30.74062185
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        8.870624537005767,
+        14.167241654951795
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 553594987,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4916579,
+        "lon": 30.72596205
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.871963666590432,
+        12.523995197333676
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 555285734,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4789787,
+        "lon": 30.7281734
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.07271678387832,
+        11.382856549831956
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 557061922,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4753309,
+        "lon": 30.72774355
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.928587240755917,
+        14.139642120247572
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 561860341,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.49288795,
+        "lon": 30.7318301
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.371294101798185,
+        12.562388806057129
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 561860345,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.493079699999996,
+        "lon": 30.732201099999997
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        12.116517225759708,
+        13.71419707076052
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 561860395,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.49211405,
+        "lon": 30.73579295
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.549597612147863,
+        13.107578051129963
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 561860397,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4920134,
+        "lon": 30.73583745
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.82705300719931,
+        13.491514139728224
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 561860400,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4919918,
+        "lon": 30.73559885
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.834676409138297,
+        10.915981573451745
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 561867017,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.494125749999995,
+        "lon": 30.7308779
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.749686887400912,
+        12.977039781252074
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 561867020,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4938784,
+        "lon": 30.731445299999997
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.78258872328297,
+        11.318435880199331
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 571805943,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.48645325,
+        "lon": 30.73492205
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        9.314289499817164,
+        12.527811846454767
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 678375325,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4886199,
+        "lon": 30.73620035
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.027142282452246,
+        13.261152486569358
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 696934417,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.4945898,
+        "lon": 30.72563935
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.494017258042732,
+        12.155416552443086
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 810204791,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.493904,
+        "lon": 30.7349858
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.611993478106115,
+        10.982677999326143
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 810204796,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.493041149999996,
+        "lon": 30.7352916
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        11.687014525089808,
+        11.794151171316798
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 994986264,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.47510585,
+        "lon": 30.736744350000002
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.312523329354008,
+        12.127633296738622
+      ]
+    },
+    {
+      "model": "WEB_building77",
+      "osmId": 1087617714,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7903.855,
+        "y": 7.353,
+        "z": 29002.933
+      },
+      "geo": {
+        "lat": 46.49401145,
+        "lon": 30.7274728
+      },
+      "modelFootprint": [
+        10.315,
+        12.734
+      ],
+      "osmFootprint": [
+        10.993794069515161,
+        11.164861445032727
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 29239609,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47647645,
+        "lon": 30.74591595
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.311293323057726,
+        34.700143651959934
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 29239734,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4763957,
+        "lon": 30.7473321
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.157258669719795,
+        28.67946279100113
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 29544704,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.476709799999995,
+        "lon": 30.74335875
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.111800378325597,
+        34.504283915296014
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 29544715,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4765895,
+        "lon": 30.74461385
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.349226713882445,
+        27.234373580314013
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 29544784,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47776705,
+        "lon": 30.7417259
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.09031103543134,
+        34.33924372892329
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38141290,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.486202250000005,
+        "lon": 30.742818149999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.52821752425666,
+        28.623882436105987
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38187227,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47863355,
+        "lon": 30.73644045
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.95781093858244,
+        34.838360643691544
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38187714,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4891005,
+        "lon": 30.739579900000003
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.517006460931043,
+        30.10231985894029
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38187715,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4889391,
+        "lon": 30.73975985
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.257052098537088,
+        29.002532102727855
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38187716,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48877255,
+        "lon": 30.73995405
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.14251526546809,
+        29.535400246118343
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38189701,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4819307,
+        "lon": 30.74237275
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.68035554353103,
+        32.71903343686654
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38197077,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4865008,
+        "lon": 30.7388348
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.257052098537088,
+        29.28664480831776
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38197599,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48800465,
+        "lon": 30.7352886
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.31083310488623,
+        35.07120352890763
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38209435,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48047295,
+        "lon": 30.7379756
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.805265546630153,
+        36.71638201484768
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38249431,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47980315,
+        "lon": 30.73369705
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.200132614847064,
+        33.21047162978107
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38249433,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47931715,
+        "lon": 30.73368555
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.178528664545297,
+        36.827542723058286
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38249434,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4790538,
+        "lon": 30.7336246
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.145445014061522,
+        27.41303669781348
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38249435,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47887025,
+        "lon": 30.7335477
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.513614481215143,
+        34.18566929375663
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38249437,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47916955,
+        "lon": 30.7323363
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.622543307311105,
+        35.39890733247205
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38279551,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.478397900000004,
+        "lon": 30.73301075
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.23348082778415,
+        27.78929406401221
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38375639,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4795047,
+        "lon": 30.736964450000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.434462855567062,
+        31.72079960732958
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38427738,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4849646,
+        "lon": 30.73301545
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        23.504567320057504,
+        32.25883760438677
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38427741,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48473145,
+        "lon": 30.7330252
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.37754337187704,
+        28.488057744797175
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 38431334,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4816697,
+        "lon": 30.738113499999997
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.123659248368412,
+        31.91276765149223
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160091282,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4749046,
+        "lon": 30.7421384
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.81107013532005,
+        34.38531605950038
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160091286,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47755085,
+        "lon": 30.74169055
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.201025367377042,
+        34.31620756363441
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160091336,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4782165,
+        "lon": 30.7425669
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.96943700621182,
+        27.189909297187796
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160095735,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48271145,
+        "lon": 30.74115935
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.780400180762605,
+        31.567225172163035
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160095738,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.480325300000004,
+        "lon": 30.7407431
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.172616113154618,
+        28.74615921608543
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160099681,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.483628800000005,
+        "lon": 30.73918605
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.41401621945866,
+        33.28725884722803
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160105833,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48780185,
+        "lon": 30.738601600000003
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.16378526002086,
+        33.49272146805197
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160105845,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.488132449999995,
+        "lon": 30.740177250000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.69185089092298,
+        31.380668007311442
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160111184,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48595385,
+        "lon": 30.7427166
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        23.93290053824478,
+        27.889117447020453
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160116246,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4862272,
+        "lon": 30.73565395
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.883204895902622,
+        33.85955180641071
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160116250,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48483455,
+        "lon": 30.7463097
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.46440754032551,
+        33.78173931034732
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160116254,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4865208,
+        "lon": 30.735672
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.858402560150807,
+        33.970712515411094
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160122220,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4820057,
+        "lon": 30.73460195
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.586114957069526,
+        32.725712579977056
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160122261,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4832569,
+        "lon": 30.733294
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        23.56607020067588,
+        34.308528841780685
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160122263,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48313175,
+        "lon": 30.73639325
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.37111074761833,
+        30.0022752217087
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160122269,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4835992,
+        "lon": 30.73960225
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.889731486203573,
+        31.903123337007045
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160124230,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48215395,
+        "lon": 30.741577550000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.82530746336215,
+        35.22682852103436
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160136908,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4865676,
+        "lon": 30.7351271
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.003684234553248,
+        35.32687315905582
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160137441,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48853435,
+        "lon": 30.734558800000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.170849942418613,
+        31.669685848816925
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160139861,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48126705,
+        "lon": 30.7338734
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.37798974893184,
+        32.14312930437836
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160141131,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47955315,
+        "lon": 30.7441123
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.93379329156454,
+        33.20279290792746
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160146368,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48151245,
+        "lon": 30.73765355
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.06852527052807,
+        34.45442455536613
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160146369,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.479782650000004,
+        "lon": 30.7407028
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.779849171695332,
+        30.4024537722147
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160146380,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.480691,
+        "lon": 30.7416552
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.53766241684616,
+        29.057409199549056
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160149098,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4788375,
+        "lon": 30.73647045
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.189909296397957,
+        34.147275684760416
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160149100,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47872475,
+        "lon": 30.735564949999997
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.31263245264239,
+        29.81647660995577
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160157361,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.477783200000005,
+        "lon": 30.74132125
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.54740906962735,
+        33.51762050011416
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160157375,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4766887,
+        "lon": 30.7365131
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.723480697072546,
+        35.03032868785442
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160157383,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4767024,
+        "lon": 30.736083999999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.280623370079866,
+        35.69069875937021
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160157406,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4772034,
+        "lon": 30.73624925
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.166784402699818,
+        31.413650736723753
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160224017,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4750147,
+        "lon": 30.743619250000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        23.36635032805316,
+        29.813302017434808
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160224101,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47650665,
+        "lon": 30.73898645
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.42290040832313,
+        28.526451353520542
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160224107,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4751846,
+        "lon": 30.740961900000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        23.4661737110614,
+        35.54919457547703
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160224117,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4754295,
+        "lon": 30.7383071
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        23.521605916759768,
+        28.595559849386518
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160224135,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4754445,
+        "lon": 30.73796015
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.0111594105731,
+        28.80288533698399
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160224168,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47536805,
+        "lon": 30.73863325
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.637485799581555,
+        32.381114383576346
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160231556,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.475539,
+        "lon": 30.74792685
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.54517718751265,
+        27.466787749971672
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160231714,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4755966,
+        "lon": 30.7455704
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.233034450729292,
+        29.363432026037117
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160249905,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.474958650000005,
+        "lon": 30.731626249999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        23.842431077532865,
+        29.17968597873869
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351673,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4804599,
+        "lon": 30.749999850000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.678123661416407,
+        36.74268364133832
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351713,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4781016,
+        "lon": 30.74965425
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.501159280651393,
+        33.471548169536845
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351723,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48091145,
+        "lon": 30.74605425
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.098209105626665,
+        29.424239537907795
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351741,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47823375,
+        "lon": 30.74670775
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.31674565600406,
+        34.51539998627493
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351750,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4813633,
+        "lon": 30.75022525
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.287796939870532,
+        29.791069875476666
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351754,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48108085,
+        "lon": 30.74994585
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.755936157479766,
+        33.717267266130875
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351772,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.481809049999995,
+        "lon": 30.7467603
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.647007330593944,
+        32.834214263036756
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351790,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4766233,
+        "lon": 30.7494266
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.278391487965223,
+        34.49281816408961
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351792,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.480868349999994,
+        "lon": 30.7501247
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.86665048942541,
+        27.904474890728125
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351797,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.478337249999996,
+        "lon": 30.7496919
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.844811287179255,
+        29.157453836780633
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351808,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4792923,
+        "lon": 30.74763875
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.923123596060577,
+        33.22582907294304
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351821,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.480261150000004,
+        "lon": 30.74979125
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.60165029414793,
+        30.69185089092298
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351831,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4797716,
+        "lon": 30.74671955
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.145445013271683,
+        29.555400069654297
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351832,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.47891545,
+        "lon": 30.7458674
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.846650229581996,
+        30.346308411593782
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351846,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4802278,
+        "lon": 30.747957149999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.946248491338423,
+        29.110034207589706
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351851,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.480823,
+        "lon": 30.748158099999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        23.49937377480171,
+        27.843045116443363
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351854,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4779559,
+        "lon": 30.746221
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.059815496630335,
+        30.235712709898735
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351858,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48216035,
+        "lon": 30.750257150000003
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.42200765579316,
+        35.606232820069636
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160351860,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.482803700000005,
+        "lon": 30.7490704
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.657677025308015,
+        36.22820928286205
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160368297,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48221295,
+        "lon": 30.7483406
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.422900408323073,
+        31.06810825739467
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160368360,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48326795,
+        "lon": 30.74585795
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.915685953780894,
+        35.44914993745557
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160368372,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48172615,
+        "lon": 30.748851000000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.312186075587576,
+        28.25769609163831
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160368373,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.482266100000004,
+        "lon": 30.7479622
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.194500147163126,
+        32.34776617063929
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160454298,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.490258600000004,
+        "lon": 30.73386285
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.056516446229352,
+        29.17146398187458
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160454310,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48962415,
+        "lon": 30.73297795
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.514060857480104,
+        33.225829073216005
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160454355,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.492850250000004,
+        "lon": 30.7302726
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.490489585937212,
+        29.148427816313074
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160454369,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.489787449999994,
+        "lon": 30.732787000000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.66923947255202,
+        31.052750813687
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160454371,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.49093675,
+        "lon": 30.733983199999997
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.311293323847508,
+        29.394146912906876
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160454383,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.49246575,
+        "lon": 30.72933925
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.60120391788314,
+        31.229361414414882
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160454438,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.49066225,
+        "lon": 30.7319238
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.221682692561103,
+        34.42647142002238
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160454440,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.488199300000005,
+        "lon": 30.7363794
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.080471451999983,
+        33.036962563440625
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458217,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48670705,
+        "lon": 30.7299791
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.846203853317036,
+        31.375257128000328
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458220,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.49222125,
+        "lon": 30.7267886
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.445132550281187,
+        27.73554301185399
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458223,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.492886049999996,
+        "lon": 30.727912850000003
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.867847452467743,
+        27.712364626883527
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458231,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48949854999999,
+        "lon": 30.7318317
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.845757477052075,
+        32.4195632878417
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458232,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4886432,
+        "lon": 30.73121185
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.676493447488156,
+        32.57008758785037
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458236,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4875544,
+        "lon": 30.72958175
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.864315110996017,
+        35.32687315905582
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458247,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.490804,
+        "lon": 30.728507399999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.622742395329965,
+        35.68258742564569
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458251,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.49192975,
+        "lon": 30.726281999999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.867543241955445,
+        33.417797117378626
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458252,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4868697,
+        "lon": 30.73255295
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.720799607329468,
+        34.0818732236217
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458263,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.487337249999996,
+        "lon": 30.729350150000002
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.979596704275536,
+        30.338629690012795
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458265,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.49154985,
+        "lon": 30.72623475
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.914239407986088,
+        34.34692245050414
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458266,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4925862,
+        "lon": 30.72734085
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        23.899552325307695,
+        27.69714940313054
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458273,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.49084385,
+        "lon": 30.727390749999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.905088929638396,
+        36.16057847221498
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458285,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4883157,
+        "lon": 30.73167655
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.772170450114345,
+        29.035177057590886
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458289,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4890656,
+        "lon": 30.732297600000003
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.300177252078583,
+        28.365198196500387
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458291,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.492115,
+        "lon": 30.727351849999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.13422250470387,
+        26.634105754555094
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458302,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4879186,
+        "lon": 30.732152749999997
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.632187287646843,
+        31.19169480224764
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458308,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48655255,
+        "lon": 30.728611899999997
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.466471938919426,
+        29.900942549256342
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458311,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48550655,
+        "lon": 30.7317079
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.645164521162656,
+        35.0045071038233
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458330,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48549275,
+        "lon": 30.7305772
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.57852540044979,
+        28.503415188231997
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160458334,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4866007,
+        "lon": 30.732523
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.924909102700155,
+        33.00314614191086
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465486,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4828623,
+        "lon": 30.7287608
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.612766365126944,
+        29.363432025764496
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465510,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48388695,
+        "lon": 30.726688000000003
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        31.390614571435123,
+        33.025846492461625
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465514,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4850185,
+        "lon": 30.728158399999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.198032488362117,
+        31.21392694420564
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465519,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48593715,
+        "lon": 30.72807935
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.42200765579321,
+        28.326804587776962
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465526,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48542825,
+        "lon": 30.727887600000003
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.20985759059795,
+        29.5354002461184
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465535,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.484449049999995,
+        "lon": 30.7252408
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        28.058049326167378,
+        28.423793161642806
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465540,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4873554,
+        "lon": 30.726412850000003
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.834195029808143,
+        29.95469360168741
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465572,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4865872,
+        "lon": 30.7274538
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        30.269521193874198,
+        31.725266203712124
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465575,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.481075000000004,
+        "lon": 30.73130295
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        25.744820086500738,
+        34.945862748280774
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465581,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4846032,
+        "lon": 30.7250436
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.121245270642476,
+        27.567855705735724
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465586,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4870042,
+        "lon": 30.727022249999997
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.457587750054984,
+        31.490437954443394
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465590,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4851607,
+        "lon": 30.726365649999998
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.035177057591,
+        29.985408488557
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465596,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.48628695,
+        "lon": 30.7270527
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.399775513835152,
+        36.811792136931274
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465611,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.4854167,
+        "lon": 30.7288143
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        24.36642730089801,
+        29.947014880106337
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465614,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.485280599999996,
+        "lon": 30.7285568
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        27.597326020122352,
+        27.767944980988716
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465622,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.484285799999995,
+        "lon": 30.7254544
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        29.501649017496163,
+        29.67990916726606
+      ]
+    },
+    {
+      "model": "WEB_building75",
+      "osmId": 160465627,
+      "kind": "building",
+      "reason": "ambiguous_footprint",
+      "world": {
+        "x": -7175.685,
+        "y": 6.289,
+        "z": 27983.801
+      },
+      "geo": {
+        "lat": 46.481833800000004,
+        "lon": 30.7303358
+      },
+      "modelFootprint": [
+        27.485,
+        31.311
+      ],
+      "osmFootprint": [
+        26.322658207394852,
+        32.014284046007475
+      ]
+    }
+  ],
+  "rejectedTruncated": true
+}

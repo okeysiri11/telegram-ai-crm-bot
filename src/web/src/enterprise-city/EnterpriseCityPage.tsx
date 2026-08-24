@@ -58,8 +58,18 @@ import { defaultGraphicsSettings } from "./graphics/graphicsConfig";
 import type { ResolvedEffect } from "./graphics/types";
 import { buildingOps, HEALTH_LABEL_RU, healthFromLiveTone } from "./buildingOps";
 import { selectCityBuilding } from "./cityInteractionBridge";
+import { geoSelectionBridge } from "./odessa3d/geospatial";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import type { BuildingHealth } from "./buildingOps";
+import {
+  Odessa3DView,
+  Odessa3DQualitySelect,
+  readViewMode,
+  writeViewMode,
+  readQualityProfile,
+  writeQualityProfile,
+} from "./odessa3d";
+import type { QualityProfile } from "./odessa3d/types";
 
 function registerCitySearchDocs() {
   for (const b of CITY_BUILDINGS) {
@@ -110,6 +120,9 @@ export function EnterpriseCityPage() {
   const [overlay, setOverlay] = useState<"all" | "health" | "activity" | "ai">("all");
   const [favTick, setFavTick] = useState(0);
   const [showDevOverlay, setShowDevOverlay] = useState(false);
+  const [cityViewMode, setCityViewMode] = useState<"2d" | "3d">(() => readViewMode());
+  const [qualityProfile, setQualityProfile] = useState<QualityProfile>(() => readQualityProfile());
+  const [bridgeGeo, setBridgeGeo] = useState<{ lat: number; lon: number } | null>(null);
   const ownerView = useRoleSwitcher((s) => s.isOwnerView());
   const planeRef = useRef<HTMLDivElement>(null);
   const cityRootRef = useRef<HTMLDivElement>(null);
@@ -124,6 +137,25 @@ export function EnterpriseCityPage() {
   useEffect(() => {
     registerCitySearchDocs();
     runtimeEngine.publishStream("city", { surface: "city" });
+  }, []);
+
+  useEffect(() => {
+    return geoSelectionBridge.subscribe((state) => {
+      if (state.intent === "show-2d" && state.geo) {
+        const geo = geoSelectionBridge.consumeShow2d();
+        if (geo) {
+          setBridgeGeo(geo);
+          setCityViewMode("2d");
+          writeViewMode("2d");
+        }
+        return;
+      }
+      if (state.intent === "show-3d" && state.geo) {
+        setBridgeGeo(state.geo);
+        setCityViewMode("3d");
+        writeViewMode("3d");
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -203,10 +235,27 @@ export function EnterpriseCityPage() {
     cityNavigation.pushRecent(b.id);
     setFavTick((t) => t + 1);
     selectCityBuilding(b.id);
+    geoSelectionBridge.setFrom2d(`city_building_${b.id}`);
     void telemetry.userActivity(`city_select:${b.id}`);
     graphicsRef.current.triggerBuildingEffect(b.id, "selection");
     graphicsRef.current.focusBuildingAnimated(b);
   }, []);
+
+  const handleOdessaSelectBuilding = useCallback(
+    (id: string | null) => {
+      if (!id) return;
+      const b = getBuilding(id as CityBuildingId);
+      if (b) selectBuilding(b);
+    },
+    [selectBuilding],
+  );
+
+  const handleOdessaOpenRoute = useCallback(
+    (route: string) => {
+      navigate(withEmbed(route, embed));
+    },
+    [navigate, embed],
+  );
 
   const returnHome = useCallback(() => {
     if (plaza) selectBuilding(plaza);
@@ -471,43 +520,97 @@ export function EnterpriseCityPage() {
             ) : null}
           </div>
           <div className="ec-layer-toggles" role="group" aria-label="Executive overlays">
-            {(
-              [
-                ["all", "All"],
-                ["health", "Health"],
-                ["activity", "Activity"],
-                ["ai", "AI"],
-              ] as const
-            ).map(([id, label]) => (
+            <Button
+              size="sm"
+              variant={cityViewMode === "2d" ? "primary" : "ghost"}
+              toolbar
+              aria-pressed={cityViewMode === "2d"}
+              onClick={() => {
+                setCityViewMode("2d");
+                writeViewMode("2d");
+              }}
+            >
+              2D
+            </Button>
+            <Button
+              size="sm"
+              variant={cityViewMode === "3d" ? "primary" : "ghost"}
+              toolbar
+              aria-pressed={cityViewMode === "3d"}
+              onClick={() => {
+                setCityViewMode("3d");
+                writeViewMode("3d");
+              }}
+            >
+              3D Одесса
+            </Button>
+            {bridgeGeo ? (
               <Button
-                key={id}
                 size="sm"
-                variant={overlay === id ? "primary" : "ghost"}
+                variant="ghost"
                 toolbar
-                onClick={() => setOverlay(id)}
+                data-testid="odessa-show-in-3d"
+                onClick={() => {
+                  geoSelectionBridge.requestShowIn3d(bridgeGeo);
+                  setCityViewMode("3d");
+                  writeViewMode("3d");
+                }}
               >
-                {label}
+                Показать в 3D
               </Button>
-            ))}
-            <Button size="sm" variant="ghost" toolbar onClick={() => graphics.resetCameraAnimated()}>
-              Reset
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              toolbar
-              onClick={() => graphics.animateViewportTo(zoomBy(graphics.getLiveViewport(), 0.1), { durationMs: 160 })}
-            >
-              +
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              toolbar
-              onClick={() => graphics.animateViewportTo(zoomBy(graphics.getLiveViewport(), -0.1), { durationMs: 160 })}
-            >
-              −
-            </Button>
+            ) : null}
+            {cityViewMode === "3d" ? (
+              <Odessa3DQualitySelect
+                value={qualityProfile}
+                onChange={(v) => {
+                  setQualityProfile(v);
+                  writeQualityProfile(v);
+                }}
+              />
+            ) : null}
+            {cityViewMode === "2d"
+              ? (
+                  [
+                    ["all", "All"],
+                    ["health", "Health"],
+                    ["activity", "Activity"],
+                    ["ai", "AI"],
+                  ] as const
+                ).map(([id, label]) => (
+                  <Button
+                    key={id}
+                    size="sm"
+                    variant={overlay === id ? "primary" : "ghost"}
+                    toolbar
+                    onClick={() => setOverlay(id)}
+                  >
+                    {label}
+                  </Button>
+                ))
+              : null}
+            {cityViewMode === "2d" ? (
+              <>
+                <Button size="sm" variant="ghost" toolbar onClick={() => graphics.resetCameraAnimated()}>
+                  Reset
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  toolbar
+                  onClick={() => graphics.animateViewportTo(zoomBy(graphics.getLiveViewport(), 0.1), { durationMs: 160 })}
+                >
+                  +
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  toolbar
+                  onClick={() => graphics.animateViewportTo(zoomBy(graphics.getLiveViewport(), -0.1), { durationMs: 160 })}
+                >
+                  −
+                </Button>
+              </>
+            ) : null}
             <Button
               size="sm"
               variant={showDevOverlay ? "primary" : "ghost"}
@@ -597,7 +700,23 @@ export function EnterpriseCityPage() {
           </Card>
         ) : null}
 
+        {bridgeGeo ? (
+          <div className="mb-2 rounded-md border border-[var(--eds-border)] px-3 py-2 text-sm" data-testid="odessa-2d-geo-marker">
+            <p className="opacity-70">3D → 2D маркер (WGS84, не адрес)</p>
+            <p className="font-mono text-xs">
+              {bridgeGeo.lat.toFixed(6)}, {bridgeGeo.lon.toFixed(6)}
+            </p>
+          </div>
+        ) : null}
         <div className="ec-stage">
+          {cityViewMode === "3d" ? (
+            <Odessa3DView
+              qualityProfile={qualityProfile}
+              showDev={showDevOverlay}
+              onOpenRoute={handleOdessaOpenRoute}
+              onSelectBuildingId={handleOdessaSelectBuilding}
+            />
+          ) : (
           <div
             className="ec-map-shell"
             ref={planeRef}
@@ -692,6 +811,7 @@ export function EnterpriseCityPage() {
               })}
             </div>
           </div>
+          )}
 
           <aside className="ec-side">
             <CityMinimap

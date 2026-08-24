@@ -53,6 +53,12 @@ class Attachment:
 
 @dataclass
 class CommandMessage:
+    """Sprint 47.0 (Decision 5 / CC-3): tenant_id is the canonical org identifier
+    going forward; organization_id is kept for backward compatibility and mirrors it.
+    Both were previously unpopulated by every caller — cmd_chat (platform_ai_command/
+    api/router.py) now resolves a real tenant_id server-side instead of leaving this
+    dead."""
+
     text: str
     owner_id: str
     channel: str = "web"  # web|telegram|desktop|voice
@@ -62,6 +68,13 @@ class CommandMessage:
     role: str = "owner"
     organization_id: str | None = None
     meta: dict[str, Any] = field(default_factory=dict)
+    tenant_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if self.tenant_id is None and self.organization_id is not None:
+            self.tenant_id = self.organization_id
+        elif self.organization_id is None and self.tenant_id is not None:
+            self.organization_id = self.tenant_id
 
     @property
     def has_voice(self) -> bool:

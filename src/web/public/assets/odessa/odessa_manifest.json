@@ -1,0 +1,657 @@
+{
+  "name": "Odessa 3D Web Map",
+  "version": 1,
+  "packageFormat": "blender_web_v1",
+  "coordinate_system": {
+    "height_axis": "Y",
+    "map_plane": [
+      "X",
+      "Z"
+    ]
+  },
+  "loading_strategy": "stream_by_camera_distance",
+  "notes": [
+    "TILE_04_00.glb is intentionally excluded.",
+    "Its non-heavy objects are in FINAL_TILE_04_REST batches.",
+    "The single heavy source mesh is represented by STEP-12 and STEP-13 chunks.",
+    "ODESSA_TILE_OUTLIERS are intentionally excluded from this first web package."
+  ],
+  "stats": {
+    "asset_count": 45,
+    "top_level_tiles": 14,
+    "tile04_rest_batches": 10,
+    "heavy_step12_chunks": 13,
+    "heavy_step13_chunks": 8,
+    "total_manifest_mb": 382.428,
+    "largest_asset_mb": 24.829
+  },
+  "geoTransform": {
+    "originLat": 46.4825,
+    "originLng": 30.7233,
+    "calibrated": false
+  },
+  "cityBounds": {
+    "minX": -417.7922668457031,
+    "maxX": 317.64459228515625,
+    "minZ": -389.4849853515625,
+    "maxZ": 658.090087890625,
+    "minY": -0.16493037343025208,
+    "maxY": 1.990004062652588
+  },
+  "priorityAssets": [
+    "TILE_04_00_REST_BATCH_07",
+    "TILE_04_00_REST_BATCH_03",
+    "TILE_04_00_REST_BATCH_02",
+    "TILE_04_00_REST_BATCH_08",
+    "TILE_04_00_REST_BATCH_09",
+    "TILE_04_00_REST_BATCH_10",
+    "TILE_04_00_REST_BATCH_05",
+    "TILE_03_01"
+  ],
+  "layers": [
+    {
+      "id": "city",
+      "label": "Odessa city",
+      "defaultVisible": true
+    },
+    {
+      "id": "heavy",
+      "label": "Heavy buildings",
+      "defaultVisible": true
+    },
+    {
+      "id": "dynamic",
+      "label": "Live data",
+      "defaultVisible": true,
+      "dynamic": true
+    }
+  ],
+  "assets": [
+    {
+      "id": "TILE_02_00",
+      "type": "top_level_tile",
+      "path": "TILE_02_00.glb",
+      "size_mb": 8.264,
+      "objects": 34,
+      "bounds": {
+        "min_x": -353.0780029296875,
+        "max_x": 53.43299865722656,
+        "min_y": -328.9930114746094,
+        "max_y": 341.041015625,
+        "min_z": -0.00299094314686954,
+        "max_z": 0.005024838261306286
+      },
+      "url": "/assets/odessa/TILE_02_00.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_02_01",
+      "type": "top_level_tile",
+      "path": "TILE_02_01.glb",
+      "size_mb": 1.497,
+      "objects": 2,
+      "bounds": {
+        "min_x": -299.2900390625,
+        "max_x": -115.54320526123047,
+        "min_y": -106.78536224365234,
+        "max_y": 146.54373168945312,
+        "min_z": -1.1110279956483282e-05,
+        "max_z": 0.22753870487213135
+      },
+      "url": "/assets/odessa/TILE_02_01.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_03_00",
+      "type": "top_level_tile",
+      "path": "TILE_03_00.glb",
+      "size_mb": 15.674,
+      "objects": 146,
+      "bounds": {
+        "min_x": -417.7922668457031,
+        "max_x": 196.69918823242188,
+        "min_y": -332.1803283691406,
+        "max_y": 303.29901123046875,
+        "min_z": -0.010018962435424328,
+        "max_z": 0.08000417053699493
+      },
+      "url": "/assets/odessa/TILE_03_00.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_03_01",
+      "type": "top_level_tile",
+      "path": "TILE_03_01.glb",
+      "size_mb": 11.18,
+      "objects": 38,
+      "bounds": {
+        "min_x": -287.83819580078125,
+        "max_x": 141.55517578125,
+        "min_y": -300.46270751953125,
+        "max_y": 298.5780029296875,
+        "min_z": -0.0014592894585803151,
+        "max_z": 0.5670223832130432
+      },
+      "url": "/assets/odessa/TILE_03_01.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_03_02",
+      "type": "top_level_tile",
+      "path": "TILE_03_02.glb",
+      "size_mb": 0.843,
+      "objects": 2,
+      "bounds": {
+        "min_x": -193.70797729492188,
+        "max_x": 33.79967498779297,
+        "min_y": -290.34381103515625,
+        "max_y": 136.8821258544922,
+        "min_z": -1.0405283319414593e-05,
+        "max_z": 0.7500181198120117
+      },
+      "url": "/assets/odessa/TILE_03_02.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_01",
+      "type": "top_level_tile",
+      "path": "TILE_04_01.glb",
+      "size_mb": 22.595,
+      "objects": 109,
+      "bounds": {
+        "min_x": -299.8745422363281,
+        "max_x": 297.9139404296875,
+        "min_y": -300.3968505859375,
+        "max_y": 299.8294372558594,
+        "min_z": -0.0014592555817216635,
+        "max_z": 0.6480112075805664
+      },
+      "url": "/assets/odessa/TILE_04_01.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_02",
+      "type": "top_level_tile",
+      "path": "TILE_04_02.glb",
+      "size_mb": 0.181,
+      "objects": 3,
+      "bounds": {
+        "min_x": -281.7973937988281,
+        "max_x": 264.4733581542969,
+        "min_y": -298.8709716796875,
+        "max_y": 253.2447052001953,
+        "min_z": -1.917285771924071e-05,
+        "max_z": 0.8500708937644958
+      },
+      "url": "/assets/odessa/TILE_04_02.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_04",
+      "type": "top_level_tile",
+      "path": "TILE_04_04.glb",
+      "size_mb": 0.002,
+      "objects": 1,
+      "bounds": {
+        "min_x": 19.811716079711914,
+        "max_x": 20.183076858520508,
+        "min_y": -52.48786926269531,
+        "max_y": -52.128868103027344,
+        "min_z": 3.860749984596623e-06,
+        "max_z": 1.990004062652588
+      },
+      "url": "/assets/odessa/TILE_04_04.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_05_00",
+      "type": "top_level_tile",
+      "path": "TILE_05_00.glb",
+      "size_mb": 4.325,
+      "objects": 111,
+      "bounds": {
+        "min_x": -131.75411987304688,
+        "max_x": 317.64459228515625,
+        "min_y": -307.4319152832031,
+        "max_y": 326.5281982421875,
+        "min_z": -0.004009215626865625,
+        "max_z": 0.07000274211168289
+      },
+      "url": "/assets/odessa/TILE_05_00.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_05_01",
+      "type": "top_level_tile",
+      "path": "TILE_05_01.glb",
+      "size_mb": 3.482,
+      "objects": 19,
+      "bounds": {
+        "min_x": -179.84201049804688,
+        "max_x": 300.8704833984375,
+        "min_y": -300.2181091308594,
+        "max_y": 300.0066223144531,
+        "min_z": -2.2733032892574556e-05,
+        "max_z": 0.5400076508522034
+      },
+      "url": "/assets/odessa/TILE_05_01.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_05_02",
+      "type": "top_level_tile",
+      "path": "TILE_05_02.glb",
+      "size_mb": 0.022,
+      "objects": 2,
+      "bounds": {
+        "min_x": 2.4244956970214844,
+        "max_x": 98.77107238769531,
+        "min_y": -102.16490173339844,
+        "max_y": 180.22479248046875,
+        "min_z": -1.3689746083400678e-05,
+        "max_z": 0.9499884843826294
+      },
+      "url": "/assets/odessa/TILE_05_02.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_06_00",
+      "type": "top_level_tile",
+      "path": "TILE_06_00.glb",
+      "size_mb": 2.041,
+      "objects": 8,
+      "bounds": {
+        "min_x": 37.21099853515625,
+        "max_x": 312.08697509765625,
+        "min_y": 135.13999938964844,
+        "max_y": 317.5019836425781,
+        "min_z": -3.517377263051458e-05,
+        "max_z": 0.009994183667004108
+      },
+      "url": "/assets/odessa/TILE_06_00.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_06_01",
+      "type": "top_level_tile",
+      "path": "TILE_06_01.glb",
+      "size_mb": 1.031,
+      "objects": 2,
+      "bounds": {
+        "min_x": 38.014892578125,
+        "max_x": 300.34576416015625,
+        "min_y": 146.2567138671875,
+        "max_y": 290.6549072265625,
+        "min_z": -2.1980507881380618e-05,
+        "max_z": 0.22963657975196838
+      },
+      "url": "/assets/odessa/TILE_06_01.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_07_00",
+      "type": "top_level_tile",
+      "path": "TILE_07_00.glb",
+      "size_mb": 0.632,
+      "objects": 452,
+      "bounds": {
+        "min_x": 224.01199340820312,
+        "max_x": 304.8999938964844,
+        "min_y": 154.25999450683594,
+        "max_y": 217.7541961669922,
+        "min_z": -0.0030168150551617146,
+        "max_z": 0.0049883536994457245
+      },
+      "url": "/assets/odessa/TILE_07_00.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_01",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_01.glb",
+      "size_mb": 22.839,
+      "objects": 1,
+      "triangles": 370936,
+      "bounds": {
+        "min_x": -207.84576416015625,
+        "max_x": 208.78257751464844,
+        "min_y": -301.2674255371094,
+        "max_y": 242.95103454589844,
+        "min_z": -0.16493037343025208,
+        "max_z": 0.2216183841228485
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_01.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_02",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_02.glb",
+      "size_mb": 8.625,
+      "objects": 2,
+      "triangles": 210146,
+      "bounds": {
+        "min_x": -334.88897705078125,
+        "max_x": 306.364990234375,
+        "min_y": -300.922119140625,
+        "max_y": 384.60101318359375,
+        "min_z": -2.9036567866569385e-05,
+        "max_z": 0.00502813421189785
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_02.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_03",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_03.glb",
+      "size_mb": 8.004,
+      "objects": 5,
+      "triangles": 233898,
+      "bounds": {
+        "min_x": -399.68798828125,
+        "max_x": 308.89398193359375,
+        "min_y": -389.4849853515625,
+        "max_y": 569.9739990234375,
+        "min_z": -4.3031835957663134e-05,
+        "max_z": 0.005029405001550913
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_03.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_04",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_04.glb",
+      "size_mb": 9.295,
+      "objects": 6,
+      "triangles": 226266,
+      "bounds": {
+        "min_x": -116.6240005493164,
+        "max_x": 113.19400024414062,
+        "min_y": -239.19300842285156,
+        "max_y": 220.53099060058594,
+        "min_z": -1.6649626559228636e-05,
+        "max_z": 0.005018058232963085
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_04.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_05",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_05.glb",
+      "size_mb": 9.131,
+      "objects": 9,
+      "triangles": 247656,
+      "bounds": {
+        "min_x": -320.51300048828125,
+        "max_x": 314.9739990234375,
+        "min_y": -323.2569885253906,
+        "max_y": 334.7839660644531,
+        "min_z": -2.5275487132603303e-05,
+        "max_z": 0.00502440519630909
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_05.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_06",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_06.glb",
+      "size_mb": 9.71,
+      "objects": 17,
+      "triangles": 243412,
+      "bounds": {
+        "min_x": -355.5679931640625,
+        "max_x": 308.5963134765625,
+        "min_y": -353.036376953125,
+        "max_y": 345.85455322265625,
+        "min_z": -0.001926382421515882,
+        "max_z": 0.0810186117887497
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_06.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_07",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_07.glb",
+      "size_mb": 9.768,
+      "objects": 29,
+      "triangles": 246553,
+      "bounds": {
+        "min_x": -348.08416748046875,
+        "max_x": 304.8824768066406,
+        "min_y": -339.971923828125,
+        "max_y": 658.090087890625,
+        "min_z": -0.0031128604896366596,
+        "max_z": 0.01002376340329647
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_07.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_08",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_08.glb",
+      "size_mb": 10.172,
+      "objects": 54,
+      "triangles": 248376,
+      "bounds": {
+        "min_x": -319.86614990234375,
+        "max_x": 301.44915771484375,
+        "min_y": -302.3393859863281,
+        "max_y": 369.3687744140625,
+        "min_z": -0.0031259185634553432,
+        "max_z": 0.005021225195378065
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_08.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_09",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_09.glb",
+      "size_mb": 9.943,
+      "objects": 100,
+      "triangles": 248999,
+      "bounds": {
+        "min_x": -318.91009521484375,
+        "max_x": 304.567626953125,
+        "min_y": -304.120361328125,
+        "max_y": 321.2571716308594,
+        "min_z": -0.002614970551803708,
+        "max_z": 0.005022593308240175
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_09.glb",
+      "layer": "city"
+    },
+    {
+      "id": "TILE_04_00_REST_BATCH_10",
+      "type": "tile04_rest",
+      "path": "FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_10.glb",
+      "size_mb": 9.568,
+      "objects": 660,
+      "triangles": 227379,
+      "bounds": {
+        "min_x": -308.4166564941406,
+        "max_x": 308.4166564941406,
+        "min_y": -308.4166564941406,
+        "max_y": 325.6009216308594,
+        "min_z": -0.005023284815251827,
+        "max_z": 0.08001252263784409
+      },
+      "url": "/assets/odessa/FINAL_TILE_04_REST/TILE_04_00_REST_BATCH_10.glb",
+      "layer": "city"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_00_00",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_00.glb",
+      "size_mb": 0.001,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_00.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_00_01",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_01.glb",
+      "size_mb": 5.887,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_01.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_00_02",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_02.glb",
+      "size_mb": 24.731,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_02.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_00_03",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_03.glb",
+      "size_mb": 4.015,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_00_03.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_01_00",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_00.glb",
+      "size_mb": 0.002,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_00.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_01_01",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_01.glb",
+      "size_mb": 18.376,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_01.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_01_03",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_03.glb",
+      "size_mb": 12.471,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_01_03.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_02_00",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_00.glb",
+      "size_mb": 0.002,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_00.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_02_01",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_01.glb",
+      "size_mb": 8.719,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_01.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_02_03",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_03.glb",
+      "size_mb": 5.926,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_02_03.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_03_01",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_01.glb",
+      "size_mb": 2.135,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_01.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_03_02",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_02.glb",
+      "size_mb": 8.942,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_02.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_03_03",
+      "type": "heavy_mesh_chunk_step12",
+      "path": "HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_03.glb",
+      "size_mb": 1.284,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS/HEAVY_BUILDING_CHUNK_03_03.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_01_02_SUB_00_00",
+      "type": "heavy_mesh_chunk_step13",
+      "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_00_00.glb",
+      "size_mb": 13.159,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_00_00.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_01_02_SUB_00_01",
+      "type": "heavy_mesh_chunk_step13",
+      "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_00_01.glb",
+      "size_mb": 23.52,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_00_01.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_01_02_SUB_01_00",
+      "type": "heavy_mesh_chunk_step13",
+      "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_01_00.glb",
+      "size_mb": 13.968,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_01_00.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_01_02_SUB_01_01",
+      "type": "heavy_mesh_chunk_step13",
+      "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_01_01.glb",
+      "size_mb": 24.829,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_01_02_SUB_01_01.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_02_02_SUB_00_00",
+      "type": "heavy_mesh_chunk_step13",
+      "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_00_00.glb",
+      "size_mb": 9.874,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_00_00.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_02_02_SUB_00_01",
+      "type": "heavy_mesh_chunk_step13",
+      "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_00_01.glb",
+      "size_mb": 17.785,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_00_01.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_02_02_SUB_01_00",
+      "type": "heavy_mesh_chunk_step13",
+      "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_01_00.glb",
+      "size_mb": 2.831,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_01_00.glb",
+      "layer": "heavy"
+    },
+    {
+      "id": "HEAVY_BUILDING_CHUNK_02_02_SUB_01_01",
+      "type": "heavy_mesh_chunk_step13",
+      "path": "HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_01_01.glb",
+      "size_mb": 5.147,
+      "url": "/assets/odessa/HEAVY_BUILDING_CHUNKS_STEP13/HEAVY_BUILDING_CHUNK_02_02_SUB_01_01.glb",
+      "layer": "heavy"
+    }
+  ]
+}

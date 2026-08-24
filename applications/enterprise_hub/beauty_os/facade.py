@@ -71,7 +71,27 @@ class BeautyOSSuite:
 
     def list_resources(self) -> dict[str, Any]:
         items = self.store.bos_resources.list_all()
-        return {"resources": items, "count": len(items)}
+        return {"resources": items, "count": len(items), "items": items}
+
+    def list_customers(self) -> dict[str, Any]:
+        items = self.store.bos_customers.list_all()
+        return {"customers": items, "count": len(items), "items": items}
+
+    def list_services(self) -> dict[str, Any]:
+        items = self.store.bos_services.list_all()
+        return {"services": items, "count": len(items), "items": items}
+
+    def list_employees(self) -> dict[str, Any]:
+        items = self.store.bos_employees.list_all()
+        return {"employees": items, "count": len(items), "items": items}
+
+    def list_appointments(self) -> dict[str, Any]:
+        items = self.store.bos_appointments.list_all()
+        return {"appointments": items, "count": len(items), "items": items}
+
+    def list_branches(self) -> dict[str, Any]:
+        items = self.store.bos_branches.list_all()
+        return {"branches": items, "count": len(items), "items": items}
 
     def create_resource(self, *, name: str, kind: str, branch: str = "") -> dict[str, Any]:
         try:

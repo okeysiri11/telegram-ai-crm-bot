@@ -550,8 +550,53 @@ def lawyer_menu():
     )
 
     return keyboard
-def crypto_otc_menu():
-    keyboard = ReplyKeyboardMarkup(
+
+
+def legal_client_menu():
+    """Legal client view — subset of existing law module buttons."""
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📂 Дела"), KeyboardButton(text="📑 Документы")],
+            [KeyboardButton(text="📅 Календарь")],
+            [KeyboardButton(text="⬅️ Назад")],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def crypto_otc_menu(extra_row: list[str] | None = None):
+    """Sprint 48.1: `extra_row` is an additive, optional row of button labels
+    inserted just above "⬅️ Назад" — used by the deal-detail screen to offer
+    a contextual "confirm payout" action without affecting any other caller
+    (default None reproduces the exact prior keyboard)."""
+    rows = [
+        [
+            KeyboardButton(text="🟢 Buy USDT"),
+            KeyboardButton(text="🔴 Sell USDT"),
+        ],
+        [
+            KeyboardButton(text="💵 Buy Cash"),
+            KeyboardButton(text="💴 Sell Cash"),
+        ],
+        [
+            KeyboardButton(text="📑 Сделки OTC"),
+            KeyboardButton(text="🤖 Crypto Agent"),
+        ],
+        [
+            KeyboardButton(text="💵 Курсы"),
+            KeyboardButton(text="📊 PnL"),
+        ],
+    ]
+    if extra_row:
+        rows.append([KeyboardButton(text=label) for label in extra_row])
+    rows.append([KeyboardButton(text="⬅️ Назад")])
+
+    return ReplyKeyboardMarkup(keyboard=rows, resize_keyboard=True)
+
+
+def crypto_client_menu():
+    """Crypto client view — trade directions only (existing buttons)."""
+    return ReplyKeyboardMarkup(
         keyboard=[
             [
                 KeyboardButton(text="🟢 Buy USDT"),
@@ -561,13 +606,41 @@ def crypto_otc_menu():
                 KeyboardButton(text="💵 Buy Cash"),
                 KeyboardButton(text="💴 Sell Cash"),
             ],
+            [KeyboardButton(text="⬅️ Назад")],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def beauty_client_menu():
+    """Beauty client view — booking-oriented subset of Cafe & Beauty."""
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text="📅 Записи"), KeyboardButton(text="💄 Салон")],
+            [KeyboardButton(text="⬅️ Назад")],
+        ],
+        resize_keyboard=True,
+    )
+
+
+def beauty_module_menu():
+    """Beauty owner/manager/specialist workspace — distinct from Cafe.
+
+    Sprint 46.6: Beauty must not display the Cafe-only "☕ Cafe" button.
+    Reuses the existing Beauty-labeled buttons from cafe_beauty_module_menu.
+    """
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[
             [
-                KeyboardButton(text="📑 Сделки OTC"),
-                KeyboardButton(text="🤖 Crypto Agent"),
+                KeyboardButton(text="💄 Салон"),
+                KeyboardButton(text="👥 Клиенты"),
             ],
             [
-                KeyboardButton(text="💵 Курсы"),
-                KeyboardButton(text="📊 PnL"),
+                KeyboardButton(text="📅 Записи"),
+                KeyboardButton(text="📅 Календарь"),
+            ],
+            [
+                KeyboardButton(text="📦 Склад"),
             ],
             [
                 KeyboardButton(text="⬅️ Назад"),
@@ -575,8 +648,9 @@ def crypto_otc_menu():
         ],
         resize_keyboard=True,
     )
-
     return keyboard
+
+
 def agro_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[

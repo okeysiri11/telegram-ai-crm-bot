@@ -54,13 +54,28 @@ class AgentHealthResult:
 
 @dataclass
 class AgentContext:
-    """Injected context — agents must not access global state directly."""
+    """Injected context — agents must not access global state directly.
+
+    Sprint 47.0 (Decision 5 / CC-3): tenant_id/vertical/customer_id/user_id are the
+    typed scope fields every agent execution should carry so downstream code (memory
+    scoping in Sprint 47.1, AI-command enforcement) can filter data by them instead of
+    digging through the freeform *_context dicts. They are optional and additive —
+    existing callers that only set the dict-shaped context fields keep working
+    unchanged; callers that also know the real tenant/vertical/customer/user should
+    populate these instead of stuffing them into platform_context/user_context.
+    "tenant_id" is the canonical org identifier (see services/tenant_context.py); do not
+    introduce a parallel organization_id/company_id field here.
+    """
 
     user_context: dict[str, Any] = field(default_factory=dict)
     memory_context: dict[str, Any] = field(default_factory=dict)
     session_context: dict[str, Any] = field(default_factory=dict)
     platform_context: dict[str, Any] = field(default_factory=dict)
     permissions: list[str] = field(default_factory=list)
+    tenant_id: str | None = None
+    vertical: str | None = None
+    customer_id: str | None = None
+    user_id: str | None = None
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -69,6 +84,10 @@ class AgentContext:
             "session_context": dict(self.session_context),
             "platform_context": dict(self.platform_context),
             "permissions": list(self.permissions),
+            "tenant_id": self.tenant_id,
+            "vertical": self.vertical,
+            "customer_id": self.customer_id,
+            "user_id": self.user_id,
         }
 
 

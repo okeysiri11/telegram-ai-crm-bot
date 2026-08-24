@@ -59,6 +59,181 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "interval_seconds": 300,
     },
     {
+        "job_key": "fx.intel.morning",
+        "name": "FX Intel Morning Brief",
+        "description": "EUR/USD + DXY morning analysis profile",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 6 * * 1-5",
+    },
+    {
+        "job_key": "fx.intel.pre_europe",
+        "name": "FX Intel Pre-Europe",
+        "description": "Analysis before Europe session",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "30 6 * * 1-5",
+    },
+    {
+        "job_key": "fx.intel.pre_us",
+        "name": "FX Intel Pre-US",
+        "description": "Analysis before US session",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 12 * * 1-5",
+    },
+    {
+        "job_key": "fx.intel.evening",
+        "name": "FX Intel Evening Brief",
+        "description": "EUR/USD + DXY evening analysis profile",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 20 * * 1-5",
+    },
+    {
+        "job_key": "fx.intel.evaluate",
+        "name": "FX Intel Evaluation",
+        "description": "Fill analysis evaluation horizons from later market data",
+        "schedule_type": JobScheduleType.INTERVAL.value,
+        "interval_seconds": 900,
+    },
+    {
+        "job_key": "legal.monitor.morning",
+        "name": "Legal Monitor Morning",
+        "description": "Lawyer 3.3 watchlist sweep 09:00 Europe/Kyiv (cron UTC approx 06:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 6 * * *",
+    },
+    {
+        "job_key": "legal.monitor.evening",
+        "name": "Legal Monitor Evening",
+        "description": "Lawyer 3.3 watchlist sweep 18:00 Europe/Kyiv (cron UTC approx 15:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 15 * * *",
+    },
+    {
+        "job_key": "agro.intel.morning",
+        "name": "Agro Intelligence Morning",
+        "description": "AGRO 1.0 morning report 08:00 Europe/Kyiv (cron UTC approx 05:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 5 * * *",
+    },
+    {
+        "job_key": "agro.intel.evening",
+        "name": "Agro Intelligence Evening",
+        "description": "AGRO 1.0 evening report 18:00 Europe/Kyiv (cron UTC approx 15:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 15 * * *",
+    },
+    {
+        "job_key": "agro.providers.daily",
+        "name": "Agro Providers Daily Ingest",
+        "description": "AGRO 1.1 official-source ingest once per day (cron UTC 06:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 6 * * *",
+    },
+    {
+        "job_key": "agro.providers.weather",
+        "name": "Agro Weather Provider Checks",
+        "description": "AGRO 1.1 weather probes several times per day",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 4,10,16 * * *",
+    },
+    {
+        "job_key": "agro.providers.markets",
+        "name": "Agro Market Provider Checks",
+        "description": "AGRO 1.1 market/trade probes morning and evening",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 5,15 * * *",
+    },
+    {
+        "job_key": "agro.alerts.evaluate",
+        "name": "Agro Price Alert Evaluator",
+        "description": "AGRO 1.2 evaluate price alert rules against stored market prices",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 6,18 * * *",
+    },
+    {
+        "job_key": "agro.calendar.reminders",
+        "name": "Agro Calendar Reminders",
+        "description": "AGRO 1.2 emit reminder notifications for calendar events",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 5,11,17 * * *",
+    },
+    {
+        "job_key": "agro.providers.morning",
+        "name": "Agro Providers Morning Ingest",
+        "description": "AGRO 1.4 provider ingest 07:30 Europe/Kyiv (cron UTC 04:30)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "30 4 * * *",
+    },
+    {
+        "job_key": "agro.review.morning",
+        "name": "Agro Morning Review",
+        "description": "AGRO 1.4 morning review 08:00 Europe/Kyiv (cron UTC 05:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 5 * * *",
+    },
+    {
+        "job_key": "agro.providers.evening",
+        "name": "Agro Providers Evening Ingest",
+        "description": "AGRO 1.4 provider ingest 18:30 Europe/Kyiv (cron UTC 15:30)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "30 15 * * *",
+    },
+    {
+        "job_key": "agro.review.evening",
+        "name": "Agro Evening Review",
+        "description": "AGRO 1.4 evening review 19:00 Europe/Kyiv (cron UTC 16:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 16 * * *",
+    },
+    {
+        "job_key": "agro.providers.dawn",
+        "name": "Agro Dawn Ops Refresh",
+        "description": "AGRO 1.9 weather/FX/ops 05:45 Europe/Kyiv (cron UTC 02:45)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "45 2 * * *",
+    },
+    {
+        "job_key": "agro.analysis.morning",
+        "name": "Agro Morning Analysis",
+        "description": "AGRO 1.9 morning analysis 06:00 Europe/Kyiv (cron UTC 03:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 3 * * *",
+    },
+    {
+        "job_key": "agro.providers.noon",
+        "name": "Agro Light Refresh",
+        "description": "AGRO 1.9 light refresh 12:00 Europe/Kyiv (cron UTC 09:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 9 * * *",
+    },
+    {
+        "job_key": "agro.providers.full",
+        "name": "Agro Full Refresh",
+        "description": "AGRO 1.9 full ingest 17:30 Europe/Kyiv (cron UTC 14:30)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "30 14 * * *",
+    },
+    {
+        "job_key": "agro.analysis.evening",
+        "name": "Agro Evening Analysis",
+        "description": "AGRO 1.9 evening analysis 18:00 Europe/Kyiv (cron UTC 15:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 15 * * *",
+    },
+    {
+        "job_key": "agro.analysis.weekly",
+        "name": "Agro Weekly Analysis",
+        "description": "AGRO 1.9 weekly Sunday 09:00 Europe/Kyiv (cron UTC 06:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 6 * * 0",
+    },
+    {
+        "job_key": "agro.analysis.outlook",
+        "name": "Agro Monthly Outlook",
+        "description": "AGRO 1.9 1–2 month outlook 1st 08:00 Europe/Kyiv (cron UTC 05:00)",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 5 1 * *",
+    },
+    {
         "job_key": "liquidity.calculation",
         "name": "Liquidity Calculation",
         "description": "Compute liquidity pool status and alerts",
@@ -127,6 +302,20 @@ DEFAULT_JOBS: tuple[dict[str, Any], ...] = (
         "description": "Calculate partner revenue, reports, and settlements",
         "schedule_type": JobScheduleType.CRON.value,
         "cron_expression": "0 6 1 * *",
+    },
+    {
+        "job_key": "auto.ops.morning",
+        "name": "Auto Ops Morning Summary",
+        "description": "Send Auto OS morning summary to authorized directors",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 7 * * *",
+    },
+    {
+        "job_key": "auto.ops.evening",
+        "name": "Auto Ops Evening Summary",
+        "description": "Send Auto OS evening summary to authorized directors",
+        "schedule_type": JobScheduleType.CRON.value,
+        "cron_expression": "0 19 * * *",
     },
 )
 
@@ -326,11 +515,271 @@ class SchedulerEngineV1:
         return await RevenueSharingEngineV1.run_monthly_cycle()
 
     @staticmethod
+
+    @staticmethod
+    async def _run_fx_intel_profile(preset_id: str) -> dict[str, Any]:
+        from services.fx_market_intel import get_fx_market_intel
+
+        result = await get_fx_market_intel().run_full_analysis(
+            preset_id=preset_id,
+            tenant_id="scheduler",
+            timeframe="1H",
+        )
+        return {
+            "ok": bool(result.get("ok")),
+            "preset_id": preset_id,
+            "direction": (result.get("display") or {}).get("direction"),
+            "confidence": (result.get("display") or {}).get("confidence"),
+            "persistence": result.get("persistence"),
+            "missing_sources": result.get("missing_sources") or [],
+        }
+
+    @staticmethod
+    async def _run_fx_intel_morning(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_fx_intel_profile("morning")
+
+    @staticmethod
+    async def _run_fx_intel_pre_europe(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_fx_intel_profile("pre_europe")
+
+    @staticmethod
+    async def _run_fx_intel_pre_us(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_fx_intel_profile("pre_us")
+
+    @staticmethod
+    async def _run_fx_intel_evening(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_fx_intel_profile("evening")
+
+    @staticmethod
+    async def _run_fx_intel_evaluate(config: dict[str, Any] | None) -> dict[str, Any]:
+        """Fill pending evaluation horizons when later market data exists. No fabricated outcomes."""
+        from datetime import datetime, timezone
+
+        from database.session import get_session
+        from repositories.fx_market_intel_repository import FxMarketIntelRepository
+        from services.fx_market_intel.evaluation import compute_move_metrics, due_horizons
+        from services.fx_market_intel.yahoo_feed import fetch_bars
+
+        filled = 0
+        skipped = 0
+        async with get_session() as session:
+            repo = FxMarketIntelRepository(session)
+            pending = await repo.list_pending_evaluations(limit=50)
+            # group by analysis_run_id
+            runs: dict[str, list] = {}
+            for row in pending:
+                runs.setdefault(row.analysis_run_id, []).append(row)
+            for run_id, rows in runs.items():
+                run = await repo.get_analysis_run(run_id)
+                if not run or not run.price_at_analysis or not run.created_at:
+                    skipped += len(rows)
+                    continue
+                due = set(due_horizons(run.created_at))
+                bars = await fetch_bars(run.instrument or "EUR/USD", "1H")
+                series = bars.get("bars") or []
+                try:
+                    px0 = float(run.price_at_analysis)
+                except Exception:
+                    skipped += len(rows)
+                    continue
+                for ev in rows:
+                    if ev.horizon not in due:
+                        skipped += 1
+                        continue
+                    # pick bar closest after horizon
+                    target = None
+                    created = run.created_at
+                    for b in series:
+                        try:
+                            bt = datetime.fromisoformat(str(b["t"]).replace("Z", "+00:00"))
+                        except Exception:
+                            continue
+                        if bt >= created:
+                            target = b
+                            # keep scanning until roughly horizon distance
+                            delta_h = {"1h": 1, "4h": 4, "1d": 24}.get(ev.horizon, 1)
+                            if (bt - created).total_seconds() >= delta_h * 3600 * 0.8:
+                                break
+                    if not target:
+                        skipped += 1
+                        continue
+                    metrics = compute_move_metrics(
+                        price_at=px0,
+                        price_after=float(target["c"]),
+                        predicted_direction=run.direction,
+                        path_highs=[float(target["h"])],
+                        path_lows=[float(target["l"])],
+                    )
+                    await repo.update_evaluation(
+                        ev.id,
+                        price_after=str(target["c"]),
+                        actual_move=metrics["actual_move"],
+                        direction_correct=metrics["direction_correct"],
+                        signal_outcome=metrics["signal_outcome"],
+                        mfe=metrics["mfe"],
+                        mae=metrics["mae"],
+                        evaluation_status="evaluated",
+                        payload=metrics,
+                    )
+                    filled += 1
+        return {"filled": filled, "skipped": skipped}
+
+    @staticmethod
+    async def _run_legal_monitor_sweep(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.legal_ops import get_legal_ops_service
+
+        org = (config or {}).get("organization_id")
+        svc = get_legal_ops_service()
+        return await svc.run_monitor_sweep(org)
+
+    @staticmethod
+    async def _run_legal_monitor_morning(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_legal_monitor_sweep(config)
+
+    @staticmethod
+    async def _run_legal_monitor_evening(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_legal_monitor_sweep(config)
+
+    @staticmethod
+    async def _run_agro_pipeline(
+        config: dict[str, Any] | None,
+        *,
+        fetch: str | None,
+        analysis_type: str | None = None,
+        reports: list[str] | None = None,
+        record_full_refresh: bool = False,
+    ) -> dict[str, Any]:
+        from services.agro_ops import get_agro_ops_service
+
+        org = (config or {}).get("organization_id")
+        return await get_agro_ops_service().run_pipeline(
+            org,
+            role="platform_owner",
+            fetch=fetch,
+            analysis_type=analysis_type,
+            reports=reports or [],
+            record_full_refresh=record_full_refresh,
+        )
+
+    @staticmethod
+    async def _run_agro_intel_sweep(config: dict[str, Any] | None, kind: str) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_pipeline(
+            config, fetch=None, analysis_type=kind if kind in {"morning", "evening"} else None, reports=[kind]
+        )
+
+    @staticmethod
+    async def _run_agro_intel_morning(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_intel_sweep(config, "morning")
+
+    @staticmethod
+    async def _run_agro_intel_evening(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_intel_sweep(config, "evening")
+
+    @staticmethod
+    async def _run_agro_providers_ingest(config: dict[str, Any] | None, cadence: str | None = None) -> dict[str, Any]:
+        fetch = "full" if cadence in (None, "", "full") else cadence
+        return await SchedulerEngineV1._run_agro_pipeline(
+            config, fetch=fetch, reports=[], record_full_refresh=fetch == "full"
+        )
+
+    @staticmethod
+    async def _run_agro_providers_light(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_providers_ingest(config, "light")
+
+    @staticmethod
+    async def _run_agro_providers_daily(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_providers_ingest(config, None)
+
+    @staticmethod
+    async def _run_agro_analysis(config: dict[str, Any] | None, analysis_type: str) -> dict[str, Any]:
+        kind = analysis_type if analysis_type in {"morning", "evening", "weekly", "outlook"} else None
+        reports = [kind] if kind else []
+        return await SchedulerEngineV1._run_agro_pipeline(
+            config, fetch=None, analysis_type=analysis_type, reports=reports
+        )
+
+    @staticmethod
+    async def _run_agro_analysis_morning(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_analysis(config, "morning")
+
+    @staticmethod
+    async def _run_agro_analysis_evening(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_analysis(config, "evening")
+
+    @staticmethod
+    async def _run_agro_analysis_weekly(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_analysis(config, "weekly")
+
+    @staticmethod
+    async def _run_agro_analysis_outlook(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_analysis(config, "outlook")
+
+    @staticmethod
+    async def _run_agro_providers_weather(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_providers_ingest(config, "weather")
+
+    @staticmethod
+    async def _run_agro_providers_markets(config: dict[str, Any] | None) -> dict[str, Any]:
+        return await SchedulerEngineV1._run_agro_providers_ingest(config, "markets")
+
+    @staticmethod
+    async def _run_agro_alerts_evaluate(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.agro_ops import get_agro_ops_service
+
+        org = (config or {}).get("organization_id")
+        return await get_agro_ops_service().evaluate_alerts(org, role="platform_owner")
+
+    @staticmethod
+    async def _run_agro_calendar_reminders(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.agro_ops import get_agro_ops_service
+
+        org = (config or {}).get("organization_id")
+        return await get_agro_ops_service().evaluate_reminders(org, role="platform_owner")
+
+    @staticmethod
+    async def _run_auto_ops_morning(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.auto_ops import get_auto_ops_service
+
+        org = (config or {}).get("organization_id")
+        return await get_auto_ops_service().send_telegram_summary("morning", org)
+
+    @staticmethod
+    async def _run_auto_ops_evening(config: dict[str, Any] | None) -> dict[str, Any]:
+        from services.auto_ops import get_auto_ops_service
+
+        org = (config or {}).get("organization_id")
+        return await get_auto_ops_service().send_telegram_summary("evening", org)
+
     def job_handlers() -> dict[str, JobHandler]:
         return {
             "nightly.reconciliation": SchedulerEngineV1._run_nightly_reconciliation,
             "pricing.recalculation": SchedulerEngineV1._run_pricing_recalculation,
             "fx.update": SchedulerEngineV1._run_fx_update,
+            "fx.intel.morning": SchedulerEngineV1._run_fx_intel_morning,
+            "fx.intel.pre_europe": SchedulerEngineV1._run_fx_intel_pre_europe,
+            "fx.intel.pre_us": SchedulerEngineV1._run_fx_intel_pre_us,
+            "fx.intel.evening": SchedulerEngineV1._run_fx_intel_evening,
+            "fx.intel.evaluate": SchedulerEngineV1._run_fx_intel_evaluate,
+            "legal.monitor.morning": SchedulerEngineV1._run_legal_monitor_morning,
+            "legal.monitor.evening": SchedulerEngineV1._run_legal_monitor_evening,
+            "agro.intel.morning": SchedulerEngineV1._run_agro_intel_morning,
+            "agro.intel.evening": SchedulerEngineV1._run_agro_intel_evening,
+            "agro.providers.daily": SchedulerEngineV1._run_agro_providers_daily,
+            "agro.providers.weather": SchedulerEngineV1._run_agro_providers_weather,
+            "agro.providers.markets": SchedulerEngineV1._run_agro_providers_markets,
+            "agro.alerts.evaluate": SchedulerEngineV1._run_agro_alerts_evaluate,
+            "agro.calendar.reminders": SchedulerEngineV1._run_agro_calendar_reminders,
+            "agro.providers.morning": SchedulerEngineV1._run_agro_providers_daily,
+            "agro.review.morning": SchedulerEngineV1._run_agro_intel_morning,
+            "agro.providers.evening": SchedulerEngineV1._run_agro_providers_daily,
+            "agro.review.evening": SchedulerEngineV1._run_agro_intel_evening,
+            "agro.providers.dawn": SchedulerEngineV1._run_agro_providers_light,
+            "agro.providers.noon": SchedulerEngineV1._run_agro_providers_light,
+            "agro.providers.full": SchedulerEngineV1._run_agro_providers_daily,
+            "agro.analysis.morning": SchedulerEngineV1._run_agro_analysis_morning,
+            "agro.analysis.evening": SchedulerEngineV1._run_agro_analysis_evening,
+            "agro.analysis.weekly": SchedulerEngineV1._run_agro_analysis_weekly,
+            "agro.analysis.outlook": SchedulerEngineV1._run_agro_analysis_outlook,
             "liquidity.calculation": SchedulerEngineV1._run_liquidity_calculation,
             "inventory.aging": SchedulerEngineV1._run_inventory_aging,
             "marketing.publish_queue": SchedulerEngineV1._run_marketing_publish_queue,
@@ -341,6 +790,8 @@ class SchedulerEngineV1:
             "analytics_engine.aggregate": SchedulerEngineV1._run_analytics_engine_aggregate,
             "tenant_billing.monthly": SchedulerEngineV1._run_tenant_billing_monthly,
             "revenue_sharing.monthly": SchedulerEngineV1._run_revenue_sharing_monthly,
+            "auto.ops.morning": SchedulerEngineV1._run_auto_ops_morning,
+            "auto.ops.evening": SchedulerEngineV1._run_auto_ops_evening,
         }
 
     @staticmethod

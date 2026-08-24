@@ -93,8 +93,28 @@ class AppContainer:
             ),
         )
 
-        # Vertical services (strangler layer)
-        for code in ("auto", "agro", "realty", "legal", "logistics"):
+        # Vertical services (strangler layer) — Sprint 47.0 (CC-2): the canonical
+        # list of business verticals lives in platform_registry.verticals.VERTICAL_REGISTRY;
+        # this loop derives from it instead of hand-maintaining an independent list that
+        # can drift out of sync (it previously did — "realty"/"logistics" below are not
+        # in the canonical registry at all). Resolution is lazy (via _lazy), so registering
+        # a canonical vertical id with no matching src/verticals/<id>/service.py yet is
+        # harmless — it only raises if something actually calls .vertical(code) for it,
+        # matching this repo's existing "declare now, implement later" convention
+        # (see platform_integrations.connector_loader.FutureProviderConnector).
+        from platform_registry.verticals import VERTICAL_REGISTRY
+
+        for code in VERTICAL_REGISTRY:
+            self.registry.register(
+                f"verticals.{code}",
+                lambda c=code: _lazy(f"src.verticals.{c}.service", f"{c.title()}VerticalService"),
+            )
+
+        # Legacy strangler-layer entries predating the canonical vertical registry.
+        # Not real business verticals (absent from VERTICAL_REGISTRY) — kept registered
+        # only because src/verticals/<code>/service.py already exists for them and nothing
+        # should silently stop resolving. Do not treat these as vertical scope values.
+        for code in ("realty", "logistics"):
             self.registry.register(
                 f"verticals.{code}",
                 lambda c=code: _lazy(f"src.verticals.{c}.service", f"{c.title()}VerticalService"),

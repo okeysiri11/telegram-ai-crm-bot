@@ -20,6 +20,10 @@ logger = logging.getLogger(__name__)
 # HOTFIX 46.2.2: durable Auto Add Vehicle FSM before Super App / AI catch-alls.
 BOT_ROUTER_PATHS: tuple[str, ...] = (
     "routers.auto_add_vehicle_router",
+    "routers.auto_ops_telegram_router",
+    # Sprint 48.0 — crypto tx idempotency callbacks (narrow "crypto_tx:"
+    # callback_data prefix; deterministic, never LLM, security-critical).
+    "routers.crypto_tx_antifraud_router",
     # Sprint 46.5 — vertical nav / role selector BEFORE Super App AI / Hercules
     "routers.vertical_nav_router",
     "routers.telegram_super_app_router",

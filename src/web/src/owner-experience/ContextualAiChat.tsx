@@ -16,6 +16,7 @@ import { Button } from "@/ui";
 import { getVertical } from "@/vertical-workspace/catalog";
 import { useVerticalWorkspaceStore } from "@/vertical-workspace/verticalWorkspaceStore";
 import { useModeStore } from "@/platform-modes/modeStore";
+import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import {
   buildSessionId,
   classifyConciergeIntent,
@@ -60,7 +61,7 @@ function specialistLabel(verticalId: string): string {
     travel: "Travel AI",
     construction: "Construction AI",
     production: "Production AI",
-    agro: "Agro AI",
+    agro: "Агро-помощник",
     knowledge: "Knowledge AI",
     marketplace: "Marketing AI",
     owner: "Owner AI",
@@ -95,13 +96,15 @@ async function callCommandCenter(
   opts: {
     sessionId: string;
     signal: AbortSignal;
+    role: string;
+    vertical: string;
   },
 ): Promise<{
   reply: string;
   meta: ExecutionMeta;
   status: string;
 }> {
-  const { sessionId, signal } = opts;
+  const { sessionId, signal, role, vertical } = opts;
   const res = await fetch("/management/v1/ai-command/chat", {
     method: "POST",
     credentials: "include",
@@ -110,7 +113,15 @@ async function callCommandCenter(
       text,
       channel: "web",
       session_id: sessionId,
-      role: "owner",
+      // Sprint 47.0 (CC-3) — the server resolves the real, authoritative
+      // role/vertical from the caller's server-side session and does not trust
+      // these; sent only as a best-effort hint/fallback for callers with no
+      // server-side session (e.g. pure API-key access), and to keep this request
+      // honest about what the UI actually shows the user instead of a hardcoded
+      // "owner" that no longer reflects reality once Beauty/Auto/Agro/Crypto
+      // switching landed.
+      role,
+      vertical,
       max_steps: 3,
     }),
     signal,
@@ -151,6 +162,7 @@ export function ContextualAiChat({
   const vertical = getVertical(verticalId);
   const contextLabel = contextLabelForUser(vertical?.label, verticalId);
   const workMode = useModeStore((s) => s.mode);
+  const activeRoleId = useRoleSwitcher((s) => s.activeRoleId);
   const titleId = useId();
 
   const [sessionId] = useState(() => buildSessionId());
@@ -228,6 +240,8 @@ export function ContextualAiChat({
         const { reply, meta, status } = await callCommandCenter(userText, {
           sessionId,
           signal: ctrl.signal,
+          role: activeRoleId,
+          vertical: verticalId,
         });
         setLastMeta(meta);
         const clarify = status === "clarify" || /уточните|напишите название/i.test(reply);
@@ -249,7 +263,7 @@ export function ContextualAiChat({
         setBusy(false);
       }
     },
-    [append, replaceMsg, sessionId],
+    [append, replaceMsg, sessionId, activeRoleId, verticalId],
   );
 
   const send = useCallback(

@@ -5,12 +5,14 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
-import { Badge, Button, Card, Input, Table } from "@/ui";
+import { Badge, Button, Card, Input, Table, Skeleton } from "@/ui";
 import { Pagination } from "@/ui/Pagination";
 import { EmptyState } from "@/ui/EmptyState";
 import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { cn } from "@/utils/cn";
 import { useOpsCabinetNavStore } from "@/shell/mobile";
+import { useIsMobile } from "@/shell/mobile/useIsMobile";
+import { useVerticalWorkspaceStore } from "@/vertical-workspace/verticalWorkspaceStore";
 
 export type OpsNavItem = { id: string; label: string; hidden?: boolean };
 
@@ -28,7 +30,6 @@ export type OpsSection = {
   integrationNote?: string;
   cards?: { label: string; value: string }[];
   emptyTitle?: string;
-  /** Contextual empty copy — overrides generic demo CTA text for professional desks. */
   emptyDescription?: string;
   emptyCtaLabel?: string;
   emptyCtaOnClick?: () => void;
@@ -37,6 +38,8 @@ export type OpsSection = {
   dateFilterKey?: string;
   panel?: React.ReactNode;
   rowActions?: (row: OpsRow) => React.ReactNode;
+  onRowOpen?: (row: OpsRow) => void;
+  thumbKey?: string;
 };
 
 export type BusinessCabinetProps = {
@@ -54,9 +57,11 @@ export type BusinessCabinetProps = {
   testId?: string;
   roleHint?: string;
   banner?: ReactNode;
+  headerExtra?: ReactNode;
 };
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE_DESKTOP = 8;
+const PAGE_SIZE_MOBILE = 12;
 
 export function BusinessCabinetShell({
   verticalId,
@@ -73,6 +78,7 @@ export function BusinessCabinetShell({
   testId,
   roleHint,
   banner,
+  headerExtra,
 }: BusinessCabinetProps) {
   const { sub } = useParams<{ sub?: string }>();
   const [params, setParams] = useSearchParams();
@@ -87,6 +93,9 @@ export function BusinessCabinetShell({
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [page, setPage] = useState(1);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [online, setOnline] = useState(() => (typeof navigator === "undefined" ? true : navigator.onLine));
+  const isMobile = useIsMobile();
+  const pageSize = isMobile ? PAGE_SIZE_MOBILE : PAGE_SIZE_DESKTOP;
 
   useEffect(() => {
     const items = nav
@@ -102,6 +111,7 @@ export function BusinessCabinetShell({
       roleHint,
       items,
     });
+    useVerticalWorkspaceStore.getState().setVerticalId(verticalId);
     return () => useOpsCabinetNavStore.getState().clear();
   }, [nav, verticalId, title, roleHint, defaultSection]);
 
@@ -123,10 +133,22 @@ export function BusinessCabinetShell({
     setSortKey("");
   }, [sectionId]);
 
+  useEffect(() => {
+    const on = () => setOnline(true);
+    const off = () => setOnline(false);
+    window.addEventListener("online", on);
+    window.addEventListener("offline", off);
+    return () => {
+      window.removeEventListener("online", on);
+      window.removeEventListener("offline", off);
+    };
+  }, []);
+
   function go(id: string) {
     const next = new URLSearchParams(params);
     if (id === defaultSection) next.delete("view");
     else next.set("view", id);
+    next.delete("id");
     setParams(next);
   }
 
@@ -171,8 +193,11 @@ export function BusinessCabinetShell({
     return rows;
   }, [section, q, status, responsible, dateFrom, sortKey, sortDir]);
 
-  const pages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageRows = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pageRows = isMobile
+    ? filtered.slice(0, page * pageSize)
+    : filtered.slice((page - 1) * pageSize, page * pageSize);
+  const hasMore = isMobile && pageRows.length < filtered.length;
 
   return (
     <WorkspaceLayout>
@@ -181,7 +206,7 @@ export function BusinessCabinetShell({
         data-testid={testId || `biz-cabinet-${verticalId}`}
         data-vertical={verticalId}
       >
-        <div className="lg:hidden">
+        <div className="hidden md:block lg:hidden">
           <Button
             size="sm"
             variant="secondary"
@@ -269,7 +294,10 @@ export function BusinessCabinetShell({
                 <h2 className="eds-type-title text-xl">{section?.title}</h2>
                 <p className="mt-1 eds-type-body text-[var(--eds-text-muted)]">{section?.description}</p>
               </div>
-              {loading ? <Badge>Загрузка…</Badge> : null}
+              <div className="flex items-center gap-2">
+                {headerExtra}
+                {loading ? <Badge>Загрузка…</Badge> : null}
+              </div>
             </div>
             {section?.quickActions?.length ? (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -296,9 +324,21 @@ export function BusinessCabinetShell({
           </header>
 
           {error ? (
-            <Card title="Ошибка">
+            <Card title="Ошибка" data-testid="ops-error-state">
               <p className="eds-type-body text-[var(--eds-danger,#b91c1c)]">{error}</p>
+              {!online ? <p className="mt-1 eds-type-helper">Нет сети. Проверьте соединение.</p> : null}
+              {onRefresh ? (
+                <Button className="mt-3" variant="secondary" onClick={onRefresh} data-testid="ops-retry">
+                  Повторить
+                </Button>
+              ) : null}
             </Card>
+          ) : null}
+
+          {loading && !error ? (
+            <div className="ados-mobile-card" data-testid="ops-skeleton">
+              <Skeleton rows={5} height="2.5rem" />
+            </div>
           ) : null}
 
           {section?.cards?.length ? (
@@ -415,19 +455,52 @@ export function BusinessCabinetShell({
                 <>
                   <div className="ados-ops-cards" data-testid="ops-mobile-cards">
                     {pageRows.map((row, i) => (
-                      <article key={String(row.id ?? i)} className="ados-mobile-card">
+                      <article
+                        key={String(row.id ?? i)}
+                        className="ados-mobile-card"
+                        role={section.onRowOpen ? "button" : undefined}
+                        tabIndex={section.onRowOpen ? 0 : undefined}
+                        onClick={() => section.onRowOpen?.(row)}
+                        onKeyDown={(e) => {
+                          if (section.onRowOpen && (e.key === "Enter" || e.key === " ")) {
+                            e.preventDefault();
+                            section.onRowOpen(row);
+                          }
+                        }}
+                      >
+                        {section.thumbKey && row[section.thumbKey] ? (
+                          <img
+                            src={String(row[section.thumbKey])}
+                            alt=""
+                            className="ados-mobile-thumb"
+                            loading="lazy"
+                            width={72}
+                            height={48}
+                          />
+                        ) : null}
                         <h3 className="font-semibold">
-                          {String(row[section.columns[0]?.key || "id"] ?? "Запись")}
+                          {String(
+                            row.title ??
+                              row[section.columns.find((c) => c.key !== "photo" && c.key !== "thumb")?.key || "id"] ??
+                              "Запись",
+                          )}
                         </h3>
                         <dl className="mt-2">
-                          {section.columns.slice(1, 4).map((col) => (
+                          {section.columns
+                            .filter((col) => col.key !== "photo" && col.key !== "thumb" && col.key !== "title")
+                            .slice(0, 3)
+                            .map((col) => (
                             <div key={col.key}>
                               <dt>{col.label}</dt>
                               <dd>{row[col.key] ?? "—"}</dd>
                             </div>
                           ))}
                         </dl>
-                        {section.rowActions ? <div className="mt-2">{section.rowActions(row)}</div> : null}
+                        {section.rowActions ? (
+                          <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                            {section.rowActions(row)}
+                          </div>
+                        ) : null}
                       </article>
                     ))}
                   </div>
@@ -445,7 +518,20 @@ export function BusinessCabinetShell({
                     ))}
                   </Table>
                   <div className="mt-3">
+                  {isMobile ? (
+                    hasMore ? (
+                      <Button
+                        className="w-full"
+                        variant="secondary"
+                        data-testid="ops-load-more"
+                        onClick={() => setPage((p) => p + 1)}
+                      >
+                        Показать ещё
+                      </Button>
+                    ) : null
+                  ) : (
                     <Pagination page={page} pages={pages} onChange={setPage} />
+                  )}
                   </div>
                 </>
               )}

@@ -40,7 +40,7 @@ class ConversationMemory:
             role=principal.role,
             metadata={"session_id": session_id or "default", "turn_role": role},
         )
-        continuity_store.save(rec)
+        continuity_store.save(rec, principal=principal)
         continuity_store.sessions.setdefault(sk, []).append(rec.id)
         return rec.to_dict()
 
@@ -55,8 +55,8 @@ class ConversationMemory:
         ids = continuity_store.sessions.get(sk, [])[-limit:]
         out: list[dict[str, Any]] = []
         for mid in ids:
-            r = continuity_store.get(mid)
-            if r and r.owner_id == principal.owner_id:
+            r = continuity_store.get(mid, principal=principal)
+            if r:
                 out.append(r.to_dict())
         return out
 
@@ -65,7 +65,7 @@ class ConversationMemory:
         ids = continuity_store.sessions.pop(sk, [])
         n = 0
         for mid in ids:
-            if continuity_store.remove(mid):
+            if continuity_store.remove(mid, principal=principal):
                 n += 1
         return n
 

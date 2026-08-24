@@ -20,7 +20,7 @@ const INDEX: IndexEntry[] = [
   { id: "mod_mkt", type: "marketplace", title: "Marketplace", route: "/platform-builder/solution-hub", keywords: ["marketplace"] },
   { id: "mod_beauty", type: "modules", title: "Beauty OS", route: "/workspace/beauty", keywords: ["beauty"] },
   { id: "vert_auto", type: "verticals", title: "Auto Vertical", route: "/workspace/auto", keywords: ["auto"] },
-  { id: "vert_agro", type: "verticals", title: "Agro Vertical", route: "/workspace/agro", keywords: ["agro"] },
+  { id: "vert_agro", type: "verticals", title: "Агро", route: "/workspace/agro", keywords: ["agro", "агро"] },
   { id: "dash_main", type: "dashboards", title: "Personal Dashboard", route: "/workspace/dashboards", keywords: ["dashboard"] },
   { id: "rep_weekly", type: "reports", title: "Weekly KPI Report", route: "/workspace/reports/weekly", keywords: ["report", "weekly"] },
   { id: "an_main", type: "analytics", title: "Analytics", route: "/platform-builder/intelligence", keywords: ["analytics"] },

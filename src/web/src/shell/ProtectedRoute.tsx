@@ -11,7 +11,10 @@ const ONBOARDING_GATED = new Set(["/", "/dashboard"]);
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const user = useAuthStore((s) => s.user);
   const loc = useLocation();
-  if (!user) return <Navigate to="/login" replace state={{ from: loc.pathname }} />;
+  if (!user) {
+    const from = `${loc.pathname}${loc.search}${loc.hash}`;
+    return <Navigate to="/login" replace state={{ from }} />;
+  }
   if (loc.pathname.startsWith("/onboarding")) return children;
 
   const isClient =

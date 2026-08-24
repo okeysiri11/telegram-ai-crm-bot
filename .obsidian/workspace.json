@@ -1,0 +1,206 @@
+{
+  "main": {
+    "id": "3ca77be1840312d0",
+    "type": "split",
+    "children": [
+      {
+        "id": "b578586441c6e751",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9ce9c674efc1210a",
+            "type": "leaf",
+            "state": {
+              "type": "graph",
+              "state": {},
+              "icon": "lucide-git-fork",
+              "title": "Граф"
+            }
+          }
+        ],
+        "stacked": true
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "8d79c5216e010bcf",
+    "type": "split",
+    "children": [
+      {
+        "id": "1f3c17e641844824",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "5dbad089858f1ccb",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Файловый менеджер"
+            }
+          },
+          {
+            "id": "b122b52948064992",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Поиск"
+            }
+          },
+          {
+            "id": "58d5a52504ce4758",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Закладки"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "8554ca83211b7268",
+    "type": "split",
+    "children": [
+      {
+        "id": "bd3199ba458a3bba",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b5767d0cf0d833be",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Обратные ссылки"
+            }
+          },
+          {
+            "id": "bbec326780b47264",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Исходящие ссылки"
+            }
+          },
+          {
+            "id": "59ebfc0305d30d0b",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Теги"
+            }
+          },
+          {
+            "id": "f65901250b24c095",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Все свойства"
+            }
+          },
+          {
+            "id": "96580b5b29d6fddd",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Структура"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Меню быстрого перехода": false,
+      "graph:Граф": false,
+      "canvas:Создать новый холст": false,
+      "daily-notes:Сегодняшняя заметка": false,
+      "templates:Вставить шаблон": false,
+      "command-palette:Открыть палитру команд": false,
+      "random-note:Открыть случайную заметку": false,
+      "workspaces:Пространства": false,
+      "bases:Создать новую базу": false
+    }
+  },
+  "active": "9ce9c674efc1210a",
+  "lastOpenFiles": [
+    "docs/SPRINT_50_0_RESULT.md",
+    "docs/SPRINT_50_0_CRYPTO_EURUSD_DXY_MARKET_INTELLIGENCE_PLAN.md",
+    "applications/crypto_enterprise/api/__pycache__/fx_intel_handlers.cpython-314.pyc",
+    "services/fx_market_intel/__pycache__/technical.cpython-314.pyc",
+    "services/fx_market_intel/__pycache__/symbols.cpython-314.pyc",
+    "services/fx_market_intel/__pycache__/signals.cpython-314.pyc",
+    "services/fx_market_intel/__pycache__/service.cpython-314.pyc",
+    "services/fx_market_intel/__pycache__/providers.cpython-314.pyc",
+    "services/fx_market_intel/__pycache__/news.cpython-314.pyc",
+    "services/fx_market_intel/__pycache__/memory.cpython-314.pyc",
+    "services/fx_market_intel/__pycache__/macro.cpython-314.pyc",
+    "services/fx_market_intel/__pycache__/correlation.cpython-314.pyc",
+    "docs/SPRINT_49_1_RESULT.md",
+    "docs/SPRINT_49_0_RESULT.md",
+    "docs/SPRINT_48_1_RESULT.md",
+    "docs/SPRINT_48_0_RESULT.md"
+  ]
+}

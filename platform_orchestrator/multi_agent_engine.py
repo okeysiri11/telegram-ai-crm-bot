@@ -532,11 +532,19 @@ class MultiAgentRuntimeEngine:
         task.status = RuntimeTaskStatus.RUNNING
         task.updated_at = time.time()
         session = self.sessions.get(task.session_id) if task.session_id else None
+        shared_context = session.shared_context if session else {}
         context = AgentContext(
             platform_context={"multi_agent": True},
             memory_context=dict(session.shared_memory) if session else {},
-            session_context=dict(session.shared_context) if session else {},
+            session_context=dict(shared_context),
             permissions=["agent.execute"],
+            # Sprint 47.0 — best-effort passthrough: populated only when the session
+            # creator actually supplied these (see create_session's shared_context);
+            # nothing upstream fabricates a tenant/vertical/customer/user here.
+            tenant_id=shared_context.get("tenant_id"),
+            vertical=shared_context.get("vertical"),
+            customer_id=shared_context.get("customer_id"),
+            user_id=shared_context.get("user_id"),
         )
 
         try:

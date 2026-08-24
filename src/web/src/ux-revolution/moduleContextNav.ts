@@ -134,6 +134,43 @@ export const MODULE_CONTEXT_NAV: ModuleContext[] = [
     ],
   },
   {
+    moduleId: "auto",
+    label: "Авто",
+    match: ["/workspace/auto"],
+    items: [
+      { id: "vert_auto_overview", label: "Обзор", route: "/workspace/auto?view=overview", icon: "crm" },
+      { id: "vert_auto_cars", label: "Автомобили", route: "/workspace/auto?view=vehicles", icon: "crm" },
+      { id: "vert_auto_purchases", label: "Закупки", route: "/workspace/auto?view=purchases", icon: "crm" },
+      { id: "vert_auto_logistics", label: "Логистика", route: "/workspace/auto?view=logistics", icon: "crm" },
+      { id: "vert_auto_customs", label: "Растаможка", route: "/workspace/auto?view=customs", icon: "crm" },
+      { id: "vert_auto_clients", label: "Клиенты", route: "/workspace/auto?view=clients", icon: "crm" },
+      { id: "vert_auto_settings", label: "Настройки", route: "/workspace/auto?view=settings", icon: "crm" },
+    ],
+  },
+  {
+    moduleId: "agro",
+    label: "Агро",
+    match: ["/workspace/agro"],
+    items: [
+      { id: "vert_agro_goods", label: "Товары (закупка / продажа)", route: "/workspace/agro/goods", icon: "marketplace" },
+      { id: "vert_agro_counterparties", label: "Контрагенты", route: "/workspace/agro/counterparties", icon: "marketplace" },
+      { id: "vert_agro_contracts", label: "Контракты", route: "/workspace/agro/contracts", icon: "marketplace" },
+      { id: "vert_agro_deals", label: "Сделки", route: "/workspace/agro/deals", icon: "marketplace" },
+      { id: "vert_agro_logistics", label: "Логистика", route: "/workspace/agro/logistics", icon: "marketplace" },
+    ],
+  },
+  {
+    moduleId: "beauty",
+    label: "Beauty",
+    match: ["/workspace/beauty"],
+    items: [
+      { id: "vert_beauty_salon", label: "Салон", route: "/workspace/beauty/salon", icon: "marketplace" },
+      { id: "vert_beauty_clients", label: "Клиенты", route: "/workspace/beauty/clients", icon: "marketplace" },
+      { id: "vert_beauty_appointments", label: "Записи", route: "/workspace/beauty/appointments", icon: "dashboard" },
+      { id: "vert_beauty_calendar", label: "Календарь", route: "/workspace/beauty/calendar", icon: "dashboard" },
+    ],
+  },
+  {
     moduleId: "governance",
     label: "Управление",
     match: ["/platform-builder/governance", "/platform-builder/god-mode"],

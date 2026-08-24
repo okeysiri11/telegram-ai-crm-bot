@@ -85,7 +85,7 @@ class CafeOSSuite:
 
     def list_tables(self) -> dict[str, Any]:
         items = self.store.cos_tables.list_all()
-        return {"tables": items, "count": len(items)}
+        return {"tables": items, "count": len(items), "items": items}
 
     def create_menu_item(self, **kwargs: Any) -> dict[str, Any]:
         try:
@@ -99,7 +99,54 @@ class CafeOSSuite:
 
     def list_menu(self) -> dict[str, Any]:
         items = self.store.cos_menu.list_all()
-        return {"menu": items, "count": len(items)}
+        return {"menu": items, "count": len(items), "items": items}
+
+    def list_staff(self) -> dict[str, Any]:
+        items = self.store.cos_staff.list_all()
+        return {"staff": items, "count": len(items), "items": items}
+
+    def list_customers(self) -> dict[str, Any]:
+        items = self.store.cos_customers.list_all()
+        return {"customers": items, "count": len(items), "items": items}
+
+    def list_reservations(self) -> dict[str, Any]:
+        items = self.store.cos_reservations.list_all()
+        return {"reservations": items, "count": len(items), "items": items}
+
+    def list_orders(self) -> dict[str, Any]:
+        items = self.store.cos_orders.list_all()
+        return {"orders": items, "count": len(items), "items": items}
+
+    def list_shifts(self) -> dict[str, Any]:
+        items = self.store.cos_shifts.list_all()
+        return {"shifts": items, "count": len(items), "items": items}
+
+    def open_shift(self, *, staff_id: str, role: str = "", date: str = "") -> dict[str, Any]:
+        staff = self.store.cos_staff.get(staff_id) if staff_id else None
+        if staff_id and not staff:
+            raise NotFoundError(f"staff not found: {staff_id}")
+        sid = _id("cos_shf")
+        record = {
+            "shift_id": sid,
+            "staff_id": staff_id,
+            "employee": (staff or {}).get("name", staff_id or "—"),
+            "role": role or (staff or {}).get("role", "waiter"),
+            "date": date or _now()[:10],
+            "start": _now(),
+            "end": "",
+            "status": "Открыта",
+            "created_at": _now(),
+        }
+        self.store.cos_shifts.save(sid, record)
+        return record
+
+    def close_shift(self, *, shift_id: str) -> dict[str, Any]:
+        item = self.store.cos_shifts.get(shift_id)
+        if not item:
+            raise NotFoundError(f"shift not found: {shift_id}")
+        updated = {**item, "end": _now(), "status": "Закрыта", "updated_at": _now()}
+        self.store.cos_shifts.save(shift_id, updated)
+        return updated
 
     def create_staff(self, **kwargs: Any) -> dict[str, Any]:
         try:

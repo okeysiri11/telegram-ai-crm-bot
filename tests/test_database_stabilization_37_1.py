@@ -43,7 +43,15 @@ def test_single_alembic_head():
     referenced = {d for meta in revs.values() for d in meta["downs"]}
     heads = [r for r in revs if r not in referenced]
     assert len(heads) == 1, f"expected 1 head, got {heads}"
-    assert heads[0] == "u4o567890123"
+    # Sprint 48.1 — x7r890123456 (crypto tx legacy deal/payment references)
+    # is now the head, chained after w6q789012345 (Sprint 48.0, crypto tx
+    # registry), chained after v5p678901234 (Sprint 47.1, memory scope
+    # columns), chained after u4o567890123 (previously the head — see its
+    # own down_revision assertion below, unchanged).
+    assert heads[0] == "x7r890123456"
+    assert revs["x7r890123456"]["downs"] == ["w6q789012345"]
+    assert revs["w6q789012345"]["downs"] == ["v5p678901234"]
+    assert revs["v5p678901234"]["downs"] == ["u4o567890123"]
     assert revs["u4o567890123"]["downs"] == ["t3n456789012"]
 
 
@@ -185,4 +193,5 @@ def test_alembic_heads_cli():
         timeout=60,
     )
     assert proc.returncode == 0, proc.stderr
-    assert "u4o567890123" in (proc.stdout + proc.stderr)
+    # Sprint 48.1 — x7r890123456 is now the head (see test_single_alembic_head).
+    assert "x7r890123456" in (proc.stdout + proc.stderr)

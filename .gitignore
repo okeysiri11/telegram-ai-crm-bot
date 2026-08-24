@@ -41,6 +41,8 @@ memory.db
 *.sqlite
 *.sqlite3
 data/media_cache/
+data/legal_ops_files/
+data/auto_ops_files/
 *.log
 
 # Database backups (keep directory; never commit dumps)
@@ -67,3 +69,8 @@ src/kernel/package-lock.json
 deploy/certs/*
 !deploy/certs/README.md
 !deploy/certs/.gitkeep
+
+# AUTO 1.8.5 temporary public URL (never commit)
+data/auto_remote_https.url
+data/auto_remote_https.pids
+scripts/.bin/

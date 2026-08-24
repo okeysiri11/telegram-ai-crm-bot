@@ -235,7 +235,9 @@ class TestRouterImport:
         from startup import BOT_ROUTER_PATHS
 
         assert BOT_ROUTER_PATHS[0] == "routers.auto_add_vehicle_router"
-        assert BOT_ROUTER_PATHS[1] == "routers.telegram_super_app_router"
+        assert BOT_ROUTER_PATHS.index("routers.auto_ops_telegram_router") < BOT_ROUTER_PATHS.index(
+            "routers.telegram_super_app_router"
+        )
 
 
 def test_main_menu_keyboard_structure():

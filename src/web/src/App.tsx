@@ -15,6 +15,7 @@ import { InvitationPage } from "@/pages/InvitationPage";
 import { homeRouteForRole } from "@/navigation/roleHome";
 import { wsKey } from "@/multi-role/workspaceSlot";
 import { ClientOnboardingPage } from "@/multi-role/ClientOnboardingPage";
+import { CryptoPayoutConfirmPanel } from "@/crypto-antifraud/CryptoPayoutConfirmPanel";
 import { PilotDashboardPage } from "@/pages/PilotDashboardPage";
 import { ProductionReadinessPage } from "@/pages/ProductionReadinessPage";
 import { ExternalPilotOnboardPage } from "@/pages/ExternalPilotOnboardPage";
@@ -255,11 +256,26 @@ import {
   WorkspacesPage,
 } from "../workspace/pages";
 import { AutomotiveLiveWorkflowPage } from "../workspace/automotive/AutomotiveLiveWorkflowPage";
-import { BeautyLiveWorkflowPage } from "../workspace/beauty/BeautyLiveWorkflowPage";
-import { CafeLiveWorkflowPage } from "../workspace/cafe/CafeLiveWorkflowPage";
+const AutoBusinessPage = lazy(() =>
+  import("../workspace/auto/AutoBusinessPage").then((m) => ({ default: m.AutoBusinessPage })),
+);
+const BeautyBusinessPage = lazy(() =>
+  import("../workspace/beauty/BeautyBusinessPage").then((m) => ({ default: m.BeautyBusinessPage })),
+);
+const CafeBusinessPage = lazy(() =>
+  import("../workspace/cafe/CafeBusinessPage").then((m) => ({ default: m.CafeBusinessPage })),
+);
+const AgroBusinessPage = lazy(() =>
+  import("../workspace/agro/AgroBusinessPage").then((m) => ({ default: m.AgroBusinessPage })),
+);
+const LawyerBusinessPage = lazy(() =>
+  import("../workspace/legal/LawyerBusinessPage").then((m) => ({ default: m.LawyerBusinessPage })),
+);
+const CryptoOtcDeskPage = lazy(() =>
+  import("../workspace/crypto/CryptoOtcDeskPage").then((m) => ({ default: m.CryptoOtcDeskPage })),
+);
 import { AgricultureLiveWorkflowPage } from "../workspace/agriculture/AgricultureLiveWorkflowPage";
 import { LegalLiveWorkflowPage } from "../workspace/legal/LegalLiveWorkflowPage";
-import { BidexLiveWorkflowPage } from "../workspace/crypto/BidexLiveWorkflowPage";
 import { DroneLiveWorkflowPage } from "../workspace/drone/DroneLiveWorkflowPage";
 import { NavigationDashboardPage } from "../navigation/pages";
 import { CommandCenterPage } from "../command-center/pages";
@@ -348,6 +364,21 @@ export function App() {
         element={
           <ProtectedRoute>
             <ClientOnboardingPage />
+          </ProtectedRoute>
+        }
+      />
+      {/* Sprint 48.1 — the minimal real Web crypto/OTC payout-confirmation
+          surface, wired to the same canonical CryptoPayoutOrchestrator the
+          Telegram bot calls. Server-side require_role(ADMINISTRATOR) is the
+          real gate; ProtectedRoute here only requires an authenticated
+          session. */}
+      <Route
+        path="/crypto-otc/payout/:dealId"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="CryptoPayoutConfirm" recoveryHref="/dashboard">
+              <CryptoPayoutConfirmPanel />
+            </RouteErrorBoundary>
           </ProtectedRoute>
         }
       />
@@ -1048,13 +1079,13 @@ export function App() {
         element={
           <ProtectedRoute>
             <WorkspaceLandingGate landingId="auto">
-              <AutomotiveLiveWorkflowPage />
+              <AutoBusinessPage />
             </WorkspaceLandingGate>
           </ProtectedRoute>
         }
       />
       <Route
-        path="/workspace/auto/:sub"
+        path="/workspace/auto/pilot"
         element={
           <ProtectedRoute>
             <AutomotiveLiveWorkflowPage />
@@ -1062,10 +1093,18 @@ export function App() {
         }
       />
       <Route
+        path="/workspace/auto/:sub"
+        element={
+          <ProtectedRoute>
+            <AutoBusinessPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/workspace/beauty"
         element={
           <ProtectedRoute>
-            <BeautyLiveWorkflowPage />
+            <BeautyBusinessPage />
           </ProtectedRoute>
         }
       />
@@ -1073,7 +1112,7 @@ export function App() {
         path="/workspace/beauty/:sub"
         element={
           <ProtectedRoute>
-            <BeautyLiveWorkflowPage />
+            <BeautyBusinessPage />
           </ProtectedRoute>
         }
       />
@@ -1082,7 +1121,7 @@ export function App() {
         element={
           <ProtectedRoute>
             <WorkspaceLandingGate landingId="cafe">
-              <CafeLiveWorkflowPage />
+              <CafeBusinessPage />
             </WorkspaceLandingGate>
           </ProtectedRoute>
         }
@@ -1091,7 +1130,7 @@ export function App() {
         path="/workspace/cafe/:sub"
         element={
           <ProtectedRoute>
-            <CafeLiveWorkflowPage />
+            <CafeBusinessPage />
           </ProtectedRoute>
         }
       />
@@ -1100,8 +1139,16 @@ export function App() {
         element={
           <ProtectedRoute>
             <WorkspaceLandingGate landingId="agro">
-              <AgricultureLiveWorkflowPage />
+              <AgroBusinessPage />
             </WorkspaceLandingGate>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/agro/pilot"
+        element={
+          <ProtectedRoute>
+            <AgricultureLiveWorkflowPage />
           </ProtectedRoute>
         }
       />
@@ -1109,7 +1156,7 @@ export function App() {
         path="/workspace/agro/:sub"
         element={
           <ProtectedRoute>
-            <AgricultureLiveWorkflowPage />
+            <AgroBusinessPage />
           </ProtectedRoute>
         }
       />
@@ -1118,8 +1165,16 @@ export function App() {
         element={
           <ProtectedRoute>
             <WorkspaceLandingGate landingId="legal">
-              <LegalLiveWorkflowPage />
+              <LawyerBusinessPage />
             </WorkspaceLandingGate>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/legal/pilot"
+        element={
+          <ProtectedRoute>
+            <LegalLiveWorkflowPage />
           </ProtectedRoute>
         }
       />
@@ -1127,7 +1182,7 @@ export function App() {
         path="/workspace/legal/:sub"
         element={
           <ProtectedRoute>
-            <LegalLiveWorkflowPage />
+            <LawyerBusinessPage />
           </ProtectedRoute>
         }
       />
@@ -1136,7 +1191,7 @@ export function App() {
         element={
           <ProtectedRoute>
             <WorkspaceLandingGate landingId="crypto">
-              <BidexLiveWorkflowPage />
+              <CryptoOtcDeskPage />
             </WorkspaceLandingGate>
           </ProtectedRoute>
         }
@@ -1145,7 +1200,7 @@ export function App() {
         path="/workspace/crypto/:sub"
         element={
           <ProtectedRoute>
-            <BidexLiveWorkflowPage />
+            <CryptoOtcDeskPage />
           </ProtectedRoute>
         }
       />

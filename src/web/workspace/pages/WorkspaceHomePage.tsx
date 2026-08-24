@@ -15,6 +15,8 @@ import {
 } from "../managers";
 import { liveUpdates } from "../realtime/liveUpdates";
 import { useWorkspaceStore } from "@/workspace/workspaceStore";
+import { MobileRouteGate } from "@/shell/mobile/MobileRouteGate";
+import { MobileWorkspaceHub } from "@/shell/mobile/MobileWorkspaceHub";
 
 export function WorkspaceHomePage() {
   const setWorkspace = useWorkspaceStore((s) => s.setWorkspace);
@@ -47,6 +49,9 @@ export function WorkspaceHomePage() {
 
   return (
     <WorkspaceLayout>
+      <MobileRouteGate
+        mobile={<MobileWorkspaceHub />}
+        desktop={
       <div className="space-y-6 eds-anim-fade">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
@@ -146,6 +151,8 @@ export function WorkspaceHomePage() {
           </div>
         </div>
       </div>
+        }
+      />
     </WorkspaceLayout>
   );
 }

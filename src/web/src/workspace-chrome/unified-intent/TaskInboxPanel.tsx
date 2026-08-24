@@ -2,7 +2,7 @@
  * Sprint 46.4 — Task Inbox (лёгкая история действий).
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/ui";
 import { STATUS_LABEL_RU } from "./unifiedIntentTypes";
@@ -25,8 +25,16 @@ export function TaskInboxPanel({
 } = {}) {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>("all");
-  const items = useUnifiedIntentStore((s) => s.byFilter(filter));
+  const allItems = useUnifiedIntentStore((s) => s.items);
   const showTech = useUnifiedIntentStore((s) => s.showTech);
+  // Sprint 46.6 — select the stable `items` array and derive the filtered
+  // view locally; calling s.byFilter(filter) directly as a selector returns
+  // a new array reference on every snapshot check (Array.prototype.filter),
+  // which triggers React's useSyncExternalStore infinite-update-depth loop.
+  const items = useMemo(
+    () => useUnifiedIntentStore.getState().byFilter(filter),
+    [allItems, filter],
+  );
   const setShowTech = useUnifiedIntentStore((s) => s.setShowTech);
 
   return (
