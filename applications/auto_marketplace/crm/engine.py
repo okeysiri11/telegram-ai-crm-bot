@@ -10,6 +10,7 @@ from applications.auto_marketplace.communications.service import CommunicationSe
 from applications.auto_marketplace.crm.ai_assistant import AISalesAssistant, ai_sales_assistant
 from applications.auto_marketplace.crm.security import CRMSecurity, crm_security
 from applications.auto_marketplace.crm.workflow_bridge import CRMWorkflowBridge, crm_workflow_bridge
+from applications.auto_marketplace.crm.automation import CRMAutomationEngine
 from applications.auto_marketplace.customers.profile_service import CustomerProfileService, customer_profile_service
 from applications.auto_marketplace.deals.service import DealService, deal_service
 from applications.auto_marketplace.leads.service import LeadService, lead_service
@@ -48,6 +49,13 @@ class CRMEngine:
         self.ai = ai or ai_sales_assistant
         self.security = security or crm_security
         self.workflow = workflow or crm_workflow_bridge
+        self.automation = CRMAutomationEngine(
+            leads=self.leads,
+            deals=self.deals,
+            tasks=self.tasks,
+            calendar=self.calendar,
+            activities=self.activities,
+        )
 
     async def metrics(self) -> dict[str, Any]:
         from applications.auto_marketplace.crm.metrics import crm_metrics

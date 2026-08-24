@@ -555,6 +555,92 @@ async def follow_up_handler(request: web.Request) -> web.Response:
     return json_response(await auto_marketplace.crm_engine.follow_up())
 
 
+async def list_follow_ups_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    items = await auto_marketplace.crm_engine.automation.list_follow_ups(
+        due=_query_flag(request, "due"),
+        overdue=_query_flag(request, "overdue"),
+    )
+    return json_response({"items": items})
+
+
+async def schedule_follow_up_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    data = await request.json()
+    created = await auto_marketplace.crm_engine.automation.schedule_follow_up(
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        customer_id=str(data.get("customer_id") or ""),
+        action_type=data.get("action_type") or data.get("next_action_type") or "manual_follow_up",
+        due_at=data.get("due_at") or data.get("remind_at") or data.get("next_action_at"),
+        delay_hours=data.get("delay_hours"),
+        assigned_to=str(data.get("assigned_to") or data.get("assigned_agent_id") or ""),
+        message=str(data.get("message") or data.get("title") or ""),
+        source=str(data.get("source") or "api"),
+        priority=data.get("priority") or data.get("next_action_priority"),
+        idempotency_key=str(data.get("idempotency_key") or ""),
+    )
+    return json_response(created, status=201)
+
+
+async def get_follow_up_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    item = await auto_marketplace.crm_engine.automation.get_follow_up(request.match_info["follow_up_id"])
+    return json_response(item)
+
+
+async def reschedule_follow_up_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    data = await request.json()
+    due_at = data.get("due_at") or data.get("remind_at") or data.get("next_action_at")
+    if due_at in (None, ""):
+        raise ValidationError("due_at is required")
+    updated = await auto_marketplace.crm_engine.automation.reschedule_follow_up(
+        request.match_info["follow_up_id"],
+        due_at=due_at,
+    )
+    return json_response(updated)
+
+
+async def complete_follow_up_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    try:
+        await request.json()
+    except Exception:
+        pass
+    item = await auto_marketplace.crm_engine.automation.complete_follow_up(request.match_info["follow_up_id"])
+    return json_response(item)
+
+
+async def cancel_follow_up_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    try:
+        await request.json()
+    except Exception:
+        pass
+    item = await auto_marketplace.crm_engine.automation.cancel_follow_up(request.match_info["follow_up_id"])
+    return json_response(item)
+
+
+async def automation_queue_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    limit_raw = request.query.get("limit") or "100"
+    try:
+        limit = int(limit_raw)
+    except ValueError as exc:
+        raise ValidationError("limit must be an integer") from exc
+    return json_response(await auto_marketplace.crm_engine.automation.get_action_queue(limit=limit))
+
+
+async def evaluate_automation_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    try:
+        await request.json()
+    except Exception:
+        pass
+    return json_response(await auto_marketplace.crm_engine.automation.evaluate_due_actions())
+
+
 async def log_call_handler(request: web.Request) -> web.Response:
     _check_perm(request, "crm.write")
     data = await request.json()
@@ -849,7 +935,8 @@ async def ai_next_action_handler(request: web.Request) -> web.Response:
     lead = await auto_marketplace.crm_engine.leads.get(request.match_info["lead_id"])
     action = await auto_marketplace.crm_engine.ai.next_best_action(lead)
     follow_up = await auto_marketplace.crm_engine.ai.suggest_follow_up(lead)
-    return json_response({"next_best_action": action, "follow_up": follow_up})
+    durable = await auto_marketplace.crm_engine.automation.next_action(lead_id=lead.lead_id)
+    return json_response({"next_best_action": action, "follow_up": follow_up, "next_action": durable})
 
 
 _CRM_WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})

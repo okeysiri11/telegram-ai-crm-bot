@@ -90,6 +90,11 @@ class InteractionType(str, enum.Enum):
     REMINDER_CREATED = "reminder_created"
     REMINDER_COMPLETED = "reminder_completed"
     MEETING_CANCELLED = "meeting_cancelled"
+    FOLLOW_UP_SCHEDULED = "follow_up_scheduled"
+    FOLLOW_UP_RESCHEDULED = "follow_up_rescheduled"
+    FOLLOW_UP_COMPLETED = "follow_up_completed"
+    FOLLOW_UP_CANCELLED = "follow_up_cancelled"
+    AUTOMATION_TASK_CREATED = "automation_task_created"
 
 
 @dataclass
@@ -343,6 +348,7 @@ class CRMTask:
     completed_at: float | None = None
     created_at: float = field(default_factory=_ts)
     updated_at: float = field(default_factory=_ts)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -361,6 +367,7 @@ class CRMTask:
             "completed_at": self.completed_at,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
+            "metadata": dict(self.metadata),
         }
 
 
@@ -377,6 +384,10 @@ class Reminder:
     trigger_at: float = field(default_factory=_ts)
     status: str = "pending"
     triggered: bool = False
+    action_type: str = "manual_follow_up"
+    source: str = "manual"
+    priority: str = "normal"
+    idempotency_key: str = ""
     created_at: float = field(default_factory=_ts)
     updated_at: float = field(default_factory=_ts)
 
@@ -385,6 +396,8 @@ class Reminder:
         data["title"] = self.title or self.message
         data["assigned_to"] = self.assigned_agent_id
         data["remind_at"] = self.trigger_at
+        data["due_at"] = self.trigger_at
+        data["follow_up_id"] = self.reminder_id
         return data
 
 

@@ -282,6 +282,14 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_get(f"{crm}/opportunities", crm_handlers.list_opportunities_handler)
     app.router.add_get(f"{crm}/opportunities/{{opportunity_id}}", crm_handlers.get_opportunity_handler)
     app.router.add_get(f"{crm}/follow-up", crm_handlers.follow_up_handler)
+    app.router.add_get(f"{crm}/follow-ups", crm_handlers.list_follow_ups_handler)
+    app.router.add_post(f"{crm}/follow-ups", crm_handlers.schedule_follow_up_handler)
+    app.router.add_get(f"{crm}/follow-ups/{{follow_up_id}}", crm_handlers.get_follow_up_handler)
+    app.router.add_patch(f"{crm}/follow-ups/{{follow_up_id}}", crm_handlers.reschedule_follow_up_handler)
+    app.router.add_post(f"{crm}/follow-ups/{{follow_up_id}}/complete", crm_handlers.complete_follow_up_handler)
+    app.router.add_post(f"{crm}/follow-ups/{{follow_up_id}}/cancel", crm_handlers.cancel_follow_up_handler)
+    app.router.add_get(f"{crm}/automation/queue", crm_handlers.automation_queue_handler)
+    app.router.add_post(f"{crm}/automation/evaluate", crm_handlers.evaluate_automation_handler)
 
     # Sprint 6.4 — AI Sales Agents & Customer Intelligence
     ai = f"{prefix}/ai"

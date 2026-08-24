@@ -6,6 +6,8 @@ import logging
 import time
 from typing import Any
 
+from applications.auto_marketplace.shared.exceptions import ValidationError
+
 logger = logging.getLogger(__name__)
 
 
@@ -28,6 +30,21 @@ class CRMWorkflowBridge:
 
     @staticmethod
     async def schedule_follow_up(lead_id: str, customer_id: str, delay_hours: int = 24) -> dict[str, Any]:
+        durable: dict[str, Any] = {}
+        try:
+            from applications.auto_marketplace.crm.automation import crm_automation
+
+            durable = await crm_automation.schedule_follow_up(
+                lead_id=lead_id,
+                customer_id=customer_id,
+                delay_hours=delay_hours,
+                action_type="manual_follow_up",
+                source="workflow",
+            )
+        except ValidationError:
+            raise
+        except Exception:
+            logger.debug("durable follow-up schedule unavailable")
         try:
             from platform_workflow import workflow_engine
             from platform_workflow.models import WorkflowStep
@@ -37,9 +54,17 @@ class CRMWorkflowBridge:
                 [WorkflowStep(name="follow_up", assignee_id="crm-agent")],
                 metadata={"lead_id": lead_id, "customer_id": customer_id, "delay_hours": delay_hours},
             )
-            return {"workflow_id": workflow.workflow_id, "scheduled_at": time.time() + delay_hours * 3600}
+            return {
+                "workflow_id": workflow.workflow_id,
+                "scheduled_at": durable.get("due_at") or (time.time() + delay_hours * 3600),
+                **durable,
+            }
         except Exception:
-            return {"scheduled_at": time.time() + delay_hours * 3600, "simulated": True}
+            return {
+                "scheduled_at": durable.get("due_at") or (time.time() + delay_hours * 3600),
+                "simulated": True,
+                **durable,
+            }
 
     @staticmethod
     async def notify_manager(team_id: str, message: str) -> None:

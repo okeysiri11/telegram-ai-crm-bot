@@ -107,6 +107,11 @@ async def test_qualify_without_auth_returns_401(client: TestClient):
         ("POST", "/api/auto/v1/crm/appointments", {"buyer_id": "b1"}),
         ("POST", "/api/auto/v1/crm/negotiations", {"buyer_id": "b1"}),
         ("POST", "/api/auto/v1/crm/reservations", {"vehicle_id": "v1"}),
+        ("POST", "/api/auto/v1/crm/follow-ups", {"lead_id": "lead-x", "action_type": "call"}),
+        ("PATCH", "/api/auto/v1/crm/follow-ups/fu-x", {"due_at": 1}),
+        ("POST", "/api/auto/v1/crm/follow-ups/fu-x/complete", {}),
+        ("POST", "/api/auto/v1/crm/follow-ups/fu-x/cancel", {}),
+        ("POST", "/api/auto/v1/crm/automation/evaluate", {}),
     ],
 )
 async def test_mutating_crm_requires_auth(client: TestClient, method: str, path: str, payload: dict):

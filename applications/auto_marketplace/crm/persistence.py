@@ -114,6 +114,7 @@ def _task_from_payload(data: dict) -> CRMTask:
         completed_at=float(completed) if completed not in (None, "") else None,
         created_at=float(data.get("created_at") or 0.0),
         updated_at=float(data.get("updated_at") or data.get("created_at") or 0.0),
+        metadata=dict(data.get("metadata") or {}) if isinstance(data.get("metadata"), dict) else {},
     )
 
 
@@ -216,6 +217,10 @@ def _reminder_from_payload(data: dict) -> Reminder:
         trigger_at=float(trigger or 0.0),
         status=str(data.get("status") or "pending"),
         triggered=bool(data.get("triggered")),
+        action_type=str(data.get("action_type") or "manual_follow_up"),
+        source=str(data.get("source") or "manual"),
+        priority=str(data.get("priority") or "normal"),
+        idempotency_key=str(data.get("idempotency_key") or ""),
         created_at=float(data.get("created_at") or 0.0),
         updated_at=float(data.get("updated_at") or data.get("created_at") or 0.0),
     )
