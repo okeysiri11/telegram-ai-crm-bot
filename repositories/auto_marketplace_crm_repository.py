@@ -13,9 +13,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.auto_marketplace_crm import (
     AutoMarketplaceCrmActivity,
+    AutoMarketplaceCrmCall,
     AutoMarketplaceCrmCustomer,
     AutoMarketplaceCrmDeal,
+    AutoMarketplaceCrmEmail,
     AutoMarketplaceCrmLead,
+    AutoMarketplaceCrmMeeting,
+    AutoMarketplaceCrmReminder,
     AutoMarketplaceCrmTask,
 )
 
@@ -24,6 +28,10 @@ _LEADS = AutoMarketplaceCrmLead.__table__
 _DEALS = AutoMarketplaceCrmDeal.__table__
 _TASKS = AutoMarketplaceCrmTask.__table__
 _ACTIVITIES = AutoMarketplaceCrmActivity.__table__
+_CALLS = AutoMarketplaceCrmCall.__table__
+_EMAILS = AutoMarketplaceCrmEmail.__table__
+_MEETINGS = AutoMarketplaceCrmMeeting.__table__
+_REMINDERS = AutoMarketplaceCrmReminder.__table__
 
 
 def _payload_from_row(row: Any) -> dict[str, Any] | None:
@@ -347,3 +355,172 @@ class AutoMarketplaceCrmRepository:
             select(func.count()).select_from(_ACTIVITIES).where(_ACTIVITIES.c.tenant_id == tenant_id)
         )
         return int(result.scalar_one())
+
+    async def _upsert_row(
+        self,
+        table,
+        pk_name: str,
+        pk_value: str,
+        tenant_id: str,
+        values: dict[str, Any],
+        data: dict[str, Any],
+    ) -> dict[str, Any]:
+        pk_col = getattr(table.c, pk_name)
+        existing = await self._session.execute(select(table).where(pk_col == pk_value))
+        row = existing.mappings().first()
+        if row is not None and row["tenant_id"] != tenant_id:
+            payload = _payload_from_row(row)
+            return payload or dict(data)
+        if row is None:
+            await self._session.execute(insert(table).values(**{pk_name: pk_value}, **values))
+        else:
+            await self._session.execute(update(table).where(pk_col == pk_value).values(**values))
+        await self._session.flush()
+        found = await self._fetch_one(select(table).where(pk_col == pk_value, table.c.tenant_id == tenant_id))
+        return found or {**dict(data), "tenant_id": tenant_id}
+
+    async def _delete_row(self, table, pk_name: str, pk_value: str, tenant_id: str) -> bool:
+        result = await self._session.execute(
+            delete(table).where(getattr(table.c, pk_name) == pk_value, table.c.tenant_id == tenant_id)
+        )
+        await self._session.flush()
+        return bool(result.rowcount)
+
+    async def _count_rows(self, table, tenant_id: str) -> int:
+        result = await self._session.execute(
+            select(func.count()).select_from(table).where(table.c.tenant_id == tenant_id)
+        )
+        return int(result.scalar_one())
+
+    async def upsert_call(self, tenant_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        call_id = str(data["call_id"])
+        started = data.get("started_at")
+        ended = data.get("ended_at")
+        values = {
+            "tenant_id": tenant_id,
+            "customer_id": str(data.get("customer_id") or ""),
+            "lead_id": str(data.get("lead_id") or ""),
+            "deal_id": str(data.get("deal_id") or ""),
+            "agent_id": str(data.get("agent_id") or ""),
+            "direction": str(data.get("direction") or "outbound"),
+            "status": str(data.get("status") or "logged"),
+            "duration_sec": int(data.get("duration_sec") or 0),
+            "summary": str(data.get("summary") or data.get("notes") or ""),
+            "started_at": float(started) if started not in (None, "") else None,
+            "ended_at": float(ended) if ended not in (None, "") else None,
+            "created_ts": float(data.get("created_at") or 0.0),
+            "payload": dict(data),
+        }
+        return await self._upsert_row(_CALLS, "call_id", call_id, tenant_id, values, data)
+
+    async def get_call(self, tenant_id: str, call_id: str) -> dict[str, Any] | None:
+        return await self._fetch_one(select(_CALLS).where(_CALLS.c.call_id == call_id, _CALLS.c.tenant_id == tenant_id))
+
+    async def list_calls(self, tenant_id: str) -> list[dict[str, Any]]:
+        return await self._fetch_all(select(_CALLS).where(_CALLS.c.tenant_id == tenant_id))
+
+    async def delete_call(self, tenant_id: str, call_id: str) -> bool:
+        return await self._delete_row(_CALLS, "call_id", call_id, tenant_id)
+
+    async def count_calls(self, tenant_id: str) -> int:
+        return await self._count_rows(_CALLS, tenant_id)
+
+    async def upsert_email(self, tenant_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        email_id = str(data["email_id"])
+        values = {
+            "tenant_id": tenant_id,
+            "customer_id": str(data.get("customer_id") or ""),
+            "lead_id": str(data.get("lead_id") or ""),
+            "deal_id": str(data.get("deal_id") or ""),
+            "agent_id": str(data.get("agent_id") or ""),
+            "subject": str(data.get("subject") or ""),
+            "body": str(data.get("body") or ""),
+            "direction": str(data.get("direction") or "outbound"),
+            "status": str(data.get("status") or "logged"),
+            "sender": str(data.get("sender") or ""),
+            "recipient": str(data.get("recipient") or ""),
+            "created_ts": float(data.get("created_at") or 0.0),
+            "payload": dict(data),
+        }
+        return await self._upsert_row(_EMAILS, "email_id", email_id, tenant_id, values, data)
+
+    async def get_email(self, tenant_id: str, email_id: str) -> dict[str, Any] | None:
+        return await self._fetch_one(
+            select(_EMAILS).where(_EMAILS.c.email_id == email_id, _EMAILS.c.tenant_id == tenant_id)
+        )
+
+    async def list_emails(self, tenant_id: str) -> list[dict[str, Any]]:
+        return await self._fetch_all(select(_EMAILS).where(_EMAILS.c.tenant_id == tenant_id))
+
+    async def delete_email(self, tenant_id: str, email_id: str) -> bool:
+        return await self._delete_row(_EMAILS, "email_id", email_id, tenant_id)
+
+    async def count_emails(self, tenant_id: str) -> int:
+        return await self._count_rows(_EMAILS, tenant_id)
+
+    async def upsert_meeting(self, tenant_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        meeting_id = str(data["meeting_id"])
+        values = {
+            "tenant_id": tenant_id,
+            "customer_id": str(data.get("customer_id") or ""),
+            "lead_id": str(data.get("lead_id") or ""),
+            "deal_id": str(data.get("deal_id") or ""),
+            "agent_id": str(data.get("agent_id") or ""),
+            "title": str(data.get("title") or ""),
+            "description": str(data.get("description") or ""),
+            "scheduled_at": float(data.get("scheduled_at") or 0.0),
+            "duration_min": int(data.get("duration_min") or 30),
+            "location": str(data.get("location") or ""),
+            "status": str(data.get("status") or "scheduled"),
+            "completed": bool(data.get("completed")),
+            "created_ts": float(data.get("created_at") or 0.0),
+            "payload": dict(data),
+        }
+        return await self._upsert_row(_MEETINGS, "meeting_id", meeting_id, tenant_id, values, data)
+
+    async def get_meeting(self, tenant_id: str, meeting_id: str) -> dict[str, Any] | None:
+        return await self._fetch_one(
+            select(_MEETINGS).where(_MEETINGS.c.meeting_id == meeting_id, _MEETINGS.c.tenant_id == tenant_id)
+        )
+
+    async def list_meetings(self, tenant_id: str) -> list[dict[str, Any]]:
+        return await self._fetch_all(select(_MEETINGS).where(_MEETINGS.c.tenant_id == tenant_id))
+
+    async def delete_meeting(self, tenant_id: str, meeting_id: str) -> bool:
+        return await self._delete_row(_MEETINGS, "meeting_id", meeting_id, tenant_id)
+
+    async def count_meetings(self, tenant_id: str) -> int:
+        return await self._count_rows(_MEETINGS, tenant_id)
+
+    async def upsert_reminder(self, tenant_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        reminder_id = str(data["reminder_id"])
+        values = {
+            "tenant_id": tenant_id,
+            "task_id": str(data.get("task_id") or ""),
+            "customer_id": str(data.get("customer_id") or ""),
+            "lead_id": str(data.get("lead_id") or ""),
+            "deal_id": str(data.get("deal_id") or ""),
+            "title": str(data.get("title") or data.get("message") or ""),
+            "message": str(data.get("message") or data.get("title") or ""),
+            "assigned_agent_id": str(data.get("assigned_agent_id") or data.get("assigned_to") or ""),
+            "trigger_at": float(data.get("trigger_at") or data.get("remind_at") or 0.0),
+            "status": str(data.get("status") or "pending"),
+            "triggered": bool(data.get("triggered")),
+            "created_ts": float(data.get("created_at") or 0.0),
+            "payload": dict(data),
+        }
+        return await self._upsert_row(_REMINDERS, "reminder_id", reminder_id, tenant_id, values, data)
+
+    async def get_reminder(self, tenant_id: str, reminder_id: str) -> dict[str, Any] | None:
+        return await self._fetch_one(
+            select(_REMINDERS).where(_REMINDERS.c.reminder_id == reminder_id, _REMINDERS.c.tenant_id == tenant_id)
+        )
+
+    async def list_reminders(self, tenant_id: str) -> list[dict[str, Any]]:
+        return await self._fetch_all(select(_REMINDERS).where(_REMINDERS.c.tenant_id == tenant_id))
+
+    async def delete_reminder(self, tenant_id: str, reminder_id: str) -> bool:
+        return await self._delete_row(_REMINDERS, "reminder_id", reminder_id, tenant_id)
+
+    async def count_reminders(self, tenant_id: str) -> int:
+        return await self._count_rows(_REMINDERS, tenant_id)

@@ -49,7 +49,7 @@ async def customer_intent_handler(request: web.Request) -> web.Response:
 async def customer_communication_history_handler(request: web.Request) -> web.Response:
     _check_ai_perm(request)
     customer_id = request.match_info["customer_id"]
-    history = auto_marketplace.ai_sales_engine.intelligence.communication_history(customer_id)
+    history = await auto_marketplace.ai_sales_engine.intelligence.communication_history(customer_id)
     return json_response({"items": history})
 
 

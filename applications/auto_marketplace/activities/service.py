@@ -108,9 +108,10 @@ class ActivityService:
 
     async def customer_timeline(self, customer_id: str) -> dict:
         items = await self.list_activities(customer_id=customer_id)
-        calls = [c.to_dict() for c in self._store.phone_calls.list_all() if c.customer_id == customer_id]
-        emails = [e.to_dict() for e in self._store.email_messages.list_all() if e.customer_id == customer_id]
-        meetings = [m.to_dict() for m in self._store.meetings.list_all() if m.customer_id == customer_id]
+        records = self._records()
+        calls = [c.to_dict() for c in await records.list_calls() if c.customer_id == customer_id]
+        emails = [e.to_dict() for e in await records.list_emails() if e.customer_id == customer_id]
+        meetings = [m.to_dict() for m in await records.list_meetings() if m.customer_id == customer_id]
         serialized = [i.to_dict() for i in items]
         return {
             "items": serialized,

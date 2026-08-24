@@ -24,7 +24,7 @@ class CustomerIntelligenceService:
         customer = await self._load_customer(customer_id)
         prefs = customer.preferences if customer else {}
         interactions = [
-            i.to_dict() for i in self._store.interactions.list_all() if i.customer_id == customer_id
+            i.to_dict() for i in await get_crm_persistence().list_activities() if i.customer_id == customer_id
         ]
 
         budget_max = float(prefs.get("budget_max", 50000))
@@ -85,15 +85,16 @@ class CustomerIntelligenceService:
             "vehicle_preferences": profile.vehicle_preferences,
         }
 
-    def communication_history(self, customer_id: str) -> list[dict[str, Any]]:
+    async def communication_history(self, customer_id: str) -> list[dict[str, Any]]:
+        records = get_crm_persistence()
         items: list[dict[str, Any]] = []
-        for interaction in self._store.interactions.list_all():
+        for interaction in await records.list_activities():
             if interaction.customer_id == customer_id:
                 items.append(interaction.to_dict())
-        for call in self._store.phone_calls.list_all():
+        for call in await records.list_calls():
             if call.customer_id == customer_id:
                 items.append(call.to_dict())
-        for email in self._store.email_messages.list_all():
+        for email in await records.list_emails():
             if email.customer_id == customer_id:
                 items.append(email.to_dict())
         items.sort(key=lambda x: x.get("created_at", 0), reverse=True)

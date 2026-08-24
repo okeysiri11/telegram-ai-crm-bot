@@ -7,8 +7,26 @@ import uuid
 
 import pytest
 
-from applications.auto_marketplace.crm.models import CRMDeal, CRMLead, CRMLeadStatus, CRMTask, CustomerProfile, DealStage, Interaction, InteractionType, LeadSource, TaskPriority, TaskStatus
+from applications.auto_marketplace.crm.models import (
+    CRMDeal,
+    CRMLead,
+    CRMLeadStatus,
+    CRMTask,
+    CustomerProfile,
+    DealStage,
+    EmailMessage,
+    Interaction,
+    InteractionType,
+    LeadSource,
+    Meeting,
+    PhoneCall,
+    Reminder,
+    TaskPriority,
+    TaskStatus,
+)
 from applications.auto_marketplace.activities.service import ActivityService
+from applications.auto_marketplace.calendar.service import CalendarService
+from applications.auto_marketplace.communications.service import CommunicationService
 from applications.auto_marketplace.tasks.service import TaskService
 from applications.auto_marketplace.crm.persistence import (
     PostgresCRMPersistence,
@@ -126,6 +144,87 @@ async def _ensure_postgres_tables() -> None:
             subject VARCHAR(255) NOT NULL DEFAULT '',
             body TEXT NOT NULL DEFAULT '',
             idempotency_key VARCHAR(255) NOT NULL DEFAULT '',
+            created_ts FLOAT NOT NULL DEFAULT 0,
+            payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS auto_marketplace_crm_calls (
+            call_id VARCHAR(64) PRIMARY KEY,
+            tenant_id VARCHAR(128) NOT NULL DEFAULT 'default',
+            customer_id VARCHAR(64) NOT NULL DEFAULT '',
+            lead_id VARCHAR(64) NOT NULL DEFAULT '',
+            deal_id VARCHAR(64) NOT NULL DEFAULT '',
+            agent_id VARCHAR(64) NOT NULL DEFAULT '',
+            direction VARCHAR(32) NOT NULL DEFAULT 'outbound',
+            status VARCHAR(64) NOT NULL DEFAULT 'logged',
+            duration_sec INTEGER NOT NULL DEFAULT 0,
+            summary TEXT NOT NULL DEFAULT '',
+            started_at FLOAT NULL,
+            ended_at FLOAT NULL,
+            created_ts FLOAT NOT NULL DEFAULT 0,
+            payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS auto_marketplace_crm_emails (
+            email_id VARCHAR(64) PRIMARY KEY,
+            tenant_id VARCHAR(128) NOT NULL DEFAULT 'default',
+            customer_id VARCHAR(64) NOT NULL DEFAULT '',
+            lead_id VARCHAR(64) NOT NULL DEFAULT '',
+            deal_id VARCHAR(64) NOT NULL DEFAULT '',
+            agent_id VARCHAR(64) NOT NULL DEFAULT '',
+            subject VARCHAR(255) NOT NULL DEFAULT '',
+            body TEXT NOT NULL DEFAULT '',
+            direction VARCHAR(32) NOT NULL DEFAULT 'outbound',
+            status VARCHAR(64) NOT NULL DEFAULT 'logged',
+            sender VARCHAR(255) NOT NULL DEFAULT '',
+            recipient VARCHAR(255) NOT NULL DEFAULT '',
+            created_ts FLOAT NOT NULL DEFAULT 0,
+            payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS auto_marketplace_crm_meetings (
+            meeting_id VARCHAR(64) PRIMARY KEY,
+            tenant_id VARCHAR(128) NOT NULL DEFAULT 'default',
+            customer_id VARCHAR(64) NOT NULL DEFAULT '',
+            lead_id VARCHAR(64) NOT NULL DEFAULT '',
+            deal_id VARCHAR(64) NOT NULL DEFAULT '',
+            agent_id VARCHAR(64) NOT NULL DEFAULT '',
+            title VARCHAR(255) NOT NULL DEFAULT '',
+            description TEXT NOT NULL DEFAULT '',
+            scheduled_at FLOAT NOT NULL DEFAULT 0,
+            duration_min INTEGER NOT NULL DEFAULT 30,
+            location VARCHAR(255) NOT NULL DEFAULT '',
+            status VARCHAR(64) NOT NULL DEFAULT 'scheduled',
+            completed BOOLEAN NOT NULL DEFAULT FALSE,
+            created_ts FLOAT NOT NULL DEFAULT 0,
+            payload JSONB NOT NULL DEFAULT '{}'::jsonb,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+        """,
+        """
+        CREATE TABLE IF NOT EXISTS auto_marketplace_crm_reminders (
+            reminder_id VARCHAR(64) PRIMARY KEY,
+            tenant_id VARCHAR(128) NOT NULL DEFAULT 'default',
+            task_id VARCHAR(64) NOT NULL DEFAULT '',
+            customer_id VARCHAR(64) NOT NULL DEFAULT '',
+            lead_id VARCHAR(64) NOT NULL DEFAULT '',
+            deal_id VARCHAR(64) NOT NULL DEFAULT '',
+            title VARCHAR(255) NOT NULL DEFAULT '',
+            message TEXT NOT NULL DEFAULT '',
+            assigned_agent_id VARCHAR(64) NOT NULL DEFAULT '',
+            trigger_at FLOAT NOT NULL DEFAULT 0,
+            status VARCHAR(64) NOT NULL DEFAULT 'pending',
+            triggered BOOLEAN NOT NULL DEFAULT FALSE,
             created_ts FLOAT NOT NULL DEFAULT 0,
             payload JSONB NOT NULL DEFAULT '{}'::jsonb,
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -522,3 +621,109 @@ async def test_task_and_activity_tenant_isolation(postgres_crm_mode):
     assert (await tasks.get(task.task_id)).title == f"secret-{suffix}"
     await tasks.delete(task.task_id)
     await activities._records().delete_activity(note.interaction_id)
+
+
+@pytest.mark.asyncio
+async def test_calls_emails_meetings_reminders_survive_restart(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant = f"comm-{suffix}"
+    bind_crm_tenant(tenant)
+    persist = PostgresCRMPersistence()
+    comms = CommunicationService(persistence=persist)
+    calendar = CalendarService(persistence=persist)
+    activities = ActivityService(persistence=persist)
+    customers = CustomerProfileService(persistence=persist)
+    profile = await customers.create(CustomerProfile(first_name="Comms", last_name="User", email=f"c-{suffix}@ex.com"))
+
+    call = await comms.log_call(PhoneCall(customer_id=profile.customer_id, direction="inbound", duration_sec=42, notes=suffix))
+    email = await comms.log_email(EmailMessage(customer_id=profile.customer_id, subject=f"sub-{suffix}", body="hello", status="logged"))
+    meeting = await calendar.schedule_meeting(Meeting(customer_id=profile.customer_id, title=f"Meet {suffix}", location="showroom"))
+    reminder = await calendar.create_reminder(Reminder(customer_id=profile.customer_id, message=f"ping-{suffix}", trigger_at=1.0))
+    ids = (call.call_id, email.email_id, meeting.meeting_id, reminder.reminder_id, profile.customer_id)
+
+    from database.session import shutdown_db
+
+    await shutdown_db()
+    reset_crm_persistence()
+    bind_crm_tenant(tenant)
+    persist2 = PostgresCRMPersistence()
+    comms2 = CommunicationService(persistence=persist2)
+    calendar2 = CalendarService(persistence=persist2)
+    activities2 = ActivityService(persistence=persist2)
+
+    restored_call = await comms2.get_call(ids[0])
+    restored_email = await comms2.get_email(ids[1])
+    restored_meeting = await calendar2.get_meeting(ids[2])
+    restored_reminder = await calendar2.get_reminder(ids[3])
+    assert restored_call.duration_sec == 42
+    assert restored_email.subject == f"sub-{suffix}"
+    assert restored_meeting.title == f"Meet {suffix}"
+    assert restored_reminder.message == f"ping-{suffix}"
+    timeline = await activities2.customer_timeline(ids[4])
+    assert any(item.get("call_id") == ids[0] for item in timeline["calls"])
+    assert any(item.get("activity_type") == "call" for item in timeline["items"])
+
+    await comms2.delete_call(ids[0])
+    await comms2.delete_email(ids[1])
+    await calendar2.delete_meeting(ids[2])
+    await calendar2.delete_reminder(ids[3])
+
+
+@pytest.mark.asyncio
+async def test_communications_tenant_isolation(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    persist = PostgresCRMPersistence()
+    comms = CommunicationService(persistence=persist)
+    calendar = CalendarService(persistence=persist)
+    bind_crm_tenant(f"ca-{suffix}")
+    call = await comms.log_call(PhoneCall(direction="outbound", notes="secret"))
+    email = await comms.log_email(EmailMessage(subject="secret"))
+    meeting = await calendar.schedule_meeting(Meeting(title="secret"))
+    reminder = await calendar.create_reminder(Reminder(message="secret", trigger_at=9.0))
+    bind_crm_tenant(f"cb-{suffix}")
+    with pytest.raises(NotFoundError):
+        await comms.get_call(call.call_id)
+    with pytest.raises(NotFoundError):
+        await comms.get_email(email.email_id)
+    with pytest.raises(NotFoundError):
+        await calendar.get_meeting(meeting.meeting_id)
+    with pytest.raises(NotFoundError):
+        await calendar.get_reminder(reminder.reminder_id)
+
+
+@pytest.mark.asyncio
+async def test_opportunity_is_deal_projection_across_restart(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant = f"opp-{suffix}"
+    bind_crm_tenant(tenant)
+    persist = PostgresCRMPersistence()
+    leads = LeadService(persistence=persist)
+    deals = DealService(persistence=persist)
+    pipeline = SalesPipelineEngine(leads=leads, deals=deals, persistence=persist)
+    lead = await leads.create(CRMLead(notes=f"opp-{suffix}"))
+    opp = await pipeline.convert_lead_to_opportunity(lead.lead_id, amount=7700)
+    again = await pipeline.convert_lead_to_opportunity(lead.lead_id, amount=1)
+    assert again.opportunity_id == opp.opportunity_id
+    deal = await pipeline.open_deal_from_opportunity(opp.opportunity_id)
+    assert deal.amount == 7700
+    assert deal.deal_id == opp.opportunity_id or deal.opportunity_id == opp.opportunity_id
+
+    from database.session import shutdown_db
+
+    await shutdown_db()
+    reset_crm_persistence()
+    bind_crm_tenant(tenant)
+    persist2 = PostgresCRMPersistence()
+    leads2 = LeadService(persistence=persist2)
+    deals2 = DealService(persistence=persist2)
+    pipeline2 = SalesPipelineEngine(leads=leads2, deals=deals2, persistence=persist2)
+    restored = await pipeline2.get_opportunity(opp.opportunity_id)
+    assert restored.amount == 7700
+    bind_crm_tenant(f"other-{suffix}")
+    with pytest.raises(NotFoundError):
+        await pipeline2.get_opportunity(opp.opportunity_id)
+    listed = await pipeline2.list_opportunities()
+    assert all(item.opportunity_id != opp.opportunity_id for item in listed)

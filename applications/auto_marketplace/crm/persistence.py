@@ -16,9 +16,13 @@ from applications.auto_marketplace.crm.models import (
     CRMTask,
     CustomerProfile,
     DealStage,
+    EmailMessage,
     Interaction,
     InteractionType,
     LeadSource,
+    Meeting,
+    PhoneCall,
+    Reminder,
     TaskPriority,
     TaskStatus,
 )
@@ -136,6 +140,87 @@ def _activity_from_payload(data: dict) -> Interaction:
     )
 
 
+def _opt_float(value: object) -> float | None:
+    if value in (None, ""):
+        return None
+    return float(value)
+
+
+def _call_from_payload(data: dict) -> PhoneCall:
+    return PhoneCall(
+        call_id=str(data.get("call_id") or ""),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        agent_id=str(data.get("agent_id") or ""),
+        direction=str(data.get("direction") or "outbound"),
+        status=str(data.get("status") or "logged"),
+        duration_sec=int(data.get("duration_sec") or 0),
+        summary=str(data.get("summary") or data.get("notes") or ""),
+        notes=str(data.get("notes") or data.get("summary") or ""),
+        started_at=_opt_float(data.get("started_at")),
+        ended_at=_opt_float(data.get("ended_at")),
+        created_at=float(data.get("created_at") or 0.0),
+        updated_at=float(data.get("updated_at") or data.get("created_at") or 0.0),
+    )
+
+
+def _email_from_payload(data: dict) -> EmailMessage:
+    return EmailMessage(
+        email_id=str(data.get("email_id") or ""),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        agent_id=str(data.get("agent_id") or ""),
+        subject=str(data.get("subject") or ""),
+        body=str(data.get("body") or ""),
+        direction=str(data.get("direction") or "outbound"),
+        status=str(data.get("status") or "logged"),
+        sender=str(data.get("sender") or ""),
+        recipient=str(data.get("recipient") or ""),
+        created_at=float(data.get("created_at") or 0.0),
+        updated_at=float(data.get("updated_at") or data.get("created_at") or 0.0),
+    )
+
+
+def _meeting_from_payload(data: dict) -> Meeting:
+    return Meeting(
+        meeting_id=str(data.get("meeting_id") or ""),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        agent_id=str(data.get("agent_id") or ""),
+        title=str(data.get("title") or ""),
+        description=str(data.get("description") or ""),
+        scheduled_at=float(data.get("scheduled_at") or 0.0),
+        duration_min=int(data.get("duration_min") or 30),
+        location=str(data.get("location") or ""),
+        status=str(data.get("status") or "scheduled"),
+        completed=bool(data.get("completed")),
+        created_at=float(data.get("created_at") or 0.0),
+        updated_at=float(data.get("updated_at") or data.get("created_at") or 0.0),
+    )
+
+
+def _reminder_from_payload(data: dict) -> Reminder:
+    trigger = data.get("trigger_at") if data.get("trigger_at") not in (None, "") else data.get("remind_at")
+    return Reminder(
+        reminder_id=str(data.get("reminder_id") or ""),
+        task_id=str(data.get("task_id") or ""),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        title=str(data.get("title") or data.get("message") or ""),
+        message=str(data.get("message") or data.get("title") or ""),
+        assigned_agent_id=str(data.get("assigned_agent_id") or data.get("assigned_to") or ""),
+        trigger_at=float(trigger or 0.0),
+        status=str(data.get("status") or "pending"),
+        triggered=bool(data.get("triggered")),
+        created_at=float(data.get("created_at") or 0.0),
+        updated_at=float(data.get("updated_at") or data.get("created_at") or 0.0),
+    )
+
+
 def _customer_from_payload(data: dict) -> CustomerProfile:
     return CustomerProfile(
         customer_id=str(data.get("customer_id") or ""),
@@ -187,6 +272,30 @@ class CRMPersistence(Protocol):
     async def delete_activity(self, activity_id: str, tenant_id: str | None = None) -> bool: ...
     async def count_activities(self, tenant_id: str | None = None) -> int: ...
 
+    async def save_call(self, call: PhoneCall, tenant_id: str | None = None) -> PhoneCall: ...
+    async def get_call(self, call_id: str, tenant_id: str | None = None) -> PhoneCall | None: ...
+    async def list_calls(self, tenant_id: str | None = None) -> list[PhoneCall]: ...
+    async def delete_call(self, call_id: str, tenant_id: str | None = None) -> bool: ...
+    async def count_calls(self, tenant_id: str | None = None) -> int: ...
+
+    async def save_email(self, email: EmailMessage, tenant_id: str | None = None) -> EmailMessage: ...
+    async def get_email(self, email_id: str, tenant_id: str | None = None) -> EmailMessage | None: ...
+    async def list_emails(self, tenant_id: str | None = None) -> list[EmailMessage]: ...
+    async def delete_email(self, email_id: str, tenant_id: str | None = None) -> bool: ...
+    async def count_emails(self, tenant_id: str | None = None) -> int: ...
+
+    async def save_meeting(self, meeting: Meeting, tenant_id: str | None = None) -> Meeting: ...
+    async def get_meeting(self, meeting_id: str, tenant_id: str | None = None) -> Meeting | None: ...
+    async def list_meetings(self, tenant_id: str | None = None) -> list[Meeting]: ...
+    async def delete_meeting(self, meeting_id: str, tenant_id: str | None = None) -> bool: ...
+    async def count_meetings(self, tenant_id: str | None = None) -> int: ...
+
+    async def save_reminder(self, reminder: Reminder, tenant_id: str | None = None) -> Reminder: ...
+    async def get_reminder(self, reminder_id: str, tenant_id: str | None = None) -> Reminder | None: ...
+    async def list_reminders(self, tenant_id: str | None = None) -> list[Reminder]: ...
+    async def delete_reminder(self, reminder_id: str, tenant_id: str | None = None) -> bool: ...
+    async def count_reminders(self, tenant_id: str | None = None) -> int: ...
+
 
 def _tid(tenant_id: str | None) -> str:
     return tenant_id or current_crm_tenant()
@@ -204,6 +313,10 @@ class MemoryCRMPersistence:
         self._deal_tenants: dict[str, str] = {}
         self._task_tenants: dict[str, str] = {}
         self._activity_tenants: dict[str, str] = {}
+        self._call_tenants: dict[str, str] = {}
+        self._email_tenants: dict[str, str] = {}
+        self._meeting_tenants: dict[str, str] = {}
+        self._reminder_tenants: dict[str, str] = {}
 
     def _visible(self, entity_id: str, tenant_map: dict[str, str], tenant_id: str) -> bool:
         return tenant_map.get(entity_id, "default") == tenant_id
@@ -348,6 +461,106 @@ class MemoryCRMPersistence:
 
     async def count_activities(self, tenant_id: str | None = None) -> int:
         return len(await self.list_activities(tenant_id))
+
+    async def save_call(self, call: PhoneCall, tenant_id: str | None = None) -> PhoneCall:
+        tid = _tid(tenant_id)
+        self._call_tenants[call.call_id] = tid
+        return self._store.phone_calls.save(call.call_id, call)
+
+    async def get_call(self, call_id: str, tenant_id: str | None = None) -> PhoneCall | None:
+        tid = _tid(tenant_id)
+        item = self._store.phone_calls.get(call_id)
+        if item is None or not self._visible(call_id, self._call_tenants, tid):
+            return None
+        return item
+
+    async def list_calls(self, tenant_id: str | None = None) -> list[PhoneCall]:
+        tid = _tid(tenant_id)
+        return [c for c in self._store.phone_calls.list_all() if self._visible(c.call_id, self._call_tenants, tid)]
+
+    async def delete_call(self, call_id: str, tenant_id: str | None = None) -> bool:
+        if await self.get_call(call_id, tenant_id) is None:
+            return False
+        self._call_tenants.pop(call_id, None)
+        return self._store.phone_calls.delete(call_id)
+
+    async def count_calls(self, tenant_id: str | None = None) -> int:
+        return len(await self.list_calls(tenant_id))
+
+    async def save_email(self, email: EmailMessage, tenant_id: str | None = None) -> EmailMessage:
+        tid = _tid(tenant_id)
+        self._email_tenants[email.email_id] = tid
+        return self._store.email_messages.save(email.email_id, email)
+
+    async def get_email(self, email_id: str, tenant_id: str | None = None) -> EmailMessage | None:
+        tid = _tid(tenant_id)
+        item = self._store.email_messages.get(email_id)
+        if item is None or not self._visible(email_id, self._email_tenants, tid):
+            return None
+        return item
+
+    async def list_emails(self, tenant_id: str | None = None) -> list[EmailMessage]:
+        tid = _tid(tenant_id)
+        return [e for e in self._store.email_messages.list_all() if self._visible(e.email_id, self._email_tenants, tid)]
+
+    async def delete_email(self, email_id: str, tenant_id: str | None = None) -> bool:
+        if await self.get_email(email_id, tenant_id) is None:
+            return False
+        self._email_tenants.pop(email_id, None)
+        return self._store.email_messages.delete(email_id)
+
+    async def count_emails(self, tenant_id: str | None = None) -> int:
+        return len(await self.list_emails(tenant_id))
+
+    async def save_meeting(self, meeting: Meeting, tenant_id: str | None = None) -> Meeting:
+        tid = _tid(tenant_id)
+        self._meeting_tenants[meeting.meeting_id] = tid
+        return self._store.meetings.save(meeting.meeting_id, meeting)
+
+    async def get_meeting(self, meeting_id: str, tenant_id: str | None = None) -> Meeting | None:
+        tid = _tid(tenant_id)
+        item = self._store.meetings.get(meeting_id)
+        if item is None or not self._visible(meeting_id, self._meeting_tenants, tid):
+            return None
+        return item
+
+    async def list_meetings(self, tenant_id: str | None = None) -> list[Meeting]:
+        tid = _tid(tenant_id)
+        return [m for m in self._store.meetings.list_all() if self._visible(m.meeting_id, self._meeting_tenants, tid)]
+
+    async def delete_meeting(self, meeting_id: str, tenant_id: str | None = None) -> bool:
+        if await self.get_meeting(meeting_id, tenant_id) is None:
+            return False
+        self._meeting_tenants.pop(meeting_id, None)
+        return self._store.meetings.delete(meeting_id)
+
+    async def count_meetings(self, tenant_id: str | None = None) -> int:
+        return len(await self.list_meetings(tenant_id))
+
+    async def save_reminder(self, reminder: Reminder, tenant_id: str | None = None) -> Reminder:
+        tid = _tid(tenant_id)
+        self._reminder_tenants[reminder.reminder_id] = tid
+        return self._store.reminders.save(reminder.reminder_id, reminder)
+
+    async def get_reminder(self, reminder_id: str, tenant_id: str | None = None) -> Reminder | None:
+        tid = _tid(tenant_id)
+        item = self._store.reminders.get(reminder_id)
+        if item is None or not self._visible(reminder_id, self._reminder_tenants, tid):
+            return None
+        return item
+
+    async def list_reminders(self, tenant_id: str | None = None) -> list[Reminder]:
+        tid = _tid(tenant_id)
+        return [r for r in self._store.reminders.list_all() if self._visible(r.reminder_id, self._reminder_tenants, tid)]
+
+    async def delete_reminder(self, reminder_id: str, tenant_id: str | None = None) -> bool:
+        if await self.get_reminder(reminder_id, tenant_id) is None:
+            return False
+        self._reminder_tenants.pop(reminder_id, None)
+        return self._store.reminders.delete(reminder_id)
+
+    async def count_reminders(self, tenant_id: str | None = None) -> int:
+        return len(await self.list_reminders(tenant_id))
 
 
 class PostgresCRMPersistence:
@@ -607,6 +820,198 @@ class PostgresCRMPersistence:
         async with get_session() as session:
             repo = AutoMarketplaceCrmRepository(session)
             return await repo.count_activities(tid)
+
+    async def save_call(self, call: PhoneCall, tenant_id: str | None = None) -> PhoneCall:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            await repo.upsert_call(tid, call.to_dict())
+        return call
+
+    async def get_call(self, call_id: str, tenant_id: str | None = None) -> PhoneCall | None:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            data = await repo.get_call(tid, call_id)
+        return _call_from_payload(data) if data else None
+
+    async def list_calls(self, tenant_id: str | None = None) -> list[PhoneCall]:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            rows = await repo.list_calls(tid)
+        return [_call_from_payload(row) for row in rows]
+
+    async def delete_call(self, call_id: str, tenant_id: str | None = None) -> bool:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.delete_call(tid, call_id)
+
+    async def count_calls(self, tenant_id: str | None = None) -> int:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.count_calls(tid)
+
+    async def save_email(self, email: EmailMessage, tenant_id: str | None = None) -> EmailMessage:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            await repo.upsert_email(tid, email.to_dict())
+        return email
+
+    async def get_email(self, email_id: str, tenant_id: str | None = None) -> EmailMessage | None:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            data = await repo.get_email(tid, email_id)
+        return _email_from_payload(data) if data else None
+
+    async def list_emails(self, tenant_id: str | None = None) -> list[EmailMessage]:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            rows = await repo.list_emails(tid)
+        return [_email_from_payload(row) for row in rows]
+
+    async def delete_email(self, email_id: str, tenant_id: str | None = None) -> bool:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.delete_email(tid, email_id)
+
+    async def count_emails(self, tenant_id: str | None = None) -> int:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.count_emails(tid)
+
+    async def save_meeting(self, meeting: Meeting, tenant_id: str | None = None) -> Meeting:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            await repo.upsert_meeting(tid, meeting.to_dict())
+        return meeting
+
+    async def get_meeting(self, meeting_id: str, tenant_id: str | None = None) -> Meeting | None:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            data = await repo.get_meeting(tid, meeting_id)
+        return _meeting_from_payload(data) if data else None
+
+    async def list_meetings(self, tenant_id: str | None = None) -> list[Meeting]:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            rows = await repo.list_meetings(tid)
+        return [_meeting_from_payload(row) for row in rows]
+
+    async def delete_meeting(self, meeting_id: str, tenant_id: str | None = None) -> bool:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.delete_meeting(tid, meeting_id)
+
+    async def count_meetings(self, tenant_id: str | None = None) -> int:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.count_meetings(tid)
+
+    async def save_reminder(self, reminder: Reminder, tenant_id: str | None = None) -> Reminder:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            await repo.upsert_reminder(tid, reminder.to_dict())
+        return reminder
+
+    async def get_reminder(self, reminder_id: str, tenant_id: str | None = None) -> Reminder | None:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            data = await repo.get_reminder(tid, reminder_id)
+        return _reminder_from_payload(data) if data else None
+
+    async def list_reminders(self, tenant_id: str | None = None) -> list[Reminder]:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            rows = await repo.list_reminders(tid)
+        return [_reminder_from_payload(row) for row in rows]
+
+    async def delete_reminder(self, reminder_id: str, tenant_id: str | None = None) -> bool:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.delete_reminder(tid, reminder_id)
+
+    async def count_reminders(self, tenant_id: str | None = None) -> int:
+        from database.session import get_session
+        from repositories.auto_marketplace_crm_repository import AutoMarketplaceCrmRepository
+
+        tid = _tid(tenant_id)
+        async with get_session() as session:
+            repo = AutoMarketplaceCrmRepository(session)
+            return await repo.count_reminders(tid)
 
 
 _persist: CRMPersistence | None = None

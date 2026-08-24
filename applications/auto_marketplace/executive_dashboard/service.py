@@ -58,7 +58,7 @@ class ExecutiveDashboardService:
         elif role == DashboardRole.OPERATIONS:
             widgets = [
                 {"type": "inventory", "data": self._analytics.inventory_analytics()},
-                {"type": "workflow", "data": self._analytics.workflow_analytics()},
+                {"type": "workflow", "data": await self._analytics.workflow_analytics()},
             ]
         elif role == DashboardRole.AI_AGENT:
             widgets = [

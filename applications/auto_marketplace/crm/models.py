@@ -87,6 +87,9 @@ class InteractionType(str, enum.Enum):
     LEAD_CONVERTED = "lead_converted"
     CUSTOMER_CREATED = "customer_created"
     DEAL_CREATED = "deal_created"
+    REMINDER_CREATED = "reminder_created"
+    REMINDER_COMPLETED = "reminder_completed"
+    MEETING_CANCELLED = "meeting_cancelled"
 
 
 @dataclass
@@ -264,25 +267,40 @@ class Interaction:
 class PhoneCall:
     call_id: str = field(default_factory=_id)
     customer_id: str = ""
+    lead_id: str = ""
+    deal_id: str = ""
     agent_id: str = ""
     direction: str = "outbound"
+    status: str = "logged"
     duration_sec: int = 0
     summary: str = ""
+    notes: str = ""
+    started_at: float | None = None
+    ended_at: float | None = None
     created_at: float = field(default_factory=_ts)
+    updated_at: float = field(default_factory=_ts)
 
     def to_dict(self) -> dict[str, Any]:
-        return {k: getattr(self, k) for k in self.__dataclass_fields__}
+        data = {k: getattr(self, k) for k in self.__dataclass_fields__}
+        data["notes"] = self.notes or self.summary
+        return data
 
 
 @dataclass
 class EmailMessage:
     email_id: str = field(default_factory=_id)
     customer_id: str = ""
+    lead_id: str = ""
+    deal_id: str = ""
     agent_id: str = ""
     subject: str = ""
     body: str = ""
     direction: str = "outbound"
+    status: str = "logged"
+    sender: str = ""
+    recipient: str = ""
     created_at: float = field(default_factory=_ts)
+    updated_at: float = field(default_factory=_ts)
 
     def to_dict(self) -> dict[str, Any]:
         return {k: getattr(self, k) for k in self.__dataclass_fields__}
@@ -292,12 +310,18 @@ class EmailMessage:
 class Meeting:
     meeting_id: str = field(default_factory=_id)
     customer_id: str = ""
+    lead_id: str = ""
+    deal_id: str = ""
     agent_id: str = ""
     title: str = ""
+    description: str = ""
     scheduled_at: float = field(default_factory=_ts)
     duration_min: int = 30
     location: str = ""
+    status: str = "scheduled"
     completed: bool = False
+    created_at: float = field(default_factory=_ts)
+    updated_at: float = field(default_factory=_ts)
 
     def to_dict(self) -> dict[str, Any]:
         return {k: getattr(self, k) for k in self.__dataclass_fields__}
@@ -345,12 +369,23 @@ class Reminder:
     reminder_id: str = field(default_factory=_id)
     task_id: str = ""
     customer_id: str = ""
+    lead_id: str = ""
+    deal_id: str = ""
+    title: str = ""
     message: str = ""
+    assigned_agent_id: str = ""
     trigger_at: float = field(default_factory=_ts)
+    status: str = "pending"
     triggered: bool = False
+    created_at: float = field(default_factory=_ts)
+    updated_at: float = field(default_factory=_ts)
 
     def to_dict(self) -> dict[str, Any]:
-        return {k: getattr(self, k) for k in self.__dataclass_fields__}
+        data = {k: getattr(self, k) for k in self.__dataclass_fields__}
+        data["title"] = self.title or self.message
+        data["assigned_to"] = self.assigned_agent_id
+        data["remind_at"] = self.trigger_at
+        return data
 
 
 @dataclass

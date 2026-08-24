@@ -21,6 +21,7 @@ from applications.auto_marketplace.crm.models import (
     LeadSource,
     Meeting,
     PhoneCall,
+    Reminder,
     TaskPriority,
     TaskStatus,
 )
@@ -531,41 +532,289 @@ async def log_call_handler(request: web.Request) -> web.Response:
     _check_perm(request, "crm.write")
     data = await request.json()
     call = PhoneCall(
-        customer_id=data.get("customer_id", ""),
-        agent_id=data.get("agent_id", ""),
-        direction=data.get("direction", "outbound"),
-        duration_sec=int(data.get("duration_sec", 0)),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        agent_id=str(data.get("agent_id") or data.get("assigned_to") or ""),
+        direction=str(data.get("direction") or "outbound"),
+        status=str(data.get("status") or "logged"),
+        duration_sec=int(data.get("duration_sec") or 0),
+        summary=str(data.get("summary") or data.get("notes") or ""),
+        notes=str(data.get("notes") or data.get("summary") or ""),
+        started_at=_optional_float(data.get("started_at"), "started_at"),
+        ended_at=_optional_float(data.get("ended_at"), "ended_at"),
     )
     saved = await auto_marketplace.crm_engine.communications.log_call(call)
     return json_response(saved.to_dict(), status=201)
+
+
+async def list_calls_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    items = await auto_marketplace.crm_engine.communications.list_calls(
+        customer_id=request.query.get("customer_id") or None,
+        lead_id=request.query.get("lead_id") or None,
+        deal_id=request.query.get("deal_id") or None,
+        agent_id=request.query.get("agent_id") or request.query.get("assigned_to") or None,
+        status=request.query.get("status") or None,
+    )
+    return json_response({"items": [c.to_dict() for c in items]})
+
+
+async def get_call_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    call = await auto_marketplace.crm_engine.communications.get_call(request.match_info["call_id"])
+    return json_response(call.to_dict())
+
+
+async def update_call_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    data = await request.json()
+    allowed = ("customer_id", "lead_id", "deal_id", "agent_id", "direction", "status", "duration_sec", "summary", "notes")
+    updates = {k: data[k] for k in allowed if k in data}
+    if not updates:
+        raise ValidationError("no updatable fields provided")
+    updated = await auto_marketplace.crm_engine.communications.update_call(request.match_info["call_id"], **updates)
+    return json_response(updated.to_dict())
+
+
+async def delete_call_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    call_id = request.match_info["call_id"]
+    deleted = await auto_marketplace.crm_engine.communications.delete_call(call_id)
+    return json_response({"call_id": call_id, "deleted": deleted})
 
 
 async def log_email_handler(request: web.Request) -> web.Response:
     _check_perm(request, "crm.write")
     data = await request.json()
     email = EmailMessage(
-        customer_id=data.get("customer_id", ""),
-        agent_id=data.get("agent_id", ""),
-        subject=data.get("subject", ""),
-        body=data.get("body", ""),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        agent_id=str(data.get("agent_id") or ""),
+        subject=str(data.get("subject") or ""),
+        body=str(data.get("body") or data.get("preview") or ""),
+        direction=str(data.get("direction") or "outbound"),
+        status=str(data.get("status") or "logged"),
+        sender=str(data.get("sender") or ""),
+        recipient=str(data.get("recipient") or ""),
     )
     saved = await auto_marketplace.crm_engine.communications.log_email(email)
     return json_response(saved.to_dict(), status=201)
+
+
+async def list_emails_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    items = await auto_marketplace.crm_engine.communications.list_emails(
+        customer_id=request.query.get("customer_id") or None,
+        lead_id=request.query.get("lead_id") or None,
+        deal_id=request.query.get("deal_id") or None,
+        status=request.query.get("status") or None,
+    )
+    return json_response({"items": [e.to_dict() for e in items]})
+
+
+async def get_email_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    email = await auto_marketplace.crm_engine.communications.get_email(request.match_info["email_id"])
+    return json_response(email.to_dict())
+
+
+async def update_email_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    data = await request.json()
+    allowed = (
+        "customer_id",
+        "lead_id",
+        "deal_id",
+        "agent_id",
+        "subject",
+        "body",
+        "direction",
+        "status",
+        "sender",
+        "recipient",
+    )
+    updates = {k: data[k] for k in allowed if k in data}
+    if not updates:
+        raise ValidationError("no updatable fields provided")
+    updated = await auto_marketplace.crm_engine.communications.update_email(request.match_info["email_id"], **updates)
+    return json_response(updated.to_dict())
+
+
+async def delete_email_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    email_id = request.match_info["email_id"]
+    deleted = await auto_marketplace.crm_engine.communications.delete_email(email_id)
+    return json_response({"email_id": email_id, "deleted": deleted})
 
 
 async def schedule_meeting_handler(request: web.Request) -> web.Response:
     _check_perm(request, "crm.write")
     data = await request.json()
     meeting = Meeting(
-        customer_id=data.get("customer_id", ""),
-        agent_id=data.get("agent_id", ""),
-        title=data.get("title", ""),
-        scheduled_at=float(data.get("scheduled_at", 0)) or __import__("time").time(),
-        duration_min=int(data.get("duration_min", 30)),
-        location=data.get("location", ""),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        agent_id=str(data.get("agent_id") or data.get("assigned_to") or ""),
+        title=str(data.get("title") or ""),
+        description=str(data.get("description") or ""),
+        scheduled_at=float(data.get("scheduled_at") or 0) or __import__("time").time(),
+        duration_min=int(data.get("duration_min") or 30),
+        location=str(data.get("location") or ""),
+        status=str(data.get("status") or "scheduled"),
     )
     saved = await auto_marketplace.crm_engine.calendar.schedule_meeting(meeting)
     return json_response(saved.to_dict(), status=201)
+
+
+async def list_meetings_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    items = await auto_marketplace.crm_engine.calendar.list_meetings(
+        agent_id=request.query.get("agent_id") or None,
+        customer_id=request.query.get("customer_id") or None,
+        lead_id=request.query.get("lead_id") or None,
+        deal_id=request.query.get("deal_id") or None,
+        status=request.query.get("status") or None,
+    )
+    return json_response({"items": [m.to_dict() for m in items]})
+
+
+async def get_meeting_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    meeting = await auto_marketplace.crm_engine.calendar.get_meeting(request.match_info["meeting_id"])
+    return json_response(meeting.to_dict())
+
+
+async def update_meeting_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    data = await request.json()
+    allowed = (
+        "customer_id",
+        "lead_id",
+        "deal_id",
+        "agent_id",
+        "title",
+        "description",
+        "scheduled_at",
+        "duration_min",
+        "location",
+        "status",
+        "completed",
+    )
+    updates = {k: data[k] for k in allowed if k in data}
+    if not updates:
+        raise ValidationError("no updatable fields provided")
+    updated = await auto_marketplace.crm_engine.calendar.update_meeting(request.match_info["meeting_id"], **updates)
+    return json_response(updated.to_dict())
+
+
+async def cancel_meeting_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    meeting = await auto_marketplace.crm_engine.calendar.cancel_meeting(request.match_info["meeting_id"])
+    return json_response(meeting.to_dict())
+
+
+async def delete_meeting_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    meeting_id = request.match_info["meeting_id"]
+    deleted = await auto_marketplace.crm_engine.calendar.delete_meeting(meeting_id)
+    return json_response({"meeting_id": meeting_id, "deleted": deleted})
+
+
+async def create_reminder_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    data = await request.json()
+    reminder = Reminder(
+        task_id=str(data.get("task_id") or ""),
+        customer_id=str(data.get("customer_id") or ""),
+        lead_id=str(data.get("lead_id") or ""),
+        deal_id=str(data.get("deal_id") or ""),
+        title=str(data.get("title") or data.get("message") or ""),
+        message=str(data.get("message") or data.get("title") or ""),
+        assigned_agent_id=str(data.get("assigned_to") or data.get("assigned_agent_id") or ""),
+        trigger_at=_optional_float(data.get("remind_at") or data.get("trigger_at"), "remind_at") or __import__("time").time(),
+    )
+    saved = await auto_marketplace.crm_engine.calendar.create_reminder(reminder)
+    return json_response(saved.to_dict(), status=201)
+
+
+async def list_reminders_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    items = await auto_marketplace.crm_engine.calendar.list_reminders(
+        customer_id=request.query.get("customer_id") or None,
+        lead_id=request.query.get("lead_id") or None,
+        deal_id=request.query.get("deal_id") or None,
+        assigned_to=request.query.get("assigned_to") or request.query.get("agent_id") or None,
+        status=request.query.get("status") or None,
+        overdue=_query_flag(request, "overdue"),
+        due=_query_flag(request, "due"),
+        upcoming=_query_flag(request, "upcoming"),
+    )
+    return json_response({"items": [r.to_dict() for r in items]})
+
+
+async def get_reminder_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.read")
+    reminder = await auto_marketplace.crm_engine.calendar.get_reminder(request.match_info["reminder_id"])
+    return json_response(reminder.to_dict())
+
+
+async def update_reminder_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    data = await request.json()
+    allowed = (
+        "task_id",
+        "customer_id",
+        "lead_id",
+        "deal_id",
+        "title",
+        "message",
+        "assigned_agent_id",
+        "assigned_to",
+        "trigger_at",
+        "remind_at",
+        "status",
+    )
+    updates = {k: data[k] for k in allowed if k in data}
+    if not updates:
+        raise ValidationError("no updatable fields provided")
+    updated = await auto_marketplace.crm_engine.calendar.update_reminder(request.match_info["reminder_id"], **updates)
+    return json_response(updated.to_dict())
+
+
+async def complete_reminder_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    reminder = await auto_marketplace.crm_engine.calendar.complete_reminder(request.match_info["reminder_id"])
+    return json_response(reminder.to_dict())
+
+
+async def dismiss_reminder_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    reminder = await auto_marketplace.crm_engine.calendar.dismiss_reminder(request.match_info["reminder_id"])
+    return json_response(reminder.to_dict())
+
+
+async def delete_reminder_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "crm.write")
+    reminder_id = request.match_info["reminder_id"]
+    deleted = await auto_marketplace.crm_engine.calendar.delete_reminder(reminder_id)
+    return json_response({"reminder_id": reminder_id, "deleted": deleted})
+
+
+async def list_opportunities_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "pipeline.read")
+    items = await auto_marketplace.crm_engine.pipeline.list_opportunities(
+        dealer_id=request.query.get("dealer_id") or None,
+        customer_id=request.query.get("customer_id") or None,
+    )
+    return json_response({"items": [o.to_dict() for o in items]})
+
+
+async def get_opportunity_handler(request: web.Request) -> web.Response:
+    _check_perm(request, "pipeline.read")
+    item = await auto_marketplace.crm_engine.pipeline.get_opportunity(request.match_info["opportunity_id"])
+    return json_response(item.to_dict())
 
 
 async def ai_next_action_handler(request: web.Request) -> web.Response:

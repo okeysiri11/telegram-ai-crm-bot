@@ -57,6 +57,10 @@ class CRMEngine:
             "leads": await records.count_leads(),
             "deals": await records.count_deals(),
             "tasks": await records.count_tasks(),
+            "calls": await records.count_calls(),
+            "emails": await records.count_emails(),
+            "meetings": await records.count_meetings(),
+            "reminders": await records.count_reminders(),
             "conversion": await self.pipeline.conversion_analytics(),
             "forecast": await self.pipeline.forecast(),
         }
@@ -65,10 +69,14 @@ class CRMEngine:
         overdue = await self.tasks.list_tasks(overdue=True)
         due = await self.tasks.list_tasks(due=True)
         recent = await self.activities.list_activities()
+        overdue_reminders = await self.calendar.list_reminders(overdue=True)
+        upcoming_reminders = await self.calendar.list_reminders(upcoming=True)
         return {
             "overdue_tasks": [t.to_dict() for t in overdue],
             "due_tasks": [t.to_dict() for t in due],
             "recent_activities": [a.to_dict() for a in recent[:50]],
+            "overdue_reminders": [r.to_dict() for r in overdue_reminders],
+            "upcoming_reminders": [r.to_dict() for r in upcoming_reminders],
         }
 
 

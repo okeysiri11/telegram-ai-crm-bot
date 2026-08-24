@@ -67,8 +67,13 @@ class AnalyticsEngine:
             result.append({"dealer_id": did, "name": getattr(dealer, "name", ""), "deals": len(dealer_deals), "revenue": sum(d.amount for d in dealer_deals)})
         return {"dealers": result}
 
-    def workflow_analytics(self) -> dict[str, Any]:
-        return {"crm_tasks": self._store.crm_tasks.count(), "meetings": self._store.meetings.count(), "reminders": self._store.reminders.count()}
+    async def workflow_analytics(self) -> dict[str, Any]:
+        records = get_crm_persistence()
+        return {
+            "crm_tasks": await records.count_tasks(),
+            "meetings": await records.count_meetings(),
+            "reminders": await records.count_reminders(),
+        }
 
     async def agent_analytics(self) -> dict[str, Any]:
         agents = self._store.sales_agents.list_all()
@@ -87,7 +92,7 @@ class AnalyticsEngine:
             "inventory": self.inventory_analytics(),
             "marketing": await self.marketing_analytics(),
             "dealer": await self.dealer_analytics(),
-            "workflow": self.workflow_analytics(),
+            "workflow": await self.workflow_analytics(),
             "agent": await self.agent_analytics(),
         }
 

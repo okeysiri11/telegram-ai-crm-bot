@@ -135,3 +135,102 @@ class AutoMarketplaceCrmActivity(TimestampMixin, Base):
     idempotency_key: Mapped[str] = mapped_column(String(255), nullable=False, default="")
     created_ts: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
+class AutoMarketplaceCrmCall(TimestampMixin, Base):
+    __tablename__ = "auto_marketplace_crm_calls"
+    __table_args__ = (
+        Index("ix_am_crm_calls_tenant", "tenant_id"),
+        Index("ix_am_crm_calls_tenant_customer", "tenant_id", "customer_id"),
+        Index("ix_am_crm_calls_tenant_lead", "tenant_id", "lead_id"),
+        Index("ix_am_crm_calls_tenant_deal", "tenant_id", "deal_id"),
+    )
+
+    call_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), nullable=False, server_default="default")
+    customer_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    lead_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    deal_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    agent_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    direction: Mapped[str] = mapped_column(String(32), nullable=False, default="outbound")
+    status: Mapped[str] = mapped_column(String(64), nullable=False, default="logged")
+    duration_sec: Mapped[int] = mapped_column(nullable=False, default=0)
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    started_at: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ended_at: Mapped[float | None] = mapped_column(Float, nullable=True)
+    created_ts: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class AutoMarketplaceCrmEmail(TimestampMixin, Base):
+    __tablename__ = "auto_marketplace_crm_emails"
+    __table_args__ = (
+        Index("ix_am_crm_emails_tenant", "tenant_id"),
+        Index("ix_am_crm_emails_tenant_customer", "tenant_id", "customer_id"),
+        Index("ix_am_crm_emails_tenant_status", "tenant_id", "status"),
+    )
+
+    email_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), nullable=False, server_default="default")
+    customer_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    lead_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    deal_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    agent_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    subject: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    body: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    direction: Mapped[str] = mapped_column(String(32), nullable=False, default="outbound")
+    status: Mapped[str] = mapped_column(String(64), nullable=False, default="logged")
+    sender: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    recipient: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    created_ts: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class AutoMarketplaceCrmMeeting(TimestampMixin, Base):
+    __tablename__ = "auto_marketplace_crm_meetings"
+    __table_args__ = (
+        Index("ix_am_crm_meetings_tenant", "tenant_id"),
+        Index("ix_am_crm_meetings_tenant_customer", "tenant_id", "customer_id"),
+        Index("ix_am_crm_meetings_tenant_status", "tenant_id", "status"),
+        Index("ix_am_crm_meetings_tenant_agent", "tenant_id", "agent_id"),
+    )
+
+    meeting_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), nullable=False, server_default="default")
+    customer_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    lead_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    deal_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    agent_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    title: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    description: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    scheduled_at: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    duration_min: Mapped[int] = mapped_column(nullable=False, default=30)
+    location: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    status: Mapped[str] = mapped_column(String(64), nullable=False, default="scheduled")
+    completed: Mapped[bool] = mapped_column(nullable=False, default=False)
+    created_ts: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+
+
+class AutoMarketplaceCrmReminder(TimestampMixin, Base):
+    __tablename__ = "auto_marketplace_crm_reminders"
+    __table_args__ = (
+        Index("ix_am_crm_reminders_tenant", "tenant_id"),
+        Index("ix_am_crm_reminders_tenant_status", "tenant_id", "status"),
+        Index("ix_am_crm_reminders_tenant_customer", "tenant_id", "customer_id"),
+        Index("ix_am_crm_reminders_tenant_trigger", "tenant_id", "trigger_at"),
+    )
+
+    reminder_id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    tenant_id: Mapped[str] = mapped_column(String(128), nullable=False, server_default="default")
+    task_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    customer_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    lead_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    deal_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    title: Mapped[str] = mapped_column(String(255), nullable=False, default="")
+    message: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    assigned_agent_id: Mapped[str] = mapped_column(String(64), nullable=False, default="")
+    trigger_at: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    status: Mapped[str] = mapped_column(String(64), nullable=False, default="pending")
+    triggered: Mapped[bool] = mapped_column(nullable=False, default=False)
+    created_ts: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    payload: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
