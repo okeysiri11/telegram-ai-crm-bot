@@ -94,6 +94,31 @@ def _optional_float(value: object, field: str) -> float | None:
         raise ValidationError(f"{field} must be a unix timestamp") from exc
 
 
+_LEAD_SOURCE_METADATA_KEYS = (
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "channel",
+    "referrer",
+    "intake_key",
+    "idempotency_key",
+)
+
+
+def _lead_intake_metadata(data: dict) -> dict:
+    meta: dict = {}
+    raw = data.get("metadata")
+    if isinstance(raw, dict):
+        meta.update(raw)
+    elif raw not in (None, ""):
+        raise ValidationError("metadata must be an object")
+    for key in _LEAD_SOURCE_METADATA_KEYS:
+        value = data.get(key)
+        if value not in (None, ""):
+            meta[key] = value
+    return meta
+
+
 def _parse_lead_source(raw: object) -> LeadSource:
     if raw is None or raw == "":
         return LeadSource.WEB
@@ -201,7 +226,9 @@ async def create_lead_handler(request: web.Request) -> web.Response:
         vehicle_id=data.get("vehicle_id", ""),
         dealer_id=data.get("dealer_id", ""),
         source=_parse_lead_source(source),
+        assigned_agent_id=str(data.get("assigned_agent_id") or data.get("assigned_to") or ""),
         notes=data.get("notes", ""),
+        metadata=_lead_intake_metadata(data),
     )
     customer = None
     if lead.customer_id:

@@ -12,6 +12,8 @@ from applications.auto_marketplace.crm.persistence import CRMPersistence, get_cr
 from applications.auto_marketplace.shared.exceptions import NotFoundError, ValidationError
 from applications.auto_marketplace.shared.store import MarketplaceStore, marketplace_store
 
+_CLOSED_STAGES = frozenset({DealStage.CLOSED_WON, DealStage.CLOSED_LOST})
+
 
 class DealService:
     def __init__(
@@ -26,6 +28,24 @@ class DealService:
 
     def _records(self) -> CRMPersistence:
         return self._persistence or get_crm_persistence()
+
+    @staticmethod
+    def _assert_stage_transition(current: DealStage, target: DealStage) -> None:
+        if current == target:
+            return
+        if current in _CLOSED_STAGES:
+            raise ValidationError(f"closed deal cannot change stage from {current.value}")
+
+    @staticmethod
+    def _apply_terminal_fields(deal: CRMDeal, stage: DealStage) -> None:
+        if stage == DealStage.CLOSED_WON:
+            deal.win = True
+            if deal.closed_at is None:
+                deal.closed_at = time.time()
+        elif stage == DealStage.CLOSED_LOST:
+            deal.win = False
+            if deal.closed_at is None:
+                deal.closed_at = time.time()
 
     async def create(self, deal: CRMDeal) -> CRMDeal:
         deal.probability = await self._ai.predict_deal_probability(deal)
@@ -68,8 +88,15 @@ class DealService:
 
     async def update_stage(self, deal_id: str, stage: DealStage) -> CRMDeal:
         deal = await self.get(deal_id)
+        if deal.stage == stage:
+            return deal
+        self._assert_stage_transition(deal.stage, stage)
         deal.stage = stage
-        deal.probability = await self._ai.predict_deal_probability(deal)
+        self._apply_terminal_fields(deal, stage)
+        if stage in _CLOSED_STAGES:
+            deal.probability = 1.0 if stage == DealStage.CLOSED_WON else 0.0
+        else:
+            deal.probability = await self._ai.predict_deal_probability(deal)
         saved = await self._records().save_deal(deal)
         await publish(DealUpdatedEvent(deal_id=deal_id, stage=stage.value, probability=saved.probability))
         from applications.auto_marketplace.activities.service import activity_service
@@ -94,8 +121,18 @@ class DealService:
                         value = DealStage(str(value))
                     except ValueError as exc:
                         raise ValidationError(f"invalid deal stage: {value!r}") from exc
+                if key == "stage":
+                    self._assert_stage_transition(deal.stage, value)  # type: ignore[arg-type]
+                    if deal.stage == value:
+                        continue
+                    setattr(deal, key, value)
+                    self._apply_terminal_fields(deal, value)  # type: ignore[arg-type]
+                    continue
                 setattr(deal, key, value)
-        deal.probability = await self._ai.predict_deal_probability(deal)
+        if deal.stage in _CLOSED_STAGES:
+            deal.probability = 1.0 if deal.stage == DealStage.CLOSED_WON else 0.0
+        else:
+            deal.probability = await self._ai.predict_deal_probability(deal)
         saved = await self._records().save_deal(deal)
         await publish(
             DealUpdatedEvent(deal_id=deal_id, stage=saved.stage.value, probability=saved.probability)
@@ -108,6 +145,9 @@ class DealService:
 
     async def mark_won(self, deal_id: str, *, amount: float | None = None) -> CRMDeal:
         deal = await self.get(deal_id)
+        if deal.stage == DealStage.CLOSED_WON:
+            return deal
+        self._assert_stage_transition(deal.stage, DealStage.CLOSED_WON)
         deal.stage = DealStage.CLOSED_WON
         deal.win = True
         deal.closed_at = time.time()
@@ -131,6 +171,9 @@ class DealService:
 
     async def mark_lost(self, deal_id: str, *, reason: str = "") -> CRMDeal:
         deal = await self.get(deal_id)
+        if deal.stage == DealStage.CLOSED_LOST:
+            return deal
+        self._assert_stage_transition(deal.stage, DealStage.CLOSED_LOST)
         deal.stage = DealStage.CLOSED_LOST
         deal.win = False
         deal.closed_at = time.time()

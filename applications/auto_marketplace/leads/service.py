@@ -30,7 +30,28 @@ class LeadService:
     def _records(self) -> CRMPersistence:
         return self._persistence or get_crm_persistence()
 
+    @staticmethod
+    def _intake_identity(metadata: dict | None) -> str:
+        payload = metadata or {}
+        for key in ("intake_key", "idempotency_key"):
+            value = str(payload.get(key) or "").strip()
+            if value:
+                return value
+        return ""
+
+    async def _existing_intake(self, lead: CRMLead) -> CRMLead | None:
+        identity = self._intake_identity(lead.metadata)
+        if not identity:
+            return None
+        for existing in await self._records().list_leads():
+            if self._intake_identity(existing.metadata) == identity:
+                return existing
+        return None
+
     async def create(self, lead: CRMLead, customer: CustomerProfile | None = None) -> CRMLead:
+        existing = await self._existing_intake(lead)
+        if existing is not None:
+            return existing
         lead.score = await self._ai.score_lead(lead, customer)
         saved = await self._records().save_lead(lead)
         await publish(LeadCreatedEvent(lead_id=saved.lead_id, customer_id=saved.customer_id, source=saved.source.value))
