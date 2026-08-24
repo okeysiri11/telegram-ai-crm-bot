@@ -205,6 +205,20 @@ async def customer_timeline_handler(request: web.Request) -> web.Response:
     return json_response(timeline)
 
 
+async def customer_360_handler(request: web.Request) -> web.Response:
+    _require_authenticated_read(request, "crm.read")
+    limit_raw = request.query.get("limit") or "100"
+    try:
+        limit = int(limit_raw)
+    except (TypeError, ValueError):
+        raise ValidationError("limit must be an integer")
+    report = await auto_marketplace.crm_engine.customer_360.get_360(
+        request.match_info["customer_id"],
+        timeline_limit=limit,
+    )
+    return json_response(report)
+
+
 async def list_leads_handler(request: web.Request) -> web.Response:
     _check_perm(request, "leads.read")
     status = request.query.get("status")
@@ -1034,13 +1048,20 @@ def _is_crm_execution_path(path: str) -> bool:
     return path.endswith("/execution")
 
 
+def _is_crm_customer_360_path(path: str) -> bool:
+    if not _is_auto_crm_path(path):
+        return False
+    return path.endswith("/360")
+
+
 @web.middleware
 async def crm_mutating_auth_middleware(request: web.Request, handler):
-    """Require Bearer auth for mutating Auto CRM routes and intelligence/execution reads."""
+    """Require Bearer auth for mutating Auto CRM routes and intelligence/execution/360 reads."""
     if _is_auto_crm_path(request.path) and (
         request.method in _CRM_WRITE_METHODS
         or _is_crm_intelligence_path(request.path)
         or _is_crm_execution_path(request.path)
+        or _is_crm_customer_360_path(request.path)
     ):
         principal = request.get("principal")
         if not isinstance(principal, dict) or not principal.get("authenticated"):

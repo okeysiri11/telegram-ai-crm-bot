@@ -230,6 +230,7 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_patch(f"{crm}/customers/{{customer_id}}", crm_handlers.update_customer_handler)
     app.router.add_delete(f"{crm}/customers/{{customer_id}}", crm_handlers.delete_customer_handler)
     app.router.add_get(f"{crm}/customers/{{customer_id}}/timeline", crm_handlers.customer_timeline_handler)
+    app.router.add_get(f"{crm}/customers/{{customer_id}}/360", crm_handlers.customer_360_handler)
     app.router.add_get(f"{crm}/leads", crm_handlers.list_leads_handler)
     app.router.add_post(f"{crm}/leads", crm_handlers.create_lead_handler)
     app.router.add_get(f"{crm}/leads/{{lead_id}}", crm_handlers.get_lead_handler)

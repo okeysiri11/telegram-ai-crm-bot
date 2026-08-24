@@ -52,6 +52,7 @@ class ExecutiveDashboardService:
                 {"type": "kpis", "data": [k.to_dict() for k in kpis if k.name in {"lead_conversion", "average_deal_size", "vehicle_sales"}]},
                 {"type": "sales_intelligence", "data": await crm_engine.intelligence.manager_overview()},
                 {"type": "sales_execution", "data": await crm_engine.execution.summary()},
+                {"type": "customer_360", "data": {"available": True, "endpoint": "/api/auto/v1/crm/customers/{customer_id}/360"}},
             ]
         elif role == DashboardRole.FINANCE_MANAGER:
             widgets = [{"type": "financial", "data": self._analytics.financial_analytics()}]
