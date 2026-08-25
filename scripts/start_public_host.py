@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-"""Sprint 13 — verified public host for the ADOS web platform + Auto CRM.
+"""Sprint 13 / 13.1 — PREVIEW public host (Cloudflare Quick Tunnel). NOT production.
+
+Durable production is docker-compose.prod.yml on a persistent host with DNS/TLS.
+This script remains as a developer/preview helper. It must never be reported as
+the production URL.
 
 The previous public deployment was two Cloudflare quick tunnels from a laptop
 (one to a Vite *dev* server on :5180, one to the API on :8080 — see
 docs/SPRINT_AUTO_1_8_5_REMOTE_ACCESS_RESULT.md). When the laptop or tunnel
 process stopped, the public hostname went NXDOMAIN and the "production host"
-died. This script is the hardened replacement:
+died. This script is the hardened *preview* replacement:
 
 1. requires the production SPA build (src/web/dist) — fails clearly if absent;
 2. ensures the ADOS API is running on 127.0.0.1:$API_PORT (reuses a running
@@ -235,12 +239,13 @@ def main() -> None:
 
     print()
     print("=" * 64)
-    print("PUBLIC HOST VERIFIED")
-    print(f"App URL:       {public_url}")
+    print("PREVIEW HOST VERIFIED — NOT PRODUCTION")
+    print(f"Preview URL:   {public_url}")
     print(f"Liveness:      {public_url}/liveness")
     print(f"Readiness:     {public_url}/readiness")
     print(f"CRM (read):    {public_url}/api/auto/v1/crm/metrics")
-    print("NOTE: quick tunnels are ephemeral — the URL dies with this process.")
+    print("Cloudflare Quick Tunnels are ephemeral preview only.")
+    print("Durable production: docker-compose.prod.yml + scripts/deploy_production.sh")
     print("Stop: scripts/stop_remote_https.sh (or Ctrl+C)")
     print("=" * 64)
     print()

@@ -2,9 +2,9 @@ name: Platform Core CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, develop]
   pull_request:
-    branches: [main, master]
+    branches: [main, master, develop]
 
 env:
   POSTGRES_ONLY: "true"

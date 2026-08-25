@@ -27,8 +27,34 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _git_revision() -> str:
+    """Build/revision identity. Prefers GIT_SHA injected at image build/deploy."""
+    import os
+    import subprocess
+    from pathlib import Path
+
+    injected = (os.getenv("GIT_SHA") or os.getenv("SOURCE_REVISION") or "").strip()
+    if injected and injected.lower() not in {"unknown", "none"}:
+        return injected[:40]
+    try:
+        root = Path(__file__).resolve().parents[1]
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+            timeout=2,
+            check=False,
+        )
+        if completed.returncode == 0 and completed.stdout.strip():
+            return completed.stdout.strip()[:40]
+    except Exception:
+        pass
+    return "unknown"
+
+
 def _service_identity() -> dict[str, str]:
-    """Non-secret service identity for health payloads (Sprint 13).
+    """Non-secret service identity for health payloads (Sprint 13 / 13.1).
 
     Reads the platform version through ConfigurationCenter so operational
     responses report the same version the platform was configured with.
@@ -46,6 +72,7 @@ def _service_identity() -> dict[str, str]:
         "service": SERVICE_NAME,
         "service_version": version,
         "runtime": "production" if IS_PRODUCTION else "development",
+        "revision": _git_revision(),
     }
 
 

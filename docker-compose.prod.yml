@@ -1,5 +1,11 @@
-# Production docker-compose — bot + postgres + redis + prometheus + grafana
+# Production docker-compose — bot + postgres + redis + nginx + prometheus + grafana
+# Durable production path (Sprint 13.1). Cloudflare Quick Tunnels are NOT production.
 # Sprint 30.9 Beta Hardening: no default Grafana/Postgres passwords in production.
+#
+# Required: copy .env.example → .env.production (gitignored) and replace CHANGE_ME.
+# Deploy: ./scripts/deploy_production.sh
+# Doctor: python scripts/production_doctor.py --offline
+# Postgres is not published to the host.
 
 services:
   postgres:
@@ -33,10 +39,17 @@ services:
       retries: 10
 
   bot:
-    build: .
+    build:
+      context: .
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
     restart: unless-stopped
     env_file:
       - .env.production
+    environment:
+      GIT_SHA: ${GIT_SHA:-unknown}
+      SOURCE_REVISION: ${GIT_SHA:-unknown}
+      ENVIRONMENT: ${ENVIRONMENT:-production}
     depends_on:
       postgres:
         condition: service_healthy

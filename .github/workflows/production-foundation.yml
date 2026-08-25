@@ -1,0 +1,32 @@
+name: Production Foundation
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master, develop]
+
+jobs:
+  production-foundation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Secret / env contract
+        run: python scripts/validate_secrets_env.py
+      - name: Production doctor (offline)
+        run: python scripts/production_doctor.py --offline
+      - name: Production compose config
+        run: |
+          cp .env.example .env.production
+          docker compose -f docker-compose.prod.yml config > /dev/null
+          rm -f .env.production
+      - name: Sprint 13 / 13.1 tests
+        run: |
+          python -m pytest tests/test_sprint_13_1_durable_deployment.py \
+            tests/test_production_health_sprint_13.py -q --tb=line
