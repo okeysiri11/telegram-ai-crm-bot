@@ -495,6 +495,19 @@ class CasinoEngine:
         if hand.get("game") != "blackjack":
             raise ValidationError("not a blackjack hand")
         already = bool(hand.get("settled"))
+        if action.strip().lower() == "double":
+            if already or len(hand.get("player_cards") or []) != 2:
+                raise ValidationError("double is not available")
+            extra = int(hand.get("wager_chips") or 0)
+            await self._delta(
+                player_id,
+                -extra,
+                entry_type="wager",
+                reference_id=hand_id,
+                idempotency_key=f"wager:double:{hand_id}",
+                reference_type="blackjack",
+            )
+            hand["wager_chips"] = extra * 2
         apply_action(hand, action)
         await self._put_session(hand_id, hand)
         if hand.get("settled") and not already:

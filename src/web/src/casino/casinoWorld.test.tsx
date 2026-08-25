@@ -26,7 +26,7 @@ describe("Sprint 18 immersive world", () => {
     expect(CASINO_ROUTES.rouletteHall).toBe("/casino/rooms/roulette");
     expect(CASINO_ROUTES.blackjackRoom).toBe("/casino/rooms/blackjack");
     expect(CASINO_ROUTES.slotsRoom).toBe("/casino/rooms/slots");
-    expect(CASINO_ROUTES.table("roulette-royale-1")).toBe("/casino/roulette/roulette-royale-1");
+    expect(CASINO_ROUTES.table("roulette-royale-1")).toBe("/casino/roulette/royale-1");
     expect(CASINO_ROUTES.slot("odessa-gold")).toBe("/casino/slots/odessa-gold");
   });
 
@@ -58,6 +58,7 @@ describe("Sprint 18 immersive world", () => {
   it("renders entrance, lobby hotspots and roulette hall", () => {
     const entrance = render(wrap(<EntranceScene />, "/casino"));
     expect(entrance.getByTestId("casino-entrance")).toBeTruthy();
+    expect(entrance.getByText("ВОЙТИ В КАЗИНО")).toBeTruthy();
     entrance.unmount();
     const lobby = render(wrap(<LobbyScene />));
     expect(lobby.getByTestId("hotspot-roulette")).toBeTruthy();

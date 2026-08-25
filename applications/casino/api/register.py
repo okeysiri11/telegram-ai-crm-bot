@@ -50,5 +50,8 @@ def register_casino_routes(app: web.Application) -> None:
         f"{prefix}/blackjack/hands/{{hand_id}}/stand", handlers.blackjack_action_handler
     )
     app.router.add_post(
+        f"{prefix}/blackjack/hands/{{hand_id}}/double", handlers.blackjack_action_handler
+    )
+    app.router.add_post(
         f"{prefix}/venues/{{venue_id}}/slots/{{machine_id}}/spin", handlers.slot_spin_handler
     )

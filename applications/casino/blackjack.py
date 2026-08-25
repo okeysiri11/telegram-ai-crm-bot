@@ -10,7 +10,7 @@ SUITS = ("s", "h", "d", "c")
 DECKS = 6
 BLACKJACK_PAYOUT = 2.5  # stake returned + 3:2
 WIN_PAYOUT = 2.0
-ACTIONS = frozenset({"hit", "stand"})
+ACTIONS = frozenset({"hit", "stand", "double"})
 
 
 def _card(rank: str, suit: str) -> dict[str, str]:
@@ -166,6 +166,12 @@ def apply_action(hand: dict[str, Any], action: str) -> dict[str, Any]:
         if hand_total(player) >= 21:
             return _finish(hand, shoe, player, dealer)
         return hand
+    if kind == "double":
+        if len(player) != 2:
+            raise ValueError("double is only allowed on the first two cards")
+        player.append(draw(shoe))
+        hand["doubled"] = True
+        return _finish(hand, shoe, player, dealer)
     return _finish(hand, shoe, player, dealer)
 
 
@@ -200,7 +206,9 @@ def public_hand(hand: dict[str, Any]) -> dict[str, Any]:
         "dealer_cards": public_cards(hand["dealer_cards"], hide_hole=hide),
         "player_total": hand_total(hand["player_cards"]),
         "dealer_total": None if hide else hand_total(hand["dealer_cards"]),
-        "available_actions": [] if hand.get("settled") else ["hit", "stand"],
+        "available_actions": []
+        if hand.get("settled")
+        else (["hit", "stand", "double"] if len(hand.get("player_cards") or []) == 2 else ["hit", "stand"]),
         "settlement": settlement,
         "server_authoritative": True,
         "duplicate_settlement_guard": True,

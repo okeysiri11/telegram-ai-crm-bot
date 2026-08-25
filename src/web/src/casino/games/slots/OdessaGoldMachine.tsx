@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { spinOdessaGold, type SlotSpin } from "../../casinoApi";
 import { formatPlayBalance } from "../../currency";
-import { loginRedirect } from "@/navigation/safeReturnTo";
 import { useCasinoWallet } from "../../useCasinoSession";
 import { casinoSound } from "../../casinoSound";
+import { useCasinoGuest } from "../../components/CasinoGuestModal";
 
 const ICONS: Record<string, string> = {
   CHERRY: "🍒",
@@ -34,6 +34,7 @@ export function SlotReels({ grid, spinning }: { grid: string[][]; spinning: bool
 export function OdessaGoldMachine() {
   const outlet = useOutletContext<{ wallet?: ReturnType<typeof useCasinoWallet> }>();
   const wallet = outlet?.wallet ?? { refresh: async () => undefined };
+  const guest = useCasinoGuest();
   const [wager, setWager] = useState(10);
   const [spin, setSpin] = useState<SlotSpin | null>(null);
   const [spinning, setSpinning] = useState(false);
@@ -60,7 +61,8 @@ export function OdessaGoldMachine() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "slot_failed";
       if (message === "auth_required") {
-        window.location.assign(loginRedirect("/casino/slots/odessa-gold"));
+        guest.openGuest("/casino/slots/odessa-gold");
+        setSpinning(false);
         return;
       }
       setError("Недостаточно PLAY или ошибка автомата.");

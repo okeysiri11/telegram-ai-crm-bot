@@ -1,0 +1,128 @@
+.op-world button,
+.op-world a,
+.op-world .op-hotspot,
+.op-world .op-chip,
+.op-world .op-cell,
+.op-world .op-map-cell,
+.op-world .op-game {
+  cursor: pointer;
+}
+
+.op-cta, .op-ghost, .op-grant, .op-icon-btn, .op-chip, .op-toggle button, .op-hotspot, .op-map-cell, .op-game, .op-cell {
+  transition: transform 160ms ease, box-shadow 160ms ease, border-color 160ms ease, filter 160ms ease, opacity 160ms ease;
+}
+.op-cta:hover, .op-ghost:hover, .op-grant:hover, .op-icon-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+}
+.op-cta:active, .op-ghost:active, .op-chip:active, .op-hotspot:active, .op-cell:active {
+  transform: translateY(1px) scale(0.98);
+}
+.op-cta:disabled, .op-ghost:disabled, .op-chip:disabled, .op-grant:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  filter: grayscale(0.2);
+}
+.op-cta.is-loading {
+  opacity: 0.75;
+  letter-spacing: 0.18em;
+}
+
+.op-nav a {
+  position: relative;
+}
+.op-nav a::after {
+  content: "";
+  position: absolute;
+  left: 0.7rem;
+  right: 0.7rem;
+  bottom: 0.2rem;
+  height: 1px;
+  background: var(--op-gold);
+  transform: scaleX(0);
+  transition: transform 180ms ease;
+}
+.op-nav a:hover::after, .op-nav a.is-active::after { transform: scaleX(1); }
+
+.op-chip {
+  cursor: pointer;
+}
+.op-chip:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 10px 20px rgba(201,164,92,0.35);
+}
+.op-chip.is-on {
+  transform: translateY(-4px);
+  box-shadow: 0 0 0 3px var(--op-gold), 0 8px 18px rgba(201,164,92,0.4);
+}
+
+.op-hotspot small {
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+.op-hotspot:hover small,
+.op-hotspot:focus-visible small {
+  opacity: 1;
+  transform: none;
+}
+.op-hotspot:hover,
+.op-hotspot:focus-visible {
+  transform: translateY(-4px) scale(1.03);
+  border-color: var(--op-gold-hi);
+  box-shadow: 0 0 40px rgba(201,164,92,0.45);
+  z-index: 4;
+}
+
+.op-game:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.35);
+  border-color: var(--op-gold);
+}
+.op-game:hover h3 { filter: brightness(1.1); }
+
+.op-map-cell:hover {
+  transform: translateY(-3px);
+  border-color: var(--op-gold);
+}
+
+.op-cell.is-win {
+  outline: 3px solid #e8d5a3;
+  box-shadow: 0 0 16px rgba(232,213,163,0.7);
+  z-index: 2;
+}
+
+.op-modal-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(7,8,10,0.72);
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+.op-modal {
+  width: min(28rem, 100%);
+  border: 1px solid rgba(201,164,92,0.4);
+  background: linear-gradient(180deg, #1a140c, #0b0c0e);
+  border-radius: 1.1rem;
+  padding: 1.4rem;
+  text-align: center;
+}
+
+.op-room-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.op-card.is-red-suit { color: #8c1c28; }
+
+@media (prefers-reduced-motion: reduce) {
+  .op-cta, .op-ghost, .op-chip, .op-hotspot, .op-game, .op-nav a::after {
+    transition: none !important;
+  }
+}

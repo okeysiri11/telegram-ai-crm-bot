@@ -82,7 +82,7 @@ async def test_lobby_opens_blackjack_and_slots(client: TestClient):
     assert floor["blackjack"]["route"] == "/casino/rooms/blackjack"
     assert any(t["table"] == "Odessa Gold" for t in lobby["slot_machines"])
     health = await (await client.get("/api/casino/v1/health")).json()
-    assert health["application_version"] == "19.0.0-play-money"
+    assert health["application_version"] == "20.0.0-play-money"
     assert floor["poker"]["route"] == "/casino/rooms/poker"
     assert floor["vip"]["coming_soon"] is False
 
@@ -170,6 +170,28 @@ async def test_blackjack_server_authority_replay_and_auth(client: TestClient):
             assert wallet["balance_chips"] != 10_000
     ledger = await (await client.get("/api/casino/v1/ledger", headers=AUTH)).json()
     assert any(row["reference_type"] == "blackjack" for row in ledger["items"])
+
+
+async def test_blackjack_double_debits_extra_wager(client: TestClient):
+    dealt = await client.post(
+        "/api/casino/v1/venues/odessa-prime/blackjack/hands",
+        headers=AUTH,
+        json={"amount_chips": 50, "idempotency_key": "s20-bj-d"},
+    )
+    assert dealt.status == 201
+    hand = await dealt.json()
+    if hand["settled"]:
+        return
+    doubled = await client.post(
+        f"/api/casino/v1/blackjack/hands/{hand['hand_id']}/double",
+        headers=AUTH,
+        json={},
+    )
+    assert doubled.status == 200
+    body = await doubled.json()
+    assert body["wager_chips"] == 100
+    assert body["settled"] is True
+    assert "double" not in (body.get("available_actions") or [])
 
 
 async def test_slot_authority_settlement_idempotency_and_invalid_wager(client: TestClient):

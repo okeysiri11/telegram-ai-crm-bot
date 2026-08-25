@@ -1,17 +1,19 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button, EmptyState, Skeleton } from "@/ui";
 import { formatDemoChips, formatLedgerDelta, formatTimestamp } from "./currency";
 import { grantDemoChips } from "./casinoApi";
 import type { CasinoLedgerEntry, CasinoWallet } from "./types";
+import { loginRedirect } from "@/navigation/safeReturnTo";
 
 export function CasinoAuthGate({ message }: { message?: string }) {
+  const loc = useLocation();
   return (
     <EmptyState
       title="Нужна авторизация"
       description={message || "Войдите, чтобы получить демо-фишки и сделать PLAY-ставку. Реальных платежей нет."}
       actionLabel="Войти"
-      actionTo="/login"
+      actionTo={loginRedirect(`${loc.pathname}${loc.search}`)}
     />
   );
 }

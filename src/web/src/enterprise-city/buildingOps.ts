@@ -78,7 +78,7 @@ const OPS: Partial<Record<CityBuildingId, BuildingOpsMeta>> = {
     quickActions: [
       { id: "open", label: "Войти в казино", route: "/casino" },
       { id: "venue", label: "Карточка заведения", route: "/casino/venues/odessa-prime" },
-      { id: "roulette", label: "Рулетка", route: "/casino/roulette/roulette-royale-1" },
+      { id: "roulette", label: "Рулетка", route: "/casino/roulette/royale-1" },
     ],
   },
   marketing: {

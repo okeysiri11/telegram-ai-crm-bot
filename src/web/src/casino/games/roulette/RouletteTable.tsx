@@ -1,14 +1,17 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useOutletContext } from "react-router-dom";
+import { useParams, useOutletContext, useLocation } from "react-router-dom";
 import { RouletteWheel } from "./RouletteWheel";
 import { CasinoBettingBoard, type BoardBet } from "./BettingBoard";
 import { DealerPortrait } from "../../components/DealerPortrait";
 import { useCasinoPresence, useCasinoWallet } from "../../useCasinoSession";
 import { openRouletteRound, placeRouletteBet, spinRoulette } from "../../casinoApi";
 import { CHIP_DENOMS, formatPlayBalance } from "../../currency";
-import { casinoSound } from "../../casinoSound";
-import { loginRedirect } from "@/navigation/safeReturnTo";
 import { useBetLock } from "../../hooks/useBetLock";
+import { casinoSound } from "../../casinoSound";
+import { isLiveRouletteTable } from "../../state/casinoRoutes";
+import { ChipSelector } from "../../components/ChipSelector";
+import { useCasinoGuest } from "../../components/CasinoGuestModal";
+import { RoomNavigation } from "../../components/RoomNavigation";
 
 const PHASE_COPY: Record<string, string> = {
   BETTING_OPEN: "СТАВКИ ПРИНИМАЮТСЯ",
@@ -29,7 +32,9 @@ function friendly(message: string): string {
 
 export function RouletteTable() {
   const { tableId = "roulette-royale-1" } = useParams();
-  const live = tableId === "roulette-royale-1" || tableId === "roulette-royale";
+  const location = useLocation();
+  const live = isLiveRouletteTable(tableId);
+  const guest = useCasinoGuest();
   const { wallet: walletState } = useOutletContext<{ wallet: ReturnType<typeof useCasinoWallet> }>();
   const presence = useCasinoPresence("odessa-prime", "roulette-royale-1");
   const [chip, setChip] = useState(10);
@@ -111,7 +116,7 @@ export function RouletteTable() {
     } catch (err) {
       const message = err instanceof Error ? err.message : "spin_failed";
       if (message === "auth_required") {
-        window.location.assign(loginRedirect(`/casino/roulette/${tableId}`));
+        guest.openGuest(`${location.pathname}${location.search}` || "/casino/roulette/royale-1");
         return;
       }
       setError(friendly(message));
@@ -173,28 +178,17 @@ export function RouletteTable() {
           <span key={fly.id} className="op-chip-fly" style={{ left: fly.x, top: fly.y }} data-testid="chip-fly" />
         ))}
         {error ? <p className="op-status" role="alert">{error}</p> : null}
-        <CasinoBettingBoard stacks={stacks} onPick={addBet} />
+        <CasinoBettingBoard stacks={stacks} onPick={addBet} win={result && phase !== "SPINNING" ? result.n : null} />
         <div className="op-sticky">
-          <div className="op-rail" role="group" aria-label="Фишки PLAY">
-            {CHIP_DENOMS.map((value) => (
-              <button
-                key={value}
-                type="button"
-                className={`op-chip${chip === value ? " is-on" : ""}`}
-                onClick={() => setChip(value)}
-              >
-                {value >= 1000 ? `${value / 1000}k` : value}
-              </button>
-            ))}
-          </div>
+          <ChipSelector value={chip} options={[...CHIP_DENOMS]} onChange={(n) => { casinoSound.tick(); setChip(n); }} disabled={lock.locked} />
           <div>Ставка: {formatPlayBalance(total)}</div>
           <div>Баланс: {walletState.wallet ? formatPlayBalance(walletState.wallet.balance_chips) : "—"}</div>
           <div className="op-actions">
             <button className="op-ghost" type="button" onClick={clear} disabled={lock.locked}>
               ОЧИСТИТЬ
             </button>
-            <button className="op-cta" type="button" disabled={busy || !total || lock.locked} onClick={() => void confirmAndSpin()}>
-              СДЕЛАТЬ СТАВКУ
+            <button className={`op-cta${busy ? " is-loading" : ""}`} type="button" disabled={busy || !total || lock.locked} onClick={() => void confirmAndSpin()}>
+              {busy ? "РАУНД…" : "СДЕЛАТЬ СТАВКУ"}
             </button>
           </div>
         </div>
@@ -208,6 +202,7 @@ export function RouletteTable() {
           </div>
         ))}
       </aside>
+      <RoomNavigation current="roulette" />
     </div>
   );
 }

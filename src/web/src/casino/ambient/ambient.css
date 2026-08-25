@@ -40,7 +40,21 @@
     radial-gradient(ellipse at 70% 140%, rgba(0,0,0,0.4) 18%, transparent 48%);
   animation: opCrowd 16s ease-in-out infinite;
 }
-.op-silhouettes.is-static { animation: none; opacity: 0.55; }
+.op-dust {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 12% 22%, rgba(255,236,190,0.45), transparent),
+    radial-gradient(1px 1px at 38% 58%, rgba(255,255,255,0.28), transparent),
+    radial-gradient(1.5px 1.5px at 71% 34%, rgba(201,164,92,0.4), transparent),
+    radial-gradient(1px 1px at 84% 76%, rgba(255,236,190,0.3), transparent);
+  animation: opDust 22s linear infinite;
+  opacity: 0.55;
+}
+@keyframes opDust {
+  from { transform: translateY(0); }
+  to { transform: translateY(-28px); }
+}
 .op-sign-shimmer {
   background: linear-gradient(90deg, var(--op-gold) 0%, var(--op-gold-hi) 40%, #fff6d4 50%, var(--op-gold) 100%);
   background-size: 220% 100%;

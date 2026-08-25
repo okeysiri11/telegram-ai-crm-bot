@@ -107,7 +107,7 @@ TABLES: tuple[dict[str, Any], ...] = (
         "max_bet": 5_000,
         "status_open": "Идет прием ставок",
         "status_idle": "Ожидание игроков",
-        "route": "/casino/roulette/roulette-royale-1",
+        "route": "/casino/roulette/royale-1",
     },
     {
         "room_id": "roulette-classic",
@@ -155,7 +155,7 @@ TABLES: tuple[dict[str, Any], ...] = (
         "max_bet": 2_000,
         "status_open": "Идет прием ставок",
         "status_idle": "Ожидание игроков",
-        "route": "/casino/rooms/blackjack",
+        "route": "/casino/blackjack",
     },
     {
         "room_id": "slots-odessa-gold",
@@ -185,6 +185,7 @@ TABLES: tuple[dict[str, Any], ...] = (
 
 _ALIASES = {
     LEGACY_LIVE_ROOM_ID: DEFAULT_LIVE_ROOM_ID,
+    "royale-1": DEFAULT_LIVE_ROOM_ID,
     "royale": DEFAULT_LIVE_ROOM_ID,
     "odessa-gold": "slots-odessa-gold",
     "blackjack": "blackjack-salon",

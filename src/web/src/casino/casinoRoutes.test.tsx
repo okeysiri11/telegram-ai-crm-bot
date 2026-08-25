@@ -14,7 +14,7 @@ describe("Sprint 17 Odessa Prime casino", () => {
     expect(CASINO_ROUTES.lobby).toBe("/casino");
     expect(CASINO_ROUTES.floor).toBe("/casino/floor");
     expect(CASINO_ROUTES.tables).toBe("/casino/roulette");
-    expect(CASINO_ROUTES.table("roulette-royale-1")).toBe("/casino/roulette/roulette-royale-1");
+    expect(CASINO_ROUTES.table("roulette-royale-1")).toBe("/casino/roulette/royale-1");
     expect(CASINO_ROUTES.venue("odessa-prime")).toBe("/casino/venues/odessa-prime");
   });
 

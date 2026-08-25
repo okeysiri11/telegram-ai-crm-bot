@@ -175,6 +175,8 @@ async def blackjack_action_handler(request: web.Request) -> web.Response:
         action = "hit"
     elif path.endswith("/stand"):
         action = "stand"
+    elif path.endswith("/double"):
+        action = "double"
     else:
         action = str(data.get("action") or "")
     return json_response(

@@ -45,7 +45,7 @@ export function EntranceScene() {
         <h1 className="op-title">ODESSA PRIME CASINO</h1>
         <p className="op-sub">Игровой мир · рулетка · blackjack · Odessa Gold · только PLAY / DEMO CHIPS</p>
         <div className="op-cta-row">
-          <Link className="op-cta" to={CASINO_ROUTES.floor}>
+          <Link className="op-cta" to={CASINO_ROUTES.lobbyAlias}>
             ВОЙТИ В КАЗИНО
           </Link>
           <Link className="op-cta secondary" to={CASINO_ROUTES.games}>

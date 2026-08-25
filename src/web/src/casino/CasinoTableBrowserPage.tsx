@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchCasinoRooms } from "./casinoApi";
+import { CASINO_ROUTES } from "./state/casinoRoutes";
 import type { CasinoTablePresence } from "./types";
 
 const CATALOG = [
@@ -32,8 +33,8 @@ export function CasinoTableBrowserPage() {
               {table.live ? live?.status_label || "Идет прием ставок" : "Скоро"}
             </div>
             {table.live ? (
-              <Link className="op-cta" to={`/casino/roulette/${table.id}`}>
-                ENTER
+              <Link className="op-cta" to={CASINO_ROUTES.table(table.id)}>
+                СЕСТЬ ЗА СТОЛ
               </Link>
             ) : (
               <button className="op-ghost" type="button" disabled>

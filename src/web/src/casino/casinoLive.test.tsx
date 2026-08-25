@@ -5,12 +5,13 @@ import { CasinoApp } from "./CasinoApp";
 import { resolvePerformanceTier } from "./hooks/usePerformanceTier";
 import { roomToneFromPath } from "./audio/casinoAudio";
 import { sanitizeReturnTo } from "@/navigation/safeReturnTo";
-import { CASINO_ROUTES } from "./state/casinoRoutes";
+import { CASINO_ROUTES, resolveRouletteTableId } from "./state/casinoRoutes";
 import { PokerRoom } from "./rooms/PokerRoom";
 import { VipRoom } from "./rooms/VipRoom";
 import { BarRoom } from "./rooms/BarRoom";
 import { RestaurantRoom } from "./rooms/RestaurantRoom";
 import { LobbyScene } from "./scenes/LobbyScene";
+import { CasinoGuestModal } from "./components/CasinoGuestModal";
 
 function mount(path: string) {
   return render(
@@ -37,11 +38,13 @@ describe("Sprint 19 live casino", () => {
     expect(CASINO_ROUTES.vipRoom).toBe("/casino/rooms/vip");
     expect(CASINO_ROUTES.barRoom).toBe("/casino/rooms/bar");
     expect(CASINO_ROUTES.restaurantRoom).toBe("/casino/rooms/restaurant");
-    expect(CASINO_ROUTES.lobbyAlias).toBe("/casino/lobby");
+    expect(CASINO_ROUTES.rouletteLive).toBe("/casino/roulette/royale-1");
+    expect(sanitizeReturnTo("/casino/roulette/table/royale-1")).toBe("/casino/roulette/table/royale-1");
     expect(sanitizeReturnTo("/casino/rooms/vip")).toBe("/casino/rooms/vip");
     expect(sanitizeReturnTo("/casino/poker")).toBe("/casino/poker");
     expect(roomToneFromPath("/casino/rooms/bar")).toBe("bar");
-    expect(roomToneFromPath("/casino")).toBe("entrance");
+    expect(resolveRouletteTableId("royale-1")).toBe("roulette-royale-1");
+    expect(resolveRouletteTableId("table")).toBe("roulette-royale-1");
   });
 
   it("renders lobby hotspots for every live room", () => {
@@ -63,7 +66,7 @@ describe("Sprint 19 live casino", () => {
       </MemoryRouter>,
     );
     expect(poker.getByTestId("poker-room")).toBeTruthy();
-    expect(poker.getByText(/Раздача и банк/i)).toBeTruthy();
+    expect(poker.getByText("POKER ROOM")).toBeTruthy();
     poker.unmount();
     expect(
       render(
@@ -98,8 +101,38 @@ describe("Sprint 19 live casino", () => {
     await waitFor(() => expect(screen.getByTestId("poker-room")).toBeTruthy());
     poker.unmount();
 
+    const table = mount("/casino/roulette/table/royale-1");
+    await waitFor(() => expect(screen.getByTestId("roulette-table")).toBeTruthy());
+    table.unmount();
+
     const alias = mount("/casino/vip");
     await waitFor(() => expect(screen.getByTestId("vip-room")).toBeTruthy());
     alias.unmount();
+
+    const bj = mount("/casino/blackjack");
+    await waitFor(() => expect(screen.getByTestId("blackjack-room")).toBeTruthy());
+    expect(screen.getByText("СДАТЬ")).toBeTruthy();
+    expect(screen.getByText("ЕЩЁ")).toBeTruthy();
+    expect(screen.getByText("ХВАТИТ")).toBeTruthy();
+    expect(screen.getByText("УДВОИТЬ")).toBeTruthy();
+    bj.unmount();
+
+    const unknown = mount("/casino/missing-hall");
+    await waitFor(() => expect(screen.getByTestId("casino-unknown")).toBeTruthy());
+    expect(screen.queryByTestId("casino-entrance")).toBeNull();
+    unknown.unmount();
+  });
+
+  it("opens guest modal without leaving the casino", () => {
+    render(
+      <MemoryRouter>
+        <CasinoGuestModal returnTo="/casino/roulette/table/royale-1" onClose={() => undefined} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("casino-guest-modal")).toBeTruthy();
+    const login = screen.getByText("ВОЙТИ") as HTMLAnchorElement;
+    expect(login.getAttribute("href") || "").toContain("returnTo=");
+    expect(decodeURIComponent(login.getAttribute("href") || "")).toContain("/casino/roulette/table/royale-1");
+    expect(screen.getByText("ОСТАТЬСЯ ГОСТЕМ")).toBeTruthy();
   });
 });

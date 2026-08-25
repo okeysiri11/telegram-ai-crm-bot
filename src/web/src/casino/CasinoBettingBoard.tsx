@@ -13,14 +13,16 @@ export function colorClass(n: number): string {
 export function CasinoBettingBoard({
   stacks,
   onPick,
+  win,
 }: {
   stacks: Record<string, number>;
   onPick: (bet: BoardBet) => void;
+  win?: number | null;
 }) {
   return (
     <div className="op-board-scroll">
       <div className="op-board" role="group" aria-label="Поле европейской рулетки">
-        <button type="button" className={`op-cell is-green${stacks["n:0"] ? " is-on" : ""}`} style={{ gridRow: "1 / span 3" }} onClick={() => onPick({ key: "n:0", bet_type: "straight", numbers: [0] })}>
+        <button type="button" className={`op-cell is-green${stacks["n:0"] ? " is-on" : ""}${win === 0 ? " is-win" : ""}`} style={{ gridRow: "1 / span 3" }} onClick={() => onPick({ key: "n:0", bet_type: "straight", numbers: [0] })}>
           0
           {stacks["n:0"] ? <span className="op-stack">{stacks["n:0"]}</span> : null}
         </button>
@@ -30,7 +32,7 @@ export function CasinoBettingBoard({
             <button
               key={n}
               type="button"
-              className={`op-cell ${colorClass(n)}${stacks[`n:${n}`] ? " is-on" : ""}`}
+              className={`op-cell ${colorClass(n)}${stacks[`n:${n}`] ? " is-on" : ""}${win === n ? " is-win" : ""}`}
               style={{ gridColumn: col + 2, gridRow: 3 - row }}
               onClick={() => onPick({ key: `n:${n}`, bet_type: "straight", numbers: [n] })}
             >

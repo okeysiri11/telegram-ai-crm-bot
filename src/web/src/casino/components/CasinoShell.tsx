@@ -11,18 +11,21 @@ import { useRoomTransition } from "../transitions/useRoomTransition";
 import { usePerformanceTier } from "../hooks/usePerformanceTier";
 import { AmbientLayer } from "../ambient/AmbientLayer";
 import { bindCasinoRoomAudio } from "../audio/casinoAudio";
+import { CasinoGuestProvider } from "./CasinoGuestModal";
 import "../odessa.css";
 import "../assets/world.css";
 import "../ambient/ambient.css";
 import "../assets/live.css";
+import "../assets/interact.css";
+import "../assets/rooms-visual.css";
 
 const NAV = [
   { to: "/enterprise-city?building=casino", label: "Город", end: false },
   { to: "/casino", label: "Казино", end: true },
-  { to: "/casino/floor", label: "Зал" },
-  { to: "/casino/rooms/roulette", label: "Рулетка" },
-  { to: "/casino/rooms/blackjack", label: "Blackjack" },
-  { to: "/casino/rooms/slots", label: "Автоматы" },
+  { to: "/casino/lobby", label: "Зал" },
+  { to: "/casino/roulette/royale-1", label: "Рулетка" },
+  { to: "/casino/blackjack", label: "Blackjack" },
+  { to: "/casino/slots", label: "Автоматы" },
   { to: "/casino/rooms/poker", label: "Покер" },
 ];
 
@@ -61,6 +64,7 @@ export function CasinoShell() {
   }
 
   return (
+    <CasinoGuestProvider>
     <div className="op-root op-world" data-testid="casino-shell" data-tier={tier}>
       <a className="op-skip" href="#op-main">
         К содержимому
@@ -121,14 +125,15 @@ export function CasinoShell() {
         <NavLink to="/casino" end>
           Лобби
         </NavLink>
-        <NavLink to="/casino/floor">Зал</NavLink>
-        <NavLink to="/casino/rooms/roulette">Рулетка</NavLink>
-        <NavLink to="/casino/rooms/blackjack">BJ</NavLink>
-        <NavLink to="/casino/rooms/slots">Слоты</NavLink>
+        <NavLink to="/casino/lobby">Зал</NavLink>
+        <NavLink to="/casino/roulette/royale-1">Рулетка</NavLink>
+        <NavLink to="/casino/blackjack">BJ</NavLink>
+        <NavLink to="/casino/slots">Слоты</NavLink>
       </nav>
       {historyOpen ? (
         <CasinoHistoryDrawer items={wallet.ledger} onClose={() => setHistoryOpen(false)} loading={wallet.loading} />
       ) : null}
     </div>
+    </CasinoGuestProvider>
   );
 }
