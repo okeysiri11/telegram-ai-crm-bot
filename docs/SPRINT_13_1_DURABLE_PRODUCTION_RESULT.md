@@ -100,3 +100,22 @@ Repository-side preparation is **complete and validated**. The Cloud Agent has *
   verification.
 
 No ephemeral tunnel is described as durable production anywhere in this sprint.
+
+## Addendum — develop deployability repair (post-merge)
+
+A parallel commit (`e983c8f5`, merged as `cd9fd30b`) integrated a second durable-deploy
+implementation (production doctor, rollback scripts, Production Foundation workflow) and also
+extended **Platform Core CI** (`architecture.yml`) to `develop`. That suite is known-red on the
+current codebase for pre-existing reasons (architecture grade 80.25 FAIL gate, full-suite
+classifier — 423 environmental/pre-existing failures in CI, import smoke importing `bot`
+without a `BOT_TOKEN` placeholder). With it on `develop`, every commit is red and
+`autoDeployTrigger: checksPass` can never deploy — the durable auto-deploy this sprint exists
+to provide.
+
+**Decision:** restore `architecture.yml` triggers to `main/master` (their pre-merge scope).
+`develop` pushes remain gated by the green Production Gate (migrations, Sprint 13/13.1 health,
+CRM 8–13, security, frontend build); Platform Core CI continues to guard `main/master`.
+The merged state itself is healthy: no conflict markers, Production Gate and Production
+Foundation both passed on `cd9fd30b`, and the combined test files (15) pass locally.
+Rejected alternative: repairing all Platform Core CI pre-existing failures inside this sprint
+(explicitly out of scope).

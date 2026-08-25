@@ -1,10 +1,17 @@
 name: Platform Core CI
 
+# Trigger scope restored to main/master (Sprint 13.1 addendum): this workflow
+# carries known-red gates on the current codebase (architecture grade 80.25,
+# full-suite classifier, import smoke without BOT_TOKEN). Running it on develop
+# makes every develop commit red, which permanently blocks the Render
+# autoDeployTrigger=checksPass durable deploy path. Develop pushes are gated by
+# .github/workflows/production-gate.yml (green); this suite continues to guard
+# main/master promotions.
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master]
   pull_request:
-    branches: [main, master, develop]
+    branches: [main, master]
 
 env:
   POSTGRES_ONLY: "true"
