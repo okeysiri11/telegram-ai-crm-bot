@@ -78,7 +78,7 @@ Open redirects (`https:`, `//`, `javascript:`) are rejected.
 ## Tests
 
 - `tests/test_casino_foundation.py` / `test_casino_premium.py` / `test_casino_immersive.py`
-- `src/web/src/casino/casinoRoutes.test.ts` — routes, returnTo, floor/table render
+- `src/web/src/casino/casinoRoutes.test.tsx` — routes, returnTo, floor/table render
 - Production gate includes immersive pytest
 
 ## Frontend gate
@@ -88,12 +88,34 @@ Open redirects (`https:`, `//`, `javascript:`) are rejected.
 Sprint 17 casino TypeScript: **zero** after fixing CasinoShell `loc` leftover.
 Pre-existing `tsc -b` debt remains in Odessa3D / Agro / Hercules / crypto / AI Command.
 
-## Production
+## Production verification
 
-Recorded after push: Render `revision` must equal `HEAD` on `develop`.
+Verified 2026-08-25 against public `https://ados-web.onrender.com`.
+
+Feature commit (casino live revision):
+`f4e78cbde6c37f46abf37d026167a344bcde4cb3`
+
+| Check | Result |
+|---|---|
+| Git | `f4e78cbd…` on `develop`, local=remote at deploy |
+| Render `/liveness` | `alive`, `startup_validated=true`, revision `f4e78cbd…` |
+| `/readiness` | `ready`; database / redis / api healthy; persistence postgres |
+| `GET /api/casino/v1/health` | `17.0.0-play-money`, Odessa Prime Casino, PLAY / DEMO CHIPS, postgres |
+| Lobby | 200; chip denoms 10–5000; Royale 1 live; Classic/Monaco/VIP soon |
+| Rooms | Redis backend, Roulette Royale 1 0/6 |
+| SPA HTML | `/`, `/enterprise-city`, `/casino`, `/casino/floor`, `/casino/roulette`, `/casino/roulette/roulette-royale-1`, `/casino/venues/odessa-prime` all 200 SPA fallback |
+| Anonymous wallet / demo-grant | 401 `Authentication required` (no auth bypass) |
+
+Authenticated PLAY wager/ledger smoke requires a real session (production Bearer is fail-closed). Anonymous path correctly shows login/401 instead of inventing a client balance.
+
 Public: `https://ados-web.onrender.com/casino` and
 `https://ados-web.onrender.com/casino/roulette/roulette-royale-1`.
-Anonymous mutations still 401.
+
+## Visual QA notes
+
+No browser MCP in this session — live click-through of entrance → floor → table was not possible.
+RTL tests rendered floor + table browser. CSS has desktop (`min-width: 860px`) and mobile
+(`max-width: 859px`, bottom nav) breakpoints. Wheel/ball animate to the **server** `result_number`.
 
 ## Next
 
