@@ -13,8 +13,8 @@ export const webConfig = {
   application: "enterprise_web_platform",
   version: "9.5.0",
   sprint: "33.2.1",
-  n8nUrl: import.meta.env.VITE_N8N_URL || "http://localhost:5678",
-  litellmUrl: import.meta.env.VITE_LITELLM_URL || "http://localhost:4000",
+  n8nUrl: import.meta.env.VITE_N8N_URL || (import.meta.env.PROD ? "" : "http://localhost:5678"),
+  litellmUrl: import.meta.env.VITE_LITELLM_URL || (import.meta.env.PROD ? "" : "http://localhost:4000"),
   /** Empty in local/dev and same-origin HTTPS. Absolute origin only when VITE_API_BASE(_URL) is set. */
   publicApiOrigin: PUBLIC_API_ORIGIN,
   apiBase: PUBLIC_API_ORIGIN ? `${PUBLIC_API_ORIGIN}/api` : import.meta.env.VITE_API_BASE || "/api",

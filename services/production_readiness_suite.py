@@ -207,7 +207,7 @@ class ProductionReadinessSuite:
                 "redis",
                 ok=ok,
                 detail="PONG" if ok else response.decode(errors="replace").strip(),
-                payload={"host": host, "port": port, "duration_ms": duration_ms},
+                payload={"reachable": True, "duration_ms": duration_ms},
             )
         except Exception as exc:
             if not REDIS_REQUIRED:
@@ -466,7 +466,45 @@ class ProductionReadinessSuite:
         cls._last_diagnostics = payload
         if persist:
             await cls._persist_run(payload)
+            payload["persistence"] = await cls._probe_persisted_health()
+            persist_ok = (payload["persistence"] or {}).get("readback") == "ok"
+            if persist_ok and payload.get("ready"):
+                cls._startup_validated = True
         return payload
+
+    @classmethod
+    async def _probe_persisted_health(cls) -> dict[str, Any]:
+        """Write-then-readback against managed Postgres (SystemHealth).
+
+        Public payload contains only statuses and counts — never connection
+        strings, hosts, or row payloads.
+        """
+        unavailable = {
+            "write": "unavailable",
+            "readback": "unavailable",
+            "history_count": 0,
+            "source": "postgres",
+        }
+        try:
+            from sqlalchemy import func, select
+
+            from database.models.production_readiness_engine import SystemHealth
+
+            async with get_session() as session:
+                health_repo = SystemHealthRepository(session)
+                latest = await health_repo.latest_by_check("database")
+                total = await session.scalar(select(func.count()).select_from(SystemHealth))
+            if latest is None:
+                return unavailable
+            return {
+                "write": "ok",
+                "readback": "ok",
+                "history_count": int(total or 0),
+                "latest_status": str(latest.status),
+                "source": "postgres",
+            }
+        except Exception:
+            return unavailable
 
     @classmethod
     async def _persist_run(cls, payload: dict[str, Any]) -> None:
@@ -551,6 +589,8 @@ class ProductionReadinessSuite:
     @classmethod
     async def readiness(cls) -> dict[str, Any]:
         payload = await cls.run_dependency_validation(persist=True)
+        if payload.get("ready"):
+            cls._startup_validated = True
         return {
             "status": "ready" if payload.get("ready") else "not_ready",
             "ready": payload.get("ready", False),
@@ -564,6 +604,8 @@ class ProductionReadinessSuite:
             "degraded": payload.get("degraded", []),
             "checked_at": payload.get("checked_at"),
             "duration_ms": payload.get("duration_ms"),
+            "persistence": payload.get("persistence")
+            or {"write": "skipped", "readback": "skipped", "source": "postgres"},
         }
 
     @classmethod

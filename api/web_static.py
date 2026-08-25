@@ -47,6 +47,19 @@ def _is_api_path(path: str) -> bool:
     return any(path == p.rstrip("/") or path.startswith(p) for p in _API_PREFIXES)
 
 
+_SPA_CITY_PATHS = frozenset({"/city", "/city/"})
+
+
+def prefers_html(request: web.Request) -> bool:
+    """Browser navigations send text/html first; API clients send JSON."""
+    accept = request.headers.get("Accept") or ""
+    html_idx = accept.find("text/html")
+    if html_idx < 0:
+        return False
+    json_idx = accept.find("application/json")
+    return json_idx < 0 or html_idx < json_idx
+
+
 def register_web_static(app: web.Application) -> None:
     dist = web_dist_dir()
     if not serve_web_enabled() or not (dist / "index.html").is_file():
@@ -61,6 +74,18 @@ def register_web_static(app: web.Application) -> None:
     app.router.add_get("/", spa_index)
 
     @web.middleware
+    async def spa_city_html(request: web.Request, handler):
+        # GET /city is also an authenticated city-runtime API. Browsers that
+        # navigate there must receive the SPA; JSON clients keep the API.
+        if (
+            request.method in {"GET", "HEAD"}
+            and request.path in _SPA_CITY_PATHS
+            and prefers_html(request)
+        ):
+            return web.FileResponse(dist / "index.html")
+        return await handler(request)
+
+    @web.middleware
     async def spa_fallback(request: web.Request, handler):
         try:
             return await handler(request)
@@ -69,4 +94,5 @@ def register_web_static(app: web.Application) -> None:
                 return web.FileResponse(dist / "index.html")
             raise
 
+    app.middlewares.append(spa_city_html)
     app.middlewares.append(spa_fallback)

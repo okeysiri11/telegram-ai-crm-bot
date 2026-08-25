@@ -48,10 +48,15 @@ jobs:
           ASSET=$(grep -oE '/assets/[A-Za-z0-9._-]+\.(js|css)' /tmp/body | head -1)
           if [ -n "$ASSET" ]; then check assets "$BASE$ASSET" 200; else echo "FAIL assets (no asset ref)"; fail=1; fi
           check spa_route       "$BASE/login"     200
+          check city_spa        "$BASE/enterprise-city" 200
+          check city_manifest   "$BASE/assets/odessa/odessa_manifest.json" 200
           check liveness        "$BASE/liveness"  200
           check readiness       "$BASE/readiness" 200
           check crm_read        "$BASE/api/auto/v1/crm/metrics" 200
           check auth_gate       "$BASE/api/auto/v1/crm/manager/operational-summary" 401
+          FAKE=$(curl -sS -o /tmp/fake -w "%{http_code}" --max-time 60 -H "Authorization: Bearer not-a-real-token" "$BASE/api/auto/v1/crm/manager/command-center" || echo 000)
+          if [ "$FAKE" = "401" ]; then echo "PASS forged_bearer"; else echo "FAIL forged_bearer (got $FAKE, want 401)"; fail=1; fi
+          curl -sS --max-time 60 "$BASE/readiness" | python3 -c 'import json,sys; p=json.load(sys.stdin); pers=p.get("persistence") or {}; ok=pers.get("readback") in {"ok","skipped"}; print("PASS persistence" if ok else "FAIL persistence"); sys.exit(0 if ok else 1)' || fail=1
 
           REVISION=$(curl -sS --max-time 60 "$BASE/liveness" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("revision", "unknown"))' || echo unknown)
           echo "deployed revision: $REVISION (develop: $EXPECTED_SHA)"

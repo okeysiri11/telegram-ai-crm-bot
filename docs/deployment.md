@@ -1,13 +1,15 @@
-# Deployment — Durable production (Sprint 13.1)
+# Deployment — Durable production (Sprint 13.1 / 14)
 
 **Not production:** Cloudflare Quick Tunnels (`scripts/start_public_host.py`) are **PREVIEW only**. They die with the process and must never be reported as the public production URL.
 
-Durable production is a persistent host. This repository now has two engineering-ready paths:
+Durable production is the Render Blueprint host:
 
-1. **Render Blueprint** (`render.yaml`) — git-driven web service + managed Postgres + Redis
-2. **Self-managed compose** (`docker-compose.prod.yml`) — VPS with DNS/TLS via `scripts/deploy_production.sh`
+**Public app:** `https://ados-web.onrender.com`
 
-Neither path is a live public cutover until an owner applies the blueprint or provisions a host. No deployment secrets live in git.
+1. **Render Blueprint** (`render.yaml`) — git-driven web service + managed Postgres + Redis (live)
+2. **Self-managed compose** (`docker-compose.prod.yml`) — VPS with DNS/TLS via `scripts/deploy_production.sh` (engineering path)
+
+No deployment secrets live in git.
 
 ## Durable production (Render Blueprint)
 
@@ -20,9 +22,11 @@ The IaC definition is **`render.yaml`**:
 | Redis `ados-redis` | Render Key Value (required by production config policy) |
 
 **Topology:** one process serves `/` (production `src/web/dist` build, `ADOS_SERVE_WEB=true`),
-`/api/*`, `/management/*`, `/liveness`, `/readiness`, `/health`, `/metrics` on a stable
-`https://<service>.onrender.com` URL. Telegram polling is *not* part of this service
-(`ADOS_TELEGRAM_REQUIRED=false` — explicit web profile); the bot remains a separate run target.
+`/api/*`, `/management/*`, `/liveness`, `/readiness`, `/health`, `/metrics` on
+`https://ados-web.onrender.com`. 3D city assets are same-origin under `/assets/odessa/`;
+browser navigation to `/city` and `/enterprise-city` serves the SPA. Telegram polling is
+*not* part of this service (`ADOS_TELEGRAM_REQUIRED=false` — explicit web profile); the bot
+remains a separate run target.
 
 **Migrations:** `scripts/run_production_web.py` runs `alembic upgrade head` at startup and
 **refuses to start production** if migrations fail (`ADOS_SKIP_MIGRATIONS=1` only for

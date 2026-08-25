@@ -104,6 +104,18 @@ async def test_crm_manager_routes_remain_authenticated(client: TestClient):
     assert metrics.status == 200
 
 
+@pytest.mark.asyncio
+async def test_production_rejects_unverified_bearer(client: TestClient, monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    forged = await client.get(
+        "/api/auto/v1/crm/manager/command-center",
+        headers={"Authorization": "Bearer not-a-real-token"},
+    )
+    assert forged.status == 401
+    body = await forged.json()
+    assert "Authentication required" in body.get("error", "")
+
+
 def test_crm_smoke_contract_helpers():
     checks = smoke_payloads(
         liveness={"status": "alive", "service": "ados-platform-api", "revision": "abc"},

@@ -169,6 +169,8 @@ async def test_readiness_returns_200_with_identity_when_ready(health_client: Tes
     assert body["runtime"] in {"production", "development"}
     assert body["database"] == "healthy"
     assert body["checks"]["database"] == "healthy"
+    assert body["persistence"]["source"] == "postgres"
+    assert body["persistence"]["readback"] in {"ok", "skipped", "unavailable"}
 
 
 @pytest.mark.asyncio

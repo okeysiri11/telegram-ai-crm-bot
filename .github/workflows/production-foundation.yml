@@ -29,4 +29,5 @@ jobs:
       - name: Sprint 13 / 13.1 tests
         run: |
           python -m pytest tests/test_sprint_13_1_durable_deployment.py \
-            tests/test_production_health_sprint_13.py -q --tb=line
+            tests/test_production_health_sprint_13.py \
+            tests/test_sprint_14_production_verification.py -q --tb=line

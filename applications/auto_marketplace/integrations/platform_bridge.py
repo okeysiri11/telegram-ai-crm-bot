@@ -4,9 +4,59 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+def _environment_is_production() -> bool:
+    env = (os.getenv("ENVIRONMENT") or "").strip().lower()
+    if env in {"production", "prod", "staging"}:
+        return True
+    if env in {"development", "dev", "test", "local"}:
+        return False
+    try:
+        from platform_configuration.configuration_center import configuration_center
+
+        return bool(configuration_center.settings.is_production)
+    except Exception:
+        return False
+
+
+def _verified_bearer_claims(token: str) -> dict[str, Any] | None:
+    """Return claims only when the token is a real session or JWT.
+
+    ``platform_security.sessions.SessionManager.validate`` falls back to
+    ``bool(session_id)`` when the identity store is unavailable — that must
+    never be treated as authentication in production.
+    """
+    try:
+        from platform_identity.session_manager import session_manager as identity_sessions
+
+        session = identity_sessions.get(token)
+        if session is not None and not getattr(session, "revoked", False):
+            return {"session_id": token}
+    except Exception:
+        logger.debug("identity session lookup unavailable")
+    try:
+        import jwt as jwt_lib
+        from config import JWT_ALGORITHM, JWT_SECRET
+
+        claims = jwt_lib.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+        if isinstance(claims, dict):
+            return claims
+    except Exception:
+        pass
+    try:
+        from platform_identity.jwt_service import jwt_service
+
+        claims = jwt_service.verify_access_token(token)
+        if isinstance(claims, dict):
+            return claims
+    except Exception:
+        pass
+    return None
 
 
 class PlatformBridge:
@@ -134,15 +184,16 @@ class PlatformBridge:
     async def authenticate_request(auth_header: str | None) -> dict[str, Any] | None:
         if not auth_header or not auth_header.startswith("Bearer "):
             return None
-        token = auth_header[7:]
-        try:
-            from platform_security.sessions import session_manager
-
-            if session_manager.validate(token):
-                return {"session_id": token, "authenticated": True}
-        except Exception:
-            logger.debug("session validation unavailable")
-        return {"token": token, "authenticated": True}
+        token = auth_header[7:].strip()
+        if not token:
+            return None
+        claims = _verified_bearer_claims(token)
+        if claims:
+            return {**claims, "authenticated": True}
+        # Local/CI CRM suites use ``Bearer test``. Production must fail closed.
+        if not _environment_is_production():
+            return {"token": token, "authenticated": True}
+        return None
 
     @staticmethod
     def platform_health() -> dict[str, Any]:

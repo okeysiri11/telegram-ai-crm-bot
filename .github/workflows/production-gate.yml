@@ -47,8 +47,8 @@ jobs:
           HEADS=$(python -m alembic heads | grep -c "(head)")
           echo "alembic head count: $HEADS"
           test "$HEADS" -eq 1
-      - name: Production health / readiness tests (Sprint 13/13.1)
-        run: python -m pytest tests/test_production_health_sprint_13.py -q
+      - name: Production health / readiness tests (Sprint 13/13.1/14)
+        run: python -m pytest tests/test_production_health_sprint_13.py tests/test_sprint_13_1_durable_deployment.py tests/test_sprint_14_production_verification.py -q
       - name: CRM regression suites (Sprints 8-13)
         run: |
           python -m pytest \
