@@ -59,7 +59,9 @@ def test_durable_artifacts_and_tunnel_demotion():
     docs = (ROOT / "docs" / "deployment.md").read_text(encoding="utf-8")
     assert "PREVIEW" in docs
     assert "not production" in docs.lower()
-    assert (ROOT / "scripts" / "deploy_production.sh").is_file()
+    assert (ROOT / "render.yaml").is_file()
+    assert (ROOT / "Dockerfile.web").is_file()
+    assert (ROOT / "scripts" / "run_production_web.py").is_file()
     assert (ROOT / "scripts" / "rollback_production.sh").is_file()
     assert (ROOT / "scripts" / "production_doctor.py").is_file()
     assert (ROOT / "docs" / "ENVIRONMENT_CONTRACT.md").is_file()

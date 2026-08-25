@@ -52,6 +52,23 @@ Observer = Callable[["ConfigurationCenter"], None]
 _INSECURE_JWT_SECRETS = insecure_secret_set()
 
 
+def _normalize_postgres_url(url: str) -> str:
+    """Normalize provider-issued PostgreSQL URLs to the asyncpg driver scheme.
+
+    Managed-Postgres providers (Render, Railway, Heroku-style) hand out
+    ``postgres://`` / ``postgresql://`` connection strings. The platform's
+    async engine requires ``postgresql+asyncpg://``. URLs that already carry
+    an explicit driver (``postgresql+asyncpg``, ``postgresql+psycopg2``) are
+    left untouched.
+    """
+    raw = (url or "").strip()
+    if raw.startswith("postgres://"):
+        return "postgresql+asyncpg://" + raw[len("postgres://"):]
+    if raw.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + raw[len("postgresql://"):]
+    return raw
+
+
 @dataclass
 class ConfigurationValidationReport:
     ok: bool
@@ -119,9 +136,11 @@ class ConfigurationCenter:
 
         self._settings = PlatformSettings(
             database=DatabaseSettings(
-                url=getenv(
-                    "DATABASE_URL",
-                    "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem",
+                url=_normalize_postgres_url(
+                    getenv(
+                        "DATABASE_URL",
+                        "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem",
+                    )
                 ),
                 postgres_only=postgres_only,
                 pool_size=getenv_int("DB_POOL_SIZE", 20),
@@ -183,7 +202,10 @@ class ConfigurationCenter:
                 api_port=getenv_int("API_PORT", getenv_int("PORT", 8080)),
                 build_version=getenv("PLATFORM_BUILD_VERSION", "1.0.0"),
                 platform_version=getenv("PLATFORM_VERSION", "2.0.0"),
-                git_revision=getenv("GIT_REVISION", getenv("GIT_COMMIT", "unknown")),
+                git_revision=getenv(
+                    "GIT_REVISION",
+                    getenv("GIT_COMMIT", getenv("GIT_SHA", getenv("RENDER_GIT_COMMIT", "unknown"))),
+                ),
             ),
             security=SecuritySettings(
                 environment=str(env).lower(),

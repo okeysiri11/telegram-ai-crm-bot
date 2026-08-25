@@ -28,14 +28,15 @@ def _now() -> datetime:
 
 
 def _git_revision() -> str:
-    """Build/revision identity. Prefers GIT_SHA injected at image build/deploy."""
+    """Build/revision identity. Prefers injected deploy SHA over local git."""
     import os
     import subprocess
     from pathlib import Path
 
-    injected = (os.getenv("GIT_SHA") or os.getenv("SOURCE_REVISION") or "").strip()
-    if injected and injected.lower() not in {"unknown", "none"}:
-        return injected[:40]
+    for key in ("GIT_SHA", "SOURCE_REVISION", "GIT_REVISION", "GIT_COMMIT", "RENDER_GIT_COMMIT"):
+        injected = (os.getenv(key) or "").strip()
+        if injected and injected.lower() not in {"unknown", "none"}:
+            return injected[:40]
     try:
         root = Path(__file__).resolve().parents[1]
         completed = subprocess.run(
@@ -56,24 +57,43 @@ def _git_revision() -> str:
 def _service_identity() -> dict[str, str]:
     """Non-secret service identity for health payloads (Sprint 13 / 13.1).
 
-    Reads the platform version through ConfigurationCenter so operational
-    responses report the same version the platform was configured with.
     Never includes credentials, tokens, or connection URLs.
     """
+    import os
+
     try:
         from platform_configuration.configuration_center import configuration_center
 
-        version = configuration_center.settings.management.platform_version
+        management = configuration_center.settings.management
+        version = management.platform_version
+        revision = management.git_revision
     except Exception:
-        import os
-
         version = os.getenv("PLATFORM_VERSION", "unknown")
+        revision = ""
+    if not revision or revision == "unknown":
+        revision = _git_revision()
     return {
         "service": SERVICE_NAME,
         "service_version": version,
         "runtime": "production" if IS_PRODUCTION else "development",
-        "revision": _git_revision(),
+        "revision": revision[:40],
     }
+
+
+def _telegram_required() -> bool:
+    """Whether readiness treats a missing BOT_TOKEN as fatal.
+
+    Defaults to required in production (unchanged bot-deployment behavior).
+    A web-only service profile (Sprint 13.1 durable deployment) may set
+    ADOS_TELEGRAM_REQUIRED=false explicitly — an operator decision recorded
+    in the deployment manifest, not a silent fallback.
+    """
+    import os
+
+    if not IS_PRODUCTION:
+        return False
+    raw = (os.getenv("ADOS_TELEGRAM_REQUIRED") or "true").strip().lower()
+    return raw not in {"0", "false", "no", "off"}
 
 
 def _check_result(
@@ -117,7 +137,7 @@ class ProductionReadinessSuite:
             "api_host": bool(API_HOST),
             "api_port": API_PORT > 0,
         }
-        ok = (checks["bot_token"] or not IS_PRODUCTION) and checks["api_port"] > 0
+        ok = (checks["bot_token"] or not _telegram_required()) and checks["api_port"] > 0
         degraded = ok and (not checks["database_configured"] or not checks["bot_token"])
         return _check_result(
             "startup",
@@ -126,6 +146,8 @@ class ProductionReadinessSuite:
             detail=(
                 "startup configuration validated"
                 if ok and checks["bot_token"]
+                else "web/API service profile (BOT_TOKEN optional)"
+                if ok and IS_PRODUCTION
                 else "API-local mode (BOT_TOKEN optional)"
                 if ok
                 else "missing BOT_TOKEN or API config"
@@ -276,6 +298,13 @@ class ProductionReadinessSuite:
                     ok=True,
                     skipped=True,
                     detail="BOT_TOKEN missing (API-local / non-production)",
+                )
+            if not _telegram_required():
+                return _check_result(
+                    "telegram",
+                    ok=True,
+                    skipped=True,
+                    detail="BOT_TOKEN missing (ADOS_TELEGRAM_REQUIRED=false — web service profile)",
                 )
             return _check_result("telegram", ok=False, detail="BOT_TOKEN missing")
 

@@ -1,0 +1,40 @@
+# Durable production web image — API + same-origin SPA (Sprint 13.1).
+# Stage 1 builds the Enterprise Web production bundle; stage 2 runs the
+# platform API which serves it (ADOS_SERVE_WEB). Telegram polling is NOT
+# part of this image — the bot stays a separate run target (Dockerfile).
+
+FROM node:22-alpine AS webbuild
+
+WORKDIR /web
+COPY src/web/package.json src/web/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY src/web ./
+# Production bundle. The repo-wide `npm run build` (tsc -b && vite build)
+# carries known pre-existing typecheck failures in unrelated verticals
+# (Odessa3D/Agro/AI-command — see docs/SPRINT_13_PRODUCTION_HOST_RECOVERY_RESULT.md);
+# the CI gate reports typecheck separately and honestly.
+RUN npx vite build
+
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . .
+COPY --from=webbuild /web/dist /app/src/web/dist
+
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+ENV ADOS_SERVE_WEB=true
+
+EXPOSE 8080
+
+# Migrations run inside the entrypoint (fatal in production on failure).
+CMD ["python", "scripts/run_production_web.py"]

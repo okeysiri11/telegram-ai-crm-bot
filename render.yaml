@@ -1,0 +1,78 @@
+# Render Blueprint — durable production deployment (Sprint 13.1).
+#
+# Topology: one Docker web service (API + same-origin SPA via
+# scripts/run_production_web.py) + managed PostgreSQL (source of truth)
+# + managed Key Value (Redis) required by production configuration policy.
+#
+# Deploy trigger: autoDeployTrigger=checksPass — Render deploys a develop
+# commit only after ALL GitHub checks pass (.github/workflows/production-gate.yml
+# gates every develop push). A failed gate or a failed health check never
+# replaces the running healthy deployment; rollback = "Rollback" on the
+# service's Deploys page.
+#
+# Secrets policy: generateValue secrets are created by Render at provision
+# time and never live in this repository. BOT_TOKEN (optional for the web
+# profile) is sync:false — set it in the Render dashboard, never in git.
+#
+# NOTE (free tier): free web services sleep on idle (cold start on first
+# request) and free PostgreSQL instances expire after their trial window —
+# upgrade plans in the dashboard for always-on production.
+
+previews:
+  generation: off
+
+databases:
+  - name: ados-postgres
+    plan: free
+    region: frankfurt
+    databaseName: ai_ecosystem
+    user: ados
+
+services:
+  - type: keyvalue
+    name: ados-redis
+    plan: free
+    region: frankfurt
+    ipAllowList: []  # internal connections only
+
+  - type: web
+    name: ados-web
+    runtime: docker
+    plan: free
+    region: frankfurt
+    branch: develop
+    dockerfilePath: ./Dockerfile.web
+    autoDeployTrigger: checksPass
+    healthCheckPath: /liveness
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: POSTGRES_ONLY
+        value: "true"
+      - key: ADOS_SERVE_WEB
+        value: "true"
+      # Web/API service profile: Telegram polling is not part of this
+      # service; readiness treats missing BOT_TOKEN as skipped, not fatal.
+      - key: ADOS_TELEGRAM_REQUIRED
+        value: "false"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ados-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: ados-redis
+          property: connectionString
+      - key: IAM_JWT_SECRET
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: API_JWT_SECRET
+        generateValue: true
+      - key: SECURITY_MASTER_KEY
+        generateValue: true
+      # Optional: set in the Render dashboard to enable Telegram-side checks
+      # for this service (the bot itself remains a separate run target).
+      - key: BOT_TOKEN
+        sync: false

@@ -35,6 +35,9 @@ def check_files() -> list[dict[str, str | bool]]:
         "restore": ROOT / "scripts" / "restore_postgres.sh",
         "crm_smoke": ROOT / "scripts" / "crm_production_smoke.py",
         "preview_tunnel": ROOT / "scripts" / "start_public_host.py",
+        "render_blueprint": ROOT / "render.yaml",
+        "web_dockerfile": ROOT / "Dockerfile.web",
+        "production_web": ROOT / "scripts" / "run_production_web.py",
     }
     results = []
     for name, path in required.items():

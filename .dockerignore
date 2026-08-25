@@ -1,23 +1,29 @@
+# Keep production images lean and deterministic (Sprint 13.1).
+# Conservative on purpose: only build tooling, local state, and secrets are
+# excluded — runtime-readable repo content (docs/, data fixtures) stays in.
 .git
 .github
 .venv
 venv
-node_modules
-src/web/node_modules
+__pycache__
 **/__pycache__
 *.pyc
 .pytest_cache
 .mypy_cache
 .ruff_cache
-.htmlcov
-coverage
-*.md
-docs
-knowledge
-platform_console
-data
+node_modules
+**/node_modules
+src/web/dist
+platform_console/dist
+terminals/
+.env
+.env.*
+!.env.example
+scripts/.bin/
+data/media_cache/
+data/auto_remote_https.url
+data/auto_remote_https.pids
+data/public_host.url
+*.log
 backups
 *.dump
-.env
-.env.local
-.env.production
