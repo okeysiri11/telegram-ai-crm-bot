@@ -74,7 +74,7 @@ export function RouletteWheel({
         </div>
         <div
           ref={wheelRef}
-          className="op-wheel"
+          className={`op-wheel${spinning ? "" : " is-idle"}`}
           style={{ background: `conic-gradient(${wheelBackground()})` }}
           role="img"
           aria-label={target != null ? `Колесо, результат ${target}` : "Колесо рулетки"}

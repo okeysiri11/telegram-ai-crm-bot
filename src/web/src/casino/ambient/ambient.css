@@ -1,0 +1,94 @@
+.op-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+.op-light-sweep {
+  position: absolute;
+  inset: -20% -40%;
+  background: linear-gradient(115deg, transparent 40%, rgba(201,164,92,0.07) 50%, transparent 60%);
+  animation: opSweep 14s ease-in-out infinite;
+}
+.op-reflect {
+  position: absolute;
+  inset: auto 10% 8% 10%;
+  height: 18%;
+  background: linear-gradient(180deg, rgba(201,164,92,0.08), transparent);
+  filter: blur(18px);
+  animation: opBreathe 9s ease-in-out infinite;
+}
+.op-bokeh,
+.op-bokeh.is-2 {
+  position: absolute;
+  width: 9rem;
+  height: 9rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,164,92,0.16), transparent 70%);
+  top: 12%;
+  left: 18%;
+  animation: opBokeh 11s ease-in-out infinite;
+}
+.op-bokeh.is-2 { top: 58%; left: 72%; animation-delay: -4s; }
+.op-silhouettes {
+  position: absolute;
+  inset: auto 0 0;
+  height: 22%;
+  background:
+    radial-gradient(ellipse at 20% 120%, rgba(0,0,0,0.45) 20%, transparent 50%),
+    radial-gradient(ellipse at 70% 140%, rgba(0,0,0,0.4) 18%, transparent 48%);
+  animation: opCrowd 16s ease-in-out infinite;
+}
+.op-silhouettes.is-static { animation: none; opacity: 0.55; }
+.op-sign-shimmer {
+  background: linear-gradient(90deg, var(--op-gold) 0%, var(--op-gold-hi) 40%, #fff6d4 50%, var(--op-gold) 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: opShimmer 8s linear infinite;
+}
+
+@keyframes opSweep {
+  0%, 100% { transform: translateX(-12%); }
+  50% { transform: translateX(12%); }
+}
+@keyframes opBreathe {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.7; }
+}
+@keyframes opBokeh {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.45; }
+  50% { transform: translate(18px, -12px) scale(1.08); opacity: 0.7; }
+}
+@keyframes opCrowd {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(10px); }
+}
+@keyframes opShimmer {
+  from { background-position: 0 0; }
+  to { background-position: 220% 0; }
+}
+@keyframes opIdleWheel {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.op-world[data-tier="HIGH"] .op-wheel.is-idle { animation: opIdleWheel 64s linear infinite; }
+.op-world[data-tier="MEDIUM"] .op-wheel.is-idle { animation: opIdleWheel 90s linear infinite; }
+.op-world[data-tier="LOW"] .op-wheel.is-idle,
+.op-world[data-tier="LOW"] .op-ambient,
+.op-world[data-tier="LOW"] .op-sign-shimmer { animation: none !important; }
+
+.op-slot-machine { position: relative; }
+.op-slot-machine::after {
+  content: "";
+  position: absolute;
+  inset: 12% 8% auto;
+  height: 40%;
+  pointer-events: none;
+  background: radial-gradient(ellipse, rgba(201,164,92,0.18), transparent 70%);
+  animation: opBreathe 5.5s ease-in-out infinite;
+}
+.op-world[data-tier="LOW"] .op-slot-machine::after { animation: none; opacity: 0.3; }

@@ -4,8 +4,10 @@ const GAMES = [
   { id: "roulette", title: "РУЛЕТКА", live: true, players: "LIVE", to: "/casino/rooms/roulette" },
   { id: "blackjack", title: "BLACKJACK", live: true, players: "LIVE", to: "/casino/rooms/blackjack" },
   { id: "slots", title: "ОДЕССА GOLD", live: true, players: "LIVE", to: "/casino/slots/odessa-gold" },
-  { id: "poker", title: "ПОКЕР", live: false, players: "Скоро", to: "/casino/games" },
-  { id: "live", title: "LIVE CASINO", live: false, players: "Скоро", to: "/casino/games" },
+  { id: "poker", title: "ПОКЕР", live: true, players: "ЗАЛ", to: "/casino/rooms/poker" },
+  { id: "vip", title: "VIP", live: true, players: "ЗАЛ", to: "/casino/rooms/vip" },
+  { id: "bar", title: "БАР", live: true, players: "ЗАЛ", to: "/casino/rooms/bar" },
+  { id: "restaurant", title: "РЕСТОРАН", live: true, players: "ЗАЛ", to: "/casino/rooms/restaurant" },
   { id: "tournaments", title: "ТУРНИРЫ", live: false, players: "Скоро", to: "/casino/games" },
 ];
 

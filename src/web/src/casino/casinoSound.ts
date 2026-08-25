@@ -1,11 +1,29 @@
-/** Optional casino sound layer. Default muted. No required audio assets. */
+/** Optional casino sound layer. Default muted. No autoplay. No looping ambience. */
+
+export type CasinoRoomTone =
+  | "entrance"
+  | "lobby"
+  | "roulette"
+  | "blackjack"
+  | "slots"
+  | "poker"
+  | "vip"
+  | "bar"
+  | "restaurant"
+  | null;
 
 class CasinoSound {
   muted = true;
+  room: CasinoRoomTone = null;
   private ctx: AudioContext | null = null;
 
   setMuted(next: boolean) {
     this.muted = next;
+    if (next) this.stopAmbience();
+  }
+
+  setRoom(room: CasinoRoomTone) {
+    this.room = room;
   }
 
   private context(): AudioContext | null {
@@ -33,8 +51,16 @@ class CasinoSound {
     this.beep(420, 0.05, 0.03);
   }
 
+  card() {
+    this.beep(880, 0.04, 0.02);
+  }
+
   spin() {
     this.beep(180, 0.2, 0.03);
+  }
+
+  slotStop() {
+    this.beep(240, 0.08, 0.03);
   }
 
   tick() {
@@ -43,6 +69,15 @@ class CasinoSound {
 
   win() {
     this.beep(520, 0.12, 0.04);
+  }
+
+  /** Reserved. Never starts without unmute + future user gesture. */
+  startAmbience() {
+    return;
+  }
+
+  stopAmbience() {
+    return;
   }
 }
 

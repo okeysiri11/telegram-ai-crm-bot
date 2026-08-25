@@ -41,7 +41,10 @@ export function OdessaGoldMachine() {
 
   useEffect(() => {
     if (!spinning) return;
-    const t = window.setTimeout(() => setSpinning(false), 1600);
+    const t = window.setTimeout(() => {
+      setSpinning(false);
+      casinoSound.slotStop();
+    }, 1600);
     return () => window.clearTimeout(t);
   }, [spinning]);
 
@@ -66,7 +69,12 @@ export function OdessaGoldMachine() {
   }
 
   return (
-    <section className="op-slot-machine" data-testid="odessa-gold" aria-label="Odessa Gold">
+    <section
+      className="op-slot-machine"
+      data-testid="odessa-gold"
+      data-phase={spinning ? "spinning" : spin ? "result" : "idle"}
+      aria-label="Odessa Gold"
+    >
       <p className="op-kicker">ODESSA GOLD</p>
       <h1 className="op-title">Чёрное море · PLAY</h1>
       <SlotReels grid={spin?.reels || []} spinning={spinning} />

@@ -4,10 +4,13 @@ import { useRoomTransition } from "../transitions/useRoomTransition";
 import { CasinoMap } from "./CasinoMap";
 
 const HOTSPOTS = [
-  { id: "roulette", label: "РУЛЕТКА", live: true, x: "18%", y: "42%", w: "28%", h: "28%", to: "/casino/rooms/roulette" },
-  { id: "blackjack", label: "BLACKJACK", live: true, x: "52%", y: "38%", w: "24%", h: "26%", to: "/casino/rooms/blackjack" },
-  { id: "slots", label: "ОДЕССА GOLD", live: true, x: "72%", y: "48%", w: "22%", h: "24%", to: "/casino/rooms/slots" },
-  { id: "vip", label: "VIP", live: false, x: "8%", y: "18%", w: "16%", h: "18%", to: "/casino/floor" },
+  { id: "vip", label: "VIP", live: true, x: "6%", y: "14%", w: "16%", h: "18%", to: "/casino/rooms/vip" },
+  { id: "restaurant", label: "РЕСТОРАН", live: true, x: "28%", y: "12%", w: "20%", h: "16%", to: "/casino/rooms/restaurant" },
+  { id: "bar", label: "БАР", live: true, x: "78%", y: "12%", w: "16%", h: "18%", to: "/casino/rooms/bar" },
+  { id: "poker", label: "ПОКЕР", live: true, x: "52%", y: "16%", w: "20%", h: "16%", to: "/casino/rooms/poker" },
+  { id: "roulette", label: "РУЛЕТКА", live: true, x: "12%", y: "42%", w: "28%", h: "30%", to: "/casino/rooms/roulette" },
+  { id: "blackjack", label: "BLACKJACK", live: true, x: "44%", y: "40%", w: "24%", h: "28%", to: "/casino/rooms/blackjack" },
+  { id: "slots", label: "ОДЕССА GOLD", live: true, x: "70%", y: "46%", w: "24%", h: "28%", to: "/casino/rooms/slots" },
 ] as const;
 
 export function LobbyScene() {
@@ -17,7 +20,7 @@ export function LobbyScene() {
   return (
     <div className="op-lobby-room" data-testid="casino-lobby" aria-label="Главный зал Odessa Prime">
       <div className="op-toolbar">
-        <h1 className="op-kicker">Зал Odessa Prime</h1>
+        <h1 className="op-kicker op-sign-shimmer">Зал Odessa Prime</h1>
         <div className="op-toggle" role="group" aria-label="Вид зала">
           <button type="button" className={mode === "hall" ? "is-on" : undefined} onClick={() => setMode("hall")}>
             ЗАЛ
@@ -30,25 +33,28 @@ export function LobbyScene() {
       {mode === "map" ? (
         <CasinoMap />
       ) : (
-        <div className="op-room-depth">
-          <div className="op-room-ceiling" />
-          <div className="op-room-backwall" />
-          <div className="op-chandelier is-lobby" />
-          <div className="op-room-carpet" />
-          {HOTSPOTS.map((spot) => (
-            <button
-              key={spot.id}
-              type="button"
-              className={`op-hotspot${spot.live ? " is-live" : " is-soon"}`}
-              style={{ left: spot.x, top: spot.y, width: spot.w, height: spot.h }}
-              data-testid={`hotspot-${spot.id}`}
-              onClick={() => (spot.live ? go(spot.to) : undefined)}
-            >
-              <span className="op-hotspot-glow" />
-              <small>{spot.live ? "ВОЙТИ" : "СКОРО"}</small>
-              <strong>{spot.label}</strong>
-            </button>
-          ))}
+        <div className="op-lobby-pan" data-testid="lobby-pan">
+          <div className="op-room-depth op-lobby-stage">
+            <div className="op-room-ceiling" aria-hidden />
+            <div className="op-room-backwall" aria-hidden />
+            <div className="op-chandelier is-lobby" aria-hidden />
+            <div className="op-room-carpet" aria-hidden />
+            {HOTSPOTS.map((spot) => (
+              <button
+                key={spot.id}
+                type="button"
+                className={`op-hotspot${spot.live ? " is-live" : " is-soon"}`}
+                style={{ left: spot.x, top: spot.y, width: spot.w, height: spot.h }}
+                data-testid={`hotspot-${spot.id}`}
+                aria-label={`${spot.label}: войти`}
+                onClick={() => go(spot.to)}
+              >
+                <span className="op-hotspot-glow" aria-hidden />
+                <small>ВОЙТИ</small>
+                <strong>{spot.label}</strong>
+              </button>
+            ))}
+          </div>
         </div>
       )}
       <p className="op-status">Горячие зоны светятся золотом — переход в комнату без смены chrome.</p>

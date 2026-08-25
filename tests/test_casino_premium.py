@@ -59,9 +59,10 @@ async def test_casino_lobby_route_and_floor(client: TestClient):
     assert labels >= {"LOBBY", "BAR", "ROULETTE", "BLACKJACK", "POKER", "SLOTS", "VIP"}
     roulette = next(a for a in payload["floor"] if a["id"] == "roulette")
     assert roulette["coming_soon"] is False
-    soon = [a for a in payload["floor"] if a["coming_soon"]]
-    assert soon
-    assert all(a["status_label"] == "Скоро" for a in soon)
+    floor = {a["id"]: a for a in payload["floor"]}
+    for area_id in ("poker", "vip", "bar", "restaurant"):
+        assert floor[area_id]["coming_soon"] is False
+        assert str(floor[area_id]["route"]).startswith("/casino/rooms/")
     games = await client.get("/api/casino/v1/games")
     assert games.status == 200
     assert any(item["id"] == "roulette" for item in (await games.json())["items"])

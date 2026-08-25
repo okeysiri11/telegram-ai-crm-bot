@@ -41,7 +41,7 @@ export function EntranceScene() {
         <div className="op-doors" aria-hidden />
       </div>
       <div className="op-hero">
-        <p className="op-kicker">ОДЕССА · MONACO HALL</p>
+        <p className="op-kicker op-sign-shimmer">ОДЕССА · MONACO HALL</p>
         <h1 className="op-title">ODESSA PRIME CASINO</h1>
         <p className="op-sub">Игровой мир · рулетка · blackjack · Odessa Gold · только PLAY / DEMO CHIPS</p>
         <div className="op-cta-row">

@@ -34,7 +34,7 @@ export function BlackjackTable() {
     try {
       const next = await fn();
       setHand(next);
-      casinoSound.chip();
+      casinoSound.card();
       if (next.settled) {
         casinoSound.win();
         await wallet.refresh();
@@ -52,7 +52,11 @@ export function BlackjackTable() {
   }
 
   return (
-    <div className="op-bj-table" data-testid="blackjack-table">
+    <div
+      className="op-bj-table"
+      data-testid="blackjack-table"
+      data-phase={hand?.settled ? "result" : hand ? "dealing" : "initial"}
+    >
       <DealerPortrait name="MARINA" />
       <p className="op-kicker">BLACKJACK SALON · PLAY</p>
       <div className="op-card-row" data-testid="dealer-cards">

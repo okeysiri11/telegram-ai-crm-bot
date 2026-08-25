@@ -45,9 +45,17 @@ export function RouletteTable() {
   const [history, setHistory] = useState<number[]>([]);
   const lock = useBetLock(phase);
   const total = useMemo(() => Object.values(stacks).reduce((a, b) => a + b, 0), [stacks]);
+  const alive = useRef(true);
+  const roundTimers = useRef<number[]>([]);
 
   useEffect(() => {
+    alive.current = true;
     void presence.join("roulette-royale-1").catch(() => undefined);
+    return () => {
+      alive.current = false;
+      roundTimers.current.forEach((id) => window.clearTimeout(id));
+      void presence.leave("roulette-royale-1").catch(() => undefined);
+    };
   }, [tableId]);
 
   const addBet = useCallback(
@@ -92,6 +100,7 @@ export function RouletteTable() {
       setPhase("BETTING_CLOSING");
       setSeconds(3);
       await new Promise((r) => setTimeout(r, 900));
+      if (!alive.current) return;
       setPhase("NO_MORE_BETS");
       const spun = await spinRoulette(opened.round_id);
       if (spun.result_number == null) throw new Error("empty_result");
@@ -117,16 +126,20 @@ export function RouletteTable() {
     setPhase("RESULT");
     if (result) setHistory((h) => [result.n, ...h].slice(0, 12));
     void walletState.refresh();
-    window.setTimeout(() => {
-      setPhase("SETTLED");
-      setStacks({});
-      setBets([]);
+    roundTimers.current.push(
       window.setTimeout(() => {
-        setPhase("BETTING_OPEN");
-        setSeconds(18);
-        setResult(null);
-      }, 1600);
-    }, 1400);
+        setPhase("SETTLED");
+        setStacks({});
+        setBets([]);
+        roundTimers.current.push(
+          window.setTimeout(() => {
+            setPhase("BETTING_OPEN");
+            setSeconds(18);
+            setResult(null);
+          }, 1600),
+        );
+      }, 1400),
+    );
   }
 
   useEffect(() => {
@@ -140,7 +153,7 @@ export function RouletteTable() {
   }
 
   return (
-    <div className="op-table op-table-scene" data-testid="roulette-table">
+    <div className="op-table op-table-scene" data-testid="roulette-table" data-phase={phase}>
       <div>
         <DealerPortrait />
         <RouletteWheel target={result?.n ?? null} spinning={spinning} onDone={onWheelDone} />

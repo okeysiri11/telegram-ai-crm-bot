@@ -1,0 +1,155 @@
+.op-world {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+.op-world :focus-visible {
+  outline: 2px solid var(--op-gold-hi);
+  outline-offset: 3px;
+}
+
+.op-skip {
+  position: absolute;
+  left: -999px;
+  top: 0;
+  z-index: 90;
+  background: #1a1208;
+  color: var(--op-gold-hi);
+  padding: 0.5rem 0.8rem;
+}
+.op-skip:focus {
+  left: 0.5rem;
+  top: 0.5rem;
+}
+
+.op-header {
+  padding-top: max(0.7rem, env(safe-area-inset-top));
+}
+.op-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.op-skeleton {
+  min-height: calc(100dvh - 6rem);
+  display: grid;
+  place-items: center;
+  color: var(--op-gold);
+  letter-spacing: 0.18em;
+  position: relative;
+}
+.op-skeleton-glow {
+  position: absolute;
+  inset: 20% 25%;
+  background: radial-gradient(circle, rgba(201,164,92,0.16), transparent 70%);
+}
+
+.op-lobby-pan {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+}
+.op-lobby-stage {
+  position: relative;
+  min-height: min(62vh, 520px);
+}
+
+.op-atmo-set {
+  position: absolute;
+  inset: 42% 18% 10%;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.op-room-depth.is-poker .op-atmo-set {
+  background: radial-gradient(ellipse, #146348, #08281d);
+  box-shadow: 0 0 0 10px #3a2e1a, 0 24px 40px rgba(0,0,0,0.4);
+}
+.op-room-depth.is-vip .op-atmo-set {
+  inset: 18% 12% 12%;
+  border-radius: 1.2rem;
+  background:
+    linear-gradient(180deg, rgba(90, 20, 28, 0.55), rgba(18, 12, 10, 0.8)),
+    repeating-linear-gradient(90deg, rgba(201,164,92,0.12) 0 18px, transparent 18px 48px);
+  border: 1px solid rgba(201,164,92,0.35);
+}
+.op-room-depth.is-restaurant .op-atmo-set {
+  inset: 48% 10% 8%;
+  border-radius: 0;
+  background:
+    radial-gradient(circle at 25% 40%, rgba(201,164,92,0.2), transparent 28%),
+    radial-gradient(circle at 75% 40%, rgba(201,164,92,0.2), transparent 28%),
+    linear-gradient(#1a140c, #0b0c0e);
+}
+.op-room-depth.is-bar .op-atmo-set {
+  inset: 38% 8% 8%;
+  border-radius: 0.4rem;
+  background:
+    linear-gradient(180deg, #2a1a12 0 18%, #0c1014 18% 100%),
+    repeating-linear-gradient(90deg, rgba(232,213,163,0.2) 0 8px, transparent 8px 22px);
+}
+
+@media (max-width: 859px) {
+  .op-lobby-stage {
+    min-width: 40rem;
+    height: min(58vh, 440px);
+    scroll-snap-align: start;
+  }
+  .op-hotspot {
+    font-size: 0.7rem;
+    min-height: 3.4rem;
+    min-width: 5.2rem;
+    letter-spacing: 0.08em;
+  }
+  .op-hotspot small { font-size: 0.55rem; }
+  .op-cta, .op-actions .op-cta, .op-sticky .op-cta {
+    min-height: 2.9rem;
+  }
+  .op-sticky {
+    bottom: calc(3.4rem + env(safe-area-inset-bottom, 0px));
+  }
+  .op-map {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .op-title { font-size: clamp(1.6rem, 8vw, 2.4rem); }
+  .op-hero { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .op-nav { display: none; }
+}
+
+@media (min-width: 860px) {
+  .op-lobby-pan { overflow: visible; }
+  .op-lobby-stage { min-width: 0; }
+}
+
+@media (min-width: 1366px) and (max-width: 1439px) {
+  .op-room-depth { max-width: 1040px; }
+}
+
+@media (min-width: 1800px), (min-aspect-ratio: 21/9) {
+  .op-uw-wings {
+    display: block;
+    position: fixed;
+    inset: 3.6rem 0 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      linear-gradient(90deg, #050607 0, transparent 14%),
+      linear-gradient(-90deg, #050607 0, transparent 14%);
+  }
+}
+
+.op-world[data-tier="LOW"] .op-header { backdrop-filter: none; }
+.op-world[data-tier="LOW"] .op-chandelier,
+.op-world[data-tier="LOW"] .op-hotspot-glow { animation: none; }
+.op-world[data-tier="LOW"] .op-slot-machine::after { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .op-ambient *,
+  .op-sign-shimmer,
+  .op-light-sweep,
+  .op-bokeh,
+  .op-silhouettes,
+  .op-wheel.is-idle {
+    animation: none !important;
+  }
+}

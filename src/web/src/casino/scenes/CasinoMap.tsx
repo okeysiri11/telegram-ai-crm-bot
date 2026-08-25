@@ -10,6 +10,7 @@ export function CasinoMap() {
           key={room.id}
           type="button"
           className={`op-map-cell${path.startsWith(room.route) ? " is-here" : ""}`}
+          aria-label={`${room.label}: ${room.live ? "открыто" : "скоро"}`}
           onClick={() => go(room.route)}
         >
           <small className="op-kicker">{room.live ? "OPEN" : "СКОРО"}</small>

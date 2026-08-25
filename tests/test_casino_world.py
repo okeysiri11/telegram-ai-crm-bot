@@ -82,7 +82,9 @@ async def test_lobby_opens_blackjack_and_slots(client: TestClient):
     assert floor["blackjack"]["route"] == "/casino/rooms/blackjack"
     assert any(t["table"] == "Odessa Gold" for t in lobby["slot_machines"])
     health = await (await client.get("/api/casino/v1/health")).json()
-    assert health["application_version"] == "18.0.0-play-money"
+    assert health["application_version"] == "19.0.0-play-money"
+    assert floor["poker"]["route"] == "/casino/rooms/poker"
+    assert floor["vip"]["coming_soon"] is False
 
 
 async def test_roulette_result_authority_and_duplicate(client: TestClient):
@@ -160,7 +162,12 @@ async def test_blackjack_server_authority_replay_and_auth(client: TestClient):
         dup = await again.json()
         assert dup["settlement"]["payout_chips"] == body["settlement"]["payout_chips"]
     wallet = await (await client.get("/api/casino/v1/wallet", headers=AUTH)).json()
-    assert wallet["balance_chips"] != 10_000 or hand["settled"]
+    if hand["settled"]:
+        assert isinstance(wallet["balance_chips"], int)
+    else:
+        outcome = body["settlement"]["outcome"]
+        if outcome != "push":
+            assert wallet["balance_chips"] != 10_000
     ledger = await (await client.get("/api/casino/v1/ledger", headers=AUTH)).json()
     assert any(row["reference_type"] == "blackjack" for row in ledger["items"])
 

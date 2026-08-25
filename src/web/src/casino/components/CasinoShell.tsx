@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/auth/authStore";
 import { formatPlayBalance } from "../currency";
 import { useCasinoWallet } from "../useCasinoSession";
@@ -8,8 +8,13 @@ import { casinoSound } from "../casinoSound";
 import { useEffect, useState } from "react";
 import { RoomTransition } from "../transitions/RoomTransition";
 import { useRoomTransition } from "../transitions/useRoomTransition";
+import { usePerformanceTier } from "../hooks/usePerformanceTier";
+import { AmbientLayer } from "../ambient/AmbientLayer";
+import { bindCasinoRoomAudio } from "../audio/casinoAudio";
 import "../odessa.css";
 import "../assets/world.css";
+import "../ambient/ambient.css";
+import "../assets/live.css";
 
 const NAV = [
   { to: "/enterprise-city?building=casino", label: "Город", end: false },
@@ -18,13 +23,16 @@ const NAV = [
   { to: "/casino/rooms/roulette", label: "Рулетка" },
   { to: "/casino/rooms/blackjack", label: "Blackjack" },
   { to: "/casino/rooms/slots", label: "Автоматы" },
+  { to: "/casino/rooms/poker", label: "Покер" },
 ];
 
 export function CasinoShell() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const wallet = useCasinoWallet();
   const { phase } = useRoomTransition();
+  const tier = usePerformanceTier();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [muted, setMuted] = useState(() => casinoSound.muted);
   const [grantBusy, setGrantBusy] = useState(false);
@@ -33,6 +41,10 @@ export function CasinoShell() {
   useEffect(() => {
     casinoSound.setMuted(muted);
   }, [muted]);
+
+  useEffect(() => {
+    bindCasinoRoomAudio(location.pathname);
+  }, [location.pathname]);
 
   async function grant() {
     setGrantBusy(true);
@@ -49,7 +61,12 @@ export function CasinoShell() {
   }
 
   return (
-    <div className="op-root op-world" data-testid="casino-shell">
+    <div className="op-root op-world" data-testid="casino-shell" data-tier={tier}>
+      <a className="op-skip" href="#op-main">
+        К содержимому
+      </a>
+      <div className="op-uw-wings" aria-hidden />
+      <AmbientLayer tier={tier} />
       <RoomTransition phase={phase} />
       <header className="op-header">
         <NavLink to="/casino" className="op-logo" aria-label="Odessa Prime Casino">
@@ -77,7 +94,13 @@ export function CasinoShell() {
               ПОЛУЧИТЬ 5 000 PLAY
             </button>
           ) : null}
-          <button className="op-icon-btn" type="button" aria-label={muted ? "Включить звук" : "Выключить звук"} onClick={() => setMuted((m) => !m)}>
+          <button
+            className="op-icon-btn"
+            type="button"
+            aria-label={muted ? "Включить звук" : "Выключить звук"}
+            aria-pressed={!muted}
+            onClick={() => setMuted((m) => !m)}
+          >
             {muted ? "🔇" : "🔊"}
           </button>
           <button className="op-ghost" type="button" onClick={() => setHistoryOpen(true)}>
@@ -91,7 +114,7 @@ export function CasinoShell() {
           </span>
         </div>
       </header>
-      <main className="op-main">
+      <main className="op-main" id="op-main">
         <Outlet context={{ wallet }} />
       </main>
       <nav className="op-bottom" aria-label="Мобильная навигация казино">
