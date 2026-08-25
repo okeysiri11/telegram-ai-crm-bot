@@ -1,0 +1,132 @@
+"""Casino domain dataclasses — play-money only."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+
+@dataclass
+class CasinoVenue:
+    venue_id: str
+    slug: str
+    name: str
+    city_building_id: str
+    city_route: str
+    game: str = "roulette"
+    status: str = "open"
+    play_money_only: bool = True
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "venue_id": self.venue_id,
+            "slug": self.slug,
+            "name": self.name,
+            "city_building_id": self.city_building_id,
+            "city_route": self.city_route,
+            "game": self.game,
+            "status": self.status,
+            "play_money_only": True,
+            "real_money": False,
+        }
+
+
+@dataclass
+class PlayWallet:
+    wallet_id: str
+    tenant_id: str
+    player_id: str
+    balance_chips: int
+    currency_code: str = "CHIPS"
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "wallet_id": self.wallet_id,
+            "tenant_id": self.tenant_id,
+            "player_id": self.player_id,
+            "balance_chips": self.balance_chips,
+            "currency_code": self.currency_code,
+            "play_money_only": True,
+            "real_money": False,
+        }
+
+
+@dataclass
+class LedgerEntry:
+    entry_id: str
+    tenant_id: str
+    player_id: str
+    wallet_id: str
+    amount_chips: int
+    balance_after: int
+    entry_type: str
+    reference_type: str = ""
+    reference_id: str = ""
+    idempotency_key: str = ""
+    created_ts: float = 0.0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "entry_id": self.entry_id,
+            "tenant_id": self.tenant_id,
+            "player_id": self.player_id,
+            "wallet_id": self.wallet_id,
+            "amount_chips": self.amount_chips,
+            "balance_after": self.balance_after,
+            "entry_type": self.entry_type,
+            "reference_type": self.reference_type,
+            "reference_id": self.reference_id,
+            "idempotency_key": self.idempotency_key,
+            "created_ts": self.created_ts,
+            "play_money_only": True,
+        }
+
+
+@dataclass
+class RouletteBet:
+    bet_id: str
+    tenant_id: str
+    player_id: str
+    round_id: str
+    bet_type: str
+    numbers: list[int] = field(default_factory=list)
+    amount_chips: int = 0
+    idempotency_key: str = ""
+    status: str = "accepted"
+    payout_chips: int = 0
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "bet_id": self.bet_id,
+            "round_id": self.round_id,
+            "bet_type": self.bet_type,
+            "numbers": list(self.numbers),
+            "amount_chips": self.amount_chips,
+            "status": self.status,
+            "payout_chips": self.payout_chips,
+            "idempotency_key": self.idempotency_key,
+        }
+
+
+@dataclass
+class RouletteRound:
+    round_id: str
+    tenant_id: str
+    venue_id: str
+    status: str = "open"
+    result_number: int | None = None
+    result_color: str | None = None
+    entropy_hex: str = ""
+    settled: bool = False
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "round_id": self.round_id,
+            "tenant_id": self.tenant_id,
+            "venue_id": self.venue_id,
+            "status": self.status,
+            "result_number": self.result_number,
+            "result_color": self.result_color,
+            "settled": self.settled,
+            "server_authoritative": True,
+        }

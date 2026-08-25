@@ -36,6 +36,7 @@ export const DESKTOP_APPS: DesktopAppDef[] = [
   { id: "analytics", label: "Аналитика", path: "/analytics", icon: "analytics", group: "ops" },
   { id: "settings", label: "Настройки", path: "/settings", icon: "settings", group: "tools" },
   { id: "city", label: "Корпоративный город", path: "/enterprise-city", icon: "city", group: "ops" },
+  { id: "casino", label: "Casino", path: "/casino", icon: "marketplace", group: "ops" },
   { id: "production", label: "Студия производства", path: "/production-studio", icon: "projects", group: "ops", badgeKey: "jobs" },
   { id: "prod_image", label: "Студия изображений", path: "/production-studio?studio=image", icon: "projects", group: "ops" },
   { id: "prod_video", label: "Студия видео", path: "/production-studio?studio=video", icon: "projects", group: "ops" },

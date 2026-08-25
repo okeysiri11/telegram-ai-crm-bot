@@ -120,6 +120,10 @@ def create_app() -> web.Application:
 
     register_enterprise_hub_routes(app)
 
+    from applications.casino.api.register import register_casino_routes
+
+    register_casino_routes(app)
+
     # Sprint 40.4 — innermost: restore Auto CRM Bearer principal after vertical
     # middlewares overwrite request["principal"] with X-Principal/None.
     from applications.auto_marketplace.api.crm_handlers import (

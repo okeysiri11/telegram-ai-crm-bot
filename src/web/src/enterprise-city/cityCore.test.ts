@@ -87,6 +87,8 @@ describe("Sprint 30.4 Enterprise City Visualization Beta", () => {
     expect(searchBuildings("crm").some((b) => b.id === "crm")).toBe(true);
     expect(searchBuildings("plaza").some((b) => b.id === "plaza")).toBe(true);
     expect(searchBuildings("склад").some((b) => b.id === "warehouse")).toBe(true);
+    expect(searchBuildings("casino").some((b) => b.id === "casino")).toBe(true);
+    expect(getBuilding("casino")?.route).toBe("/casino/venues/odessa-prime");
     expect(buildingsByDistrict("ai").length).toBeGreaterThanOrEqual(2);
     expect(buildingsByDistrict("warehouse").length).toBeGreaterThanOrEqual(1);
     expect(buildingsByDistrict("legal").length).toBeGreaterThanOrEqual(1);

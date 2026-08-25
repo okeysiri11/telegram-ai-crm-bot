@@ -70,6 +70,16 @@ const OPS: Partial<Record<CityBuildingId, BuildingOpsMeta>> = {
     description: "Договоры, риски и юридические процессы",
     quickActions: [{ id: "open", label: "Юридический модуль", route: "/workspace/legal" }],
   },
+  casino: {
+    owner: "Casino vertical",
+    activeUsers: 6,
+    health: "online",
+    description: "Play-money casino — Odessa Prime venue, roulette demo",
+    quickActions: [
+      { id: "open", label: "Open casino", route: "/casino" },
+      { id: "venue", label: "Odessa Prime", route: "/casino/venues/odessa-prime" },
+    ],
+  },
   marketing: {
     owner: "Маркетинг",
     activeUsers: 6,

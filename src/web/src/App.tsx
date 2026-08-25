@@ -130,6 +130,12 @@ function Hub({ id }: { id: string }) {
 const EnterpriseCityPage = lazy(() =>
   import("@/enterprise-city").then((m) => ({ default: m.EnterpriseCityPage })),
 );
+const CasinoLobbyPage = lazy(() =>
+  import("@/casino").then((m) => ({ default: m.CasinoLobbyPage })),
+);
+const CasinoVenuePage = lazy(() =>
+  import("@/casino").then((m) => ({ default: m.CasinoVenuePage })),
+);
 const WorkflowCenterPage = lazy(() =>
   import("@/enterprise-workflow").then((m) => ({ default: m.WorkflowCenterPage })),
 );
@@ -578,6 +584,36 @@ export function App() {
           <ProtectedRoute>
             <RouteErrorBoundary zone="Enterprise City" recoveryHref="/dashboard?mode=executive">
               <EnterpriseCityPage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/casino"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="Casino" recoveryHref="/casino">
+              <CasinoLobbyPage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/casino/venues/:venueId/roulette"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="Casino roulette" recoveryHref="/casino">
+              <CasinoVenuePage />
+            </RouteErrorBoundary>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/casino/venues/:venueId"
+        element={
+          <ProtectedRoute>
+            <RouteErrorBoundary zone="Casino venue" recoveryHref="/casino">
+              <CasinoVenuePage />
             </RouteErrorBoundary>
           </ProtectedRoute>
         }

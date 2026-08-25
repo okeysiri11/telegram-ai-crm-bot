@@ -46,7 +46,8 @@ export type CityBuildingId =
   | "business_network"
   | "digital_citizens"
   | "warehouse"
-  | "legal";
+  | "legal"
+  | "casino";
 
 /** Sprint 30.4 navigation districts (primary city map). */
 export type CityDistrictId =
@@ -679,6 +680,20 @@ export const CITY_BUILDINGS: CityBuilding[] = [
     searchTokens: ["legal", "юридический", "contracts", "law"],
     aiAssistant: "Legal Advisor",
   },
+  {
+    id: "casino",
+    label: "Odessa Prime Casino",
+    short: "Casino",
+    icon: "◈",
+    route: "/casino/venues/odessa-prime",
+    x: 50,
+    y: 78,
+    w: 12,
+    h: 11,
+    district: "marketplace",
+    searchTokens: ["casino", "roulette", "venue", "odessa", "prime", "play", "chips", "казино"],
+    aiAssistant: "Casino Concierge",
+  },
 ];
 
 export type CityLiveStatus = {
@@ -741,6 +756,7 @@ export const CITY_STATUS_SEED: Record<CityBuildingId, CityLiveStatus> = {
   settings: defaultStatus("Preferences"),
   warehouse: { tone: "active", notifications: 1, tasks: 2, aiActive: false, processLabel: "Stock sync" },
   legal: { tone: "idle", notifications: 0, tasks: 1, aiActive: false, processLabel: "Contracts" },
+  casino: { tone: "active", notifications: 0, tasks: 1, aiActive: false, processLabel: "Play-money floor" },
 };
 
 export function getBuilding(id: CityBuildingId): CityBuilding | undefined {

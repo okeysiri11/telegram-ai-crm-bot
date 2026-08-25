@@ -35,6 +35,7 @@ export const webConfig = {
   ewsPrefix: "/api/enterprise-ews/v1",
   enpPrefix: "/api/enterprise-enp/v1",
   autoPrefix: "/api/auto/v1",
+  casinoPrefix: "/api/casino/v1",
   autoOpsPrefix: "/api/auto-ops/v1",
   beautyOsPrefix: "/api/enterprise-bos/v1",
   beautyWorkspacePrefix: "/api/enterprise-bws/v1",

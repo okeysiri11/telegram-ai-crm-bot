@@ -6,6 +6,9 @@ Durable production is the Render Blueprint host:
 
 **Public app:** `https://ados-web.onrender.com`
 
+Casino play-money foundation (Sprint 15) is served on the same origin:
+`/casino`, `/casino/venues/odessa-prime`, `/api/casino/v1`. No payment processing.
+
 1. **Render Blueprint** (`render.yaml`) — git-driven web service + managed Postgres + Redis (live)
 2. **Self-managed compose** (`docker-compose.prod.yml`) — VPS with DNS/TLS via `scripts/deploy_production.sh` (engineering path)
 
