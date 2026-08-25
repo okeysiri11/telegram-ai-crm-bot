@@ -116,8 +116,22 @@ Pre-existing `tsc -b` debt (unchanged, not caused by Sprint 16):
 
 ## Production verification
 
-Recorded in the Sprint 16 completion report after Render revision match and public smoke
-(City → «казино» → Войти в казино → PLAY wallet → demo chips → roulette → ledger → deep link refresh).
+Verified 2026-08-25 against public `https://ados-web.onrender.com`:
+
+| Check | Result |
+|---|---|
+| Git | `cafdcd9d2db29966e995035335101ca8a861c426` on `develop`, local=remote |
+| GitHub Production Gate | success |
+| Render `revision` | `cafdcd9d2db29966e995035335101ca8a861c426` |
+| `/liveness` | `alive`, `startup_validated=true` |
+| `/readiness` | `ready`, database healthy |
+| `GET /api/casino/v1/health` | `16.0.0-play-money`, PLAY / DEMO CHIPS, postgres |
+| Lobby / venue search «казино» | Odessa Prime bound to city building `casino` |
+| SPA HTML | `/`, `/enterprise-city`, `/casino`, `/casino/venues/odessa-prime`, roulette deep link |
+| Anonymous wallet / demo-grant | 401 Authentication required (no auth bypass) |
+| Rooms | Redis backend, Roulette Royale 0/6 |
+
+Authenticated PLAY wager/ledger smoke requires a real session (production Bearer is fail-closed; demo `Bearer test` is CI-only). Anonymous path correctly shows login/401 instead of inventing a client balance.
 
 ## Visual QA notes
 
