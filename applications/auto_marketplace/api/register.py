@@ -228,6 +228,8 @@ def register_auto_marketplace_routes(app: web.Application) -> None:
     app.router.add_get(f"{crm}/manager/pipeline", crm_handlers.crm_manager_pipeline_handler)
     app.router.add_get(f"{crm}/manager/forecast", crm_handlers.crm_manager_forecast_handler)
     app.router.add_get(f"{crm}/manager/team-performance", crm_handlers.crm_manager_team_performance_handler)
+    # Sprint 13 — production operations summary (read-only, composes Sprint 8-12 engines)
+    app.router.add_get(f"{crm}/manager/operational-summary", crm_handlers.crm_manager_operational_summary_handler)
     app.router.add_get(f"{crm}/customers", crm_handlers.list_customers_handler)
     app.router.add_post(f"{crm}/customers", crm_handlers.create_customer_handler)
     app.router.add_get(f"{crm}/customers/{{customer_id}}", crm_handlers.get_customer_handler)

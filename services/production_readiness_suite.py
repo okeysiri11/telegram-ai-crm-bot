@@ -20,10 +20,33 @@ from repositories.production_readiness_repository import (
 
 SUITE_VERSION = "v1"
 CRITICAL_CHECKS = frozenset({"database", "telegram", "scheduler", "api"})
+SERVICE_NAME = "ados-platform-api"
 
 
 def _now() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _service_identity() -> dict[str, str]:
+    """Non-secret service identity for health payloads (Sprint 13).
+
+    Reads the platform version through ConfigurationCenter so operational
+    responses report the same version the platform was configured with.
+    Never includes credentials, tokens, or connection URLs.
+    """
+    try:
+        from platform_configuration.configuration_center import configuration_center
+
+        version = configuration_center.settings.management.platform_version
+    except Exception:
+        import os
+
+        version = os.getenv("PLATFORM_VERSION", "unknown")
+    return {
+        "service": SERVICE_NAME,
+        "service_version": version,
+        "runtime": "production" if IS_PRODUCTION else "development",
+    }
 
 
 def _check_result(
@@ -466,6 +489,7 @@ class ProductionReadinessSuite:
             "version": SUITE_VERSION,
             "timestamp": _now().isoformat(),
             "startup_validated": cls._startup_validated,
+            **_service_identity(),
         }
 
     @classmethod
@@ -474,6 +498,8 @@ class ProductionReadinessSuite:
         return {
             "status": "ready" if payload.get("ready") else "not_ready",
             "ready": payload.get("ready", False),
+            **_service_identity(),
+            "database": (payload.get("checks") or {}).get("database", {}).get("status", "unknown"),
             "checks": {
                 name: item.get("status")
                 for name, item in (payload.get("checks") or {}).items()
@@ -490,6 +516,7 @@ class ProductionReadinessSuite:
         alerts = await cls.get_active_alerts()
         return {
             **payload,
+            **_service_identity(),
             "alerts": alerts,
         }
 

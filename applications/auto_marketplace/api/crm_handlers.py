@@ -1074,6 +1074,13 @@ async def crm_manager_team_performance_handler(request: web.Request) -> web.Resp
     return json_response(await auto_marketplace.crm_engine.manager.team_performance(owner=owner))
 
 
+async def crm_manager_operational_summary_handler(request: web.Request) -> web.Response:
+    """Sprint 13 — read-only production operations summary for the manager side."""
+    _require_authenticated_read(request, "crm.read")
+    owner = request.query.get("owner") or None
+    return json_response(await auto_marketplace.crm_engine.manager.operational_summary(owner=owner))
+
+
 _CRM_WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 _CRM_API_ROOT = "/api/auto/v1/crm"
 

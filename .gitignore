@@ -73,4 +73,5 @@ deploy/certs/*
 # AUTO 1.8.5 temporary public URL (never commit)
 data/auto_remote_https.url
 data/auto_remote_https.pids
+data/public_host.url
 scripts/.bin/

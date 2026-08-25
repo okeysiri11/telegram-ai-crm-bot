@@ -550,3 +550,110 @@ async def test_postgres_manager_forecast_restart_and_tenant_isolation(postgres_c
     assert loaded_snap["items"][0]["forecast_category"] == snap["items"][0]["forecast_category"]
     assert loaded_snap["items"][0]["risk_level"] == snap["items"][0]["risk_level"]
     assert loaded_snap["items"][0]["weighted_value"] == snap["items"][0]["weighted_value"]
+
+
+# --- Sprint 13 — production operational summary -----------------------------
+
+
+@pytest.mark.asyncio
+async def test_operational_summary_composes_persisted_facts_and_is_read_only():
+    engine = auto_marketplace.crm_engine
+    now = time.time()
+    lead = await engine.leads.create(CRMLead(notes="ops-lead", assigned_agent_id="agt-ops", source=LeadSource.WEB))
+    deal = await engine.pipeline.convert_lead_to_deal(lead.lead_id, amount=12000, agent_id="agt-ops")
+    await engine.tasks.create(CRMTask(title="call back", assigned_agent_id="agt-ops", due_at=now + 3600))
+    await engine.automation.schedule_follow_up(
+        lead_id=lead.lead_id,
+        deal_id=deal.deal_id,
+        action_type="call",
+        due_at=now - 900,
+        idempotency_key="ops-fu",
+    )
+    before = await _counts(engine)
+    summary = await engine.manager.operational_summary(now=now)
+    after = await _counts(engine)
+    assert after == before
+
+    assert summary["tenant_id"] == "default"
+    assert summary["currency"] == CURRENCY_UNSPECIFIED
+    assert summary["active_deals"] == 1
+    assert summary["open_tasks"] >= 1
+    assert summary["overdue_follow_ups"] >= 1
+    assert summary["weighted_pipeline"]
+    assert set(summary["forecast"]) == {
+        "total_open_pipeline",
+        "commit_forecast",
+        "likely_forecast",
+        "upside_forecast",
+        "at_risk_value",
+        "won_value",
+    }
+    assert isinstance(summary["top_priority_actions"], list)
+
+    again = await engine.manager.operational_summary(now=now)
+    assert again == summary  # deterministic for a fixed clock
+
+    owner_scoped = await engine.manager.operational_summary(now=now, owner="agt-none")
+    assert owner_scoped["active_deals"] == 0
+    assert owner_scoped["active_leads"] == 0
+
+
+@pytest.mark.asyncio
+async def test_operational_summary_api_requires_auth_and_isolates_tenants(client: TestClient):
+    path = "/api/auto/v1/crm/manager/operational-summary"
+    unauth = await client.get(path)
+    assert unauth.status == 401
+
+    headers_a = {**AUTH, "X-Tenant-Id": "ops-a"}
+    headers_b = {**AUTH, "X-Tenant-Id": "ops-b"}
+    created = await client.post(
+        "/api/auto/v1/crm/leads",
+        json={"notes": "ops-api", "source": "web", "assigned_agent_id": "agt-ops"},
+        headers=headers_a,
+    )
+    assert created.status == 201
+    lead_id = (await created.json())["lead_id"]
+    converted = await client.post(
+        f"/api/auto/v1/crm/leads/{lead_id}/convert", json={"amount": 7500}, headers=headers_a
+    )
+    assert converted.status in {200, 201}
+
+    visible = await client.get(path, headers=headers_a)
+    assert visible.status == 200
+    body = await visible.json()
+    assert body["tenant_id"] == "ops-a"
+    assert body["active_deals"] == 1
+
+    hidden = await client.get(path, headers=headers_b)
+    assert hidden.status == 200
+    hidden_body = await hidden.json()
+    assert hidden_body["tenant_id"] == "ops-b"
+    assert hidden_body["active_deals"] == 0
+    assert hidden_body["active_leads"] == 0
+
+
+@pytest.mark.asyncio
+async def test_postgres_operational_summary_survives_restart(postgres_crm_mode):
+    await _ensure_postgres_tables()
+    suffix = uuid.uuid4().hex[:12]
+    tenant = f"ops-pg-{suffix}"
+    now = time.time()
+
+    bind_crm_tenant(tenant)
+    engine = _stack(PostgresCRMPersistence())
+    lead = await engine.leads.create(CRMLead(notes=f"ops-{suffix}", assigned_agent_id="agt-pg"))
+    await engine.pipeline.convert_lead_to_deal(lead.lead_id, amount=33000, agent_id="agt-pg")
+    first = await engine.manager.operational_summary(now=now)
+    assert first["tenant_id"] == tenant
+    assert first["active_deals"] == 1
+
+    from database.session import shutdown_db
+
+    await shutdown_db()
+    reset_crm_persistence()
+    bind_crm_tenant(tenant)
+    restored = _stack(PostgresCRMPersistence())
+    loaded = await restored.manager.operational_summary(now=now)
+    assert loaded["active_deals"] == first["active_deals"]
+    assert loaded["weighted_pipeline"] == first["weighted_pipeline"]
+    assert loaded["forecast"] == first["forecast"]

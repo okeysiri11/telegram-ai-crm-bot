@@ -11,7 +11,14 @@ from applications.auto_marketplace.crm.automation import CRMAutomationEngine, cr
 from applications.auto_marketplace.crm.customer_360 import score_relationship
 from applications.auto_marketplace.crm.execution import CRMExecutionEngine, crm_execution
 from applications.auto_marketplace.crm.intelligence import CRMIntelligenceService, crm_intelligence
-from applications.auto_marketplace.crm.models import CRMDeal, DealStage, Interaction, InteractionType, TaskStatus
+from applications.auto_marketplace.crm.models import (
+    CRMDeal,
+    CRMLeadStatus,
+    DealStage,
+    Interaction,
+    InteractionType,
+    TaskStatus,
+)
 from applications.auto_marketplace.crm.tenant import current_crm_tenant
 from applications.auto_marketplace.deals.service import DealService, deal_service
 from applications.auto_marketplace.leads.service import LeadService, lead_service
@@ -542,6 +549,76 @@ class ManagerIntelligenceService:
             "currency": CURRENCY_UNSPECIFIED,
             "generated_at": clock,
             "tenant_id": current_crm_tenant(),
+        }
+
+    async def operational_summary(
+        self,
+        *,
+        now: float | None = None,
+        owner: str | None = None,
+    ) -> dict[str, Any]:
+        """Sprint 13 — deterministic production operations summary.
+
+        Read-only composition of persisted CRM facts (deals, leads, tasks,
+        follow-ups) through the existing Sprint 8–12 engines. No new
+        datastore, no snapshot table — every number is recomputed from
+        PostgreSQL-backed services on each call.
+        """
+        clock = now if now is not None else time.time()
+        snapshots = await self._snapshots(now=clock)
+        if owner:
+            snapshots = [item for item in snapshots if item["owner_id"] == owner]
+        open_items = [item for item in snapshots if item["active"]]
+        summary = self._forecast_summary(snapshots, now=clock)
+        queue = await self._execution.queue(now=clock, owner=owner, limit=100)
+        actions = self._action_center(snapshots, queue["items"], limit=DEFAULT_ACTION_LIMIT)
+
+        leads = await self._leads.list_leads()
+        active_lead_statuses = {
+            CRMLeadStatus.NEW,
+            CRMLeadStatus.CONTACTED,
+            CRMLeadStatus.QUALIFIED,
+        }
+        active_leads = [
+            lead
+            for lead in leads
+            if lead.status in active_lead_statuses
+            and (not owner or (lead.assigned_agent_id or "unassigned") == owner)
+        ]
+
+        tasks = await self._tasks.list_tasks()
+        open_task_statuses = {TaskStatus.PENDING, TaskStatus.IN_PROGRESS}
+        open_tasks = [task for task in tasks if task.status in open_task_statuses]
+
+        overdue_follow_ups = await self._automation.list_follow_ups(now=clock, overdue=True)
+
+        return {
+            "tenant_id": current_crm_tenant(),
+            "generated_at": clock,
+            "currency": CURRENCY_UNSPECIFIED,
+            "active_leads": len(active_leads),
+            "active_deals": summary["open_deal_count"],
+            "won_deals": summary["won_deal_count"],
+            "lost_deals": summary["lost_deal_count"],
+            "open_tasks": len(open_tasks),
+            "overdue_follow_ups": len(overdue_follow_ups),
+            "sla_at_risk": sum(
+                1 for item in open_items if item["sla_status"] in {"due_soon", "overdue", "breached"}
+            ),
+            "sla_breached": summary["sla_breach_count"],
+            "escalated": summary["escalation_count"],
+            "critical_deals": summary["critical_deal_count"],
+            "stale_deals": sum(1 for item in open_items if item["stale"]),
+            "weighted_pipeline": summary["weighted_pipeline"],
+            "forecast": {
+                "total_open_pipeline": summary["total_open_pipeline"],
+                "commit_forecast": summary["commit_forecast"],
+                "likely_forecast": summary["likely_forecast"],
+                "upside_forecast": summary["upside_forecast"],
+                "at_risk_value": summary["at_risk_value"],
+                "won_value": summary["won_value"],
+            },
+            "top_priority_actions": actions["items"][:5],
         }
 
     async def _snapshots(self, *, now: float) -> list[dict[str, Any]]:
