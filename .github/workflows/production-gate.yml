@@ -1,0 +1,94 @@
+name: Production Gate (develop)
+
+# Sprint 13.1 — the tests/build gate for durable production deployment.
+# Render (render.yaml, autoDeployTrigger=checksPass) deploys a develop commit
+# only after this workflow succeeds, so a red gate never replaces a healthy
+# production deployment. No deployment secrets live here or in the repo.
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+
+concurrency:
+  group: production-gate-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  POSTGRES_ONLY: "true"
+  REDIS_REQUIRED: "false"
+  DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem
+
+jobs:
+  backend-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: ai_ecosystem
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ai_ecosystem"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Migrations (single head, clean upgrade)
+        run: |
+          python -m alembic upgrade head
+          HEADS=$(python -m alembic heads | grep -c "(head)")
+          echo "alembic head count: $HEADS"
+          test "$HEADS" -eq 1
+      - name: Production health / readiness tests (Sprint 13/13.1)
+        run: python -m pytest tests/test_production_health_sprint_13.py -q
+      - name: CRM regression suites (Sprints 8-13)
+        run: |
+          python -m pytest \
+            tests/test_auto_marketplace_crm_automation.py \
+            tests/test_auto_marketplace_crm_communications.py \
+            tests/test_auto_marketplace_crm_customer_360.py \
+            tests/test_auto_marketplace_crm_execution.py \
+            tests/test_auto_marketplace_crm_intelligence.py \
+            tests/test_auto_marketplace_crm_lifecycle.py \
+            tests/test_auto_marketplace_crm_metrics.py \
+            tests/test_auto_marketplace_crm_postgres.py \
+            tests/test_auto_marketplace_crm_workflow.py \
+            tests/test_auto_marketplace_crm_manager_forecasting.py \
+            tests/test_crm_api_security_40_1.py \
+            tests/test_crm_engine.py \
+            tests/test_crm_foundation_40_2.py -q
+      - name: Security suite
+        run: |
+          python -m pytest tests/test_management_security.py \
+            tests/test_api_v1_freeze.py \
+            tests/test_admin_security.py -q --tb=no
+      - name: Production entrypoint import sanity
+        run: python -c "import scripts.run_production_web, api.server, startup; print('ok')"
+
+  web-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: src/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: src/web/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - name: Typecheck (report-only — known pre-existing failures in unrelated verticals)
+        run: npm run lint
+        continue-on-error: true
+      - name: Production build (blocking)
+        run: npx vite build

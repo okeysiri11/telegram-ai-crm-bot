@@ -21,7 +21,25 @@ load_dotenv()
 DEFAULT_DATABASE_URL = (
     "postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem"
 )
-DATABASE_URL: str = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+
+
+def _normalize_postgres_url(url: str) -> str:
+    """Provider URLs (postgres:// / postgresql://) → asyncpg driver scheme.
+
+    Sprint 13.1: managed-Postgres providers inject plain-scheme URLs; the
+    async migration engine requires postgresql+asyncpg. Mirrors
+    platform_configuration.configuration_center._normalize_postgres_url
+    (kept local — alembic must not import the full configuration stack).
+    """
+    raw = (url or "").strip()
+    if raw.startswith("postgres://"):
+        return "postgresql+asyncpg://" + raw[len("postgres://"):]
+    if raw.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + raw[len("postgresql://"):]
+    return raw
+
+
+DATABASE_URL: str = _normalize_postgres_url(os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL))
 
 
 def _load_migration_models() -> None:

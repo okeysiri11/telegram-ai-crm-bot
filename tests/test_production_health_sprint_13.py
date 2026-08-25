@@ -13,12 +13,15 @@ import pytest
 from aiohttp import web
 from aiohttp.test_utils import TestClient, TestServer
 
+import services.production_readiness_suite as prs
 from api.health_handlers import health_handler, liveness_handler, readiness_handler
+from platform_configuration.configuration_center import _normalize_postgres_url
 from services.production_readiness_suite import (
     SERVICE_NAME,
     SUITE_VERSION,
     ProductionReadinessSuite,
     _service_identity,
+    _telegram_required,
 )
 
 SECRET_MARKERS = ("password", "secret", "token=", "postgresql+", "postgresql://", "redis://", "api_key")
@@ -56,9 +59,79 @@ def test_service_identity_shape_and_no_secrets():
     assert identity["service"] == SERVICE_NAME
     assert identity["runtime"] in {"production", "development"}
     assert identity["service_version"]
+    assert "revision" in identity  # Sprint 13.1 — deployed revision metadata
     serialized = json.dumps(identity).lower()
     for marker in SECRET_MARKERS:
         assert marker not in serialized
+
+
+# --- Sprint 13.1 — durable deployment hardening ------------------------------
+
+
+def test_postgres_url_normalization_for_provider_urls():
+    assert (
+        _normalize_postgres_url("postgres://u:p@host:5432/db")
+        == "postgresql+asyncpg://u:p@host:5432/db"
+    )
+    assert (
+        _normalize_postgres_url("postgresql://u:p@host:5432/db")
+        == "postgresql+asyncpg://u:p@host:5432/db"
+    )
+    # Explicit drivers untouched.
+    assert (
+        _normalize_postgres_url("postgresql+asyncpg://u:p@host/db")
+        == "postgresql+asyncpg://u:p@host/db"
+    )
+    assert (
+        _normalize_postgres_url("postgresql+psycopg2://u:p@host/db")
+        == "postgresql+psycopg2://u:p@host/db"
+    )
+    assert _normalize_postgres_url("") == ""
+
+
+def test_telegram_required_defaults_and_web_profile_flag(monkeypatch):
+    # Non-production: never required (existing behavior).
+    monkeypatch.setattr(prs, "IS_PRODUCTION", False)
+    monkeypatch.delenv("ADOS_TELEGRAM_REQUIRED", raising=False)
+    assert _telegram_required() is False
+
+    # Production default: required (bot deployments unchanged).
+    monkeypatch.setattr(prs, "IS_PRODUCTION", True)
+    assert _telegram_required() is True
+
+    # Explicit web service profile opt-out.
+    monkeypatch.setenv("ADOS_TELEGRAM_REQUIRED", "false")
+    assert _telegram_required() is False
+
+
+@pytest.mark.asyncio
+async def test_check_telegram_production_missing_token(monkeypatch):
+    monkeypatch.setattr(prs, "IS_PRODUCTION", True)
+    monkeypatch.setattr(prs, "BOT_TOKEN", "")
+
+    monkeypatch.delenv("ADOS_TELEGRAM_REQUIRED", raising=False)
+    required = await ProductionReadinessSuite.check_telegram()
+    assert required["status"] == "unhealthy"  # default production behavior preserved
+
+    monkeypatch.setenv("ADOS_TELEGRAM_REQUIRED", "false")
+    web_profile = await ProductionReadinessSuite.check_telegram()
+    assert web_profile["status"] == "skipped"
+    assert web_profile["ok"] is True
+
+
+@pytest.mark.asyncio
+async def test_check_startup_web_profile_in_production(monkeypatch):
+    monkeypatch.setattr(prs, "IS_PRODUCTION", True)
+    monkeypatch.setattr(prs, "BOT_TOKEN", "")
+
+    monkeypatch.delenv("ADOS_TELEGRAM_REQUIRED", raising=False)
+    strict = await ProductionReadinessSuite.check_startup()
+    assert strict["status"] == "unhealthy"
+
+    monkeypatch.setenv("ADOS_TELEGRAM_REQUIRED", "false")
+    web_profile = await ProductionReadinessSuite.check_startup()
+    assert web_profile["ok"] is True
+    assert web_profile["status"] in {"healthy", "degraded"}
 
 
 @pytest.mark.asyncio

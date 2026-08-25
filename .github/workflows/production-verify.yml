@@ -1,0 +1,62 @@
+name: Production Verify (external)
+
+# Sprint 13.1 — external verification of the durable production host.
+# Runs OUTSIDE the deploy gate (Render deploys after the gate's checks pass;
+# a same-commit check polling for the new revision would deadlock the
+# checksPass trigger). Configure the repository variable PRODUCTION_URL
+# (Settings -> Secrets and variables -> Actions -> Variables) with the stable
+# Render URL, e.g. https://ados-web.onrender.com — no secrets required.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 */6 * * *" # every 6 hours
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - name: External production verification
+        env:
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+        run: |
+          if [ -z "$PRODUCTION_URL" ]; then
+            echo "::notice::PRODUCTION_URL repository variable is not set — skipping external verification."
+            exit 0
+          fi
+          BASE="${PRODUCTION_URL%/}"
+          EXPECTED_SHA=$(git rev-parse HEAD)
+          echo "verifying $BASE against develop@$EXPECTED_SHA"
+          fail=0
+
+          check() { # name url expected_status
+            local status
+            status=$(curl -sS -o /tmp/body -w "%{http_code}" --max-time 60 "$2" || echo 000)
+            if [ "$status" = "$3" ]; then
+              echo "PASS $1 ($status)"
+            else
+              echo "FAIL $1 (got $status, want $3)"; fail=1
+            fi
+          }
+
+          check root            "$BASE/"          200
+          grep -q 'id="root"' /tmp/body && echo "PASS frontend html" || { echo "FAIL frontend html"; fail=1; }
+          ASSET=$(grep -oE '/assets/[A-Za-z0-9._-]+\.(js|css)' /tmp/body | head -1)
+          if [ -n "$ASSET" ]; then check assets "$BASE$ASSET" 200; else echo "FAIL assets (no asset ref)"; fail=1; fi
+          check spa_route       "$BASE/login"     200
+          check liveness        "$BASE/liveness"  200
+          check readiness       "$BASE/readiness" 200
+          check crm_read        "$BASE/api/auto/v1/crm/metrics" 200
+          check auth_gate       "$BASE/api/auto/v1/crm/manager/operational-summary" 401
+
+          REVISION=$(curl -sS --max-time 60 "$BASE/liveness" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("revision", "unknown"))' || echo unknown)
+          echo "deployed revision: $REVISION (develop: $EXPECTED_SHA)"
+          if [ "$REVISION" != "$EXPECTED_SHA" ]; then
+            echo "::warning::Deployed revision does not match develop HEAD (deploy may be in flight)."
+          fi
+
+          exit $fail
