@@ -1,6 +1,7 @@
 import { apiFetch } from "@/integrations/apiClient";
 import { webConfig } from "@/config/webConfig";
 import type {
+  BlackjackHand,
   CasinoLobby,
   CasinoLedgerEntry,
   CasinoRooms,
@@ -8,6 +9,7 @@ import type {
   CasinoVenue,
   CasinoWallet,
   RouletteRound,
+  SlotSpin,
 } from "./types";
 
 const PREFIX = webConfig.casinoPrefix;
@@ -118,12 +120,53 @@ export async function spinRoulette(roundId: string): Promise<RouletteRound> {
   return readJson<RouletteRound>(res, "casino_spin");
 }
 
-export const CASINO_ROUTES = {
-  lobby: "/casino",
-  floor: "/casino/floor",
-  games: "/casino/games",
-  tables: "/casino/roulette",
-  venue: (id: string) => `/casino/venues/${id}`,
-  roulette: (id: string) => `/casino/venues/${id}/roulette`,
-  table: (tableId: string) => `/casino/roulette/${tableId}`,
-} as const;
+export async function dealBlackjack(amountChips: number, idempotencyKey?: string): Promise<BlackjackHand> {
+  const res = await apiFetch(`${PREFIX}/venues/odessa-prime/blackjack/hands`, {
+    method: "POST",
+    body: JSON.stringify({
+      amount_chips: amountChips,
+      idempotency_key: idempotencyKey || `bj:${Date.now()}`,
+    }),
+  });
+  if (res.status === 401) {
+    const err = new Error("auth_required");
+    err.name = "CasinoAuthError";
+    throw err;
+  }
+  return readJson<BlackjackHand>(res, "casino_bj_deal");
+}
+
+export async function hitBlackjack(handId: string): Promise<BlackjackHand> {
+  const res = await apiFetch(`${PREFIX}/blackjack/hands/${encodeURIComponent(handId)}/hit`, {
+    method: "POST",
+    body: "{}",
+  });
+  return readJson<BlackjackHand>(res, "casino_bj_hit");
+}
+
+export async function standBlackjack(handId: string): Promise<BlackjackHand> {
+  const res = await apiFetch(`${PREFIX}/blackjack/hands/${encodeURIComponent(handId)}/stand`, {
+    method: "POST",
+    body: "{}",
+  });
+  return readJson<BlackjackHand>(res, "casino_bj_stand");
+}
+
+export async function spinOdessaGold(amountChips: number, idempotencyKey?: string): Promise<SlotSpin> {
+  const res = await apiFetch(`${PREFIX}/venues/odessa-prime/slots/odessa-gold/spin`, {
+    method: "POST",
+    body: JSON.stringify({
+      amount_chips: amountChips,
+      idempotency_key: idempotencyKey || `slot:${Date.now()}`,
+    }),
+  });
+  if (res.status === 401) {
+    const err = new Error("auth_required");
+    err.name = "CasinoAuthError";
+    throw err;
+  }
+  return readJson<SlotSpin>(res, "casino_slot");
+}
+
+export type { BlackjackHand, SlotSpin } from "./types";
+export { CASINO_ROUTES } from "./state/casinoRoutes";

@@ -44,6 +44,7 @@ class MemoryCasinoStore:
         self.ledger: list[LedgerEntry] = []
         self.rounds: dict[str, RouletteRound] = {}
         self.bets: dict[str, RouletteBet] = {}
+        self.sessions: dict[tuple[str, str], dict[str, Any]] = {}
         self._ledger_keys: set[tuple[str, str]] = set()
         self._bet_keys: set[tuple[str, str]] = set()
 
@@ -132,7 +133,16 @@ class MemoryCasinoStore:
         ]
         return max(stamps) if stamps else None
 
-    def debit(self, player_id: str, amount: int, *, entry_type: str, reference_id: str, idempotency_key: str) -> PlayWallet:
+    def debit(
+        self,
+        player_id: str,
+        amount: int,
+        *,
+        entry_type: str,
+        reference_id: str,
+        idempotency_key: str,
+        reference_type: str = "roulette",
+    ) -> PlayWallet:
         if amount <= 0:
             raise ValidationError("debit amount must be positive")
         wallet = self.get_or_create_wallet(player_id)
@@ -140,7 +150,7 @@ class MemoryCasinoStore:
             wallet,
             amount=-amount,
             entry_type=entry_type,
-            reference_type="roulette",
+            reference_type=reference_type,
             reference_id=reference_id,
             idempotency_key=idempotency_key,
         )
@@ -209,6 +219,28 @@ class MemoryCasinoStore:
         rnd.settled = True
         rnd.status = "settled"
         return True
+
+    def get_bet_by_idempotency(self, key: str) -> RouletteBet | None:
+        tenant = current_casino_tenant()
+        for bet in self.bets.values():
+            if bet.tenant_id == tenant and bet.idempotency_key == key:
+                return bet
+        return None
+
+    def put_game_session(self, session_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        tenant = current_casino_tenant()
+        stored = dict(payload)
+        stored["session_id"] = session_id
+        stored["tenant_id"] = tenant
+        self.sessions[(tenant, session_id)] = stored
+        return stored
+
+    def get_game_session(self, session_id: str) -> dict[str, Any]:
+        tenant = current_casino_tenant()
+        row = self.sessions.get((tenant, session_id))
+        if not row:
+            raise NotFoundError(f"session not found: {session_id}")
+        return dict(row)
 
 
 _MEMORY = MemoryCasinoStore()
@@ -635,3 +667,88 @@ class PostgresCasinoStore:
                 return
             row.status = bet.status
             row.payout_chips = bet.payout_chips
+
+    async def get_bet_by_idempotency(self, key: str) -> RouletteBet | None:
+        from sqlalchemy import select
+
+        from database.models.casino import CasinoRouletteBetRow
+        from database.session import get_session
+
+        tenant = current_casino_tenant()
+        async with get_session() as session:
+            row = await session.scalar(
+                select(CasinoRouletteBetRow).where(
+                    CasinoRouletteBetRow.tenant_id == tenant,
+                    CasinoRouletteBetRow.idempotency_key == key,
+                )
+            )
+        if not row:
+            return None
+        return RouletteBet(
+            bet_id=row.bet_id,
+            tenant_id=row.tenant_id,
+            player_id=row.player_id,
+            round_id=row.round_id,
+            bet_type=row.bet_type,
+            numbers=list(row.numbers or []),
+            amount_chips=int(row.amount_chips),
+            idempotency_key=row.idempotency_key,
+            status=row.status,
+            payout_chips=int(row.payout_chips),
+        )
+
+    async def put_game_session(self, session_id: str, payload: dict[str, Any]) -> dict[str, Any]:
+        from sqlalchemy import select
+
+        from database.models.casino import CasinoRouletteRoundRow
+        from database.session import get_session
+
+        tenant = current_casino_tenant()
+        stored = dict(payload)
+        stored["session_id"] = session_id
+        stored["tenant_id"] = tenant
+        venue_id = str(stored.get("venue_id") or DEFAULT_CONFIG.default_venue_id)
+        settled = bool(stored.get("settled"))
+        async with get_session() as session:
+            row = await session.scalar(
+                select(CasinoRouletteRoundRow).where(
+                    CasinoRouletteRoundRow.round_id == session_id,
+                    CasinoRouletteRoundRow.tenant_id == tenant,
+                )
+            )
+            if row is None:
+                session.add(
+                    CasinoRouletteRoundRow(
+                        round_id=session_id,
+                        tenant_id=tenant,
+                        venue_id=venue_id,
+                        status="settled" if settled else "open",
+                        entropy_hex=str(stored.get("entropy_hex") or ""),
+                        settled=settled,
+                        payload=stored,
+                    )
+                )
+            else:
+                row.status = "settled" if settled else "open"
+                row.settled = settled
+                row.entropy_hex = str(stored.get("entropy_hex") or "")
+                row.payload = stored
+        return stored
+
+    async def get_game_session(self, session_id: str) -> dict[str, Any]:
+        from sqlalchemy import select
+
+        from database.models.casino import CasinoRouletteRoundRow
+        from database.session import get_session
+
+        tenant = current_casino_tenant()
+        async with get_session() as session:
+            row = await session.scalar(
+                select(CasinoRouletteRoundRow).where(
+                    CasinoRouletteRoundRow.round_id == session_id,
+                    CasinoRouletteRoundRow.tenant_id == tenant,
+                )
+            )
+        if not row or not isinstance(row.payload, dict) or not row.payload.get("game"):
+            raise NotFoundError(f"session not found: {session_id}")
+        return dict(row.payload)

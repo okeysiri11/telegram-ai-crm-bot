@@ -1,4 +1,4 @@
-"""Casino vertical configuration — play-money only (Sprint 15–17)."""
+"""Casino vertical configuration — play-money only (Sprint 15–18)."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class CasinoConfig:
     application_name: str = "Odessa Prime Casino"
-    application_version: str = "17.0.0-play-money"
+    application_version: str = "18.0.0-play-money"
     api_prefix: str = "/api/casino/v1"
     currency_code: str = "CHIPS"
     currency_label: str = "PLAY"

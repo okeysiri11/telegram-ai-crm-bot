@@ -171,7 +171,7 @@ async def test_presence_join_leave_reconnect_display_names(client: TestClient):
     )
     assert named.status == 200
     soon = await client.post(
-        "/api/casino/v1/venues/odessa-prime/rooms/blackjack-salon/join",
+        "/api/casino/v1/venues/odessa-prime/rooms/poker-room/join",
         headers=AUTH,
     )
     assert soon.status == 400

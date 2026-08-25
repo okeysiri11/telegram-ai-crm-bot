@@ -141,3 +141,69 @@ async def rooms_index_handler(request: web.Request) -> web.Response:
     _bind(request)
     venue_id = request.query.get("venue_id") or casino_engine.config.default_venue_id
     return json_response(await casino_engine.room(venue_id))
+
+
+def _json_body(raw: bytes) -> dict:
+    import json
+
+    if not raw:
+        return {}
+    data = json.loads(raw.decode("utf-8") or "{}")
+    return data if isinstance(data, dict) else {}
+
+
+async def blackjack_deal_handler(request: web.Request) -> web.Response:
+    _bind(request)
+    data = _json_body(await request.read()) if request.can_read_body else {}
+    return json_response(
+        await casino_engine.blackjack_deal(
+            player_id=_player_id(request),
+            venue_id=request.match_info["venue_id"],
+            amount_chips=int(data.get("amount_chips") or 0),
+            idempotency_key=str(data.get("idempotency_key") or ""),
+            client_payload=data,
+        ),
+        status=201,
+    )
+
+
+async def blackjack_action_handler(request: web.Request) -> web.Response:
+    _bind(request)
+    data = _json_body(await request.read()) if request.can_read_body else {}
+    path = request.path
+    if path.endswith("/hit"):
+        action = "hit"
+    elif path.endswith("/stand"):
+        action = "stand"
+    else:
+        action = str(data.get("action") or "")
+    return json_response(
+        await casino_engine.blackjack_action(
+            player_id=_player_id(request),
+            hand_id=request.match_info["hand_id"],
+            action=action,
+            client_payload=data,
+        )
+    )
+
+
+async def blackjack_hand_handler(request: web.Request) -> web.Response:
+    _bind(request)
+    return json_response(
+        await casino_engine.blackjack_hand(_player_id(request), request.match_info["hand_id"])
+    )
+
+
+async def slot_spin_handler(request: web.Request) -> web.Response:
+    _bind(request)
+    data = _json_body(await request.read()) if request.can_read_body else {}
+    return json_response(
+        await casino_engine.slot_spin(
+            player_id=_player_id(request),
+            venue_id=request.match_info["venue_id"],
+            machine_id=request.match_info.get("machine_id") or "odessa-gold",
+            amount_chips=int(data.get("amount_chips") or 0),
+            idempotency_key=str(data.get("idempotency_key") or ""),
+            client_payload=data,
+        )
+    )

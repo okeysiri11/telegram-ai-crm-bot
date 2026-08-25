@@ -67,7 +67,8 @@ jobs:
             tests/test_crm_foundation_40_2.py \
             tests/test_casino_foundation.py \
             tests/test_casino_premium.py \
-            tests/test_casino_immersive.py -q
+            tests/test_casino_immersive.py \
+            tests/test_casino_world.py -q
       - name: Security suite
         run: |
           python -m pytest tests/test_management_security.py \

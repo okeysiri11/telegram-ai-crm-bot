@@ -39,3 +39,16 @@ def register_casino_routes(app: web.Application) -> None:
     app.router.add_post(f"{prefix}/venues/{{venue_id}}/rooms/join", handlers.join_room_handler)
     app.router.add_post(f"{prefix}/venues/{{venue_id}}/rooms/leave", handlers.leave_room_handler)
     app.router.add_get(f"{prefix}/venues/{{venue_id}}/rooms", handlers.room_handler)
+    app.router.add_post(
+        f"{prefix}/venues/{{venue_id}}/blackjack/hands", handlers.blackjack_deal_handler
+    )
+    app.router.add_get(f"{prefix}/blackjack/hands/{{hand_id}}", handlers.blackjack_hand_handler)
+    app.router.add_post(
+        f"{prefix}/blackjack/hands/{{hand_id}}/hit", handlers.blackjack_action_handler
+    )
+    app.router.add_post(
+        f"{prefix}/blackjack/hands/{{hand_id}}/stand", handlers.blackjack_action_handler
+    )
+    app.router.add_post(
+        f"{prefix}/venues/{{venue_id}}/slots/{{machine_id}}/spin", handlers.slot_spin_handler
+    )

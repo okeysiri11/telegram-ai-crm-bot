@@ -61,6 +61,7 @@ export type CasinoLedgerEntry = {
   resulting_balance: number;
   amount_chips: number;
   balance_after: number;
+  reference_type?: string;
   currency_label?: string;
   display_currency?: string;
 };
@@ -95,6 +96,30 @@ export type CasinoRooms = {
   count: number;
   online_count: number;
   play_money_only: boolean;
+};
+
+export type BlackjackHand = {
+  hand_id: string;
+  status: string;
+  settled: boolean;
+  wager_chips: number;
+  player_cards: Array<{ rank: string; suit: string; hidden?: boolean }>;
+  dealer_cards: Array<{ rank: string; suit: string; hidden?: boolean }>;
+  player_total: number;
+  dealer_total: number | null;
+  available_actions: string[];
+  settlement?: { outcome: string; payout_chips: number; server_authoritative: boolean };
+  server_authoritative: boolean;
+};
+
+export type SlotSpin = {
+  spin_id: string;
+  machine: string;
+  wager_chips: number;
+  reels: string[][];
+  payout_chips: number;
+  outcome: string;
+  server_authoritative: boolean;
 };
 
 export type RouletteRound = {

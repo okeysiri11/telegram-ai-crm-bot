@@ -54,7 +54,7 @@ export function CasinoHistoryDrawer({
         <tbody>
           {rows.map((row) => (
             <tr key={row.entry_id}>
-              <td>Рулетка</td>
+              <td>{row.reference_type === "blackjack" ? "Blackjack" : row.reference_type === "slots" ? "Odessa Gold" : "Рулетка"}</td>
               <td>{formatTimestamp(row.created_ts)}</td>
               <td>{row.wager != null ? formatPlayBalance(row.wager) : row.operation}</td>
               <td className={row.balance_delta >= 0 ? "op-win" : "op-loss"}>{formatLedgerDelta(row.balance_delta)}</td>

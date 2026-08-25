@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 
 const GAMES = [
-  { id: "roulette", title: "РУЛЕТКА", live: true, players: "LIVE", to: "/casino/roulette" },
-  { id: "blackjack", title: "BLACKJACK", live: false, players: "Скоро", to: "/casino/games" },
+  { id: "roulette", title: "РУЛЕТКА", live: true, players: "LIVE", to: "/casino/rooms/roulette" },
+  { id: "blackjack", title: "BLACKJACK", live: true, players: "LIVE", to: "/casino/rooms/blackjack" },
+  { id: "slots", title: "ОДЕССА GOLD", live: true, players: "LIVE", to: "/casino/slots/odessa-gold" },
   { id: "poker", title: "ПОКЕР", live: false, players: "Скоро", to: "/casino/games" },
-  { id: "slots", title: "АВТОМАТЫ", live: false, players: "Скоро", to: "/casino/games" },
   { id: "live", title: "LIVE CASINO", live: false, players: "Скоро", to: "/casino/games" },
   { id: "tournaments", title: "ТУРНИРЫ", live: false, players: "Скоро", to: "/casino/games" },
 ];

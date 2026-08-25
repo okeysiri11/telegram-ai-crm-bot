@@ -27,16 +27,19 @@ FLOOR_AREAS: tuple[dict[str, Any], ...] = (
         "coming_soon": False,
         "game": "roulette",
         "room_id": DEFAULT_LIVE_ROOM_ID,
-        "route": "/casino/roulette",
+        "route": "/casino/rooms/roulette",
         "zone": "roulette",
     },
     {
         "id": "blackjack",
         "label": "BLACKJACK",
         "label_ru": "BLACKJACK",
-        "status": "soon",
-        "status_label": "Скоро",
-        "coming_soon": True,
+        "status": "open",
+        "status_label": "Идет прием ставок",
+        "coming_soon": False,
+        "game": "blackjack",
+        "room_id": "blackjack-salon",
+        "route": "/casino/rooms/blackjack",
         "zone": "blackjack",
     },
     {
@@ -52,9 +55,12 @@ FLOOR_AREAS: tuple[dict[str, Any], ...] = (
         "id": "slots",
         "label": "SLOTS",
         "label_ru": "АВТОМАТЫ",
-        "status": "soon",
-        "status_label": "Скоро",
-        "coming_soon": True,
+        "status": "open",
+        "status_label": "Идет прием ставок",
+        "coming_soon": False,
+        "game": "slots",
+        "room_id": "slots-odessa-gold",
+        "route": "/casino/rooms/slots",
         "zone": "slots",
     },
     {
@@ -140,12 +146,24 @@ TABLES: tuple[dict[str, Any], ...] = (
         "table": "Blackjack Salon",
         "game": "blackjack",
         "seats": 5,
-        "coming_soon": True,
+        "coming_soon": False,
         "min_bet": 25,
         "max_bet": 2_000,
-        "status_open": "Скоро",
-        "status_idle": "Скоро",
-        "route": None,
+        "status_open": "Идет прием ставок",
+        "status_idle": "Ожидание игроков",
+        "route": "/casino/rooms/blackjack",
+    },
+    {
+        "room_id": "slots-odessa-gold",
+        "table": "Odessa Gold",
+        "game": "slots",
+        "seats": 3,
+        "coming_soon": False,
+        "min_bet": 10,
+        "max_bet": 5_000,
+        "status_open": "Идет прием ставок",
+        "status_idle": "Ожидание игроков",
+        "route": "/casino/slots/odessa-gold",
     },
     {
         "room_id": "poker-room",
@@ -164,6 +182,8 @@ TABLES: tuple[dict[str, Any], ...] = (
 _ALIASES = {
     LEGACY_LIVE_ROOM_ID: DEFAULT_LIVE_ROOM_ID,
     "royale": DEFAULT_LIVE_ROOM_ID,
+    "odessa-gold": "slots-odessa-gold",
+    "blackjack": "blackjack-salon",
 }
 
 
@@ -184,3 +204,11 @@ def get_table(room_id: str) -> dict[str, Any] | None:
 
 def roulette_tables() -> list[dict[str, Any]]:
     return [dict(t) for t in TABLES if t.get("game") == "roulette"]
+
+
+def blackjack_tables() -> list[dict[str, Any]]:
+    return [dict(t) for t in TABLES if t.get("game") == "blackjack"]
+
+
+def slot_machines() -> list[dict[str, Any]]:
+    return [dict(t) for t in TABLES if t.get("game") == "slots"]
