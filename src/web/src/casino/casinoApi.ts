@@ -120,6 +120,10 @@ export async function spinRoulette(roundId: string): Promise<RouletteRound> {
 
 export const CASINO_ROUTES = {
   lobby: "/casino",
+  floor: "/casino/floor",
+  games: "/casino/games",
+  tables: "/casino/roulette",
   venue: (id: string) => `/casino/venues/${id}`,
   roulette: (id: string) => `/casino/venues/${id}/roulette`,
+  table: (tableId: string) => `/casino/roulette/${tableId}`,
 } as const;

@@ -140,6 +140,14 @@ export function EnterpriseCityPage() {
   }, []);
 
   useEffect(() => {
+    const building = params.get("building");
+    if (building === "casino") {
+      setFocusId("casino");
+      setCityFocus("casino");
+    }
+  }, [params]);
+
+  useEffect(() => {
     return geoSelectionBridge.subscribe((state) => {
       if (state.intent === "show-2d" && state.geo) {
         const geo = geoSelectionBridge.consumeShow2d();

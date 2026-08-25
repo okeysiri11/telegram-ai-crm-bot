@@ -56,10 +56,11 @@ async def test_casino_lobby_route_and_floor(client: TestClient):
     assert payload["display_currency"] == "DEMO CHIPS"
     assert payload["city_entry"]["enter_label"] == "Войти в казино"
     labels = {area["label"] for area in payload["floor"]}
-    assert labels >= {"RECEPTION", "BAR", "ROULETTE", "BLACKJACK", "POKER", "SLOTS", "VIP"}
+    assert labels >= {"LOBBY", "BAR", "ROULETTE", "BLACKJACK", "POKER", "SLOTS", "VIP"}
     roulette = next(a for a in payload["floor"] if a["id"] == "roulette")
     assert roulette["coming_soon"] is False
-    soon = [a for a in payload["floor"] if a["id"] != "roulette"]
+    soon = [a for a in payload["floor"] if a["coming_soon"]]
+    assert soon
     assert all(a["status_label"] == "Скоро" for a in soon)
     games = await client.get("/api/casino/v1/games")
     assert games.status == 200
@@ -148,7 +149,7 @@ async def test_presence_join_leave_reconnect_display_names(client: TestClient):
     join = await client.post("/api/casino/v1/venues/odessa-prime/rooms/join", headers=AUTH)
     assert join.status == 200
     body = await join.json()
-    assert body["table"] == "Roulette Royale"
+    assert body["table"] == "Roulette Royale 1"
     assert body["count"] == 1
     assert body["seats_total"] == 6
     assert body["status_label"] in {"Идет прием ставок", "Ожидание игроков"}
@@ -163,7 +164,7 @@ async def test_presence_join_leave_reconnect_display_names(client: TestClient):
     rooms = await client.get("/api/casino/v1/venues/odessa-prime/rooms")
     listed = await rooms.json()
     assert listed["online_count"] >= 1
-    assert any(t["room_id"] == "roulette-royale" for t in listed["tables"])
+    assert any(t["room_id"] == "roulette-royale-1" for t in listed["tables"])
     named = await client.post(
         "/api/casino/v1/venues/odessa-prime/rooms/roulette-royale/join",
         headers=AUTH,

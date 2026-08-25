@@ -1,30 +1,22 @@
-"""Premium floor catalog — illustrated lobby areas and live tables.
-
-No new persistence. Coming-soon areas are presentation only.
-"""
+"""Odessa Prime floor catalog — tables and hall zones. No new persistence."""
 
 from __future__ import annotations
 
 from typing import Any
 
-DEFAULT_LIVE_ROOM_ID = "roulette-royale"
+DEFAULT_LIVE_ROOM_ID = "roulette-royale-1"
+LEGACY_LIVE_ROOM_ID = "roulette-royale"
 
 FLOOR_AREAS: tuple[dict[str, Any], ...] = (
     {
-        "id": "reception",
-        "label": "RECEPTION",
-        "label_ru": "РЕЦЕПЦИЯ",
-        "status": "soon",
-        "status_label": "Скоро",
-        "coming_soon": True,
-    },
-    {
-        "id": "bar",
-        "label": "BAR",
-        "label_ru": "БАР",
-        "status": "soon",
-        "status_label": "Скоро",
-        "coming_soon": True,
+        "id": "lobby",
+        "label": "LOBBY",
+        "label_ru": "ЛОББИ",
+        "status": "open",
+        "status_label": "Открыто",
+        "coming_soon": False,
+        "route": "/casino/floor",
+        "zone": "lobby",
     },
     {
         "id": "roulette",
@@ -35,15 +27,17 @@ FLOOR_AREAS: tuple[dict[str, Any], ...] = (
         "coming_soon": False,
         "game": "roulette",
         "room_id": DEFAULT_LIVE_ROOM_ID,
-        "route": "/casino/venues/odessa-prime/roulette",
+        "route": "/casino/roulette",
+        "zone": "roulette",
     },
     {
         "id": "blackjack",
         "label": "BLACKJACK",
-        "label_ru": "БЛЭКДЖЕК",
+        "label_ru": "BLACKJACK",
         "status": "soon",
         "status_label": "Скоро",
         "coming_soon": True,
+        "zone": "blackjack",
     },
     {
         "id": "poker",
@@ -52,35 +46,94 @@ FLOOR_AREAS: tuple[dict[str, Any], ...] = (
         "status": "soon",
         "status_label": "Скоро",
         "coming_soon": True,
+        "zone": "poker",
     },
     {
         "id": "slots",
         "label": "SLOTS",
-        "label_ru": "СЛОТЫ",
+        "label_ru": "АВТОМАТЫ",
         "status": "soon",
         "status_label": "Скоро",
         "coming_soon": True,
+        "zone": "slots",
     },
     {
         "id": "vip",
         "label": "VIP",
-        "label_ru": "VIP",
+        "label_ru": "VIP ЗОНА",
         "status": "soon",
         "status_label": "Скоро",
         "coming_soon": True,
+        "zone": "vip",
+    },
+    {
+        "id": "bar",
+        "label": "BAR",
+        "label_ru": "БАР",
+        "status": "soon",
+        "status_label": "Скоро",
+        "coming_soon": True,
+        "zone": "bar",
+    },
+    {
+        "id": "restaurant",
+        "label": "RESTAURANT",
+        "label_ru": "РЕСТОРАН",
+        "status": "soon",
+        "status_label": "Скоро",
+        "coming_soon": True,
+        "zone": "restaurant",
     },
 )
 
 TABLES: tuple[dict[str, Any], ...] = (
     {
         "room_id": DEFAULT_LIVE_ROOM_ID,
-        "table": "Roulette Royale",
+        "table": "Roulette Royale 1",
         "game": "roulette",
         "seats": 6,
         "coming_soon": False,
+        "min_bet": 10,
+        "max_bet": 5_000,
         "status_open": "Идет прием ставок",
         "status_idle": "Ожидание игроков",
-        "route": "/casino/venues/odessa-prime/roulette",
+        "route": "/casino/roulette/roulette-royale-1",
+    },
+    {
+        "room_id": "roulette-classic",
+        "table": "Roulette Classic",
+        "game": "roulette",
+        "seats": 6,
+        "coming_soon": True,
+        "min_bet": 10,
+        "max_bet": 1_000,
+        "status_open": "Скоро",
+        "status_idle": "Скоро",
+        "route": None,
+    },
+    {
+        "room_id": "roulette-monaco",
+        "table": "Roulette Monaco",
+        "game": "roulette",
+        "seats": 8,
+        "coming_soon": True,
+        "min_bet": 50,
+        "max_bet": 5_000,
+        "status_open": "Скоро",
+        "status_idle": "Скоро",
+        "route": None,
+    },
+    {
+        "room_id": "roulette-vip",
+        "table": "Roulette VIP",
+        "game": "roulette",
+        "seats": 4,
+        "coming_soon": True,
+        "min_bet": 500,
+        "max_bet": 5_000,
+        "status_open": "Скоро",
+        "status_idle": "Скоро",
+        "route": None,
     },
     {
         "room_id": "blackjack-salon",
@@ -88,6 +141,8 @@ TABLES: tuple[dict[str, Any], ...] = (
         "game": "blackjack",
         "seats": 5,
         "coming_soon": True,
+        "min_bet": 25,
+        "max_bet": 2_000,
         "status_open": "Скоро",
         "status_idle": "Скоро",
         "route": None,
@@ -98,23 +153,34 @@ TABLES: tuple[dict[str, Any], ...] = (
         "game": "poker",
         "seats": 8,
         "coming_soon": True,
+        "min_bet": 50,
+        "max_bet": 5_000,
         "status_open": "Скоро",
         "status_idle": "Скоро",
         "route": None,
     },
 )
 
-
-def get_table(room_id: str) -> dict[str, Any] | None:
-    rid = (room_id or "").strip().lower()
-    for table in TABLES:
-        if table["room_id"] == rid:
-            return dict(table)
-    return None
+_ALIASES = {
+    LEGACY_LIVE_ROOM_ID: DEFAULT_LIVE_ROOM_ID,
+    "royale": DEFAULT_LIVE_ROOM_ID,
+}
 
 
 def live_room_id(room_id: str | None) -> str:
     rid = (room_id or "").strip().lower()
     if not rid or rid in {"default", "main", "venue"}:
         return DEFAULT_LIVE_ROOM_ID
-    return rid
+    return _ALIASES.get(rid, rid)
+
+
+def get_table(room_id: str) -> dict[str, Any] | None:
+    rid = live_room_id(room_id)
+    for table in TABLES:
+        if table["room_id"] == rid:
+            return dict(table)
+    return None
+
+
+def roulette_tables() -> list[dict[str, Any]]:
+    return [dict(t) for t in TABLES if t.get("game") == "roulette"]

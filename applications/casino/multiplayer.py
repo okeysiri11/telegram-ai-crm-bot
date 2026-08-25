@@ -87,6 +87,8 @@ def _public_presence(
         "players": [row for row in _seat_view(members, seats) if row["occupied"]],
         "seats": _seat_view(members, seats),
         "route": table.get("route"),
+        "min_bet": int(table.get("min_bet") or 10),
+        "max_bet": int(table.get("max_bet") or 5000),
     }
 
 

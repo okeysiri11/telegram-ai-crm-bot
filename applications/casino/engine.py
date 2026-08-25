@@ -90,8 +90,15 @@ class CasinoEngine:
                 "route": "/casino",
                 "venue_route": f"/casino/venues/{self.config.default_venue_id}",
                 "enter_label": "Войти в казино",
+                "city_return": "/enterprise-city?building=casino",
             },
+            "roulette_tables": self._roulette_table_catalog(),
         }
+
+    def _roulette_table_catalog(self) -> list[dict[str, Any]]:
+        from applications.casino.tables import roulette_tables
+
+        return roulette_tables()
 
     async def games(self) -> dict[str, Any]:
         return {

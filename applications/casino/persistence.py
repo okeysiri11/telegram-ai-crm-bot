@@ -178,6 +178,7 @@ class MemoryCasinoStore:
             tenant_id=current_casino_tenant(),
             venue_id=venue_id,
             status="open",
+            opened_ts=time.time(),
         )
         self.rounds[rnd.round_id] = rnd
         return rnd
@@ -471,11 +472,13 @@ class PostgresCasinoStore:
         from database.session import get_session
 
         await self.get_venue(venue_id)
+        opened = time.time()
         rnd = RouletteRound(
             round_id=_new_id("rnd"),
             tenant_id=current_casino_tenant(),
             venue_id=venue_id,
             status="open",
+            opened_ts=opened,
         )
         async with get_session() as session:
             session.add(
@@ -486,7 +489,7 @@ class PostgresCasinoStore:
                     status="open",
                     entropy_hex="",
                     settled=False,
-                    payload={},
+                    payload={"opened_ts": opened},
                 )
             )
         return rnd
@@ -507,6 +510,7 @@ class PostgresCasinoStore:
             )
         if not row:
             raise NotFoundError(f"round not found: {round_id}")
+        payload = row.payload if isinstance(row.payload, dict) else {}
         return RouletteRound(
             round_id=row.round_id,
             tenant_id=row.tenant_id,
@@ -516,6 +520,7 @@ class PostgresCasinoStore:
             result_color=row.result_color,
             entropy_hex=row.entropy_hex,
             settled=bool(row.settled),
+            opened_ts=float(payload.get("opened_ts") or 0),
         )
 
     async def save_round(self, rnd: RouletteRound) -> None:

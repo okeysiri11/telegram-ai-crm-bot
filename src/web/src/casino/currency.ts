@@ -2,7 +2,7 @@
 
 export const PLAY_LABEL = "PLAY";
 export const DEMO_CHIPS_LABEL = "DEMO CHIPS";
-export const CHIP_DENOMS = [1, 5, 10, 25, 50, 100, 500] as const;
+export const CHIP_DENOMS = [10, 50, 100, 500, 1000, 5000] as const;
 
 const MONEY_SYMBOL = /[$€£¥₽₴]/;
 

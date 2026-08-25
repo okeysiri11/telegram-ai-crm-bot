@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Checkbox, Input, Select } from "@/ui";
 import { useAuthStore } from "@/auth/authStore";
 import { useI18n } from "@/i18n";
@@ -18,6 +18,7 @@ import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import { MULTI_ROLE_DEMO_USERS } from "@/multi-role/demoUsers";
 import { openClientDemoWorkspace } from "@/multi-role/applyDemoSession";
+import { resolvePostLoginPath } from "@/navigation/safeReturnTo";
 
 export function LoginPage() {
   const t = useI18n((s) => s.t);
@@ -28,7 +29,7 @@ export function LoginPage() {
   const updatePrefs = usePreferencesStore((s) => s.update);
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: string } | null)?.from || "/dashboard";
+  const [searchParams] = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"chooser" | "email">("chooser");
   const [googleBusy, setGoogleBusy] = useState(false);
@@ -79,8 +80,11 @@ export function LoginPage() {
     }
 
     const roleHome = postAuthDestination(useRoleSwitcher.getState().activeRoleId || authUser?.roleId, email);
-    const next =
-      from.startsWith("/onboarding") || from === "/login" ? roleHome : from || roleHome;
+    const next = resolvePostLoginPath({
+      queryReturnTo: searchParams.get("returnTo"),
+      stateFrom: (location.state as { from?: string } | null)?.from,
+      roleHome,
+    });
     navigate(next, { replace: true });
   }
 

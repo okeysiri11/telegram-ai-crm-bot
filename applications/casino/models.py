@@ -151,8 +151,29 @@ class RouletteRound:
     result_color: str | None = None
     entropy_hex: str = ""
     settled: bool = False
+    opened_ts: float = 0.0
+
+    def phase(self) -> str:
+        from applications.casino.config import DEFAULT_CONFIG
+
+        if self.settled:
+            return "SETTLED"
+        if self.result_number is not None:
+            return "RESULT"
+        import time
+
+        elapsed = max(0.0, time.time() - (self.opened_ts or 0.0))
+        open_s = DEFAULT_CONFIG.betting_open_seconds
+        close_s = DEFAULT_CONFIG.betting_closing_seconds
+        if elapsed < open_s:
+            return "BETTING_OPEN"
+        if elapsed < open_s + close_s:
+            return "BETTING_CLOSING"
+        return "NO_MORE_BETS"
 
     def to_dict(self) -> dict[str, Any]:
+        from applications.casino.config import DEFAULT_CONFIG
+
         return {
             "round_id": self.round_id,
             "tenant_id": self.tenant_id,
@@ -162,4 +183,8 @@ class RouletteRound:
             "result_color": self.result_color,
             "settled": self.settled,
             "server_authoritative": True,
+            "opened_ts": self.opened_ts,
+            "betting_open_seconds": DEFAULT_CONFIG.betting_open_seconds,
+            "betting_closing_seconds": DEFAULT_CONFIG.betting_closing_seconds,
+            "phase": self.phase(),
         }
