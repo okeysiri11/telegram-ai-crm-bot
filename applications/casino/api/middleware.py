@@ -11,6 +11,7 @@ from applications.casino.exceptions import (
     DuplicateSettlementError,
     InsufficientChipsError,
     NotFoundError,
+    RateLimitError,
     ValidationError,
 )
 from applications.casino.tenant import bind_casino_tenant, tenant_from_request
@@ -68,6 +69,11 @@ async def casino_error_middleware(request: web.Request, handler):
         return error_response(str(exc), status=400)
     except DuplicateSettlementError as exc:
         return error_response(str(exc), status=409)
+    except RateLimitError as exc:
+        return web.json_response(
+            {"error": str(exc), "retry_after_seconds": exc.retry_after},
+            status=429,
+        )
     except ValidationError as exc:
         return error_response(str(exc), status=400)
     except ValueError as exc:

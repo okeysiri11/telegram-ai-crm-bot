@@ -54,6 +54,25 @@ async def ledger_handler(request: web.Request) -> web.Response:
     return json_response(await casino_engine.ledger(_player_id(request)))
 
 
+async def demo_grant_handler(request: web.Request) -> web.Response:
+    _bind(request)
+    payload: dict | None = None
+    if request.can_read_body:
+        raw = await request.read()
+        if raw:
+            import json
+
+            data = json.loads(raw.decode("utf-8") or "{}")
+            if isinstance(data, dict):
+                payload = data
+    return json_response(await casino_engine.demo_grant(_player_id(request), client_payload=payload))
+
+
+async def games_handler(request: web.Request) -> web.Response:
+    _bind(request)
+    return json_response(await casino_engine.games())
+
+
 async def open_round_handler(request: web.Request) -> web.Response:
     _bind(request)
     _player_id(request)
@@ -98,14 +117,27 @@ async def spin_handler(request: web.Request) -> web.Response:
 
 async def join_room_handler(request: web.Request) -> web.Response:
     _bind(request)
-    return json_response(await casino_engine.join_room(request.match_info["venue_id"], _player_id(request)))
+    room_id = request.match_info.get("room_id")
+    return json_response(
+        await casino_engine.join_room(request.match_info["venue_id"], _player_id(request), room_id)
+    )
 
 
 async def leave_room_handler(request: web.Request) -> web.Response:
     _bind(request)
-    return json_response(await casino_engine.leave_room(request.match_info["venue_id"], _player_id(request)))
+    room_id = request.match_info.get("room_id")
+    return json_response(
+        await casino_engine.leave_room(request.match_info["venue_id"], _player_id(request), room_id)
+    )
 
 
 async def room_handler(request: web.Request) -> web.Response:
     _bind(request)
-    return json_response(await casino_engine.room(request.match_info["venue_id"]))
+    room_id = request.match_info.get("room_id")
+    return json_response(await casino_engine.room(request.match_info["venue_id"], room_id))
+
+
+async def rooms_index_handler(request: web.Request) -> web.Response:
+    _bind(request)
+    venue_id = request.query.get("venue_id") or casino_engine.config.default_venue_id
+    return json_response(await casino_engine.room(venue_id))

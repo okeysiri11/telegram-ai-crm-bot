@@ -1,4 +1,4 @@
-"""ADOS Casino vertical — play-money foundation (Sprint 15)."""
+"""ADOS Casino vertical — play-money (Sprint 15 foundation, Sprint 16 premium UX)."""
 
 from applications.casino.engine import CasinoEngine, casino_engine
 

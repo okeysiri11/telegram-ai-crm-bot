@@ -136,6 +136,9 @@ const CasinoLobbyPage = lazy(() =>
 const CasinoVenuePage = lazy(() =>
   import("@/casino").then((m) => ({ default: m.CasinoVenuePage })),
 );
+const CasinoRoulettePage = lazy(() =>
+  import("@/casino").then((m) => ({ default: m.CasinoRoulettePage })),
+);
 const WorkflowCenterPage = lazy(() =>
   import("@/enterprise-workflow").then((m) => ({ default: m.WorkflowCenterPage })),
 );
@@ -603,7 +606,7 @@ export function App() {
         element={
           <ProtectedRoute>
             <RouteErrorBoundary zone="Casino roulette" recoveryHref="/casino">
-              <CasinoVenuePage />
+              <CasinoRoulettePage />
             </RouteErrorBoundary>
           </ProtectedRoute>
         }

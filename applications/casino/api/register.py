@@ -16,14 +16,26 @@ def register_casino_routes(app: web.Application) -> None:
 
     app.router.add_get(f"{prefix}/health", handlers.health_handler)
     app.router.add_get(f"{prefix}/lobby", handlers.lobby_handler)
+    app.router.add_get(f"{prefix}/games", handlers.games_handler)
+    app.router.add_get(f"{prefix}/rooms", handlers.rooms_index_handler)
     app.router.add_get(f"{prefix}/venues", handlers.venues_handler)
     app.router.add_get(f"{prefix}/venues/{{venue_id}}", handlers.venue_handler)
     app.router.add_get(f"{prefix}/wallet", handlers.wallet_handler)
     app.router.add_get(f"{prefix}/ledger", handlers.ledger_handler)
+    app.router.add_post(f"{prefix}/wallet/demo-grant", handlers.demo_grant_handler)
     app.router.add_post(f"{prefix}/venues/{{venue_id}}/roulette/rounds", handlers.open_round_handler)
     app.router.add_get(f"{prefix}/roulette/rounds/{{round_id}}", handlers.get_round_handler)
     app.router.add_post(f"{prefix}/roulette/rounds/{{round_id}}/bets", handlers.place_bet_handler)
     app.router.add_post(f"{prefix}/roulette/rounds/{{round_id}}/spin", handlers.spin_handler)
+    app.router.add_post(
+        f"{prefix}/venues/{{venue_id}}/rooms/{{room_id}}/join", handlers.join_room_handler
+    )
+    app.router.add_post(
+        f"{prefix}/venues/{{venue_id}}/rooms/{{room_id}}/leave", handlers.leave_room_handler
+    )
+    app.router.add_get(
+        f"{prefix}/venues/{{venue_id}}/rooms/{{room_id}}", handlers.room_handler
+    )
     app.router.add_post(f"{prefix}/venues/{{venue_id}}/rooms/join", handlers.join_room_handler)
     app.router.add_post(f"{prefix}/venues/{{venue_id}}/rooms/leave", handlers.leave_room_handler)
     app.router.add_get(f"{prefix}/venues/{{venue_id}}/rooms", handlers.room_handler)

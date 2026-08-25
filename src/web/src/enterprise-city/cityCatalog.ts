@@ -691,7 +691,7 @@ export const CITY_BUILDINGS: CityBuilding[] = [
     w: 12,
     h: 11,
     district: "marketplace",
-    searchTokens: ["casino", "roulette", "venue", "odessa", "prime", "play", "chips", "казино"],
+    searchTokens: ["casino", "roulette", "venue", "odessa", "prime", "play", "chips", "казино", "рулетка", "демо"],
     aiAssistant: "Casino Concierge",
   },
 ];

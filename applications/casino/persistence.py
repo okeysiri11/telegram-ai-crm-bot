@@ -123,6 +123,15 @@ class MemoryCasinoStore:
         rows = [e for e in self.ledger if e.tenant_id == tenant and e.player_id == player_id]
         return list(reversed(rows[-limit:]))
 
+    def last_entry_ts(self, player_id: str, entry_type: str) -> float | None:
+        tenant = current_casino_tenant()
+        stamps = [
+            e.created_ts
+            for e in self.ledger
+            if e.tenant_id == tenant and e.player_id == player_id and e.entry_type == entry_type
+        ]
+        return max(stamps) if stamps else None
+
     def debit(self, player_id: str, amount: int, *, entry_type: str, reference_id: str, idempotency_key: str) -> PlayWallet:
         if amount <= 0:
             raise ValidationError("debit amount must be positive")
@@ -137,7 +146,16 @@ class MemoryCasinoStore:
         )
         return wallet
 
-    def credit(self, player_id: str, amount: int, *, entry_type: str, reference_id: str, idempotency_key: str) -> PlayWallet:
+    def credit(
+        self,
+        player_id: str,
+        amount: int,
+        *,
+        entry_type: str,
+        reference_id: str,
+        idempotency_key: str,
+        reference_type: str = "roulette",
+    ) -> PlayWallet:
         if amount < 0:
             raise ValidationError("credit amount must be non-negative")
         wallet = self.get_or_create_wallet(player_id)
@@ -147,7 +165,7 @@ class MemoryCasinoStore:
             wallet,
             amount=amount,
             entry_type=entry_type,
-            reference_type="roulette",
+            reference_type=reference_type,
             reference_id=reference_id,
             idempotency_key=idempotency_key,
         )
@@ -363,6 +381,23 @@ class PostgresCasinoStore:
             for r in rows
         ]
 
+    async def last_entry_ts(self, player_id: str, entry_type: str) -> float | None:
+        from sqlalchemy import func, select
+
+        from database.models.casino import CasinoLedgerRow
+        from database.session import get_session
+
+        tenant = current_casino_tenant()
+        async with get_session() as session:
+            value = await session.scalar(
+                select(func.max(CasinoLedgerRow.created_ts)).where(
+                    CasinoLedgerRow.tenant_id == tenant,
+                    CasinoLedgerRow.player_id == player_id,
+                    CasinoLedgerRow.entry_type == entry_type,
+                )
+            )
+        return float(value) if value is not None else None
+
     async def apply_delta(
         self,
         player_id: str,
@@ -371,6 +406,7 @@ class PostgresCasinoStore:
         entry_type: str,
         reference_id: str,
         idempotency_key: str,
+        reference_type: str = "roulette",
     ) -> PlayWallet:
         from sqlalchemy import select
         from sqlalchemy.exc import IntegrityError
@@ -414,7 +450,7 @@ class PostgresCasinoStore:
                         amount_chips=amount,
                         balance_after=nxt,
                         entry_type=entry_type,
-                        reference_type="roulette",
+                        reference_type=reference_type,
                         reference_id=reference_id,
                         idempotency_key=idempotency_key,
                         created_ts=time.time(),

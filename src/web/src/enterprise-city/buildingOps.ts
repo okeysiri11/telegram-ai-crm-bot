@@ -74,10 +74,11 @@ const OPS: Partial<Record<CityBuildingId, BuildingOpsMeta>> = {
     owner: "Casino vertical",
     activeUsers: 6,
     health: "online",
-    description: "Play-money casino — Odessa Prime venue, roulette demo",
+    description: "Play-money казино Odessa Prime — рулетка на PLAY / DEMO CHIPS",
     quickActions: [
-      { id: "open", label: "Open casino", route: "/casino" },
-      { id: "venue", label: "Odessa Prime", route: "/casino/venues/odessa-prime" },
+      { id: "open", label: "Войти в казино", route: "/casino" },
+      { id: "venue", label: "Карточка заведения", route: "/casino/venues/odessa-prime" },
+      { id: "roulette", label: "Рулетка", route: "/casino/venues/odessa-prime/roulette" },
     ],
   },
   marketing: {

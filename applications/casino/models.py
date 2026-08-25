@@ -40,12 +40,16 @@ class PlayWallet:
     currency_code: str = "CHIPS"
 
     def to_dict(self) -> dict[str, Any]:
+        from applications.casino.config import DEFAULT_CONFIG
+
         return {
             "wallet_id": self.wallet_id,
             "tenant_id": self.tenant_id,
             "player_id": self.player_id,
             "balance_chips": self.balance_chips,
             "currency_code": self.currency_code,
+            "currency_label": DEFAULT_CONFIG.currency_label,
+            "display_currency": DEFAULT_CONFIG.display_currency,
             "play_money_only": True,
             "real_money": False,
         }
@@ -66,18 +70,47 @@ class LedgerEntry:
     created_ts: float = 0.0
 
     def to_dict(self) -> dict[str, Any]:
+        from applications.casino.config import DEFAULT_CONFIG
+
+        amount = int(self.amount_chips)
+        if self.entry_type == "wager":
+            operation = "Wager"
+            wager = abs(amount)
+            win_loss = "loss" if amount < 0 else None
+        elif self.entry_type == "payout":
+            operation = "Win"
+            wager = None
+            win_loss = "win"
+        elif self.entry_type == "demo_grant":
+            operation = "Demo grant"
+            wager = None
+            win_loss = None
+        elif self.entry_type == "opening_grant":
+            operation = "Opening grant"
+            wager = None
+            win_loss = None
+        else:
+            operation = self.entry_type
+            wager = abs(amount) if amount < 0 else None
+            win_loss = "win" if amount > 0 else ("loss" if amount < 0 else None)
         return {
             "entry_id": self.entry_id,
             "tenant_id": self.tenant_id,
-            "player_id": self.player_id,
             "wallet_id": self.wallet_id,
-            "amount_chips": self.amount_chips,
+            "amount_chips": amount,
             "balance_after": self.balance_after,
             "entry_type": self.entry_type,
             "reference_type": self.reference_type,
             "reference_id": self.reference_id,
             "idempotency_key": self.idempotency_key,
             "created_ts": self.created_ts,
+            "operation": operation,
+            "wager": wager,
+            "win_loss": win_loss,
+            "balance_delta": amount,
+            "resulting_balance": self.balance_after,
+            "currency_label": DEFAULT_CONFIG.currency_label,
+            "display_currency": DEFAULT_CONFIG.display_currency,
             "play_money_only": True,
         }
 

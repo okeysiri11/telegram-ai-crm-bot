@@ -57,7 +57,7 @@ def tenant_from_request(request: Any) -> str:
 def player_id_from_principal(principal: object, *, fallback: str = "anonymous") -> str:
     if not isinstance(principal, dict):
         return fallback[:64]
-    for key in ("sub", "user_id", "player_id", "session_id", "token"):
+    for key in ("sub", "user_id", "player_id", "session_id"):
         value = principal.get(key)
         if value not in (None, ""):
             return str(value)[:64]

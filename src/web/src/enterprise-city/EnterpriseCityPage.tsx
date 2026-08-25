@@ -922,8 +922,17 @@ export function EnterpriseCityPage() {
                     </li>
                   </ul>
                   <div className="mt-2 flex flex-wrap gap-2">
-                    <Button size="sm" onClick={() => openBuilding(focused)}>
-                      Открыть модуль
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        if (focused.id === "casino") {
+                          navigate(withEmbed("/casino", embed));
+                          return;
+                        }
+                        openBuilding(focused);
+                      }}
+                    >
+                      {focused.id === "casino" ? "Войти в казино" : "Открыть модуль"}
                     </Button>
                     {focusedOps.quickActions
                       .filter((a) => a.id !== "open")

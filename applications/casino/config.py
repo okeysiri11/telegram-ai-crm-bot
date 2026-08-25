@@ -1,4 +1,4 @@
-"""Casino vertical configuration — play-money foundation only (Sprint 15)."""
+"""Casino vertical configuration — play-money only (Sprint 15–16)."""
 
 from __future__ import annotations
 
@@ -8,12 +8,18 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class CasinoConfig:
     application_name: str = "ADOS Casino"
-    application_version: str = "15.0.0-play-money"
+    application_version: str = "16.0.0-play-money"
     api_prefix: str = "/api/casino/v1"
     currency_code: str = "CHIPS"
+    currency_label: str = "PLAY"
+    display_currency: str = "DEMO CHIPS"
     opening_chips: int = 10_000
     min_wager: int = 1
     max_wager: int = 5_000
+    chip_denoms: tuple[int, ...] = (1, 5, 10, 25, 50, 100, 500)
+    demo_grant_chips: int = 5_000
+    demo_grant_cooldown_seconds: int = 900
+    demo_grant_balance_cap: int = 25_000
     play_money_only: bool = True
     real_money_implemented: bool = False
     payment_processing_implemented: bool = False
