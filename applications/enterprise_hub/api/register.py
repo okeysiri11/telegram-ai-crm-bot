@@ -283,6 +283,10 @@ def register_enterprise_hub_routes(app: web.Application) -> None:
     app.router.add_get(f"{isam}/dashboard", isam_api.isam_dashboard_handler)
     app.router.add_post(f"{isam}/dashboard", isam_api.isam_dashboard_handler)
 
+    demo_auth = "/api/enterprise-demo-auth/v1"
+    app.router.add_get(f"{demo_auth}/health", isam_api.demo_auth_health_handler)
+    app.router.add_post(f"{demo_auth}/login", isam_api.demo_auth_login_handler)
+
     # Sprint 19.9 — Enterprise Observability (additive; prior routes unchanged)
     obs = DEFAULT_CONFIG.observability_api_prefix
     app.router.add_get(f"{obs}/health", obs_api.obs_health_handler)

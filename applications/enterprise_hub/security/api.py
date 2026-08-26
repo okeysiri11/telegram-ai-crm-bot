@@ -52,6 +52,73 @@ async def isam_bootstrap_handler(request: web.Request) -> web.Response:
         return _handle_error(exc)
 
 
+def _telegram_id_for_email(email: str) -> int:
+    lower = email.lower()
+    if lower.startswith("owner@") or "+owner@" in lower:
+        return 1208044579
+    digest = 0
+    for ch in lower:
+        digest = (digest * 31 + ord(ch)) & 0xFFFFFFFF
+    return 2_000_000_000 + (digest % 100_000_000)
+
+
+async def demo_auth_health_handler(request: web.Request) -> web.Response:
+    return json_response({"ok": True, "mode": "enterprise_demo", "service": "enterprise-demo-auth"})
+
+
+async def demo_auth_login_handler(request: web.Request) -> web.Response:
+    try:
+        from applications.enterprise_hub.security.authentication import (
+            DEMO_PASSWORD,
+            is_demo_subject,
+        )
+        from platform_identity.jwt_service import jwt_service
+
+        body = await _read_json(request)
+        email = str(body.get("email") or body.get("subject") or "").strip().lower()
+        password = str(body.get("password") or body.get("secret") or "")
+        tenant_id = str(body.get("tenant_id") or body.get("tenantId") or "demo-corp")
+        if password != DEMO_PASSWORD or not is_demo_subject(email):
+            return json_response({"success": False, "error": "Invalid demo credentials"}, status=401)
+        suite = _suite()
+        suite.authentication.set_password(subject=email, password=DEMO_PASSWORD)
+        identity = suite.authentication.login_password(subject=email, password=DEMO_PASSWORD)
+        identity_id = str((identity.get("identity") or {}).get("identity_id") or identity.get("identity_id") or "")
+        is_owner = "owner" in email
+        roles = ["owner", "platform_admin"] if is_owner else ["employee"]
+        tokens = jwt_service.issue_tokens(
+            subject=email,
+            roles=roles,
+            permissions=["read", "write", "admin"],
+            telegram_id=_telegram_id_for_email(email),
+            user_id=identity_id or email,
+            session_id=f"sess_{identity_id or email}",
+            extra={"tenant_id": tenant_id, "email": email},
+        )
+        return json_response(
+            {
+                "success": True,
+                "data": {
+                    "access_token": tokens.access_token,
+                    "refresh_token": tokens.refresh_token,
+                    "access_expires_at": tokens.access_expires_at.isoformat(),
+                    "refresh_expires_at": tokens.refresh_expires_at.isoformat(),
+                    "session_id": tokens.session_id,
+                    "principal": {
+                        "principal_id": identity_id or email,
+                        "user_id": identity_id or email,
+                        "email": email,
+                        "tenant_id": tenant_id,
+                        "roles": roles,
+                        "permissions": ["read", "write", "admin"],
+                    },
+                },
+            }
+        )
+    except Exception as exc:
+        return _handle_error(exc)
+
+
 async def isam_identity_handler(request: web.Request) -> web.Response:
     try:
         identity = _suite().identity

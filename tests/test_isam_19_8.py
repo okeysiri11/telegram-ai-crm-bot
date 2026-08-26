@@ -76,6 +76,26 @@ def test_identity_auth_rbac_session():
         suite.identity.register(subject="", identity_type="user")
 
 
+@pytest.mark.asyncio
+async def test_demo_auth_login_issues_platform_jwt(client: TestClient):
+    health = await client.get("/api/enterprise-demo-auth/v1/health")
+    assert health.status == 200
+    denied = await client.post(
+        "/api/enterprise-demo-auth/v1/login",
+        json={"email": "owner@demo.corp", "password": "wrong", "tenant_id": "demo-corp"},
+    )
+    assert denied.status == 401
+    ok = await client.post(
+        "/api/enterprise-demo-auth/v1/login",
+        json={"email": "owner@demo.corp", "password": "demo", "tenant_id": "demo-corp"},
+    )
+    assert ok.status == 200
+    body = await ok.json()
+    assert body["success"] is True
+    token = body["data"]["access_token"]
+    assert token.count(".") == 2
+
+
 def test_mfa_monitor_audit_bootstrap():
     suite = enterprise_hub.isam
     boot = suite.bootstrap()

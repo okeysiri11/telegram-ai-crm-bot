@@ -12,8 +12,28 @@ from applications.enterprise_hub.shared.exceptions import ValidationError
 from applications.enterprise_hub.shared.store import EnterpriseHubStore, enterprise_hub_store
 
 
+DEMO_PASSWORD = "demo"
+DEMO_EMAIL_SUFFIXES = ("@demo.corp", "@ados.demo", "@globefly.demo", "@local.dev")
+DEMO_SUBJECTS = (
+    "owner@demo.corp",
+    "ops@demo.corp",
+    "owner@ados.demo",
+    "admin@ados.demo",
+    "travel@globefly.demo",
+)
+
+
 def _hash_password(password: str, *, salt: str) -> str:
     return hashlib.sha256(f"{salt}:{password}".encode()).hexdigest()
+
+
+def is_demo_subject(subject: str) -> bool:
+    email = (subject or "").strip().lower()
+    if not email or "@" not in email:
+        return False
+    if email in DEMO_SUBJECTS:
+        return True
+    return email.endswith(DEMO_EMAIL_SUFFIXES)
 
 
 class AuthenticationService:
@@ -52,8 +72,18 @@ class AuthenticationService:
         attrs = dict(identity.get("attributes") or {})
         salt = str(attrs.get("password_salt") or "")
         expected = str(attrs.get("password_hash") or "")
-        # Legacy demo identities may lack a password_hash — accept any non-empty secret.
-        if salt and expected:
+        if is_demo_subject(subject):
+            if password != DEMO_PASSWORD:
+                event = authenticate_provider(
+                    self.store, provider="local", subject=subject, secret=""
+                )
+                event["success"] = False
+                event["error"] = "bad_password"
+                self.store.isam_auth_events.save(event["auth_id"], event)
+                raise ValidationError("invalid credentials")
+            self.set_password(subject=subject, password=DEMO_PASSWORD)
+            identity = identity_mgr.find_by_subject(subject=subject) or identity
+        elif salt and expected:
             if _hash_password(password, salt=salt) != expected:
                 event = authenticate_provider(
                     self.store, provider="local", subject=subject, secret=""
@@ -128,6 +158,37 @@ class AuthenticationService:
         self.store.isam_audit.save(rid, {**record, "action": "password_reset_request"})
         # Never return raw token in production responses — demo returns token for local tests
         return {"status": "issued", "email": record["email"], "reset_token": token}
+
+    def set_password(self, *, subject: str, password: str) -> dict[str, Any]:
+        from applications.enterprise_hub.security.identity_manager import IdentityManager
+
+        email_n = subject.strip().lower()
+        if not email_n or "@" not in email_n:
+            raise ValidationError("valid email required")
+        if not password:
+            raise ValidationError("password required")
+        identity_mgr = IdentityManager(self.store)
+        identity = identity_mgr.register_or_get(
+            subject=email_n,
+            identity_type="user",
+            roles=["company_owner"] if "owner" in email_n else ["employee"],
+            attributes={"email": email_n},
+        )
+        attrs = dict(identity.get("attributes") or {})
+        salt = secrets.token_hex(16)
+        attrs["password_salt"] = salt
+        attrs["password_hash"] = _hash_password(password, salt=salt)
+        attrs.setdefault("auth_providers", ["local"])
+        identity["attributes"] = attrs
+        self.store.isam_identities.save(identity["identity_id"], identity)
+        return identity
+
+    def reset_demo_passwords(self, *, password: str = DEMO_PASSWORD) -> list[str]:
+        reset: list[str] = []
+        for subject in DEMO_SUBJECTS:
+            self.set_password(subject=subject, password=password)
+            reset.append(subject)
+        return reset
 
     def login_google(
         self,

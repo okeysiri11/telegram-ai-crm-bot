@@ -37,10 +37,10 @@ export function LoginPage() {
   const { register, handleSubmit, formState, getValues, setValue } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema) as never,
     defaultValues: {
-      identifier: isDemoAuthEnabled() ? "travel@globefly.demo" : "",
-      password: isDemoAuthEnabled() ? "demo" : "",
+      identifier: "owner@demo.corp",
+      password: "demo",
       rememberMe: true,
-      tenantId: localStorage.getItem("ewp_remember_tenant") || (isDemoAuthEnabled() ? "globefly" : ""),
+      tenantId: localStorage.getItem("ewp_remember_tenant") || "demo-corp",
       language: "ru",
     },
   });
@@ -142,9 +142,11 @@ export function LoginPage() {
             добавлены позже.
             {isDemoAuthEnabled() ? " · Локальный demo-режим включён" : null}
           </p>
-          {isDemoAuthEnabled() ? (
-            <div className="rounded-md border border-[var(--ew-border)] p-2 space-y-2" data-testid="demo-accounts">
-              <p className="eds-type-caption font-medium">Демо-аккаунты (пароль: demo)</p>
+          <div className="rounded-md border border-[var(--ew-border)] p-2 space-y-2" data-testid="demo-accounts">
+              <p className="eds-type-caption font-medium">Тестовый вход · пароль: demo</p>
+              <p className="eds-type-caption text-[var(--eds-text-muted)]">
+                owner@demo.corp · tenant demo-corp
+              </p>
               <Select
                 className="eds-focus-ring w-full"
                 defaultValue=""
@@ -183,7 +185,6 @@ export function LoginPage() {
                 Открыть демо-пространство
               </Button>
             </div>
-          ) : null}
           {error ? (
             <p
               className="rounded-md border border-[var(--eds-danger)]/40 bg-[var(--eds-danger-soft)] px-3 py-2 eds-type-caption text-[var(--eds-danger)]"

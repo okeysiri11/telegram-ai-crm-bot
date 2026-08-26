@@ -49,3 +49,11 @@ ISAM (`applications/enterprise_hub/security`) is the authentication runtime for 
 ## Compatibility
 
 Legacy demo identities without `password_hash` still accept any non-empty password so existing demo flows keep working. New registrations always store a salted hash.
+
+Test / demo accounts (password always `demo`):
+
+- `owner@demo.corp` · tenant `demo-corp`
+- `owner@ados.demo` · tenant `ados`
+- `travel@globefly.demo` · tenant `globefly`
+
+Production login: `POST /api/enterprise-demo-auth/v1/login` issues a platform JWT (required for casino PLAY). Known demo emails only.

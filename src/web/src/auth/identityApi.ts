@@ -272,9 +272,9 @@ async function loginViaDemoAuthApi(
 
 /**
  * Production login with local recovery:
- * 1) ISAM (+ optional platform JWT) when backend reachable
- * 2) Vite Demo Auth API
- * 3) In-process Demo Auth Provider (JWT → localStorage)
+ * 1) Demo-auth API (known test accounts → platform JWT that casino accepts)
+ * 2) ISAM (+ optional platform JWT) when backend reachable
+ * 3) Vite / in-process Demo Auth Provider
  */
 export async function productionLogin(
   email: string,
@@ -282,6 +282,9 @@ export async function productionLogin(
   tenantId: string,
 ): Promise<AuthSessionPayload> {
   const demoOn = isDemoAuthEnabled();
+  const fromApi = await loginViaDemoAuthApi(email, password, tenantId);
+  if (fromApi?.accessToken) return fromApi;
+
   const isamUp = await isBackendReachable(`${ISAM}/health`);
 
   if (isamUp) {
@@ -312,8 +315,6 @@ export async function productionLogin(
   }
 
   if (demoOn) {
-    const fromApi = await loginViaDemoAuthApi(email, password, tenantId);
-    if (fromApi?.accessToken) return fromApi;
     return loginViaDemoAuth(email, password, tenantId);
   }
 

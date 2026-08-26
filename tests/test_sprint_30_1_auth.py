@@ -38,16 +38,16 @@ def test_google_login_auto_creates_account(store: EnterpriseHubStore):
 def test_register_and_password_login(store: EnterpriseHubStore):
     auth = AuthenticationService(store)
     reg = auth.register_local(
-        email="new@demo.corp",
+        email="new@example.corp",
         password="securepass1",
         name="New User",
         role="manager",
     )
-    assert reg["identity"]["subject"] == "new@demo.corp"
-    login = auth.login_password(subject="new@demo.corp", password="securepass1")
+    assert reg["identity"]["subject"] == "new@example.corp"
+    login = auth.login_password(subject="new@example.corp", password="securepass1")
     assert login["success"] is True
     with pytest.raises(ValidationError):
-        auth.login_password(subject="new@demo.corp", password="wrong-password")
+        auth.login_password(subject="new@example.corp", password="wrong-password")
 
 
 def test_legacy_identity_password_without_hash(store: EnterpriseHubStore):
@@ -56,12 +56,12 @@ def test_legacy_identity_password_without_hash(store: EnterpriseHubStore):
 
     auth = AuthenticationService(store)
     IdentityManager(store).register_or_get(
-        subject="legacy@demo.corp",
+        subject="legacy@example.com",
         identity_type="user",
         roles=["employee"],
         attributes={"name": "Legacy"},
     )
-    login = auth.login_password(subject="legacy@demo.corp", password="anything")
+    login = auth.login_password(subject="legacy@example.com", password="anything")
     assert login["success"] is True
 
 
@@ -70,6 +70,22 @@ def test_password_reset_issues_token(store: EnterpriseHubStore):
     out = auth.request_password_reset(email="owner@demo.corp")
     assert out["status"] == "issued"
     assert out["reset_token"]
+
+
+def test_demo_accounts_reset_to_demo_password(store: EnterpriseHubStore):
+    auth = AuthenticationService(store)
+    auth.register_local(
+        email="owner@demo.corp",
+        password="oldsecret9",
+        name="Owner",
+        role="company_owner",
+    )
+    with pytest.raises(ValidationError):
+        auth.login_password(subject="owner@demo.corp", password="oldsecret9")
+    reset = auth.reset_demo_passwords()
+    assert "owner@demo.corp" in reset
+    login = auth.login_password(subject="owner@demo.corp", password="demo")
+    assert login["success"] is True
 
 
 def test_mfa_org_policy_and_user_toggle(store: EnterpriseHubStore):

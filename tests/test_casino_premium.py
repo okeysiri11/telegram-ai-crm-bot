@@ -190,6 +190,32 @@ def test_display_identity_is_stable_and_non_sensitive():
     assert "user-a" not in display_identity("user-a")
 
 
+async def test_platform_jwt_opens_wallet_when_production_fail_closed(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+):
+    """Demo login JWT (IAM-signed) must open PLAY; opaque ISAM tokens must not."""
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    from platform_identity.jwt_service import jwt_service
+
+    tokens = jwt_service.issue_tokens(
+        subject="owner@demo.corp",
+        roles=["owner"],
+        permissions=["read", "write", "admin"],
+        user_id="owner-demo",
+        extra={"tenant_id": "demo-corp", "email": "owner@demo.corp"},
+    )
+    wallet = await client.get(
+        "/api/casino/v1/wallet",
+        headers={"Authorization": f"Bearer {tokens.access_token}"},
+    )
+    assert wallet.status == 200
+    opaque = await client.get(
+        "/api/casino/v1/wallet",
+        headers={"Authorization": "Bearer access_not_a_jwt"},
+    )
+    assert opaque.status == 401
+
+
 async def test_auth_security_tenant_isolation_no_secret_exposure(client: TestClient):
     assert (await client.get("/api/casino/v1/wallet")).status == 401
     assert (await client.post("/api/casino/v1/wallet/demo-grant")).status == 401
