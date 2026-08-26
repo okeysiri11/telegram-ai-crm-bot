@@ -37,11 +37,15 @@ Play-money only. Lobby interior + interactive floor plan. Roulette/blackjack gam
 
 ## Production health at START_HEAD `99f691b1`
 
-Inspected live before this commit:
+Inspected live before the lobby commit:
 
 - `/liveness` HTTP 200 `status=alive` `startup_validated=false` (known pre-existing; not a Sprint 22 regression)
 - `/readiness` HTTP 200 `ready=true` all checks healthy
 - `/api/casino/v1/health` HTTP 200 play-money only
+
+## Production Gate retrigger
+
+GitHub Actions had a major outage on 2026-08-26. Run `32984612323` for `868e39e9` stayed `queued` with 0 jobs for ~3h after Actions returned to operational. This follow-up retriggers `Production Gate (develop)` so Render `checksPass` can deploy.
 
 ## Leftovers not in this commit
 
