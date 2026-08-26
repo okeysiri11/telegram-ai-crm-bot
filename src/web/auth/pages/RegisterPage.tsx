@@ -8,6 +8,7 @@ import { useAuthStore } from "@/auth/authStore";
 import { AuthLink, AuthShell } from "../components/AuthShell";
 import { saveFirstEntry } from "@/onboarding/firstEntryStore";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
+import { isDemoAuthEnabled } from "@/auth/demoAuthProvider";
 
 const schema = z
   .object({
@@ -27,7 +28,7 @@ export function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const { register, handleSubmit, formState } = useForm<Form>({
     resolver: zodResolver(schema),
-    defaultValues: { tenantId: "demo-corp", name: "", email: "", password: "", confirm: "" },
+    defaultValues: { tenantId: "ados", name: "", email: "", password: "", confirm: "" },
   });
 
   return (
@@ -43,9 +44,9 @@ export function RegisterPage() {
           try {
             await registerUser(values.email, values.password, values.tenantId, values.name);
             useOrgSelector.getState().setOrganization(
-              ["demo-corp", "acme-ltd", "bidex"].includes(values.tenantId)
+              ["ados", "demo-corp", "acme-ltd", "bidex"].includes(values.tenantId)
                 ? values.tenantId
-                : "demo-corp",
+                : "ados",
             );
             saveFirstEntry({
               completed: false,
@@ -84,12 +85,17 @@ export function RegisterPage() {
           <label className="eds-type-label mb-1 block">Компания</label>
           <Input {...register("tenantId")} />
         </div>
+        {isDemoAuthEnabled() ? (
+          <p className="eds-type-caption text-[var(--eds-text-muted)]" role="status">
+            Регистрация отключена. Войдите как owner@ados.demo.
+          </p>
+        ) : null}
         {error ? (
           <p className="eds-type-caption text-[var(--eds-danger)]" role="alert">
             {error}
           </p>
         ) : null}
-        <Button className="w-full" type="submit" disabled={formState.isSubmitting}>
+        <Button className="w-full" type="submit" disabled={formState.isSubmitting || isDemoAuthEnabled()}>
           Создать аккаунт
         </Button>
       </form>

@@ -5,7 +5,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/ui";
 import { getWorkspaceSlot, workspaceSlotLabel } from "./workspaceSlot";
-import { openClientDemoWorkspace } from "./applyDemoSession";
+import { openOwnerDemoWorkspace } from "./applyDemoSession";
 import { useAuthStore } from "@/auth/authStore";
 import { useI18n } from "@/i18n";
 import { useViewModeStore } from "@/ux-revolution";
@@ -18,13 +18,13 @@ export function WorkspaceSlotBanner() {
   const viewMode = useViewModeStore((s) => s.viewMode);
 
   async function openDemo() {
-    const creds = openClientDemoWorkspace();
+    const creds = openOwnerDemoWorkspace();
     try {
       await login(creds.email, creds.password, creds.tenantId);
     } catch {
       /* demo seed still applied for already-logged-in users */
     }
-    navigate("/dashboard");
+    navigate("/owner");
   }
 
   return (

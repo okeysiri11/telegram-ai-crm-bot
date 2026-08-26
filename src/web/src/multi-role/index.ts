@@ -3,7 +3,7 @@
 export { getWorkspaceSlot, wsKey, workspaceSlotLabel, WORKSPACE_PORT_SLOTS } from "./workspaceSlot";
 export { MULTI_ROLE_DEMO_USERS, demoUserByEmail, isMultiRoleDemoEmail, MULTI_ROLE_DEMO_PASSWORD } from "./demoUsers";
 export type { DemoUserDef } from "./demoUsers";
-export { applyDemoUserSession, openClientDemoWorkspace } from "./applyDemoSession";
+export { applyDemoUserSession, openClientDemoWorkspace, openOwnerDemoWorkspace } from "./applyDemoSession";
 export { ClientOnboardingPage } from "./ClientOnboardingPage";
 export {
   loadClientOnboarding,

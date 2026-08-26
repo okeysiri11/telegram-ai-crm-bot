@@ -1,5 +1,5 @@
 /// <reference types="vitest/config" />
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "node:path";
@@ -17,6 +17,29 @@ import { interactionApiPlugin } from "./vite.interactionApiPlugin";
 import { intelligenceApiPlugin } from "./vite.intelligenceApiPlugin";
 import { orchestratorApiPlugin } from "./vite.orchestratorApiPlugin";
 import { kernelApiPlugin } from "./vite.kernelApiPlugin";
+
+/** Fail-safe: never treat VITE_DEMO_AUTH as a production bypass. */
+function demoAuthProductionGuard(): Plugin {
+  return {
+    name: "ados-demo-auth-prod-guard",
+    config(_cfg, { command, mode }) {
+      if (command !== "build" || mode !== "production") return;
+      delete process.env.VITE_DEMO_AUTH;
+      const env = loadEnv(mode, path.resolve(__dirname), "VITE_");
+      if (env.VITE_DEMO_AUTH === "true" || process.env.VITE_DEMO_AUTH === "true") {
+        console.error(
+          "[ADOS] VITE_DEMO_AUTH=true is ignored in production builds. Demo auth bypass is disabled.",
+        );
+        delete process.env.VITE_DEMO_AUTH;
+      }
+      return {
+        define: {
+          "import.meta.env.VITE_DEMO_AUTH": JSON.stringify(""),
+        },
+      };
+    },
+  };
+}
 
 function writeProxyUnavailable(
   res: ServerResponse | Socket,
@@ -82,13 +105,17 @@ function apiProxyConfig(): Record<string, ProxyOptions> {
   };
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => {
+  const localEnv =
+    command === "serve" ? loadEnv("development", path.resolve(__dirname), "") : {};
+  return {
   define: {
     "import.meta.env.VITE_API_PROXY": JSON.stringify(""),
   },
   plugins: [
     react(),
     tailwindcss(),
+    demoAuthProductionGuard(),
     demoAuthPlugin(),
     ebnApiPlugin(),
     edcApiPlugin(),
@@ -107,8 +134,8 @@ export default defineConfig({
     },
   },
   server: {
-    host: process.env.VITE_DEV_HOST || "0.0.0.0",
-    port: Number(process.env.PORT || process.env.VITE_PORT || 5180),
+    host: process.env.VITE_DEV_HOST || localEnv.VITE_DEV_HOST || "127.0.0.1",
+    port: Number(process.env.PORT || process.env.VITE_PORT || localEnv.PORT || 5180),
     strictPort: Boolean(process.env.VITE_STRICT_PORT === "1"),
     headers: {
       "Cache-Control": "no-store",
@@ -117,6 +144,7 @@ export default defineConfig({
       ".trycloudflare.com",
       ".cfargotunnel.com",
       "localhost",
+      "127.0.0.1",
     ],
     proxy: apiProxyConfig(),
   },
@@ -128,6 +156,7 @@ export default defineConfig({
       ".trycloudflare.com",
       ".cfargotunnel.com",
       "localhost",
+      "127.0.0.1",
     ],
     proxy: apiProxyConfig(),
   },
@@ -136,4 +165,5 @@ export default defineConfig({
     globals: true,
     setupFiles: "./src/test/setup.ts",
   },
+};
 });

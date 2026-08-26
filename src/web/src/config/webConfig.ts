@@ -83,8 +83,10 @@ export const webConfig = {
    * Default on in DEV; set VITE_DEMO_AUTH=false to force production-only login.
    */
   demoAuthEnabled:
-    import.meta.env.VITE_DEMO_AUTH === "true" ||
-    (import.meta.env.DEV && import.meta.env.VITE_DEMO_AUTH !== "false"),
+    import.meta.env.PROD
+      ? false
+      : import.meta.env.VITE_DEMO_AUTH === "true" ||
+        (import.meta.env.DEV && import.meta.env.VITE_DEMO_AUTH !== "false"),
   /** Posts to existing Enterprise Observability — disable in offline CI if needed. */
   telemetryEnabled: import.meta.env.VITE_TELEMETRY_ENABLED !== "false",
 };

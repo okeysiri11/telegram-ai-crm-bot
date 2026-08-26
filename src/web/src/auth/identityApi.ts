@@ -5,7 +5,7 @@
 
 import { hubIntegrations } from "@/integrations/hub";
 import { webConfig } from "@/config/webConfig";
-import { isDemoAuthEnabled, loginViaDemoAuth } from "./demoAuthProvider";
+import { isDemoAuthEnabled, loginViaDemoAuth, loginViaDemoGoogle } from "./demoAuthProvider";
 
 const ISAM = hubIntegrations.authentication;
 const IAM_LOGIN = "/management/identity/login";
@@ -271,55 +271,50 @@ async function loginViaDemoAuthApi(
 }
 
 /**
- * Production login with local recovery:
- * 1) Demo-auth API (known test accounts → platform JWT that casino accepts)
- * 2) ISAM (+ optional platform JWT) when backend reachable
- * 3) Vite / in-process Demo Auth Provider
+ * Production login with local recovery.
+ * DEV / demo: in-process Owner session — never blocks on ISAM :8080.
+ * Production: demo-auth API (platform JWT) then ISAM. No local bypass.
  */
 export async function productionLogin(
   email: string,
   password: string,
   tenantId: string,
 ): Promise<AuthSessionPayload> {
-  const demoOn = isDemoAuthEnabled();
-  const fromApi = await loginViaDemoAuthApi(email, password, tenantId);
+  const resolvedTenant = tenantId.trim() || "ados";
+  if (isDemoAuthEnabled()) {
+    return loginViaDemoAuth(email, password, resolvedTenant);
+  }
+
+  const fromApi = await loginViaDemoAuthApi(email, password, resolvedTenant);
   if (fromApi?.accessToken) return fromApi;
 
   const isamUp = await isBackendReachable(`${ISAM}/health`);
 
   if (isamUp) {
+    const isam = await loginViaIsam(email, password, resolvedTenant);
     try {
-      const isam = await loginViaIsam(email, password, tenantId);
-      try {
-        const jwt = await loginViaPlatformJwt(email, tenantId);
-        if (jwt) {
-          return {
-            ...jwt,
-            user: {
-              ...jwt.user,
-              identityId: isam.user.identityId,
-              permissions: Array.from(
-                new Set([...(jwt.user.permissions || []), ...(isam.user.permissions || [])]),
-              ),
-              roles: Array.from(new Set([...(jwt.user.roles || []), ...(isam.user.roles || [])])),
-            },
-          };
-        }
-      } catch {
-        /* ISAM session remains valid when JWT mint is unavailable */
+      const jwt = await loginViaPlatformJwt(email, resolvedTenant);
+      if (jwt) {
+        return {
+          ...jwt,
+          user: {
+            ...jwt.user,
+            identityId: isam.user.identityId,
+            permissions: Array.from(
+              new Set([...(jwt.user.permissions || []), ...(isam.user.permissions || [])]),
+            ),
+            roles: Array.from(new Set([...(jwt.user.roles || []), ...(isam.user.roles || [])])),
+          },
+        };
       }
-      return isam;
-    } catch (err) {
-      if (!demoOn) throw err;
+    } catch {
+      /* ISAM session remains valid when JWT mint is unavailable */
     }
-  }
-
-  if (demoOn) {
-    return loginViaDemoAuth(email, password, tenantId);
+    return isam;
   }
 
   throw new Error(
-    "Authentication backend unavailable (ISAM proxy → localhost:8080). Set VITE_DEMO_AUTH=true or start the API.",
+    "Authentication backend unavailable (ISAM proxy → localhost:8080). Start the API.",
   );
 }
 
@@ -333,7 +328,11 @@ export async function productionGoogleLogin(
     rememberMe?: boolean;
   },
 ): Promise<AuthSessionPayload> {
-  const tenantId = input.tenantId || "demo-corp";
+  const tenantId = input.tenantId || "ados";
+  if (isDemoAuthEnabled()) {
+    return loginViaDemoGoogle(input.email || "owner@ados.demo", input.name || "Google User", tenantId);
+  }
+
   const isamUp = await isBackendReachable(`${ISAM}/health`);
 
   if (isamUp) {
@@ -421,6 +420,11 @@ export async function productionRegister(input: {
   name?: string;
   tenantId: string;
 }): Promise<AuthSessionPayload> {
+  if (isDemoAuthEnabled()) {
+    throw new Error(
+      "Регистрация отключена в демо-режиме. Войдите как owner@ados.demo.",
+    );
+  }
   const isamUp = await isBackendReachable(`${ISAM}/health`);
   if (isamUp) {
     const res = await postJson(`${ISAM}/auth`, {
@@ -452,14 +456,13 @@ export async function refreshProductionSession(
   if (authMode === "platform_jwt") {
     if (refreshToken.split(".").length === 3) {
       try {
-        const mid = refreshToken.split(".")[1] || "";
-        const json = JSON.parse(atob(mid.replace(/-/g, "+").replace(/_/g, "/"))) as {
+        const json = decodeJwtPayload(refreshToken) as {
           iss?: string;
           sub?: string;
           tid?: string;
           email?: string;
-        };
-        if (json.iss === "ados-enterprise-local") {
+        } | null;
+        if (json?.iss === "ados-enterprise-local") {
           const { mintLocalDemoJwt } = await import("./demoAuthProvider");
           return {
             accessToken: mintLocalDemoJwt({

@@ -89,7 +89,8 @@ export function postAuthDestination(activeRoleId?: string | null, email?: string
   if (isClientLike(activeRoleId, email) && !isClientOnboardingComplete()) {
     return "/onboarding/client";
   }
-  if (!isClientLike(activeRoleId, email) && !isFirstEntryComplete()) {
+  const isOwner = activeRoleId === "platform_owner" || activeRoleId === "owner";
+  if (!isClientLike(activeRoleId, email) && !isOwner && !isFirstEntryComplete()) {
     return "/onboarding/first-entry";
   }
   const first = loadFirstEntry();

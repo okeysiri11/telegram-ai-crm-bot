@@ -436,5 +436,10 @@ export function workspaceSwitcherItems(): MobileNavLink[] {
 export function isDemoAccount(email?: string | null, tenantId?: string | null): boolean {
   const mail = (email || "").toLowerCase();
   const tenant = (tenantId || "").toLowerCase();
-  return mail.includes("@demo.") || tenant.includes("demo");
+  return (
+    mail.includes("@demo.") ||
+    mail.endsWith("@ados.demo") ||
+    tenant.includes("demo") ||
+    tenant === "ados"
+  );
 }

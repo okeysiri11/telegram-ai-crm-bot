@@ -1416,7 +1416,7 @@ describe("Sprint 30.3 Beta Launch", () => {
     expect(homeRouteForRole("dealer")).toBe("/dashboards/dealer");
     const { resetFirstEntry } = await import("../onboarding/firstEntryStore");
     resetFirstEntry();
-    expect(postAuthDestination("owner")).toBe("/onboarding/first-entry");
+    expect(postAuthDestination("owner")).toBe("/owner");
   });
 
   it("exports dashboard and invitation pages", async () => {

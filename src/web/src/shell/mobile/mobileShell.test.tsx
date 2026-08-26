@@ -73,6 +73,7 @@ describe("mobile workspace navigation", () => {
   });
 
   it("marks demo accounts without treating them as production", () => {
+    expect(isDemoAccount("owner@ados.demo", "ados")).toBe(true);
     expect(isDemoAccount("owner@demo.corp", "demo-corp")).toBe(true);
     expect(isDemoAccount("ops@company.io", "org-prod")).toBe(false);
   });

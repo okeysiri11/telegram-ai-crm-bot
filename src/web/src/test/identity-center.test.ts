@@ -15,10 +15,10 @@ describe("Enterprise Identity Center", () => {
   it("exposes version and auth schemas", () => {
     expect(AUTH_UI_VERSION).toBe("9.4.0");
     expect(loginSchema.safeParse({
-      identifier: "owner@demo.corp",
+      identifier: "owner@ados.demo",
       password: "demo",
       rememberMe: true,
-      tenantId: "demo-corp",
+      tenantId: "ados",
       language: "en",
     }).success).toBe(true);
   });

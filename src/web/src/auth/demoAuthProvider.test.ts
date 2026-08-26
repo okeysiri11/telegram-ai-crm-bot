@@ -9,17 +9,18 @@ import { isJwtToken, validateSessionOnline } from "@/auth/identityApi";
 
 describe("Sprint 27.1.1 local demo auth", () => {
   it("mints JWT-shaped tokens without legacy .demo suffix", () => {
-    const token = mintLocalDemoJwt({ sub: "u1", email: "owner@demo.corp", tid: "demo-corp" });
+    const token = mintLocalDemoJwt({ sub: "u1", email: "owner@ados.demo", tid: "ados" });
     expect(token.includes(".demo")).toBe(false);
     expect(isJwtToken(token)).toBe(true);
     expect(isLocalDemoToken(token)).toBe(true);
   });
 
   it("accepts demo credentials and rejects others", () => {
-    const ok = loginViaDemoAuth("owner@demo.corp", "demo", "demo-corp");
+    const ok = loginViaDemoAuth("owner@ados.demo", "demo", "ados");
     expect(ok.accessToken.split(".")).toHaveLength(3);
     expect(ok.user.roleId).toBe("platform_owner");
-    expect(() => loginViaDemoAuth("owner@demo.corp", "wrong", "demo-corp")).toThrow(/rejected/i);
+    expect(ok.user.tenantId).toBe("ados");
+    expect(() => loginViaDemoAuth("owner@ados.demo", "wrong", "ados")).toThrow(/rejected/i);
   });
 
   it("validates local demo session online", async () => {

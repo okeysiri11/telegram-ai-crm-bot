@@ -3,6 +3,7 @@
  */
 
 import { demoUserByEmail, type DemoUserDef } from "./demoUsers";
+import { DEMO_PASSWORD, OWNER_DEMO_EMAIL, OWNER_DEMO_TENANT } from "@/auth/demoAuthProvider";
 import { useViewModeStore } from "@/ux-revolution/viewModeStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
@@ -45,6 +46,20 @@ export function applyDemoUserSession(email: string): DemoUserDef | undefined {
   }
 
   return user;
+}
+
+/** One-click Owner demo — full platform session without ISAM. */
+export function openOwnerDemoWorkspace(): { email: string; password: string; tenantId: string } {
+  const owner = demoUserByEmail(OWNER_DEMO_EMAIL);
+  try {
+    useOrgSelector.getState().setOrganization(OWNER_DEMO_TENANT);
+    localStorage.setItem("ewp_company_label_v1", owner?.company || "ADOS Platform");
+  } catch {
+    /* ignore */
+  }
+  useViewModeStore.getState().setViewMode("platform_owner");
+  useRoleSwitcher.getState().setRole("owner");
+  return { email: OWNER_DEMO_EMAIL, password: DEMO_PASSWORD, tenantId: OWNER_DEMO_TENANT };
 }
 
 /** One-click Client Demo Mode — loads seeded workspace as travel client. */

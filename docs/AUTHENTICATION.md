@@ -44,16 +44,17 @@ ISAM (`applications/enterprise_hub/security`) is the authentication runtime for 
 |---|---|
 | `GOOGLE_CLIENT_ID` | Production Google token audience |
 | `IAM_JWT_SECRET` / `JWT_SECRET` | Platform JWT mint (Sprint 30.0) |
-| `VITE_DEMO_AUTH` | Local demo fallback when API down |
+| `VITE_DEMO_AUTH` | Local demo Owner login (`owner@ados.demo`, tenant `ados`). Default **on** in Vite DEV. **Ignored in production builds.** |
+| `VITE_DEMO_OWNER_PASSWORD` | Optional local override of the existing DEV Owner password. Never used in production builds. |
 
 ## Compatibility
 
 Legacy demo identities without `password_hash` still accept any non-empty password so existing demo flows keep working. New registrations always store a salted hash.
 
-Test / demo accounts (password always `demo`):
+Canonical development Owner:
 
-- `owner@demo.corp` · tenant `demo-corp`
-- `owner@ados.demo` · tenant `ados`
-- `travel@globefly.demo` · tenant `globefly`
+- `owner@ados.demo` · tenant `ados` · role OWNER / SUPER_ADMIN
 
-Production login: `POST /api/enterprise-demo-auth/v1/login` issues a platform JWT (required for casino PLAY). Known demo emails only.
+Password comes from the existing DEV demo mechanism (`VITE_DEMO_OWNER_PASSWORD` or the built-in DEV default). Do not use production credentials.
+
+Production login: in Vite DEV, `productionLogin` uses the in-process Demo Auth Provider and never calls ISAM on `:8080`. Production builds ignore `VITE_DEMO_AUTH=true` and use `POST /api/enterprise-demo-auth/v1/login` (platform JWT) then ISAM.

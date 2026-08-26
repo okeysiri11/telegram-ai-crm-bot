@@ -14,7 +14,7 @@ React 19 · TypeScript · Vite · Tailwind · TanStack Query · React Router · 
 cd src/web
 npm install
 npm run dev      # http://localhost:5180
-# Login: owner@demo.corp / demo → Dashboard
+# Login: owner@ados.demo → /owner
 npm run build
 ```
 

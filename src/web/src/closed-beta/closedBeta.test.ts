@@ -78,7 +78,8 @@ describe("Sprint 31.0 Closed Beta RC", () => {
 
   it("postAuthDestination gates first-run then role home", () => {
     resetFirstEntry();
-    expect(postAuthDestination("owner")).toBe("/onboarding/first-entry");
+    expect(postAuthDestination("owner")).toBe("/owner");
+    expect(postAuthDestination("manager")).toBe("/onboarding/first-entry");
     saveFirstEntry({ roleId: "manager", companyName: "Beta Co" });
     markFirstEntryComplete();
     expect(postAuthDestination("manager")).toBe("/dashboards/manager");
