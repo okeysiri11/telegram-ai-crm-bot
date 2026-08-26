@@ -3,7 +3,6 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { CasinoShell } from "./components/CasinoShell";
 import { EntranceScene } from "./scenes/EntranceScene";
 import { LobbyScene } from "./scenes/LobbyScene";
-import { CasinoMap } from "./scenes/CasinoMap";
 import { CasinoGamesPage } from "./CasinoGamesPage";
 import { CasinoTableBrowserPage } from "./CasinoTableBrowserPage";
 import { RouletteHall } from "./rooms/RouletteHall";
@@ -42,8 +41,9 @@ export function CasinoApp() {
         <Route index element={<EntranceScene />} />
         <Route path="lobby" element={<LobbyScene />} />
         <Route path="floor" element={<LobbyScene />} />
-        <Route path="map" element={<CasinoMap />} />
+        <Route path="map" element={<LobbyScene view="map" />} />
         <Route path="games" element={<CasinoGamesPage />} />
+        <Route path="halls" element={<CasinoGamesPage />} />
         <Route path="tables" element={<CasinoTableBrowserPage />} />
         <Route path="rooms/roulette" element={<RouletteHall />} />
         <Route path="rooms/blackjack" element={<BlackjackSalon />} />

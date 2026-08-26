@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import { ProtectedRoute } from "@/shell/ProtectedRoute";
+import { CasinoBrowseRoute } from "@/shell/CasinoBrowseRoute";
 import { LoadingScreen } from "@/shell/LoadingScreen";
 import { RouteErrorBoundary } from "@/shell/RouteErrorBoundary";
 import { DashboardPage } from "@/pages/DashboardPage";
@@ -588,11 +589,11 @@ export function App() {
       <Route
         path="/casino/*"
         element={
-          <ProtectedRoute>
+          <CasinoBrowseRoute>
             <RouteErrorBoundary zone="Casino" recoveryHref="/casino">
               <CasinoApp />
             </RouteErrorBoundary>
-          </ProtectedRoute>
+          </CasinoBrowseRoute>
         }
       />
       <Route

@@ -25,6 +25,7 @@ export const CASINO_ROUTES = {
   promos: "/casino/promos",
   tournaments: "/casino/tournaments",
   support: "/casino/support",
+  halls: "/casino/games",
 } as const;
 
 const TABLE_ALIASES: Record<string, string> = {

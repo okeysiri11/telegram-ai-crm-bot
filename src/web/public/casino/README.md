@@ -6,5 +6,5 @@
 ```
 
 Entrance uses a compressed photographic still plus CSS architectural layers.
-Static facade files live under `/assets/casino/` so production SPA catch-all for `/casino/*` does not swallow them.
-Do not add multi-megabyte video or Three.js for the facade.
+Lobby interior still: `/assets/casino/lobby/hall.jpg`.
+Static casino files live under `/assets/casino/` so production SPA catch-all for `/casino/*` does not swallow them.

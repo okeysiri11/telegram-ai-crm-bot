@@ -1,15 +1,30 @@
-import { Link } from "react-router-dom";
-import { ROOM_CATALOG } from "./state/casinoRoutes";
+import { useRoomTransition } from "./transitions/useRoomTransition";
+import { LOBBY_HOTSPOTS } from "./lobby/hotspots";
+import { casinoSound } from "./casinoSound";
 
 export function CasinoGamesPage() {
+  const { go } = useRoomTransition();
   return (
-    <div className="op-games">
-      {ROOM_CATALOG.filter((r) => r.id !== "lobby").map((game) => (
-        <Link key={game.id} className={`op-game is-${game.id}`} to={game.route} aria-label={game.label}>
+    <div className="op-games op-games-hall" data-testid="casino-halls">
+      {LOBBY_HOTSPOTS.map((game) => (
+        <button
+          key={game.id}
+          type="button"
+          className={`op-game is-${game.id}`}
+          data-testid={`hall-card-${game.id}`}
+          aria-label={game.label}
+          onMouseEnter={() => casinoSound.hover()}
+          onClick={() => {
+            casinoSound.click();
+            go(game.to);
+          }}
+        >
           <span className="op-badge">LIVE</span>
           <h3>{game.label}</h3>
-          <p>Открыто · PLAY</p>
-        </Link>
+          <p>
+            {game.venue} · {game.detail}
+          </p>
+        </button>
       ))}
     </div>
   );

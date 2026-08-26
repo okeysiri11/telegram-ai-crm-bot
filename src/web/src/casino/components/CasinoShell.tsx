@@ -19,15 +19,42 @@ import "../ambient/ambient.css";
 import "../assets/live.css";
 import "../assets/interact.css";
 import "../assets/rooms-visual.css";
+import "../assets/lobby.css";
 
-const NAV = [
-  { to: "/enterprise-city?building=casino", label: "ГОРОД", end: false },
-  { to: "/casino", label: "КАЗИНО", end: true },
-  { to: "/casino/promos", label: "АКЦИИ" },
-  { to: "/casino/vip", label: "VIP" },
-  { to: "/casino/tournaments", label: "ТУРНИРЫ" },
-  { to: "/casino/support", label: "ПОДДЕРЖКА" },
+const GLOBAL_NAV = [
+  { to: "/enterprise-city?building=casino", label: "ГОРОД", id: "city" },
+  { to: "/casino", label: "КАЗИНО", id: "casino", end: true },
+  { to: "/casino/promos", label: "АКЦИИ", id: "promos" },
+  { to: "/casino/tournaments", label: "ТУРНИРЫ", id: "tournaments" },
+  { to: "/casino/support", label: "ПОДДЕРЖКА", id: "support" },
 ];
+
+const ROOM_NAV = [
+  { to: "/casino/lobby", label: "ЛОББИ", id: "lobby" },
+  { to: "/casino/games", label: "ИГРОВЫЕ ЗАЛЫ", id: "halls" },
+  { to: "/casino/vip", label: "VIP", id: "vip" },
+  { to: "/casino/bar", label: "БАР", id: "bar" },
+  { to: "/casino/restaurant", label: "РЕСТОРАН", id: "restaurant" },
+];
+
+export function casinoNavActive(path: string, id: string, to: string, end?: boolean): boolean {
+  if (id === "casino") return path === "/casino" || path === "/casino/";
+  if (id === "lobby") {
+    return path === "/casino/lobby" || path === "/casino/floor" || path === "/casino/map";
+  }
+  if (id === "halls") {
+    return (
+      path.startsWith("/casino/games") ||
+      path.startsWith("/casino/halls") ||
+      path.includes("/roulette") ||
+      path.includes("blackjack") ||
+      path.includes("/slots") ||
+      path.includes("poker")
+    );
+  }
+  if (end) return path === to || path === `${to}/`;
+  return path === to || path.startsWith(`${to}/`) || path.startsWith(`${to}?`);
+}
 
 export function CasinoShell() {
   return (
@@ -85,18 +112,31 @@ function CasinoShellFrame() {
           <strong>ODESSA PRIME</strong>
           <span>CASINO</span>
         </NavLink>
-        <nav className="op-nav" aria-label="Казино">
-          {NAV.map((item) => (
-            <NavLink
-              key={item.label}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) => (isActive ? "is-active" : undefined)}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-        </nav>
+        <div className="op-header-stack">
+          <nav className="op-nav" aria-label="Казино">
+            {GLOBAL_NAV.map((item) => (
+              <NavLink
+                key={item.id}
+                to={item.to}
+                end={item.end}
+                className={() => (casinoNavActive(location.pathname, item.id, item.to, item.end) ? "is-active" : undefined)}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+          <nav className="op-nav op-nav-rooms" aria-label="Залы">
+            {ROOM_NAV.map((item) => (
+              <NavLink
+                key={item.id}
+                to={item.to}
+                className={() => (casinoNavActive(location.pathname, item.id, item.to) ? "is-active" : undefined)}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+          </nav>
+        </div>
         <div className="op-hud">
           <div className="op-chip-balance" aria-live="polite">
             {wallet.wallet ? formatPlayBalance(wallet.wallet.balance_chips) : "PLAY"}
@@ -139,9 +179,9 @@ function CasinoShellFrame() {
         <NavLink to="/casino" end>
           Казино
         </NavLink>
+        <NavLink to="/casino/lobby">Лобби</NavLink>
+        <NavLink to="/casino/games">Залы</NavLink>
         <NavLink to="/casino/vip">VIP</NavLink>
-        <NavLink to="/casino/tournaments">Турниры</NavLink>
-        <NavLink to="/casino/support">Поддержка</NavLink>
         <NavLink to="/enterprise-city?building=casino">Город</NavLink>
       </nav>
       {historyOpen ? (

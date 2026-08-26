@@ -1,4 +1,4 @@
-/** Optional casino sound layer. Default muted. No autoplay. No looping ambience. */
+/** Optional casino sound layer. Default muted. No autoplay. Quiet lobby ambience only after unmute. */
 
 export type CasinoRoomTone =
   | "entrance"
@@ -16,14 +16,21 @@ class CasinoSound {
   muted = true;
   room: CasinoRoomTone = null;
   private ctx: AudioContext | null = null;
+  private ambience: Array<{ osc: OscillatorNode; gain: GainNode }> = [];
 
   setMuted(next: boolean) {
     this.muted = next;
     if (next) this.stopAmbience();
+    else this.startAmbience();
   }
 
   setRoom(room: CasinoRoomTone) {
     this.room = room;
+    if (this.muted) {
+      this.stopAmbience();
+      return;
+    }
+    this.startAmbience();
   }
 
   private context(): AudioContext | null {
@@ -84,13 +91,32 @@ class CasinoSound {
     this.beep(520, 0.12, 0.04);
   }
 
-  /** Reserved. Never starts without unmute + future user gesture. */
-  startAmbience() {
-    return;
+  stopAmbience() {
+    for (const node of this.ambience) {
+      try {
+        node.osc.stop();
+      } catch {
+        /* already stopped */
+      }
+    }
+    this.ambience = [];
   }
 
-  stopAmbience() {
-    return;
+  /** Quiet lobby drone. Never runs while muted. */
+  startAmbience() {
+    this.stopAmbience();
+    if (this.muted || this.room !== "lobby") return;
+    const ctx = this.context();
+    if (!ctx) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = 88;
+    gain.gain.value = 0.01;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    this.ambience = [{ osc, gain }];
   }
 }
 
