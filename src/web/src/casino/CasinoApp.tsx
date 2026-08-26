@@ -13,6 +13,7 @@ import { OdessaGoldMachine } from "./games/slots/OdessaGoldMachine";
 import { RouletteTable } from "./games/roulette/RouletteTable";
 import { RoomSkeleton } from "./components/RoomSkeleton";
 import { RoomNavigation } from "./components/RoomNavigation";
+import { CasinoSoonPage } from "./components/CasinoSoonModal";
 
 const PokerRoom = lazy(() => import("./rooms/PokerRoom"));
 const VipRoom = lazy(() => import("./rooms/VipRoom"));
@@ -64,6 +65,9 @@ export function CasinoApp() {
         <Route path="slots/odessa-gold" element={<OdessaGoldMachine />} />
         <Route path="venues/:venueId/roulette" element={<Navigate to="/casino/roulette/royale-1" replace />} />
         <Route path="venues/:venueId" element={<Navigate to="/casino" replace />} />
+        <Route path="promos" element={<CasinoSoonPage title="Акции" />} />
+        <Route path="tournaments" element={<CasinoSoonPage title="Турниры" />} />
+        <Route path="support" element={<CasinoSoonPage title="Поддержка" />} />
         <Route path="*" element={<CasinoUnknown />} />
       </Route>
     </Routes>

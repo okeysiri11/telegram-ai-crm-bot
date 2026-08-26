@@ -22,6 +22,9 @@ export const CASINO_ROUTES = {
   },
   slot: (machineId: string) => `/casino/slots/${machineId}`,
   cityReturn: "/enterprise-city?building=casino",
+  promos: "/casino/promos",
+  tournaments: "/casino/tournaments",
+  support: "/casino/support",
 } as const;
 
 const TABLE_ALIASES: Record<string, string> = {

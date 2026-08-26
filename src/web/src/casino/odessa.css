@@ -1,20 +1,44 @@
 .op-root {
-  --op-bg: #07080a;
-  --op-graphite: #12151a;
-  --op-charcoal: #1a1f24;
+  --op-bg: #06070a;
+  --op-graphite: #10141a;
+  --op-charcoal: #161b22;
+  --op-navy: #0a1018;
+  --op-marble: #1c1f24;
+  --op-wood: #24180f;
+  --op-wood-hi: #3a2a18;
+  --op-brass: #b08a4a;
   --op-green: #0d3b2e;
   --op-felt: #0b4a36;
+  --op-felt-deep: #07281e;
   --op-gold: #c9a45c;
   --op-gold-hi: #e8d5a3;
   --op-ivory: #f4ead7;
   --op-muted: #b9ad96;
+  --op-burgundy: #5a1820;
+  --op-wine: #3a1018;
+  --op-lamp: rgba(255, 220, 150, 0.42);
+  --op-fog: rgba(168, 178, 196, 0.07);
   --op-loss: #7a2e32;
   --op-win: #2f7a58;
+  --casino-bg: var(--op-bg, #06070a);
+  --casino-bg-elevated: #10141a;
+  --casino-gold: var(--op-gold);
+  --casino-gold-soft: var(--op-gold-hi);
+  --casino-emerald: var(--op-green);
+  --casino-red: var(--op-burgundy);
+  --casino-text: var(--op-ivory);
+  --casino-muted: var(--op-muted);
+  --casino-border: rgba(201, 164, 92, 0.38);
+  --casino-shadow-gold: 0 18px 40px rgba(201, 164, 92, 0.18);
+  --casino-motion-fast: 160ms;
+  --casino-motion-medium: 280ms;
+  --casino-motion-slow: 980ms;
   min-height: 100dvh;
   background:
-    radial-gradient(900px 480px at 50% -8%, rgba(201, 164, 92, 0.16), transparent 55%),
-    radial-gradient(700px 360px at 80% 10%, rgba(13, 59, 46, 0.35), transparent 50%),
-    linear-gradient(180deg, #0b0c0e 0%, #07080a 55%, #050607 100%);
+    radial-gradient(920px 520px at 50% -10%, rgba(201, 164, 92, 0.14), transparent 58%),
+    radial-gradient(640px 380px at 12% 18%, rgba(90, 24, 32, 0.18), transparent 52%),
+    radial-gradient(700px 360px at 82% 12%, rgba(13, 59, 46, 0.32), transparent 50%),
+    linear-gradient(180deg, #0a1018 0%, #07080a 48%, #050607 100%);
   color: var(--op-ivory);
   overflow-x: hidden;
   font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
@@ -30,8 +54,11 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.7rem 1rem;
-  background: linear-gradient(180deg, rgba(7, 8, 10, 0.94), rgba(7, 8, 10, 0.72));
-  border-bottom: 1px solid rgba(201, 164, 92, 0.22);
+  background:
+    linear-gradient(180deg, rgba(18, 16, 12, 0.94), rgba(7, 8, 10, 0.78)),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 42px);
+  border-bottom: 1px solid rgba(176, 138, 74, 0.45);
+  box-shadow: 0 1px 0 rgba(232, 213, 163, 0.12), 0 16px 40px rgba(0, 0, 0, 0.4);
   backdrop-filter: blur(10px);
 }
 
@@ -73,13 +100,16 @@
 }
 
 .op-chip-balance {
-  border: 1px solid rgba(201, 164, 92, 0.45);
-  background: linear-gradient(180deg, rgba(201, 164, 92, 0.16), rgba(18, 21, 26, 0.8));
+  border: 1px solid rgba(176, 138, 74, 0.55);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(232, 213, 163, 0.22), transparent 55%),
+    linear-gradient(180deg, rgba(36, 24, 15, 0.9), rgba(12, 14, 18, 0.88));
   color: var(--op-gold-hi);
   border-radius: 999px;
   padding: 0.35rem 0.75rem;
   font-size: 0.82rem;
   letter-spacing: 0.04em;
+  box-shadow: inset 0 1px 0 rgba(232, 213, 163, 0.25);
 }
 
 .op-icon-btn, .op-grant, .op-ghost {
@@ -114,8 +144,8 @@
   position: sticky;
   bottom: 0;
   z-index: 30;
-  border-top: 1px solid rgba(201, 164, 92, 0.2);
-  background: rgba(7, 8, 10, 0.94);
+  border-top: 1px solid rgba(176, 138, 74, 0.28);
+  background: linear-gradient(180deg, rgba(18, 16, 12, 0.92), rgba(7, 8, 10, 0.96));
 }
 .op-bottom a {
   flex: 1;
@@ -148,13 +178,14 @@
 }
 .op-layer-back {
   background:
-    radial-gradient(circle at 50% 18%, rgba(232, 213, 163, 0.18), transparent 28%),
-    linear-gradient(180deg, #14110e 0%, #0b0c0e 40%, #07080a 100%);
+    radial-gradient(circle at 50% 16%, rgba(255, 220, 150, 0.22), transparent 26%),
+    radial-gradient(ellipse at 50% 100%, rgba(90, 24, 32, 0.28), transparent 40%),
+    linear-gradient(180deg, #141820 0%, #0b0c0e 42%, #07080a 100%);
 }
 .op-layer-hall {
   background:
-    linear-gradient(180deg, transparent 8%, rgba(7, 8, 10, 0.15) 42%, rgba(7, 8, 10, 0.75) 100%),
-    repeating-linear-gradient(90deg, rgba(201, 164, 92, 0.05) 0 12px, transparent 12px 64px);
+    linear-gradient(180deg, transparent 8%, rgba(7, 8, 10, 0.12) 42%, rgba(7, 8, 10, 0.78) 100%),
+    repeating-linear-gradient(90deg, rgba(176, 138, 74, 0.06) 0 12px, transparent 12px 64px);
   transform: translateZ(-80px) scale(1.08);
 }
 .op-marble {
@@ -164,9 +195,58 @@
   bottom: 0;
   height: 42%;
   background:
-    linear-gradient(180deg, transparent, rgba(232, 221, 196, 0.08)),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 18px);
+    linear-gradient(180deg, transparent, rgba(232, 221, 196, 0.1)),
+    repeating-linear-gradient(115deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 17px),
+    repeating-linear-gradient(90deg, #1c1f24 0 28px, #16181c 28px 56px);
   clip-path: polygon(8% 0, 92% 0, 100% 100%, 0 100%);
+}
+.op-marble-sheen {
+  position: absolute;
+  inset: auto 10% 0;
+  height: 28%;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(232, 213, 163, 0.08), transparent 70%);
+  filter: blur(10px);
+}
+.op-fog {
+  position: absolute;
+  inset: 18% -8% 8%;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 80%, var(--op-fog), transparent 62%),
+    radial-gradient(ellipse at 20% 40%, rgba(180, 190, 210, 0.05), transparent 50%);
+  filter: blur(22px);
+  animation: opBreathe 11s ease-in-out infinite;
+}
+.op-lamp-pool {
+  position: absolute;
+  left: 28%;
+  right: 28%;
+  top: 0;
+  height: 42%;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 20%, var(--op-lamp), transparent 68%);
+  mix-blend-mode: screen;
+}
+.op-brass-arch {
+  position: absolute;
+  inset: 16% 24% 28%;
+  border: 2px solid rgba(176, 138, 74, 0.35);
+  border-radius: 50% 50% 0 0 / 70% 70% 0 0;
+  box-shadow: inset 0 0 40px rgba(201, 164, 92, 0.08), 0 0 24px rgba(176, 138, 74, 0.12);
+  pointer-events: none;
+}
+.op-runner {
+  position: absolute;
+  left: 42%;
+  right: 42%;
+  bottom: 0;
+  height: 46%;
+  background: linear-gradient(180deg, rgba(90, 24, 32, 0.15), var(--op-burgundy));
+  box-shadow: inset 0 0 0 2px rgba(176, 138, 74, 0.35);
+  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+  opacity: 0.55;
+  pointer-events: none;
 }
 .op-columns {
   position: absolute;
@@ -177,9 +257,10 @@
 }
 .op-col {
   width: 4.2%;
-  background: linear-gradient(90deg, #2a241c, #8a7350 45%, #2a241c);
-  box-shadow: 0 0 24px rgba(0,0,0,0.45);
-  opacity: 0.7;
+  background:
+    linear-gradient(90deg, #1a140c, #8a7350 42%, #c9a45c 50%, #8a7350 58%, #1a140c);
+  box-shadow: 0 0 24px rgba(0,0,0,0.45), inset 0 0 8px rgba(232, 213, 163, 0.15);
+  opacity: 0.78;
 }
 .op-chandelier {
   position: absolute;
@@ -188,7 +269,7 @@
   width: 180px;
   height: 90px;
   margin-left: -90px;
-  background: radial-gradient(circle at 50% 20%, rgba(255, 236, 190, 0.9), rgba(201, 164, 92, 0.05) 70%);
+  background: radial-gradient(circle at 50% 20%, rgba(255, 236, 190, 0.92), rgba(201, 164, 92, 0.05) 70%);
   filter: blur(1px);
   animation: opGlow 3.6s ease-in-out infinite;
 }

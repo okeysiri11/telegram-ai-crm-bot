@@ -67,6 +67,19 @@ class CasinoSound {
     this.beep(640, 0.03, 0.02);
   }
 
+  hover() {
+    this.beep(720, 0.04, 0.015);
+  }
+
+  click() {
+    this.beep(380, 0.07, 0.03);
+  }
+
+  door() {
+    this.beep(140, 0.28, 0.035);
+    this.beep(220, 0.18, 0.02);
+  }
+
   win() {
     this.beep(520, 0.12, 0.04);
   }

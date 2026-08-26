@@ -1,10 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { RoomTransitionContext, type RoomTransitionApi, type RoomTransitionPhase } from "./roomTransitionContext";
 
-export function useRoomTransition() {
+export type { RoomTransitionApi, RoomTransitionPhase };
+
+export function useRoomTransitionState(): RoomTransitionApi {
   const location = useLocation();
   const navigate = useNavigate();
-  const [phase, setPhase] = useState<"idle" | "leaving" | "entering">("idle");
+  const [phase, setPhase] = useState<RoomTransitionPhase>("idle");
   const [from, setFrom] = useState(location.pathname);
   const leaveTimer = useRef<number | null>(null);
 
@@ -33,4 +36,11 @@ export function useRoomTransition() {
   }
 
   return { phase, path: location.pathname, go };
+}
+
+/** Shared shell veil when a provider is mounted; local fallback for isolated tests. */
+export function useRoomTransition(): RoomTransitionApi {
+  const ctx = useContext(RoomTransitionContext);
+  const local = useRoomTransitionState();
+  return ctx ?? local;
 }

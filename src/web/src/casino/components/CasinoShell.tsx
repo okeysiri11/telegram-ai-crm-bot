@@ -6,35 +6,44 @@ import { grantDemoChips } from "../casinoApi";
 import { CasinoHistoryDrawer } from "../CasinoHistoryDrawer";
 import { casinoSound } from "../casinoSound";
 import { useEffect, useState } from "react";
-import { RoomTransition } from "../transitions/RoomTransition";
-import { useRoomTransition } from "../transitions/useRoomTransition";
+import { RoomTransitionHost } from "../transitions/RoomTransition";
+import { RoomTransitionProvider } from "../transitions/RoomTransitionProvider";
 import { usePerformanceTier } from "../hooks/usePerformanceTier";
 import { AmbientLayer } from "../ambient/AmbientLayer";
 import { bindCasinoRoomAudio } from "../audio/casinoAudio";
 import { CasinoGuestProvider } from "./CasinoGuestModal";
 import "../odessa.css";
 import "../assets/world.css";
+import "../assets/entrance.css";
 import "../ambient/ambient.css";
 import "../assets/live.css";
 import "../assets/interact.css";
 import "../assets/rooms-visual.css";
 
 const NAV = [
-  { to: "/enterprise-city?building=casino", label: "Город", end: false },
-  { to: "/casino", label: "Казино", end: true },
-  { to: "/casino/lobby", label: "Зал" },
-  { to: "/casino/roulette/royale-1", label: "Рулетка" },
-  { to: "/casino/blackjack", label: "Blackjack" },
-  { to: "/casino/slots", label: "Автоматы" },
-  { to: "/casino/rooms/poker", label: "Покер" },
+  { to: "/enterprise-city?building=casino", label: "ГОРОД", end: false },
+  { to: "/casino", label: "КАЗИНО", end: true },
+  { to: "/casino/promos", label: "АКЦИИ" },
+  { to: "/casino/vip", label: "VIP" },
+  { to: "/casino/tournaments", label: "ТУРНИРЫ" },
+  { to: "/casino/support", label: "ПОДДЕРЖКА" },
 ];
 
 export function CasinoShell() {
+  return (
+    <CasinoGuestProvider>
+      <RoomTransitionProvider>
+        <CasinoShellFrame />
+      </RoomTransitionProvider>
+    </CasinoGuestProvider>
+  );
+}
+
+function CasinoShellFrame() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const wallet = useCasinoWallet();
-  const { phase } = useRoomTransition();
   const tier = usePerformanceTier();
   const [historyOpen, setHistoryOpen] = useState(false);
   const [muted, setMuted] = useState(() => casinoSound.muted);
@@ -64,14 +73,13 @@ export function CasinoShell() {
   }
 
   return (
-    <CasinoGuestProvider>
-    <div className="op-root op-world" data-testid="casino-shell" data-tier={tier}>
+    <div className="op-root op-world" data-testid="casino-shell" data-art="odessa-prime" data-tier={tier}>
       <a className="op-skip" href="#op-main">
         К содержимому
       </a>
       <div className="op-uw-wings" aria-hidden />
       <AmbientLayer tier={tier} />
-      <RoomTransition phase={phase} />
+      <RoomTransitionHost />
       <header className="op-header">
         <NavLink to="/casino" className="op-logo" aria-label="Odessa Prime Casino">
           <strong>ODESSA PRIME</strong>
@@ -101,6 +109,7 @@ export function CasinoShell() {
           <button
             className="op-icon-btn"
             type="button"
+            data-testid="casino-sound-toggle"
             aria-label={muted ? "Включить звук" : "Выключить звук"}
             aria-pressed={!muted}
             onClick={() => setMuted((m) => !m)}
@@ -110,12 +119,17 @@ export function CasinoShell() {
           <button className="op-ghost" type="button" onClick={() => setHistoryOpen(true)}>
             История
           </button>
-          <button className="op-ghost" type="button" onClick={() => navigate("/enterprise-city?building=casino")}>
-            В город
-          </button>
           <span className="op-avatar" aria-label={user?.name || "Профиль"}>
             {initial}
           </span>
+          <button
+            className="op-ghost op-to-city"
+            type="button"
+            data-testid="casino-to-city"
+            onClick={() => navigate("/enterprise-city?building=casino")}
+          >
+            В ГОРОД
+          </button>
         </div>
       </header>
       <main className="op-main" id="op-main">
@@ -123,17 +137,16 @@ export function CasinoShell() {
       </main>
       <nav className="op-bottom" aria-label="Мобильная навигация казино">
         <NavLink to="/casino" end>
-          Лобби
+          Казино
         </NavLink>
-        <NavLink to="/casino/lobby">Зал</NavLink>
-        <NavLink to="/casino/roulette/royale-1">Рулетка</NavLink>
-        <NavLink to="/casino/blackjack">BJ</NavLink>
-        <NavLink to="/casino/slots">Слоты</NavLink>
+        <NavLink to="/casino/vip">VIP</NavLink>
+        <NavLink to="/casino/tournaments">Турниры</NavLink>
+        <NavLink to="/casino/support">Поддержка</NavLink>
+        <NavLink to="/enterprise-city?building=casino">Город</NavLink>
       </nav>
       {historyOpen ? (
         <CasinoHistoryDrawer items={wallet.ledger} onClose={() => setHistoryOpen(false)} loading={wallet.loading} />
       ) : null}
     </div>
-    </CasinoGuestProvider>
   );
 }

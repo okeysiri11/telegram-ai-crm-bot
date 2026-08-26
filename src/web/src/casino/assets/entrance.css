@@ -1,0 +1,538 @@
+.op-root {
+  --casino-bg: var(--op-bg);
+  --casino-bg-elevated: #10141a;
+  --casino-gold: var(--op-gold);
+  --casino-gold-soft: var(--op-gold-hi);
+  --casino-emerald: #0d3b2e;
+  --casino-red: var(--op-burgundy);
+  --casino-text: var(--op-ivory);
+  --casino-muted: var(--op-muted);
+  --casino-border: rgba(201, 164, 92, 0.38);
+  --casino-shadow-gold: 0 18px 40px rgba(201, 164, 92, 0.18);
+  --casino-motion-fast: 160ms;
+  --casino-motion-medium: 280ms;
+  --casino-motion-slow: 980ms;
+  --casino-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --casino-ui: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+
+.op-entrance.op-facade-hero {
+  min-height: calc(100dvh - 3.7rem);
+  display: grid;
+  grid-template-rows: 1fr auto;
+}
+
+.op-night-sky {
+  background:
+    radial-gradient(circle at 78% 18%, rgba(201, 164, 92, 0.16), transparent 22%),
+    radial-gradient(ellipse at 50% 100%, rgba(13, 59, 46, 0.18), transparent 42%),
+    linear-gradient(180deg, #070b12 0%, #080a0e 48%, #050607 100%);
+}
+
+.op-city-glow {
+  background:
+    radial-gradient(ellipse at 82% 58%, rgba(201, 164, 92, 0.14), transparent 36%),
+    linear-gradient(90deg, rgba(5, 6, 8, 0.72) 0%, rgba(5, 6, 8, 0.12) 42%, transparent 68%);
+  pointer-events: none;
+}
+
+.op-entrance.op-cinematic .op-facade-photo {
+  background:
+    linear-gradient(90deg, rgba(6, 7, 10, 0.88) 0%, rgba(6, 7, 10, 0.28) 28%, rgba(6, 7, 10, 0.04) 52%),
+    linear-gradient(180deg, transparent 58%, rgba(5, 6, 8, 0.72) 100%),
+    url("/casino/entrance/facade.jpg") 72% 42% / cover no-repeat,
+    url("/casino/entrance/facade.svg") 70% 40% / cover no-repeat,
+    #07080a;
+  filter: saturate(0.95) contrast(1.12);
+}
+
+.op-facade-architecture {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 72% 42%, rgba(255, 220, 150, 0.16), transparent 32%),
+    linear-gradient(90deg, rgba(5, 6, 8, 0.55) 0%, transparent 38%);
+}
+
+.op-entrance .op-columns {
+  inset: 10% 6% 20% 44%;
+  opacity: 0.22;
+}
+
+.op-entrance .op-brass-arch {
+  inset: 18% 14% 28% 50%;
+  opacity: 0.18;
+  border-radius: 4px;
+}
+
+.op-entrance .op-marble {
+  left: 0;
+  right: 0;
+  height: 30%;
+  clip-path: none;
+  background:
+    linear-gradient(180deg, transparent, rgba(8, 10, 14, 0.7)),
+    repeating-linear-gradient(105deg, rgba(232, 213, 163, 0.09) 0 1px, transparent 1px 18px),
+    linear-gradient(180deg, rgba(18, 20, 24, 0.2), #07080a);
+}
+
+.op-entrance .op-marble-sheen {
+  height: 22%;
+  background: linear-gradient(180deg, rgba(232, 213, 163, 0.16), transparent 70%);
+  animation: opPavement 7s ease-in-out infinite;
+}
+
+.op-entrance .op-runner {
+  left: 56%;
+  right: 16%;
+  height: 40%;
+  opacity: 0.88;
+  clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
+  box-shadow: 0 0 40px rgba(90, 24, 32, 0.35), inset 0 0 0 2px rgba(176, 138, 74, 0.45);
+}
+
+.op-entrance .op-chandelier {
+  left: 68%;
+  margin-left: -90px;
+  top: 8%;
+}
+
+.op-entrance .op-lamp-pool {
+  left: 48%;
+  right: 8%;
+}
+
+.op-scene.is-zooming {
+  transform: scale(1.08);
+  transform-origin: 68% 48%;
+  transition: transform var(--casino-motion-slow) cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.op-entrance.is-entering .op-doors,
+.op-entrance.is-entering .op-lamp-pool,
+.op-entrance.is-entering .op-chandelier {
+  filter: brightness(1.55);
+  transition: filter var(--casino-motion-medium) ease;
+}
+
+.op-marquee {
+  display: none;
+}
+
+.op-marquee-sign,
+.op-marquee-casino {
+  letter-spacing: 0.42em;
+  color: var(--casino-gold-soft);
+  text-shadow: 0 0 18px rgba(232, 213, 163, 0.45);
+  animation: opSignPulse 4.8s ease-in-out infinite;
+}
+
+.op-marquee-sign {
+  font-size: clamp(0.7rem, 1.1vw, 0.95rem);
+}
+
+.op-marquee-casino {
+  font-size: clamp(1.1rem, 2.2vw, 2rem);
+  border: 1px solid rgba(201, 164, 92, 0.55);
+  padding: 0.2rem 0.8rem;
+  background: linear-gradient(90deg, transparent, rgba(201, 164, 92, 0.16), transparent);
+  background-size: 220% 100%;
+  animation: opMarqueeSweep 6.5s linear infinite, opSignPulse 4.8s ease-in-out infinite;
+}
+
+.op-facade-hero .op-doors {
+  inset: 28% 22% 18% 52%;
+  display: flex;
+  gap: 0.35rem;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.op-door {
+  flex: 1;
+  border: 1px solid rgba(232, 213, 163, 0.4);
+  background:
+    linear-gradient(180deg, rgba(255, 231, 176, 0.28), rgba(12, 14, 18, 0.2) 46%, rgba(12, 14, 18, 0.55)),
+    repeating-linear-gradient(90deg, rgba(232, 213, 163, 0.12) 0 1px, transparent 1px 18px);
+  box-shadow: inset 0 0 40px rgba(255, 220, 150, 0.18);
+}
+
+.op-entrance .op-ropes {
+  position: absolute;
+  left: 46%;
+  right: 18%;
+  bottom: 8%;
+  height: 18%;
+  pointer-events: none;
+  display: flex;
+  justify-content: space-between;
+}
+
+.op-entrance .op-ropes span {
+  width: 7px;
+  background: linear-gradient(#e8d5a3, #8a6a32);
+  box-shadow: 0 0 10px rgba(201, 164, 92, 0.4);
+}
+
+.op-entrance .op-ropes span::after {
+  content: "";
+  position: absolute;
+  width: 28%;
+  height: 4px;
+  margin-top: 28%;
+  background: #5a1820;
+}
+
+.op-entrance .op-silhouettes {
+  position: absolute;
+  left: 52%;
+  right: 16%;
+  bottom: 16%;
+  height: 18%;
+  display: flex;
+  gap: 8%;
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.op-entrance .op-silhouettes span {
+  width: 18px;
+  background: #050607;
+  clip-path: polygon(30% 0, 70% 0, 88% 28%, 80% 28%, 80% 100%, 20% 100%, 20% 28%, 12% 28%);
+  animation: opSilhouette 9s ease-in-out infinite;
+}
+
+.op-entrance .op-silhouettes span:nth-child(2) { animation-delay: -3s; width: 22px; }
+.op-entrance .op-silhouettes span:nth-child(3) { animation-delay: -6s; }
+
+.op-entrance .op-dust {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(232, 213, 163, 0.45) 0 1px, transparent 1.6px),
+    radial-gradient(circle, rgba(255, 236, 190, 0.28) 0 1px, transparent 1.5px);
+  background-size: 180px 140px, 120px 90px;
+  animation: opDust 14s linear infinite;
+  opacity: 0.28;
+}
+
+.op-hero-facade {
+  z-index: 3;
+  display: grid;
+  grid-template-columns: minmax(280px, 42%) 1fr;
+  align-items: center;
+  min-height: calc(100dvh - 11rem);
+  padding: 6vh 4vw 2rem;
+  text-align: left;
+}
+
+.op-hero-copy {
+  max-width: 36rem;
+}
+
+.op-hero-facade .op-title {
+  display: flex;
+  flex-direction: column;
+  line-height: 0.92;
+  font-size: clamp(2.4rem, 5.4vw, 5.2rem);
+}
+
+.op-hero-facade .op-title span {
+  font-size: 0.52em;
+  letter-spacing: 0.34em;
+  color: var(--casino-gold);
+}
+
+.op-demo-label {
+  letter-spacing: 0.22em;
+  font-size: 0.68rem;
+  color: var(--casino-gold);
+  margin: 0 0 1.1rem;
+  font-family: var(--casino-ui);
+}
+
+.op-enter-cta {
+  position: relative;
+  overflow: hidden;
+  min-height: 3.2rem;
+  padding: 0 1.6rem;
+  border: 1px solid var(--casino-gold-soft);
+  border-radius: 2px;
+  background: linear-gradient(180deg, #f0ddb0, #c9a45c 48%, #8a6a32);
+  color: #1a1208;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  font-family: var(--casino-ui);
+  cursor: pointer;
+  box-shadow: var(--casino-shadow-gold), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform var(--casino-motion-fast) ease, box-shadow var(--casino-motion-fast) ease, filter var(--casino-motion-fast) ease;
+}
+
+.op-enter-cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 30%, rgba(255, 255, 255, 0.38) 48%, transparent 62%);
+  transform: translateX(-120%);
+}
+
+.op-enter-cta:hover {
+  transform: translateY(-3px);
+  filter: brightness(1.08);
+  box-shadow: 0 0 0 1px rgba(232, 213, 163, 0.7), 0 16px 36px rgba(201, 164, 92, 0.32);
+}
+
+.op-enter-cta:hover::after {
+  animation: opCtaSweep 700ms ease;
+}
+
+.op-enter-cta:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.op-enter-cta:focus-visible {
+  outline: 2px solid var(--casino-gold-soft);
+  outline-offset: 3px;
+}
+
+.op-status-row {
+  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  max-width: 34rem;
+}
+
+.op-glass-panel {
+  border: 1px solid var(--casino-border);
+  border-radius: 4px;
+  padding: 0.7rem 0.75rem;
+  background: linear-gradient(180deg, rgba(18, 16, 12, 0.72), rgba(7, 8, 10, 0.62));
+  box-shadow: inset 0 1px 0 rgba(232, 213, 163, 0.16);
+  backdrop-filter: blur(8px);
+  font-family: var(--casino-ui);
+}
+
+.op-glass-panel span {
+  display: block;
+  letter-spacing: 0.14em;
+  font-size: 0.62rem;
+  color: var(--casino-gold);
+}
+
+.op-glass-panel b {
+  display: block;
+  margin: 0.2rem 0;
+  font-size: 1.15rem;
+  color: var(--casino-text);
+}
+
+.op-glass-panel small {
+  color: var(--casino-muted);
+  letter-spacing: 0.08em;
+  font-size: 0.68rem;
+}
+
+.op-online-dot {
+  display: inline-block;
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-right: 0.3rem;
+  border-radius: 50%;
+  background: #3dce8a;
+  box-shadow: 0 0 8px #3dce8a;
+  animation: opOnline 1.8s ease-in-out infinite;
+}
+
+.op-preview-strip {
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(6, minmax(140px, 1fr));
+  gap: 0.65rem;
+  padding: 0 4vw 1.4rem;
+}
+
+.op-preview-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 8.4rem;
+  border: 1px solid var(--casino-border);
+  border-radius: 4px;
+  padding: 0;
+  text-align: left;
+  color: var(--casino-text);
+  background: #0b0c0e;
+  cursor: pointer;
+  transition: transform var(--casino-motion-fast) ease, box-shadow var(--casino-motion-fast) ease, border-color var(--casino-motion-fast) ease;
+}
+
+.op-preview-art {
+  display: block;
+  height: 5.4rem;
+  overflow: hidden;
+}
+
+.op-preview-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transform: scale(1.02);
+  transition: transform var(--casino-motion-medium) ease;
+}
+
+.op-preview-copy {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  padding: 0.45rem 0.6rem 0.55rem;
+  font-family: var(--casino-ui);
+}
+
+.op-preview-copy strong {
+  letter-spacing: 0.12em;
+  font-size: 0.72rem;
+}
+
+.op-preview-copy small {
+  color: var(--casino-gold);
+  letter-spacing: 0.1em;
+  font-size: 0.58rem;
+}
+
+.op-preview-card:hover,
+.op-preview-card:focus-visible {
+  transform: translateY(-3px);
+  border-color: var(--casino-gold-soft);
+  box-shadow: var(--casino-shadow-gold);
+}
+
+.op-preview-card:hover .op-preview-svg,
+.op-preview-card:focus-visible .op-preview-svg {
+  transform: scale(1.05);
+}
+
+.op-preview-card:focus-visible {
+  outline: 2px solid var(--casino-gold-soft);
+  outline-offset: 2px;
+}
+
+.op-enter-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 68% 48%, rgba(232, 213, 163, 0.42), transparent 28%),
+    linear-gradient(180deg, rgba(7, 8, 10, 0.2), #050607 86%);
+  animation: opEnterVeil var(--casino-motion-slow) ease forwards;
+}
+
+.op-header,
+.op-nav,
+.op-hud,
+.op-bottom {
+  font-family: var(--casino-ui);
+}
+
+.op-nav a {
+  border-radius: 2px;
+}
+
+.op-to-city {
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+@keyframes opSignPulse {
+  0%, 100% { opacity: 0.78; }
+  50% { opacity: 1; }
+}
+
+@keyframes opMarqueeSweep {
+  0% { background-position: 120% 0; }
+  100% { background-position: -40% 0; }
+}
+
+@keyframes opCtaSweep {
+  from { transform: translateX(-120%); }
+  to { transform: translateX(120%); }
+}
+
+@keyframes opDust {
+  from { background-position: 0 0, 40px 20px; }
+  to { background-position: 40px -80px, -20px -60px; }
+}
+
+@keyframes opSilhouette {
+  0%, 100% { transform: translateX(0); opacity: 0.28; }
+  50% { transform: translateX(10px); opacity: 0.4; }
+}
+
+@keyframes opOnline {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
+@keyframes opPavement {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes opEnterVeil {
+  0% { opacity: 0; }
+  35% { opacity: 0.45; }
+  100% { opacity: 1; }
+}
+
+@media (min-width: 1920px) {
+  .op-hero-facade {
+    grid-template-columns: minmax(360px, 38%) 1fr;
+    padding-left: 5vw;
+    padding-right: 5vw;
+  }
+  .op-preview-strip { padding-left: 5vw; padding-right: 5vw; }
+}
+
+@media (min-width: 2560px) {
+  .op-hero-facade {
+    grid-template-columns: minmax(420px, 34%) 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .op-hero-facade {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: 8vh 1rem 1rem;
+  }
+  .op-marquee { left: 12%; right: 12%; top: 8%; }
+  .op-status-row { grid-template-columns: 1fr; max-width: none; }
+  .op-preview-strip {
+    grid-template-columns: repeat(6, minmax(11rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 4.5rem;
+  }
+  .op-enter-cta { width: 100%; justify-content: center; display: inline-flex; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .op-marquee-sign,
+  .op-marquee-casino,
+  .op-entrance .op-dust,
+  .op-entrance .op-silhouettes span,
+  .op-online-dot,
+  .op-chandelier,
+  .op-fog,
+  .op-scene.is-zooming,
+  .op-enter-veil,
+  .op-preview-card,
+  .op-enter-cta,
+  .op-preview-svg {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}

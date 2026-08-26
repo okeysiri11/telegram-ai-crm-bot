@@ -1,8 +1,8 @@
-# Odessa Prime visual assets (Sprint 20)
+# Odessa Prime visual assets (Sprint 21)
 
 ```
 /public/casino/
-  entrance/
+  entrance/   facade.jpg + facade.svg (cinematic night exterior)
   lobby/
   roulette/
   blackjack/
@@ -14,5 +14,5 @@
   ui/
 ```
 
-Scenes currently use CSS/SVG composition (no unoptimized photography).
-Replace files here without changing React routes.
+Entrance uses a compressed photographic still plus SVG/CSS architectural layers.
+Do not add multi-megabyte video or Three.js for the facade.
