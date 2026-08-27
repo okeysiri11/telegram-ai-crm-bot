@@ -3,6 +3,7 @@ import { Badge, Card } from "@/ui";
 import { useAuthStore } from "@/auth/authStore";
 import { useLastModuleStore } from "@/modules/lastModuleStore";
 import { openOwnerDemoWorkspace } from "@/multi-role/applyDemoSession";
+import { resolvePostLoginPath } from "@/navigation/safeReturnTo";
 import { useNotificationStore } from "@/notifications/notificationStore";
 import { MobileActionButton } from "./MobileActionButton";
 import { useMobileChromeStore } from "./mobileChromeStore";
@@ -66,7 +67,7 @@ export function MobileHome({
             } catch {
               /* demo seed still applied */
             }
-            navigate("/owner");
+            navigate(resolvePostLoginPath({ roleHome: "/owner" }));
           }}
         >
           Открыть демо-пространство

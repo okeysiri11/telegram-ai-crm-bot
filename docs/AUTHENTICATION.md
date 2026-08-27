@@ -28,9 +28,10 @@ ISAM (`applications/enterprise_hub/security`) is the authentication runtime for 
 
 ## Frontend (Russian copy)
 
-- `/login` — «Продолжить через Google», «Войти по Email»
-- `/auth/register` — «Создать аккаунт»
-- `/auth/forgot-password` — «Восстановить пароль»
+- `/login` (Vite DEV) — primary **«Войти как Owner»** (one click, no password, no API). Email / Google / registration / password recovery are collapsed and marked unavailable locally.
+- `/login` (production) — «Продолжить через Google», «Войти по Email». Local Owner bypass is compiled/runtime-disabled (`import.meta.env.PROD`).
+- `/auth/register` — «Создать аккаунт» (hidden in local Owner mode)
+- `/auth/forgot-password` — «Восстановить пароль» (hidden in local Owner mode)
 
 ## Client modules
 

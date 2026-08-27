@@ -77,6 +77,24 @@ export function isDemoAuthEnabled(): boolean {
   });
 }
 
+/** Local Owner one-click surface: DEV only. Production builds always false. */
+export function isLocalOwnerLoginEnabled(): boolean {
+  if (import.meta.env.PROD) return false;
+  return isDemoAuthEnabled();
+}
+
+export function assertLocalOwnerLoginAllowed(): void {
+  if (import.meta.env.PROD || !isDemoAuthEnabled()) {
+    throw new Error("Local Owner login is DEV-only and is disabled in production.");
+  }
+}
+
+/** Canonical in-process Owner session. Never calls ISAM, Google, or the API. */
+export function loginAsCanonicalOwner(): AuthSessionPayload {
+  assertLocalOwnerLoginAllowed();
+  return loginViaDemoAuth(OWNER_DEMO_EMAIL, DEMO_PASSWORD, OWNER_DEMO_TENANT);
+}
+
 export function isDemoOwnerEmail(email: string): boolean {
   return email.trim().toLowerCase() === OWNER_DEMO_EMAIL;
 }

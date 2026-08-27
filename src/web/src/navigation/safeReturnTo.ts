@@ -4,24 +4,8 @@
 
 const STORAGE_KEY = "ados_return_to";
 
-const ALLOWED_PREFIXES = [
-  "/casino",
-  "/enterprise-city",
-  "/city",
-  "/dashboard",
-  "/owner",
-  "/admin",
-  "/crm",
-  "/workspace",
-  "/marketplace",
-  "/command-center",
-  "/platform-builder",
-  "/settings",
-  "/security",
-  "/identity",
-];
-
-const BLOCKED_EXACT = new Set(["/login", "/logout", "/auth/logout", "/auth/register"]);
+const BLOCKED_EXACT = new Set(["/login", "/logout", "/auth/logout", "/auth/register", "/auth/forgot-password"]);
+const BLOCKED_PREFIXES = ["/login?", "/login#"];
 
 export function sanitizeReturnTo(raw: string | null | undefined): string | null {
   if (!raw || typeof raw !== "string") return null;
@@ -40,9 +24,7 @@ export function sanitizeReturnTo(raw: string | null | undefined): string | null 
   if (/[\n\r\t]/.test(value)) return null;
   const pathOnly = value.split("?")[0].split("#")[0];
   if (BLOCKED_EXACT.has(pathOnly)) return null;
-  if (!ALLOWED_PREFIXES.some((prefix) => pathOnly === prefix || pathOnly.startsWith(`${prefix}/`) || pathOnly.startsWith(`${prefix}?`))) {
-    if (!ALLOWED_PREFIXES.some((prefix) => pathOnly.startsWith(prefix))) return null;
-  }
+  if (BLOCKED_PREFIXES.some((prefix) => value.startsWith(prefix) || pathOnly.startsWith("/login"))) return null;
   return value;
 }
 

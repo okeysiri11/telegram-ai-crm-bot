@@ -5,6 +5,8 @@ import {
   DEMO_PASSWORD,
   isDemoAuthEnabled,
   isGoogleAuthConfigured,
+  isLocalOwnerLoginEnabled,
+  loginAsCanonicalOwner,
   loginViaDemoAuth,
   OWNER_DEMO_EMAIL,
   OWNER_DEMO_TENANT,
@@ -22,6 +24,14 @@ import { isRouteAllowedForViewMode } from "@/ux-revolution";
 import { wsKey } from "@/multi-role/workspaceSlot";
 import { LoginPage } from "../../auth/pages/LoginPage";
 import { CasinoApp } from "@/casino/CasinoApp";
+import {
+  assertOwnerRouteAccess,
+  CASINO_OWNER_ROUTES,
+  ownerAccessSmokeRoutes,
+  ownerVerticalRoutes,
+  ownerWorkspaceRoutes,
+} from "@/auth/ownerAccessRegistry";
+import { loginRedirect, sanitizeReturnTo } from "@/navigation/safeReturnTo";
 
 function fetchCalledIsam(spy: { mock: { calls: unknown[][] } }): boolean {
   return spy.mock.calls.some((call) => {
@@ -92,7 +102,9 @@ describe("Canonical Owner auth", () => {
 
   it("enables demo auth in test/dev and never in production", () => {
     expect(isDemoAuthEnabled()).toBe(true);
+    expect(isLocalOwnerLoginEnabled()).toBe(true);
     expect(resolveDemoAuthEnabled({ PROD: true, DEV: false, VITE_DEMO_AUTH: "true" })).toBe(false);
+    expect(resolveDemoAuthEnabled({ PROD: true, DEV: true, VITE_DEMO_AUTH: "true" })).toBe(false);
     expect(isGoogleAuthConfigured()).toBe(false);
   });
 
@@ -197,6 +209,10 @@ describe("Canonical Owner auth", () => {
         <LoginPage />
       </MemoryRouter>,
     );
+    expect(screen.getByTestId("login-as-owner").textContent).toContain("Войти как Owner");
+    expect(screen.getByTestId("local-owner-status").textContent).toMatch(/Local Owner mode is available/i);
+    expect(screen.queryByText(/Authentication backend unavailable/i)).toBeNull();
+    expect(screen.queryByText(/ISAM proxy/i)).toBeNull();
     expect((screen.getByRole("textbox") as HTMLInputElement).value).toBe(OWNER_DEMO_EMAIL);
     expect(screen.queryByText("Продолжить через Google")).toBeNull();
     expect(screen.queryByText("owner@demo.corp")).toBeNull();
@@ -235,6 +251,94 @@ describe("Canonical Owner auth", () => {
     fireEvent.change(password, { target: { value: DEMO_PASSWORD } });
     fireEvent.click(screen.getByRole("button", { name: "Войти по Email" }));
     expect(await screen.findByText("roulette-table")).toBeTruthy();
+  });
+
+  it("one-click Owner login enters /owner without a password", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    render(
+      <MemoryRouter initialEntries={["/login"]}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/owner" element={<p>owner-home</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByTestId("login-as-owner"));
+    expect(await screen.findByText("owner-home")).toBeTruthy();
+    expect(useAuthStore.getState().user?.roleId).toBe("platform_owner");
+    expect(useAuthStore.getState().user?.tenantId).toBe("ados");
+    expect(fetchCalledIsam(fetchSpy)).toBe(false);
+    fetchSpy.mockRestore();
+  });
+
+  it("one-click Owner login honors casino returnTo", async () => {
+    render(
+      <MemoryRouter initialEntries={["/login?returnTo=/casino/roulette/table/royale-1"]}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/casino/roulette/table/royale-1" element={<p>roulette-royale</p>} />
+          <Route path="/" element={<p>home-page</p>} />
+          <Route path="/dashboard" element={<p>dashboard-page</p>} />
+          <Route path="/owner" element={<p>owner-home</p>} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Войти как Owner" }));
+    expect(await screen.findByText("roulette-royale")).toBeTruthy();
+    expect(screen.queryByText("home-page")).toBeNull();
+    expect(screen.queryByText("dashboard-page")).toBeNull();
+    expect(screen.queryByText("owner-home")).toBeNull();
+  });
+
+  it("preserves ProtectedRoute returnTo for workspace deep links", async () => {
+    render(
+      <MemoryRouter initialEntries={["/workspace/crypto"]}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/workspace/crypto"
+            element={
+              <ProtectedRoute>
+                <p>crypto-workspace</p>
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("login-as-owner")).toBeTruthy();
+    fireEvent.click(screen.getByTestId("login-as-owner"));
+    expect(await screen.findByText("crypto-workspace")).toBeTruthy();
+  });
+
+  it("builds an owner smoke matrix from route catalogs", () => {
+    const routes = ownerAccessSmokeRoutes();
+    expect(routes).toEqual(expect.arrayContaining(["/owner", "/dashboard", "/settings", "/command-center"]));
+    expect(routes).toEqual(expect.arrayContaining(["/workspace/crypto", "/workspace/agro", "/workspace/legal"]));
+    expect(routes).toEqual(expect.arrayContaining(["/vertical/travel", "/creative-factory"]));
+    expect(routes).toEqual(expect.arrayContaining([...CASINO_OWNER_ROUTES]));
+    const access = assertOwnerRouteAccess();
+    expect(access.denied).toEqual([]);
+    expect(access.ok).toBe(true);
+    expect(ownerWorkspaceRoutes().length).toBeGreaterThan(0);
+    expect(ownerVerticalRoutes().length).toBeGreaterThan(0);
+  });
+
+  it("creates a canonical owner session without API or Google", () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch");
+    const session = loginAsCanonicalOwner();
+    expect(session.user.email).toBe(OWNER_DEMO_EMAIL);
+    expect(session.user.roleId).toBe("platform_owner");
+    expect(session.user.permissions).toEqual(expect.arrayContaining(["admin", "all", "hr"]));
+    expect(fetchSpy).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
+    expect(sanitizeReturnTo("/vertical/travel")).toBe("/vertical/travel");
+    expect(sanitizeReturnTo("/creative-factory")).toBe("/creative-factory");
+    expect(sanitizeReturnTo("https://evil.example/phish")).toBeNull();
+    for (const path of CASINO_OWNER_ROUTES) {
+      expect(sanitizeReturnTo(path)).toBe(path);
+      expect(decodeURIComponent(loginRedirect(path))).toContain(path);
+    }
   });
 
   it("renders casino rooms for authenticated owner without unknown-hall copy", async () => {

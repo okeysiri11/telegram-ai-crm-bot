@@ -3,7 +3,12 @@
  */
 
 import { demoUserByEmail, type DemoUserDef } from "./demoUsers";
-import { DEMO_PASSWORD, OWNER_DEMO_EMAIL, OWNER_DEMO_TENANT } from "@/auth/demoAuthProvider";
+import {
+  assertLocalOwnerLoginAllowed,
+  DEMO_PASSWORD,
+  OWNER_DEMO_EMAIL,
+  OWNER_DEMO_TENANT,
+} from "@/auth/demoAuthProvider";
 import { useViewModeStore } from "@/ux-revolution/viewModeStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
@@ -48,8 +53,9 @@ export function applyDemoUserSession(email: string): DemoUserDef | undefined {
   return user;
 }
 
-/** One-click Owner demo — full platform session without ISAM. */
+/** One-click Owner demo — full platform session without ISAM. DEV-only. */
 export function openOwnerDemoWorkspace(): { email: string; password: string; tenantId: string } {
+  assertLocalOwnerLoginAllowed();
   const owner = demoUserByEmail(OWNER_DEMO_EMAIL);
   try {
     useOrgSelector.getState().setOrganization(OWNER_DEMO_TENANT);

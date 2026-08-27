@@ -4,6 +4,7 @@ import {
   isLocalDemoToken,
   loginViaDemoAuth,
   mintLocalDemoJwt,
+  resolveDemoAuthEnabled,
 } from "@/auth/demoAuthProvider";
 import { isJwtToken, validateSessionOnline } from "@/auth/identityApi";
 
@@ -30,5 +31,11 @@ describe("Sprint 27.1.1 local demo auth", () => {
 
   it("enables demo auth in test/dev by default", () => {
     expect(isDemoAuthEnabled()).toBe(true);
+  });
+
+  it("never treats PROD + VITE_DEMO_AUTH as a bypass", () => {
+    expect(resolveDemoAuthEnabled({ PROD: true, DEV: false, VITE_DEMO_AUTH: "true" })).toBe(false);
+    expect(resolveDemoAuthEnabled({ PROD: true, DEV: true, VITE_DEMO_AUTH: "true" })).toBe(false);
+    expect(resolveDemoAuthEnabled({ PROD: true, DEV: false, VITE_DEMO_AUTH: "false" })).toBe(false);
   });
 });
