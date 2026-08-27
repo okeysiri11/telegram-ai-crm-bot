@@ -41,7 +41,10 @@ describe("Vanguard career form", () => {
     expect(screen.getByTestId("vanguard-reference").textContent).toMatch(/VG-TEST01/);
     await waitFor(() => {
       const posts = fetchMock.mock.calls.filter((c) => String(c[1]?.method) === "POST");
-      expect(posts.some((c) => String(c[0]).includes("/api/vanguard-site/v1/applications"))).toBe(true);
+      const apply = posts.find((c) => String(c[0]).includes("/api/vanguard-site/v1/applications"));
+      expect(apply).toBeTruthy();
+      const headers = (apply?.[1]?.headers || {}) as Record<string, string>;
+      expect(headers["Idempotency-Key"]).toBeTruthy();
     });
   });
 });

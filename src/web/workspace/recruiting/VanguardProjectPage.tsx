@@ -118,6 +118,7 @@ export function VanguardProjectPage() {
   const attribution = asRecord(overview.attribution);
   const recruiting = asRecord(overview.recruiting);
   const marketing = asRecord(overview.marketing);
+  const diagnostics = asRecord(integration.diagnostics);
   const publicUrl = website.public_url ? String(website.public_url) : "";
   const sitePath = website.site_path ? String(website.site_path) : "/vanguard";
 
@@ -130,6 +131,11 @@ export function VanguardProjectPage() {
     const res = await recruitingOpsPost("/projects/vanguard/integration/check", {}, headers);
     if (res.ok) setIntegration(asRecord(res.json));
     else setError("Проверка интеграции не выполнена.");
+  }
+
+  function uiState(value: unknown): string {
+    const rec = value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+    return displayMetric(rec.ui_state || rec.status_label_ru || rec.label_ru || rec.code);
   }
 
   function cardValue(value: unknown): string {
@@ -151,6 +157,32 @@ export function VanguardProjectPage() {
       <p className="mb-4 eds-type-helper" data-testid="vanguard-relationship">
         Сайт Vanguard → Рекрутинг → Лиды → Кандидаты
       </p>
+      <div data-testid="vanguard-diagnostics">
+      <Card title="Интеграция" className="mb-4">
+        <dl className="grid grid-cols-2 gap-2 eds-type-small md:grid-cols-4">
+          <dt>Website</dt>
+          <dd>{uiState(diagnostics.website || integration.website_status)}</dd>
+          <dt>Integration</dt>
+          <dd>{uiState(diagnostics.integration || integration.integration_status)}</dd>
+          <dt>Database</dt>
+          <dd>{uiState(diagnostics.database || integration.database_status)}</dd>
+          <dt>Tracking</dt>
+          <dd>{uiState(diagnostics.tracking || integration.tracking_status)}</dd>
+          <dt>Last application</dt>
+          <dd>{displayMetric(diagnostics.last_application || cards.last_application_at)}</dd>
+          <dt>Last synchronization</dt>
+          <dd>{displayMetric(diagnostics.last_synchronization || integration.last_success_at)}</dd>
+          <dt>Last successful health check</dt>
+          <dd>{displayMetric(diagnostics.last_successful_health_check || integration.last_successful_check_at)}</dd>
+          <dt>Last checked</dt>
+          <dd>{displayMetric(diagnostics.last_checked || integration.last_check_at)}</dd>
+        </dl>
+        {diagnostics.failure_reason ? <p className="mt-2 eds-type-helper">{String(diagnostics.failure_reason)}</p> : null}
+        <Button className="mt-3" size="sm" variant="secondary" onClick={() => void checkIntegration()}>
+          Проверить интеграцию
+        </Button>
+      </Card>
+      </div>
       <nav className="mb-4 flex flex-wrap gap-1" aria-label="Разделы Vanguard" data-testid="vanguard-tabs">
         {TABS.map((item) => (
           <Button
@@ -325,7 +357,7 @@ export function VanguardProjectPage() {
       {tab === "campaigns" ? (
         <div data-testid="vanguard-campaigns">
         <Card title="Кампании Vanguard">
-          <p className="mb-2 eds-type-helper">Кампании ведут трафик на сайт Vanguard. Рекламные API не подключены.</p>
+          <p className="mb-2 eds-type-helper">Кампании ведут трафик на сайт Vanguard. Meta Ads / Google Ads / TikTok Ads: Провайдер не подключен.</p>
           <SimpleTable
             headers={["Кампания", "Канал", "Source", "Medium", "Код", "Статус", "Spend", "Лиды", "CPL"]}
             rows={(asList(marketing.campaigns).length ? (marketing.campaigns as Row[]) : campaigns).map((c) => [

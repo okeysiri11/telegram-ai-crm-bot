@@ -74,6 +74,12 @@ async def ops_catalogs_handler(_request: web.Request) -> web.Response:
     return json_response(get_recruiting_ops_service().catalogs())
 
 
+async def ops_ads_foundation_handler(_request: web.Request) -> web.Response:
+    from services.recruiting_ops.ads_foundation import ads_foundation
+
+    return json_response(ads_foundation())
+
+
 async def ops_vanguard_contract_handler(_request: web.Request) -> web.Response:
     return json_response(get_recruiting_ops_service().vanguard_contract())
 

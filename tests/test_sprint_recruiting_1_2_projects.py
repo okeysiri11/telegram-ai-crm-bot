@@ -106,7 +106,8 @@ async def test_vanguard_filter_and_lookup(client: TestClient):
     integ = await (await client.get(f"{OPS}/projects/vanguard/integration", headers=_hdr(org))).json()
     assert integ["ok"] is True
     stage_ids = [row["id"] for row in integ["stages"]]
-    assert stage_ids == ["website", "vanguard_endpoint", "recruiting_api", "database"]
+    assert stage_ids[:4] == ["website", "vanguard_endpoint", "recruiting_api", "database"]
+    assert "tracking" in stage_ids
     assert integ["website"]["public_url"] is None
 
     found = await (await client.get(f"{OPS}/lookup?q=VG-TEST-1", headers=_hdr(org))).json()

@@ -93,9 +93,17 @@ def vanguard_website_url() -> str | None:
     return url
 
 
+UI_STATE = {
+    STATUS_CONNECTED: "ONLINE",
+    STATUS_DEGRADED: "DEGRADED",
+    STATUS_DISCONNECTED: "OFFLINE",
+    STATUS_UNKNOWN: "NO DATA",
+}
+
+
 def status_payload(code: str, *, reason_ru: str | None = None) -> dict[str, str]:
     raw = code if code in STATUS_RU else STATUS_UNKNOWN
-    out = {"code": raw, "label_ru": STATUS_RU[raw]}
+    out = {"code": raw, "label_ru": STATUS_RU[raw], "ui_state": UI_STATE.get(raw, "NO DATA")}
     if reason_ru:
         out["reason_ru"] = reason_ru
     return out

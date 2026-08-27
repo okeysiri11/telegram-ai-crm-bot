@@ -163,6 +163,8 @@ describe("Sprint Recruiting 1.2 projects", () => {
     expect(await screen.findByTestId("vanguard-project-page")).toBeTruthy();
     expect(await screen.findByTestId("vanguard-overview")).toBeTruthy();
     expect(screen.getByTestId("vanguard-relationship").textContent).toMatch(/Сайт Vanguard/);
+    expect(screen.getByTestId("vanguard-diagnostics").textContent).toMatch(/Website/);
+    expect(screen.getAllByRole("button", { name: "Проверить интеграцию" }).length).toBeGreaterThan(0);
     const tabs = screen.getByTestId("vanguard-tabs");
     fireEvent.click(within(tabs).getByRole("button", { name: "Лиды" }));
     expect(await screen.findByTestId("vanguard-leads")).toBeTruthy();

@@ -111,6 +111,15 @@ async def test_expired_signature_rejected(client: TestClient):
     assert (await res.json())["error"] == "expired_signature"
 
 
+async def test_replayed_nonce_rejected(client: TestClient):
+    body = {"first_name": "Replay", "email": "replay@example.com", "vacancy_id": "vac-r"}
+    first = await _post_signed(client, body, nonce="same-nonce-once")
+    assert first.status == 201
+    second = await _post_signed(client, body, nonce="same-nonce-once")
+    assert second.status == 401
+    assert (await second.json())["error"] == "bad_signature"
+
+
 async def test_malformed_lead_rejected(client: TestClient):
     res = await _post_signed(client, {"email": "no-name@example.com"})
     assert res.status == 400

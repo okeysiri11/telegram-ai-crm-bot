@@ -7,6 +7,7 @@ Production Vanguard ingest never reports success for a memory-only lead.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import uuid
@@ -42,6 +43,7 @@ KINDS = (
     "communication",
     "activity",
     "tracking",
+    "idempotency",
 )
 
 LEAD_STATUSES = ("new", "qualified", "converted", "lost")
@@ -212,6 +214,7 @@ class RecruitingOpsService:
             "last_error_at": None,
             "last_error": None,
             "last_check_at": None,
+            "last_successful_check_at": None,
         }
 
     def _bag(self, org: str) -> dict[str, list[dict[str, Any]]]:
@@ -249,14 +252,16 @@ class RecruitingOpsService:
                 saved = record_to_dict(row)
                 saved["storage"] = "postgres"
                 saved["durable"] = True
+                saved["persistence_mode"] = "POSTGRES"
                 return saved
         except Exception as exc:
             if not memory_fallback_allowed():
                 logger.error("recruiting_ops persist %s failed in production: %s", kind, exc)
                 raise PersistUnavailable(str(exc)) from exc
-            logger.warning("recruiting_ops persist %s failed (DEV memory kept): %s", kind, exc)
+            logger.warning("recruiting_ops persist %s failed (NON_DURABLE_DEVELOPMENT_MODE): %s", kind, exc)
             data["storage"] = "memory"
             data["durable"] = False
+            data["persistence_mode"] = "NON_DURABLE_DEVELOPMENT_MODE"
             return data
 
     async def _persist_patch(self, org: str, item_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:
@@ -270,7 +275,10 @@ class RecruitingOpsService:
                     await repo.update(row, patch)
                     return record_to_dict(row)
         except Exception as exc:
-            logger.warning("recruiting_ops patch persist skipped: %s", exc)
+            if not memory_fallback_allowed():
+                logger.error("recruiting_ops patch persist failed in production: %s", exc)
+                raise PersistUnavailable(str(exc)) from exc
+            logger.warning("recruiting_ops patch persist skipped (NON_DURABLE_DEVELOPMENT_MODE): %s", exc)
         return None
 
     def _find(self, org: str, kind: str, item_id: str) -> dict[str, Any] | None:
@@ -331,6 +339,8 @@ class RecruitingOpsService:
         return roles_catalog()
 
     def catalogs(self) -> dict[str, Any]:
+        from services.recruiting_ops.ads_foundation import ads_foundation
+
         return {
             "ok": True,
             "lead_statuses": list(LEAD_STATUSES),
@@ -347,7 +357,8 @@ class RecruitingOpsService:
                 "application_submit",
                 "application_success",
             ],
-            "data_modes": ["REAL", "DEMO"],
+            "data_modes": ["REAL", "DEMO", "NON_DURABLE_DEVELOPMENT_MODE"],
+            "ads": ads_foundation(),
         }
 
     def vanguard_contract(self) -> dict[str, Any]:
@@ -365,7 +376,7 @@ class RecruitingOpsService:
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.3",
+            "sprint": "recruiting_1.4",
             "vanguard": {
                 "connected": False,
                 "status": "ingest_ready",
@@ -769,20 +780,67 @@ class RecruitingOpsService:
         event = sanitize_tracking_body(body)
         err = validate_tracking(event)
         if err:
-            return {"ok": False, "error": "validation", "message_ru": err}
+            return {"ok": False, "error": "validation", "message_ru": err, "delivery_status": "FAILED"}
         org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados", body.get("tenant_id"))
         await self.ensure_hydrated(org)
         event["id"] = str(body.get("id") or event.get("event_id") or uuid.uuid4())
+        event["event_id"] = event.get("event_id") or event["id"]
         event["organization_id"] = org
         event["created_at"] = event.get("timestamp") or _now()
         event["data_mode"] = "REAL"
+        event["delivery_status"] = "RETRYING"
         if event.get("event_id"):
             for existing in self._bag(org)["tracking"]:
                 if _txt(existing.get("event_id")) == event["event_id"]:
-                    return self._ok(item=existing, duplicate=True)
-        saved = await self._persist("tracking", event)
+                    existing.setdefault("delivery_status", "DELIVERED")
+                    return self._ok(item=existing, duplicate=True, delivery_status=existing.get("delivery_status") or "DELIVERED")
+        saved: dict[str, Any] | None = None
+        last_exc: Exception | None = None
+        for attempt in range(3):
+            try:
+                event["delivery_status"] = "RETRYING"
+                saved = await self._persist("tracking", event)
+                last_exc = None
+                break
+            except PersistUnavailable as exc:
+                last_exc = exc
+                if attempt < 2:
+                    await asyncio.sleep(0.05 * (2 ** attempt))
+        if saved is None:
+            logger.error("vanguard tracking persist failed after retries: %s", last_exc)
+            event["delivery_status"] = "FAILED"
+            return {"ok": False, "error": "tracking_failed", "delivery_status": "FAILED", "message_ru": "Событие не доставлено"}
+        saved["delivery_status"] = "DELIVERED"
         self._bag(org)["tracking"].insert(0, saved)
-        return self._ok(item=saved)
+        return self._ok(item=saved, delivery_status="DELIVERED")
+
+    def _idempotency_hit(self, org: str, key: str) -> dict[str, Any] | None:
+        if not key:
+            return None
+        for row in self._bag(org)["idempotency"]:
+            if _txt(row.get("key")) == key:
+                lead_id = _txt(row.get("lead_id"))
+                lead = self._find(org, "lead", lead_id) if lead_id else None
+                return lead or row
+        return None
+
+    async def _store_idempotency(self, org: str, key: str, lead: dict[str, Any]) -> None:
+        if not key or not lead:
+            return
+        item = {
+            "id": str(uuid.uuid4()),
+            "organization_id": org,
+            "key": key,
+            "lead_id": lead.get("id"),
+            "reference": lead.get("external_id") or lead.get("reference"),
+            "project_key": VANGUARD_PROJECT_KEY,
+            "created_at": _now(),
+        }
+        try:
+            saved = await self._persist("idempotency", item)
+        except PersistUnavailable:
+            saved = item
+        self._bag(org)["idempotency"].insert(0, saved)
 
     async def submit_vanguard_application(self, body: dict[str, Any]) -> dict[str, Any]:
         from services.recruiting_ops.references import new_vanguard_reference
@@ -790,20 +848,30 @@ class RecruitingOpsService:
         first = _txt(body.get("first_name"))
         last = _txt(body.get("last_name"))
         name = _txt(body.get("name") or body.get("full_name") or " ".join(p for p in (first, last) if p))
-        email = _txt(body.get("email"))
+        email = _txt(body.get("email")).lower()
         if not name or not email:
             return {"ok": False, "error": "validation", "message_ru": "Укажите имя и email"}
+        org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados", body.get("tenant_id"))
+        await self.ensure_hydrated(org)
+        idem_key = _txt(body.get("idempotency_key"))
+        hit = self._idempotency_hit(org, idem_key)
+        if hit and hit.get("id"):
+            ref = _txt(hit.get("external_id") or hit.get("reference"))
+            return self._ok(item=hit, duplicate=True, already_exists=True, reference=ref, application_received=True)
         reference = _txt(body.get("external_id") or body.get("reference")) or new_vanguard_reference()
         submitted_at = _txt(body.get("submitted_at")) or _now()
-        await self.record_vanguard_event(
-            {
-                **body,
-                "event_type": "application_submit",
-                "event_id": _txt(body.get("event_id")) or str(uuid.uuid4()),
-                "timestamp": submitted_at,
-                "page": _txt(body.get("page") or body.get("landing_page")) or "/vanguard",
-            }
-        )
+        try:
+            await self.record_vanguard_event(
+                {
+                    **body,
+                    "event_type": "application_submit",
+                    "event_id": _txt(body.get("event_id")) or str(uuid.uuid4()),
+                    "timestamp": submitted_at,
+                    "page": _txt(body.get("page") or body.get("landing_page")) or "/vanguard",
+                }
+            )
+        except Exception:
+            logger.warning("vanguard apply tracking submit skipped")
         payload = dict(body)
         payload["first_name"] = first
         payload["last_name"] = last
@@ -819,19 +887,23 @@ class RecruitingOpsService:
         payload["application_message"] = _txt(body.get("application_message") or body.get("message") or body.get("reason"))
         payload["vacancy"] = payload["program_of_interest"] or _txt(body.get("vacancy"))
         ingested = await self.ingest_vanguard_lead(payload)
-        if ingested.get("ok"):
-            await self.record_vanguard_event(
-                {
-                    **body,
-                    "event_type": "application_success",
-                    "event_id": str(uuid.uuid4()),
-                    "timestamp": _now(),
-                    "page": "/vanguard",
-                }
-            )
+        if ingested.get("ok") and ingested.get("item"):
+            await self._store_idempotency(org, idem_key, ingested["item"])
+            try:
+                await self.record_vanguard_event(
+                    {
+                        **body,
+                        "event_type": "application_success",
+                        "event_id": str(uuid.uuid4()),
+                        "timestamp": _now(),
+                        "page": "/vanguard",
+                    }
+                )
+            except Exception:
+                logger.warning("vanguard apply tracking success skipped")
         return {
             **ingested,
-            "reference": reference,
+            "reference": reference if ingested.get("ok") else ingested.get("reference") or reference,
             "application_received": bool(ingested.get("ok")),
         }
 
@@ -1035,9 +1107,22 @@ class RecruitingOpsService:
         if body.get("notes"):
             patch["notes"] = _txt(body.get("notes"))
         item.update(patch)
-        persisted = await self._persist_patch(org, candidate_id, patch)
+        try:
+            persisted = await self._persist_patch(org, candidate_id, patch)
+        except PersistUnavailable:
+            return {
+                "ok": False,
+                "error": "storage_unavailable",
+                "message_ru": "Не удалось сохранить этап воронки в PostgreSQL.",
+            }
         if persisted:
             item = persisted
+        elif not memory_fallback_allowed():
+            return {
+                "ok": False,
+                "error": "storage_unavailable",
+                "message_ru": "Не удалось сохранить этап воронки в PostgreSQL.",
+            }
         self._replace(org, "candidate", item)
         await self._activity(
             organization_id=org,
@@ -1257,6 +1342,7 @@ class RecruitingOpsService:
     def _note_ingest_success(self) -> None:
         self._ingest_log["last_success_at"] = _now()
         self._ingest_log["last_check_at"] = self._ingest_log["last_success_at"]
+        self._ingest_log["last_successful_check_at"] = self._ingest_log["last_success_at"]
 
     def _note_ingest_error(self, error: str, message: str) -> None:
         self._ingest_log["last_error_at"] = _now()
@@ -1579,6 +1665,8 @@ class RecruitingOpsService:
     async def _run_integration_check(self, spec: dict[str, Any], *, probe_website: bool = False) -> dict[str, Any]:
         from services.recruiting_ops.ingest_auth import resolve_ingest_secret
 
+        org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
+        await self.ensure_hydrated(org)
         self._ingest_log["last_check_at"] = _now()
         url = vanguard_website_url()
         website_code, website_reason = STATUS_DISCONNECTED, "Публичный URL сайта не настроен (VANGUARD_WEBSITE_URL)."
@@ -1595,6 +1683,7 @@ class RecruitingOpsService:
             endpoint_code, endpoint_reason = STATUS_DEGRADED, "Production secret не задан; используется DEV fallback secret."
         recruiting_code, recruiting_reason = STATUS_CONNECTED, "Recruiting API отвечает."
         db_code, db_reason = await self._storage_probe_reason()
+        tracking_code, tracking_reason = self._tracking_health_reason()
         website_status = status_payload(website_code, reason_ru=website_reason)
         integ_codes = [endpoint_code, recruiting_code, db_code]
         if STATUS_DISCONNECTED in integ_codes:
@@ -1612,13 +1701,36 @@ class RecruitingOpsService:
             {"id": "website", "label_ru": "Сайт Vanguard", "code": website_status["code"], "status_label_ru": website_status["label_ru"], "reason_ru": website_reason},
             {"id": "vanguard_endpoint", "label_ru": "Серверный endpoint Vanguard", "code": endpoint_code, "status_label_ru": status_payload(endpoint_code)["label_ru"], "reason_ru": endpoint_reason},
             {"id": "recruiting_api", "label_ru": "Recruiting API", "code": recruiting_code, "status_label_ru": status_payload(recruiting_code)["label_ru"], "reason_ru": recruiting_reason},
-            {"id": "database", "label_ru": "База данных", "code": db_code, "status_label_ru": status_payload(db_code)["label_ru"], "reason_ru": db_reason},
+            {"id": "database", "label_ru": "База данных", "code": db_code, "status_label_ru": status_payload(db_code)["label_ru"], "reason_ru": db_reason, "ui_state": status_payload(db_code)["ui_state"]},
+            {"id": "tracking", "label_ru": "Трекинг", "code": tracking_code, "status_label_ru": status_payload(tracking_code)["label_ru"], "reason_ru": tracking_reason, "ui_state": status_payload(tracking_code)["ui_state"]},
         ]
+        if overall_code == STATUS_CONNECTED:
+            self._ingest_log["last_successful_check_at"] = self._ingest_log.get("last_check_at")
+        last_lead = None
+        org_id = os.getenv("VANGUARD_ORGANIZATION_ID") or "ados"
+        bag = self._bag(_org(org_id))
+        leads = [item for item in bag["lead"] if belongs_to_project(item, spec["project_key"])]
+        if leads:
+            last_lead = leads[0]
+        diagnostics = {
+            "website": status_payload(website_code, reason_ru=website_reason),
+            "integration": status_payload(overall_code, reason_ru=overall_reason),
+            "database": status_payload(db_code, reason_ru=db_reason),
+            "tracking": status_payload(tracking_code, reason_ru=tracking_reason),
+            "last_application": (last_lead or {}).get("submitted_at") or (last_lead or {}).get("created_at"),
+            "last_synchronization": self._ingest_log.get("last_success_at"),
+            "last_successful_health_check": self._ingest_log.get("last_successful_check_at"),
+            "last_checked": self._ingest_log.get("last_check_at"),
+            "failure_reason": (self._ingest_log.get("last_error") or {}).get("message_ru") if overall_code != STATUS_CONNECTED else None,
+        }
         return self._ok(
             project=spec,
             overall=status_payload(overall_code, reason_ru=overall_reason),
             website_status=website_status,
             integration_status=status_payload(overall_code, reason_ru=overall_reason),
+            tracking_status=status_payload(tracking_code, reason_ru=tracking_reason),
+            database_status=status_payload(db_code, reason_ru=db_reason),
+            diagnostics=diagnostics,
             stages=stages,
             website={
                 "name": spec["name"],
@@ -1627,10 +1739,25 @@ class RecruitingOpsService:
                 "environment": "production" if is_production_runtime() else "development",
             },
             last_success_at=self._ingest_log.get("last_success_at"),
+            last_successful_check_at=self._ingest_log.get("last_successful_check_at"),
             last_error=self._ingest_log.get("last_error"),
             last_error_at=self._ingest_log.get("last_error_at"),
             last_check_at=self._ingest_log.get("last_check_at"),
         )
+
+    def _tracking_health_reason(self) -> tuple[str, str]:
+        org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
+        events = self._bag(org).get("tracking") or []
+        if not events:
+            return STATUS_UNKNOWN, "Событий трекинга ещё нет."
+        statuses = {_txt(item.get("delivery_status")) for item in events}
+        if "FAILED" in statuses:
+            return STATUS_DEGRADED, "Есть недоставленные события трекинга."
+        if "RETRYING" in statuses:
+            return STATUS_DEGRADED, "Есть события в повторной доставке."
+        if events and any(item.get("persistence_mode") == "NON_DURABLE_DEVELOPMENT_MODE" for item in events):
+            return STATUS_DEGRADED, "Трекинг в NON_DURABLE_DEVELOPMENT_MODE."
+        return STATUS_CONNECTED, "События трекинга доставляются."
 
     async def _probe_website(self, url: str) -> tuple[str, str]:
         try:
@@ -1719,5 +1846,7 @@ def reset_recruiting_ops_for_tests() -> None:
     global _SVC
     _SVC = None
     from services.recruiting_ops.ingest_auth import reset_ingest_auth_for_tests
+    from services.recruiting_ops.public_limits import reset_public_limits_for_tests
 
     reset_ingest_auth_for_tests()
+    reset_public_limits_for_tests()

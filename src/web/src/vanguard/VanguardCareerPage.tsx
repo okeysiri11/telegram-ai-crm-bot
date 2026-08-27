@@ -4,6 +4,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button, Card, Input } from "@/ui";
+import { postWithRetry } from "./trackingRetry";
 
 const APPLY = "/api/vanguard-site/v1/applications";
 const EVENTS = "/api/vanguard-site/v1/events";
@@ -45,9 +46,10 @@ function utmFromSearch(): Record<string, string> {
 }
 
 async function track(eventType: string, extra: Record<string, string> = {}) {
+  const eventId = extra.event_id || crypto.randomUUID();
   const body = {
     event_type: eventType,
-    event_id: crypto.randomUUID(),
+    event_id: eventId,
     visitor_id: visitorId(),
     session_id: sessionId(),
     timestamp: new Date().toISOString(),
@@ -57,11 +59,23 @@ async function track(eventType: string, extra: Record<string, string> = {}) {
     ...utmFromSearch(),
     ...extra,
   };
-  await fetch(EVENTS, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  }).catch(() => undefined);
+  const result = await postWithRetry(EVENTS, body);
+  if (!result.ok) {
+    console.warn("vanguard tracking FAILED", eventType, result.delivery_status);
+  }
+}
+
+function applicationIdempotencyKey(): string {
+  const key = "vanguard_apply_idempotency";
+  try {
+    const existing = sessionStorage.getItem(key);
+    if (existing) return existing;
+    const next = crypto.randomUUID();
+    sessionStorage.setItem(key, next);
+    return next;
+  } catch {
+    return crypto.randomUUID();
+  }
 }
 
 export function VanguardCareerPage() {
@@ -96,6 +110,7 @@ export function VanguardCareerPage() {
     e.preventDefault();
     setError(null);
     setStatus("Отправка…");
+    const idempotencyKey = applicationIdempotencyKey();
     const payload = {
       ...form,
       unit_of_interest: form.unit,
@@ -109,12 +124,13 @@ export function VanguardCareerPage() {
       referrer: typeof document === "undefined" ? "" : document.referrer,
       landing_page: "/vanguard",
       submitted_at: new Date().toISOString(),
+      idempotency_key: idempotencyKey,
       ...utm,
     };
     void track("application_submit");
     const res = await fetch(APPLY, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Idempotency-Key": idempotencyKey },
       body: JSON.stringify(payload),
     });
     const json = await res.json().catch(() => ({}));
@@ -122,6 +138,11 @@ export function VanguardCareerPage() {
       setError(String(json.message_ru || json.error || "Заявка не принята рекрутингом"));
       setStatus(null);
       return;
+    }
+    try {
+      sessionStorage.removeItem("vanguard_apply_idempotency");
+    } catch {
+      /* ignore */
     }
     setReference(String(json.reference || json.item?.external_id || ""));
     setStatus("APPLICATION RECEIVED");
