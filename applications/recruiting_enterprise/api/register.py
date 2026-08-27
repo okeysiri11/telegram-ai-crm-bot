@@ -14,6 +14,7 @@ def register_recruiting_enterprise_routes(app: web.Application) -> None:
     app.router.add_get(f"{ops}/roles", ops_handlers.ops_roles_handler)
     app.router.add_get(f"{ops}/catalogs", ops_handlers.ops_catalogs_handler)
     app.router.add_get(f"{ops}/vanguard/contract", ops_handlers.ops_vanguard_contract_handler)
+    app.router.add_post(f"{ops}/vanguard/leads", ops_handlers.ops_vanguard_ingest_handler)
     app.router.add_get(f"{ops}/dashboard", ops_handlers.ops_dashboard_handler)
     app.router.add_post(f"{ops}/dashboard", ops_handlers.ops_dashboard_handler)
     app.router.add_get(f"{ops}/analytics", ops_handlers.ops_analytics_handler)

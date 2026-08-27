@@ -43,7 +43,7 @@ async def test_health_roles_and_vanguard_contract(client: TestClient):
     res = await client.get(f"{OPS}/health")
     assert res.status == 200
     body = await res.json()
-    assert body["sprint"] == "recruiting_1.0"
+    assert body["sprint"] in {"recruiting_1.0", "recruiting_1.1"}
     assert body["vanguard"]["connected"] is False
     assert body["visits_available"] is False
 
@@ -53,8 +53,10 @@ async def test_health_roles_and_vanguard_contract(client: TestClient):
 
     contract = await (await client.get(f"{OPS}/vanguard/contract")).json()
     assert contract["connected"] is False
-    assert contract["inbound"]["path"] == f"{OPS}/leads"
-    assert "name" in contract["inbound"]["required"]
+    assert contract["inbound"]["path"] == f"{OPS}/vanguard/leads"
+    assert contract["inbound"]["auth"] == "hmac-sha256"
+    assert contract["inbound"]["secret_frontend_exposure"] is False
+    assert "first_name|name" in contract["inbound"]["required"]
     assert "TELEGRAM" in contract["channels_prepared"]
     assert contract["ads_apis"]["meta"] == "not_connected"
 

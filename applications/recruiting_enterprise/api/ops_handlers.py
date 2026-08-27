@@ -46,7 +46,13 @@ def _status_for(result: dict, *, created: bool = False) -> int:
             return 403
         if err == "not_found":
             return 404
+        if err in {"missing_signature", "bad_signature", "expired_signature"}:
+            return 401
+        if err in {"storage_unavailable", "ingest_not_configured"}:
+            return 503
         return 400
+    if result.get("duplicate"):
+        return 200
     return 201 if created else 200
 
 
@@ -65,6 +71,33 @@ async def ops_catalogs_handler(_request: web.Request) -> web.Response:
 
 async def ops_vanguard_contract_handler(_request: web.Request) -> web.Response:
     return json_response(get_recruiting_ops_service().vanguard_contract())
+
+
+async def ops_vanguard_ingest_handler(request: web.Request) -> web.Response:
+    import json as json_lib
+
+    from services.recruiting_ops.ingest_auth import verify_ingest_request
+
+    raw = await request.read()
+    auth = verify_ingest_request(
+        body=raw,
+        signature=request.headers.get("X-Vanguard-Signature") or request.headers.get("X-Signature"),
+        timestamp=request.headers.get("X-Vanguard-Timestamp") or request.headers.get("X-Timestamp"),
+        nonce=request.headers.get("X-Vanguard-Nonce") or request.headers.get("X-Nonce"),
+    )
+    if not auth.get("ok"):
+        return json_response(auth, status=_status_for(auth))
+    try:
+        body = json_lib.loads(raw.decode("utf-8") or "{}")
+        if not isinstance(body, dict):
+            body = {}
+    except Exception:
+        return json_response(
+            {"ok": False, "error": "validation", "message_ru": "Некорректный JSON"},
+            status=400,
+        )
+    result = await get_recruiting_ops_service().ingest_vanguard_lead(body)
+    return json_response(result, status=_status_for(result, created=not result.get("duplicate")))
 
 
 async def ops_dashboard_handler(request: web.Request) -> web.Response:

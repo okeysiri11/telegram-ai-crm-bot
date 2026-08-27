@@ -1,19 +1,21 @@
 """Recruiting Ops service — durable ATS desk (Sprint Recruiting 1.0).
 
 Org-scoped memory bags hydrated from and persisted to Postgres
-(`recruiting_ops_records`). Memory is kept when DB is unreachable.
-No fake visits/metrics. Vanguard is contract-only until a later sprint.
+(`recruiting_ops_records`). Memory fallback is DEV/test only.
+Production Vanguard ingest never reports success for a memory-only lead.
 """
 
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from datetime import datetime, timezone
 from typing import Any
 
 from repositories.recruiting_ops_repository import RecruitingOpsRepository, record_to_dict
 from services.recruiting_ops.rbac import can, normalize_role, require, roles_catalog
+from services.recruiting_ops.runtime import is_production_runtime, memory_fallback_allowed
 
 logger = logging.getLogger(__name__)
 
@@ -46,37 +48,55 @@ VISITS_UNAVAILABLE = {
     "reason": "vanguard_not_connected",
 }
 
+class PersistUnavailable(RuntimeError):
+    """Raised when production storage failed and memory must not be treated as success."""
+
+
 VANGUARD_CONTRACT = {
-    "status": "contract_only",
+    "status": "ingest_ready",
     "connected": False,
     "integration": "vanguard_website",
-    "message_ru": "Сайт Vanguard ещё не подключён. Контракт описывает будущий inbound lead.",
+    "message_ru": "Inbound HMAC endpoint готов. Сайт Vanguard в этом репозитории отсутствует — форму нужно подключить отдельно.",
     "inbound": {
         "method": "POST",
-        "path": "/api/recruiting-ops/v1/leads",
-        "required": ["name"],
+        "path": "/api/recruiting-ops/v1/vanguard/leads",
+        "auth": "hmac-sha256",
+        "headers": [
+            "X-Vanguard-Signature",
+            "X-Vanguard-Timestamp",
+            "X-Vanguard-Nonce",
+        ],
+        "signature_message": "{timestamp}.{nonce}.{raw_body}",
+        "secret_location": "server_env:VANGUARD_INGEST_SECRET",
+        "secret_frontend_exposure": False,
+        "required": ["first_name|name", "email|phone"],
         "optional": [
-            "phone",
-            "email",
+            "last_name",
             "source",
             "campaign_id",
             "vacancy_id",
+            "vacancy",
+            "external_id",
             "utm_source",
             "utm_medium",
             "utm_campaign",
+            "utm_content",
+            "utm_term",
             "notes",
         ],
         "example": {
-            "name": "Иван Петров",
+            "first_name": "Иван",
+            "last_name": "Петров",
             "phone": "+380501112233",
             "email": "ivan@example.com",
             "source": "vanguard",
-            "campaign_id": None,
-            "vacancy_id": None,
+            "vacancy_id": "vac-1",
+            "external_id": "vg-1001",
             "utm_source": "vanguard",
             "utm_medium": "website",
             "utm_campaign": "career",
         },
+        "duplicate_policy": "same external_id + same vacancy → handled as duplicate; different vacancy → new lead",
     },
     "channels_prepared": list(COMM_CHANNELS),
     "ads_apis": {
@@ -191,9 +211,17 @@ class RecruitingOpsService:
             async with get_session() as session:
                 repo = RecruitingOpsRepository(session)
                 row = await repo.insert(kind, data)
-                return record_to_dict(row)
+                saved = record_to_dict(row)
+                saved["storage"] = "postgres"
+                saved["durable"] = True
+                return saved
         except Exception as exc:
-            logger.warning("recruiting_ops persist %s failed (memory kept): %s", kind, exc)
+            if not memory_fallback_allowed():
+                logger.error("recruiting_ops persist %s failed in production: %s", kind, exc)
+                raise PersistUnavailable(str(exc)) from exc
+            logger.warning("recruiting_ops persist %s failed (DEV memory kept): %s", kind, exc)
+            data["storage"] = "memory"
+            data["durable"] = False
             return data
 
     async def _persist_patch(self, org: str, item_id: str, patch: dict[str, Any]) -> dict[str, Any] | None:
@@ -250,7 +278,13 @@ class RecruitingOpsService:
             "created_at": _now(),
             "status": "recorded",
         }
-        saved = await self._persist("activity", item)
+        try:
+            saved = await self._persist("activity", item)
+        except PersistUnavailable:
+            logger.error("recruiting_ops activity persist failed in production")
+            item["storage"] = "unpersisted"
+            item["durable"] = False
+            saved = item
         self._bag(org)["activity"].insert(0, saved)
         return saved
 
@@ -269,14 +303,29 @@ class RecruitingOpsService:
         }
 
     def vanguard_contract(self) -> dict[str, Any]:
-        return {"ok": True, **VANGUARD_CONTRACT, "data_mode": "REAL"}
+        from services.recruiting_ops.ingest_auth import resolve_ingest_secret
+
+        return {
+            "ok": True,
+            **VANGUARD_CONTRACT,
+            "data_mode": "REAL",
+            "ingest_secret_configured": bool(resolve_ingest_secret()),
+            "production": is_production_runtime(),
+            "memory_fallback_allowed": memory_fallback_allowed(),
+        }
 
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.0",
-            "vanguard": {"connected": False, "status": "contract_only"},
+            "sprint": "recruiting_1.1",
+            "vanguard": {
+                "connected": False,
+                "status": "ingest_ready",
+                "inbound": "/api/recruiting-ops/v1/vanguard/leads",
+            },
             "visits_available": False,
+            "production": is_production_runtime(),
+            "memory_fallback_allowed": memory_fallback_allowed(),
             "roles": self.roles(),
         }
 
@@ -399,37 +448,67 @@ class RecruitingOpsService:
             groups.setdefault(_stage(cand.get("pipeline_stage")), []).append(cand)
         return groups
 
-    async def create_lead(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+    async def create_lead(
+        self,
+        organization_id: str,
+        body: dict[str, Any],
+        role: str | None = None,
+        *,
+        require_durable: bool | None = None,
+    ) -> dict[str, Any]:
         denied = require(role, "create")
         if denied:
             return denied
-        name = _txt(body.get("name") or body.get("full_name"))
+        first = _txt(body.get("first_name"))
+        last = _txt(body.get("last_name"))
+        name = _txt(body.get("name") or body.get("full_name") or " ".join(p for p in (first, last) if p))
         if not name:
             return {"ok": False, "error": "validation", "message_ru": "Укажите имя лида"}
         org = _org(organization_id, body.get("tenant_id"))
         await self.ensure_hydrated(org)
+        vacancy = _txt(body.get("vacancy_id") or body.get("vacancy")) or None
         item = {
             "id": str(body.get("id") or uuid.uuid4()),
             "organization_id": org,
             "tenant_id": org,
             "name": name,
+            "first_name": first or None,
+            "last_name": last or None,
             "phone": _txt(body.get("phone")),
             "email": _txt(body.get("email")),
             "source": _txt(body.get("source")) or "manual",
             "campaign_id": _txt(body.get("campaign_id")) or None,
-            "vacancy_id": _txt(body.get("vacancy_id")) or None,
+            "vacancy_id": vacancy,
+            "vacancy": _txt(body.get("vacancy")) or vacancy,
+            "external_id": _txt(body.get("external_id")) or None,
             "assignee": _txt(body.get("assignee")) or None,
             "status": _lead_status(body.get("status"), "new"),
             "notes": _txt(body.get("notes")),
             "utm_source": _txt(body.get("utm_source")) or None,
             "utm_medium": _txt(body.get("utm_medium")) or None,
             "utm_campaign": _txt(body.get("utm_campaign")) or None,
+            "utm_content": _txt(body.get("utm_content")) or None,
+            "utm_term": _txt(body.get("utm_term")) or None,
             "candidate_id": None,
             "data_mode": "REAL",
             "created_at": _now(),
             "updated_at": _now(),
         }
-        saved = await self._persist("lead", item)
+        must_be_durable = is_production_runtime() if require_durable is None else require_durable
+        try:
+            saved = await self._persist("lead", item)
+        except PersistUnavailable:
+            return {
+                "ok": False,
+                "error": "storage_unavailable",
+                "message_ru": "Не удалось сохранить лид в PostgreSQL. Заявка не принята.",
+            }
+        if must_be_durable and not saved.get("durable"):
+            return {
+                "ok": False,
+                "error": "storage_unavailable",
+                "message_ru": "Не удалось сохранить лид в PostgreSQL. Заявка не принята.",
+            }
         self._bag(org)["lead"].insert(0, saved)
         await self._activity(
             organization_id=org,
@@ -438,9 +517,91 @@ class RecruitingOpsService:
             action="lead_created",
             summary=f"Лид создан: {name}",
             role=role,
-            payload={"source": saved.get("source")},
+            payload={
+                "source": saved.get("source"),
+                "vacancy_id": saved.get("vacancy_id"),
+                "external_id": saved.get("external_id"),
+                "utm_source": saved.get("utm_source"),
+                "utm_campaign": saved.get("utm_campaign"),
+            },
         )
         return self._ok(item=saved)
+
+    def _find_duplicate(self, org: str, *, external_id: str | None, vacancy_id: str | None) -> dict[str, Any] | None:
+        ext = _txt(external_id)
+        if not ext:
+            return None
+        vac = _txt(vacancy_id)
+        for item in self._bag(org)["lead"]:
+            if _txt(item.get("external_id")) != ext:
+                continue
+            if _txt(item.get("vacancy_id") or item.get("vacancy")) == vac:
+                return item
+        return None
+
+    async def ingest_vanguard_lead(self, body: dict[str, Any]) -> dict[str, Any]:
+        first = _txt(body.get("first_name"))
+        last = _txt(body.get("last_name"))
+        name = _txt(body.get("name") or body.get("full_name") or " ".join(p for p in (first, last) if p))
+        email = _txt(body.get("email"))
+        phone = _txt(body.get("phone"))
+        if not name:
+            return {"ok": False, "error": "validation", "message_ru": "Укажите имя лида"}
+        if not email and not phone:
+            return {"ok": False, "error": "validation", "message_ru": "Укажите email или телефон"}
+        org = _org(
+            body.get("organization_id") or os.getenv("VANGUARD_ORGANIZATION_ID") or "ados",
+            body.get("tenant_id"),
+        )
+        await self.ensure_hydrated(org)
+        vacancy = _txt(body.get("vacancy_id") or body.get("vacancy")) or None
+        external_id = _txt(body.get("external_id")) or None
+        existing = self._find_duplicate(org, external_id=external_id, vacancy_id=vacancy)
+        if existing:
+            await self._activity(
+                organization_id=org,
+                entity_type="lead",
+                entity_id=str(existing["id"]),
+                action="vanguard_lead_duplicate",
+                summary=f"Повторная заявка Vanguard: {existing.get('name')}",
+                role="platform_owner",
+                payload={"external_id": external_id, "vacancy_id": vacancy},
+            )
+            return self._ok(item=existing, duplicate=True, already_exists=True)
+        payload = dict(body)
+        payload["name"] = name
+        payload["first_name"] = first
+        payload["last_name"] = last
+        payload["source"] = _txt(body.get("source")) or "vanguard"
+        payload["vacancy_id"] = vacancy
+        payload["external_id"] = external_id
+        created = await self.create_lead(
+            org,
+            payload,
+            "platform_owner",
+            require_durable=is_production_runtime(),
+        )
+        if created.get("ok") and created.get("item"):
+            item = created["item"]
+            await self._activity(
+                organization_id=org,
+                entity_type="lead",
+                entity_id=str(item["id"]),
+                action="vanguard_lead_ingested",
+                summary=f"Заявка Vanguard: {item.get('name')}",
+                role="platform_owner",
+                payload={
+                    "source": item.get("source"),
+                    "vacancy_id": item.get("vacancy_id"),
+                    "external_id": item.get("external_id"),
+                    "utm_source": item.get("utm_source"),
+                    "utm_medium": item.get("utm_medium"),
+                    "utm_campaign": item.get("utm_campaign"),
+                    "durable": item.get("durable"),
+                    "storage": item.get("storage"),
+                },
+            )
+        return created
 
     async def update_lead(
         self,
@@ -836,3 +997,6 @@ def get_recruiting_ops_service() -> RecruitingOpsService:
 def reset_recruiting_ops_for_tests() -> None:
     global _SVC
     _SVC = None
+    from services.recruiting_ops.ingest_auth import reset_ingest_auth_for_tests
+
+    reset_ingest_auth_for_tests()
