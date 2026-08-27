@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Badge, Button, Card, Table } from "@/ui";
+import { Badge, Button, Card, Input, Table } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import { asList, recruitingOpsGet, recruitingOpsPost, pick } from "../business-ops/opsApi";
@@ -67,6 +67,16 @@ export function VanguardProjectPage() {
   const [campaigns, setCampaigns] = useState<Row[]>([]);
   const [analytics, setAnalytics] = useState<Row>({});
   const [pipeline, setPipeline] = useState<Record<string, Row[]>>({});
+  const [adsCenter, setAdsCenter] = useState<Row>({});
+  const [campaignForm, setCampaignForm] = useState({
+    name: "",
+    channel: "Meta",
+    source: "vanguard",
+    medium: "cpc",
+    campaign_code: "",
+    landing_url: "/vanguard",
+    spend: "",
+  });
 
   const headers = useMemo(
     () => ({
@@ -80,7 +90,7 @@ export function VanguardProjectPage() {
   const load = useCallback(async () => {
     setError(null);
     const q = "project=vanguard";
-    const [ov, integ, leadRes, candRes, vacRes, campRes, an] = await Promise.all([
+    const [ov, integ, leadRes, candRes, vacRes, campRes, an, ads] = await Promise.all([
       recruitingOpsGet("/projects/vanguard", headers),
       recruitingOpsGet("/projects/vanguard/integration", headers),
       recruitingOpsGet(`/leads?${q}`, headers),
@@ -88,6 +98,7 @@ export function VanguardProjectPage() {
       recruitingOpsGet(`/vacancies?${q}`, headers),
       recruitingOpsGet(`/campaigns?${q}`, headers),
       recruitingOpsGet(`/analytics?${q}`, headers),
+      recruitingOpsGet("/ads/control-center?project=vanguard", headers),
     ]);
     if (![ov, integ, leadRes].some((x) => x.ok)) {
       setError("Recruiting Ops API недоступен. Запустите backend (:8080).");
@@ -101,6 +112,7 @@ export function VanguardProjectPage() {
     setVacancies(asList(vacRes.json) as Row[]);
     setCampaigns(asList(campRes.json) as Row[]);
     setAnalytics(asRecord(an.json));
+    setAdsCenter(asRecord(ads.json));
     setPipeline((candJson.pipeline && typeof candJson.pipeline === "object" ? candJson.pipeline : {}) as Record<string, Row[]>);
   }, [headers]);
 
@@ -119,6 +131,7 @@ export function VanguardProjectPage() {
   const recruiting = asRecord(overview.recruiting);
   const marketing = asRecord(overview.marketing);
   const diagnostics = asRecord(integration.diagnostics);
+  const sourceAnalytics = asRecord(overview.source_analytics || adsCenter.source_analytics);
   const publicUrl = website.public_url ? String(website.public_url) : "";
   const sitePath = website.site_path ? String(website.site_path) : "/vanguard";
 
@@ -159,22 +172,22 @@ export function VanguardProjectPage() {
       </p>
       <div data-testid="vanguard-diagnostics">
       <Card title="Интеграция" className="mb-4">
-        <dl className="grid grid-cols-2 gap-2 eds-type-small md:grid-cols-4">
-          <dt>Website</dt>
+        <dl className="grid grid-cols-1 gap-2 eds-type-small sm:grid-cols-2 md:grid-cols-4">
+          <dt>Сайт</dt>
           <dd>{uiState(diagnostics.website || integration.website_status)}</dd>
-          <dt>Integration</dt>
+          <dt>Интеграция</dt>
           <dd>{uiState(diagnostics.integration || integration.integration_status)}</dd>
-          <dt>Database</dt>
+          <dt>База данных</dt>
           <dd>{uiState(diagnostics.database || integration.database_status)}</dd>
-          <dt>Tracking</dt>
+          <dt>Трекинг</dt>
           <dd>{uiState(diagnostics.tracking || integration.tracking_status)}</dd>
-          <dt>Last application</dt>
+          <dt>Последняя заявка</dt>
           <dd>{displayMetric(diagnostics.last_application || cards.last_application_at)}</dd>
-          <dt>Last synchronization</dt>
+          <dt>Последняя синхронизация</dt>
           <dd>{displayMetric(diagnostics.last_synchronization || integration.last_success_at)}</dd>
-          <dt>Last successful health check</dt>
+          <dt>Последняя успешная проверка</dt>
           <dd>{displayMetric(diagnostics.last_successful_health_check || integration.last_successful_check_at)}</dd>
-          <dt>Last checked</dt>
+          <dt>Последняя проверка</dt>
           <dd>{displayMetric(diagnostics.last_checked || integration.last_check_at)}</dd>
         </dl>
         {diagnostics.failure_reason ? <p className="mt-2 eds-type-helper">{String(diagnostics.failure_reason)}</p> : null}
@@ -244,16 +257,16 @@ export function VanguardProjectPage() {
       {tab === "website" ? (
         <div data-testid="vanguard-website-card">
         <Card title="Сайт Vanguard">
-          <dl className="grid grid-cols-2 gap-2 eds-type-small">
-            <dt>Website name</dt>
+          <dl className="grid grid-cols-1 gap-2 eds-type-small sm:grid-cols-2">
+            <dt>Название сайта</dt>
             <dd>{displayMetric(website.name)}</dd>
-            <dt>Public URL</dt>
+            <dt>Публичный URL</dt>
             <dd>{displayMetric(publicUrl || sitePath)}</dd>
-            <dt>Environment</dt>
+            <dt>Окружение</dt>
             <dd>{displayMetric(website.environment)}</dd>
-            <dt>Website status</dt>
+            <dt>Статус сайта</dt>
             <dd>{statusLabel(integration.website_status)}</dd>
-            <dt>Last health check</dt>
+            <dt>Последняя проверка</dt>
             <dd>{displayMetric(integration.last_check_at)}</dd>
           </dl>
           <div className="mt-3">
@@ -358,13 +371,32 @@ export function VanguardProjectPage() {
         <div data-testid="vanguard-campaigns">
         <Card title="Кампании Vanguard">
           <p className="mb-2 eds-type-helper">Кампании ведут трафик на сайт Vanguard. Meta Ads / Google Ads / TikTok Ads: Провайдер не подключен.</p>
+          <form
+            className="mb-4 grid gap-2 sm:grid-cols-2 md:grid-cols-3"
+            data-testid="vanguard-campaign-form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void act("/campaigns", {
+                ...campaignForm,
+                project_key: "vanguard",
+                spend: campaignForm.spend ? Number(campaignForm.spend) : null,
+              });
+            }}
+          >
+            <Input placeholder="Название" value={campaignForm.name} onChange={(e) => setCampaignForm({ ...campaignForm, name: e.target.value })} />
+            <Input placeholder="Код кампании" value={campaignForm.campaign_code} onChange={(e) => setCampaignForm({ ...campaignForm, campaign_code: e.target.value })} />
+            <Input placeholder="Источник" value={campaignForm.source} onChange={(e) => setCampaignForm({ ...campaignForm, source: e.target.value })} />
+            <Input placeholder="Канал" value={campaignForm.medium} onChange={(e) => setCampaignForm({ ...campaignForm, medium: e.target.value })} />
+            <Input placeholder="Посадочная страница" value={campaignForm.landing_url} onChange={(e) => setCampaignForm({ ...campaignForm, landing_url: e.target.value })} />
+            <Input placeholder="Расход" value={campaignForm.spend} onChange={(e) => setCampaignForm({ ...campaignForm, spend: e.target.value })} />
+            <Button type="submit">Сохранить кампанию</Button>
+          </form>
           <SimpleTable
-            headers={["Кампания", "Канал", "Source", "Medium", "Код", "Статус", "Spend", "Лиды", "CPL"]}
+            headers={["Кампания", "Канал", "Источник", "Код", "Статус", "Расход", "Лиды", "Стоимость лида"]}
             rows={(asList(marketing.campaigns).length ? (marketing.campaigns as Row[]) : campaigns).map((c) => [
               pick(c, "name"),
               pick(c, "channel"),
               pick(c, "source"),
-              pick(c, "medium"),
               pick(c, "campaign_code"),
               pick(c, "status"),
               displayMetric(c.spend),
@@ -400,19 +432,23 @@ export function VanguardProjectPage() {
       {tab === "attribution" ? (
         <div data-testid="vanguard-attribution">
           <Card title="Атрибуция">
-            <dl className="grid grid-cols-2 gap-2 eds-type-small">
-              <dt>Source</dt>
+            <dl className="grid grid-cols-1 gap-2 eds-type-small sm:grid-cols-2">
+              <dt>Источник</dt>
               <dd>{displayMetric(attribution.source)}</dd>
-              <dt>Medium</dt>
+              <dt>Канал</dt>
               <dd>{displayMetric(attribution.medium)}</dd>
-              <dt>Campaign</dt>
+              <dt>Кампания</dt>
               <dd>{displayMetric(attribution.campaign)}</dd>
-              <dt>Content</dt>
+              <dt>Контент</dt>
               <dd>{displayMetric(attribution.content)}</dd>
-              <dt>Referrer</dt>
+              <dt>Источник перехода</dt>
               <dd>{displayMetric(attribution.referrer)}</dd>
-              <dt>Landing page</dt>
+              <dt>Посадочная страница</dt>
               <dd>{displayMetric(attribution.landing_page)}</dd>
+              <dt>Первый контакт</dt>
+              <dd>{displayMetric(asRecord(attribution.first_touch).source)}</dd>
+              <dt>Последний контакт</dt>
+              <dd>{displayMetric(asRecord(attribution.last_touch).source)}</dd>
               <dt>utm_source</dt>
               <dd>{displayMetric(asRecord(attribution.utm).utm_source)}</dd>
               <dt>utm_medium</dt>
@@ -424,10 +460,15 @@ export function VanguardProjectPage() {
               <dt>utm_term</dt>
               <dd>{displayMetric(asRecord(attribution.utm).utm_term)}</dd>
             </dl>
-            <p className="mt-3 eds-type-caption">Конверсия по источнику</p>
+            <p className="mt-3 eds-type-caption">Аналитика по источнику</p>
             <SimpleTable
-              headers={["Source", "События / лиды"]}
-              rows={(asList(attribution.by_source) as Row[]).map((row) => [pick(row, "source"), displayMetric(row.count)])}
+              headers={["Источник", "Лиды", "Кандидаты", "Конверсия"]}
+              rows={(asList(sourceAnalytics.items || attribution.by_source) as Row[]).map((row) => [
+                pick(row, "source"),
+                displayMetric(row.leads ?? row.count),
+                displayMetric(row.candidates),
+                row.conversion != null ? `${Math.round(Number(row.conversion) * 100)}%` : "Нет данных",
+              ])}
             />
           </Card>
         </div>

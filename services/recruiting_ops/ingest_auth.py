@@ -9,15 +9,14 @@ import time
 from typing import Any
 
 from services.recruiting_ops.runtime import is_production_runtime
+from services.recruiting_ops.shared_store import get_store, reset_shared_store_for_tests
 
 REPLAY_WINDOW_SECONDS = 300
 DEV_FALLBACK_SECRET = "vanguard-dev-ingest-secret"
 
-_seen_nonces: dict[str, float] = {}
-
 
 def reset_ingest_auth_for_tests() -> None:
-    _seen_nonces.clear()
+    reset_shared_store_for_tests()
 
 
 def resolve_ingest_secret() -> str | None:
@@ -76,12 +75,6 @@ def verify_ingest_request(
             "error": "expired_signature",
             "message_ru": "Подпись истекла.",
         }
-    if nonce in _seen_nonces:
-        return {
-            "ok": False,
-            "error": "bad_signature",
-            "message_ru": "Повтор nonce — запрос отклонён.",
-        }
     expected = sign_ingest_body(body=body, timestamp=str(timestamp), nonce=str(nonce), secret=secret)
     provided = str(signature).removeprefix("sha256=").strip()
     if not hmac.compare_digest(expected, provided):
@@ -90,9 +83,13 @@ def verify_ingest_request(
             "error": "bad_signature",
             "message_ru": "Неверная подпись запроса.",
         }
-    _seen_nonces[str(nonce)] = current
-    cutoff = current - REPLAY_WINDOW_SECONDS * 2
-    stale = [k for k, seen in _seen_nonces.items() if seen < cutoff]
-    for key in stale:
-        _seen_nonces.pop(key, None)
-    return {"ok": True}
+    store = get_store()
+    if not store.claim_nonce(str(nonce), REPLAY_WINDOW_SECONDS * 2):
+        return {
+            "ok": False,
+            "error": "bad_signature",
+            "message_ru": "Повтор nonce — запрос отклонён.",
+            "replay_store": store.backend,
+            "replay_shared": store.shared,
+        }
+    return {"ok": True, "replay_store": store.backend, "replay_shared": store.shared}

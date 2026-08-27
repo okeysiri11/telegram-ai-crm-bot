@@ -14,12 +14,14 @@ STATUS_DEGRADED = "DEGRADED"
 STATUS_DISCONNECTED = "DISCONNECTED"
 STATUS_OFFLINE = "DISCONNECTED"
 STATUS_UNKNOWN = "UNKNOWN"
+STATUS_NOT_CONFIGURED = "NOT_CONFIGURED"
 
 STATUS_RU = {
     STATUS_CONNECTED: "Подключено",
     STATUS_DEGRADED: "Сбои",
     STATUS_DISCONNECTED: "Отключено",
     STATUS_UNKNOWN: "Нет данных",
+    STATUS_NOT_CONFIGURED: "Не настроено",
 }
 
 RECRUITING_PROJECTS: tuple[dict[str, Any], ...] = (
@@ -27,7 +29,7 @@ RECRUITING_PROJECTS: tuple[dict[str, Any], ...] = (
         "project_key": VANGUARD_PROJECT_KEY,
         "name": "Vanguard",
         "type": "recruiting_website",
-        "type_ru": "Recruiting website",
+        "type_ru": "Сайт рекрутинга",
         "description_ru": "Сайт Vanguard отправляет заявки в Рекрутинг. Лиды становятся кандидатами.",
     },
 )
@@ -98,6 +100,7 @@ UI_STATE = {
     STATUS_DEGRADED: "DEGRADED",
     STATUS_DISCONNECTED: "OFFLINE",
     STATUS_UNKNOWN: "NO DATA",
+    STATUS_NOT_CONFIGURED: "NO DATA",
 }
 
 

@@ -1,26 +1,24 @@
 """Vanguard public apply/event rate limits — server-side, env-configurable.
 
-Policy (documented in SPRINT_RECRUITING_1_4 RESULT):
+Policy (documented in SPRINT_RECRUITING_1_5 RESULT):
 - Apply: per client IP and per email, sliding 60s window.
 - Events: per client IP, higher ceiling (tracking must not starve apply).
 - Defaults: development 20 apply/min, production 8 apply/min.
+- Store: Redis when reachable (shared=true), else process_local (shared=false).
 - Frontend controls are ignored; HTTP 429 + Retry-After on exceed.
 """
 
 from __future__ import annotations
 
 import os
-import time
-from collections import defaultdict, deque
 from typing import Any
 
 from services.recruiting_ops.runtime import is_production_runtime
-
-_WINDOWS: dict[str, deque[float]] = defaultdict(deque)
+from services.recruiting_ops.shared_store import get_store, reset_shared_store_for_tests
 
 
 def reset_public_limits_for_tests() -> None:
-    _WINDOWS.clear()
+    reset_shared_store_for_tests()
 
 
 def _int_env(name: str, default: int) -> int:
@@ -47,19 +45,8 @@ def window_seconds() -> int:
 
 
 def check_rate_limit(*, key: str, limit: int) -> dict[str, Any]:
-    now = time.monotonic()
-    span = float(window_seconds())
-    bucket = _WINDOWS[key]
-    while bucket and now - bucket[0] > span:
-        bucket.popleft()
-    if len(bucket) >= limit:
-        retry = max(1, int(span - (now - bucket[0])))
-        return {
-            "allowed": False,
-            "error": "rate_limited",
-            "retry_after_seconds": retry,
-            "limit": limit,
-            "message_ru": "Слишком много заявок. Подождите и повторите.",
-        }
-    bucket.append(now)
-    return {"allowed": True, "limit": limit, "remaining": max(0, limit - len(bucket))}
+    store = get_store()
+    result = store.hit_rate(key, limit, window_seconds())
+    result["store"] = store.backend
+    result["shared"] = store.shared
+    return result

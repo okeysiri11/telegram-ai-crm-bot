@@ -135,7 +135,7 @@ async def test_tracking_contract_and_forbidden_fields(client: TestClient):
 
 async def test_integration_website_independent_from_recruiting(client: TestClient):
     integ = await (await client.get(f"{OPS}/projects/vanguard/integration", headers=_hdr())).json()
-    assert integ["website_status"]["code"] == "DISCONNECTED"
+    assert integ["website_status"]["code"] == "NOT_CONFIGURED"
     assert integ["website_status"]["reason_ru"]
     assert integ["integration_status"]["code"] in {"CONNECTED", "DEGRADED", "DISCONNECTED"}
     assert integ["website_status"]["code"] != integ["integration_status"]["code"] or integ["integration_status"]["reason_ru"]

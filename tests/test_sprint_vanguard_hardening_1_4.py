@@ -158,7 +158,7 @@ async def test_diagnostics_independent_website(client: TestClient):
     res = await client.post(f"{OPS}/projects/vanguard/integration/check", headers=_hdr())
     body = await res.json()
     diag = body["diagnostics"]
-    assert diag["website"]["code"] == "DISCONNECTED"
+    assert diag["website"]["code"] == "NOT_CONFIGURED"
     assert diag["integration"]["code"] in {"CONNECTED", "DEGRADED", "DISCONNECTED"}
     assert diag["website"]["code"] != diag["integration"]["code"] or diag["integration"]["reason_ru"]
     assert "last_checked" in diag

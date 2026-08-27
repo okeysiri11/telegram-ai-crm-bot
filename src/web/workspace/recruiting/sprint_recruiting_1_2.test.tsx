@@ -65,7 +65,7 @@ const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
           {
             project_key: "vanguard",
             name: "Vanguard",
-            type_ru: "Recruiting website",
+            type_ru: "Сайт рекрутинга",
             leads: 1,
             candidates: 0,
             active_vacancies: 0,
@@ -155,7 +155,7 @@ describe("Sprint Recruiting 1.2 projects", () => {
     expect(await screen.findByTestId("recruiting-projects-page")).toBeTruthy();
     expect(await screen.findByTestId("recruiting-project-card-vanguard")).toBeTruthy();
     expect(screen.getByText("Vanguard")).toBeTruthy();
-    expect(screen.getByText(/Recruiting website/)).toBeTruthy();
+    expect(screen.getByText(/Сайт рекрутинга/)).toBeTruthy();
   });
 
   it("opens Vanguard overview, leads and integration without fabricated visits", async () => {
@@ -163,7 +163,7 @@ describe("Sprint Recruiting 1.2 projects", () => {
     expect(await screen.findByTestId("vanguard-project-page")).toBeTruthy();
     expect(await screen.findByTestId("vanguard-overview")).toBeTruthy();
     expect(screen.getByTestId("vanguard-relationship").textContent).toMatch(/Сайт Vanguard/);
-    expect(screen.getByTestId("vanguard-diagnostics").textContent).toMatch(/Website/);
+    expect(screen.getByTestId("vanguard-diagnostics").textContent).toMatch(/Сайт/);
     expect(screen.getAllByRole("button", { name: "Проверить интеграцию" }).length).toBeGreaterThan(0);
     const tabs = screen.getByTestId("vanguard-tabs");
     fireEvent.click(within(tabs).getByRole("button", { name: "Лиды" }));

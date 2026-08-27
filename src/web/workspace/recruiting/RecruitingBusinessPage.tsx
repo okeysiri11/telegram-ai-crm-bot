@@ -514,10 +514,10 @@ export function RecruitingBusinessPage() {
         { key: "name", label: "Кампания" },
         { key: "channel", label: "Канал" },
         { key: "source", label: "Источник" },
-        { key: "medium", label: "Medium" },
+        { key: "medium", label: "Канал" },
         { key: "campaign_code", label: "Код" },
         { key: "status", label: "Статус" },
-        { key: "spend", label: "Spend" },
+        { key: "spend", label: "Расход" },
       ],
       rows: bundle.campaigns.map((c) => ({
         id: String(c.id || ""),
@@ -553,15 +553,15 @@ export function RecruitingBusinessPage() {
                 <option key={ch} value={ch}>{ch}</option>
               ))}
             </select>
-            <Input placeholder="Source" value={campaignForm.source} onChange={(e) => setCampaignForm({ ...campaignForm, source: e.target.value })} />
-            <Input placeholder="Medium" value={campaignForm.medium} onChange={(e) => setCampaignForm({ ...campaignForm, medium: e.target.value })} />
-            <Input placeholder="Campaign code" value={campaignForm.campaign_code} onChange={(e) => setCampaignForm({ ...campaignForm, campaign_code: e.target.value })} />
-            <Input placeholder="Landing URL" value={campaignForm.landing_url} onChange={(e) => setCampaignForm({ ...campaignForm, landing_url: e.target.value })} />
+            <Input placeholder="Источник" value={campaignForm.source} onChange={(e) => setCampaignForm({ ...campaignForm, source: e.target.value })} />
+            <Input placeholder="Канал" value={campaignForm.medium} onChange={(e) => setCampaignForm({ ...campaignForm, medium: e.target.value })} />
+            <Input placeholder="Код кампании" value={campaignForm.campaign_code} onChange={(e) => setCampaignForm({ ...campaignForm, campaign_code: e.target.value })} />
+            <Input placeholder="Посадочная страница" value={campaignForm.landing_url} onChange={(e) => setCampaignForm({ ...campaignForm, landing_url: e.target.value })} />
             <Input placeholder="Статус (active/paused)" value={campaignForm.status} onChange={(e) => setCampaignForm({ ...campaignForm, status: e.target.value })} />
-            <Input type="date" placeholder="Start" value={campaignForm.start_date} onChange={(e) => setCampaignForm({ ...campaignForm, start_date: e.target.value })} />
-            <Input type="date" placeholder="End" value={campaignForm.end_date} onChange={(e) => setCampaignForm({ ...campaignForm, end_date: e.target.value })} />
-            <Input placeholder="Budget" value={campaignForm.budget} onChange={(e) => setCampaignForm({ ...campaignForm, budget: e.target.value })} />
-            <Input placeholder="Spend" value={campaignForm.spend} onChange={(e) => setCampaignForm({ ...campaignForm, spend: e.target.value })} />
+            <Input type="date" placeholder="Начало" value={campaignForm.start_date} onChange={(e) => setCampaignForm({ ...campaignForm, start_date: e.target.value })} />
+            <Input type="date" placeholder="Окончание" value={campaignForm.end_date} onChange={(e) => setCampaignForm({ ...campaignForm, end_date: e.target.value })} />
+            <Input placeholder="Бюджет" value={campaignForm.budget} onChange={(e) => setCampaignForm({ ...campaignForm, budget: e.target.value })} />
+            <Input placeholder="Расход" value={campaignForm.spend} onChange={(e) => setCampaignForm({ ...campaignForm, spend: e.target.value })} />
             <Button type="submit">Сохранить кампанию</Button>
           </form>
         ) : null,

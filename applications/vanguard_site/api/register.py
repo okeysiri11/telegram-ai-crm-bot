@@ -162,7 +162,7 @@ async def vanguard_site_events_handler(request: web.Request) -> web.Response:
         )
     if result.get("error") == "validation":
         return json_response(result, status=400)
-    if result.get("delivery_status") == "FAILED":
+    if result.get("delivery_status") in {"FAILED", "RETRYING"}:
         return json_response(result, status=503)
     return json_response(result, status=_status_for(result, created=not result.get("duplicate")))
 
