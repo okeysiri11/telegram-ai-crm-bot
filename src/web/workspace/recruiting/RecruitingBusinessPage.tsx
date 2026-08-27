@@ -3,6 +3,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Card, Input } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
@@ -62,6 +63,8 @@ function asRecord(json: unknown): Record<string, unknown> {
 
 export function RecruitingBusinessPage() {
   const caps = resolveCabinetCaps("recruiting");
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const organizationId = useOrgSelector((s) => s.organizationId);
   const orgLabel = useOrgSelector((s) => s.label());
   const activeRoleId = useRoleSwitcher((s) => s.activeRoleId);
@@ -93,6 +96,7 @@ export function RecruitingBusinessPage() {
     setLoading(true);
     setError(null);
     try {
+      const health = await recruitingOpsGet("/health", headers);
       const [d, leads, cands, vacs, camps, tasks, comms, act, an] = await Promise.all([
         recruitingOpsGet("/dashboard", headers),
         recruitingOpsGet("/leads", headers),
@@ -104,8 +108,15 @@ export function RecruitingBusinessPage() {
         recruitingOpsGet("/activity", headers),
         recruitingOpsGet("/analytics", headers),
       ]);
-      if (![d, leads].some((x) => x.ok || x.status === 404)) {
-        setError("Recruiting Ops API недоступен. Запустите backend (:8080).");
+      if (!health.ok || ![d, leads].some((x) => x.ok || x.status === 404)) {
+        const code = health.status || d.status || leads.status;
+        setError(
+          code === 0 || code === 502
+            ? "Recruiting Ops API недоступен. Запустите backend (:8080)."
+            : `Recruiting Ops API недоступен (HTTP ${code}).`,
+        );
+        setBundle(emptyBundle());
+        return;
       }
       const dash = asRecord(d.json);
       const candJson = asRecord(cands.json);
@@ -132,6 +143,12 @@ export function RecruitingBusinessPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (searchParams.get("view") === "projects") {
+      navigate("/workspace/recruiting/projects", { replace: true });
+    }
+  }, [navigate, searchParams]);
 
   async function post(path: string, body: Record<string, unknown>) {
     setFormMsg(null);
@@ -216,10 +233,10 @@ export function RecruitingBusinessPage() {
         status: pick(t, "status"),
       })),
       cards: [
-        { label: "Лиды", value: String(cards.leads ?? bundle.leads.length) },
-        { label: "Кандидаты", value: String(cards.candidates ?? bundle.candidates.length) },
-        { label: "Просрочено", value: String(cards.overdue_tasks ?? bundle.overdue.length) },
-        { label: "Ближайшие задачи", value: String(cards.next_tasks ?? bundle.nextTasks.length) },
+        { label: "Лиды", value: error ? "Нет данных" : String(cards.leads ?? bundle.leads.length) },
+        { label: "Кандидаты", value: error ? "Нет данных" : String(cards.candidates ?? bundle.candidates.length) },
+        { label: "Просрочено", value: error ? "Нет данных" : String(cards.overdue_tasks ?? bundle.overdue.length) },
+        { label: "Ближайшие задачи", value: error ? "Нет данных" : String(cards.next_tasks ?? bundle.nextTasks.length) },
       ],
       emptyTitle: "Нет задач, требующих внимания",
       emptyDescription: "Создайте лид или задачу — дашборд покажет просроченные и ближайшие действия.",
@@ -233,6 +250,40 @@ export function RecruitingBusinessPage() {
         : [],
       panel: (
         <div className="grid gap-3">
+          <div data-testid="recruiting-projects-home">
+          <Card title="ПРОЕКТЫ РЕКРУТИНГА">
+            {(() => {
+              const projects = Array.isArray(bundle.dashboard.projects) ? (bundle.dashboard.projects as Row[]) : [];
+              const vanguard = projects.find((p) => String(p.project_key || p.id) === "vanguard") || projects[0];
+              if (!vanguard) {
+                return (
+                  <div>
+                    <p>Vanguard</p>
+                    <p className="eds-type-helper">Нет данных</p>
+                    <Button className="mt-2" onClick={() => navigate("/workspace/recruiting/projects/vanguard")}>
+                      Открыть Vanguard
+                    </Button>
+                  </div>
+                );
+              }
+              const integ = vanguard.integration_status && typeof vanguard.integration_status === "object"
+                ? (vanguard.integration_status as Row)
+                : {};
+              return (
+                <div>
+                  <p className="eds-type-section">Vanguard</p>
+                  <p className="eds-type-helper">Сайт заявок внутри Рекрутинга</p>
+                  <p className="mt-1 eds-type-small">Статус: {String(integ.label_ru || integ.code || "Нет данных")}</p>
+                  <p className="eds-type-small">Новые лиды: {String(vanguard.new_leads ?? "Нет данных")}</p>
+                  <p className="eds-type-small">Последняя заявка: {String(vanguard.last_application_at || "Нет данных")}</p>
+                  <Button className="mt-2" data-testid="open-vanguard-project" onClick={() => navigate("/workspace/recruiting/projects/vanguard")}>
+                    Открыть Vanguard
+                  </Button>
+                </div>
+              );
+            })()}
+          </Card>
+          </div>
           <Card title="Посещения">
             <p data-testid="recruiting-visits-empty">{String(visits.message_ru || "Нет данных о посещениях")}</p>
           </Card>

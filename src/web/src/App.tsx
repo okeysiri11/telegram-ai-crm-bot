@@ -278,6 +278,12 @@ const LawyerBusinessPage = lazy(() =>
 const RecruitingBusinessPage = lazy(() =>
   import("../workspace/recruiting/RecruitingBusinessPage").then((m) => ({ default: m.RecruitingBusinessPage })),
 );
+const RecruitingProjectsPage = lazy(() =>
+  import("../workspace/recruiting/RecruitingProjectsPage").then((m) => ({ default: m.RecruitingProjectsPage })),
+);
+const VanguardProjectPage = lazy(() =>
+  import("../workspace/recruiting/VanguardProjectPage").then((m) => ({ default: m.VanguardProjectPage })),
+);
 const CryptoOtcDeskPage = lazy(() =>
   import("../workspace/crypto/CryptoOtcDeskPage").then((m) => ({ default: m.CryptoOtcDeskPage })),
 );
@@ -1210,6 +1216,22 @@ export function App() {
             <WorkspaceLandingGate landingId="recruiting">
               <RecruitingBusinessPage />
             </WorkspaceLandingGate>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/recruiting/projects"
+        element={
+          <ProtectedRoute>
+            <RecruitingProjectsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/recruiting/projects/:projectKey"
+        element={
+          <ProtectedRoute>
+            <VanguardProjectPage />
           </ProtectedRoute>
         }
       />

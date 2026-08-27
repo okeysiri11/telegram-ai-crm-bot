@@ -14,6 +14,19 @@ from datetime import datetime, timezone
 from typing import Any
 
 from repositories.recruiting_ops_repository import RecruitingOpsRepository, record_to_dict
+from services.recruiting_ops.projects import (
+    belongs_to_project,
+    get_project,
+    infer_project_key,
+    project_catalog,
+    status_payload,
+    vanguard_website_url,
+    STATUS_CONNECTED,
+    STATUS_DEGRADED,
+    STATUS_OFFLINE,
+    STATUS_UNKNOWN,
+    VANGUARD_PROJECT_KEY,
+)
 from services.recruiting_ops.rbac import can, normalize_role, require, roles_catalog
 from services.recruiting_ops.runtime import is_production_runtime, memory_fallback_allowed
 
@@ -77,6 +90,8 @@ VANGUARD_CONTRACT = {
             "vacancy_id",
             "vacancy",
             "external_id",
+            "reference",
+            "project_key",
             "utm_source",
             "utm_medium",
             "utm_campaign",
@@ -178,6 +193,12 @@ class RecruitingOpsService:
     def __init__(self) -> None:
         self._mem: dict[str, dict[str, list[dict[str, Any]]]] = {}
         self._hydrated: set[str] = set()
+        self._ingest_log: dict[str, Any] = {
+            "last_success_at": None,
+            "last_error_at": None,
+            "last_error": None,
+            "last_check_at": None,
+        }
 
     def _bag(self, org: str) -> dict[str, list[dict[str, Any]]]:
         if org not in self._mem:
@@ -299,6 +320,7 @@ class RecruitingOpsService:
             "task_statuses": list(TASK_STATUSES),
             "task_templates": list(TASK_TEMPLATES),
             "communication_channels": list(COMM_CHANNELS),
+            "projects": project_catalog(),
             "data_modes": ["REAL", "DEMO"],
         }
 
@@ -317,7 +339,7 @@ class RecruitingOpsService:
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.1",
+            "sprint": "recruiting_1.2",
             "vanguard": {
                 "connected": False,
                 "status": "ingest_ready",
@@ -359,6 +381,7 @@ class RecruitingOpsService:
             attention=attention,
             visits=VISITS_UNAVAILABLE,
             vanguard=self.vanguard_contract(),
+            projects=self._project_summaries(org, bag),
         )
 
     def _task_buckets(self, tasks: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -374,15 +397,19 @@ class RecruitingOpsService:
         upcoming.sort(key=lambda t: _date_only(t.get("due_date")) or "9999-12-31")
         return overdue, upcoming
 
-    async def analytics(self, organization_id: str, role: str | None = None) -> dict[str, Any]:
+    async def analytics(self, organization_id: str, role: str | None = None, *, project: str | None = None) -> dict[str, Any]:
         denied = require(role, "list")
         if denied:
             return denied
         org = _org(organization_id)
         await self.ensure_hydrated(org)
         bag = self._bag(org)
-        leads = bag["lead"]
-        candidates = bag["candidate"]
+        key = _txt(project).lower()
+        leads = list(bag["lead"])
+        candidates = list(bag["candidate"])
+        if key:
+            leads = [item for item in leads if belongs_to_project(item, key)]
+            candidates = [item for item in candidates if belongs_to_project(item, key)]
         vacancies = {str(v.get("id")): _txt(v.get("title")) or str(v.get("id")) for v in bag["vacancy"]}
         campaigns = {str(c.get("id")): _txt(c.get("name")) or str(c.get("id")) for c in bag["campaign"]}
 
@@ -425,22 +452,70 @@ class RecruitingOpsService:
             by_source=_count_by(leads, "source"),
             by_campaign=_count_by(leads, "campaign_id", campaigns),
             by_vacancy=_count_by(leads + candidates, "vacancy_id", vacancies),
+            project=key or None,
         )
 
-    async def list_kind(self, organization_id: str, kind: str, role: str | None = None) -> dict[str, Any]:
+    async def list_kind(
+        self,
+        organization_id: str,
+        kind: str,
+        role: str | None = None,
+        *,
+        project: str | None = None,
+    ) -> dict[str, Any]:
         denied = require(role, "list")
         if denied:
             return denied
         org = _org(organization_id)
         await self.ensure_hydrated(org)
         items = list(self._bag(org).get(kind) or [])
+        key = _txt(project).lower()
+        if key:
+            items = self._filter_project_items(org, kind, items, key)
         extra: dict[str, Any] = {}
         if kind == "task":
             overdue, upcoming = self._task_buckets(items)
             extra = {"overdue_tasks": overdue, "next_tasks": upcoming}
         if kind == "candidate":
             extra = {"pipeline": self._pipeline_groups(items)}
-        return self._ok(items=items, **extra)
+        return self._ok(items=items, project=key or None, **extra)
+
+    def _filter_project_items(
+        self,
+        org: str,
+        kind: str,
+        items: list[dict[str, Any]],
+        project_key: str,
+    ) -> list[dict[str, Any]]:
+        if kind in {"lead", "candidate", "campaign", "communication", "task"}:
+            return [item for item in items if belongs_to_project(item, project_key)]
+        if kind == "activity":
+            bag = self._bag(org)
+            entity_ids = {
+                _txt(row.get("id"))
+                for row in bag["lead"] + bag["candidate"] + bag["campaign"] + bag["vacancy"]
+                if belongs_to_project(row, project_key)
+            }
+            return [
+                item
+                for item in items
+                if belongs_to_project(item, project_key)
+                or _txt(item.get("entity_id")) in entity_ids
+                or project_key in _txt(item.get("action")).lower()
+            ]
+        if kind == "vacancy":
+            bag = self._bag(org)
+            related_ids = {
+                _txt(row.get("vacancy_id"))
+                for row in bag["lead"] + bag["candidate"] + bag["campaign"]
+                if belongs_to_project(row, project_key) and _txt(row.get("vacancy_id"))
+            }
+            return [
+                item
+                for item in items
+                if belongs_to_project(item, project_key) or _txt(item.get("id")) in related_ids
+            ]
+        return [item for item in items if belongs_to_project(item, project_key)]
 
     def _pipeline_groups(self, candidates: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
         groups = {stage: [] for stage in PIPELINE_STAGES}
@@ -477,10 +552,14 @@ class RecruitingOpsService:
             "phone": _txt(body.get("phone")),
             "email": _txt(body.get("email")),
             "source": _txt(body.get("source")) or "manual",
+            "project_key": infer_project_key(
+                source=_txt(body.get("source")) or "manual",
+                project_key=_txt(body.get("project_key")) or None,
+            ),
             "campaign_id": _txt(body.get("campaign_id")) or None,
             "vacancy_id": vacancy,
             "vacancy": _txt(body.get("vacancy")) or vacancy,
-            "external_id": _txt(body.get("external_id")) or None,
+            "external_id": _txt(body.get("external_id") or body.get("reference") or body.get("reference_id")) or None,
             "assignee": _txt(body.get("assignee")) or None,
             "status": _lead_status(body.get("status"), "new"),
             "notes": _txt(body.get("notes")),
@@ -546,8 +625,10 @@ class RecruitingOpsService:
         email = _txt(body.get("email"))
         phone = _txt(body.get("phone"))
         if not name:
+            self._note_ingest_error("validation", "Укажите имя лида")
             return {"ok": False, "error": "validation", "message_ru": "Укажите имя лида"}
         if not email and not phone:
+            self._note_ingest_error("validation", "Укажите email или телефон")
             return {"ok": False, "error": "validation", "message_ru": "Укажите email или телефон"}
         org = _org(
             body.get("organization_id") or os.getenv("VANGUARD_ORGANIZATION_ID") or "ados",
@@ -555,7 +636,8 @@ class RecruitingOpsService:
         )
         await self.ensure_hydrated(org)
         vacancy = _txt(body.get("vacancy_id") or body.get("vacancy")) or None
-        external_id = _txt(body.get("external_id")) or None
+        external_id = _txt(body.get("external_id") or body.get("reference") or body.get("reference_id")) or None
+        self._ingest_log["last_check_at"] = _now()
         existing = self._find_duplicate(org, external_id=external_id, vacancy_id=vacancy)
         if existing:
             await self._activity(
@@ -567,12 +649,14 @@ class RecruitingOpsService:
                 role="platform_owner",
                 payload={"external_id": external_id, "vacancy_id": vacancy},
             )
+            self._note_ingest_success()
             return self._ok(item=existing, duplicate=True, already_exists=True)
         payload = dict(body)
         payload["name"] = name
         payload["first_name"] = first
         payload["last_name"] = last
         payload["source"] = _txt(body.get("source")) or "vanguard"
+        payload["project_key"] = VANGUARD_PROJECT_KEY
         payload["vacancy_id"] = vacancy
         payload["external_id"] = external_id
         created = await self.create_lead(
@@ -601,6 +685,9 @@ class RecruitingOpsService:
                     "storage": item.get("storage"),
                 },
             )
+            self._note_ingest_success()
+        else:
+            self._note_ingest_error(str(created.get("error") or "ingest_failed"), str(created.get("message_ru") or ""))
         return created
 
     async def update_lead(
@@ -706,6 +793,7 @@ class RecruitingOpsService:
             "phone": lead.get("phone"),
             "email": lead.get("email"),
             "source": lead.get("source"),
+            "project_key": lead.get("project_key") or infer_project_key(source=_txt(lead.get("source"))),
             "campaign_id": lead.get("campaign_id"),
             "vacancy_id": body.get("vacancy_id") or lead.get("vacancy_id"),
             "assignee": body.get("assignee") or lead.get("assignee"),
@@ -752,6 +840,10 @@ class RecruitingOpsService:
             "phone": _txt(body.get("phone")),
             "email": _txt(body.get("email")),
             "source": _txt(body.get("source")) or None,
+            "project_key": infer_project_key(
+                source=_txt(body.get("source")) or None,
+                project_key=_txt(body.get("project_key")) or None,
+            ),
             "campaign_id": _txt(body.get("campaign_id")) or None,
             "vacancy_id": _txt(body.get("vacancy_id")) or None,
             "assignee": _txt(body.get("assignee")) or None,
@@ -830,6 +922,7 @@ class RecruitingOpsService:
             "department": _txt(body.get("department")),
             "location": _txt(body.get("location")),
             "status": _txt(body.get("status")) or "open",
+            "project_key": infer_project_key(project_key=_txt(body.get("project_key")) or None),
             "notes": _txt(body.get("notes")),
             "data_mode": "REAL",
             "created_at": _now(),
@@ -862,6 +955,10 @@ class RecruitingOpsService:
             "tenant_id": org,
             "name": name,
             "source": _txt(body.get("source")) or "manual",
+            "project_key": infer_project_key(
+                source=_txt(body.get("source")) or "manual",
+                project_key=_txt(body.get("project_key")) or None,
+            ),
             "vacancy_id": _txt(body.get("vacancy_id")) or None,
             "status": _txt(body.get("status")) or "active",
             "notes": _txt(body.get("notes")),
@@ -980,8 +1077,198 @@ class RecruitingOpsService:
         )
         return self._ok(item=saved)
 
-    async def list_activity(self, organization_id: str, role: str | None = None) -> dict[str, Any]:
-        return await self.list_kind(organization_id, "activity", role)
+    def _note_ingest_success(self) -> None:
+        self._ingest_log["last_success_at"] = _now()
+        self._ingest_log["last_check_at"] = self._ingest_log["last_success_at"]
+
+    def _note_ingest_error(self, error: str, message: str) -> None:
+        self._ingest_log["last_error_at"] = _now()
+        self._ingest_log["last_error"] = {"error": error, "message_ru": message or error}
+        self._ingest_log["last_check_at"] = self._ingest_log["last_error_at"]
+
+    def _project_summaries(self, org: str, bag: dict[str, list[dict[str, Any]]]) -> list[dict[str, Any]]:
+        out = []
+        for spec in project_catalog():
+            key = spec["project_key"]
+            leads = [item for item in bag["lead"] if belongs_to_project(item, key)]
+            cands = [item for item in bag["candidate"] if belongs_to_project(item, key)]
+            last_lead = leads[0] if leads else None
+            url = vanguard_website_url() if key == VANGUARD_PROJECT_KEY else None
+            out.append(
+                {
+                    **spec,
+                    "organization_id": org,
+                    "leads": len(leads),
+                    "candidates": len(cands),
+                    "active_vacancies": self._active_vacancy_count(org, key),
+                    "last_application_at": (last_lead or {}).get("created_at"),
+                    "new_leads": len([item for item in leads if _lead_status(item.get("status")) == "new"]),
+                    "website_status": status_payload(STATUS_UNKNOWN if not url else STATUS_CONNECTED),
+                    "integration_status": status_payload(STATUS_UNKNOWN),
+                }
+            )
+        return out
+
+    def _active_vacancy_count(self, org: str, project_key: str) -> int:
+        items = self._filter_project_items(org, "vacancy", list(self._bag(org)["vacancy"]), project_key)
+        return len([item for item in items if _txt(item.get("status")).lower() in {"", "open", "active"}])
+
+    async def list_projects(self, organization_id: str, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        bag = self._bag(org)
+        items = []
+        for summary in self._project_summaries(org, bag):
+            integration = await self.project_integration(org, summary["project_key"], role)
+            items.append(
+                {
+                    **summary,
+                    "website_status": integration.get("website_status"),
+                    "integration_status": integration.get("overall"),
+                    "last_sync_at": integration.get("last_check_at"),
+                    "public_url": integration.get("website", {}).get("public_url"),
+                }
+            )
+        return self._ok(items=items)
+
+    async def project_overview(self, organization_id: str, project_key: str, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        spec = get_project(project_key)
+        if not spec:
+            return {"ok": False, "error": "not_found", "message_ru": "Проект не найден"}
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        key = spec["project_key"]
+        leads = [item for item in self._bag(org)["lead"] if belongs_to_project(item, key)]
+        cands = [item for item in self._bag(org)["candidate"] if belongs_to_project(item, key)]
+        today = _today()
+        today_leads = [item for item in leads if _date_only(item.get("created_at")) == today]
+        converted = [item for item in leads if _lead_status(item.get("status")) == "converted"]
+        conversion = round(len(converted) / len(leads), 4) if leads else None
+        last_lead = leads[0] if leads else None
+        analytics = await self.analytics(org, role, project=key)
+        stages = analytics.get("pipeline_stages") if analytics.get("ok") else {}
+        return self._ok(
+            project=spec,
+            relationship=[
+                {"id": "website", "label_ru": "Сайт Vanguard"},
+                {"id": "recruiting", "label_ru": "Рекрутинг"},
+                {"id": "leads", "label_ru": "Лиды"},
+                {"id": "candidates", "label_ru": "Кандидаты"},
+            ],
+            cards={
+                "new_leads": len([item for item in leads if _lead_status(item.get("status")) == "new"]),
+                "candidates": len(cands),
+                "active_vacancies": self._active_vacancy_count(org, key),
+                "applications_today": len(today_leads),
+                "lead_to_candidate": conversion,
+                "last_application_at": (last_lead or {}).get("created_at"),
+            },
+            recent_leads=leads[:10],
+            pipeline=stages,
+            funnel=analytics.get("funnel") if analytics.get("ok") else None,
+        )
+
+    async def project_integration(self, organization_id: str, project_key: str, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        spec = get_project(project_key)
+        if not spec:
+            return {"ok": False, "error": "not_found", "message_ru": "Проект не найден"}
+        self._ingest_log["last_check_at"] = _now()
+        from services.recruiting_ops.ingest_auth import resolve_ingest_secret
+
+        url = vanguard_website_url()
+        website_code = STATUS_UNKNOWN if not url else STATUS_CONNECTED
+        endpoint_code = STATUS_CONNECTED if resolve_ingest_secret() else (
+            STATUS_OFFLINE if is_production_runtime() else STATUS_DEGRADED
+        )
+        recruiting_code = STATUS_CONNECTED
+        db_code = await self._storage_probe()
+        stages = [
+            {"id": "website", "label_ru": "Сайт Vanguard", "code": status_payload(website_code)["code"], "status_label_ru": status_payload(website_code)["label_ru"]},
+            {"id": "vanguard_endpoint", "label_ru": "Серверный endpoint Vanguard", "code": status_payload(endpoint_code)["code"], "status_label_ru": status_payload(endpoint_code)["label_ru"]},
+            {"id": "recruiting_api", "label_ru": "Recruiting API", "code": status_payload(recruiting_code)["code"], "status_label_ru": status_payload(recruiting_code)["label_ru"]},
+            {"id": "database", "label_ru": "База данных", "code": status_payload(db_code)["code"], "status_label_ru": status_payload(db_code)["label_ru"]},
+        ]
+        codes = [row["code"] for row in stages]
+        if STATUS_OFFLINE in codes:
+            overall = STATUS_OFFLINE
+        elif STATUS_DEGRADED in codes:
+            overall = STATUS_DEGRADED
+        elif STATUS_UNKNOWN in codes:
+            overall = STATUS_DEGRADED if STATUS_CONNECTED in codes else STATUS_UNKNOWN
+        else:
+            overall = STATUS_CONNECTED
+        return self._ok(
+            project=spec,
+            overall=status_payload(overall),
+            website_status=status_payload(website_code),
+            integration_status=status_payload(overall),
+            stages=stages,
+            website={
+                "name": spec["name"],
+                "public_url": url,
+                "environment": "production" if is_production_runtime() else "development",
+            },
+            last_success_at=self._ingest_log.get("last_success_at"),
+            last_error=self._ingest_log.get("last_error"),
+            last_error_at=self._ingest_log.get("last_error_at"),
+            last_check_at=self._ingest_log.get("last_check_at"),
+        )
+
+    async def _storage_probe(self) -> str:
+        try:
+            from database.session import get_session
+            from sqlalchemy import text
+
+            async with get_session() as session:
+                await session.execute(text("SELECT 1"))
+            return STATUS_CONNECTED
+        except Exception:
+            return STATUS_DEGRADED if memory_fallback_allowed() else STATUS_OFFLINE
+
+    async def lookup_reference(
+        self,
+        organization_id: str,
+        query: str,
+        role: str | None = None,
+    ) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        needle = _txt(query).lower()
+        if not needle:
+            return self._ok(found=False, items=[], query=query)
+        hits = []
+        for item in self._bag(org)["lead"]:
+            fields = [
+                _txt(item.get("external_id")),
+                _txt(item.get("reference")),
+                _txt(item.get("id")),
+                _txt(item.get("email")),
+                _txt(item.get("name")),
+            ]
+            if any(needle == field.lower() or needle in field.lower() for field in fields if field):
+                hits.append(item)
+        return self._ok(found=bool(hits), items=hits, query=query)
+
+    async def list_activity(
+        self,
+        organization_id: str,
+        role: str | None = None,
+        *,
+        project: str | None = None,
+    ) -> dict[str, Any]:
+        return await self.list_kind(organization_id, "activity", role, project=project)
 
 
 _SVC: RecruitingOpsService | None = None

@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Input, Table, Skeleton } from "@/ui";
 import { Pagination } from "@/ui/Pagination";
 import { EmptyState } from "@/ui/EmptyState";
@@ -14,7 +14,7 @@ import { useOpsCabinetNavStore } from "@/shell/mobile";
 import { useIsMobile } from "@/shell/mobile/useIsMobile";
 import { useVerticalWorkspaceStore } from "@/vertical-workspace/verticalWorkspaceStore";
 
-export type OpsNavItem = { id: string; label: string; hidden?: boolean };
+export type OpsNavItem = { id: string; label: string; hidden?: boolean; href?: string };
 
 export type OpsColumn = { key: string; label: string };
 
@@ -81,6 +81,8 @@ export function BusinessCabinetShell({
   headerExtra,
 }: BusinessCabinetProps) {
   const { sub } = useParams<{ sub?: string }>();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const sectionId = params.get("view") || sub || defaultSection;
   const section = sections[sectionId] || sections[defaultSection] || Object.values(sections)[0];
@@ -103,7 +105,7 @@ export function BusinessCabinetShell({
       .map((item) => ({
         id: item.id,
         label: item.label,
-        href: item.id === defaultSection ? `/workspace/${verticalId}` : `/workspace/${verticalId}?view=${item.id}`,
+        href: item.href || (item.id === defaultSection ? `/workspace/${verticalId}` : `/workspace/${verticalId}?view=${item.id}`),
       }));
     useOpsCabinetNavStore.getState().register({
       verticalId,
@@ -145,11 +147,31 @@ export function BusinessCabinetShell({
   }, []);
 
   function go(id: string) {
+    const item = nav.find((entry) => entry.id === id);
+    if (item?.href) {
+      navigate(item.href);
+      return;
+    }
     const next = new URLSearchParams(params);
     if (id === defaultSection) next.delete("view");
     else next.set("view", id);
     next.delete("id");
     setParams(next);
+  }
+
+  function isNavActive(item: OpsNavItem) {
+    if (item.href) {
+      const [path, query] = item.href.split("?");
+      if (item.id === "projects") {
+        return location.pathname.startsWith(`/workspace/${verticalId}/projects`);
+      }
+      if (query) {
+        const view = new URLSearchParams(query).get("view");
+        return location.pathname === path && (params.get("view") || sub) === view;
+      }
+      return location.pathname === path && !params.get("view") && !sub;
+    }
+    return sectionId === item.id;
   }
 
   const statusOptions = useMemo(() => {
@@ -249,7 +271,7 @@ export function BusinessCabinetShell({
                   type="button"
                   className={cn(
                     "rounded-md px-2 py-1.5 text-left eds-type-small",
-                    sectionId === item.id
+                    sectionId === item.id || isNavActive(item)
                       ? "bg-[var(--eds-primary-soft)] text-[var(--eds-primary)]"
                       : "hover:bg-[var(--eds-primary-soft)]/40",
                   )}

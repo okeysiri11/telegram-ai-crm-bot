@@ -29,6 +29,11 @@ def _org(request: web.Request, body: dict | None = None) -> str:
     )
 
 
+def _project(request: web.Request) -> str | None:
+    raw = request.rel_url.query.get("project") or request.rel_url.query.get("project_key")
+    return str(raw).strip() if raw else None
+
+
 def _role(request: web.Request, body: dict | None = None) -> str:
     body = body or {}
     return str(
@@ -109,13 +114,13 @@ async def ops_dashboard_handler(request: web.Request) -> web.Response:
 
 async def ops_analytics_handler(request: web.Request) -> web.Response:
     svc = get_recruiting_ops_service()
-    result = await svc.analytics(_org(request), _role(request))
+    result = await svc.analytics(_org(request), _role(request), project=_project(request))
     return json_response(result, status=_status_for(result))
 
 
 async def ops_activity_handler(request: web.Request) -> web.Response:
     svc = get_recruiting_ops_service()
-    result = await svc.list_activity(_org(request), _role(request))
+    result = await svc.list_activity(_org(request), _role(request), project=_project(request))
     return json_response(result, status=_status_for(result))
 
 
@@ -124,7 +129,7 @@ async def ops_leads_handler(request: web.Request) -> web.Response:
     body = await _read_json(request) if request.method == "POST" else {}
     org, role = _org(request, body), _role(request, body)
     if request.method == "GET":
-        result = await svc.list_kind(org, "lead", role)
+        result = await svc.list_kind(org, "lead", role, project=_project(request))
         return json_response(result, status=_status_for(result))
     result = await svc.create_lead(org, body, role)
     return json_response(result, status=_status_for(result, created=True))
@@ -167,7 +172,7 @@ async def ops_candidates_handler(request: web.Request) -> web.Response:
     body = await _read_json(request) if request.method == "POST" else {}
     org, role = _org(request, body), _role(request, body)
     if request.method == "GET":
-        result = await svc.list_kind(org, "candidate", role)
+        result = await svc.list_kind(org, "candidate", role, project=_project(request))
         return json_response(result, status=_status_for(result))
     result = await svc.create_candidate(org, body, role)
     return json_response(result, status=_status_for(result, created=True))
@@ -186,7 +191,7 @@ async def ops_vacancies_handler(request: web.Request) -> web.Response:
     body = await _read_json(request) if request.method == "POST" else {}
     org, role = _org(request, body), _role(request, body)
     if request.method == "GET":
-        result = await svc.list_kind(org, "vacancy", role)
+        result = await svc.list_kind(org, "vacancy", role, project=_project(request))
         return json_response(result, status=_status_for(result))
     result = await svc.create_vacancy(org, body, role)
     return json_response(result, status=_status_for(result, created=True))
@@ -197,7 +202,7 @@ async def ops_campaigns_handler(request: web.Request) -> web.Response:
     body = await _read_json(request) if request.method == "POST" else {}
     org, role = _org(request, body), _role(request, body)
     if request.method == "GET":
-        result = await svc.list_kind(org, "campaign", role)
+        result = await svc.list_kind(org, "campaign", role, project=_project(request))
         return json_response(result, status=_status_for(result))
     result = await svc.create_campaign(org, body, role)
     return json_response(result, status=_status_for(result, created=True))
@@ -231,3 +236,30 @@ async def ops_communications_handler(request: web.Request) -> web.Response:
         return json_response(result, status=_status_for(result))
     result = await svc.log_communication(org, body, role)
     return json_response(result, status=_status_for(result, created=True))
+
+
+async def ops_projects_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    result = await svc.list_projects(_org(request), _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_project_overview_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    project_key = request.match_info.get("project_key") or ""
+    result = await svc.project_overview(_org(request), project_key, _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_project_integration_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    project_key = request.match_info.get("project_key") or ""
+    result = await svc.project_integration(_org(request), project_key, _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_lookup_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    query = str(request.rel_url.query.get("q") or request.rel_url.query.get("external_id") or "")
+    result = await svc.lookup_reference(_org(request), query, _role(request))
+    return json_response(result, status=_status_for(result))

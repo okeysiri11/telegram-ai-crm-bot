@@ -72,6 +72,7 @@ describe("Sprint Recruiting 1.0 cabinet", () => {
     const root = await screen.findByTestId("recruiting-business-cabinet");
     expect(root).toBeTruthy();
     const nav = root.querySelector('[aria-label="Разделы"]')?.textContent || "";
+    expect(nav).toMatch(/Проекты/);
     expect(nav).toMatch(/Лиды/);
     expect(nav).toMatch(/Кандидаты/);
     expect(nav).toMatch(/Вакансии/);

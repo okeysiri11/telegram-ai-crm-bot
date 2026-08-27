@@ -462,6 +462,7 @@ export const VERTICAL_WORKSPACES: VerticalDef[] = [
     legacyRoute: "/workspace/recruiting",
     nav: [
       { id: "home", label: "Главная", href: "/workspace/recruiting?view=home" },
+      { id: "projects", label: "Проекты", href: "/workspace/recruiting/projects" },
       { id: "leads", label: "Лиды", href: "/workspace/recruiting?view=leads" },
       { id: "candidates", label: "Кандидаты", href: "/workspace/recruiting?view=candidates" },
       { id: "vacancies", label: "Вакансии", href: "/workspace/recruiting?view=vacancies" },

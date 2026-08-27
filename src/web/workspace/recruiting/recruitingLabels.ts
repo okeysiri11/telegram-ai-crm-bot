@@ -1,14 +1,15 @@
 export const RECRUITING_NAV = [
-  { id: "home", label: "Главная" },
-  { id: "leads", label: "Лиды" },
-  { id: "candidates", label: "Кандидаты" },
-  { id: "vacancies", label: "Вакансии" },
-  { id: "pipeline", label: "Воронка" },
-  { id: "campaigns", label: "Кампании" },
-  { id: "tasks", label: "Задачи" },
-  { id: "comms", label: "Коммуникации" },
-  { id: "activity", label: "Активность" },
-  { id: "analytics", label: "Аналитика" },
+  { id: "home", label: "Главная", href: "/workspace/recruiting" },
+  { id: "projects", label: "Проекты", href: "/workspace/recruiting/projects" },
+  { id: "leads", label: "Лиды", href: "/workspace/recruiting?view=leads" },
+  { id: "candidates", label: "Кандидаты", href: "/workspace/recruiting?view=candidates" },
+  { id: "vacancies", label: "Вакансии", href: "/workspace/recruiting?view=vacancies" },
+  { id: "pipeline", label: "Воронка", href: "/workspace/recruiting?view=pipeline" },
+  { id: "campaigns", label: "Кампании", href: "/workspace/recruiting?view=campaigns" },
+  { id: "tasks", label: "Задачи", href: "/workspace/recruiting?view=tasks" },
+  { id: "comms", label: "Коммуникации", href: "/workspace/recruiting?view=comms" },
+  { id: "activity", label: "Активность", href: "/workspace/recruiting?view=activity" },
+  { id: "analytics", label: "Аналитика", href: "/workspace/recruiting?view=analytics" },
 ] as const;
 
 export const PIPELINE_STAGES = ["NEW", "QUALIFIED", "INTERVIEW", "APPROVED", "HIRED", "REJECTED"] as const;
