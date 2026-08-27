@@ -24,6 +24,9 @@ def record_to_dict(row: RecruitingOpsRecord) -> dict[str, Any]:
         data["archived_at"] = row.archived_at.isoformat()
         data["archived_by"] = row.archived_by
         data["archive_reason"] = row.archive_reason
+    data["durable"] = True
+    data["storage"] = data.get("storage") or "postgres"
+    data["persistence_mode"] = data.get("persistence_mode") or "POSTGRES"
     return data
 
 
@@ -78,6 +81,9 @@ class RecruitingOpsRepository:
         if "status" in patch:
             row.status = str(patch["status"])
         row.payload = payload
+        from sqlalchemy.orm.attributes import flag_modified
+
+        flag_modified(row, "payload")
         row.updated_at = datetime.now(timezone.utc)
         await self.session.flush()
         return row

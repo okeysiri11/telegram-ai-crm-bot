@@ -184,10 +184,10 @@ async def test_tracking_retries_then_deliver():
         return {**event, "id": "trk-1"}
 
     worker.enqueue({"event_id": "e1", "event_type": "page_view"})
-    first = await worker.tick(persist)
+    first = await worker.tick(persist, force=True)
     assert first == []
     assert worker.pending[0]["delivery_status"] == "RETRYING"
-    second = await worker.tick(persist)
+    second = await worker.tick(persist, force=True)
     assert second[0]["delivery_status"] == "DELIVERED"
 
 
@@ -199,9 +199,10 @@ async def test_tracking_terminal_failure():
 
     worker.enqueue({"event_id": "e-fail", "event_type": "page_view"})
     for _ in range(MAX_ATTEMPTS):
-        await worker.tick(persist)
-    assert worker.pending[0]["delivery_status"] == "FAILED"
+        await worker.tick(persist, force=True)
+    assert worker.pending[0]["delivery_status"] == "DEAD_LETTER"
     assert worker.pending[0]["attempt"] >= MAX_ATTEMPTS
+    assert worker.pending[0]["last_error"]
 
 
 async def test_messaging_journal_not_sent(client: TestClient):
@@ -239,7 +240,7 @@ async def test_ads_control_center_providers_not_connected(client: TestClient):
 
 async def test_health_reports_stores_and_worker(client: TestClient):
     body = await (await client.get(f"{OPS}/health")).json()
-    assert body["sprint"] in {"recruiting_1.5", "recruiting_1.6"}
+    assert body["sprint"] in {"recruiting_1.5", "recruiting_1.6", "recruiting_1.7"}
     assert body["rate_limit_store"]["backend"] in {"redis", "process_local"}
     assert body["replay_store"]["backend"] in {"redis", "process_local"}
     assert body["tracking_worker"]["enabled"] is True

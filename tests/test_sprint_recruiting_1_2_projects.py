@@ -72,12 +72,13 @@ async def test_projects_catalog_includes_vanguard(client: TestClient):
 
 async def test_vanguard_filter_and_lookup(client: TestClient):
     org = "ados"
+    ext = f"VG-TEST-{uuid.uuid4().hex[:10]}"
     raw, headers = _signed(
         {
             "first_name": "Vanguard Lead",
-            "email": "vg@example.com",
+            "email": f"vg-{uuid.uuid4().hex[:8]}@example.com",
             "source": "vanguard",
-            "external_id": "VG-TEST-1",
+            "external_id": ext,
             "vacancy_id": "vac-1",
         }
     )
@@ -89,7 +90,7 @@ async def test_vanguard_filter_and_lookup(client: TestClient):
 
     await client.post(
         f"{OPS}/leads",
-        json={"name": "Manual", "source": "manual", "email": "m@example.com"},
+        json={"name": "Manual", "source": "manual", "email": f"m-{uuid.uuid4().hex[:8]}@example.com"},
         headers=_hdr(org),
     )
 
@@ -110,7 +111,7 @@ async def test_vanguard_filter_and_lookup(client: TestClient):
     assert "tracking" in stage_ids
     assert integ["website"]["public_url"] is None
 
-    found = await (await client.get(f"{OPS}/lookup?q=VG-TEST-1", headers=_hdr(org))).json()
+    found = await (await client.get(f"{OPS}/lookup?q={ext}", headers=_hdr(org))).json()
     assert found["found"] is True
 
     missing = await (await client.get(f"{OPS}/lookup?q=VG-ZT9TH2", headers=_hdr(org))).json()

@@ -36,8 +36,11 @@ def classify_unconfigured_provider(event: dict[str, Any]) -> dict[str, Any]:
     out = dict(event)
     dest = destination_of(event)
     out["destination"] = dest
-    out["delivery_class"] = "provider_not_configured"
+    out["delivery_status"] = "WAITING_PROVIDER"
+    out["delivery_class"] = "waiting_provider"
     out["provider_status"] = "NOT_CONFIGURED"
     out["adapter"] = dest
-    out["message_ru"] = f"Провайдер {dest} не настроен; событие не отравляет ядро трекинга."
+    out["message_ru"] = (
+        f"Провайдер {dest} не настроен; событие сохранено и будет повторено после настройки."
+    )
     return out

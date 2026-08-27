@@ -61,8 +61,13 @@ def _status_for(result: dict, *, created: bool = False) -> int:
     return 201 if created else 200
 
 
-async def ops_health_handler(_request: web.Request) -> web.Response:
-    return json_response(get_recruiting_ops_service().health())
+async def ops_health_handler(request: web.Request) -> web.Response:
+    import os
+
+    svc = get_recruiting_ops_service()
+    await svc.ensure_hydrated(_org(request))
+    await svc.ensure_hydrated(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
+    return json_response(svc.health())
 
 
 async def ops_diagnostics_handler(_request: web.Request) -> web.Response:

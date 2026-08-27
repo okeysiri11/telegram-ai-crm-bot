@@ -33,6 +33,8 @@ async def client(app: web.Application):
 @pytest.fixture(autouse=True)
 def reset_ops(monkeypatch):
     monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.delenv("VANGUARD_WEBSITE_URL", raising=False)
+    monkeypatch.delenv("VANGUARD_PUBLIC_URL", raising=False)
     monkeypatch.delenv("VANGUARD_ANTIBOT_REQUIRED", raising=False)
     monkeypatch.setenv("VANGUARD_ANTIBOT_PROVIDER", "none")
     monkeypatch.setenv("VANGUARD_APPLY_RATE_LIMIT", "20")

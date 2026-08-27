@@ -28,6 +28,10 @@ type Diagnostics = {
     delivered?: number;
     retrying?: number;
     failed?: number;
+    pending?: number;
+    processing?: number;
+    waiting_provider?: number;
+    dead_letter?: number;
     provider_not_configured?: number;
     oldest_pending?: string | null;
     last_delivery?: string | null;
@@ -142,12 +146,18 @@ export function RecruitingInfraPage() {
       </div>
       <Card title="Трекинг">
         <dl className="grid grid-cols-2 gap-2 eds-type-small" data-testid="infra-tracking-counts">
-          <dt>delivered</dt>
-          <dd>{displayNum(tracking.delivered)}</dd>
+          <dt>pending</dt>
+          <dd>{displayNum(tracking.pending)}</dd>
+          <dt>processing</dt>
+          <dd>{displayNum(tracking.processing)}</dd>
           <dt>retrying</dt>
           <dd>{displayNum(tracking.retrying)}</dd>
-          <dt>failed</dt>
-          <dd>{displayNum(tracking.failed)}</dd>
+          <dt>waiting_provider</dt>
+          <dd>{displayNum(tracking.waiting_provider)}</dd>
+          <dt>delivered</dt>
+          <dd>{displayNum(tracking.delivered)}</dd>
+          <dt>dead_letter</dt>
+          <dd>{displayNum(tracking.dead_letter)}</dd>
           <dt>provider_not_configured</dt>
           <dd>{displayNum(tracking.provider_not_configured)}</dd>
           <dt>oldest_pending</dt>

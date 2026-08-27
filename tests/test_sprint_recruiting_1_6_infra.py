@@ -225,7 +225,7 @@ async def test_ops_diagnostics_api(client: TestClient):
     assert res.status == 200
     body = await res.json()
     assert body["ok"] is True
-    assert body["sprint"] == "recruiting_1.6"
+    assert body["sprint"] == "recruiting_1.7"
     components = body["components"]
     for key in (
         "postgresql",
@@ -255,7 +255,7 @@ async def test_ops_diagnostics_api(client: TestClient):
         assert store["shared"] is False
     assert body["tracking"]["provider_not_configured"] >= 0
     health = await (await client.get(f"{OPS}/health")).json()
-    assert health["sprint"] == "recruiting_1.6"
+    assert health["sprint"] == "recruiting_1.7"
 
 
 async def test_journal_communication_never_sent(client: TestClient):

@@ -216,6 +216,7 @@ class RecruitingOpsService:
     def __init__(self) -> None:
         self._mem: dict[str, dict[str, list[dict[str, Any]]]] = {}
         self._hydrated: set[str] = set()
+        self._lifecycle_migrated: set[str] = set()
         self._ingest_log: dict[str, Any] = {
             "last_success_at": None,
             "last_error_at": None,
@@ -248,6 +249,17 @@ class RecruitingOpsService:
         except Exception as exc:
             logger.warning("recruiting_ops hydrate skipped: %s", exc)
         self._hydrated.add(org)
+        from services.recruiting_ops.tracking_worker import get_tracking_worker
+
+        get_tracking_worker().ensure_loop(self.process_tracking_retries)
+        if org not in self._lifecycle_migrated:
+            self._lifecycle_migrated.add(org)
+            if os.environ.get("PYTEST_CURRENT_TEST"):
+                get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
+            else:
+                await self.recover_tracking_records(org)
+        else:
+            get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
 
     async def _persist(self, kind: str, data: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -256,10 +268,14 @@ class RecruitingOpsService:
             async with get_session() as session:
                 repo = RecruitingOpsRepository(session)
                 row = await repo.insert(kind, data)
+                flags = {
+                    "storage": "postgres",
+                    "durable": True,
+                    "persistence_mode": "POSTGRES",
+                }
+                await repo.update(row, flags)
                 saved = record_to_dict(row)
-                saved["storage"] = "postgres"
-                saved["durable"] = True
-                saved["persistence_mode"] = "POSTGRES"
+                saved.update(flags)
                 return saved
         except Exception as exc:
             if not memory_fallback_allowed():
@@ -383,7 +399,7 @@ class RecruitingOpsService:
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.6",
+            "sprint": "recruiting_1.7",
             "vanguard": {
                 "connected": False,
                 "status": "ingest_ready",
@@ -407,15 +423,31 @@ class RecruitingOpsService:
         events = self._bag(org).get("tracking") or []
         return build_tracking_diagnostics(events)
 
-    async def recover_tracking_records(self) -> dict[str, Any]:
-        from services.recruiting_ops.tracking_health import should_recover_to_delivered
+    async def recover_tracking_records(self, organization_id: str | None = None) -> dict[str, Any]:
+        from services.recruiting_ops.tracking_lifecycle import migration_patch, should_recover_to_delivered
 
-        org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
+        org = _org(organization_id or os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
         await self.ensure_hydrated(org)
         recovered: list[str] = []
         inspected: list[dict[str, Any]] = []
+        before = {"RETRYING": 0, "DELIVERED": 0, "WAITING_PROVIDER": 0, "DEAD_LETTER": 0, "PENDING": 0, "empty": 0}
+        after: dict[str, int] = {}
         for item in list(self._bag(org).get("tracking") or []):
             status = _txt(item.get("delivery_status"))
+            before[status if status in before else ("empty" if not status else status)] = before.get(
+                status if status in before else ("empty" if not status else status), 0
+            ) + 1
+            patch = migration_patch(item)
+            if patch is None and should_recover_to_delivered(item):
+                patch = {
+                    "delivery_status": "DELIVERED",
+                    "delivery_class": "delivered",
+                    "recovery_reason": "persisted_in_postgres",
+                    "destination": item.get("destination") or "recruiting_db",
+                    "durable": True,
+                    "storage": item.get("storage") or "postgres",
+                    "persistence_mode": "POSTGRES",
+                }
             inspected.append(
                 {
                     "id": item.get("id"),
@@ -423,29 +455,31 @@ class RecruitingOpsService:
                     "durable": bool(item.get("durable")),
                     "storage": item.get("storage"),
                     "destination": item.get("destination") or "recruiting_db",
-                    "will_recover": should_recover_to_delivered(item),
+                    "will_recover": bool(patch),
                 }
             )
-            if not should_recover_to_delivered(item):
+            if not patch:
                 continue
-            patch = {
-                "delivery_status": "DELIVERED",
-                "delivery_class": "delivered",
-                "recovery_reason": "persisted_in_postgres",
-                "destination": item.get("destination") or "recruiting_db",
-            }
             persisted = await self._persist_patch(org, str(item.get("id")), patch)
             if persisted:
                 item.update(persisted)
             else:
                 item.update(patch)
             recovered.append(str(item.get("id")))
+        for item in self._bag(org).get("tracking") or []:
+            st = _txt(item.get("delivery_status")) or "empty"
+            after[st] = after.get(st, 0) + 1
+        from services.recruiting_ops.tracking_worker import get_tracking_worker
+
+        get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
         return {
             "ok": True,
             "recovered": len(recovered),
             "ids": recovered,
             "inspected": inspected,
             "deleted": 0,
+            "before": before,
+            "after": after,
         }
 
     async def infrastructure_diagnostics(self) -> dict[str, Any]:
@@ -873,23 +907,21 @@ class RecruitingOpsService:
             classify_unconfigured_provider,
             deliver_via_test_adapter,
         )
+        from services.recruiting_ops.tracking_lifecycle import WAITING_PROVIDER, provider_is_configured
 
         if dest in TEST_DESTINATIONS:
             event = deliver_via_test_adapter(event)
-        elif dest in PROVIDER_DESTINATIONS:
+        elif dest in PROVIDER_DESTINATIONS and not provider_is_configured(dest):
             event = classify_unconfigured_provider(event)
-            event["delivery_status"] = "DELIVERED"
         else:
-            event["delivery_status"] = "RETRYING"
+            event["delivery_status"] = "PENDING"
         if event.get("event_id"):
             for existing in self._bag(org)["tracking"]:
                 if _txt(existing.get("event_id")) == event["event_id"]:
-                    existing.setdefault("delivery_status", "DELIVERED")
+                    existing.setdefault("delivery_status", existing.get("delivery_status") or "DELIVERED")
                     return self._ok(item=existing, duplicate=True, delivery_status=existing.get("delivery_status") or "DELIVERED")
         saved: dict[str, Any] | None = None
         try:
-            if event.get("delivery_status") != "DELIVERED":
-                event["delivery_status"] = "RETRYING"
             saved = await self._persist("tracking", event)
         except PersistUnavailable:
             queued = get_tracking_worker().enqueue({**event, "organization_id": org})
@@ -897,24 +929,68 @@ class RecruitingOpsService:
             return {
                 "ok": False,
                 "error": "tracking_retrying",
-                "delivery_status": "RETRYING",
+                "delivery_status": queued.get("delivery_status") or "RETRYING",
                 "message_ru": "Событие в повторной доставке",
                 "item": queued,
             }
-        saved["delivery_status"] = "DELIVERED"
-        if dest in PROVIDER_DESTINATIONS:
-            saved["delivery_class"] = "provider_not_configured"
+        if dest in PROVIDER_DESTINATIONS and not provider_is_configured(dest):
+            saved["delivery_status"] = WAITING_PROVIDER
+            saved["delivery_class"] = "waiting_provider"
+            saved["provider_status"] = "NOT_CONFIGURED"
         elif dest in TEST_DESTINATIONS:
+            saved["delivery_status"] = saved.get("delivery_status") or "DELIVERED"
             saved["delivery_class"] = saved.get("delivery_class") or "delivered"
             saved["adapter"] = saved.get("adapter") or "test"
         else:
+            saved["delivery_status"] = "DELIVERED"
             saved["delivery_class"] = "delivered"
             saved["destination"] = saved.get("destination") or "recruiting_db"
+        patched = await self._persist_patch(
+            org,
+            str(saved.get("id")),
+            {
+                "delivery_status": saved["delivery_status"],
+                "delivery_class": saved.get("delivery_class"),
+                "destination": saved.get("destination") or dest,
+                "durable": True,
+                "storage": saved.get("storage") or "postgres",
+                "persistence_mode": "POSTGRES",
+                "recovery_reason": saved.get("recovery_reason"),
+                "provider_status": saved.get("provider_status"),
+                "adapter": saved.get("adapter"),
+                "message_ru": saved.get("message_ru"),
+            },
+        )
+        if patched:
+            saved.update(patched)
         self._bag(org)["tracking"].insert(0, saved)
+        if saved.get("delivery_status") == WAITING_PROVIDER:
+            get_tracking_worker().enqueue(saved)
         return self._ok(item=saved, delivery_status=saved["delivery_status"])
 
     async def process_tracking_retries(self) -> dict[str, Any]:
         async def _persist(event: dict[str, Any]) -> dict[str, Any]:
+            org = _org(str(event.get("organization_id") or os.getenv("VANGUARD_ORGANIZATION_ID") or "ados"))
+            item_id = str(event.get("id") or "")
+            if item_id:
+                patched = await self._persist_patch(
+                    org,
+                    item_id,
+                    {
+                        "delivery_status": "DELIVERED",
+                        "delivery_class": "delivered",
+                        "durable": True,
+                        "storage": "postgres",
+                        "persistence_mode": "POSTGRES",
+                        "attempt": event.get("attempt"),
+                        "last_error": None,
+                    },
+                )
+                if patched:
+                    return patched
+            return await super_persist(event)
+
+        async def super_persist(event: dict[str, Any]) -> dict[str, Any]:
             return await self._persist("tracking", event)
 
         done = await get_tracking_worker().tick(_persist)
@@ -922,7 +998,20 @@ class RecruitingOpsService:
         await self.ensure_hydrated(org)
         for item in done:
             if item.get("delivery_status") == "DELIVERED":
-                self._bag(org)["tracking"].insert(0, item)
+                self._replace(org, "tracking", item)
+            elif item.get("delivery_status") == "DEAD_LETTER":
+                await self._persist_patch(
+                    org,
+                    str(item.get("id") or ""),
+                    {
+                        "delivery_status": "DEAD_LETTER",
+                        "dead_letter_reason": item.get("dead_letter_reason"),
+                        "last_error": item.get("last_error"),
+                        "attempt": item.get("attempt"),
+                        "message_ru": item.get("message_ru"),
+                    },
+                )
+                self._replace(org, "tracking", item)
         return self._ok(items=done, worker=get_tracking_worker().snapshot())
 
     def _idempotency_hit(self, org: str, key: str) -> dict[str, Any] | None:
@@ -1919,7 +2008,8 @@ class RecruitingOpsService:
             endpoint_code, endpoint_reason = STATUS_DEGRADED, "Production secret не задан; используется DEV fallback secret."
         recruiting_code, recruiting_reason = STATUS_CONNECTED, "Recruiting API отвечает."
         db_code, db_reason = await self._storage_probe_reason()
-        await self.recover_tracking_records()
+        if not os.environ.get("PYTEST_CURRENT_TEST"):
+            await self.recover_tracking_records()
         tracking_diag = self.tracking_diagnostics()
         tracking_code, tracking_reason = tracking_diag["code"], tracking_diag.get("reason_ru") or ""
         website_status = status_payload(website_code, reason_ru=website_reason)

@@ -32,7 +32,7 @@ const fetchMock = vi.fn(async (url: string) => {
           anti_bot: { code: "NOT_CONFIGURED", label_ru: "Не настроено", tone: "info" },
           ci_e2e: { code: "NOT_CONFIGURED", label_ru: "Не настроено", tone: "info" },
         },
-        tracking: { delivered: 2, retrying: 0, failed: 0, provider_not_configured: 1, oldest_pending: null, last_delivery: "2026-08-27" },
+        tracking: { delivered: 2, retrying: 0, failed: 0, pending: 0, processing: 0, waiting_provider: 1, dead_letter: 0, provider_not_configured: 1, oldest_pending: null, last_delivery: "2026-08-27" },
       }),
     };
   }
@@ -69,5 +69,7 @@ describe("Sprint Recruiting 1.6 infrastructure page", () => {
     expect(screen.getByText("Google Ads")).toBeTruthy();
     expect(screen.getByText("TikTok Ads")).toBeTruthy();
     expect(screen.getByTestId("infra-tracking-counts").textContent).toContain("provider_not_configured");
+    expect(screen.getByTestId("infra-tracking-counts").textContent).toContain("waiting_provider");
+    expect(screen.getByTestId("infra-tracking-counts").textContent).toContain("dead_letter");
   });
 });
