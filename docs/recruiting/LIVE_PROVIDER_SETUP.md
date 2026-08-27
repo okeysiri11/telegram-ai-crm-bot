@@ -67,14 +67,15 @@ Telegram is **intentionally frozen / disabled** in Recruiting.
 
 ## WhatsApp
 
-1. Meta WhatsApp Cloud API (business + phone number).
-2. Create WhatsApp product; phone number ID; access token; webhook verify token.
-3. Env names: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, optional `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_VERIFY_TOKEN`.
-4. Webhook URL: `https://ados-web.onrender.com/api/recruiting-ops/v1/webhooks/whatsapp` (GET verify + POST statuses).
-5. `whatsapp_business_messaging` as granted on the token.
-6. Recruiting → Интеграции → WhatsApp → Настроить.
-7. **Проверить соединение**.
-8. Success: **Подключено**. Webhook events appear only when Meta actually posts them.
+1. Meta WhatsApp Cloud API (WhatsApp product on a Meta app + business phone number).
+2. From Meta obtain: `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_VERIFY_TOKEN`. Optional `WHATSAPP_APP_SECRET` for webhook signatures. `WHATSAPP_TOKEN` is an accepted alias for the access token.
+3. Enter values in **Recruiting → Интеграции → WhatsApp → Настроить**, or as Render/server env. Do not paste tokens into chat or git.
+4. Webhook URL (production): `https://ados-web.onrender.com/api/recruiting-ops/v1/webhooks/whatsapp`
+5. Local webhook: `http://127.0.0.1:8080/api/recruiting-ops/v1/webhooks/whatsapp`
+6. **Проверить соединение** — Graph health only, no outbound message.
+7. Success: **Подключено / CONNECTED** only after a real authenticated Meta response. Missing credentials stay **Не настроено / NOT_CONFIGURED**.
+8. Outbound send always requires a human confirmation. AI draft does not send. Provider accept ≠ delivered.
+9. Full owner steps: `docs/recruiting/WHATSAPP_PROVIDER_SETUP.md`.
 
 ---
 

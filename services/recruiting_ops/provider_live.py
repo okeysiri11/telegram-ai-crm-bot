@@ -188,11 +188,17 @@ def live_health(provider: str) -> dict[str, Any]:
         packed = {**result, "ok": ok}
         return _from_http(key, packed, identity=identity)
     if key == "whatsapp":
-        token = _secret("whatsapp", "access_token", "WHATSAPP_TOKEN")
+        token = _secret("whatsapp", "access_token", "WHATSAPP_TOKEN", "WHATSAPP_ACCESS_TOKEN")
         phone = _public("whatsapp", "phone_number_id", "WHATSAPP_PHONE_NUMBER_ID")
         if not token:
+            from services.recruiting_ops.whatsapp_ops import record_health_metric
+
+            record_health_metric("NOT_CONFIGURED")
             return _not_configured(key)
         if not phone:
+            from services.recruiting_ops.whatsapp_ops import record_health_metric
+
+            record_health_metric("ERROR")
             return adapter_result(ok=False, error="INVALID_ACCOUNT", status="ERROR", connected=False, mode="LIVE", message_ru="Не задан phone number id.")
         result = provider_request(
             "GET",
@@ -201,7 +207,11 @@ def live_health(provider: str) -> dict[str, Any]:
         )
         data = result.get("json") if isinstance(result.get("json"), dict) else {}
         identity = {"id": data.get("id") or phone, "name": data.get("verified_name"), "phone": data.get("display_phone_number")}
-        return _from_http(key, result, identity=identity)
+        packed = _from_http(key, result, identity=identity)
+        from services.recruiting_ops.whatsapp_ops import record_health_metric
+
+        record_health_metric("CONNECTED" if packed.get("connected") else "ERROR", packed.get("latency_ms"))
+        return packed
     if key == "email":
         return smtp_health()
     return _not_configured(key)
@@ -499,21 +509,38 @@ def live_send_message(provider: str, *, to: str, text: str, subject: str = "") -
         out["provider_message_id"] = inner.get("message_id")
         return out
     if key == "whatsapp":
-        token = _secret("whatsapp", "access_token", "WHATSAPP_TOKEN")
+        from services.observability import inc_metric
+        from services.recruiting_ops.provider_http import MAX_ATTEMPTS
+        from services.recruiting_ops.whatsapp_ops import record_health_metric
+
+        token = _secret("whatsapp", "access_token", "WHATSAPP_TOKEN", "WHATSAPP_ACCESS_TOKEN")
         phone = _public("whatsapp", "phone_number_id", "WHATSAPP_PHONE_NUMBER_ID")
         if not token or not phone:
+            record_health_metric("NOT_CONFIGURED")
             return _not_configured(key)
+        inc_metric("whatsapp_send_attempt_total")
         result = provider_request(
             "POST",
             f"https://graph.facebook.com/{graph_version()}/{phone}/messages",
             headers={"Authorization": f"Bearer {token}"},
             json_body={"messaging_product": "whatsapp", "to": to, "type": "text", "text": {"body": text}},
+            attempts=MAX_ATTEMPTS,
         )
         data = result.get("json") if isinstance(result.get("json"), dict) else {}
         messages = data.get("messages") if isinstance(data.get("messages"), list) else []
         out = _from_http(key, result)
-        out["sent"] = bool(result.get("ok"))
+        accepted = bool(result.get("ok"))
+        out["sent"] = accepted
+        out["delivered"] = False
+        out["delivery"] = "accepted" if accepted else None
         out["provider_message_id"] = (messages[0] or {}).get("id") if messages else None
+        if result.get("error") == "RATE_LIMITED" or int(result.get("status") or 0) == 429:
+            inc_metric("whatsapp_rate_limited_total")
+        if accepted:
+            inc_metric("whatsapp_send_success_total")
+        else:
+            inc_metric("whatsapp_send_failure_total")
+        record_health_metric("CONNECTED" if accepted else "ERROR", result.get("latency_ms"))
         return out
     if key == "email":
         from services.recruiting_ops.email_smtp import send_smtp_message
@@ -526,3 +553,27 @@ def live_send_message(provider: str, *, to: str, text: str, subject: str = "") -
             factory=_SMTP_FACTORY,
         )
     return adapter_result(ok=False, error="UNSUPPORTED", sent=False)
+
+
+def live_list_whatsapp_templates() -> dict[str, Any]:
+    token = _secret("whatsapp", "access_token", "WHATSAPP_TOKEN", "WHATSAPP_ACCESS_TOKEN")
+    waba = _public("whatsapp", "business_account_id", "WHATSAPP_BUSINESS_ACCOUNT_ID")
+    if not token:
+        return adapter_result(ok=False, error=NOT_CONFIGURED, status="NOT_CONFIGURED", items=[], provider="whatsapp")
+    if not waba:
+        return adapter_result(ok=True, status="CONFIGURING", items=[], provider="whatsapp", message_ru="Business account id не задан — шаблоны недоступны.")
+    result = provider_request(
+        "GET",
+        f"https://graph.facebook.com/{graph_version()}/{waba}/message_templates",
+        query={"access_token": token, "limit": 20},
+    )
+    data = result.get("json") if isinstance(result.get("json"), dict) else {}
+    rows = data.get("data") if isinstance(data.get("data"), list) else []
+    items = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        items.append({"id": row.get("id"), "name": row.get("name"), "status": row.get("status"), "language": row.get("language")})
+    packed = _from_http("whatsapp", result)
+    packed["items"] = items
+    return packed

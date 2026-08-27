@@ -23,6 +23,16 @@ _METRICS: dict[str, float] = {
     "email_rate_limited_total": 0,
     "email_provider_health": 0,
     "email_send_latency": 0,
+    "whatsapp_send_attempt_total": 0,
+    "whatsapp_send_success_total": 0,
+    "whatsapp_send_failure_total": 0,
+    "whatsapp_webhook_received_total": 0,
+    "whatsapp_webhook_duplicate_total": 0,
+    "whatsapp_message_delivered_total": 0,
+    "whatsapp_message_read_total": 0,
+    "whatsapp_provider_health": 0,
+    "whatsapp_rate_limited_total": 0,
+    "whatsapp_send_latency": 0,
 }
 
 _METRIC_META: dict[str, tuple[str, str]] = {
@@ -38,6 +48,16 @@ _METRIC_META: dict[str, tuple[str, str]] = {
     "email_rate_limited_total": ("counter", "Recruiting SMTP rate-limit hits"),
     "email_provider_health": ("gauge", "Recruiting SMTP health 1=up 0=not configured -1=error"),
     "email_send_latency": ("gauge", "Last Recruiting SMTP send latency milliseconds"),
+    "whatsapp_send_attempt_total": ("counter", "Recruiting WhatsApp send attempts"),
+    "whatsapp_send_success_total": ("counter", "Recruiting WhatsApp accepted sends"),
+    "whatsapp_send_failure_total": ("counter", "Recruiting WhatsApp send failures"),
+    "whatsapp_webhook_received_total": ("counter", "Recruiting WhatsApp webhooks received"),
+    "whatsapp_webhook_duplicate_total": ("counter", "Recruiting WhatsApp duplicate webhooks"),
+    "whatsapp_message_delivered_total": ("counter", "Recruiting WhatsApp delivered receipts"),
+    "whatsapp_message_read_total": ("counter", "Recruiting WhatsApp read receipts"),
+    "whatsapp_provider_health": ("gauge", "Recruiting WhatsApp health 1=up 0=not configured -1=error"),
+    "whatsapp_rate_limited_total": ("counter", "Recruiting WhatsApp rate-limit hits"),
+    "whatsapp_send_latency": ("gauge", "Last Recruiting WhatsApp send latency milliseconds"),
 }
 
 

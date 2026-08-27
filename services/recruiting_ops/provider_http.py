@@ -49,7 +49,7 @@ def _default_transport(method: str, url: str, headers: dict[str, str], body: byt
                 parsed = json.loads(text) if text else None
             except json.JSONDecodeError:
                 parsed = None
-            return {"status": int(response.status), "text": text, "json": parsed, "ok": 200 <= int(response.status) < 300}
+            return {"status": int(response.status), "text": text, "json": parsed, "ok": 200 <= int(response.status) < 300, "retry_after": None}
     except urllib.error.HTTPError as exc:
         raw = exc.read()
         text = raw.decode("utf-8", errors="replace") if raw else str(exc)
@@ -58,9 +58,14 @@ def _default_transport(method: str, url: str, headers: dict[str, str], body: byt
             parsed = json.loads(text) if text else None
         except json.JSONDecodeError:
             parsed = None
-        return {"status": int(exc.code), "text": text, "json": parsed, "ok": False}
+        retry_after = None
+        try:
+            retry_after = exc.headers.get("Retry-After") if exc.headers else None
+        except Exception:
+            retry_after = None
+        return {"status": int(exc.code), "text": text, "json": parsed, "ok": False, "retry_after": retry_after}
     except Exception as exc:
-        return {"status": 0, "text": type(exc).__name__, "json": None, "ok": False}
+        return {"status": 0, "text": type(exc).__name__, "json": None, "ok": False, "retry_after": None}
 
 
 def backoff_seconds(attempt: int) -> int:
@@ -100,7 +105,14 @@ def provider_request(
         if last.get("ok") or status not in {429, 500, 502, 503, 0}:
             break
         if attempt < tries and status in {429, 500, 502, 503, 0}:
-            time.sleep(min(0.05, backoff_seconds(attempt) / 100) if _TRANSPORT else min(1.0, backoff_seconds(attempt) / 10))
+            wait = min(0.05, backoff_seconds(attempt) / 100) if _TRANSPORT else min(1.0, backoff_seconds(attempt) / 10)
+            raw_retry = last.get("retry_after")
+            if status == 429 and raw_retry not in {None, ""}:
+                try:
+                    wait = min(2.0 if not _TRANSPORT else 0.05, float(raw_retry))
+                except (TypeError, ValueError):
+                    pass
+            time.sleep(wait)
     latency = int((time.perf_counter() - started) * 1000)
     ok = bool(last.get("ok"))
     error_code = None if ok else classify_http_error(last.get("status"), last.get("json") or last.get("text"))
@@ -117,4 +129,5 @@ def provider_request(
         "fake_data": False,
         "live": _TRANSPORT is None,
         "mocked_http": _TRANSPORT is not None,
+        "retry_after": last.get("retry_after"),
     }

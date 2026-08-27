@@ -458,9 +458,24 @@ async def ops_outbound_decide_handler(request: web.Request) -> web.Response:
 
 
 async def ops_whatsapp_webhook_handler(request: web.Request) -> web.Response:
-    body = await _read_json(request) if request.method == "POST" else {}
+    raw = await request.read() if request.method == "POST" else b""
+    body: dict = {}
+    if raw:
+        try:
+            import json as _json
+
+            parsed = _json.loads(raw.decode("utf-8"))
+            body = parsed if isinstance(parsed, dict) else {}
+        except Exception:
+            body = {}
     query = dict(request.rel_url.query)
-    result = await get_recruiting_ops_service().whatsapp_webhook(method=request.method, query=query, body=body)
+    result = await get_recruiting_ops_service().whatsapp_webhook(
+        method=request.method,
+        query=query,
+        body=body,
+        raw=raw or None,
+        signature=request.headers.get("X-Hub-Signature-256"),
+    )
     if request.method == "GET" and result.get("verified"):
         return web.Response(text=str(result.get("challenge") or ""), content_type="text/plain")
     return json_response(result, status=_status_for(result))
@@ -494,3 +509,27 @@ async def ops_candidate_email_send_handler(request: web.Request) -> web.Response
     candidate_id = request.match_info.get("candidate_id") or ""
     result = await get_recruiting_ops_service().send_candidate_email(_org(request, body), candidate_id, body, _role(request, body))
     return json_response(result, status=_status_for(result, created=bool(result.get("ok") and not result.get("duplicate"))))
+
+
+async def ops_whatsapp_conversations_handler(request: web.Request) -> web.Response:
+    candidate_id = request.rel_url.query.get("candidate_id")
+    result = await get_recruiting_ops_service().list_whatsapp_conversations(_org(request), _role(request), candidate_id=candidate_id)
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_whatsapp_templates_handler(request: web.Request) -> web.Response:
+    result = await get_recruiting_ops_service().list_whatsapp_templates(_org(request), _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_whatsapp_ai_draft_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    result = await get_recruiting_ops_service().draft_whatsapp_ai(_org(request, body), body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_candidate_whatsapp_send_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    candidate_id = request.match_info.get("candidate_id") or ""
+    result = await get_recruiting_ops_service().send_candidate_whatsapp(_org(request, body), candidate_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))

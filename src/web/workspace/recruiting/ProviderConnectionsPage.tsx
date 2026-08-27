@@ -125,13 +125,11 @@ export function ProviderConnectionsPage() {
       <div className="grid gap-3 md:grid-cols-2" data-testid="provider-connection-grid">
         {items.map((card) => {
           const frozen = Boolean(card.frozen) || card.status === "DISABLED";
-          const emailStatusId =
-            card.provider === "email"
-              ? card.status === "CONNECTED"
-                ? "email-status-connected"
-                : card.status === "ERROR"
-                  ? "email-status-error"
-                  : "email-status-not-configured"
+          const messagingStatusId =
+            card.provider === "email" || card.provider === "whatsapp"
+              ? `${card.provider}-status-${
+                  card.status === "CONNECTED" ? "connected" : card.status === "ERROR" ? "error" : "not-configured"
+                }`
               : undefined;
           return (
           <Card key={card.provider} title={card.label || card.provider || ""}>
@@ -146,8 +144,8 @@ export function ProviderConnectionsPage() {
                   </span>
                 ) : null}
               </div>
-              {emailStatusId ? (
-                <p className="mt-1 eds-type-helper" data-testid={emailStatusId}>
+              {messagingStatusId ? (
+                <p className="mt-1 eds-type-helper" data-testid={messagingStatusId}>
                   {card.status_label_ru || card.status}
                 </p>
               ) : null}
@@ -197,7 +195,13 @@ export function ProviderConnectionsPage() {
                 <Button
                   size="sm"
                   variant="secondary"
-                  data-testid={card.provider === "email" ? "email-check-connection" : undefined}
+                  data-testid={
+                    card.provider === "email"
+                      ? "email-check-connection"
+                      : card.provider === "whatsapp"
+                        ? "whatsapp-check-connection"
+                        : undefined
+                  }
                   onClick={() => void act(card.provider || "", "test")}
                 >
                   Проверить соединение

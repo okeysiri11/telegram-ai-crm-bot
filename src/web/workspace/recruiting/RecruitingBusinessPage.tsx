@@ -25,6 +25,7 @@ import {
   ruLeadStatus,
 } from "./recruitingLabels";
 import { CandidateEmailComposer } from "./CandidateEmailComposer";
+import { WhatsAppConversation } from "./WhatsAppConversation";
 
 type Row = Record<string, unknown>;
 
@@ -98,6 +99,7 @@ export function RecruitingBusinessPage() {
   const [commForm, setCommForm] = useState({ channel: "PHONE", body: "", lead_id: "", candidate_id: "" });
   const [noteForm, setNoteForm] = useState({ lead_id: "", notes: "" });
   const [emailCandidate, setEmailCandidate] = useState<Row | null>(null);
+  const [whatsappCandidate, setWhatsappCandidate] = useState<Row | null>(null);
 
   const headers = useMemo(
     () => ({
@@ -419,19 +421,36 @@ export function RecruitingBusinessPage() {
       emptyDescription: "Квалифицируйте лид и преобразуйте его в кандидата — он появится в воронке.",
       rowActions: caps.canOperate
         ? (row) => (
-            <Button size="sm" variant="secondary" onClick={() => setEmailCandidate(bundle.candidates.find((c) => String(c.id) === String(row.id)) || row)}>
-              Письмо
-            </Button>
+            <div className="flex flex-wrap gap-1">
+              <Button size="sm" variant="secondary" onClick={() => setEmailCandidate(bundle.candidates.find((c) => String(c.id) === String(row.id)) || row)}>
+                Письмо
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => setWhatsappCandidate(bundle.candidates.find((c) => String(c.id) === String(row.id)) || row)}>
+                WhatsApp
+              </Button>
+            </div>
           )
         : undefined,
-      panel: emailCandidate ? (
-        <CandidateEmailComposer
-          candidateId={String(emailCandidate.id || "")}
-          candidateName={pick(emailCandidate, "name")}
-          candidateEmail={pick(emailCandidate, "email")}
-          headers={headers}
-        />
-      ) : null,
+      panel: (
+        <div className="grid gap-3">
+          {emailCandidate ? (
+            <CandidateEmailComposer
+              candidateId={String(emailCandidate.id || "")}
+              candidateName={pick(emailCandidate, "name")}
+              candidateEmail={pick(emailCandidate, "email")}
+              headers={headers}
+            />
+          ) : null}
+          {whatsappCandidate ? (
+            <WhatsAppConversation
+              candidateId={String(whatsappCandidate.id || "")}
+              candidateName={pick(whatsappCandidate, "name")}
+              candidatePhone={pick(whatsappCandidate, "phone")}
+              headers={headers}
+            />
+          ) : null}
+        </div>
+      ),
     },
     vacancies: {
       id: "vacancies",
@@ -647,7 +666,7 @@ export function RecruitingBusinessPage() {
     comms: {
       id: "comms",
       title: "Коммуникации",
-      description: "Журнал вручную. Telegram/WhatsApp/Email ещё не отправляют сообщения.",
+      description: "Журнал вручную. WhatsApp — отдельный диалог с подтверждением человеком. Telegram заморожен.",
       columns: [
         { key: "channel", label: "Канал" },
         { key: "body", label: "Запись" },

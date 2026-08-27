@@ -80,6 +80,7 @@ WIZARD_FIELDS: dict[str, list[dict[str, Any]]] = {
         {"id": "phone_number_id", "label_ru": "Phone identifier", "secret": False, "required": True},
         {"id": "access_token", "label_ru": "API token", "secret": True, "required": True},
         {"id": "verify_token", "label_ru": "Webhook verify token", "secret": True, "required": False},
+        {"id": "app_secret", "label_ru": "App Secret (подпись webhook)", "secret": True, "required": False},
     ],
     "email": [
         {"id": "provider_type", "label_ru": "Тип провайдера", "secret": False, "required": True},

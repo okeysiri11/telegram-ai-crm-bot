@@ -20,7 +20,7 @@ SECRET_FIELDS = {
     "google": ("client_secret", "refresh_token", "developer_token"),
     "tiktok": ("access_token", "app_secret"),
     "telegram": ("bot_token",),
-    "whatsapp": ("access_token", "verify_token"),
+    "whatsapp": ("access_token", "verify_token", "app_secret"),
     "email": ("smtp_password", "api_key"),
 }
 
@@ -157,6 +157,9 @@ def _env_name(provider: str, field: str) -> str | None:
         ("telegram", "bot_token"): "VANGUARD_TELEGRAM_BOT_TOKEN",
         ("whatsapp", "access_token"): "WHATSAPP_TOKEN",
         ("whatsapp", "verify_token"): "WHATSAPP_VERIFY_TOKEN",
+        ("whatsapp", "phone_number_id"): "WHATSAPP_PHONE_NUMBER_ID",
+        ("whatsapp", "business_account_id"): "WHATSAPP_BUSINESS_ACCOUNT_ID",
+        ("whatsapp", "app_secret"): "WHATSAPP_APP_SECRET",
         ("email", "smtp_password"): "SMTP_PASSWORD",
         ("email", "smtp_host"): "SMTP_HOST",
         ("email", "smtp_user"): "SMTP_USER",

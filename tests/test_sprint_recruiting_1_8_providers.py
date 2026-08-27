@@ -277,7 +277,7 @@ async def test_automation_and_ai_api(client: TestClient):
 
 async def test_health_still_green_with_providers_not_configured(client: TestClient):
     health = await (await client.get(f"{OPS}/health")).json()
-    assert health["sprint"] in {"recruiting_1.8", "recruiting_1.9", "recruiting_1.10"}
+    assert health["sprint"] in {"recruiting_1.8", "recruiting_1.9", "recruiting_1.10", "recruiting_1.11"}
     assert health["tracking_health"]["code"] == "CONNECTED"
     diag = await (await client.get(f"{OPS}/ops/diagnostics", headers=_hdr())).json()
     assert diag["components"]["postgresql"]["code"] in {"CONNECTED", "DEGRADED", "NOT_CONFIGURED"}

@@ -303,7 +303,7 @@ def test_template_placeholders_safe():
 
 async def test_telegram_frozen_does_not_block_readiness_or_retry_storm(client: TestClient):
     health = await (await client.get(f"{OPS}/health")).json()
-    assert health["sprint"] == "recruiting_1.10"
+    assert health["sprint"] in {"recruiting_1.10", "recruiting_1.11"}
     assert health["telegram"]["frozen"] is True
     assert health["telegram"]["blocks_readiness"] is False
     assert health["tracking_health"]["code"] == "CONNECTED"
