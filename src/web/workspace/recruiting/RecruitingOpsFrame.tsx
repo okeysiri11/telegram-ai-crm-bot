@@ -31,6 +31,8 @@ export function RecruitingOpsFrame({ title, subtitle, children, testId, error, o
               const active =
                 item.id === "projects"
                   ? location.pathname.startsWith("/workspace/recruiting/projects")
+                  : item.id === "infra"
+                    ? location.pathname.startsWith("/workspace/recruiting/infra")
                   : location.pathname + location.search === item.href ||
                     (item.id === "home" && location.pathname === "/workspace/recruiting" && !location.search.includes("view="));
               return (

@@ -18,6 +18,7 @@ env:
   POSTGRES_ONLY: "true"
   REDIS_REQUIRED: "false"
   DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem
+  REDIS_URL: redis://localhost:6379/0
 
 jobs:
   backend-gate:
@@ -34,6 +35,12 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U postgres -d ai_ecosystem"
           --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -82,7 +89,8 @@ jobs:
             tests/test_sprint_recruiting_1_2_projects.py \
             tests/test_sprint_vanguard_live_1_3.py \
             tests/test_sprint_vanguard_hardening_1_4.py \
-            tests/test_sprint_recruiting_1_5_ads.py -q --tb=short
+            tests/test_sprint_recruiting_1_5_ads.py \
+            tests/test_sprint_recruiting_1_6_infra.py -q --tb=short
       - name: Alembic single head (re-check)
         run: |
           HEADS=$(python -m alembic heads | grep -c "(head)")
@@ -109,7 +117,7 @@ jobs:
         run: npm run lint
         continue-on-error: true
       - name: Vanguard / Recruiting vitest (scoped)
-        run: npx vitest run src/vanguard/vanguardCareer.test.tsx workspace/recruiting/sprint_recruiting_1_0.test.tsx workspace/recruiting/sprint_recruiting_1_2.test.tsx workspace/recruiting/sprint_recruiting_1_5.test.tsx
+        run: npx vitest run src/vanguard/vanguardCareer.test.tsx workspace/recruiting/sprint_recruiting_1_0.test.tsx workspace/recruiting/sprint_recruiting_1_2.test.tsx workspace/recruiting/sprint_recruiting_1_5.test.tsx workspace/recruiting/sprint_recruiting_1_6.test.tsx
       - name: Production build (blocking)
         run: npx vite build
 
@@ -127,11 +135,18 @@ jobs:
         options: >-
           --health-cmd "pg_isready -U postgres -d ai_ecosystem"
           --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
     env:
       ENVIRONMENT: development
       PYTHON: python3
       VANGUARD_ANTIBOT_PROVIDER: none
       VANGUARD_APPLY_RATE_LIMIT: "50"
+      REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

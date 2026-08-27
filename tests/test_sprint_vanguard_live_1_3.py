@@ -48,7 +48,7 @@ async def test_vanguard_form_creates_recruiting_lead(client: TestClient):
         json={
             "first_name": "E2E_LIVE",
             "last_name": "Applicant",
-            "email": "e2e.live@example.com",
+            "email": f"e2e.live.{uuid.uuid4().hex[:8]}@example.com",
             "country": "UA",
             "preferred_language": "ru",
             "unit": "Operations",
@@ -89,7 +89,7 @@ async def test_vanguard_form_creates_recruiting_lead(client: TestClient):
 async def test_duplicate_application_is_idempotent(client: TestClient):
     payload = {
         "first_name": "Dup",
-        "email": "dup.live@example.com",
+        "email": f"dup.live.{uuid.uuid4().hex[:8]}@example.com",
         "program": "Same Role",
     }
     first = await client.post(f"{SITE}/applications", json=payload)
@@ -105,7 +105,7 @@ async def test_duplicate_application_is_idempotent(client: TestClient):
 async def test_qualify_convert_interview_persists(client: TestClient):
     applied = await client.post(
         f"{SITE}/applications",
-        json={"first_name": "Pipeline", "email": "pipe@example.com", "program": "Ops"},
+        json={"first_name": "Pipeline", "email": f"pipe.{uuid.uuid4().hex[:8]}@example.com", "program": "Ops"},
     )
     lead_id = (await applied.json())["item"]["id"]
     h = _hdr()

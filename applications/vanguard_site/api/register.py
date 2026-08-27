@@ -31,12 +31,29 @@ def _safe_error(error: str, message_ru: str, *, extra: dict | None = None) -> di
     return out
 
 
+def _limit_response(limited: dict, ip: str) -> web.Response:
+    retry = int(limited.get("retry_after_seconds") or 60)
+    if limited.get("error") == "store_unavailable":
+        logger.error("vanguard_site store_unavailable ip=%s", ip)
+        return json_response(
+            {**_safe_error("store_unavailable", str(limited.get("message_ru"))), "retry_after_seconds": retry},
+            status=503,
+            retry_after=retry,
+        )
+    logger.info("vanguard_site apply rate_limited ip=%s", ip)
+    return json_response(
+        {**_safe_error("rate_limited", str(limited.get("message_ru"))), "retry_after_seconds": retry},
+        status=429,
+        retry_after=retry,
+    )
+
+
 def _status_for(result: dict, *, created: bool = False) -> int:
     if result.get("ok") is False:
         err = result.get("error")
         if err == "rate_limited":
             return 429
-        if err in {"storage_unavailable", "ingest_not_configured", "anti_bot_not_configured", "anti_bot_adapter_not_wired"}:
+        if err in {"storage_unavailable", "ingest_not_configured", "anti_bot_not_configured", "anti_bot_adapter_not_wired", "store_unavailable"}:
             return 503
         if err == "payload_too_large":
             return 413
@@ -89,22 +106,10 @@ async def vanguard_site_apply_handler(request: web.Request) -> web.Response:
     cleaned = validated["body"]
     ip_limit = check_rate_limit(key=f"apply:ip:{ip}", limit=apply_limit())
     if not ip_limit.get("allowed"):
-        retry = int(ip_limit.get("retry_after_seconds") or 60)
-        logger.info("vanguard_site apply rate_limited ip=%s", ip)
-        return json_response(
-            {**_safe_error("rate_limited", str(ip_limit.get("message_ru"))), "retry_after_seconds": retry},
-            status=429,
-            retry_after=retry,
-        )
+        return _limit_response(ip_limit, ip)
     email_limit = check_rate_limit(key=f"apply:email:{cleaned['email']}", limit=apply_limit())
     if not email_limit.get("allowed"):
-        retry = int(email_limit.get("retry_after_seconds") or 60)
-        logger.info("vanguard_site apply rate_limited email ip=%s", ip)
-        return json_response(
-            {**_safe_error("rate_limited", str(email_limit.get("message_ru"))), "retry_after_seconds": retry},
-            status=429,
-            retry_after=retry,
-        )
+        return _limit_response(email_limit, ip)
     token = str(cleaned.get("antibot_token") or request.headers.get("X-Vanguard-Antibot") or "")
     antibot = verify_antibot(token=token, remote_ip=ip)
     if not antibot.get("ok"):
@@ -142,12 +147,7 @@ async def vanguard_site_events_handler(request: web.Request) -> web.Response:
     ip = _client_ip(request)
     limited = check_rate_limit(key=f"events:ip:{ip}", limit=events_limit())
     if not limited.get("allowed"):
-        retry = int(limited.get("retry_after_seconds") or 60)
-        return json_response(
-            {**_safe_error("rate_limited", "Слишком много событий."), "retry_after_seconds": retry},
-            status=429,
-            retry_after=retry,
-        )
+        return _limit_response(limited, ip)
     body, err = await _read_limited_json(request)
     if err is not None:
         return err

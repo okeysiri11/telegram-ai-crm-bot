@@ -383,7 +383,7 @@ class RecruitingOpsService:
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.5",
+            "sprint": "recruiting_1.6",
             "vanguard": {
                 "connected": False,
                 "status": "ingest_ready",
@@ -396,8 +396,62 @@ class RecruitingOpsService:
             "rate_limit_store": get_store().describe(),
             "replay_store": get_store().describe(),
             "tracking_worker": get_tracking_worker().snapshot(),
+            "tracking_health": self.tracking_diagnostics(),
             "ads": {"connected": False, "message_ru": "Провайдер не подключен"},
         }
+
+    def tracking_diagnostics(self) -> dict[str, Any]:
+        from services.recruiting_ops.tracking_health import build_tracking_diagnostics
+
+        org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
+        events = self._bag(org).get("tracking") or []
+        return build_tracking_diagnostics(events)
+
+    async def recover_tracking_records(self) -> dict[str, Any]:
+        from services.recruiting_ops.tracking_health import should_recover_to_delivered
+
+        org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
+        await self.ensure_hydrated(org)
+        recovered: list[str] = []
+        inspected: list[dict[str, Any]] = []
+        for item in list(self._bag(org).get("tracking") or []):
+            status = _txt(item.get("delivery_status"))
+            inspected.append(
+                {
+                    "id": item.get("id"),
+                    "delivery_status": status,
+                    "durable": bool(item.get("durable")),
+                    "storage": item.get("storage"),
+                    "destination": item.get("destination") or "recruiting_db",
+                    "will_recover": should_recover_to_delivered(item),
+                }
+            )
+            if not should_recover_to_delivered(item):
+                continue
+            patch = {
+                "delivery_status": "DELIVERED",
+                "delivery_class": "delivered",
+                "recovery_reason": "persisted_in_postgres",
+                "destination": item.get("destination") or "recruiting_db",
+            }
+            persisted = await self._persist_patch(org, str(item.get("id")), patch)
+            if persisted:
+                item.update(persisted)
+            else:
+                item.update(patch)
+            recovered.append(str(item.get("id")))
+        return {
+            "ok": True,
+            "recovered": len(recovered),
+            "ids": recovered,
+            "inspected": inspected,
+            "deleted": 0,
+        }
+
+    async def infrastructure_diagnostics(self) -> dict[str, Any]:
+        from services.recruiting_ops.ops_diagnostics import build_ops_diagnostics
+
+        return await build_ops_diagnostics(self)
 
     def _ok(self, **extra: Any) -> dict[str, Any]:
         return {"ok": True, "data_mode": "REAL", **extra}
@@ -811,7 +865,22 @@ class RecruitingOpsService:
         event["organization_id"] = org
         event["created_at"] = event.get("timestamp") or _now()
         event["data_mode"] = "REAL"
-        event["delivery_status"] = "RETRYING"
+        dest = _txt(body.get("destination") or event.get("destination") or "recruiting_db").lower() or "recruiting_db"
+        event["destination"] = dest
+        from services.recruiting_ops.tracking_adapters import (
+            PROVIDER_DESTINATIONS,
+            TEST_DESTINATIONS,
+            classify_unconfigured_provider,
+            deliver_via_test_adapter,
+        )
+
+        if dest in TEST_DESTINATIONS:
+            event = deliver_via_test_adapter(event)
+        elif dest in PROVIDER_DESTINATIONS:
+            event = classify_unconfigured_provider(event)
+            event["delivery_status"] = "DELIVERED"
+        else:
+            event["delivery_status"] = "RETRYING"
         if event.get("event_id"):
             for existing in self._bag(org)["tracking"]:
                 if _txt(existing.get("event_id")) == event["event_id"]:
@@ -819,7 +888,8 @@ class RecruitingOpsService:
                     return self._ok(item=existing, duplicate=True, delivery_status=existing.get("delivery_status") or "DELIVERED")
         saved: dict[str, Any] | None = None
         try:
-            event["delivery_status"] = "RETRYING"
+            if event.get("delivery_status") != "DELIVERED":
+                event["delivery_status"] = "RETRYING"
             saved = await self._persist("tracking", event)
         except PersistUnavailable:
             queued = get_tracking_worker().enqueue({**event, "organization_id": org})
@@ -832,8 +902,16 @@ class RecruitingOpsService:
                 "item": queued,
             }
         saved["delivery_status"] = "DELIVERED"
+        if dest in PROVIDER_DESTINATIONS:
+            saved["delivery_class"] = "provider_not_configured"
+        elif dest in TEST_DESTINATIONS:
+            saved["delivery_class"] = saved.get("delivery_class") or "delivered"
+            saved["adapter"] = saved.get("adapter") or "test"
+        else:
+            saved["delivery_class"] = "delivered"
+            saved["destination"] = saved.get("destination") or "recruiting_db"
         self._bag(org)["tracking"].insert(0, saved)
-        return self._ok(item=saved, delivery_status="DELIVERED")
+        return self._ok(item=saved, delivery_status=saved["delivery_status"])
 
     async def process_tracking_retries(self) -> dict[str, Any]:
         async def _persist(event: dict[str, Any]) -> dict[str, Any]:
@@ -1432,6 +1510,10 @@ class RecruitingOpsService:
         org = _org(organization_id)
         await self.ensure_hydrated(org)
         channel = _channel(body.get("channel"))
+        from services.recruiting_ops.provider_readiness import messaging_readiness
+
+        channel_key = channel.lower()
+        ready = messaging_readiness()["channels"].get(channel_key) or {}
         item = {
             "id": str(body.get("id") or uuid.uuid4()),
             "organization_id": org,
@@ -1445,8 +1527,10 @@ class RecruitingOpsService:
                 project_key=_txt(body.get("project_key")) or None,
             ),
             "sent": False,
+            "journal_only": True,
             "delivery": "manual_log_only",
             "status": "logged",
+            "provider_status": ready.get("status") or "NOT_CONFIGURED",
             "data_mode": "REAL",
             "created_at": _now(),
             "updated_at": _now(),
@@ -1835,7 +1919,9 @@ class RecruitingOpsService:
             endpoint_code, endpoint_reason = STATUS_DEGRADED, "Production secret не задан; используется DEV fallback secret."
         recruiting_code, recruiting_reason = STATUS_CONNECTED, "Recruiting API отвечает."
         db_code, db_reason = await self._storage_probe_reason()
-        tracking_code, tracking_reason = self._tracking_health_reason()
+        await self.recover_tracking_records()
+        tracking_diag = self.tracking_diagnostics()
+        tracking_code, tracking_reason = tracking_diag["code"], tracking_diag.get("reason_ru") or ""
         website_status = status_payload(website_code, reason_ru=website_reason)
         integ_codes = [endpoint_code, recruiting_code, db_code]
         if STATUS_DISCONNECTED in integ_codes:
@@ -1868,7 +1954,7 @@ class RecruitingOpsService:
             "website": status_payload(website_code, reason_ru=website_reason),
             "integration": status_payload(overall_code, reason_ru=overall_reason),
             "database": status_payload(db_code, reason_ru=db_reason),
-            "tracking": status_payload(tracking_code, reason_ru=tracking_reason),
+            "tracking": {**status_payload(tracking_code, reason_ru=tracking_reason), **{k: tracking_diag.get(k) for k in ("delivered", "retrying", "failed", "provider_not_configured", "oldest_pending", "last_delivery")}},
             "last_application": (last_lead or {}).get("submitted_at") or (last_lead or {}).get("created_at"),
             "last_synchronization": self._ingest_log.get("last_success_at"),
             "last_successful_health_check": self._ingest_log.get("last_successful_check_at"),
@@ -1898,18 +1984,8 @@ class RecruitingOpsService:
         )
 
     def _tracking_health_reason(self) -> tuple[str, str]:
-        org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
-        events = self._bag(org).get("tracking") or []
-        if not events:
-            return STATUS_UNKNOWN, "Событий трекинга ещё нет."
-        statuses = {_txt(item.get("delivery_status")) for item in events}
-        if "FAILED" in statuses:
-            return STATUS_DEGRADED, "Есть недоставленные события трекинга."
-        if "RETRYING" in statuses:
-            return STATUS_DEGRADED, "Есть события в повторной доставке."
-        if events and any(item.get("persistence_mode") == "NON_DURABLE_DEVELOPMENT_MODE" for item in events):
-            return STATUS_DEGRADED, "Трекинг в NON_DURABLE_DEVELOPMENT_MODE."
-        return STATUS_CONNECTED, "События трекинга доставляются."
+        diag = self.tracking_diagnostics()
+        return str(diag.get("code") or STATUS_UNKNOWN), str(diag.get("reason_ru") or "")
 
     async def _probe_website(self, url: str) -> tuple[str, str]:
         try:

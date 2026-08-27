@@ -127,4 +127,5 @@ def _fail(error: str, message_ru: str, provider: str, required: bool, *, captcha
         "captcha_active": captcha_active,
         "required": required,
         "status": "rejected",
+        "readiness": "NOT_CONFIGURED" if error == "anti_bot_not_configured" else "ERROR",
     }

@@ -4,7 +4,9 @@ Policy (documented in SPRINT_RECRUITING_1_5 RESULT):
 - Apply: per client IP and per email, sliding 60s window.
 - Events: per client IP, higher ceiling (tracking must not starve apply).
 - Defaults: development 20 apply/min, production 8 apply/min.
-- Store: Redis when reachable (shared=true), else process_local (shared=false).
+- Store: Redis when reachable (shared=true). Development without Redis uses
+process_local (shared=false). Production without Redis is fail-closed
+(store_unavailable, never silent process_local, never SHARED=YES).
 - Frontend controls are ignored; HTTP 429 + Retry-After on exceed.
 """
 

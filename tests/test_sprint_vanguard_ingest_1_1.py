@@ -14,6 +14,7 @@ from aiohttp.test_utils import TestClient, TestServer
 from applications.recruiting_enterprise.api.register import register_recruiting_enterprise_routes
 from services.recruiting_ops import reset_recruiting_ops_for_tests
 from services.recruiting_ops.ingest_auth import DEV_FALLBACK_SECRET, sign_ingest_body
+from services.recruiting_ops.shared_store import SharedStore, set_store_for_tests
 from services.recruiting_ops.service import PersistUnavailable
 
 OPS = "/api/recruiting-ops/v1"
@@ -197,6 +198,7 @@ async def test_production_ingest_fails_closed_when_storage_unavailable(client: T
     monkeypatch.setenv("ENVIRONMENT", "production")
     monkeypatch.setenv("VANGUARD_INGEST_SECRET", "prod-secret-value")
     reset_recruiting_ops_for_tests()
+    set_store_for_tests(SharedStore(backend="memory_shared", shared=True, mapping={}))
     raw, headers = _signed(
         {
             "first_name": "ProdFail",

@@ -1,0 +1,26 @@
+# Minimal Recruiting/Vanguard local infrastructure.
+# Does not start the full ADOS stack (bot, nginx, prometheus, grafana).
+#
+#   scripts/recruiting_infra.sh start|stop|health|logs
+#
+# Env (host):
+#   REDIS_URL=redis://127.0.0.1:6379/0
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: recruiting-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - recruiting_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  recruiting_redis_data:

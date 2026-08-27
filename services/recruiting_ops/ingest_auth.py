@@ -84,6 +84,15 @@ def verify_ingest_request(
             "message_ru": "Неверная подпись запроса.",
         }
     store = get_store()
+    if store.fail_closed:
+        return {
+            "ok": False,
+            "error": "store_unavailable",
+            "message_ru": "Хранилище защиты от повторов недоступно.",
+            "replay_store": store.backend,
+            "replay_shared": False,
+            "fail_closed": True,
+        }
     if not store.claim_nonce(str(nonce), REPLAY_WINDOW_SECONDS * 2):
         return {
             "ok": False,

@@ -10,6 +10,7 @@ export const RECRUITING_NAV = [
   { id: "comms", label: "Коммуникации", href: "/workspace/recruiting?view=comms" },
   { id: "activity", label: "Активность", href: "/workspace/recruiting?view=activity" },
   { id: "analytics", label: "Аналитика", href: "/workspace/recruiting?view=analytics" },
+  { id: "infra", label: "Инфраструктура", href: "/workspace/recruiting/infra" },
 ] as const;
 
 export const PIPELINE_STAGES = ["NEW", "QUALIFIED", "INTERVIEW", "APPROVED", "HIRED", "REJECTED"] as const;

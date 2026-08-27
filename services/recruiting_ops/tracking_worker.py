@@ -22,12 +22,15 @@ class TrackingWorker:
     def snapshot(self) -> dict[str, Any]:
         retrying = sum(1 for item in self.pending if item.get("delivery_status") == "RETRYING")
         failed = sum(1 for item in self.pending if item.get("delivery_status") == "FAILED")
+        stamps = [str(item.get("created_at") or item.get("enqueued_at") or "") for item in self.pending]
+        oldest = min((s for s in stamps if s), default=None)
         return {
             "enabled": self.enabled,
             "pending": len(self.pending),
             "retrying": retrying,
             "failed": failed,
             "max_attempts": MAX_ATTEMPTS,
+            "oldest_pending": oldest,
         }
 
     def enqueue(self, event: dict[str, Any]) -> dict[str, Any]:

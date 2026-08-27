@@ -11,6 +11,7 @@ from applications.recruiting_enterprise.config import DEFAULT_CONFIG
 def register_recruiting_enterprise_routes(app: web.Application) -> None:
     ops = DEFAULT_CONFIG.api_prefix
     app.router.add_get(f"{ops}/health", ops_handlers.ops_health_handler)
+    app.router.add_get(f"{ops}/ops/diagnostics", ops_handlers.ops_diagnostics_handler)
     app.router.add_get(f"{ops}/roles", ops_handlers.ops_roles_handler)
     app.router.add_get(f"{ops}/catalogs", ops_handlers.ops_catalogs_handler)
     app.router.add_get(f"{ops}/vanguard/contract", ops_handlers.ops_vanguard_contract_handler)
@@ -18,6 +19,7 @@ def register_recruiting_enterprise_routes(app: web.Application) -> None:
     app.router.add_get(f"{ops}/ads/control-center", ops_handlers.ops_ads_control_center_handler)
     app.router.add_post(f"{ops}/ads/entities", ops_handlers.ops_ads_entities_handler)
     app.router.add_post(f"{ops}/tracking/retries", ops_handlers.ops_tracking_retries_handler)
+    app.router.add_post(f"{ops}/tracking/recover", ops_handlers.ops_tracking_recover_handler)
     app.router.add_post(f"{ops}/vanguard/leads", ops_handlers.ops_vanguard_ingest_handler)
     app.router.add_get(f"{ops}/projects", ops_handlers.ops_projects_handler)
     app.router.add_get(f"{ops}/projects/{{project_key}}", ops_handlers.ops_project_overview_handler)

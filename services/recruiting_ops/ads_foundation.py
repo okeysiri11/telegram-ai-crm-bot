@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from services.recruiting_ops.provider_readiness import ads_readiness
+
 ADS_PROVIDERS = ("meta", "google", "tiktok")
 
 ENTITY_TYPES = (
@@ -31,11 +33,15 @@ ENTITY_TYPES = (
 
 
 def ads_foundation(*, project_key: str = "vanguard") -> dict[str, Any]:
+    ready = ads_readiness()["providers"]
     providers = {
         name: {
             "provider": name,
             "status": "not_connected",
-            "label_ru": "Провайдер не подключен",
+            "readiness": ready[name]["status"],
+            "label_ru": ready[name]["message_ru"],
+            "missing": ready[name].get("missing") or [],
+            "connected": False,
             "accounts": [],
             "campaigns": [],
             "metrics": None,

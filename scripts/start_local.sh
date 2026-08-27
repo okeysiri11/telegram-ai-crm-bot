@@ -11,9 +11,11 @@ else
 fi
 
 echo "ADOS local development"
+echo "  Recruiting stack (Postgres if already up, Redis, API, Vite): scripts/recruiting_dev.sh"
 echo "  Backend:  $PY scripts/run_api_local.py   → http://127.0.0.1:8080"
 echo "  Frontend: npm run dev --prefix src/web -- --host 127.0.0.1 --port 5180"
 echo "  Combined: npm run dev:all"
+echo "  Redis:    scripts/recruiting_infra.sh start|stop|health|logs"
 echo
 echo "Does not start Telegram polling. Keep a single bot instance (startup.py / main.py) if you need Telegram."
 

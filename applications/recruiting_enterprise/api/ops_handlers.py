@@ -53,7 +53,7 @@ def _status_for(result: dict, *, created: bool = False) -> int:
             return 404
         if err in {"missing_signature", "bad_signature", "expired_signature"}:
             return 401
-        if err in {"storage_unavailable", "ingest_not_configured"}:
+        if err in {"storage_unavailable", "ingest_not_configured", "store_unavailable"}:
             return 503
         return 400
     if result.get("duplicate"):
@@ -63,6 +63,16 @@ def _status_for(result: dict, *, created: bool = False) -> int:
 
 async def ops_health_handler(_request: web.Request) -> web.Response:
     return json_response(get_recruiting_ops_service().health())
+
+
+async def ops_diagnostics_handler(_request: web.Request) -> web.Response:
+    result = await get_recruiting_ops_service().infrastructure_diagnostics()
+    return json_response(result)
+
+
+async def ops_tracking_recover_handler(_request: web.Request) -> web.Response:
+    result = await get_recruiting_ops_service().recover_tracking_records()
+    return json_response(result)
 
 
 async def ops_roles_handler(_request: web.Request) -> web.Response:

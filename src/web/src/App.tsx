@@ -284,6 +284,9 @@ const RecruitingProjectsPage = lazy(() =>
 const VanguardProjectPage = lazy(() =>
   import("../workspace/recruiting/VanguardProjectPage").then((m) => ({ default: m.VanguardProjectPage })),
 );
+const RecruitingInfraPage = lazy(() =>
+  import("../workspace/recruiting/RecruitingInfraPage").then((m) => ({ default: m.RecruitingInfraPage })),
+);
 const VanguardCareerPage = lazy(() =>
   import("./vanguard/VanguardCareerPage").then((m) => ({ default: m.VanguardCareerPage })),
 );
@@ -1236,6 +1239,14 @@ export function App() {
         element={
           <ProtectedRoute>
             <VanguardProjectPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/recruiting/infra"
+        element={
+          <ProtectedRoute>
+            <RecruitingInfraPage />
           </ProtectedRoute>
         }
       />
