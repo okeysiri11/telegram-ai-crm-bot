@@ -32,6 +32,7 @@ export const OWNER_PERMISSIONS = [
   "builder",
   "hr",
   "legal",
+  "recruiting",
   "crypto",
   "agro",
   "beauty",

@@ -31,7 +31,7 @@ function buildCtx(): AccessContext {
   };
 }
 
-export function resolveCabinetCaps(vertical: "beauty" | "cafe" | "crypto" | "legal" | "agro" | "auto"): CabinetCaps {
+export function resolveCabinetCaps(vertical: "beauty" | "cafe" | "crypto" | "legal" | "agro" | "auto" | "recruiting"): CabinetCaps {
   const ctx = buildCtx();
   const viewAs = useRoleSwitcher.getState().activeRoleId.toLowerCase();
   const isCustomer =
@@ -64,7 +64,7 @@ export function resolveCabinetCaps(vertical: "beauty" | "cafe" | "crypto" | "leg
   const canCreate =
     canOperate &&
     !observerOnly &&
-    (canConfigure || !/cashier|viewer/i.test(viewAs) || vertical === "cafe" || vertical === "legal" || vertical === "agro");
+    (canConfigure || !/cashier|viewer/i.test(viewAs) || vertical === "cafe" || vertical === "legal" || vertical === "agro" || vertical === "recruiting");
 
   // Waiter/master/operator: operate yes, finance/settings limited
   const staffOnly = /master|waiter|bartender|chef|cashier|operator|employee|paralegal|помощник/i.test(viewAs);

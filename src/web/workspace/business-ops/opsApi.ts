@@ -307,6 +307,48 @@ export function legalOpsFileUrl(fileId: string): string {
   return `${legalOpsPrefix()}/files/${fileId}/content`;
 }
 
+export function recruitingOpsPrefix(): string {
+  return (webConfig as { recruitingOpsPrefix?: string }).recruitingOpsPrefix || "/api/recruiting-ops/v1";
+}
+
+export async function recruitingOpsGet(path: string, headers: Record<string, string> = {}) {
+  const prefix = recruitingOpsPrefix();
+  try {
+    const res = await fetch(`${prefix}${path}`, {
+      credentials: "include",
+      headers: { ...headers },
+    });
+    const json = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, json };
+  } catch (e) {
+    return {
+      ok: false,
+      status: 0,
+      json: { error: e instanceof Error ? e.message : "network_error" },
+    };
+  }
+}
+
+export async function recruitingOpsPost(path: string, body: Record<string, unknown> = {}, headers: Record<string, string> = {}) {
+  const prefix = recruitingOpsPrefix();
+  try {
+    const res = await fetch(`${prefix}${path}`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json().catch(() => ({}));
+    return { ok: res.ok, status: res.status, json };
+  } catch (e) {
+    return {
+      ok: false,
+      status: 0,
+      json: { error: e instanceof Error ? e.message : "network_error" },
+    };
+  }
+}
+
 export async function legalOpsGet(path: string, headers: Record<string, string> = {}) {
   const prefix = legalOpsPrefix();
   try {

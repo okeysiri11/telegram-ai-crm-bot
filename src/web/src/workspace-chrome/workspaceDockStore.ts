@@ -23,6 +23,7 @@ export const DOCK_CATALOG: DockFavourite[] = [
   { id: "agro", label: "Агро", route: "/workspace/agro" },
   { id: "marketplace", label: "Маркетплейс", route: "/marketplace" },
   { id: "legal", label: "Юридический", route: "/workspace/legal" },
+  { id: "recruiting", label: "Рекрутинг", route: "/workspace/recruiting" },
   { id: "knowledge", label: "Знания", route: "/knowledge" },
   { id: "documents", label: "Документы", route: "/documents" },
   { id: "ai", label: "AI", route: "/ai-agents" },

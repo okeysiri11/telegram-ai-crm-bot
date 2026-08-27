@@ -62,6 +62,7 @@ function collectCatalogPaths(): string[] {
   paths.add("/workspace/agro");
   paths.add("/workspace/drone");
   paths.add("/workspace/legal");
+  paths.add("/workspace/recruiting");
   paths.add("/vertical/travel");
   return [...paths].filter((path) => path.startsWith("/") && !AUTH_ONLY.has(path)).sort();
 }

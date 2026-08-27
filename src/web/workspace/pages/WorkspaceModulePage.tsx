@@ -13,6 +13,7 @@ const HUB_BY_MODULE: Record<string, string> = {
   marketplace: "/marketplace",
   finance: "/workspace/finance",
   legal: "/workspace/legal",
+  recruiting: "/workspace/recruiting",
   knowledge: "/knowledge",
   analytics: "/analytics",
   projects: "/projects",

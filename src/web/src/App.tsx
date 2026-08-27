@@ -275,6 +275,9 @@ const AgroBusinessPage = lazy(() =>
 const LawyerBusinessPage = lazy(() =>
   import("../workspace/legal/LawyerBusinessPage").then((m) => ({ default: m.LawyerBusinessPage })),
 );
+const RecruitingBusinessPage = lazy(() =>
+  import("../workspace/recruiting/RecruitingBusinessPage").then((m) => ({ default: m.RecruitingBusinessPage })),
+);
 const CryptoOtcDeskPage = lazy(() =>
   import("../workspace/crypto/CryptoOtcDeskPage").then((m) => ({ default: m.CryptoOtcDeskPage })),
 );
@@ -1197,6 +1200,24 @@ export function App() {
         element={
           <ProtectedRoute>
             <LawyerBusinessPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/recruiting"
+        element={
+          <ProtectedRoute>
+            <WorkspaceLandingGate landingId="recruiting">
+              <RecruitingBusinessPage />
+            </WorkspaceLandingGate>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/recruiting/:sub"
+        element={
+          <ProtectedRoute>
+            <RecruitingBusinessPage />
           </ProtectedRoute>
         }
       />

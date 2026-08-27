@@ -19,6 +19,7 @@ const REQUIRED_IDS = [
   "cafe",
   "crypto",
   "legal",
+  "recruiting",
   "travel",
   "drone",
   "agro",

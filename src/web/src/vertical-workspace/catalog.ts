@@ -455,6 +455,63 @@ export const VERTICAL_WORKSPACES: VerticalDef[] = [
     },
   },
   {
+    id: "recruiting",
+    label: "Рекрутинг",
+    purpose: "Лиды, кандидаты, вакансии и воронка найма",
+    route: path("recruiting"),
+    legacyRoute: "/workspace/recruiting",
+    nav: [
+      { id: "home", label: "Главная", href: "/workspace/recruiting?view=home" },
+      { id: "leads", label: "Лиды", href: "/workspace/recruiting?view=leads" },
+      { id: "candidates", label: "Кандидаты", href: "/workspace/recruiting?view=candidates" },
+      { id: "vacancies", label: "Вакансии", href: "/workspace/recruiting?view=vacancies" },
+      { id: "pipeline", label: "Воронка", href: "/workspace/recruiting?view=pipeline" },
+      { id: "campaigns", label: "Кампании", href: "/workspace/recruiting?view=campaigns" },
+      { id: "tasks", label: "Задачи", href: "/workspace/recruiting?view=tasks" },
+      { id: "comms", label: "Коммуникации", href: "/workspace/recruiting?view=comms" },
+      { id: "activity", label: "Активность", href: "/workspace/recruiting?view=activity" },
+      { id: "analytics", label: "Аналитика", href: "/workspace/recruiting?view=analytics" },
+    ],
+    agents: [
+      { id: "concierge", name: "AI Консьерж", role: "Главный помощник" },
+      { id: "recruiter_ai", name: "AI-рекрутер", role: "Разбор анкет и воронки" },
+    ],
+    stats: [
+      { label: "Лиды", value: "—" },
+      { label: "Кандидаты", value: "—" },
+      { label: "Просроченные задачи", value: "—" },
+    ],
+    quickActions: [
+      { label: "Открыть рекрутинг", route: "/workspace/recruiting" },
+      { label: "Создать лид", route: "/workspace/recruiting?view=leads" },
+      { label: "Воронка", route: "/workspace/recruiting?view=pipeline" },
+    ],
+    recommendations: [
+      "Проверьте просроченные задачи",
+      "Квалифицируйте новые лиды",
+      "Не выдумывайте визиты до подключения Vanguard",
+    ],
+    primaryAction: { label: "Открыть кабинет рекрутера", route: "/workspace/recruiting" },
+    recentObjects: [
+      { title: "Лиды", detail: "Входящие заявки", route: "/workspace/recruiting?view=leads" },
+      { title: "Воронка", detail: "Кандидаты", route: "/workspace/recruiting?view=pipeline" },
+    ],
+    events: [{ title: "Recruiting 1.0", detail: "Операционный кабинет найма" }],
+    tasks: [
+      { title: "Позвонить лиду", status: "Сегодня" },
+      { title: "Провести интервью", status: "На неделе" },
+    ],
+    aiGuide: {
+      greeting: "Добро пожаловать в рекрутинг.",
+      bullets: [
+        "Лиды → квалификация → кандидат → интервью",
+        "Просроченные задачи на главной",
+        "Визиты появятся после интеграции Vanguard",
+      ],
+      recommendedAction: { label: "Открыть кабинет рекрутера", route: "/workspace/recruiting" },
+    },
+  },
+  {
     id: "travel",
     label: "Travel",
     purpose: "Туры, бронирования, отели и авиабилеты",

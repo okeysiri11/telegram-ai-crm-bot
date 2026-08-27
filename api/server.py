@@ -108,6 +108,10 @@ def create_app() -> web.Application:
 
     register_legal_enterprise_routes(app)
 
+    from applications.recruiting_enterprise.api.register import register_recruiting_enterprise_routes
+
+    register_recruiting_enterprise_routes(app)
+
     from applications.auto_enterprise.api.register import register_auto_enterprise_routes
 
     register_auto_enterprise_routes(app)

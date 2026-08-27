@@ -42,7 +42,7 @@ let documents: SearchDocument[] = [
   { id: "idx_crm", category: "crm", title: "Воронка CRM", path: "/workspace/crm", tokens: ["crm", "воронка", "pipeline", "leads"], rankBoost: 6 },
   { id: "idx_erp", category: "erp", title: "Склад ERP", path: "/workspace/erp", tokens: ["erp", "склад", "inventory"], rankBoost: 6 },
   { id: "idx_fin", category: "finance", title: "Финансы", path: "/workspace/finance", tokens: ["финансы", "finance", "billing"], rankBoost: 6 },
-  { id: "idx_hr", category: "hr", title: "Справочник HR", path: "/workspace/hr", tokens: ["hr", "people"], rankBoost: 4 },
+  { id: "idx_hr", category: "hr", title: "Рекрутинг", path: "/workspace/recruiting", tokens: ["hr", "people", "рекрутинг", "найм", "лиды", "кандидаты"], rankBoost: 8 },
   { id: "idx_ai", category: "ai_agents", title: "Ops Copilot", path: "/workspace/ai", tokens: ["ai", "copilot", "агент"], rankBoost: 8 },
   { id: "idx_wf", category: "workflows", title: "Согласование счёта", path: "/workspace/workflows/invoice", tokens: ["процесс", "workflow", "invoice"], rankBoost: 7 },
   { id: "idx_rep", category: "reports", title: "Еженедельный KPI", path: "/workspace/reports/weekly", tokens: ["отчёт", "report", "kpi", "weekly"], rankBoost: 5 },

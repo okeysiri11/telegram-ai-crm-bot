@@ -12,10 +12,10 @@ import { AutoHumanLandingView } from "@/human-first";
 import { useIsMobile } from "@/shell/mobile/useIsMobile";
 
 /** On phone these open the live ops cabinet, not the catalog landing (menu A). */
-const MOBILE_OPS_CABINET_LANDINGS = new Set(["agro", "auto", "cafe", "legal", "crypto", "drone"]);
+const MOBILE_OPS_CABINET_LANDINGS = new Set(["agro", "auto", "cafe", "legal", "crypto", "drone", "recruiting"]);
 
 /** Agro Command Center is the desktop home — refresh must not bounce to the catalog landing. */
-const ALWAYS_OPS_CABINET_LANDINGS = new Set(["agro"]);
+const ALWAYS_OPS_CABINET_LANDINGS = new Set(["agro", "recruiting"]);
 
 export function WorkspaceLandingGate({
   landingId,

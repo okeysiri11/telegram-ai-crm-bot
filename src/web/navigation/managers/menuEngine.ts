@@ -125,6 +125,7 @@ const menu: MenuItem[] = [
       { id: "nav_eco_agro", name: "Agriculture", icon: "erp", route: "/workspace/agro", module: "agro", permissions: ["read"], status: "active" },
       { id: "nav_eco_drone", name: "Drone", icon: "analytics", route: "/workspace/drone", module: "drone", permissions: ["read"], status: "active" },
       { id: "nav_eco_legal", name: "Legal", icon: "security", route: "/workspace/legal", module: "legal", permissions: ["read"], status: "active" },
+      { id: "nav_eco_recruiting", name: "Recruiting", icon: "crm", route: "/workspace/recruiting", module: "recruiting", permissions: ["read", "recruiting"], status: "active" },
       { id: "nav_eco_crypto", name: "Crypto (Bidex)", icon: "finance", route: "/workspace/crypto", module: "crypto", permissions: ["read"], status: "active" },
     ],
   },

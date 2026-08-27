@@ -219,6 +219,20 @@ const MODULES: Record<string, RegisteredModule> = {
     widgets: ["widget_legal_cases", "widget_legal_calendar"],
     dashboards: ["dash_legal_owner", "dash_legal_executive"],
   }),
+  recruiting: entry("recruiting", {
+    title: "Recruiting",
+    purpose:
+      "Recruiting operations — leads, candidates, vacancies, pipeline, campaigns, tasks via /api/recruiting-ops/v1.",
+    builderRoute: "/platform-builder/business-ecosystem",
+    portalHint: "/portals/employee",
+    apiHint: "/api/recruiting-ops/v1",
+    ecosystem: "recruiting",
+    version: "1.0.0",
+    permissions: ["recruiting", "hr", "read"],
+    dependencies: ["enterprise_web_platform", "recruiting_enterprise", "platform_builder", "enterprise_hub"],
+    widgets: ["widget_recruiting_pipeline", "widget_recruiting_tasks"],
+    dashboards: ["dash_recruiting_owner"],
+  }),
   crypto: entry("crypto", {
     title: "Crypto (Bidex)",
     purpose:

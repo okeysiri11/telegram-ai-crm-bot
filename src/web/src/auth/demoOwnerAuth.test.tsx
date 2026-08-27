@@ -51,6 +51,7 @@ const OWNER_VERTICAL_ROUTES = [
   "/workspace/agro",
   "/workspace/drone",
   "/workspace/legal",
+  "/workspace/recruiting",
   "/vertical/travel",
   "/command-center",
   "/creative-factory",
@@ -314,7 +315,7 @@ describe("Canonical Owner auth", () => {
   it("builds an owner smoke matrix from route catalogs", () => {
     const routes = ownerAccessSmokeRoutes();
     expect(routes).toEqual(expect.arrayContaining(["/owner", "/dashboard", "/settings", "/command-center"]));
-    expect(routes).toEqual(expect.arrayContaining(["/workspace/crypto", "/workspace/agro", "/workspace/legal"]));
+    expect(routes).toEqual(expect.arrayContaining(["/workspace/crypto", "/workspace/agro", "/workspace/legal", "/workspace/recruiting"]));
     expect(routes).toEqual(expect.arrayContaining(["/vertical/travel", "/creative-factory"]));
     expect(routes).toEqual(expect.arrayContaining([...CASINO_OWNER_ROUTES]));
     const access = assertOwnerRouteAccess();

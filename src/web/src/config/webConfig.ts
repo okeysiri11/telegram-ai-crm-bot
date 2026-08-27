@@ -49,6 +49,7 @@ export const webConfig = {
   aiAgronomistPrefix: "/api/ai-agronomist/v1",
   legalEnterprisePrefix: "/api/legal-enterprise/v1",
   legalOpsPrefix: "/api/legal-ops/v1",
+  recruitingOpsPrefix: "/api/recruiting-ops/v1",
   legalCasePrefix: "/api/legal-cm/v1",
   legalDocumentsPrefix: "/api/legal-di/v1",
   legalCompliancePrefix: "/api/legal-cp/v1",

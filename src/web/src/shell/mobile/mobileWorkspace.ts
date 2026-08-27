@@ -55,7 +55,7 @@ export function operationalPanelPath(verticalId: string, lastRoute?: string): st
 }
 
 export function isOperationalWorkspaceRoute(path: string): boolean {
-  return /^\/workspace\/(auto|agro|crypto|legal|beauty|cafe|drone)(\/|\?|$)/.test(path);
+  return /^\/workspace\/(auto|agro|crypto|legal|beauty|cafe|drone|recruiting)(\/|\?|$)/.test(path);
 }
 
 export const MOBILE_VERTICAL_HUB = [
@@ -63,6 +63,7 @@ export const MOBILE_VERTICAL_HUB = [
   { id: "agro", label: "Агро", icon: "🌾", href: "/workspace/agro" },
   { id: "crypto", label: "Crypto", icon: "₿", href: "/workspace/crypto" },
   { id: "legal", label: "Lawyer", icon: "⚖️", href: "/workspace/legal" },
+  { id: "recruiting", label: "Рекрутинг", icon: "🎯", href: "/workspace/recruiting" },
   { id: "beauty", label: "Beauty", icon: "✦", href: "/workspace/beauty" },
   { id: "cafe", label: "Cafe", icon: "☕", href: "/workspace/cafe" },
   { id: "drone", label: "БПЛА", icon: "🛸", href: "/workspace/drone" },

@@ -32,6 +32,7 @@ export const ENTERPRISE_RU_SIDEBAR: RuNavItem[] = [
   { id: "ai_studio", label: "Студия AI", route: "/ai-studio", icon: "ai_studio" },
   { id: "manufacturing", label: "Производство", route: "/erp?view=production", icon: "erp" },
   { id: "legal", label: "Юридический отдел", route: "/workspace/legal", icon: "security" },
+  { id: "recruiting", label: "Рекрутинг", route: "/workspace/recruiting", icon: "crm" },
   { id: "analytics", label: "Аналитика", route: "/analytics", icon: "analytics" },
   { id: "users", label: "Пользователи", route: "/identity/users", icon: "settings" },
   { id: "monitoring", label: "Мониторинг", route: "/health", icon: "dashboard" },
