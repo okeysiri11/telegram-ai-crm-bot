@@ -33,7 +33,8 @@ test("real browser: Vanguard form → Recruiting INTERVIEW", async ({ page, requ
     throw new Error("BLOCKED: Local Owner login is not available; cannot open Recruiting UI in the browser.");
   }
   await owner.click();
-  await page.waitForURL(/workspace|dashboard|home|recruiting/, { timeout: 20_000 });
+  // Demo Owner lands on /owner (platform owner home), not /workspace.
+  await page.waitForURL(/\/owner(?:\/|$)|workspace|dashboard|home|recruiting/, { timeout: 20_000 });
   await page.goto("/workspace/recruiting/projects/vanguard?tab=leads");
   await expect(page.getByTestId("vanguard-leads")).toContainText(reference, { timeout: 20_000 });
   await expect(page.getByTestId("vanguard-leads")).toContainText("E2E_HARDEN");
