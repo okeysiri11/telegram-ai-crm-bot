@@ -16,12 +16,21 @@ from typing import Any, Protocol
 from services.recruiting_ops.provider_readiness import SECRET_ENV_NAMES, redact_mapping
 
 SECRET_FIELDS = {
-    "meta": ("access_token",),
+    "meta": ("access_token", "app_secret"),
     "google": ("client_secret", "refresh_token", "developer_token"),
+    "tiktok": ("access_token", "app_secret"),
+    "telegram": ("bot_token",),
+    "whatsapp": ("access_token", "verify_token"),
+    "email": ("smtp_password", "api_key"),
+}
+
+PRIMARY_SECRET_FIELDS = {
+    "meta": ("access_token",),
+    "google": ("refresh_token", "developer_token"),
     "tiktok": ("access_token",),
     "telegram": ("bot_token",),
     "whatsapp": ("access_token",),
-    "email": ("smtp_password", "api_key"),
+    "email": ("smtp_password",),
 }
 
 
@@ -136,13 +145,22 @@ def reset_secret_store_for_tests() -> None:
 def _env_name(provider: str, field: str) -> str | None:
     mapping = {
         ("meta", "access_token"): "META_ADS_ACCESS_TOKEN",
+        ("meta", "app_id"): "META_ADS_APP_ID",
+        ("meta", "app_secret"): "META_ADS_APP_SECRET",
+        ("google", "client_id"): "GOOGLE_ADS_CLIENT_ID",
         ("google", "client_secret"): "GOOGLE_ADS_CLIENT_SECRET",
         ("google", "refresh_token"): "GOOGLE_ADS_REFRESH_TOKEN",
         ("google", "developer_token"): "GOOGLE_ADS_DEVELOPER_TOKEN",
         ("tiktok", "access_token"): "TIKTOK_ADS_ACCESS_TOKEN",
+        ("tiktok", "app_id"): "TIKTOK_ADS_APP_ID",
+        ("tiktok", "app_secret"): "TIKTOK_ADS_APP_SECRET",
         ("telegram", "bot_token"): "VANGUARD_TELEGRAM_BOT_TOKEN",
         ("whatsapp", "access_token"): "WHATSAPP_TOKEN",
+        ("whatsapp", "verify_token"): "WHATSAPP_VERIFY_TOKEN",
         ("email", "smtp_password"): "SMTP_PASSWORD",
+        ("email", "smtp_host"): "SMTP_HOST",
+        ("email", "smtp_user"): "SMTP_USER",
+        ("email", "email_from"): "EMAIL_FROM",
     }
     return mapping.get((provider, field))
 
@@ -150,10 +168,12 @@ def _env_name(provider: str, field: str) -> str | None:
 def credential_presence(provider: str) -> dict[str, Any]:
     store = get_secret_store()
     fields = SECRET_FIELDS.get(provider, ())
+    primary = PRIMARY_SECRET_FIELDS.get(provider, fields)
     items = [store.describe(provider, field) for field in fields]
+    present_map = {item["field"]: item["present"] for item in items}
     return {
         "provider": provider,
-        "present": all(item["present"] for item in items) if items else False,
+        "present": all(present_map.get(field) for field in primary) if primary else False,
         "any_present": any(item["present"] for item in items),
         "fields": {item["field"]: {"present": item["present"], "expires_at": item["expires_at"], "scopes": item["scopes"]} for item in items},
         "expires_at": next((item["expires_at"] for item in items if item.get("expires_at")), None),

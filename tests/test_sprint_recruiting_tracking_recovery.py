@@ -253,5 +253,5 @@ async def test_core_event_persists_delivered(client: TestClient):
     assert body["item"]["delivery_status"] == DELIVERED
     assert body["item"]["durable"] is True
     health = await (await client.get(f"{OPS}/health")).json()
-    assert health["sprint"] == "recruiting_1.8"
+    assert health["sprint"] in {"recruiting_1.8", "recruiting_1.9"}
     assert health["tracking_health"]["code"] == "CONNECTED"

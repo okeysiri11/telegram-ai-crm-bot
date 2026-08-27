@@ -386,3 +386,79 @@ async def ops_ai_decide_handler(request: web.Request) -> web.Response:
     rec_id = request.match_info.get("rec_id") or ""
     result = await get_recruiting_ops_service().decide_ai_recommendation(_org(request, body), rec_id, body, _role(request, body))
     return json_response(result, status=_status_for(result))
+
+
+async def ops_oauth_start_handler(request: web.Request) -> web.Response:
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().oauth_start(_org(request), provider, _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_oauth_callback_handler(request: web.Request) -> web.Response:
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().oauth_callback(
+        provider,
+        state=str(request.rel_url.query.get("state") or ""),
+        code=request.rel_url.query.get("code"),
+        error=request.rel_url.query.get("error"),
+    )
+    if request.rel_url.query.get("format") == "json":
+        return json_response(result, status=_status_for(result))
+    status = "connected" if result.get("ok") and ((result.get("item") or {}).get("connected") if isinstance(result.get("item"), dict) else False) else "error"
+    raise web.HTTPFound(f"/workspace/recruiting/integrations?oauth={provider}&status={status}")
+
+
+async def ops_provider_test_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().test_provider_connection(_org(request, body), provider, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_provider_sync_metrics_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().sync_provider_metrics(_org(request, body), provider, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_provider_sync_campaigns_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().sync_provider_campaigns(_org(request, body), provider, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_campaign_write_create_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    result = await get_recruiting_ops_service().propose_campaign_write(_org(request, body), body, _role(request, body))
+    return json_response(result, status=_status_for(result, created=True))
+
+
+async def ops_campaign_write_decide_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    write_id = request.match_info.get("write_id") or ""
+    result = await get_recruiting_ops_service().decide_campaign_write(_org(request, body), write_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_outbound_create_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    result = await get_recruiting_ops_service().create_outbound_message(_org(request, body), body, _role(request, body))
+    return json_response(result, status=_status_for(result, created=True))
+
+
+async def ops_outbound_decide_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    message_id = request.match_info.get("message_id") or ""
+    result = await get_recruiting_ops_service().decide_outbound_message(_org(request, body), message_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_whatsapp_webhook_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request) if request.method == "POST" else {}
+    query = dict(request.rel_url.query)
+    result = await get_recruiting_ops_service().whatsapp_webhook(method=request.method, query=query, body=body)
+    if request.method == "GET" and result.get("verified"):
+        return web.Response(text=str(result.get("challenge") or ""), content_type="text/plain")
+    return json_response(result, status=_status_for(result))

@@ -98,7 +98,11 @@ async def build_ops_diagnostics(service: Any) -> dict[str, Any]:
     tracking_chip = chip(tracking["code"], reason_ru=tracking.get("reason_ru"))
     from services.recruiting_ops.provider_connections import provider_health_snapshot
 
+    from services.recruiting_ops.provider_health import monitor_snapshot
+
     provider_health = provider_health_snapshot(service._bag(org).get("provider_connection") or [])
+    provider_health["monitor"] = monitor_snapshot(service._bag(org).get("provider_connection") or [])
+    provider_health["infra_independent"] = True
 
     url = vanguard_website_url()
     if url:
@@ -156,7 +160,7 @@ async def build_ops_diagnostics(service: Any) -> dict[str, Any]:
 
     return {
         "ok": True,
-        "sprint": "recruiting_1.8",
+        "sprint": "recruiting_1.9",
         "components": components,
         "tracking": tracking,
         "tracking_recovery": recovery,

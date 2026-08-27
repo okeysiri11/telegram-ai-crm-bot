@@ -4,6 +4,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Dialog, Input } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
@@ -29,6 +30,10 @@ type ProviderCard = {
   tracking_status?: string;
   mock?: boolean;
   wizard?: WizardField[];
+  oauth_ready?: boolean;
+  redirect_uri?: string;
+  identity?: { id?: string; name?: string; username?: string };
+  live_verified?: boolean;
 };
 
 function asRecord(json: unknown): Record<string, unknown> {
@@ -46,6 +51,9 @@ function tone(status?: string, mock?: boolean): "success" | "info" | "warning" |
 }
 
 export function ProviderConnectionsPage() {
+  const [params] = useSearchParams();
+  const oauthStatus = params.get("status");
+  const oauthProvider = params.get("oauth");
   const organizationId = useOrgSelector((s) => s.organizationId);
   const recruitingRole = mapUiRoleToRecruiting(useRoleSwitcher((s) => s.activeRoleId));
   const [error, setError] = useState<string | null>(null);
@@ -104,6 +112,11 @@ export function ProviderConnectionsPage() {
       error={error}
       onRefresh={() => void load()}
     >
+      {oauthProvider ? (
+        <p className="eds-type-helper" data-testid="oauth-flow-status">
+          {oauthStatus === "connected" ? "Подключено" : oauthStatus === "error" ? "Ошибка подключения" : "Подключение..."}
+        </p>
+      ) : null}
       <div className="grid gap-3" data-testid="provider-connection-grid">
         {items.map((card) => (
           <Card key={card.provider} title={card.label || card.provider || ""}>
@@ -117,7 +130,7 @@ export function ProviderConnectionsPage() {
                 <dt>Тип</dt>
                 <dd>{card.connection_type || "—"}</dd>
                 <dt>Аккаунт</dt>
-                <dd>{card.account_id || "—"}</dd>
+                <dd>{card.account_id || card.identity?.name || card.identity?.username || "—"}</dd>
                 <dt>Последняя проверка</dt>
                 <dd>{card.last_successful_health_check || "—"}</dd>
                 <dt>Ошибка</dt>
@@ -135,6 +148,21 @@ export function ProviderConnectionsPage() {
                 <Button size="sm" onClick={() => { setWizard(card); setForm({}); }}>
                   Настроить
                 </Button>
+                {card.oauth_ready || card.provider === "meta" || card.provider === "google" || card.provider === "tiktok" ? (
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    data-testid={`provider-oauth-${card.provider}`}
+                    onClick={async () => {
+                      const res = await recruitingOpsGet(`/providers/${card.provider}/oauth/start`, headers);
+                      const json = asRecord(res.json);
+                      const url = String(json.authorize_url || "");
+                      if (url) window.location.assign(url);
+                    }}
+                  >
+                    Подключить
+                  </Button>
+                ) : null}
                 <Button size="sm" variant="secondary" onClick={() => void act(card.provider || "", "test")}>
                   Проверить соединение
                 </Button>

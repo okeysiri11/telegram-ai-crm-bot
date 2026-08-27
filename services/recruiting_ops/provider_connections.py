@@ -42,9 +42,11 @@ CONNECTION_TYPES = {
 
 WIZARD_FIELDS: dict[str, list[dict[str, Any]]] = {
     "meta": [
+        {"id": "app_id", "label_ru": "App ID", "secret": False, "required": False},
+        {"id": "app_secret", "label_ru": "App Secret", "secret": True, "required": False},
         {"id": "ad_account_id", "label_ru": "Ad Account ID", "secret": False, "required": True},
         {"id": "page_id", "label_ru": "Page / Business", "secret": False, "required": False},
-        {"id": "access_token", "label_ru": "Токен доступа", "secret": True, "required": True},
+        {"id": "access_token", "label_ru": "Токен доступа", "secret": True, "required": False},
         {"id": "scopes", "label_ru": "Разрешения", "secret": False, "required": False},
     ],
     "google": [
@@ -52,12 +54,14 @@ WIZARD_FIELDS: dict[str, list[dict[str, Any]]] = {
         {"id": "manager_id", "label_ru": "Manager account", "secret": False, "required": False},
         {"id": "client_id", "label_ru": "OAuth Client ID", "secret": False, "required": True},
         {"id": "client_secret", "label_ru": "OAuth Client Secret", "secret": True, "required": True},
-        {"id": "refresh_token", "label_ru": "Refresh token", "secret": True, "required": True},
+        {"id": "refresh_token", "label_ru": "Refresh token", "secret": True, "required": False},
         {"id": "developer_token", "label_ru": "Developer token", "secret": True, "required": True},
     ],
     "tiktok": [
+        {"id": "app_id", "label_ru": "App ID", "secret": False, "required": False},
+        {"id": "app_secret", "label_ru": "App Secret", "secret": True, "required": False},
         {"id": "advertiser_id", "label_ru": "Advertiser account", "secret": False, "required": True},
-        {"id": "access_token", "label_ru": "Токен / OAuth", "secret": True, "required": True},
+        {"id": "access_token", "label_ru": "Токен / OAuth", "secret": True, "required": False},
     ],
     "telegram": [
         {"id": "bot_username", "label_ru": "Бот", "secret": False, "required": False},
@@ -68,14 +72,18 @@ WIZARD_FIELDS: dict[str, list[dict[str, Any]]] = {
         {"id": "business_account_id", "label_ru": "Business account", "secret": False, "required": False},
         {"id": "phone_number_id", "label_ru": "Phone identifier", "secret": False, "required": True},
         {"id": "access_token", "label_ru": "API token", "secret": True, "required": True},
+        {"id": "verify_token", "label_ru": "Webhook verify token", "secret": True, "required": False},
     ],
     "email": [
         {"id": "provider_type", "label_ru": "Тип провайдера", "secret": False, "required": True},
         {"id": "smtp_host", "label_ru": "SMTP / API host", "secret": False, "required": True},
         {"id": "smtp_user", "label_ru": "Пользователь", "secret": False, "required": False},
         {"id": "email_from", "label_ru": "Отправитель", "secret": False, "required": True},
+        {"id": "smtp_port", "label_ru": "Порт", "secret": False, "required": False},
+        {"id": "tls_mode", "label_ru": "TLS/SSL", "secret": False, "required": False},
+        {"id": "sender_name", "label_ru": "Имя отправителя", "secret": False, "required": False},
         {"id": "smtp_password", "label_ru": "Пароль SMTP", "secret": True, "required": False},
-        {"id": "api_key", "label_ru": "API ключ", "secret": True, "required": False},
+        {"id": "api_key", "label_ru": "API ключ (SendGrid/Mailgun/SES позже)", "secret": True, "required": False},
     ],
 }
 
@@ -125,9 +133,13 @@ def public_card(row: dict[str, Any]) -> dict[str, Any]:
     status = _txt(row.get("status") or "NOT_CONFIGURED").upper()
     mode = _txt(row.get("mode") or "LIVE").upper()
     if mode != "MOCK" and status == "CONNECTED":
-        # Live CONNECTED is only allowed after a real live health check, which this sprint does not perform.
-        status = "CONFIGURING"
-        row = {**row, "status": status, "connected": False}
+        from services.recruiting_ops.runtime import is_production_runtime
+
+        verified = bool(row.get("live_verified"))
+        injected = bool(row.get("mocked_http")) and not is_production_runtime()
+        if not verified and not injected:
+            status = "CONFIGURING"
+            row = {**row, "status": status, "connected": False}
     tracking = "DELIVERABLE" if status == "CONNECTED" else "WAITING_PROVIDER"
     return {
         "provider": provider,
@@ -153,7 +165,11 @@ def public_card(row: dict[str, Any]) -> dict[str, Any]:
         "public": row.get("public") or {},
         "wizard": WIZARD_FIELDS.get(provider) or [],
         "capabilities": list(LIVE_ADAPTERS[provider].capabilities) if provider in LIVE_ADAPTERS else [],
-        "actions": ["configure", "test", "reconnect", "disable", "diagnostics"],
+        "actions": ["configure", "test", "reconnect", "disable", "diagnostics", "oauth"],
+        "live_verified": bool(row.get("live_verified")),
+        "mocked_http": bool(row.get("mocked_http")),
+        "identity": row.get("identity") or {},
+        "consecutive_failures": row.get("consecutive_failures") or 0,
     }
 
 
@@ -199,8 +215,15 @@ def provider_health_snapshot(connections: list[dict[str, Any]]) -> dict[str, Any
 def connection_center_payload(connections: list[dict[str, Any]]) -> dict[str, Any]:
     cards = []
     by_provider = { _txt(item.get("provider")): item for item in connections }
+    from services.recruiting_ops.provider_oauth import OAUTH_PROVIDERS, oauth_ready, redirect_uri
+
     for provider in PROVIDERS:
-        cards.append(public_card(by_provider.get(provider) or default_connection(provider)))
+        card = public_card(by_provider.get(provider) or default_connection(provider))
+        if provider in OAUTH_PROVIDERS:
+            card["oauth_ready"] = oauth_ready(provider)
+            card["redirect_uri"] = redirect_uri(provider)
+            card["actions"] = list(card.get("actions") or []) + ([] if "oauth" in (card.get("actions") or []) else [])
+        cards.append(card)
     return {
         "ok": True,
         "items": cards,

@@ -1,7 +1,6 @@
-"""Provider adapters — LIVE boundaries + MOCK implementations for tests.
+"""Provider adapters — LIVE HTTP + MOCK implementations for tests.
 
-LIVE adapters never report CONNECTED without a successful live health check.
-This sprint does not call Meta/Google/TikTok/WhatsApp/SMTP networks.
+LIVE adapters report CONNECTED only after a successful provider API request.
 MOCK adapters are visibly mode=MOCK and are forbidden in production.
 """
 
@@ -11,15 +10,23 @@ import os
 import time
 from typing import Any
 
+from services.recruiting_ops.campaign_writes import reject_unapproved
 from services.recruiting_ops.provider_contract import (
     ADS_CAPABILITIES,
-    LIVE_API_NOT_IMPLEMENTED,
     MESSAGING_CAPABILITIES,
     MOCK_ONLY,
     NOT_CONFIGURED,
     ProviderAdapter,
     adapter_result,
     unsupported,
+)
+from services.recruiting_ops.provider_live import (
+    live_fetch_metrics,
+    live_health,
+    live_list_accounts,
+    live_list_campaigns,
+    live_send_message,
+    live_write_campaign,
 )
 from services.recruiting_ops.runtime import is_production_runtime
 from services.recruiting_ops.secret_store import credential_presence, get_secret_store
@@ -41,79 +48,54 @@ class LiveProviderAdapter(ProviderAdapter):
         return bool(credential_presence(self.provider)["present"])
 
     def connect(self, **kwargs: Any) -> dict[str, Any]:
-        if not self._credentials_ready():
-            return adapter_result(
-                ok=False,
-                error=NOT_CONFIGURED,
-                status="NOT_CONFIGURED",
-                mode=self.mode,
-                message_ru="Учётные данные не заданы. Провайдер не подключен.",
-            )
-        return adapter_result(
-            ok=True,
-            status="CONFIGURING",
-            mode=self.mode,
-            connected=False,
-            message_ru="Учётные данные сохранены. Live API ещё не подтверждался.",
-        )
+        health = self.health_check(**kwargs)
+        if health.get("connected"):
+            return {**health, "status": "CONNECTED", "mode": self.mode}
+        return health
 
     def disconnect(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=True, status="NOT_CONFIGURED", mode=self.mode, connected=False, message_ru="Подключение отключено.")
+        return adapter_result(ok=True, status="NOT_CONFIGURED", mode=self.mode, connected=False, live_verified=False, message_ru="Подключение отключено.")
 
     def health_check(self, **_kwargs: Any) -> dict[str, Any]:
         started = time.perf_counter()
-        if not self._credentials_ready():
-            return adapter_result(
-                ok=False,
-                error=NOT_CONFIGURED,
-                status="NOT_CONFIGURED",
-                mode=self.mode,
-                connected=False,
-                latency_ms=int((time.perf_counter() - started) * 1000),
-                message_ru="Провайдер не настроен.",
-            )
-        return adapter_result(
-            ok=True,
-            error=LIVE_API_NOT_IMPLEMENTED,
-            status="CONFIGURING",
-            mode=self.mode,
-            connected=False,
-            latency_ms=int((time.perf_counter() - started) * 1000),
-            message_ru="Секреты есть, live-запрос к провайдеру в этом спринте не выполняется.",
-        )
+        result = live_health(self.provider)
+        result.setdefault("latency_ms", int((time.perf_counter() - started) * 1000))
+        result["mode"] = self.mode
+        result["mock"] = False
+        return result
 
     def refresh_credentials(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(
-            ok=False,
-            error=LIVE_API_NOT_IMPLEMENTED,
-            status="CONFIGURING",
-            mode=self.mode,
-            message_ru="Обновление токена live API ещё не подключено.",
-        )
+        return self.health_check()
 
     def list_accounts(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, items=[], mode=self.mode, message_ru="Нет живых данных.")
+        return live_list_accounts(self.provider)
 
-    def list_campaigns(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, items=[], mode=self.mode, message_ru="Нет живых данных.")
+    def list_campaigns(self, **kwargs: Any) -> dict[str, Any]:
+        return live_list_campaigns(self.provider, cursor=kwargs.get("cursor"))
 
     def create_campaign(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, mode=self.mode, message_ru="Создание кампании у провайдера недоступно.")
+        return reject_unapproved()
 
-    def update_campaign(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, mode=self.mode, message_ru="Изменение кампании у провайдера недоступно.")
+    def update_campaign(self, **kwargs: Any) -> dict[str, Any]:
+        if not kwargs.get("approved"):
+            return reject_unapproved()
+        return live_write_campaign(self.provider, "budget", campaign_id=str(kwargs.get("campaign_id") or ""), budget=kwargs.get("budget"))
 
-    def pause_campaign(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, mode=self.mode, message_ru="Пауза у провайдера недоступна.")
+    def pause_campaign(self, **kwargs: Any) -> dict[str, Any]:
+        if not kwargs.get("approved"):
+            return reject_unapproved()
+        return live_write_campaign(self.provider, "pause", campaign_id=str(kwargs.get("campaign_id") or ""))
 
-    def resume_campaign(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, mode=self.mode, message_ru="Возобновление у провайдера недоступно.")
+    def resume_campaign(self, **kwargs: Any) -> dict[str, Any]:
+        if not kwargs.get("approved"):
+            return reject_unapproved()
+        return live_write_campaign(self.provider, "resume", campaign_id=str(kwargs.get("campaign_id") or ""))
 
     def fetch_metrics(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, metrics=None, mode=self.mode, message_ru="Нет живых данных.")
+        return live_fetch_metrics(self.provider)
 
     def fetch_leads(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, items=[], mode=self.mode, message_ru="Нет живых данных.")
+        return adapter_result(ok=False, error="UNSUPPORTED", items=[], mode=self.mode, message_ru="Lead fetch идёт через ingest, не через этот метод.")
 
     def send_message(self, **_kwargs: Any) -> dict[str, Any]:
         return unsupported("send_message", self.provider)
@@ -146,8 +128,10 @@ class TelegramAdapter(LiveProviderAdapter):
     capabilities = MESSAGING_CAPABILITIES
     public_fields = ("bot_username", "target_chat")
 
-    def send_message(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, sent=False, mode=self.mode, message_ru="Отправка в Telegram не подключена.")
+    def send_message(self, **kwargs: Any) -> dict[str, Any]:
+        if not kwargs.get("approved"):
+            return reject_unapproved()
+        return live_send_message(self.provider, to=str(kwargs.get("to") or kwargs.get("chat_id") or ""), text=str(kwargs.get("text") or kwargs.get("body") or ""))
 
 
 class WhatsAppAdapter(LiveProviderAdapter):
@@ -156,8 +140,10 @@ class WhatsAppAdapter(LiveProviderAdapter):
     capabilities = MESSAGING_CAPABILITIES
     public_fields = ("phone_number_id", "business_account_id")
 
-    def send_message(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, sent=False, mode=self.mode, message_ru="Отправка в WhatsApp не подключена.")
+    def send_message(self, **kwargs: Any) -> dict[str, Any]:
+        if not kwargs.get("approved"):
+            return reject_unapproved()
+        return live_send_message(self.provider, to=str(kwargs.get("to") or kwargs.get("phone") or ""), text=str(kwargs.get("text") or kwargs.get("body") or ""))
 
 
 class EmailAdapter(LiveProviderAdapter):
@@ -166,8 +152,10 @@ class EmailAdapter(LiveProviderAdapter):
     capabilities = MESSAGING_CAPABILITIES
     public_fields = ("smtp_host", "smtp_user", "email_from", "provider_type")
 
-    def send_message(self, **_kwargs: Any) -> dict[str, Any]:
-        return adapter_result(ok=False, error=LIVE_API_NOT_IMPLEMENTED, sent=False, mode=self.mode, message_ru="Отправка email не подключена.")
+    def send_message(self, **kwargs: Any) -> dict[str, Any]:
+        if not kwargs.get("approved"):
+            return reject_unapproved()
+        return live_send_message(self.provider, to=str(kwargs.get("to") or kwargs.get("email") or ""), text=str(kwargs.get("text") or kwargs.get("body") or ""))
 
 
 class MockProviderAdapter(ProviderAdapter):
@@ -294,5 +282,11 @@ def reset_adapters_for_tests() -> None:
     _MOCKS.clear()
     get_secret_store()  # ensure store exists
     from services.recruiting_ops.secret_store import reset_secret_store_for_tests
+    from services.recruiting_ops.provider_http import reset_http_transport
+    from services.recruiting_ops.provider_live import set_smtp_factory
+    from services.recruiting_ops.provider_health import reset_health_monitor
 
     reset_secret_store_for_tests()
+    reset_http_transport()
+    set_smtp_factory(None)
+    reset_health_monitor()

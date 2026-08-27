@@ -1,0 +1,91 @@
+# Recruiting live provider setup
+
+No secret values. Configure these in the server environment or Render dashboard, then **Recruiting → Интеграции → Проверить соединение**.
+
+Public API origin used for callbacks:
+
+- Production (from `VANGUARD_WEBSITE_URL` host): `https://ados-web.onrender.com`
+- Override: `RECRUITING_PUBLIC_URL`
+- Local: `http://127.0.0.1:8080`
+
+Callback pattern: `{origin}/api/recruiting-ops/v1/oauth/{provider}/callback`
+
+Successful live status is **Подключено / CONNECTED** only after a real provider health request. Missing credentials stay **Не настроено / NOT_CONFIGURED** (not ERROR).
+
+---
+
+## Meta Ads
+
+1. Meta for Developers app with Marketing API.
+2. Create app; add Ads Management; set Valid OAuth Redirect URIs.
+3. Env names: `META_ADS_APP_ID`, `META_ADS_APP_SECRET`, `META_ADS_ACCOUNT_ID`, optional `META_ADS_ACCESS_TOKEN`, `META_ADS_REDIRECT_URI`, `META_GRAPH_API_VERSION`.
+4. Redirect URI: `https://ados-web.onrender.com/api/recruiting-ops/v1/oauth/meta/callback` (or local `http://127.0.0.1:8080/api/recruiting-ops/v1/oauth/meta/callback`).
+5. Scopes: `ads_management`, `ads_read`, `business_management`, `pages_show_list`.
+6. Enter App ID / secret and Ad Account ID in Recruiting → Интеграции → Meta Ads → Настроить, or set env. Then **Подключить**.
+7. **Проверить соединение**.
+8. Success: status **Подключено**, mode **LIVE**.
+
+---
+
+## Google Ads
+
+1. Google Cloud OAuth client + Google Ads API developer token.
+2. Create OAuth client (web), enable Google Ads API, note customer ID (and manager ID if MCC).
+3. Env names: `GOOGLE_ADS_CLIENT_ID`, `GOOGLE_ADS_CLIENT_SECRET`, `GOOGLE_ADS_DEVELOPER_TOKEN`, `GOOGLE_ADS_CUSTOMER_ID`, optional `GOOGLE_ADS_REFRESH_TOKEN`, `GOOGLE_ADS_LOGIN_CUSTOMER_ID`, `GOOGLE_ADS_REDIRECT_URI`, `GOOGLE_ADS_API_VERSION`.
+4. Redirect URI: `https://ados-web.onrender.com/api/recruiting-ops/v1/oauth/google/callback`.
+5. Scope: `https://www.googleapis.com/auth/adwords` (offline access).
+6. Recruiting → Интеграции → Google Ads → Настроить / **Подключить**.
+7. **Проверить соединение**.
+8. Success: **Подключено**.
+
+---
+
+## TikTok Ads
+
+1. TikTok Marketing API app.
+2. Create app; add redirect URL; note advertiser ID.
+3. Env names: `TIKTOK_ADS_APP_ID`, `TIKTOK_ADS_APP_SECRET`, `TIKTOK_ADS_ADVERTISER_ID`, optional `TIKTOK_ADS_ACCESS_TOKEN`, `TIKTOK_ADS_REDIRECT_URI`.
+4. Redirect URI: `https://ados-web.onrender.com/api/recruiting-ops/v1/oauth/tiktok/callback`.
+5. Advertiser management authorization.
+6. Recruiting → Интеграции → TikTok Ads → Настроить / **Подключить**.
+7. **Проверить соединение**.
+8. Success: **Подключено**.
+
+---
+
+## Telegram
+
+1. BotFather bot (do **not** reuse the platform `BOT_TOKEN`).
+2. Create bot; optional default chat/channel.
+3. Env names: `VANGUARD_TELEGRAM_BOT_TOKEN`. Optional chat in UI `target_chat`.
+4. No OAuth redirect.
+5. Bot identity via `getMe`.
+6. Recruiting → Интеграции → Telegram → paste token → Сохранить. Token is not shown again.
+7. **Проверить соединение**.
+8. Success: **Подключено** and bot username.
+
+---
+
+## WhatsApp
+
+1. Meta WhatsApp Cloud API (business + phone number).
+2. Create WhatsApp product; phone number ID; access token; webhook verify token.
+3. Env names: `WHATSAPP_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, optional `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_VERIFY_TOKEN`.
+4. Webhook URL: `https://ados-web.onrender.com/api/recruiting-ops/v1/webhooks/whatsapp` (GET verify + POST statuses).
+5. `whatsapp_business_messaging` as granted on the token.
+6. Recruiting → Интеграции → WhatsApp → Настроить.
+7. **Проверить соединение**.
+8. Success: **Подключено**. Webhook events appear only when Meta actually posts them.
+
+---
+
+## Email (SMTP)
+
+1. SMTP mailbox (SendGrid/Mailgun/SES API can be added later without redesign).
+2. Host, port, TLS mode, user, password, sender.
+3. Env names: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_TLS_MODE`, `EMAIL_FROM`, `EMAIL_FROM_NAME`.
+4. No OAuth redirect.
+5. STARTTLS by default (`SMTP_TLS_MODE=starttls`).
+6. Recruiting → Интеграции → Email → Настроить. Password is not shown after save.
+7. **Проверить соединение**.
+8. Success: **Подключено**. Outbound recruiting messages still require human approval.

@@ -55,6 +55,8 @@ KINDS = (
     "automation_rule",
     "automation_run",
     "ai_recommendation",
+    "campaign_write",
+    "outbound_message",
 )
 
 LEAD_STATUSES = ("new", "qualified", "converted", "lost")
@@ -406,7 +408,7 @@ class RecruitingOpsService:
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.8",
+            "sprint": "recruiting_1.9",
             "vanguard": {
                 "connected": False,
                 "status": "ingest_ready",
@@ -1540,35 +1542,66 @@ class RecruitingOpsService:
         payload["attribution"] = self._attribution_snapshot(leads, events)
         payload["entities"] = {kind: list(self._bag(org).get(kind) or []) for kind in ("ad_account", "ad_set", "creative", "audience", "ads_metrics")}
         from services.recruiting_ops.provider_connections import connection_center_payload, provider_health_snapshot
+        from services.recruiting_ops.provider_health import monitor_snapshot
 
         connections = self._bag(org).get("provider_connection") or []
-        live_provider = any(str(item.get("status") or "").upper() == "CONNECTED" and str(item.get("mode") or "").upper() != "MOCK" for item in connections)
+        live_provider = any(
+            str(item.get("status") or "").upper() == "CONNECTED"
+            and str(item.get("mode") or "").upper() != "MOCK"
+            and (item.get("live_verified") or item.get("mocked_http"))
+            for item in connections
+        )
         qualified = [item for item in leads if _txt(item.get("status")).lower() in {"qualified", "converted"}]
         interviews = [item for item in cands if _txt(item.get("pipeline_stage")).upper() == "INTERVIEW"]
         hires = [item for item in cands if _txt(item.get("pipeline_stage")).upper() == "HIRED"]
+        from services.recruiting_ops.provider_metrics import aggregate_live_metrics
+
+        live_rows = [item for item in self._bag(org).get("ads_metrics") or [] if item.get("source") == "LIVE"]
+        live_agg = aggregate_live_metrics(live_rows)
+        spend = live_agg["spend"] if live_provider else None
+        impressions = live_agg["impressions"] if live_provider else None
+        clicks = live_agg["clicks"] if live_provider else None
         payload["sections"] = ["overview", "providers", "campaigns", "leads", "funnel", "attribution", "source_analytics", "automation", "ai_optimization", "diagnostics"]
         payload["overview"] = {
             "connected_providers": sum(1 for item in connections if str(item.get("status") or "").upper() == "CONNECTED"),
             "active_campaigns": len([c for c in campaigns if str(c.get("status") or "").upper() in {"ACTIVE", "active"}]),
-            "spend": None if not live_provider else None,
-            "impressions": None,
-            "clicks": None,
+            "spend": spend,
+            "impressions": impressions,
+            "clicks": clicks,
+            "ctr": live_agg.get("ctr") if live_provider else None,
+            "cpc": live_agg.get("cpc") if live_provider else None,
             "leads": len(leads),
             "qualified_candidates": len(qualified),
             "interviews": len(interviews),
             "hires": len(hires),
-            "cost_per_lead": None,
-            "cost_per_qualified_candidate": None,
-            "cost_per_interview": None,
-            "cost_per_hire": None,
-            "live_provider_metrics": False,
-            "no_live_data": True,
-            "message_ru": "Нет живых данных" if not live_provider else "Нет живых данных провайдера",
+            "cost_per_lead": (spend / len(leads)) if spend is not None and leads else None,
+            "cost_per_qualified_candidate": (spend / len(qualified)) if spend is not None and qualified else None,
+            "cost_per_interview": (spend / len(interviews)) if spend is not None and interviews else None,
+            "cost_per_hire": (spend / len(hires)) if spend is not None and hires else None,
+            "live_provider_metrics": bool(live_provider and not live_agg.get("no_live_data")),
+            "no_live_data": True if not live_provider else bool(live_agg.get("no_live_data")),
+            "message_ru": "Нет живых данных" if not live_provider or live_agg.get("no_live_data") else None,
+            "data_source": {
+                "providers": "LIVE" if live_provider else "UNAVAILABLE",
+                "spend": "LIVE" if spend is not None else "UNAVAILABLE",
+                "impressions": "LIVE" if impressions is not None else "UNAVAILABLE",
+                "clicks": "LIVE" if clicks is not None else "UNAVAILABLE",
+                "leads": "INTERNAL",
+                "qualified_candidates": "INTERNAL",
+                "interviews": "INTERNAL",
+                "hires": "INTERNAL",
+                "cost_per_lead": "CALCULATED" if spend is not None and leads else "UNAVAILABLE",
+                "cost_per_qualified_candidate": "CALCULATED" if spend is not None and qualified else "UNAVAILABLE",
+                "cost_per_interview": "CALCULATED" if spend is not None and interviews else "UNAVAILABLE",
+                "cost_per_hire": "CALCULATED" if spend is not None and hires else "UNAVAILABLE",
+            },
         }
-        payload["provider_health"] = provider_health_snapshot(connections)
+        payload["provider_health"] = {**provider_health_snapshot(connections), **{"monitor": monitor_snapshot(connections)}}
         payload["provider_connections"] = connection_center_payload(connections)
         payload["automation"] = {"items": list(self._bag(org).get("automation_rule") or []), "approval_required_default": True}
         payload["ai_optimization"] = {"items": list(self._bag(org).get("ai_recommendation") or []), "advisory_only": True, "live_write_access": False}
+        payload["campaign_writes"] = {"items": list(self._bag(org).get("campaign_write") or []), "approval_required": True}
+        payload["outbound_messages"] = {"items": list(self._bag(org).get("outbound_message") or []), "approval_required": True}
         return self._ok(**payload)
 
     async def create_task(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
@@ -2154,6 +2187,9 @@ class RecruitingOpsService:
 
         payload = connection_center_payload(self._connections(org))
         payload["wizards"] = {key: wizard_spec(key) for key in ("meta", "google", "tiktok", "telegram", "whatsapp", "email")}
+        from services.recruiting_ops.provider_registry import provider_registry
+
+        payload["registry"] = provider_registry(self._connections(org))["items"]
         return payload
 
     async def provider_wizard(self, provider: str) -> dict[str, Any]:
@@ -2283,11 +2319,18 @@ class RecruitingOpsService:
                 "last_health_check_at": _now(),
                 "last_error": None if result.get("ok") else (result.get("error") or result.get("message_ru")),
                 "latency_ms": result.get("latency_ms"),
+                "live_verified": bool(result.get("live_verified")),
+                "mocked_http": bool(result.get("mocked_http")),
+                "identity": result.get("identity") or row.get("identity") or {},
+                "consecutive_failures": 0 if result.get("connected") else int(row.get("consecutive_failures") or 0) + (0 if act in {"disable", "disconnect"} else 1),
                 "updated_at": _now(),
             }
         )
         if result.get("ok") and result.get("connected"):
             row["last_successful_request_at"] = _now()
+        from services.recruiting_ops.provider_health import record_check
+
+        record_check(key, result)
         if not existing:
             row["id"] = str(uuid.uuid4())
             row["created_at"] = _now()
@@ -2473,17 +2516,33 @@ class RecruitingOpsService:
         if denied:
             return denied
         from services.recruiting_ops.ai_optimization import build_recommendation
+        from services.recruiting_ops.provider_metrics import aggregate_live_metrics
 
-        parsed = build_recommendation(body, metrics=body.get("metrics") if isinstance(body.get("metrics"), dict) else body)
-        if not parsed.get("ok"):
-            return parsed
         org = _org(organization_id)
         await self.ensure_hydrated(org)
+        live_rows = [item for item in self._bag(org).get("ads_metrics") or [] if item.get("source") == "LIVE"]
+        agg = aggregate_live_metrics(live_rows)
+        metrics = body.get("metrics") if isinstance(body.get("metrics"), dict) else {}
+        metrics = {
+            "leads": len(self._bag(org).get("lead") or []),
+            "qualified": len([item for item in self._bag(org).get("lead") or [] if _txt(item.get("status")).lower() in {"qualified", "converted"}]),
+            "interviews": len([item for item in self._bag(org).get("candidate") or [] if _txt(item.get("pipeline_stage")).upper() == "INTERVIEW"]),
+            "hires": len([item for item in self._bag(org).get("candidate") or [] if _txt(item.get("pipeline_stage")).upper() == "HIRED"]),
+            "spend": agg.get("spend"),
+            "impressions": agg.get("impressions"),
+            "clicks": agg.get("clicks"),
+            **metrics,
+        }
+        parsed = build_recommendation(body, metrics=metrics)
+        if not parsed.get("ok"):
+            return parsed
         item = {
             "id": str(body.get("id") or uuid.uuid4()),
             "organization_id": org,
             "created_at": _now(),
             "updated_at": _now(),
+            "data_freshness": max((str(row.get("updated_at") or row.get("bucket") or "") for row in live_rows), default=None),
+            "observation": _txt(body.get("observation") or body.get("reason")) or "Анализ внутренних метрик воронки и доступных live-данных.",
             **parsed["item"],
         }
         saved = await self._persist("ai_recommendation", item)
@@ -2530,6 +2589,320 @@ class RecruitingOpsService:
         )
         return self._ok(item=saved)
 
+    async def oauth_start(self, organization_id: str, provider: str, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        from services.recruiting_ops.provider_oauth import authorize_url
+
+        result = authorize_url(provider, _org(organization_id))
+        if result.get("ok"):
+            await self._activity(
+                organization_id=_org(organization_id),
+                entity_type="provider_connection",
+                entity_id=provider,
+                action="oauth_started",
+                summary=f"OAuth {provider}: старт",
+                role=role,
+                payload={"provider": provider, "redirect_uri": result.get("redirect_uri")},
+            )
+        return result
+
+    async def oauth_callback(self, provider: str, *, state: str, code: str | None, error: str | None = None) -> dict[str, Any]:
+        from services.recruiting_ops.provider_oauth import decode_state, exchange_code
+        from services.recruiting_ops.secret_store import get_secret_store, public_secret_audit
+
+        parsed = decode_state(state)
+        if not parsed.get("ok"):
+            return parsed
+        if _txt(parsed.get("provider")) != _txt(provider).lower():
+            return {"ok": False, "error": "AUTH_ERROR", "message_ru": "OAuth state не совпадает с провайдером."}
+        if error or not _txt(code):
+            return {"ok": False, "error": "AUTH_ERROR", "status": "ERROR", "message_ru": "Провайдер не выдал код авторизации."}
+        org = _org(parsed.get("organization_id"))
+        exchanged = exchange_code(provider, str(code))
+        if not exchanged.get("ok"):
+            return exchanged
+        store = get_secret_store()
+        if exchanged.get("access_token"):
+            store.put(_txt(provider).lower(), "access_token", str(exchanged["access_token"]))
+        if exchanged.get("refresh_token"):
+            store.put(_txt(provider).lower(), "refresh_token", str(exchanged["refresh_token"]))
+        await self._activity(
+            organization_id=org,
+            entity_type="provider_connection",
+            entity_id=provider,
+            action="oauth_token_stored",
+            summary=f"OAuth {provider}: токен сохранён",
+            role="system",
+            payload=public_secret_audit("put", _txt(provider).lower(), "access_token"),
+        )
+        return await self.provider_action(org, provider, "connect", {"mode": "LIVE"}, role="platform_owner")
+
+    async def test_provider_connection(self, organization_id: str, provider: str, role: str | None = None) -> dict[str, Any]:
+        result = await self.provider_action(organization_id, provider, "test", {"mode": "LIVE"}, role=role)
+        item = result.get("item") if isinstance(result.get("item"), dict) else {}
+        adapter = result.get("adapter") if isinstance(result.get("adapter"), dict) else {}
+        identity = item.get("identity") or adapter.get("identity") or {}
+        safe = {
+            "provider": _txt(provider).lower(),
+            "status": item.get("status") or adapter.get("status"),
+            "account_identity": {k: identity.get(k) for k in ("id", "name", "username", "phone", "account_id") if identity.get(k)},
+            "latency": item.get("latency_ms") or adapter.get("latency_ms"),
+            "permissions": item.get("scopes") or item.get("permissions") or [],
+            "checked_at": item.get("last_successful_health_check") or _now(),
+            "error_code": adapter.get("error_code") or adapter.get("error"),
+            "safe_error_message": adapter.get("message_ru"),
+            "mocked_http": bool(adapter.get("mocked_http") or item.get("mocked_http")),
+            "live_verified": bool(adapter.get("live_verified") or item.get("live_verified")),
+        }
+        if result.get("ok") is False and not adapter:
+            return result
+        return self._ok(**safe)
+
+    async def sync_provider_metrics(self, organization_id: str, provider: str, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        from services.recruiting_ops.provider_adapters import get_adapter
+        from services.recruiting_ops.provider_metrics import normalize_metric_row, upsert_metrics
+
+        fetched = get_adapter(provider, mode="LIVE").invoke("fetch_metrics")
+        if not fetched.get("ok"):
+            return fetched
+        incoming = [
+            normalize_metric_row(provider, row if isinstance(row, dict) else {}, account=str((fetched.get("identity") or {}).get("id") or ""))
+            for row in fetched.get("items") or []
+        ]
+        existing = list(self._bag(org).get("ads_metrics") or [])
+        self._bag(org)["ads_metrics"] = upsert_metrics(existing, incoming)
+        for row in incoming:
+            saved = await self._persist("ads_metrics", {**row, "id": str(uuid.uuid4()), "organization_id": org})
+            self._bag(org)["ads_metrics"].insert(0, saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="ads_metrics",
+            entity_id=provider,
+            action="metrics_synced",
+            summary=f"Метрики {provider}: {len(incoming)}",
+            role=role,
+            payload={"provider": provider, "count": len(incoming), "mocked_http": fetched.get("mocked_http")},
+        )
+        return self._ok(items=incoming, cursor=fetched.get("cursor"), mocked_http=fetched.get("mocked_http"), live_verified=fetched.get("live_verified"))
+
+    async def sync_provider_campaigns(self, organization_id: str, provider: str, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        from services.recruiting_ops.provider_adapters import get_adapter
+        from services.recruiting_ops.campaign_model import normalize_campaign
+
+        listed = get_adapter(provider, mode="LIVE").invoke("list_campaigns")
+        if not listed.get("ok"):
+            return listed
+        synced = []
+        for raw in listed.get("items") or []:
+            if not isinstance(raw, dict):
+                continue
+            external_id = str(raw.get("id") or raw.get("campaign_id") or "")
+            existing = next(
+                (
+                    item
+                    for item in self._bag(org).get("campaign") or []
+                    if str(item.get("external_id")) == external_id and _txt(item.get("provider")) == _txt(provider)
+                ),
+                None,
+            )
+            domain = normalize_campaign(
+                {
+                    "provider": provider,
+                    "external_id": external_id,
+                    "name": raw.get("name"),
+                    "status": raw.get("status"),
+                    "budget": raw.get("budget") or raw.get("daily_budget"),
+                    "start_at": raw.get("start_time") or raw.get("start_at"),
+                    "end_at": raw.get("stop_time") or raw.get("end_at"),
+                },
+                existing=existing,
+            )
+            domain["lifecycle_status"] = domain.get("status")
+            domain["provider_status"] = raw.get("status")
+            domain["sync_state"] = "SYNCED"
+            domain["last_synced_at"] = _now()
+            if existing:
+                history = list(existing.get("audit_history") or [])
+                domain.pop("status", None)
+                existing.update({k: v for k, v in domain.items() if k != "audit_history"})
+                existing["audit_history"] = history
+                persisted = await self._persist_patch(org, str(existing["id"]), existing)
+                saved = persisted or existing
+                self._replace(org, "campaign", saved)
+            else:
+                item = {"id": str(uuid.uuid4()), "organization_id": org, "status": "active", "created_at": _now(), **domain}
+                saved = await self._persist("campaign", item)
+                self._bag(org)["campaign"].insert(0, saved)
+            synced.append(saved)
+        return self._ok(items=synced, mocked_http=listed.get("mocked_http"))
+
+    async def propose_campaign_write(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        from services.recruiting_ops.campaign_writes import propose_write
+
+        parsed = propose_write(body)
+        if not parsed.get("ok"):
+            return parsed
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        item = {"id": str(uuid.uuid4()), "organization_id": org, **parsed["item"]}
+        saved = await self._persist("campaign_write", item)
+        self._bag(org)["campaign_write"].insert(0, saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="campaign_write",
+            entity_id=str(saved["id"]),
+            action="campaign_write_proposed",
+            summary=f"Live-изменение {saved.get('action')} ожидает согласования",
+            role=role,
+            payload={"action": saved.get("action"), "provider": saved.get("provider"), "approval_required": True},
+        )
+        return self._ok(item=saved)
+
+    async def decide_campaign_write(self, organization_id: str, write_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        item = self._find(org, "campaign_write", write_id)
+        if not item:
+            return {"ok": False, "error": "not_found", "message_ru": "Нет заявки на изменение кампании"}
+        from services.recruiting_ops.campaign_writes import apply_approved_write
+
+        parsed = apply_approved_write(item, decision=str(body.get("decision") or ""))
+        if parsed.get("error") == "validation":
+            return parsed
+        patch = parsed["item"]
+        patch["updated_at"] = _now()
+        item.update(patch)
+        persisted = await self._persist_patch(org, write_id, patch)
+        saved = persisted or item
+        self._replace(org, "campaign_write", saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="campaign_write",
+            entity_id=write_id,
+            action="campaign_write_decided",
+            summary=f"Live-изменение: {saved.get('status')}",
+            role=role,
+            payload={"status": saved.get("status"), "live_applied": saved.get("live_applied")},
+        )
+        return self._ok(item=saved, adapter=parsed.get("adapter"))
+
+    async def create_outbound_message(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "create")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        from services.recruiting_ops.messaging_lifecycle import normalize_outbound
+        from services.recruiting_ops.provider_connections import is_runtime_connected
+
+        channel = _txt(body.get("channel") or body.get("provider")).lower()
+        parsed = normalize_outbound(body, connected=is_runtime_connected(channel))
+        if not parsed.get("ok"):
+            return parsed
+        item = {"id": str(uuid.uuid4()), "organization_id": org, **parsed["item"]}
+        saved = await self._persist("outbound_message", item)
+        self._bag(org)["outbound_message"].insert(0, saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="outbound_message",
+            entity_id=str(saved["id"]),
+            action="message_created",
+            summary=f"Сообщение {saved.get('channel')}: {saved.get('status')}",
+            role=role,
+            payload={"channel": saved.get("channel"), "status": saved.get("status")},
+        )
+        return self._ok(item=saved)
+
+    async def decide_outbound_message(self, organization_id: str, message_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        item = self._find(org, "outbound_message", message_id)
+        if not item:
+            return {"ok": False, "error": "not_found", "message_ru": "Сообщение не найдено"}
+        decision = _txt(body.get("decision")).upper()
+        if decision in {"REJECT", "REJECTED"}:
+            item.update({"status": "FAILED", "updated_at": _now()})
+            await self._persist_patch(org, message_id, item)
+            self._replace(org, "outbound_message", item)
+            return self._ok(item=item)
+        if decision not in {"APPROVE", "APPROVED"}:
+            return {"ok": False, "error": "validation", "message_ru": "Нужно Approve или Reject."}
+        from services.recruiting_ops.provider_adapters import get_adapter
+        from services.recruiting_ops.messaging_lifecycle import WAITING_PROVIDER, SENDING, SENT, FAILED
+
+        if item.get("status") == WAITING_PROVIDER:
+            return self._ok(item=item, message_ru="Провайдер не подключен.")
+        item["status"] = SENDING
+        sent = get_adapter(str(item.get("channel")), mode="LIVE").invoke(
+            "send_message",
+            approved=True,
+            to=item.get("to"),
+            text=item.get("body"),
+            body=item.get("body"),
+        )
+        item.update(
+            {
+                "status": SENT if sent.get("ok") else FAILED,
+                "sent": bool(sent.get("ok")),
+                "journal_only": not bool(sent.get("ok")),
+                "provider_message_id": sent.get("provider_message_id"),
+                "updated_at": _now(),
+            }
+        )
+        persisted = await self._persist_patch(org, message_id, item)
+        saved = persisted or item
+        self._replace(org, "outbound_message", saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="outbound_message",
+            entity_id=message_id,
+            action="message_sent" if saved.get("sent") else "message_failed",
+            summary=f"Сообщение {saved.get('channel')}: {saved.get('status')}",
+            role=role,
+            payload={"status": saved.get("status"), "provider_message_id": saved.get("provider_message_id")},
+        )
+        return self._ok(item=saved, adapter={"ok": sent.get("ok"), "error": sent.get("error"), "message_ru": sent.get("message_ru")})
+
+    async def whatsapp_webhook(self, *, method: str, query: dict[str, Any], body: dict[str, Any] | None = None) -> dict[str, Any]:
+        from services.recruiting_ops.secret_store import get_secret_store
+        import os
+
+        store = get_secret_store()
+        verify = store.get("whatsapp", "verify_token") or _txt(os.getenv("WHATSAPP_VERIFY_TOKEN"))
+        if method.upper() == "GET":
+            if _txt(query.get("hub.mode")) == "subscribe" and _txt(query.get("hub.verify_token")) == verify and verify:
+                return {"ok": True, "challenge": query.get("hub.challenge"), "verified": True}
+            return {"ok": False, "error": "AUTH_ERROR", "message_ru": "Webhook verify не прошёл."}
+        entries = (body or {}).get("entry") if isinstance(body, dict) else None
+        events = []
+        if isinstance(entries, list):
+            for entry in entries:
+                for change in (entry.get("changes") or []) if isinstance(entry, dict) else []:
+                    value = change.get("value") if isinstance(change, dict) else {}
+                    for status in value.get("statuses") or []:
+                        events.append({"status": status.get("status"), "provider_message_id": status.get("id"), "received": True})
+        return self._ok(items=events, received=bool(events))
 
     async def _probe_website(self, url: str) -> tuple[str, str]:
         try:

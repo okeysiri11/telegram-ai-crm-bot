@@ -78,6 +78,8 @@ export function AdsControlCenterPage() {
   const sources = asRecord(data.source_analytics);
   const automation = asRecord(data.automation);
   const ai = asRecord(data.ai_optimization);
+  const writes = asRecord(data.campaign_writes);
+  const messages = asRecord(data.outbound_messages);
   const health = asRecord(data.provider_health);
 
   return (
@@ -131,6 +133,9 @@ export function AdsControlCenterPage() {
             <dd>{liveLabel(overview.cost_per_hire)}</dd>
           </dl>
           {overview.no_live_data ? <p className="mt-2 eds-type-helper" data-testid="ads-no-live-data">Нет живых данных</p> : null}
+          <p className="mt-2 eds-type-helper" data-testid="ads-data-sources">
+            Источники: расход {String(asRecord(overview.data_source).spend || "UNAVAILABLE")}, лиды INTERNAL, CPL {String(asRecord(overview.data_source).cost_per_lead || "UNAVAILABLE")}
+          </p>
         </Card>
       ) : null}
       {section === "providers" ? (
@@ -172,9 +177,41 @@ export function AdsControlCenterPage() {
             );
           })}
           </ul>
+          <p className="mt-3 eds-type-helper" data-testid="ads-campaign-approval">Live-изменения кампании только после согласования.</p>
+          <ul data-testid="ads-campaign-writes">
+            {asList(writes.items).map((raw) => {
+              const row = asRecord(raw);
+              return (
+                <li key={String(row.id)}>
+                  {String(row.action)} — {String(row.status)}
+                  <Button size="sm" variant="secondary" onClick={() => void recruitingOpsPost(`/campaign-writes/${row.id}/decision`, { decision: "APPROVE" }, headers).then(load)}>
+                    Одобрить
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
         </Card>
       ) : null}
-      {section === "leads" ? <Card title="Лиды">Лиды нормализуются из провайдера без перезаписи истории.</Card> : null}
+      {section === "leads" ? (
+        <Card title="Лиды">
+          <p>Лиды нормализуются из провайдера без перезаписи истории.</p>
+          <p className="mt-2 eds-type-helper" data-testid="ads-messaging-approval">Сообщения требуют согласования. Неподключенный канал остаётся WAITING_PROVIDER.</p>
+          <ul>
+            {asList(messages.items).map((raw) => {
+              const row = asRecord(raw);
+              return (
+                <li key={String(row.id)}>
+                  {String(row.channel)} — {String(row.status)}
+                  <Button size="sm" variant="secondary" onClick={() => void recruitingOpsPost(`/messages/${row.id}/decision`, { decision: "APPROVE" }, headers).then(load)}>
+                    Одобрить отправку
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        </Card>
+      ) : null}
       {section === "funnel" ? (
         <Card title="Воронка">
           <ul data-testid="ads-funnel">
