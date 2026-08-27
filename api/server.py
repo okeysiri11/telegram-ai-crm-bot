@@ -112,6 +112,10 @@ def create_app() -> web.Application:
 
     register_recruiting_enterprise_routes(app)
 
+    from applications.vanguard_site.api.register import register_vanguard_site_routes
+
+    register_vanguard_site_routes(app)
+
     from applications.auto_enterprise.api.register import register_auto_enterprise_routes
 
     register_auto_enterprise_routes(app)

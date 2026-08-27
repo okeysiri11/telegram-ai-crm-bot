@@ -24,6 +24,7 @@ import {
   mapUiRoleToRecruiting,
   ruLeadStatus,
 } from "./recruitingLabels";
+import { displayMetric } from "./RecruitingOpsFrame";
 
 type Row = Record<string, unknown>;
 
@@ -78,7 +79,21 @@ export function RecruitingBusinessPage() {
   const [panel, setPanel] = useState<null | "lead" | "vacancy" | "campaign" | "task" | "comm">(null);
   const [leadForm, setLeadForm] = useState({ name: "", phone: "", email: "", source: "manual", vacancy_id: "", campaign_id: "" });
   const [vacancyForm, setVacancyForm] = useState({ title: "", department: "", location: "" });
-  const [campaignForm, setCampaignForm] = useState({ name: "", source: "vanguard", vacancy_id: "" });
+  const [campaignForm, setCampaignForm] = useState({
+    name: "",
+    source: "vanguard",
+    project_key: "vanguard",
+    channel: "Organic",
+    medium: "website",
+    campaign_code: "",
+    landing_url: "/vanguard",
+    vacancy_id: "",
+    budget: "",
+    spend: "",
+    start_date: "",
+    end_date: "",
+    status: "active",
+  });
   const [taskForm, setTaskForm] = useState({ title: "Позвонить", assignee: "", due_date: "", lead_id: "", candidate_id: "", notes: "" });
   const [commForm, setCommForm] = useState({ channel: "PHONE", body: "", lead_id: "", candidate_id: "" });
   const [noteForm, setNoteForm] = useState({ lead_id: "", notes: "" });
@@ -497,14 +512,22 @@ export function RecruitingBusinessPage() {
       description: "Маркировка источника трафика. Рекламные API не подключены.",
       columns: [
         { key: "name", label: "Кампания" },
+        { key: "channel", label: "Канал" },
         { key: "source", label: "Источник" },
+        { key: "medium", label: "Medium" },
+        { key: "campaign_code", label: "Код" },
         { key: "status", label: "Статус" },
+        { key: "spend", label: "Spend" },
       ],
       rows: bundle.campaigns.map((c) => ({
         id: String(c.id || ""),
         name: pick(c, "name", "title"),
+        channel: pick(c, "channel"),
         source: pick(c, "source"),
+        medium: pick(c, "medium"),
+        campaign_code: pick(c, "campaign_code"),
         status: pick(c, "status"),
+        spend: displayMetric(c.spend),
       })),
       emptyTitle: "Кампаний нет",
       emptyDescription: "Создайте кампанию вручную. Meta/Google/TikTok Ads не подключаются в этом спринте.",
@@ -517,11 +540,28 @@ export function RecruitingBusinessPage() {
             className="grid gap-2 md:grid-cols-3"
             onSubmit={(e) => {
               e.preventDefault();
-              void post("/campaigns", { ...campaignForm });
+              void post("/campaigns", {
+                ...campaignForm,
+                project_key: "vanguard",
+                utm_url: `${campaignForm.landing_url}?utm_source=${encodeURIComponent(campaignForm.source)}&utm_medium=${encodeURIComponent(campaignForm.medium)}&utm_campaign=${encodeURIComponent(campaignForm.campaign_code || campaignForm.name)}`,
+              });
             }}
           >
             <Input placeholder="Название" value={campaignForm.name} onChange={(e) => setCampaignForm({ ...campaignForm, name: e.target.value })} />
-            <Input placeholder="Источник" value={campaignForm.source} onChange={(e) => setCampaignForm({ ...campaignForm, source: e.target.value })} />
+            <select className="eds-input" value={campaignForm.channel} onChange={(e) => setCampaignForm({ ...campaignForm, channel: e.target.value })}>
+              {["Google", "Meta", "Instagram", "TikTok", "Telegram", "YouTube", "Organic", "Referral", "Direct", "Other"].map((ch) => (
+                <option key={ch} value={ch}>{ch}</option>
+              ))}
+            </select>
+            <Input placeholder="Source" value={campaignForm.source} onChange={(e) => setCampaignForm({ ...campaignForm, source: e.target.value })} />
+            <Input placeholder="Medium" value={campaignForm.medium} onChange={(e) => setCampaignForm({ ...campaignForm, medium: e.target.value })} />
+            <Input placeholder="Campaign code" value={campaignForm.campaign_code} onChange={(e) => setCampaignForm({ ...campaignForm, campaign_code: e.target.value })} />
+            <Input placeholder="Landing URL" value={campaignForm.landing_url} onChange={(e) => setCampaignForm({ ...campaignForm, landing_url: e.target.value })} />
+            <Input placeholder="Статус (active/paused)" value={campaignForm.status} onChange={(e) => setCampaignForm({ ...campaignForm, status: e.target.value })} />
+            <Input type="date" placeholder="Start" value={campaignForm.start_date} onChange={(e) => setCampaignForm({ ...campaignForm, start_date: e.target.value })} />
+            <Input type="date" placeholder="End" value={campaignForm.end_date} onChange={(e) => setCampaignForm({ ...campaignForm, end_date: e.target.value })} />
+            <Input placeholder="Budget" value={campaignForm.budget} onChange={(e) => setCampaignForm({ ...campaignForm, budget: e.target.value })} />
+            <Input placeholder="Spend" value={campaignForm.spend} onChange={(e) => setCampaignForm({ ...campaignForm, spend: e.target.value })} />
             <Button type="submit">Сохранить кампанию</Button>
           </form>
         ) : null,

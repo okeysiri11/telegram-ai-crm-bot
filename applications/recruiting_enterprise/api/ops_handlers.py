@@ -254,7 +254,10 @@ async def ops_project_overview_handler(request: web.Request) -> web.Response:
 async def ops_project_integration_handler(request: web.Request) -> web.Response:
     svc = get_recruiting_ops_service()
     project_key = request.match_info.get("project_key") or ""
-    result = await svc.project_integration(_org(request), project_key, _role(request))
+    if request.method == "POST":
+        result = await svc.check_project_integration(_org(request), project_key, _role(request))
+    else:
+        result = await svc.project_integration(_org(request), project_key, _role(request))
     return json_response(result, status=_status_for(result))
 
 

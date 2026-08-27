@@ -284,6 +284,9 @@ const RecruitingProjectsPage = lazy(() =>
 const VanguardProjectPage = lazy(() =>
   import("../workspace/recruiting/VanguardProjectPage").then((m) => ({ default: m.VanguardProjectPage })),
 );
+const VanguardCareerPage = lazy(() =>
+  import("./vanguard/VanguardCareerPage").then((m) => ({ default: m.VanguardCareerPage })),
+);
 const CryptoOtcDeskPage = lazy(() =>
   import("../workspace/crypto/CryptoOtcDeskPage").then((m) => ({ default: m.CryptoOtcDeskPage })),
 );
@@ -336,6 +339,7 @@ export function App() {
     <Suspense fallback={<LoadingScreen />}>
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/vanguard" element={<VanguardCareerPage />} />
       <Route path="/auth/login" element={<LoginPage />} />
       <Route path="/auth/register" element={<RegisterPage />} />
       <Route path="/auth/invite" element={<InvitationPage />} />

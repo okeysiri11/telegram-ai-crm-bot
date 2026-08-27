@@ -11,13 +11,14 @@ VANGUARD_PROJECT_KEY = "vanguard"
 
 STATUS_CONNECTED = "CONNECTED"
 STATUS_DEGRADED = "DEGRADED"
-STATUS_OFFLINE = "OFFLINE"
+STATUS_DISCONNECTED = "DISCONNECTED"
+STATUS_OFFLINE = "DISCONNECTED"
 STATUS_UNKNOWN = "UNKNOWN"
 
 STATUS_RU = {
     STATUS_CONNECTED: "Подключено",
     STATUS_DEGRADED: "Сбои",
-    STATUS_OFFLINE: "Недоступно",
+    STATUS_DISCONNECTED: "Отключено",
     STATUS_UNKNOWN: "Нет данных",
 }
 
@@ -92,6 +93,9 @@ def vanguard_website_url() -> str | None:
     return url
 
 
-def status_payload(code: str) -> dict[str, str]:
+def status_payload(code: str, *, reason_ru: str | None = None) -> dict[str, str]:
     raw = code if code in STATUS_RU else STATUS_UNKNOWN
-    return {"code": raw, "label_ru": STATUS_RU[raw]}
+    out = {"code": raw, "label_ru": STATUS_RU[raw]}
+    if reason_ru:
+        out["reason_ru"] = reason_ru
+    return out

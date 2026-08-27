@@ -19,11 +19,12 @@ from services.recruiting_ops.projects import (
     get_project,
     infer_project_key,
     project_catalog,
+    resolve_project_key,
     status_payload,
     vanguard_website_url,
     STATUS_CONNECTED,
     STATUS_DEGRADED,
-    STATUS_OFFLINE,
+    STATUS_DISCONNECTED,
     STATUS_UNKNOWN,
     VANGUARD_PROJECT_KEY,
 )
@@ -40,12 +41,25 @@ KINDS = (
     "task",
     "communication",
     "activity",
+    "tracking",
 )
 
 LEAD_STATUSES = ("new", "qualified", "converted", "lost")
 PIPELINE_STAGES = ("NEW", "QUALIFIED", "INTERVIEW", "APPROVED", "HIRED", "REJECTED")
 TASK_STATUSES = ("open", "done", "cancelled")
 COMM_CHANNELS = ("TELEGRAM", "WHATSAPP", "EMAIL", "PHONE", "MANUAL")
+CAMPAIGN_CHANNELS = (
+    "Google",
+    "Meta",
+    "Instagram",
+    "TikTok",
+    "Telegram",
+    "YouTube",
+    "Organic",
+    "Referral",
+    "Direct",
+    "Other",
+)
 TASK_TEMPLATES = (
     "Позвонить",
     "Написать",
@@ -295,6 +309,10 @@ class RecruitingOpsService:
             "actor_role": normalize_role(role),
             "summary": summary,
             "payload": payload or {},
+            "project_key": infer_project_key(
+                project_key=_txt((payload or {}).get("project_key")),
+                source=_txt((payload or {}).get("source")),
+            ),
             "data_mode": "REAL",
             "created_at": _now(),
             "status": "recorded",
@@ -320,7 +338,15 @@ class RecruitingOpsService:
             "task_statuses": list(TASK_STATUSES),
             "task_templates": list(TASK_TEMPLATES),
             "communication_channels": list(COMM_CHANNELS),
+            "campaign_channels": list(CAMPAIGN_CHANNELS),
             "projects": project_catalog(),
+            "tracking_events": [
+                "page_view",
+                "application_open",
+                "application_start",
+                "application_submit",
+                "application_success",
+            ],
             "data_modes": ["REAL", "DEMO"],
         }
 
@@ -339,7 +365,7 @@ class RecruitingOpsService:
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.2",
+            "sprint": "recruiting_1.3",
             "vanguard": {
                 "connected": False,
                 "status": "ingest_ready",
@@ -487,8 +513,22 @@ class RecruitingOpsService:
         items: list[dict[str, Any]],
         project_key: str,
     ) -> list[dict[str, Any]]:
-        if kind in {"lead", "candidate", "campaign", "communication", "task"}:
+        if kind in {"lead", "candidate", "campaign"}:
             return [item for item in items if belongs_to_project(item, project_key)]
+        if kind in {"communication", "task"}:
+            bag = self._bag(org)
+            related_ids = {
+                _txt(row.get("id"))
+                for row in bag["lead"] + bag["candidate"]
+                if belongs_to_project(row, project_key)
+            }
+            return [
+                item
+                for item in items
+                if belongs_to_project(item, project_key)
+                or _txt(item.get("lead_id")) in related_ids
+                or _txt(item.get("candidate_id")) in related_ids
+            ]
         if kind == "activity":
             bag = self._bag(org)
             entity_ids = {
@@ -568,6 +608,16 @@ class RecruitingOpsService:
             "utm_campaign": _txt(body.get("utm_campaign")) or None,
             "utm_content": _txt(body.get("utm_content")) or None,
             "utm_term": _txt(body.get("utm_term")) or None,
+            "country": _txt(body.get("country")) or None,
+            "preferred_language": _txt(body.get("preferred_language") or body.get("language")) or None,
+            "unit_of_interest": _txt(body.get("unit_of_interest") or body.get("unit")) or None,
+            "program_of_interest": _txt(body.get("program_of_interest") or body.get("program") or body.get("vacancy")) or None,
+            "application_message": _txt(body.get("application_message") or body.get("message") or body.get("reason") or body.get("notes")) or None,
+            "submitted_at": _txt(body.get("submitted_at")) or _now(),
+            "visitor_id": _txt(body.get("visitor_id")) or None,
+            "session_id": _txt(body.get("session_id")) or None,
+            "referrer": _txt(body.get("referrer")) or None,
+            "landing_page": _txt(body.get("landing_page")) or None,
             "candidate_id": None,
             "data_mode": "REAL",
             "created_at": _now(),
@@ -606,16 +656,31 @@ class RecruitingOpsService:
         )
         return self._ok(item=saved)
 
-    def _find_duplicate(self, org: str, *, external_id: str | None, vacancy_id: str | None) -> dict[str, Any] | None:
+    def _find_duplicate(
+        self,
+        org: str,
+        *,
+        external_id: str | None,
+        vacancy_id: str | None,
+        email: str | None = None,
+        program: str | None = None,
+    ) -> dict[str, Any] | None:
         ext = _txt(external_id)
-        if not ext:
-            return None
         vac = _txt(vacancy_id)
-        for item in self._bag(org)["lead"]:
-            if _txt(item.get("external_id")) != ext:
-                continue
-            if _txt(item.get("vacancy_id") or item.get("vacancy")) == vac:
-                return item
+        if ext:
+            for item in self._bag(org)["lead"]:
+                if _txt(item.get("external_id")) != ext:
+                    continue
+                if _txt(item.get("vacancy_id") or item.get("vacancy") or item.get("program_of_interest")) == vac:
+                    return item
+        email_n = _txt(email).lower()
+        prog = _txt(program or vacancy_id)
+        if email_n and prog:
+            for item in self._bag(org)["lead"]:
+                if _txt(item.get("email")).lower() != email_n:
+                    continue
+                if _txt(item.get("program_of_interest") or item.get("vacancy_id") or item.get("vacancy")) == prog:
+                    return item
         return None
 
     async def ingest_vanguard_lead(self, body: dict[str, Any]) -> dict[str, Any]:
@@ -638,7 +703,13 @@ class RecruitingOpsService:
         vacancy = _txt(body.get("vacancy_id") or body.get("vacancy")) or None
         external_id = _txt(body.get("external_id") or body.get("reference") or body.get("reference_id")) or None
         self._ingest_log["last_check_at"] = _now()
-        existing = self._find_duplicate(org, external_id=external_id, vacancy_id=vacancy)
+        existing = self._find_duplicate(
+            org,
+            external_id=external_id,
+            vacancy_id=vacancy,
+            email=email,
+            program=_txt(body.get("program_of_interest") or body.get("program")),
+        )
         if existing:
             await self._activity(
                 organization_id=org,
@@ -683,12 +754,86 @@ class RecruitingOpsService:
                     "utm_campaign": item.get("utm_campaign"),
                     "durable": item.get("durable"),
                     "storage": item.get("storage"),
+                    "project_key": VANGUARD_PROJECT_KEY,
+                    "source": "vanguard",
                 },
             )
             self._note_ingest_success()
         else:
             self._note_ingest_error(str(created.get("error") or "ingest_failed"), str(created.get("message_ru") or ""))
         return created
+
+    async def record_vanguard_event(self, body: dict[str, Any]) -> dict[str, Any]:
+        from services.recruiting_ops.tracking import sanitize_tracking_body, validate_tracking
+
+        event = sanitize_tracking_body(body)
+        err = validate_tracking(event)
+        if err:
+            return {"ok": False, "error": "validation", "message_ru": err}
+        org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados", body.get("tenant_id"))
+        await self.ensure_hydrated(org)
+        event["id"] = str(body.get("id") or event.get("event_id") or uuid.uuid4())
+        event["organization_id"] = org
+        event["created_at"] = event.get("timestamp") or _now()
+        event["data_mode"] = "REAL"
+        if event.get("event_id"):
+            for existing in self._bag(org)["tracking"]:
+                if _txt(existing.get("event_id")) == event["event_id"]:
+                    return self._ok(item=existing, duplicate=True)
+        saved = await self._persist("tracking", event)
+        self._bag(org)["tracking"].insert(0, saved)
+        return self._ok(item=saved)
+
+    async def submit_vanguard_application(self, body: dict[str, Any]) -> dict[str, Any]:
+        from services.recruiting_ops.references import new_vanguard_reference
+
+        first = _txt(body.get("first_name"))
+        last = _txt(body.get("last_name"))
+        name = _txt(body.get("name") or body.get("full_name") or " ".join(p for p in (first, last) if p))
+        email = _txt(body.get("email"))
+        if not name or not email:
+            return {"ok": False, "error": "validation", "message_ru": "Укажите имя и email"}
+        reference = _txt(body.get("external_id") or body.get("reference")) or new_vanguard_reference()
+        submitted_at = _txt(body.get("submitted_at")) or _now()
+        await self.record_vanguard_event(
+            {
+                **body,
+                "event_type": "application_submit",
+                "event_id": _txt(body.get("event_id")) or str(uuid.uuid4()),
+                "timestamp": submitted_at,
+                "page": _txt(body.get("page") or body.get("landing_page")) or "/vanguard",
+            }
+        )
+        payload = dict(body)
+        payload["first_name"] = first
+        payload["last_name"] = last
+        payload["name"] = name
+        payload["email"] = email
+        payload["source"] = "vanguard"
+        payload["project_key"] = VANGUARD_PROJECT_KEY
+        payload["external_id"] = reference
+        payload["reference"] = reference
+        payload["submitted_at"] = submitted_at
+        payload["program_of_interest"] = _txt(body.get("program_of_interest") or body.get("program"))
+        payload["unit_of_interest"] = _txt(body.get("unit_of_interest") or body.get("unit"))
+        payload["application_message"] = _txt(body.get("application_message") or body.get("message") or body.get("reason"))
+        payload["vacancy"] = payload["program_of_interest"] or _txt(body.get("vacancy"))
+        ingested = await self.ingest_vanguard_lead(payload)
+        if ingested.get("ok"):
+            await self.record_vanguard_event(
+                {
+                    **body,
+                    "event_type": "application_success",
+                    "event_id": str(uuid.uuid4()),
+                    "timestamp": _now(),
+                    "page": "/vanguard",
+                }
+            )
+        return {
+            **ingested,
+            "reference": reference,
+            "application_received": bool(ingested.get("ok")),
+        }
 
     async def update_lead(
         self,
@@ -959,6 +1104,17 @@ class RecruitingOpsService:
                 source=_txt(body.get("source")) or "manual",
                 project_key=_txt(body.get("project_key")) or None,
             ),
+            "channel": _txt(body.get("channel")) or None,
+            "medium": _txt(body.get("medium") or body.get("utm_medium")) or None,
+            "campaign_code": _txt(body.get("campaign_code") or body.get("utm_campaign")) or None,
+            "landing_url": _txt(body.get("landing_url") or body.get("landing_page")) or None,
+            "utm_url": _txt(body.get("utm_url")) or None,
+            "start_date": _txt(body.get("start_date")) or None,
+            "end_date": _txt(body.get("end_date")) or None,
+            "budget": body.get("budget"),
+            "spend": body.get("spend"),
+            "ads_provider": None,
+            "ads_api": "not_connected",
             "vacancy_id": _txt(body.get("vacancy_id")) or None,
             "status": _txt(body.get("status")) or "active",
             "notes": _txt(body.get("notes")),
@@ -994,6 +1150,10 @@ class RecruitingOpsService:
             "title": title,
             "lead_id": _txt(body.get("lead_id")) or None,
             "candidate_id": _txt(body.get("candidate_id")) or None,
+            "project_key": infer_project_key(
+                source=_txt(body.get("source")),
+                project_key=_txt(body.get("project_key")) or None,
+            ),
             "assignee": _txt(body.get("assignee")) or None,
             "due_date": _parse_date(body.get("due_date") or body.get("due_at")),
             "status": _task_status(body.get("status"), "open"),
@@ -1002,6 +1162,12 @@ class RecruitingOpsService:
             "created_at": _now(),
             "updated_at": _now(),
         }
+        if not item["project_key"] and item["lead_id"]:
+            lead = self._find(org, "lead", item["lead_id"])
+            item["project_key"] = resolve_project_key(lead) or None
+        if not item["project_key"] and item["candidate_id"]:
+            cand = self._find(org, "candidate", item["candidate_id"])
+            item["project_key"] = resolve_project_key(cand) or None
         saved = await self._persist("task", item)
         self._bag(org)["task"].insert(0, saved)
         await self._activity(
@@ -1011,6 +1177,7 @@ class RecruitingOpsService:
             action="task_created",
             summary=f"Задача: {title}",
             role=role,
+            payload={"project_key": item.get("project_key")},
         )
         return self._ok(item=saved)
 
@@ -1057,6 +1224,10 @@ class RecruitingOpsService:
             "body": text,
             "lead_id": _txt(body.get("lead_id")) or None,
             "candidate_id": _txt(body.get("candidate_id")) or None,
+            "project_key": infer_project_key(
+                source=_txt(body.get("source")),
+                project_key=_txt(body.get("project_key")) or None,
+            ),
             "sent": False,
             "delivery": "manual_log_only",
             "status": "logged",
@@ -1064,6 +1235,12 @@ class RecruitingOpsService:
             "created_at": _now(),
             "updated_at": _now(),
         }
+        if not item["project_key"] and item["lead_id"]:
+            lead = self._find(org, "lead", item["lead_id"])
+            item["project_key"] = resolve_project_key(lead) or None
+        if not item["project_key"] and item["candidate_id"]:
+            cand = self._find(org, "candidate", item["candidate_id"])
+            item["project_key"] = resolve_project_key(cand) or None
         saved = await self._persist("communication", item)
         self._bag(org)["communication"].insert(0, saved)
         await self._activity(
@@ -1073,7 +1250,7 @@ class RecruitingOpsService:
             action="communication_logged",
             summary=text,
             role=role,
-            payload={"channel": channel, "sent": False},
+            payload={"channel": channel, "sent": False, "project_key": item.get("project_key")},
         )
         return self._ok(item=saved)
 
@@ -1147,12 +1324,20 @@ class RecruitingOpsService:
         leads = [item for item in self._bag(org)["lead"] if belongs_to_project(item, key)]
         cands = [item for item in self._bag(org)["candidate"] if belongs_to_project(item, key)]
         today = _today()
-        today_leads = [item for item in leads if _date_only(item.get("created_at")) == today]
+        today_leads = [item for item in leads if _date_only(item.get("created_at") or item.get("submitted_at")) == today]
         converted = [item for item in leads if _lead_status(item.get("status")) == "converted"]
         conversion = round(len(converted) / len(leads), 4) if leads else None
         last_lead = leads[0] if leads else None
         analytics = await self.analytics(org, role, project=key)
         stages = analytics.get("pipeline_stages") if analytics.get("ok") else {}
+        integration = await self.project_integration(org, key, role)
+        traffic = self._traffic_snapshot(org, key)
+        funnel = self._marketing_funnel(org, key, leads, cands, stages if isinstance(stages, dict) else {})
+        attribution = self._attribution_snapshot(leads, traffic["events"])
+        campaigns = self._campaign_metrics(org, key, leads, cands, traffic["events"])
+        comms = [item for item in self._bag(org)["communication"] if belongs_to_project(item, key)]
+        activity = await self.list_activity(org, role, project=key)
+        website = (integration.get("website") if integration.get("ok") else {}) or {}
         return self._ok(
             project=spec,
             relationship=[
@@ -1161,18 +1346,217 @@ class RecruitingOpsService:
                 {"id": "leads", "label_ru": "Лиды"},
                 {"id": "candidates", "label_ru": "Кандидаты"},
             ],
+            website_url=website.get("public_url") or website.get("site_path"),
+            website_health=integration.get("website_status"),
+            integration_health=integration.get("integration_status"),
+            last_successful_connection=integration.get("last_success_at"),
             cards={
-                "new_leads": len([item for item in leads if _lead_status(item.get("status")) == "new"]),
-                "candidates": len(cands),
-                "active_vacancies": self._active_vacancy_count(org, key),
+                "website_url": website.get("public_url") or website.get("site_path"),
+                "website_health": integration.get("website_status"),
+                "integration_health": integration.get("integration_status"),
+                "last_successful_connection": integration.get("last_success_at"),
+                "last_application_at": (last_lead or {}).get("submitted_at") or (last_lead or {}).get("created_at"),
                 "applications_today": len(today_leads),
+                "applications_7d": self._count_since(leads, 7),
+                "applications_30d": self._count_since(leads, 30),
+                "leads": len(leads),
+                "candidates": len(cands),
+                "new_leads": len([item for item in leads if _lead_status(item.get("status")) == "new"]),
+                "active_vacancies": self._active_vacancy_count(org, key),
                 "lead_to_candidate": conversion,
-                "last_application_at": (last_lead or {}).get("created_at"),
+                "conversion_rate": conversion,
             },
+            traffic=traffic,
+            attribution=attribution,
+            recruiting={
+                "new_leads": len([item for item in leads if _lead_status(item.get("status")) == "new"]),
+                "qualified_leads": len([item for item in leads if _lead_status(item.get("status")) in {"qualified", "converted"}]),
+                "candidates": len(cands),
+                "interviews": (stages or {}).get("INTERVIEW", 0),
+                "accepted": (stages or {}).get("APPROVED", 0) + (stages or {}).get("HIRED", 0),
+                "rejected": (stages or {}).get("REJECTED", 0),
+            },
+            marketing={"campaigns": campaigns, "funnel": funnel, "ads_apis": {"meta": "not_connected", "google": "not_connected", "tiktok": "not_connected"}},
+            funnel=funnel,
             recent_leads=leads[:10],
+            recent_communications=comms[:10],
+            recent_activity=(activity.get("items") or [])[:15] if activity.get("ok") else [],
             pipeline=stages,
-            funnel=analytics.get("funnel") if analytics.get("ok") else None,
         )
+
+    def _count_since(self, items: list[dict[str, Any]], days: int) -> int:
+        from datetime import timedelta
+
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).date().isoformat()
+        return len(
+            [
+                item
+                for item in items
+                if (_date_only(item.get("submitted_at") or item.get("created_at") or item.get("timestamp")) or "") >= cutoff
+            ]
+        )
+
+    def _pct(self, part: int, whole: int) -> float | None:
+        if whole <= 0:
+            return None
+        return round(part / whole, 4)
+
+    def _traffic_snapshot(self, org: str, project_key: str) -> dict[str, Any]:
+        events = [item for item in self._bag(org).get("tracking") or [] if belongs_to_project(item, project_key)]
+        by_type: dict[str, int] = {}
+        visitors: set[str] = set()
+        sessions: set[str] = set()
+        for event in events:
+            kind = _txt(event.get("event_type"))
+            by_type[kind] = by_type.get(kind, 0) + 1
+            if event.get("visitor_id"):
+                visitors.add(_txt(event.get("visitor_id")))
+            if event.get("session_id"):
+                sessions.add(_txt(event.get("session_id")))
+        return {
+            "visits": by_type.get("page_view", 0) if events else None,
+            "unique_visitors": len(visitors) if events else None,
+            "sessions": len(sessions) if events else None,
+            "application_opens": by_type.get("application_open", 0) if events else None,
+            "application_starts": by_type.get("application_start", 0) if events else None,
+            "completed_applications": by_type.get("application_success", 0) if events else None,
+            "events": events,
+            "has_data": bool(events),
+        }
+
+    def _attribution_snapshot(self, leads: list[dict[str, Any]], events: list[dict[str, Any]]) -> dict[str, Any]:
+        rows = leads or events
+        if not rows:
+            return {
+                "source": None,
+                "medium": None,
+                "campaign": None,
+                "content": None,
+                "referrer": None,
+                "landing_page": None,
+                "utm": None,
+                "by_source": [],
+                "has_data": False,
+            }
+        def _top(key: str) -> str | None:
+            counts: dict[str, int] = {}
+            for row in rows:
+                raw = _txt(row.get(key))
+                if raw:
+                    counts[raw] = counts.get(raw, 0) + 1
+            if not counts:
+                return None
+            return sorted(counts.items(), key=lambda x: (-x[1], x[0]))[0][0]
+
+        by_source = []
+        source_counts: dict[str, int] = {}
+        for row in rows:
+            raw = _txt(row.get("utm_source") or row.get("source"))
+            if raw:
+                source_counts[raw] = source_counts.get(raw, 0) + 1
+        by_source = [{"source": name, "count": count} for name, count in sorted(source_counts.items(), key=lambda x: (-x[1], x[0]))]
+
+        return {
+            "source": _top("utm_source") or _top("source"),
+            "medium": _top("utm_medium") or _top("medium"),
+            "campaign": _top("utm_campaign") or _top("campaign_code"),
+            "content": _top("utm_content"),
+            "referrer": _top("referrer"),
+            "landing_page": _top("landing_page"),
+            "utm": {
+                "utm_source": _top("utm_source"),
+                "utm_medium": _top("utm_medium"),
+                "utm_campaign": _top("utm_campaign"),
+                "utm_content": _top("utm_content"),
+                "utm_term": _top("utm_term"),
+            },
+            "by_source": by_source,
+            "has_data": True,
+        }
+
+    def _marketing_funnel(
+        self,
+        org: str,
+        project_key: str,
+        leads: list[dict[str, Any]],
+        cands: list[dict[str, Any]],
+        stages: dict[str, Any],
+    ) -> dict[str, Any]:
+        traffic = self._traffic_snapshot(org, project_key)
+        visit = traffic["visits"]
+        open_n = traffic["application_opens"]
+        start_n = traffic["application_starts"]
+        submitted = traffic["completed_applications"]
+        lead_n = len(leads)
+        qualified = len([item for item in leads if _lead_status(item.get("status")) in {"qualified", "converted"}])
+        cand_n = len(cands)
+        interview = int(stages.get("INTERVIEW") or 0)
+        accepted = int(stages.get("APPROVED") or 0) + int(stages.get("HIRED") or 0)
+        rejected = int(stages.get("REJECTED") or 0)
+        steps = [
+            {"id": "visit", "label_ru": "Визит", "count": visit},
+            {"id": "application_open", "label_ru": "Открытие заявки", "count": open_n},
+            {"id": "application_start", "label_ru": "Старт заявки", "count": start_n},
+            {"id": "application_submitted", "label_ru": "Заявка отправлена", "count": submitted if submitted is not None else lead_n},
+            {"id": "lead", "label_ru": "Лид", "count": lead_n},
+            {"id": "qualified", "label_ru": "Квалификация", "count": qualified},
+            {"id": "candidate", "label_ru": "Кандидат", "count": cand_n},
+            {"id": "interview", "label_ru": "Интервью", "count": interview},
+            {"id": "accepted", "label_ru": "Принят", "count": accepted},
+            {"id": "rejected", "label_ru": "Отказ", "count": rejected},
+        ]
+        prev = None
+        for step in steps:
+            count = step["count"]
+            step["conversion"] = self._pct(int(count or 0), int(prev)) if prev and count is not None else None
+            if count is not None:
+                prev = count
+        return {"steps": steps, "has_tracking": bool(traffic["has_data"])}
+
+    def _campaign_metrics(
+        self,
+        org: str,
+        project_key: str,
+        leads: list[dict[str, Any]],
+        cands: list[dict[str, Any]],
+        events: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        out = []
+        for camp in self._bag(org)["campaign"]:
+            if not belongs_to_project(camp, project_key) and _txt(camp.get("source")).lower() != "vanguard":
+                continue
+            cid = _txt(camp.get("id"))
+            code = _txt(camp.get("campaign_code") or camp.get("utm_campaign") or camp.get("name"))
+            camp_leads = [
+                item
+                for item in leads
+                if _txt(item.get("campaign_id")) == cid or _txt(item.get("utm_campaign")) == code
+            ]
+            camp_cands = [
+                item
+                for item in cands
+                if _txt(item.get("campaign_id")) == cid or _txt(item.get("utm_campaign")) == code
+            ]
+            visits = [
+                item
+                for item in events
+                if _txt(item.get("campaign_id")) == cid or _txt(item.get("utm_campaign")) == code
+            ]
+            spend = camp.get("spend")
+            try:
+                spend_n = float(spend) if spend is not None and str(spend).strip() != "" else None
+            except (TypeError, ValueError):
+                spend_n = None
+            cpl = round(spend_n / len(camp_leads), 4) if spend_n is not None and camp_leads else None
+            item = dict(camp)
+            item["visits"] = len(visits) if visits else None
+            item["applications"] = len(camp_leads)
+            item["leads"] = len(camp_leads)
+            item["candidates"] = len(camp_cands)
+            item["conversion"] = self._pct(len(camp_cands), len(camp_leads))
+            item["cpl"] = cpl
+            out.append(item)
+        return out
 
     async def project_integration(self, organization_id: str, project_key: str, role: str | None = None) -> dict[str, Any]:
         denied = require(role, "list")
@@ -1181,40 +1565,65 @@ class RecruitingOpsService:
         spec = get_project(project_key)
         if not spec:
             return {"ok": False, "error": "not_found", "message_ru": "Проект не найден"}
-        self._ingest_log["last_check_at"] = _now()
+        return await self._run_integration_check(spec)
+
+    async def check_project_integration(self, organization_id: str, project_key: str, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        spec = get_project(project_key)
+        if not spec:
+            return {"ok": False, "error": "not_found", "message_ru": "Проект не найден"}
+        return await self._run_integration_check(spec, probe_website=True)
+
+    async def _run_integration_check(self, spec: dict[str, Any], *, probe_website: bool = False) -> dict[str, Any]:
         from services.recruiting_ops.ingest_auth import resolve_ingest_secret
 
+        self._ingest_log["last_check_at"] = _now()
         url = vanguard_website_url()
-        website_code = STATUS_UNKNOWN if not url else STATUS_CONNECTED
-        endpoint_code = STATUS_CONNECTED if resolve_ingest_secret() else (
-            STATUS_OFFLINE if is_production_runtime() else STATUS_DEGRADED
-        )
-        recruiting_code = STATUS_CONNECTED
-        db_code = await self._storage_probe()
-        stages = [
-            {"id": "website", "label_ru": "Сайт Vanguard", "code": status_payload(website_code)["code"], "status_label_ru": status_payload(website_code)["label_ru"]},
-            {"id": "vanguard_endpoint", "label_ru": "Серверный endpoint Vanguard", "code": status_payload(endpoint_code)["code"], "status_label_ru": status_payload(endpoint_code)["label_ru"]},
-            {"id": "recruiting_api", "label_ru": "Recruiting API", "code": status_payload(recruiting_code)["code"], "status_label_ru": status_payload(recruiting_code)["label_ru"]},
-            {"id": "database", "label_ru": "База данных", "code": status_payload(db_code)["code"], "status_label_ru": status_payload(db_code)["label_ru"]},
-        ]
-        codes = [row["code"] for row in stages]
-        if STATUS_OFFLINE in codes:
-            overall = STATUS_OFFLINE
-        elif STATUS_DEGRADED in codes:
-            overall = STATUS_DEGRADED
-        elif STATUS_UNKNOWN in codes:
-            overall = STATUS_DEGRADED if STATUS_CONNECTED in codes else STATUS_UNKNOWN
+        website_code, website_reason = STATUS_DISCONNECTED, "Публичный URL сайта не настроен (VANGUARD_WEBSITE_URL)."
+        if url:
+            website_code, website_reason = STATUS_CONNECTED, "URL сайта задан."
+            if probe_website:
+                website_code, website_reason = await self._probe_website(url)
+        secret = resolve_ingest_secret()
+        if secret:
+            endpoint_code, endpoint_reason = STATUS_CONNECTED, "HMAC ingest secret настроен на сервере."
+        elif is_production_runtime():
+            endpoint_code, endpoint_reason = STATUS_DISCONNECTED, "VANGUARD_INGEST_SECRET не задан в production."
         else:
-            overall = STATUS_CONNECTED
+            endpoint_code, endpoint_reason = STATUS_DEGRADED, "Production secret не задан; используется DEV fallback secret."
+        recruiting_code, recruiting_reason = STATUS_CONNECTED, "Recruiting API отвечает."
+        db_code, db_reason = await self._storage_probe_reason()
+        website_status = status_payload(website_code, reason_ru=website_reason)
+        integ_codes = [endpoint_code, recruiting_code, db_code]
+        if STATUS_DISCONNECTED in integ_codes:
+            overall_code = STATUS_DISCONNECTED
+        elif STATUS_DEGRADED in integ_codes:
+            overall_code = STATUS_DEGRADED
+        else:
+            overall_code = STATUS_CONNECTED
+        overall_reason = "; ".join(
+            part
+            for part in (endpoint_reason, recruiting_reason, db_reason)
+            if part
+        )
+        stages = [
+            {"id": "website", "label_ru": "Сайт Vanguard", "code": website_status["code"], "status_label_ru": website_status["label_ru"], "reason_ru": website_reason},
+            {"id": "vanguard_endpoint", "label_ru": "Серверный endpoint Vanguard", "code": endpoint_code, "status_label_ru": status_payload(endpoint_code)["label_ru"], "reason_ru": endpoint_reason},
+            {"id": "recruiting_api", "label_ru": "Recruiting API", "code": recruiting_code, "status_label_ru": status_payload(recruiting_code)["label_ru"], "reason_ru": recruiting_reason},
+            {"id": "database", "label_ru": "База данных", "code": db_code, "status_label_ru": status_payload(db_code)["label_ru"], "reason_ru": db_reason},
+        ]
         return self._ok(
             project=spec,
-            overall=status_payload(overall),
-            website_status=status_payload(website_code),
-            integration_status=status_payload(overall),
+            overall=status_payload(overall_code, reason_ru=overall_reason),
+            website_status=website_status,
+            integration_status=status_payload(overall_code, reason_ru=overall_reason),
             stages=stages,
             website={
                 "name": spec["name"],
                 "public_url": url,
+                "site_path": "/vanguard",
                 "environment": "production" if is_production_runtime() else "development",
             },
             last_success_at=self._ingest_log.get("last_success_at"),
@@ -1223,16 +1632,41 @@ class RecruitingOpsService:
             last_check_at=self._ingest_log.get("last_check_at"),
         )
 
-    async def _storage_probe(self) -> str:
+    async def _probe_website(self, url: str) -> tuple[str, str]:
+        try:
+            import aiohttp
+
+            timeout = aiohttp.ClientTimeout(total=5)
+            async with aiohttp.ClientSession(timeout=timeout) as session:
+                async with session.get(url) as resp:
+                    if resp.status < 500:
+                        return STATUS_CONNECTED, f"Сайт ответил HTTP {resp.status}."
+                    return STATUS_DEGRADED, f"Сайт ответил HTTP {resp.status}."
+        except Exception as exc:
+            return STATUS_DISCONNECTED, f"Сайт недоступен: {exc}"
+
+    async def _storage_probe_reason(self) -> tuple[str, str]:
         try:
             from database.session import get_session
             from sqlalchemy import text
 
             async with get_session() as session:
                 await session.execute(text("SELECT 1"))
-            return STATUS_CONNECTED
-        except Exception:
-            return STATUS_DEGRADED if memory_fallback_allowed() else STATUS_OFFLINE
+                exists = await session.execute(text("SELECT to_regclass('public.recruiting_ops_records')"))
+                table = exists.scalar()
+            if not table:
+                if memory_fallback_allowed():
+                    return STATUS_DEGRADED, "PostgreSQL доступен, но таблица recruiting_ops_records отсутствует; заявки остаются в DEV memory."
+                return STATUS_DISCONNECTED, "Таблица recruiting_ops_records отсутствует."
+            return STATUS_CONNECTED, "PostgreSQL и recruiting_ops_records доступны."
+        except Exception as exc:
+            if memory_fallback_allowed():
+                return STATUS_DEGRADED, f"PostgreSQL недоступен, DEV memory fallback: {exc}"
+            return STATUS_DISCONNECTED, f"PostgreSQL недоступен: {exc}"
+
+    async def _storage_probe(self) -> str:
+        code, _reason = await self._storage_probe_reason()
+        return code
 
     async def lookup_reference(
         self,
