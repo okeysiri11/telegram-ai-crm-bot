@@ -16,6 +16,28 @@ _METRICS: dict[str, float] = {
     "notifications_sent_total": 0,
     "sla_violations_total": 0,
     "process_start_time": time.time(),
+    "email_send_attempt_total": 0,
+    "email_send_success_total": 0,
+    "email_send_failure_total": 0,
+    "email_retry_total": 0,
+    "email_rate_limited_total": 0,
+    "email_provider_health": 0,
+    "email_send_latency": 0,
+}
+
+_METRIC_META: dict[str, tuple[str, str]] = {
+    "http_requests_total": ("counter", "Total HTTP requests"),
+    "leads_created_total": ("counter", "Total leads created"),
+    "notifications_sent_total": ("counter", "Total notifications sent"),
+    "sla_violations_total": ("counter", "Total SLA violations"),
+    "process_start_time": ("gauge", "Process start unix time"),
+    "email_send_attempt_total": ("counter", "Recruiting SMTP send attempts"),
+    "email_send_success_total": ("counter", "Recruiting SMTP accepted sends"),
+    "email_send_failure_total": ("counter", "Recruiting SMTP send failures"),
+    "email_retry_total": ("counter", "Recruiting SMTP retries"),
+    "email_rate_limited_total": ("counter", "Recruiting SMTP rate-limit hits"),
+    "email_provider_health": ("gauge", "Recruiting SMTP health 1=up 0=not configured -1=error"),
+    "email_send_latency": ("gauge", "Last Recruiting SMTP send latency milliseconds"),
 }
 
 
@@ -36,24 +58,18 @@ def inc_metric(name: str, value: float = 1.0) -> None:
     _METRICS[name] = _METRICS.get(name, 0) + value
 
 
+def set_metric(name: str, value: float) -> None:
+    _METRICS[name] = float(value)
+
+
 def prometheus_text() -> str:
-    lines = [
-        "# HELP http_requests_total Total HTTP requests",
-        "# TYPE http_requests_total counter",
-        f"http_requests_total {_METRICS.get('http_requests_total', 0)}",
-        "# HELP leads_created_total Total leads created",
-        "# TYPE leads_created_total counter",
-        f"leads_created_total {_METRICS.get('leads_created_total', 0)}",
-        "# HELP notifications_sent_total Total notifications sent",
-        "# TYPE notifications_sent_total counter",
-        f"notifications_sent_total {_METRICS.get('notifications_sent_total', 0)}",
-        "# HELP sla_violations_total Total SLA violations",
-        "# TYPE sla_violations_total counter",
-        f"sla_violations_total {_METRICS.get('sla_violations_total', 0)}",
-        "# HELP process_start_time_seconds Process start unix time",
-        "# TYPE process_start_time_seconds gauge",
-        f"process_start_time_seconds {_METRICS.get('process_start_time', 0)}",
-    ]
+    lines: list[str] = []
+    for name, value in _METRICS.items():
+        kind, help_text = _METRIC_META.get(name, ("gauge", name.replace("_", " ")))
+        prom_name = "process_start_time_seconds" if name == "process_start_time" else name
+        lines.append(f"# HELP {prom_name} {help_text}")
+        lines.append(f"# TYPE {prom_name} {kind}")
+        lines.append(f"{prom_name} {value}")
     return "\n".join(lines) + "\n"
 
 

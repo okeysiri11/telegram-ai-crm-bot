@@ -160,7 +160,7 @@ async def build_ops_diagnostics(service: Any) -> dict[str, Any]:
 
     return {
         "ok": True,
-        "sprint": "recruiting_1.9",
+        "sprint": "recruiting_1.10",
         "components": components,
         "tracking": tracking,
         "tracking_recovery": recovery,

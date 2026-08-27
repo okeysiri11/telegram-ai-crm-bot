@@ -24,7 +24,7 @@ import {
   mapUiRoleToRecruiting,
   ruLeadStatus,
 } from "./recruitingLabels";
-import { displayMetric } from "./RecruitingOpsFrame";
+import { CandidateEmailComposer } from "./CandidateEmailComposer";
 
 type Row = Record<string, unknown>;
 
@@ -97,6 +97,7 @@ export function RecruitingBusinessPage() {
   const [taskForm, setTaskForm] = useState({ title: "Позвонить", assignee: "", due_date: "", lead_id: "", candidate_id: "", notes: "" });
   const [commForm, setCommForm] = useState({ channel: "PHONE", body: "", lead_id: "", candidate_id: "" });
   const [noteForm, setNoteForm] = useState({ lead_id: "", notes: "" });
+  const [emailCandidate, setEmailCandidate] = useState<Row | null>(null);
 
   const headers = useMemo(
     () => ({
@@ -416,6 +417,21 @@ export function RecruitingBusinessPage() {
       })),
       emptyTitle: "Кандидатов нет",
       emptyDescription: "Квалифицируйте лид и преобразуйте его в кандидата — он появится в воронке.",
+      rowActions: caps.canOperate
+        ? (row) => (
+            <Button size="sm" variant="secondary" onClick={() => setEmailCandidate(bundle.candidates.find((c) => String(c.id) === String(row.id)) || row)}>
+              Письмо
+            </Button>
+          )
+        : undefined,
+      panel: emailCandidate ? (
+        <CandidateEmailComposer
+          candidateId={String(emailCandidate.id || "")}
+          candidateName={pick(emailCandidate, "name")}
+          candidateEmail={pick(emailCandidate, "email")}
+          headers={headers}
+        />
+      ) : null,
     },
     vacancies: {
       id: "vacancies",

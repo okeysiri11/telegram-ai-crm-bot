@@ -10,6 +10,10 @@ from services.recruiting_ops.secret_store import credential_presence
 
 _RUNTIME_CONNECTED: dict[str, bool] = {}
 
+# Product overlay for this sprint: Telegram stays disabled. Adapter HTTP is unchanged.
+TELEGRAM_FROZEN = True
+TELEGRAM_FROZEN_MESSAGE_RU = "Telegram намеренно отключён и не блокирует готовность Recruiting."
+
 
 def set_runtime_connected(provider: str, connected: bool) -> None:
     key = (provider or "").strip().lower()
@@ -22,7 +26,10 @@ def set_runtime_connected(provider: str, connected: bool) -> None:
 
 
 def is_runtime_connected(provider: str) -> bool:
-    return bool(_RUNTIME_CONNECTED.get((provider or "").strip().lower()))
+    key = (provider or "").strip().lower()
+    if key == "telegram" and TELEGRAM_FROZEN:
+        return False
+    return bool(_RUNTIME_CONNECTED.get(key))
 
 
 def reset_runtime_connections() -> None:
@@ -93,6 +100,8 @@ STATUS_RU = {
     "CONNECTED": "Подключено",
     "DEGRADED": "Ограничено",
     "ERROR": "Ошибка",
+    "DISABLED": "Отключено",
+    "FROZEN": "Заморожено",
 }
 
 
@@ -141,7 +150,7 @@ def public_card(row: dict[str, Any]) -> dict[str, Any]:
             status = "CONFIGURING"
             row = {**row, "status": status, "connected": False}
     tracking = "DELIVERABLE" if status == "CONNECTED" else "WAITING_PROVIDER"
-    return {
+    card = {
         "provider": provider,
         "label": row.get("label") or LIVE_ADAPTERS.get(provider, LIVE_ADAPTERS["meta"]).label,
         "status": status,
@@ -170,7 +179,20 @@ def public_card(row: dict[str, Any]) -> dict[str, Any]:
         "mocked_http": bool(row.get("mocked_http")),
         "identity": row.get("identity") or {},
         "consecutive_failures": row.get("consecutive_failures") or 0,
+        "frozen": False,
+        "connect_cta": True,
     }
+    if provider == "telegram" and TELEGRAM_FROZEN:
+        card["status"] = "DISABLED"
+        card["status_label_ru"] = "Отключено (заморожено)"
+        card["connected"] = False
+        card["enabled"] = False
+        card["frozen"] = True
+        card["connect_cta"] = False
+        card["tracking_status"] = "WAITING_PROVIDER"
+        card["actions"] = []
+        card["message_ru"] = TELEGRAM_FROZEN_MESSAGE_RU
+    return card
 
 
 def is_provider_connected(provider: str, connections: list[dict[str, Any]] | None = None) -> bool:

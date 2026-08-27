@@ -159,6 +159,11 @@ async def test_provider_center_not_configured(client: TestClient):
     body = await res.json()
     by = {item["provider"]: item for item in body["items"]}
     for key in ("meta", "google", "tiktok", "telegram", "whatsapp", "email"):
+        if key == "telegram":
+            assert by[key]["status"] == "DISABLED"
+            assert by[key]["frozen"] is True
+            assert by[key]["connect_cta"] is False
+            continue
         assert by[key]["status"] == "NOT_CONFIGURED"
         assert by[key]["connected"] is False
         assert by[key]["mode"] in {"LIVE", "MOCK"}
@@ -272,7 +277,7 @@ async def test_automation_and_ai_api(client: TestClient):
 
 async def test_health_still_green_with_providers_not_configured(client: TestClient):
     health = await (await client.get(f"{OPS}/health")).json()
-    assert health["sprint"] in {"recruiting_1.8", "recruiting_1.9"}
+    assert health["sprint"] in {"recruiting_1.8", "recruiting_1.9", "recruiting_1.10"}
     assert health["tracking_health"]["code"] == "CONNECTED"
     diag = await (await client.get(f"{OPS}/ops/diagnostics", headers=_hdr())).json()
     assert diag["components"]["postgresql"]["code"] in {"CONNECTED", "DEGRADED", "NOT_CONFIGURED"}

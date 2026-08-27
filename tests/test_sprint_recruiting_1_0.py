@@ -43,7 +43,7 @@ async def test_health_roles_and_vanguard_contract(client: TestClient):
     res = await client.get(f"{OPS}/health")
     assert res.status == 200
     body = await res.json()
-    assert body["sprint"] in {"recruiting_1.0", "recruiting_1.1", "recruiting_1.2", "recruiting_1.3", "recruiting_1.4", "recruiting_1.5", "recruiting_1.6", "recruiting_1.7", "recruiting_1.8", "recruiting_1.9"}
+    assert body["sprint"] in {"recruiting_1.0", "recruiting_1.1", "recruiting_1.2", "recruiting_1.3", "recruiting_1.4", "recruiting_1.5", "recruiting_1.6", "recruiting_1.7", "recruiting_1.8", "recruiting_1.9", "recruiting_1.10"}
     assert body["vanguard"]["connected"] is False
     assert body["visits_available"] is False
 

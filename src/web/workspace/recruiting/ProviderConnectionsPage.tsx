@@ -34,6 +34,9 @@ type ProviderCard = {
   redirect_uri?: string;
   identity?: { id?: string; name?: string; username?: string };
   live_verified?: boolean;
+  frozen?: boolean;
+  connect_cta?: boolean;
+  message_ru?: string;
 };
 
 function asRecord(json: unknown): Record<string, unknown> {
@@ -61,6 +64,8 @@ export function ProviderConnectionsPage() {
   const [wizard, setWizard] = useState<ProviderCard | null>(null);
   const [form, setForm] = useState<Record<string, string>>({});
   const [diagnostics, setDiagnostics] = useState<Record<string, unknown> | null>(null);
+  const [testEmailTo, setTestEmailTo] = useState("");
+  const [testEmailOpen, setTestEmailOpen] = useState(false);
 
   const headers = useMemo(
     () => ({
@@ -117,16 +122,41 @@ export function ProviderConnectionsPage() {
           {oauthStatus === "connected" ? "Подключено" : oauthStatus === "error" ? "Ошибка подключения" : "Подключение..."}
         </p>
       ) : null}
-      <div className="grid gap-3" data-testid="provider-connection-grid">
-        {items.map((card) => (
+      <div className="grid gap-3 md:grid-cols-2" data-testid="provider-connection-grid">
+        {items.map((card) => {
+          const frozen = Boolean(card.frozen) || card.status === "DISABLED";
+          const emailStatusId =
+            card.provider === "email"
+              ? card.status === "CONNECTED"
+                ? "email-status-connected"
+                : card.status === "ERROR"
+                  ? "email-status-error"
+                  : "email-status-not-configured"
+              : undefined;
+          return (
           <Card key={card.provider} title={card.label || card.provider || ""}>
             <div data-testid={`provider-card-${card.provider}`}>
               <div className="flex flex-wrap gap-2">
                 <Badge tone={tone(card.status, card.mock)}>{card.status_label_ru || card.status}</Badge>
                 <Badge tone={card.mock ? "warning" : "info"}>{card.mock ? "MOCK" : card.mode_label_ru || "LIVE"}</Badge>
                 {card.status === "NOT_CONFIGURED" ? <Badge tone="info">Не настроено</Badge> : null}
+                {frozen ? (
+                  <span data-testid="telegram-frozen-badge">
+                    <Badge tone="warning">Заморожено</Badge>
+                  </span>
+                ) : null}
               </div>
-              <dl className="mt-2 grid grid-cols-2 gap-1 eds-type-small" data-testid={`provider-meta-${card.provider}`}>
+              {emailStatusId ? (
+                <p className="mt-1 eds-type-helper" data-testid={emailStatusId}>
+                  {card.status_label_ru || card.status}
+                </p>
+              ) : null}
+              {frozen ? (
+                <p className="mt-2 eds-type-helper" data-testid="telegram-frozen-note">
+                  {card.message_ru || "Telegram намеренно отключён."}
+                </p>
+              ) : null}
+              <dl className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2 eds-type-small" data-testid={`provider-meta-${card.provider}`}>
                 <dt>Тип</dt>
                 <dd>{card.connection_type || "—"}</dd>
                 <dt>Аккаунт</dt>
@@ -144,11 +174,12 @@ export function ProviderConnectionsPage() {
                 <dt>Трекинг</dt>
                 <dd>{card.tracking_status || "—"}</dd>
               </dl>
+              {frozen ? null : (
               <div className="mt-3 flex flex-wrap gap-2">
                 <Button size="sm" onClick={() => { setWizard(card); setForm({}); }}>
                   Настроить
                 </Button>
-                {card.oauth_ready || card.provider === "meta" || card.provider === "google" || card.provider === "tiktok" ? (
+                {card.connect_cta !== false && (card.oauth_ready || card.provider === "meta" || card.provider === "google" || card.provider === "tiktok") ? (
                   <Button
                     size="sm"
                     variant="secondary"
@@ -163,9 +194,19 @@ export function ProviderConnectionsPage() {
                     Подключить
                   </Button>
                 ) : null}
-                <Button size="sm" variant="secondary" onClick={() => void act(card.provider || "", "test")}>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  data-testid={card.provider === "email" ? "email-check-connection" : undefined}
+                  onClick={() => void act(card.provider || "", "test")}
+                >
                   Проверить соединение
                 </Button>
+                {card.provider === "email" ? (
+                  <Button size="sm" variant="secondary" data-testid="email-test-send" onClick={() => { setTestEmailOpen(true); setTestEmailTo(""); }}>
+                    Тестовое письмо
+                  </Button>
+                ) : null}
                 <Button size="sm" variant="secondary" onClick={() => void act(card.provider || "", "reconnect")}>
                   Переподключить
                 </Button>
@@ -183,9 +224,11 @@ export function ProviderConnectionsPage() {
                   Диагностика
                 </Button>
               </div>
+              )}
             </div>
           </Card>
-        ))}
+          );
+        })}
       </div>
       {diagnostics ? (
         <Card title="Диагностика">
@@ -202,7 +245,9 @@ export function ProviderConnectionsPage() {
             <Input
               type={field.secret ? "password" : "text"}
               autoComplete="off"
+              data-testid={field.secret ? `secret-input-${field.id}` : undefined}
               value={form[field.id] || ""}
+              placeholder={field.secret ? "" : undefined}
               onChange={(ev) => setForm((prev) => ({ ...prev, [field.id]: ev.target.value }))}
             />
           </label>
@@ -212,6 +257,31 @@ export function ProviderConnectionsPage() {
             Сохранить
           </Button>
           <Button size="sm" variant="secondary" onClick={() => setWizard(null)}>
+            Закрыть
+          </Button>
+        </div>
+      </Dialog>
+      <Dialog open={testEmailOpen} title="Тестовое письмо SMTP" onClose={() => setTestEmailOpen(false)}>
+        <p className="eds-type-helper mb-2">Письмо отправится только по явной команде. Health check письма не шлёт.</p>
+        <Input
+          placeholder="email@example.com"
+          value={testEmailTo}
+          onChange={(ev) => setTestEmailTo(ev.target.value)}
+          autoComplete="off"
+        />
+        <div className="mt-3 flex gap-2">
+          <Button
+            size="sm"
+            data-testid="email-test-send-confirm"
+            onClick={async () => {
+              await recruitingOpsPost("/providers/email/test-email", { to: testEmailTo }, headers);
+              setTestEmailOpen(false);
+              await load();
+            }}
+          >
+            Отправить тест
+          </Button>
+          <Button size="sm" variant="secondary" onClick={() => setTestEmailOpen(false)}>
             Закрыть
           </Button>
         </div>

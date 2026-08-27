@@ -57,6 +57,7 @@ KINDS = (
     "ai_recommendation",
     "campaign_write",
     "outbound_message",
+    "email_suppression",
 )
 
 LEAD_STATUSES = ("new", "qualified", "converted", "lost")
@@ -408,7 +409,7 @@ class RecruitingOpsService:
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.9",
+            "sprint": "recruiting_1.10",
             "vanguard": {
                 "connected": False,
                 "status": "ingest_ready",
@@ -423,6 +424,7 @@ class RecruitingOpsService:
             "tracking_worker": get_tracking_worker().snapshot(),
             "tracking_health": self.tracking_diagnostics(),
             "ads": {"connected": False, "message_ru": "Провайдер не подключен"},
+            "telegram": {"frozen": True, "status": "DISABLED", "blocks_readiness": False},
         }
 
     def tracking_diagnostics(self) -> dict[str, Any]:
@@ -2172,6 +2174,9 @@ class RecruitingOpsService:
 
         rows = {str(item.get("provider") or ""): item for item in self._connections(org)}
         for provider in PROVIDERS:
+            if provider == "telegram":
+                set_runtime_connected(provider, False)
+                continue
             row = rows.get(provider) or {}
             connected = str(row.get("status") or "").upper() == "CONNECTED" and row.get("enabled") is not False
             set_runtime_connected(provider, connected)
@@ -2247,6 +2252,13 @@ class RecruitingOpsService:
                 "updated_at": _now(),
             }
         )
+        from services.recruiting_ops.provider_connections import TELEGRAM_FROZEN
+
+        if key == "telegram" and TELEGRAM_FROZEN:
+            row["status"] = "DISABLED"
+            row["enabled"] = False
+            row["frozen"] = True
+            row["connected"] = False
         if not existing:
             row["id"] = str(uuid.uuid4())
             row["created_at"] = _now()
@@ -2284,6 +2296,45 @@ class RecruitingOpsService:
 
         if key not in PROVIDERS:
             return {"ok": False, "error": "not_found", "message_ru": "Неизвестный провайдер"}
+        from services.recruiting_ops.provider_connections import TELEGRAM_FROZEN, TELEGRAM_FROZEN_MESSAGE_RU, public_card
+
+        if key == "email" and act in {"test_email", "send_test", "test-email"}:
+            return await self.test_smtp_email(org, body, role=role)
+        if key == "telegram" and TELEGRAM_FROZEN:
+            existing = next((item for item in self._connections(org) if _txt(item.get("provider")) == key), None)
+            row = existing or default_connection(key)
+            row.update(
+                {
+                    "organization_id": org,
+                    "status": "DISABLED",
+                    "frozen": True,
+                    "enabled": False,
+                    "connected": False,
+                    "last_health_check_at": _now(),
+                    "updated_at": _now(),
+                }
+            )
+            if not existing:
+                row["id"] = str(uuid.uuid4())
+                row["created_at"] = _now()
+                saved = await self._persist("provider_connection", row)
+                self._bag(org)["provider_connection"].insert(0, saved)
+            else:
+                persisted = await self._persist_patch(org, str(row["id"]), row)
+                saved = persisted or row
+                self._replace(org, "provider_connection", saved)
+            self._sync_runtime_connections(org)
+            return self._ok(
+                item=public_card(saved),
+                adapter={
+                    "ok": True,
+                    "status": "DISABLED",
+                    "frozen": True,
+                    "connected": False,
+                    "mode": "LIVE",
+                    "message_ru": TELEGRAM_FROZEN_MESSAGE_RU,
+                },
+            )
         mode = _txt(body.get("mode") or "LIVE").upper()
         if mode == "MOCK" and not mock_providers_allowed():
             return {"ok": False, "error": "forbidden", "message_ru": "Mock-режим запрещён в production."}
@@ -2804,6 +2855,218 @@ class RecruitingOpsService:
         )
         return self._ok(item=saved, adapter=parsed.get("adapter"))
 
+    async def list_email_templates(self, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        from services.recruiting_ops.email_smtp import TEMPLATES
+
+        return self._ok(items=list(TEMPLATES.values()))
+
+    async def preview_candidate_email(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        from services.recruiting_ops.email_smtp import render_template
+
+        context = body.get("context") if isinstance(body.get("context"), dict) else {}
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        candidate_id = _txt(body.get("candidate_id"))
+        if candidate_id:
+            cand = self._find(org, "candidate", candidate_id) or {}
+            context = {
+                "name": _txt(cand.get("name") or context.get("name")),
+                "first_name": _txt((cand.get("name") or "").split(" ")[0] or context.get("first_name")),
+                "vacancy": _txt(context.get("vacancy") or cand.get("vacancy") or ""),
+                "company": _txt(context.get("company") or ""),
+                "link": _txt(context.get("link") or ""),
+                **{k: _txt(v) for k, v in context.items()},
+            }
+        rendered = render_template(_txt(body.get("template_id") or "intro"), context)
+        return self._ok(**rendered)
+
+    async def test_smtp_email(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        from services.recruiting_ops.email_smtp import send_smtp_message
+        from services.recruiting_ops.provider_live import _SMTP_FACTORY, smtp_settings
+        from services.recruiting_ops.secret_store import public_secret_audit
+
+        to = _txt(body.get("to") or body.get("email"))
+        result = send_smtp_message(
+            to=to,
+            subject=_txt(body.get("subject") or "Проверка SMTP Recruiting"),
+            body=_txt(body.get("body") or "Это проверка SMTP. Автоматическая рассылка не выполнялась."),
+            cfg=smtp_settings(),
+            factory=_SMTP_FACTORY,
+        )
+        await self._activity(
+            organization_id=org,
+            entity_type="provider_connection",
+            entity_id="email",
+            action="email_test_send",
+            summary="Тестовое письмо SMTP",
+            role=role,
+            payload={**public_secret_audit("test_email", "email", "smtp_password"), "status": result.get("status"), "sent": result.get("sent"), "delivered": False},
+        )
+        return {
+            "ok": bool(result.get("ok")),
+            "status": result.get("status"),
+            "sent": bool(result.get("sent")),
+            "delivered": False,
+            "error": result.get("error"),
+            "message_ru": result.get("message_ru"),
+            "retryable": result.get("retryable"),
+        }
+
+    async def list_candidate_emails(self, organization_id: str, candidate_id: str, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        items = [
+            item
+            for item in self._bag(org).get("communication") or []
+            if _txt(item.get("candidate_id")) == _txt(candidate_id) and _txt(item.get("channel")).upper() == "EMAIL"
+        ]
+        return self._ok(items=items)
+
+    async def add_email_suppression(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        from services.recruiting_ops.email_smtp import valid_recipient
+
+        email = _txt(body.get("email") or body.get("to")).lower()
+        if not valid_recipient(email):
+            return {"ok": False, "error": "validation", "message_ru": "Некорректный адрес для suppression."}
+        item = {
+            "id": str(uuid.uuid4()),
+            "organization_id": org,
+            "email": email,
+            "reason": _txt(body.get("reason") or "manual"),
+            "created_at": _now(),
+        }
+        saved = await self._persist("email_suppression", item)
+        self._bag(org)["email_suppression"].insert(0, saved)
+        return self._ok(item=saved)
+
+    def _email_suppressed(self, org: str, address: str) -> bool:
+        needle = _txt(address).lower()
+        return any(_txt(item.get("email")).lower() == needle for item in self._bag(org).get("email_suppression") or [])
+
+    async def send_candidate_email(self, organization_id: str, candidate_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        from services.observability import inc_metric
+        from services.recruiting_ops.email_smtp import idempotency_key, render_template, send_smtp_message, valid_recipient
+        from services.recruiting_ops.provider_errors import RATE_LIMITED
+        from services.recruiting_ops.provider_live import _SMTP_FACTORY, smtp_settings
+        from services.recruiting_ops.public_limits import check_rate_limit
+        from services.recruiting_ops.secret_store import public_secret_audit
+
+        cand = self._find(org, "candidate", candidate_id)
+        if not cand:
+            return {"ok": False, "error": "not_found", "message_ru": "Кандидат не найден"}
+        to = _txt(body.get("to") or body.get("email") or cand.get("email"))
+        if not valid_recipient(to):
+            return {"ok": False, "error": "validation", "message_ru": "Некорректный получатель."}
+        if self._email_suppressed(org, to):
+            return {"ok": False, "error": "suppressed", "message_ru": "Адрес в списке suppression. Письмо не отправлено."}
+        if _txt(body.get("campaign_id")) and not body.get("approved"):
+            return {"ok": False, "error": "APPROVAL_REQUIRED", "message_ru": "Рассылка кампании требует согласования."}
+        try:
+            limit = max(1, int(os.getenv("EMAIL_SEND_RATE_LIMIT") or "20"))
+        except ValueError:
+            limit = 20
+        rl = check_rate_limit(key=f"email-send:{org}", limit=limit)
+        if not rl.get("allowed"):
+            inc_metric("email_rate_limited_total")
+            return {"ok": False, "error": RATE_LIMITED, "message_ru": "Превышен лимит отправки email.", "retry_after_seconds": rl.get("retry_after_seconds")}
+        context = body.get("context") if isinstance(body.get("context"), dict) else {}
+        rendered = render_template(
+            _txt(body.get("template_id") or "intro"),
+            {
+                "name": _txt(cand.get("name") or context.get("name")),
+                "first_name": _txt((cand.get("name") or "").split(" ")[0] or context.get("first_name")),
+                "vacancy": _txt(context.get("vacancy") or cand.get("vacancy") or ""),
+                "company": _txt(context.get("company") or ""),
+                "link": _txt(context.get("link") or ""),
+            },
+        )
+        subject = _txt(body.get("subject") or rendered.get("subject"))
+        text = _txt(body.get("body") or rendered.get("body"))
+        key = idempotency_key(organization_id=org, to=to, subject=subject, body=text, candidate_id=candidate_id)
+        for row in self._bag(org)["idempotency"]:
+            if _txt(row.get("key")) == key:
+                existing = self._find(org, "communication", _txt(row.get("communication_id")))
+                if existing and existing.get("status") == "SENT":
+                    return self._ok(item=existing, duplicate=True, message_ru="Повторная отправка предотвращена.")
+        result = send_smtp_message(to=to, subject=subject, body=text, cfg=smtp_settings(), factory=_SMTP_FACTORY)
+        status = "SENT" if result.get("ok") else "FAILED"
+        item = {
+            "id": str(uuid.uuid4()),
+            "organization_id": org,
+            "tenant_id": org,
+            "channel": "EMAIL",
+            "body": text,
+            "subject": subject,
+            "to": to,
+            "candidate_id": candidate_id,
+            "campaign_id": _txt(body.get("campaign_id")) or None,
+            "template_id": rendered.get("template_id"),
+            "sent": bool(result.get("ok")),
+            "delivered": False,
+            "delivery": result.get("delivery") or ("accepted" if result.get("ok") else "failed"),
+            "status": status,
+            "journal_only": not bool(result.get("ok")),
+            "data_mode": "REAL",
+            "created_at": _now(),
+            "updated_at": _now(),
+            "last_error": None if result.get("ok") else (result.get("error") or result.get("message_ru")),
+        }
+        saved = await self._persist("communication", item)
+        self._bag(org)["communication"].insert(0, saved)
+        if result.get("ok"):
+            await self._store_idempotency_email(org, key, saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="candidate",
+            entity_id=candidate_id,
+            action="email_sent" if result.get("ok") else "email_failed",
+            summary=f"Email {status}: {to}",
+            role=role,
+            payload={**public_secret_audit("send", "email", "smtp_password"), "status": status, "delivered": False, "to": to},
+        )
+        out = self._ok(item=saved, adapter={"ok": result.get("ok"), "error": result.get("error"), "message_ru": result.get("message_ru"), "retryable": result.get("retryable"), "delivered": False})
+        if not result.get("ok"):
+            out["ok"] = False
+            out["error"] = result.get("error")
+            out["message_ru"] = result.get("message_ru")
+        return out
+
+    async def _store_idempotency_email(self, org: str, key: str, communication: dict[str, Any]) -> None:
+        item = {
+            "id": str(uuid.uuid4()),
+            "organization_id": org,
+            "key": key,
+            "communication_id": communication.get("id"),
+            "kind": "email",
+            "created_at": _now(),
+        }
+        saved = await self._persist("idempotency", item)
+        self._bag(org)["idempotency"].insert(0, saved)
+
     async def create_outbound_message(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
         denied = require(role, "create")
         if denied:
@@ -2860,11 +3123,14 @@ class RecruitingOpsService:
             to=item.get("to"),
             text=item.get("body"),
             body=item.get("body"),
+            subject=item.get("subject") or "Сообщение",
         )
         item.update(
             {
                 "status": SENT if sent.get("ok") else FAILED,
                 "sent": bool(sent.get("ok")),
+                "delivered": False,
+                "delivery": sent.get("delivery") or ("accepted" if sent.get("ok") and _txt(item.get("channel")).lower() == "email" else None),
                 "journal_only": not bool(sent.get("ok")),
                 "provider_message_id": sent.get("provider_message_id"),
                 "updated_at": _now(),
@@ -3005,3 +3271,6 @@ def reset_recruiting_ops_for_tests() -> None:
     reset_secret_store_for_tests()
     reset_adapters_for_tests()
     reset_runtime_connections()
+    from services.recruiting_ops.provider_live import set_smtp_factory
+
+    set_smtp_factory(None)

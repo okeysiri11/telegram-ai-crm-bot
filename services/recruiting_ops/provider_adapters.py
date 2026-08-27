@@ -155,7 +155,12 @@ class EmailAdapter(LiveProviderAdapter):
     def send_message(self, **kwargs: Any) -> dict[str, Any]:
         if not kwargs.get("approved"):
             return reject_unapproved()
-        return live_send_message(self.provider, to=str(kwargs.get("to") or kwargs.get("email") or ""), text=str(kwargs.get("text") or kwargs.get("body") or ""))
+        return live_send_message(
+            self.provider,
+            to=str(kwargs.get("to") or kwargs.get("email") or ""),
+            text=str(kwargs.get("text") or kwargs.get("body") or ""),
+            subject=str(kwargs.get("subject") or "Сообщение"),
+        )
 
 
 class MockProviderAdapter(ProviderAdapter):

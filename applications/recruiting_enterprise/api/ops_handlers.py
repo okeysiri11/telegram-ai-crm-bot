@@ -55,6 +55,8 @@ def _status_for(result: dict, *, created: bool = False) -> int:
             return 401
         if err in {"storage_unavailable", "ingest_not_configured", "store_unavailable"}:
             return 503
+        if err in {"RATE_LIMITED", "rate_limited"}:
+            return 429
         return 400
     if result.get("duplicate"):
         return 200
@@ -462,3 +464,33 @@ async def ops_whatsapp_webhook_handler(request: web.Request) -> web.Response:
     if request.method == "GET" and result.get("verified"):
         return web.Response(text=str(result.get("challenge") or ""), content_type="text/plain")
     return json_response(result, status=_status_for(result))
+
+
+async def ops_email_templates_handler(request: web.Request) -> web.Response:
+    result = await get_recruiting_ops_service().list_email_templates(_role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_email_preview_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    result = await get_recruiting_ops_service().preview_candidate_email(_org(request, body), body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_email_suppression_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    result = await get_recruiting_ops_service().add_email_suppression(_org(request, body), body, _role(request, body))
+    return json_response(result, status=_status_for(result, created=True))
+
+
+async def ops_candidate_emails_handler(request: web.Request) -> web.Response:
+    candidate_id = request.match_info.get("candidate_id") or ""
+    result = await get_recruiting_ops_service().list_candidate_emails(_org(request), candidate_id, _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_candidate_email_send_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    candidate_id = request.match_info.get("candidate_id") or ""
+    result = await get_recruiting_ops_service().send_candidate_email(_org(request, body), candidate_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result, created=bool(result.get("ok") and not result.get("duplicate"))))

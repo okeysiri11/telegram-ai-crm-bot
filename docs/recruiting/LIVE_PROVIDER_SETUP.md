@@ -55,14 +55,13 @@ Successful live status is **Подключено / CONNECTED** only after a real
 
 ## Telegram
 
-1. BotFather bot (do **not** reuse the platform `BOT_TOKEN`).
-2. Create bot; optional default chat/channel.
-3. Env names: `VANGUARD_TELEGRAM_BOT_TOKEN`. Optional chat in UI `target_chat`.
-4. No OAuth redirect.
-5. Bot identity via `getMe`.
-6. Recruiting → Интеграции → Telegram → paste token → Сохранить. Token is not shown again.
-7. **Проверить соединение**.
-8. Success: **Подключено** and bot username.
+Telegram is **intentionally frozen / disabled** in Recruiting.
+
+- Status: `DISABLED` (Отключено / заморожено).
+- No «Подключить» CTA.
+- Frozen overlay does not change core Recruiting readiness.
+- Tracking destinations stay `WAITING_PROVIDER` — no retry storm.
+- Do not reuse platform `BOT_TOKEN`. Adapter HTTP is unchanged and is not developed in this sprint.
 
 ---
 

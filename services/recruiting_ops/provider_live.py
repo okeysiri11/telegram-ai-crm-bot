@@ -6,7 +6,7 @@ import json
 import os
 import smtplib
 import ssl
-from email.message import EmailMessage
+import time
 from typing import Any, Callable
 
 from services.recruiting_ops.provider_contract import NOT_CONFIGURED, adapter_result
@@ -226,10 +226,14 @@ def smtp_settings() -> dict[str, Any]:
 
 
 def smtp_health() -> dict[str, Any]:
+    from services.recruiting_ops.email_smtp import classify_smtp_exception, record_health_metric
+
     cfg = smtp_settings()
     if not cfg["host"] or not cfg["sender"]:
+        record_health_metric("NOT_CONFIGURED")
         return _not_configured("email")
     factory = _SMTP_FACTORY
+    started = time.perf_counter()
     try:
         if factory:
             client = factory(cfg["host"], cfg["port"])
@@ -245,6 +249,8 @@ def smtp_health() -> dict[str, Any]:
                 client.ehlo()
             if cfg["user"]:
                 client.login(cfg["user"], cfg["password"] or "")
+        latency = int((time.perf_counter() - started) * 1000)
+        record_health_metric("CONNECTED", latency)
         return adapter_result(
             ok=True,
             status="CONNECTED",
@@ -253,18 +259,23 @@ def smtp_health() -> dict[str, Any]:
             mocked_http=factory is not None,
             mode="LIVE",
             provider="email",
+            latency_ms=latency,
             identity={"id": cfg["sender"], "name": cfg["sender_name"] or cfg["sender"]},
-            message_ru="SMTP-соединение успешно.",
+            message_ru="SMTP-соединение успешно. Письмо не отправлялось.",
         )
     except Exception as exc:
+        classified = classify_smtp_exception(exc)
+        latency = int((time.perf_counter() - started) * 1000)
+        record_health_metric(str(classified.get("status") or "ERROR"), latency)
         return adapter_result(
             ok=False,
-            error="PROVIDER_UNAVAILABLE",
-            status="ERROR",
+            error=classified.get("error"),
+            status=classified.get("status") or "ERROR",
             connected=False,
             mode="LIVE",
             provider="email",
-            message_ru="SMTP недоступен.",
+            latency_ms=latency,
+            message_ru=classified.get("message_ru"),
             last_error=type(exc).__name__,
         )
 
@@ -469,7 +480,7 @@ def live_write_campaign(provider: str, action: str, *, campaign_id: str, budget:
     return adapter_result(ok=False, error="UNSUPPORTED", mode="LIVE")
 
 
-def live_send_message(provider: str, *, to: str, text: str) -> dict[str, Any]:
+def live_send_message(provider: str, *, to: str, text: str, subject: str = "") -> dict[str, Any]:
     key = _txt(provider).lower()
     if key == "telegram":
         token = _secret("telegram", "bot_token", "VANGUARD_TELEGRAM_BOT_TOKEN")
@@ -505,41 +516,13 @@ def live_send_message(provider: str, *, to: str, text: str) -> dict[str, Any]:
         out["provider_message_id"] = (messages[0] or {}).get("id") if messages else None
         return out
     if key == "email":
-        cfg = smtp_settings()
-        if not cfg["host"] or not cfg["sender"] or not to:
-            return _not_configured(key)
-        msg = EmailMessage()
-        msg["Subject"] = "Recruiting"
-        msg["From"] = f"{cfg['sender_name']} <{cfg['sender']}>" if cfg["sender_name"] else cfg["sender"]
-        msg["To"] = to
-        msg.set_content(text)
-        factory = _SMTP_FACTORY
-        try:
-            if factory:
-                client = factory(cfg["host"], cfg["port"])
-            elif cfg["tls_mode"] == "ssl":
-                client = smtplib.SMTP_SSL(cfg["host"], cfg["port"], timeout=10)
-            else:
-                client = smtplib.SMTP(cfg["host"], cfg["port"], timeout=10)
-            with client:
-                client.ehlo()
-                if cfg["tls_mode"] not in {"ssl", "none"}:
-                    client.starttls(context=ssl.create_default_context())
-                    client.ehlo()
-                if cfg["user"]:
-                    client.login(cfg["user"], cfg["password"] or "")
-                client.send_message(msg)
-            return adapter_result(
-                ok=True,
-                sent=True,
-                status="CONNECTED",
-                connected=True,
-                mode="LIVE",
-                provider="email",
-                mocked_http=factory is not None,
-                live_verified=factory is None,
-                message_ru="Письмо отправлено.",
-            )
-        except Exception as exc:
-            return adapter_result(ok=False, sent=False, error="PROVIDER_UNAVAILABLE", message_ru="SMTP отправка не удалась.", last_error=type(exc).__name__)
+        from services.recruiting_ops.email_smtp import send_smtp_message
+
+        return send_smtp_message(
+            to=to,
+            subject=subject or "Recruiting",
+            body=text,
+            cfg=smtp_settings(),
+            factory=_SMTP_FACTORY,
+        )
     return adapter_result(ok=False, error="UNSUPPORTED", sent=False)
