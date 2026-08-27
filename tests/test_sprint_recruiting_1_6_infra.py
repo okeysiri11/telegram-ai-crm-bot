@@ -87,6 +87,7 @@ def test_production_missing_redis_fail_closed(monkeypatch):
 
 def test_production_unreachable_redis_fail_closed(monkeypatch):
     monkeypatch.setenv("ENVIRONMENT", "production")
+    monkeypatch.delenv("VANGUARD_SHARED_STORE_URL", raising=False)
     monkeypatch.setenv("REDIS_URL", "redis://127.0.0.1:1/0")
     store = SharedStore.connect()
     assert store.backend == "unavailable"

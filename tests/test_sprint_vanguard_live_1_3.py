@@ -33,6 +33,7 @@ async def client(app: web.Application):
 @pytest.fixture(autouse=True)
 def reset_ops(monkeypatch):
     monkeypatch.setenv("ENVIRONMENT", "development")
+    monkeypatch.delenv("VANGUARD_WEBSITE_URL", raising=False)
     reset_recruiting_ops_for_tests()
     yield
     reset_recruiting_ops_for_tests()

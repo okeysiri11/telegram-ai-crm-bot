@@ -108,15 +108,16 @@ async def test_ingest_duplicate_preserves_first_touch(client: TestClient):
 
 
 async def test_funnel_and_cost_calculations(client: TestClient):
+    campaign_code = f"cost-{uuid.uuid4().hex[:8]}"
     await client.post(
         f"{OPS}/campaigns",
-        json={"name": "Cost Camp", "project_key": "vanguard", "campaign_code": "cost-1", "spend": 100, "impressions": None, "clicks": None},
+        json={"name": "Cost Camp", "project_key": "vanguard", "campaign_code": campaign_code, "spend": 100, "impressions": None, "clicks": None},
         headers=_hdr(),
     )
     email = f"funnel.{uuid.uuid4().hex[:6]}@example.com"
     applied = await client.post(
         f"{SITE}/applications",
-        json={"first_name": "Funnel", "email": email, "program": "Ops", "utm_campaign": "cost-1", "utm_source": "meta"},
+        json={"first_name": "Funnel", "email": email, "program": "Ops", "utm_campaign": campaign_code, "utm_source": "meta"},
     )
     lead_id = (await applied.json())["item"]["id"]
     await client.post(f"{OPS}/leads/{lead_id}/qualify", json={}, headers=_hdr())
@@ -126,7 +127,7 @@ async def test_funnel_and_cost_calculations(client: TestClient):
     assert steps["lead"] >= 1
     assert steps["qualified"] >= 1
     assert steps["candidate"] >= 1
-    camp = next(c for c in overview["marketing"]["campaigns"] if c.get("campaign_code") == "cost-1")
+    camp = next(c for c in overview["marketing"]["campaigns"] if c.get("campaign_code") == campaign_code)
     assert camp["cpl"] == 100
     assert camp["missing_provider_metrics"] is True
     assert camp["fake_data"] is False

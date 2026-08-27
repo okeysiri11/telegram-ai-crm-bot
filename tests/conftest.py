@@ -29,6 +29,18 @@ def _register_rbac_models():
         importlib.import_module(module)
 
 
+@pytest.fixture(autouse=True)
+async def _dispose_asyncpg_engine_after_test():
+    """Close asyncpg connections on the same loop that opened them."""
+    yield
+    try:
+        from database.session import shutdown_db
+
+        await shutdown_db()
+    except Exception:
+        pass
+
+
 @pytest.fixture
 def scaffold_marker() -> str:
     return "architecture_scaffold"

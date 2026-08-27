@@ -67,10 +67,10 @@ async def test_valid_signed_request_accepted(client: TestClient):
         client,
         {
             "first_name": "Анна",
-            "email": "anna@example.com",
+            "email": f"anna.{uuid.uuid4().hex[:8]}@example.com",
             "source": "vanguard",
             "vacancy_id": "vac-ops",
-            "external_id": "vg-ok-1",
+            "external_id": f"vg-ok-{uuid.uuid4().hex[:8]}",
             "utm_source": "vanguard",
             "utm_campaign": "career",
         },
@@ -113,10 +113,11 @@ async def test_expired_signature_rejected(client: TestClient):
 
 
 async def test_replayed_nonce_rejected(client: TestClient):
-    body = {"first_name": "Replay", "email": "replay@example.com", "vacancy_id": "vac-r"}
-    first = await _post_signed(client, body, nonce="same-nonce-once")
+    nonce = f"nonce-{uuid.uuid4().hex}"
+    body = {"first_name": "Replay", "email": f"replay.{uuid.uuid4().hex[:8]}@example.com", "vacancy_id": "vac-r"}
+    first = await _post_signed(client, body, nonce=nonce)
     assert first.status == 201
-    second = await _post_signed(client, body, nonce="same-nonce-once")
+    second = await _post_signed(client, body, nonce=nonce)
     assert second.status == 401
     assert (await second.json())["error"] == "bad_signature"
 
@@ -135,11 +136,11 @@ async def test_valid_lead_persisted_with_attribution_and_activity(client: TestCl
         client,
         {
             "first_name": "E2E_TEST",
-            "email": "e2e@example.com",
+            "email": f"e2e.{uuid.uuid4().hex[:8]}@example.com",
             "phone": "+380500000001",
             "source": "vanguard",
             "vacancy_id": "vac-frontend",
-            "external_id": "vg-attr-1",
+            "external_id": f"vg-attr-{uuid.uuid4().hex[:8]}",
             "utm_source": "vanguard",
             "utm_medium": "website",
             "utm_campaign": "career-q3",
@@ -147,7 +148,7 @@ async def test_valid_lead_persisted_with_attribution_and_activity(client: TestCl
     )
     assert res.status == 201
     item = (await res.json())["item"]
-    assert item["external_id"] == "vg-attr-1"
+    assert item["external_id"].startswith("vg-attr-")
     assert item["vacancy_id"] == "vac-frontend"
     assert item["utm_source"] == "vanguard"
     assert item["utm_campaign"] == "career-q3"
@@ -163,10 +164,10 @@ async def test_valid_lead_persisted_with_attribution_and_activity(client: TestCl
 async def test_duplicate_submit_handled(client: TestClient):
     body = {
         "first_name": "Дубль",
-        "email": "dup@example.com",
+        "email": f"dup.{uuid.uuid4().hex[:8]}@example.com",
         "source": "vanguard",
         "vacancy_id": "vac-same",
-        "external_id": "vg-dup-1",
+        "external_id": f"vg-dup-{uuid.uuid4().hex[:8]}",
     }
     first = await _post_signed(client, body)
     assert first.status == 201
@@ -181,9 +182,9 @@ async def test_duplicate_submit_handled(client: TestClient):
 async def test_different_vacancy_allowed(client: TestClient):
     base = {
         "first_name": "Мульти",
-        "email": "multi@example.com",
+        "email": f"multi.{uuid.uuid4().hex[:8]}@example.com",
         "source": "vanguard",
-        "external_id": "vg-multi-1",
+        "external_id": f"vg-multi-{uuid.uuid4().hex[:8]}",
     }
     a = await _post_signed(client, {**base, "vacancy_id": "vac-a"})
     b = await _post_signed(client, {**base, "vacancy_id": "vac-b"})

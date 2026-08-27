@@ -5,6 +5,11 @@ name: Production Gate (develop)
 # only after this workflow succeeds, so a red gate never replaces a healthy
 # production deployment. No deployment secrets live here or in the repo.
 
+permissions:
+  contents: read
+  actions: write
+  checks: write
+
 on:
   push:
     branches: [develop]
@@ -147,6 +152,7 @@ jobs:
       VANGUARD_ANTIBOT_PROVIDER: none
       VANGUARD_APPLY_RATE_LIMIT: "50"
       REDIS_URL: redis://localhost:6379/0
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -158,6 +164,8 @@ jobs:
           node-version: "22"
           cache: npm
           cache-dependency-path: src/web/package-lock.json
+      - name: Wait for Postgres and Redis
+        run: python3 scripts/ci_wait_tcp.py 5432 6379
       - run: pip install -r requirements.txt
       - run: python -m alembic upgrade head
       - run: npm ci --no-audit --no-fund
@@ -166,4 +174,22 @@ jobs:
         working-directory: src/web
       - name: Playwright Vanguard E2E
         working-directory: src/web
+        env:
+          CI: "true"
+          ENVIRONMENT: development
+          DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/ai_ecosystem
+          REDIS_URL: redis://localhost:6379/0
+          REDIS_REQUIRED: "false"
+          VANGUARD_ANTIBOT_PROVIDER: none
+          VANGUARD_APPLY_RATE_LIMIT: "50"
+          PYTHON: python3
         run: npx playwright test --config=playwright.config.ts
+      - name: Upload Playwright artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vanguard-e2e-report
+          path: |
+            src/web/playwright-report
+            src/web/test-results
+          if-no-files-found: ignore

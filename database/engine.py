@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import os
+
 from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.pool import NullPool
 
 from platform_configuration.configuration_center import configuration_center
 
@@ -47,15 +50,24 @@ def get_engine(*, force_new: bool = False) -> AsyncEngine:
         return _engine
 
     pool = _pool_kwargs()
-    _engine = create_async_engine(
-        DATABASE_URL,
-        echo=False,
-        pool_pre_ping=True,
-        pool_size=pool["pool_size"],
-        max_overflow=pool["max_overflow"],
-        pool_timeout=pool["pool_timeout"],
-        pool_recycle=pool["pool_recycle"],
-    )
+    if os.environ.get("PYTEST_CURRENT_TEST"):
+        # Per-test connections: do not keep an asyncpg pool after the pytest loop closes.
+        _engine = create_async_engine(
+            DATABASE_URL,
+            echo=False,
+            pool_pre_ping=True,
+            poolclass=NullPool,
+        )
+    else:
+        _engine = create_async_engine(
+            DATABASE_URL,
+            echo=False,
+            pool_pre_ping=True,
+            pool_size=pool["pool_size"],
+            max_overflow=pool["max_overflow"],
+            pool_timeout=pool["pool_timeout"],
+            pool_recycle=pool["pool_recycle"],
+        )
     return _engine
 
 

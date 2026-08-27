@@ -1,6 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-test("real browser: Vanguard form → Recruiting INTERVIEW", async ({ page }) => {
+test("real browser: Vanguard form → Recruiting INTERVIEW", async ({ page, request }) => {
+  await expect
+    .poll(async () => {
+      const res = await request.get("http://127.0.0.1:8080/api/vanguard-site/v1/health");
+      return res.ok();
+    }, { timeout: 30_000 })
+    .toBeTruthy();
+
   const email = `e2e.harden.${Date.now()}@example.com`;
   await page.goto("/vanguard");
   await expect(page.getByTestId("vanguard-career-page")).toBeVisible();
@@ -10,7 +17,13 @@ test("real browser: Vanguard form → Recruiting INTERVIEW", async ({ page }) =>
   await page.getByPlaceholder("Программа / вакансия").fill("Frontend Recruiter");
   await page.getByPlaceholder("Почему вы откликаетесь").fill("Playwright acceptance");
   await page.getByTestId("vanguard-apply-submit").click();
-  await expect(page.getByTestId("vanguard-application-received")).toBeVisible({ timeout: 20_000 });
+  const received = page.getByTestId("vanguard-application-received");
+  const applyError = page.getByTestId("vanguard-apply-error");
+  await expect(received.or(applyError)).toBeVisible({ timeout: 20_000 });
+  if (await applyError.isVisible().catch(() => false)) {
+    throw new Error(`Vanguard apply failed: ${(await applyError.innerText()).trim()}`);
+  }
+  await expect(received).toBeVisible();
   const reference = (await page.getByTestId("vanguard-reference").innerText()).trim();
   expect(reference).toMatch(/^VG-[A-Z0-9]{6}$/);
 

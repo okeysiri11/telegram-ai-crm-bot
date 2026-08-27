@@ -64,6 +64,8 @@ services:
           type: keyvalue
           name: ados-redis
           property: connectionString
+      - key: VANGUARD_WEBSITE_URL
+        value: https://ados-web.onrender.com/vanguard
       - key: IAM_JWT_SECRET
         generateValue: true
       - key: JWT_SECRET

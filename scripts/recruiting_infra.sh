@@ -6,16 +6,28 @@ FILE="$ROOT/docker-compose.recruiting.yml"
 NAME="recruiting-redis"
 
 compose() {
-  docker_bin=""
-  if command -v docker >/dev/null 2>&1; then
-    docker_bin="$(command -v docker)"
-  elif [[ -x /usr/local/bin/docker ]]; then
-    docker_bin="/usr/local/bin/docker"
+  candidates=()
+  if [[ -x "${HOME}/.local/bin/docker" ]]; then
+    candidates+=("${HOME}/.local/bin/docker")
   fi
-  if [[ -z "$docker_bin" ]] || ! "$docker_bin" info >/dev/null 2>&1; then
-    echo "BLOCKED: Docker is not available."
-    echo "Docker CLI is missing or the Docker.app volume is not mounted (expected /usr/local/bin/docker)."
-    echo "Start Docker Desktop or mount the volume, then retry. Do not install Redis with Homebrew."
+  if command -v docker >/dev/null 2>&1; then
+    candidates+=("$(command -v docker)")
+  fi
+  if [[ -x /usr/local/bin/docker ]]; then
+    candidates+=("/usr/local/bin/docker")
+  fi
+  docker_bin=""
+  for cand in "${candidates[@]}"; do
+    if "$cand" info >/dev/null 2>&1; then
+      docker_bin="$cand"
+      break
+    fi
+  done
+  if [[ -z "$docker_bin" ]]; then
+    echo "BLOCKED: Docker daemon is not available."
+    echo "/usr/local/bin/docker is a dangling symlink to /Volumes/Docker 1/Docker.app (volume not mounted)."
+    echo "A valid Docker.app exists at ~/Desktop/Docker.app — start it, then: export PATH=\"\$HOME/.local/bin:\$PATH\""
+    echo "Do not install Redis with Homebrew."
     return 127
   fi
   "$docker_bin" compose -f "$FILE" "$@"
