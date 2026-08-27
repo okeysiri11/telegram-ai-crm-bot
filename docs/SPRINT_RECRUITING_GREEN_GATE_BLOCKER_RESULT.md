@@ -33,7 +33,7 @@ PID 45359 (`recruiting_1.4`) was terminated. Current `scripts/run_api_local.py` 
 
 `vanguard-e2e` is self-contained on `ubuntu-latest`: Postgres + Redis services, wait via `scripts/ci_wait_tcp.py` **before** alembic, sequential API-then-Vite stack (`scripts/run_vanguard_e2e_stack.sh`), Playwright Chromium `--with-deps`, failure artifacts. `reuseExistingServer` is false in CI.
 
-Apply + Chromium succeeded on the first post-fix run; the remaining failure was `waitForURL` not matching demo Owner `/owner`. The spec now accepts that route.
+Apply + Chromium + demo Owner `/owner` succeeded on the follow-up run. Remaining failure was a Playwright strict-mode click on «Кандидаты» (side nav + tabs + «В кандидаты»). Locators are now scoped to `vanguard-tabs` with `exact: true`.
 
 ### asyncpg warning
 

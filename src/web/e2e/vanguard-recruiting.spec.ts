@@ -39,13 +39,13 @@ test("real browser: Vanguard form → Recruiting INTERVIEW", async ({ page, requ
   await expect(page.getByTestId("vanguard-leads")).toContainText(reference, { timeout: 20_000 });
   await expect(page.getByTestId("vanguard-leads")).toContainText("E2E_HARDEN");
 
-  await page.getByRole("button", { name: "Квалифицировать" }).click();
-  await page.getByRole("button", { name: "В кандидаты" }).click();
-  await page.getByRole("button", { name: "Кандидаты" }).click();
+  await page.getByRole("button", { name: "Квалифицировать", exact: true }).click();
+  await page.getByRole("button", { name: "В кандидаты", exact: true }).click();
+  await page.getByTestId("vanguard-tabs").getByRole("button", { name: "Кандидаты", exact: true }).click();
   await expect(page.getByTestId("vanguard-candidates")).toBeVisible();
-  await page.getByRole("button", { name: "В интервью" }).click();
+  await page.getByRole("button", { name: "В интервью", exact: true }).click();
   await expect(page.getByTestId("vanguard-candidates")).toContainText("Интервью");
   await page.reload();
-  await page.getByRole("button", { name: "Кандидаты" }).click();
+  await page.getByTestId("vanguard-tabs").getByRole("button", { name: "Кандидаты", exact: true }).click();
   await expect(page.getByTestId("vanguard-candidates")).toContainText("Интервью");
 });
