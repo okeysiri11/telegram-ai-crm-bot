@@ -6,6 +6,8 @@ export const RECRUITING_NAV = [
   { id: "vacancies", label: "Вакансии", href: "/workspace/recruiting?view=vacancies" },
   { id: "pipeline", label: "Воронка", href: "/workspace/recruiting?view=pipeline" },
   { id: "campaigns", label: "Кампании", href: "/workspace/recruiting?view=campaigns" },
+  { id: "ads", label: "Реклама", href: "/workspace/recruiting/ads" },
+  { id: "integrations", label: "Интеграции", href: "/workspace/recruiting/integrations" },
   { id: "tasks", label: "Задачи", href: "/workspace/recruiting?view=tasks" },
   { id: "comms", label: "Коммуникации", href: "/workspace/recruiting?view=comms" },
   { id: "activity", label: "Активность", href: "/workspace/recruiting?view=activity" },

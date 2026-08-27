@@ -51,6 +51,10 @@ KINDS = (
     "creative",
     "audience",
     "ads_metrics",
+    "provider_connection",
+    "automation_rule",
+    "automation_run",
+    "ai_recommendation",
 )
 
 LEAD_STATUSES = ("new", "qualified", "converted", "lost")
@@ -260,6 +264,7 @@ class RecruitingOpsService:
                 await self.recover_tracking_records(org)
         else:
             get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
+        self._sync_runtime_connections(org)
 
     async def _persist(self, kind: str, data: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -380,8 +385,10 @@ class RecruitingOpsService:
                 "application_submit",
                 "application_success",
             ],
-            "data_modes": ["REAL", "DEMO", "NON_DURABLE_DEVELOPMENT_MODE"],
+            "data_modes": ["REAL", "DEMO", "NON_DURABLE_DEVELOPMENT_MODE", "LIVE", "MOCK"],
             "ads": ads_foundation(),
+            "campaign_statuses": ["DRAFT", "READY", "ACTIVE", "PAUSED", "COMPLETED", "FAILED"],
+            "providers": ["meta", "google", "tiktok", "telegram", "whatsapp", "email"],
         }
 
     def vanguard_contract(self) -> dict[str, Any]:
@@ -399,7 +406,7 @@ class RecruitingOpsService:
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.7",
+            "sprint": "recruiting_1.8",
             "vanguard": {
                 "connected": False,
                 "status": "ingest_ready",
@@ -1409,6 +1416,14 @@ class RecruitingOpsService:
             "created_at": _now(),
             "updated_at": _now(),
         }
+        from services.recruiting_ops.campaign_model import normalize_campaign
+
+        domain = normalize_campaign(body)
+        domain["lifecycle_status"] = domain.get("status")
+        domain.pop("status", None)
+        item.update(domain)
+        if not item.get("name"):
+            item["name"] = name
         saved = await self._persist("campaign", item)
         self._bag(org)["campaign"].insert(0, saved)
         await self._activity(
@@ -1452,6 +1467,15 @@ class RecruitingOpsService:
         ):
             if field in body:
                 patch[field] = body.get(field)
+        from services.recruiting_ops.campaign_model import normalize_campaign
+
+        domain = normalize_campaign(body, existing=item)
+        domain["lifecycle_status"] = domain.get("status")
+        if "status" in body:
+            domain["status"] = body.get("status")
+        else:
+            domain.pop("status", None)
+        patch.update({k: v for k, v in domain.items() if k in body or k in {"lifecycle_status", "status_label_ru", "sync_state", "utm", "provider", "external_id"}})
         if "project_key" in patch:
             patch["project_key"] = infer_project_key(source=_txt(patch.get("source") or item.get("source")), project_key=_txt(patch.get("project_key")))
         patch["ads_api"] = "not_connected"
@@ -1515,6 +1539,36 @@ class RecruitingOpsService:
         payload["funnel"] = self._marketing_funnel(org, key, leads, cands, {})
         payload["attribution"] = self._attribution_snapshot(leads, events)
         payload["entities"] = {kind: list(self._bag(org).get(kind) or []) for kind in ("ad_account", "ad_set", "creative", "audience", "ads_metrics")}
+        from services.recruiting_ops.provider_connections import connection_center_payload, provider_health_snapshot
+
+        connections = self._bag(org).get("provider_connection") or []
+        live_provider = any(str(item.get("status") or "").upper() == "CONNECTED" and str(item.get("mode") or "").upper() != "MOCK" for item in connections)
+        qualified = [item for item in leads if _txt(item.get("status")).lower() in {"qualified", "converted"}]
+        interviews = [item for item in cands if _txt(item.get("pipeline_stage")).upper() == "INTERVIEW"]
+        hires = [item for item in cands if _txt(item.get("pipeline_stage")).upper() == "HIRED"]
+        payload["sections"] = ["overview", "providers", "campaigns", "leads", "funnel", "attribution", "source_analytics", "automation", "ai_optimization", "diagnostics"]
+        payload["overview"] = {
+            "connected_providers": sum(1 for item in connections if str(item.get("status") or "").upper() == "CONNECTED"),
+            "active_campaigns": len([c for c in campaigns if str(c.get("status") or "").upper() in {"ACTIVE", "active"}]),
+            "spend": None if not live_provider else None,
+            "impressions": None,
+            "clicks": None,
+            "leads": len(leads),
+            "qualified_candidates": len(qualified),
+            "interviews": len(interviews),
+            "hires": len(hires),
+            "cost_per_lead": None,
+            "cost_per_qualified_candidate": None,
+            "cost_per_interview": None,
+            "cost_per_hire": None,
+            "live_provider_metrics": False,
+            "no_live_data": True,
+            "message_ru": "Нет живых данных" if not live_provider else "Нет живых данных провайдера",
+        }
+        payload["provider_health"] = provider_health_snapshot(connections)
+        payload["provider_connections"] = connection_center_payload(connections)
+        payload["automation"] = {"items": list(self._bag(org).get("automation_rule") or []), "approval_required_default": True}
+        payload["ai_optimization"] = {"items": list(self._bag(org).get("ai_recommendation") or []), "advisory_only": True, "live_write_access": False}
         return self._ok(**payload)
 
     async def create_task(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
@@ -2077,6 +2131,406 @@ class RecruitingOpsService:
         diag = self.tracking_diagnostics()
         return str(diag.get("code") or STATUS_UNKNOWN), str(diag.get("reason_ru") or "")
 
+    def _connections(self, org: str) -> list[dict[str, Any]]:
+        return list(self._bag(org).get("provider_connection") or [])
+
+    def _sync_runtime_connections(self, org: str) -> None:
+        from services.recruiting_ops.provider_connections import PROVIDERS, set_runtime_connected
+
+        rows = {str(item.get("provider") or ""): item for item in self._connections(org)}
+        for provider in PROVIDERS:
+            row = rows.get(provider) or {}
+            connected = str(row.get("status") or "").upper() == "CONNECTED" and row.get("enabled") is not False
+            set_runtime_connected(provider, connected)
+
+    async def provider_connection_center(self, organization_id: str, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        self._sync_runtime_connections(org)
+        from services.recruiting_ops.provider_connections import connection_center_payload, wizard_spec
+
+        payload = connection_center_payload(self._connections(org))
+        payload["wizards"] = {key: wizard_spec(key) for key in ("meta", "google", "tiktok", "telegram", "whatsapp", "email")}
+        return payload
+
+    async def provider_wizard(self, provider: str) -> dict[str, Any]:
+        from services.recruiting_ops.provider_connections import wizard_spec
+
+        return wizard_spec(provider)
+
+    async def configure_provider(self, organization_id: str, provider: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        key = _txt(provider).lower()
+        from services.recruiting_ops.provider_connections import PROVIDERS, WIZARD_FIELDS, default_connection
+        from services.recruiting_ops.secret_store import get_secret_store, public_secret_audit
+
+        if key not in PROVIDERS:
+            return {"ok": False, "error": "not_found", "message_ru": "Неизвестный провайдер"}
+        store = get_secret_store()
+        public: dict[str, Any] = {}
+        scopes = body.get("scopes") if isinstance(body.get("scopes"), list) else []
+        if _txt(body.get("scopes")):
+            scopes = [part.strip() for part in _txt(body.get("scopes")).split(",") if part.strip()]
+        for field in WIZARD_FIELDS[key]:
+            fid = field["id"]
+            if fid not in body or body.get(fid) in (None, ""):
+                continue
+            if field.get("secret"):
+                store.put(key, fid, str(body.get(fid)), scopes=list(scopes) if isinstance(scopes, list) else [])
+                await self._activity(
+                    organization_id=org,
+                    entity_type="provider_connection",
+                    entity_id=key,
+                    action="credential_metadata_changed",
+                    summary=f"Метаданные секрета {key}.{fid} обновлены",
+                    role=role,
+                    payload=public_secret_audit("put", key, fid),
+                )
+            else:
+                public[fid] = body.get(fid)
+        existing = next((item for item in self._connections(org) if _txt(item.get("provider")) == key), None)
+        row = existing or default_connection(key)
+        row.update(
+            {
+                "organization_id": org,
+                "public": {**(row.get("public") or {}), **public},
+                "account_id": public.get("ad_account_id") or public.get("customer_id") or public.get("advertiser_id") or public.get("phone_number_id") or public.get("email_from") or row.get("account_id"),
+                "workspace_id": public.get("business_id") or public.get("manager_id") or public.get("target_chat") or public.get("business_account_id") or row.get("workspace_id"),
+                "scopes": scopes or row.get("scopes") or [],
+                "status": "CONFIGURING",
+                "enabled": True,
+                "mode": "LIVE",
+                "connected": False,
+                "updated_at": _now(),
+            }
+        )
+        if not existing:
+            row["id"] = str(uuid.uuid4())
+            row["created_at"] = _now()
+            saved = await self._persist("provider_connection", row)
+            self._bag(org)["provider_connection"].insert(0, saved)
+        else:
+            persisted = await self._persist_patch(org, str(row["id"]), row)
+            saved = persisted or row
+            self._replace(org, "provider_connection", saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="provider_connection",
+            entity_id=str(saved.get("id")),
+            action="provider_configured",
+            summary=f"Провайдер {key}: настройка",
+            role=role,
+            payload={"provider": key, "status": "CONFIGURING"},
+        )
+        self._sync_runtime_connections(org)
+        from services.recruiting_ops.provider_connections import public_card
+
+        return self._ok(item=public_card(saved))
+
+    async def provider_action(self, organization_id: str, provider: str, action: str, body: dict[str, Any] | None = None, role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        key = _txt(provider).lower()
+        act = _txt(action).lower()
+        body = body or {}
+        from services.recruiting_ops.provider_adapters import get_adapter, mock_providers_allowed
+        from services.recruiting_ops.provider_connections import PROVIDERS, default_connection, public_card
+
+        if key not in PROVIDERS:
+            return {"ok": False, "error": "not_found", "message_ru": "Неизвестный провайдер"}
+        mode = _txt(body.get("mode") or "LIVE").upper()
+        if mode == "MOCK" and not mock_providers_allowed():
+            return {"ok": False, "error": "forbidden", "message_ru": "Mock-режим запрещён в production."}
+        adapter = get_adapter(key, mode=mode)
+        existing = next((item for item in self._connections(org) if _txt(item.get("provider")) == key), None)
+        row = existing or default_connection(key)
+        result: dict[str, Any]
+        if act in {"test", "test_connection", "health"}:
+            result = adapter.invoke("health_check")
+        elif act in {"connect", "reconnect"}:
+            result = adapter.invoke("connect")
+        elif act in {"disable", "disconnect"}:
+            result = adapter.invoke("disconnect")
+        elif act == "diagnostics":
+            result = adapter.invoke("health_check")
+            result["diagnostics"] = True
+        else:
+            return {"ok": False, "error": "validation", "message_ru": "Неизвестное действие"}
+        status = str(result.get("status") or row.get("status") or "NOT_CONFIGURED")
+        if act in {"disable", "disconnect"}:
+            status = "NOT_CONFIGURED"
+            row["enabled"] = False
+        elif result.get("connected"):
+            status = "CONNECTED"
+            row["enabled"] = True
+        row.update(
+            {
+                "organization_id": org,
+                "status": status,
+                "mode": result.get("mode") or mode,
+                "mock": bool(result.get("mock") or mode == "MOCK"),
+                "connected": bool(result.get("connected")),
+                "last_health_check_at": _now(),
+                "last_error": None if result.get("ok") else (result.get("error") or result.get("message_ru")),
+                "latency_ms": result.get("latency_ms"),
+                "updated_at": _now(),
+            }
+        )
+        if result.get("ok") and result.get("connected"):
+            row["last_successful_request_at"] = _now()
+        if not existing:
+            row["id"] = str(uuid.uuid4())
+            row["created_at"] = _now()
+            saved = await self._persist("provider_connection", row)
+            self._bag(org)["provider_connection"].insert(0, saved)
+        else:
+            persisted = await self._persist_patch(org, str(row["id"]), row)
+            saved = persisted or row
+            self._replace(org, "provider_connection", saved)
+        self._sync_runtime_connections(org)
+        reactivation = None
+        if str(saved.get("status")).upper() == "CONNECTED":
+            reactivation = await self.reactivate_waiting_provider(org, key, role=role)
+        await self._activity(
+            organization_id=org,
+            entity_type="provider_connection",
+            entity_id=str(saved.get("id")),
+            action=f"provider_{act}",
+            summary=f"Провайдер {key}: {act}",
+            role=role,
+            payload={"provider": key, "status": saved.get("status"), "mode": saved.get("mode"), "secret": None},
+        )
+        return self._ok(item=public_card(saved), adapter=result, reactivation=reactivation)
+
+    async def reactivate_waiting_provider(self, organization_id: str, provider: str, role: str | None = None, *, batch_limit: int = 50) -> dict[str, Any]:
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        dest = _txt(provider).lower()
+        from services.recruiting_ops.tracking_lifecycle import WAITING_PROVIDER, RETRYING, iso_now
+        from services.recruiting_ops.tracking_adapters import destination_of
+        from services.recruiting_ops.tracking_worker import get_tracking_worker
+
+        activated: list[str] = []
+        skipped: list[str] = []
+        errors: list[str] = []
+        for item in list(self._bag(org).get("tracking") or []):
+            if len(activated) >= batch_limit:
+                break
+            if destination_of(item) != dest:
+                continue
+            status = str(item.get("delivery_status") or "")
+            if status != WAITING_PROVIDER:
+                skipped.append(str(item.get("id")))
+                continue
+            eid = str(item.get("event_id") or item.get("id") or "")
+            if eid and eid in activated:
+                continue
+            patch = {
+                "delivery_status": RETRYING,
+                "delivery_class": "retry_scheduled",
+                "next_attempt_at": iso_now(),
+                "reactivation_batch": True,
+            }
+            try:
+                persisted = await self._persist_patch(org, str(item.get("id")), patch)
+                if persisted:
+                    item.update(persisted)
+                else:
+                    item.update(patch)
+                get_tracking_worker().enqueue(item)
+                activated.append(str(item.get("id")))
+            except Exception as exc:
+                errors.append(str(item.get("id")))
+                logger.warning("waiting_provider reactivation failed id=%s: %s", item.get("id"), exc)
+        await self._activity(
+            organization_id=org,
+            entity_type="tracking",
+            entity_id=dest,
+            action="waiting_provider_reactivated",
+            summary=f"Активировано WAITING_PROVIDER {dest}: {len(activated)}",
+            role=role,
+            payload={"provider": dest, "activated": len(activated), "skipped": len(skipped), "errors": len(errors), "ids": activated},
+        )
+        return {
+            "ok": True,
+            "provider": dest,
+            "activated": len(activated),
+            "skipped": len(skipped),
+            "errors": len(errors),
+            "ids": activated,
+            "deleted": 0,
+        }
+
+    async def ingest_provider_lead(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        org = _org(organization_id, body.get("tenant_id"))
+        await self.ensure_hydrated(org)
+        from services.recruiting_ops.lead_ingest import find_provider_duplicate, merge_duplicate, normalize_provider_lead
+
+        incoming = normalize_provider_lead(body)
+        if not incoming.get("name"):
+            return {"ok": False, "error": "validation", "message_ru": "Укажите имя лида"}
+        existing = find_provider_duplicate(self._bag(org)["lead"], incoming)
+        if existing:
+            patch = merge_duplicate(existing, incoming)
+            patch["updated_at"] = _now()
+            existing.update(patch)
+            persisted = await self._persist_patch(org, str(existing["id"]), patch)
+            if persisted:
+                existing = persisted
+                self._replace(org, "lead", existing)
+            await self._activity(
+                organization_id=org,
+                entity_type="lead",
+                entity_id=str(existing["id"]),
+                action="provider_lead_duplicate",
+                summary=f"Повторный лид {incoming.get('provider')}: {existing.get('name')}",
+                role=role,
+                payload={"provider": incoming.get("provider"), "external_id": incoming.get("external_id"), "history_preserved": True},
+            )
+            return self._ok(item=existing, duplicate=True)
+        created = await self.create_lead(org, {**body, **incoming}, role)
+        return created
+
+    async def create_automation_rule(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "create")
+        if denied:
+            return denied
+        from services.recruiting_ops.automation import normalize_rule
+
+        parsed = normalize_rule(body)
+        if not parsed.get("ok"):
+            return parsed
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        item = {
+            "id": str(body.get("id") or uuid.uuid4()),
+            "organization_id": org,
+            "created_at": _now(),
+            "updated_at": _now(),
+            **parsed["item"],
+        }
+        saved = await self._persist("automation_rule", item)
+        self._bag(org)["automation_rule"].insert(0, saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="automation_rule",
+            entity_id=str(saved["id"]),
+            action="automation_rule_created",
+            summary=f"Правило автоматизации: {saved.get('name')}",
+            role=role,
+            payload={"rule_type": saved.get("rule_type"), "approval_required": saved.get("approval_required")},
+        )
+        return self._ok(item=saved)
+
+    async def run_automation_rule(self, organization_id: str, rule_id: str, body: dict[str, Any] | None = None, role: str | None = None) -> dict[str, Any]:
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        rule = self._find(org, "automation_rule", rule_id)
+        if not rule:
+            return {"ok": False, "error": "not_found", "message_ru": "Правило не найдено"}
+        from services.recruiting_ops.automation import evaluate_rule
+
+        metrics = (body or {}).get("metrics") if isinstance((body or {}).get("metrics"), dict) else (body or {})
+        health = (body or {}).get("provider_health") if isinstance(body, dict) else None
+        evaluation = evaluate_rule(rule, metrics=metrics, provider_health=health)
+        run = {
+            "id": str(uuid.uuid4()),
+            "organization_id": org,
+            "rule_id": rule_id,
+            "rule_type": rule.get("rule_type"),
+            "reason": evaluation["reason"],
+            "input_metrics": evaluation["input_metrics"],
+            "result": evaluation["result"],
+            "approval_required": evaluation["approval_required"],
+            "auto_applied": False,
+            "created_at": _now(),
+        }
+        saved = await self._persist("automation_run", run)
+        self._bag(org)["automation_run"].insert(0, saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="automation_run",
+            entity_id=str(saved["id"]),
+            action="automation_evaluated",
+            summary=f"Автоматизация: {evaluation['result']}",
+            role=role,
+            payload={"rule_id": rule_id, "result": evaluation["result"], "reason": evaluation["reason"]},
+        )
+        return self._ok(item=saved, evaluation=evaluation)
+
+    async def create_ai_recommendation(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "create")
+        if denied:
+            return denied
+        from services.recruiting_ops.ai_optimization import build_recommendation
+
+        parsed = build_recommendation(body, metrics=body.get("metrics") if isinstance(body.get("metrics"), dict) else body)
+        if not parsed.get("ok"):
+            return parsed
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        item = {
+            "id": str(body.get("id") or uuid.uuid4()),
+            "organization_id": org,
+            "created_at": _now(),
+            "updated_at": _now(),
+            **parsed["item"],
+        }
+        saved = await self._persist("ai_recommendation", item)
+        self._bag(org)["ai_recommendation"].insert(0, saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="ai_recommendation",
+            entity_id=str(saved["id"]),
+            action="ai_recommendation_created",
+            summary=f"AI рекомендация: {saved.get('recommendation')}",
+            role=role,
+            payload={"recommendation": saved.get("recommendation"), "advisory_only": True, "live_write_access": False},
+        )
+        return self._ok(item=saved)
+
+    async def decide_ai_recommendation(self, organization_id: str, rec_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        item = self._find(org, "ai_recommendation", rec_id)
+        if not item:
+            return {"ok": False, "error": "not_found", "message_ru": "Рекомендация не найдена"}
+        from services.recruiting_ops.ai_optimization import apply_human_decision
+
+        parsed = apply_human_decision(item, str(body.get("decision") or body.get("status") or ""))
+        if not parsed.get("ok"):
+            return parsed
+        patch = parsed["item"]
+        patch["updated_at"] = _now()
+        item.update(patch)
+        persisted = await self._persist_patch(org, rec_id, patch)
+        saved = persisted or item
+        self._replace(org, "ai_recommendation", saved)
+        await self._activity(
+            organization_id=org,
+            entity_type="ai_recommendation",
+            entity_id=rec_id,
+            action="ai_recommendation_decided",
+            summary=f"AI рекомендация: {saved.get('status')}",
+            role=role,
+            payload={"status": saved.get("status"), "live_applied": False},
+        )
+        return self._ok(item=saved)
+
+
     async def _probe_website(self, url: str) -> tuple[str, str]:
         try:
             import aiohttp
@@ -2171,3 +2625,10 @@ def reset_recruiting_ops_for_tests() -> None:
     from services.recruiting_ops.tracking_worker import reset_tracking_worker_for_tests
 
     reset_tracking_worker_for_tests()
+    from services.recruiting_ops.secret_store import reset_secret_store_for_tests
+    from services.recruiting_ops.provider_adapters import reset_adapters_for_tests
+    from services.recruiting_ops.provider_connections import reset_runtime_connections
+
+    reset_secret_store_for_tests()
+    reset_adapters_for_tests()
+    reset_runtime_connections()

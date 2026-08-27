@@ -316,3 +316,73 @@ async def ops_lookup_handler(request: web.Request) -> web.Response:
     query = str(request.rel_url.query.get("q") or request.rel_url.query.get("external_id") or "")
     result = await svc.lookup_reference(_org(request), query, _role(request))
     return json_response(result, status=_status_for(result))
+
+
+async def ops_providers_handler(request: web.Request) -> web.Response:
+    result = await get_recruiting_ops_service().provider_connection_center(_org(request), _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_provider_wizard_handler(request: web.Request) -> web.Response:
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().provider_wizard(provider)
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_provider_configure_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().configure_provider(_org(request, body), provider, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_provider_action_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    provider = request.match_info.get("provider") or ""
+    action = request.match_info.get("action") or ""
+    result = await get_recruiting_ops_service().provider_action(
+        _org(request, body), provider, action, body, _role(request, body)
+    )
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_provider_leads_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    result = await get_recruiting_ops_service().ingest_provider_lead(_org(request, body), body, _role(request, body))
+    return json_response(result, status=_status_for(result, created=not result.get("duplicate")))
+
+
+async def ops_automation_list_handler(request: web.Request) -> web.Response:
+    result = await get_recruiting_ops_service().list_kind(_org(request), "automation_rule", _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_automation_create_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    result = await get_recruiting_ops_service().create_automation_rule(_org(request, body), body, _role(request, body))
+    return json_response(result, status=_status_for(result, created=True))
+
+
+async def ops_automation_run_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    rule_id = request.match_info.get("rule_id") or ""
+    result = await get_recruiting_ops_service().run_automation_rule(_org(request, body), rule_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_ai_list_handler(request: web.Request) -> web.Response:
+    result = await get_recruiting_ops_service().list_kind(_org(request), "ai_recommendation", _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_ai_create_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    result = await get_recruiting_ops_service().create_ai_recommendation(_org(request, body), body, _role(request, body))
+    return json_response(result, status=_status_for(result, created=True))
+
+
+async def ops_ai_decide_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    rec_id = request.match_info.get("rec_id") or ""
+    result = await get_recruiting_ops_service().decide_ai_recommendation(_org(request, body), rec_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))

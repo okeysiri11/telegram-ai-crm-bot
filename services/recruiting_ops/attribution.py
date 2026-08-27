@@ -53,6 +53,33 @@ def preserve_first_touch(existing: dict[str, Any], incoming: dict[str, Any]) -> 
     return patch
 
 
+def attribution_chain(lead: dict[str, Any], candidate: dict[str, Any] | None = None) -> dict[str, Any]:
+    stage = _txt((candidate or {}).get("pipeline_stage") or lead.get("pipeline_stage") or lead.get("status"))
+    hire = stage.upper() == "HIRED" or _txt(lead.get("status")).lower() == "hired"
+    interview = stage.upper() == "INTERVIEW" or hire
+    qualified = _txt(lead.get("status")).lower() in {"qualified", "converted"} or interview
+    return {
+        "provider": _txt(lead.get("provider") or lead.get("utm_source") or lead.get("first_touch_source")) or None,
+        "campaign": _txt(lead.get("utm_campaign") or lead.get("campaign_id") or lead.get("first_touch_campaign")) or None,
+        "click_or_lead": _txt(lead.get("click_id") or lead.get("external_id") or lead.get("id")) or None,
+        "candidate": _txt((candidate or {}).get("id") or lead.get("candidate_id")) or None,
+        "qualified": qualified,
+        "interview": interview,
+        "hire": hire,
+        "first_touch": {
+            "source": lead.get("first_touch_source"),
+            "medium": lead.get("first_touch_medium"),
+            "campaign": lead.get("first_touch_campaign"),
+        },
+        "last_touch": {
+            "source": lead.get("last_touch_source"),
+            "medium": lead.get("last_touch_medium"),
+            "campaign": lead.get("last_touch_campaign"),
+        },
+        "multi_touch_ready": True,
+    }
+
+
 def source_analytics(leads: list[dict[str, Any]], candidates: list[dict[str, Any]]) -> dict[str, Any]:
     cand_ids = {_txt(item.get("lead_id")) for item in candidates}
     buckets: dict[str, dict[str, int]] = {}

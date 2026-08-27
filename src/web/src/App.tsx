@@ -287,6 +287,12 @@ const VanguardProjectPage = lazy(() =>
 const RecruitingInfraPage = lazy(() =>
   import("../workspace/recruiting/RecruitingInfraPage").then((m) => ({ default: m.RecruitingInfraPage })),
 );
+const ProviderConnectionsPage = lazy(() =>
+  import("../workspace/recruiting/ProviderConnectionsPage").then((m) => ({ default: m.ProviderConnectionsPage })),
+);
+const AdsControlCenterPage = lazy(() =>
+  import("../workspace/recruiting/AdsControlCenterPage").then((m) => ({ default: m.AdsControlCenterPage })),
+);
 const VanguardCareerPage = lazy(() =>
   import("./vanguard/VanguardCareerPage").then((m) => ({ default: m.VanguardCareerPage })),
 );
@@ -1247,6 +1253,22 @@ export function App() {
         element={
           <ProtectedRoute>
             <RecruitingInfraPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/recruiting/integrations"
+        element={
+          <ProtectedRoute>
+            <ProviderConnectionsPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/workspace/recruiting/ads"
+        element={
+          <ProtectedRoute>
+            <AdsControlCenterPage />
           </ProtectedRoute>
         }
       />

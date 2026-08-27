@@ -71,15 +71,9 @@ def provider_is_configured(dest: str) -> bool:
     dest = (dest or "").strip().lower()
     if dest not in PROVIDER_DESTINATIONS:
         return False
-    from services.recruiting_ops.provider_readiness import ads_readiness, messaging_readiness
+    from services.recruiting_ops.provider_connections import is_runtime_connected
 
-    ads = ads_readiness()["providers"]
-    msg = messaging_readiness()["channels"]
-    if dest in ads:
-        return ads[dest]["status"] != "NOT_CONFIGURED"
-    if dest in msg:
-        return msg[dest]["status"] != "NOT_CONFIGURED"
-    return False
+    return is_runtime_connected(dest)
 
 
 def classify_lifecycle(item: dict[str, Any]) -> str:
