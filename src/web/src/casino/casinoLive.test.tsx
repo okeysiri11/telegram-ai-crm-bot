@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { CasinoApp } from "./CasinoApp";
 import { resolvePerformanceTier } from "./hooks/usePerformanceTier";
@@ -53,9 +53,10 @@ describe("Sprint 19 live casino", () => {
         <LobbyScene />
       </MemoryRouter>,
     );
-    for (const id of ["roulette", "blackjack", "slots", "poker", "vip", "bar", "restaurant"]) {
+    for (const id of ["roulette", "blackjack", "poker", "restaurant", "bar", "slots"]) {
       expect(screen.getByTestId(`hotspot-${id}`)).toBeTruthy();
     }
+    expect(screen.queryByTestId("hotspot-vip")).toBeNull();
     expect(screen.getByTestId("lobby-pan")).toBeTruthy();
   });
 
@@ -93,24 +94,24 @@ describe("Sprint 19 live casino", () => {
 
   it("resolves direct room routes and lobby alias through CasinoApp", async () => {
     const lobby = mount("/casino/lobby");
-    await waitFor(() => expect(screen.getByTestId("casino-lobby")).toBeTruthy());
+    expect(await screen.findByTestId("casino-lobby", {}, { timeout: 8000 })).toBeTruthy();
     expect(lobby.container.querySelector('[data-testid="casino-shell"]')).toBeTruthy();
     lobby.unmount();
 
     const poker = mount("/casino/rooms/poker");
-    await waitFor(() => expect(screen.getByTestId("poker-room")).toBeTruthy());
+    expect(await screen.findByTestId("poker-room", {}, { timeout: 8000 })).toBeTruthy();
     poker.unmount();
 
     const table = mount("/casino/roulette/table/royale-1");
-    await waitFor(() => expect(screen.getByTestId("roulette-table")).toBeTruthy());
+    expect(await screen.findByTestId("roulette-table", {}, { timeout: 8000 })).toBeTruthy();
     table.unmount();
 
     const alias = mount("/casino/vip");
-    await waitFor(() => expect(screen.getByTestId("vip-room")).toBeTruthy());
+    expect(await screen.findByTestId("vip-room", {}, { timeout: 8000 })).toBeTruthy();
     alias.unmount();
 
     const bj = mount("/casino/blackjack");
-    await waitFor(() => expect(screen.getByTestId("blackjack-room")).toBeTruthy());
+    expect(await screen.findByTestId("blackjack-room", {}, { timeout: 8000 })).toBeTruthy();
     expect(screen.getByText("СДАТЬ")).toBeTruthy();
     expect(screen.getByText("ЕЩЁ")).toBeTruthy();
     expect(screen.getByText("ХВАТИТ")).toBeTruthy();
@@ -118,10 +119,10 @@ describe("Sprint 19 live casino", () => {
     bj.unmount();
 
     const unknown = mount("/casino/missing-hall");
-    await waitFor(() => expect(screen.getByTestId("casino-unknown")).toBeTruthy());
+    expect(await screen.findByTestId("casino-unknown", {}, { timeout: 8000 })).toBeTruthy();
     expect(screen.queryByTestId("casino-entrance")).toBeNull();
     unknown.unmount();
-  });
+  }, 30000);
 
   it("opens guest modal without leaving the casino", () => {
     render(

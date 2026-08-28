@@ -7,6 +7,7 @@ import { casinoSound } from "./casinoSound";
 import { casinoNavActive } from "./components/CasinoShell";
 import { loginRedirect, sanitizeReturnTo } from "@/navigation/safeReturnTo";
 import { LOBBY_HOTSPOTS } from "./lobby/hotspots";
+import { HALL_ZONES } from "./lobby/hallZones";
 
 function mount(path: string) {
   return render(
@@ -45,9 +46,10 @@ describe("Sprint 22 Odessa Prime lobby", () => {
 
   it("renders room hotspots and navigates roulette and blackjack", async () => {
     const view = mount("/casino/lobby");
-    for (const spot of LOBBY_HOTSPOTS) {
-      expect(screen.getByTestId(`hotspot-${spot.id}`)).toBeTruthy();
+    for (const zone of HALL_ZONES) {
+      expect(screen.getByTestId(`hotspot-${zone.id}`)).toBeTruthy();
     }
+    expect(screen.queryByTestId("hotspot-vip")).toBeNull();
     fireEvent.click(screen.getByTestId("hotspot-roulette"));
     expect(await screen.findByTestId("roulette-table", {}, { timeout: 8000 })).toBeTruthy();
     view.unmount();
@@ -98,9 +100,9 @@ describe("Sprint 22 Odessa Prime lobby", () => {
   it("lights a hotspot on hover and keeps reduced-motion lobby usable", () => {
     const view = mount("/casino/lobby");
     const roulette = screen.getByTestId("hotspot-roulette");
-    fireEvent.mouseEnter(roulette);
+    fireEvent.pointerEnter(roulette);
     expect(roulette.className).toContain("is-lit");
-    fireEvent.mouseLeave(roulette);
+    fireEvent.pointerLeave(roulette);
     expect(casinoSound.muted).toBe(true);
     view.unmount();
   });

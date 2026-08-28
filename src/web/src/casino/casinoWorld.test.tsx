@@ -63,8 +63,9 @@ describe("Sprint 18 immersive world", () => {
     const lobby = render(wrap(<LobbyScene />));
     expect(lobby.getByTestId("hotspot-roulette")).toBeTruthy();
     expect(lobby.getByTestId("hotspot-blackjack")).toBeTruthy();
-    expect(lobby.getByTestId("hotspot-vip")).toBeTruthy();
     expect(lobby.getByTestId("hotspot-poker")).toBeTruthy();
+    expect(lobby.getByTestId("hotspot-slots")).toBeTruthy();
+    expect(lobby.queryByTestId("hotspot-vip")).toBeNull();
     expect(lobby.getByText("ЗАЛ")).toBeTruthy();
     expect(lobby.getByText("КАРТА")).toBeTruthy();
     lobby.unmount();

@@ -1,0 +1,157 @@
+import { afterEach, describe, expect, it } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { CasinoApp } from "./CasinoApp";
+import { CasinoBrowseRoute } from "@/shell/CasinoBrowseRoute";
+import { casinoSound } from "./casinoSound";
+import { HALL_ZONES, validateHallZones } from "./lobby/hallZones";
+
+function mount(path: string) {
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <Routes>
+        <Route
+          path="/casino/*"
+          element={
+            <CasinoBrowseRoute>
+              <CasinoApp />
+            </CasinoBrowseRoute>
+          }
+        />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
+
+function mockReducedMotion(enabled: boolean) {
+  const original = window.matchMedia;
+  window.matchMedia = ((query: string) =>
+    ({
+      matches: enabled && String(query).includes("prefers-reduced-motion"),
+      media: query,
+      onchange: null,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia;
+  return () => {
+    window.matchMedia = original;
+  };
+}
+
+describe("Odessa Prime interactive hall", () => {
+  afterEach(() => {
+    casinoSound.setMuted(true);
+  });
+
+  it("validates six unique spatial zones with normalized polygons", () => {
+    expect(HALL_ZONES).toHaveLength(6);
+    expect(HALL_ZONES.map((z) => z.id)).toEqual([
+      "roulette",
+      "blackjack",
+      "poker",
+      "restaurant",
+      "bar",
+      "slots",
+    ]);
+    expect(validateHallZones()).toEqual([]);
+    expect(HALL_ZONES.find((z) => z.id === "roulette")?.route).toBe("/casino/roulette/royale-1");
+    expect(HALL_ZONES.find((z) => z.id === "blackjack")?.route).toBe("/casino/blackjack");
+    expect(HALL_ZONES.find((z) => z.id === "poker")?.route).toBe("/casino/poker");
+    expect(HALL_ZONES.find((z) => z.id === "slots")?.route).toBe("/casino/slots");
+    expect(HALL_ZONES.find((z) => z.id === "bar")?.route).toBe("/casino/bar");
+    expect(HALL_ZONES.find((z) => z.id === "restaurant")?.route).toBe("/casino/restaurant");
+  });
+
+  it("renders the hall interior without permanent rectangle overlays", async () => {
+    const view = mount("/casino/lobby");
+    await waitFor(() => expect(screen.getByTestId("casino-lobby")).toBeTruthy());
+    expect(screen.getByTestId("lobby-hall")).toBeTruthy();
+    expect(screen.getByTestId("lobby-hall-stage")).toBeTruthy();
+    expect(view.container.querySelector(".op-lobby-photo")).toBeTruthy();
+    expect(view.container.querySelectorAll(".op-hotspot").length).toBe(0);
+    expect(screen.queryByTestId("hall-zone-label")).toBeNull();
+    expect(screen.queryByText("ВОЙТИ В РУЛЕТКУ")).toBeNull();
+    expect(screen.queryByTestId("hotspot-vip")).toBeNull();
+    for (const zone of HALL_ZONES) {
+      const hit = screen.getByTestId(`hotspot-${zone.id}`);
+      expect(hit.getAttribute("aria-label")).toContain(zone.label);
+    }
+    view.unmount();
+  });
+
+  it("shows a contextual label only while a zone is active", () => {
+    const view = mount("/casino/lobby");
+    const roulette = screen.getByTestId("hotspot-roulette");
+    fireEvent.pointerEnter(roulette);
+    expect(roulette.className).toContain("is-active");
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("РУЛЕТКА");
+    expect(screen.getByTestId("lobby-hall-stage").className).toContain("is-focused");
+    fireEvent.pointerLeave(roulette);
+    expect(screen.queryByTestId("hall-zone-label")).toBeNull();
+    view.unmount();
+  });
+
+  it("matches focus to hover and activates with keyboard", async () => {
+    const view = mount("/casino/lobby");
+    const roulette = screen.getByTestId("hotspot-roulette");
+    fireEvent.focus(roulette);
+    expect(roulette.className).toContain("is-active");
+    fireEvent.keyDown(roulette, { key: "Enter" });
+    expect(await screen.findByTestId("roulette-table", {}, { timeout: 8000 })).toBeTruthy();
+    expect(screen.getByText("← В ЗАЛ")).toBeTruthy();
+    view.unmount();
+  }, 20000);
+
+  it("navigates each spatial zone to its existing room", async () => {
+    const cases = [
+      ["roulette", "roulette-table"],
+      ["blackjack", "blackjack-table"],
+      ["poker", "poker-room"],
+      ["slots", "slots-room"],
+      ["bar", "bar-room"],
+      ["restaurant", "restaurant-room"],
+    ] as const;
+    for (const [id, testid] of cases) {
+      const view = mount("/casino/lobby");
+      fireEvent.click(screen.getByTestId(`hotspot-${id}`));
+      expect(await screen.findByTestId(testid, {}, { timeout: 8000 })).toBeTruthy();
+      expect(screen.getByText("← В ЗАЛ")).toBeTruthy();
+      view.unmount();
+    }
+  }, 60000);
+
+  it("skips the click zoom when prefers-reduced-motion is set", async () => {
+    const restore = mockReducedMotion(true);
+    const view = mount("/casino/lobby");
+    fireEvent.click(screen.getByTestId("hotspot-blackjack"));
+    expect(await screen.findByTestId("blackjack-table", {}, { timeout: 8000 })).toBeTruthy();
+    view.unmount();
+    restore();
+  }, 20000);
+
+  it("keeps debug outlines behind a development-only query", () => {
+    const hidden = mount("/casino/lobby");
+    expect(hidden.container.querySelector(".op-hall-glow.is-debug")).toBeNull();
+    expect(hidden.container.querySelector(".op-hall-debug-id")).toBeNull();
+    hidden.unmount();
+    const shown = mount("/casino/lobby?casinoHotspots=debug");
+    expect(shown.container.querySelector(".op-hall-glow.is-debug")).toBeTruthy();
+    expect(shown.container.querySelector(".op-hall-debug-id")?.textContent).toBe("roulette");
+    shown.unmount();
+  });
+
+  it("does not track pointer coordinates in React state", () => {
+    const view = mount("/casino/lobby");
+    const stage = screen.getByTestId("lobby-hall-stage");
+    fireEvent.pointerMove(stage, { clientX: 10, clientY: 10 });
+    fireEvent.pointerMove(stage, { clientX: 80, clientY: 80 });
+    expect(stage.getAttribute("data-hall-active")).toBe("");
+    expect(screen.queryByTestId("hall-zone-label")).toBeNull();
+    fireEvent.pointerEnter(screen.getByTestId("hotspot-roulette"));
+    expect(stage.getAttribute("data-hall-active")).toBe("roulette");
+    view.unmount();
+  });
+});
