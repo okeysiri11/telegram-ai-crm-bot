@@ -4,14 +4,14 @@
 **Branch:** `develop`  
 **Sprint:** `ODESSA_PRIME_CASINO_PREMIUM_HOVER_HOTSPOTS`
 
-Idle `/casino/lobby` shows only the hall photograph. Gold object traces, pulses, and tooltips appear for one active zone on hover, keyboard focus, or touch, then clear on leave.
+Idle `/casino/lobby` shows only the hall photograph. Object illumination, pulses, and tooltips appear for one active zone on hover, keyboard focus, or touch, then clear on leave.
 
 ## What shipped
 
-- Hit geometry stays invisible (`clip-path` spans). Visual glow is a separate SVG stroke layer.
-- Idle visual polygons: `fill="none"`, `stroke="none"`, opacity 0, no filter.
-- Hover/focus: champagne-gold rim glow, sign/lamp/pulse roles, one-shot light trace (~520ms), then static glow until leave.
-- Slots use three cabinet rims + 777 pulses + a thin floor reflection, not a single rectangle fill.
+- Hit geometry stays invisible (`clip-path` spans). Visual highlight is a separate SVG layer.
+- Idle visual polygons: `fill="none"`, `stroke="none"`, opacity 0, no filter. SVG attributes stay unstroked even while active.
+- Hover/focus: soft gold **bloom** on object mass (no polygon outline). Signs keep a thin gold edge. One-shot light trace (~480ms) runs on the **sign only**, then static glow until leave.
+- Slots use three arched cabinet blooms + 777 pulses + a thin floor reflection, not a rectangle stroke.
 - Compact glass tooltip (opacity + scale, 160ms), one tooltip at a time. Bar/restaurant secondary line is `ODESSA PRIME`.
 - Full-image dim overlay removed. No mousemove React state. Viewport-fit hall from the previous sprint is preserved.
 

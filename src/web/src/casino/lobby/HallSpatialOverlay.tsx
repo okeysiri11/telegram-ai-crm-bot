@@ -115,8 +115,11 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
         data-testid="hall-visual-layer"
       >
         <defs>
-          <filter id="op-hall-gold-glow" x="-12%" y="-12%" width="124%" height="124%">
-            <feGaussianBlur stdDeviation="0.22" result="blur" />
+          <filter id="op-hall-gold-bloom" x="-45%" y="-45%" width="190%" height="190%">
+            <feGaussianBlur stdDeviation="1.25" />
+          </filter>
+          <filter id="op-hall-gold-glow" x="-18%" y="-18%" width="136%" height="136%">
+            <feGaussianBlur stdDeviation="0.28" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -132,7 +135,7 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
                 key={`${item.id}-glow-${index}`}
                 points={polygonPoints(visual.polygon)}
                 fill="none"
-                stroke={on ? undefined : "none"}
+                stroke="none"
                 data-visual-zone={item.id}
                 data-visual-role={role}
                 data-visual-on={on ? "true" : "false"}

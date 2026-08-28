@@ -118,7 +118,7 @@
 
 .op-hall-shape {
   fill: none !important;
-  stroke: none;
+  stroke: none !important;
   stroke-width: 0;
   opacity: 0;
   filter: none;
@@ -128,46 +128,42 @@
 
 .op-hall-shape.is-on {
   opacity: 1;
-  fill: none !important;
-  stroke: rgba(232, 213, 163, 0.74);
-  stroke-width: 0.26;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-  filter: url(#op-hall-gold-glow);
+  fill: rgba(201, 164, 92, 0.11) !important;
+  stroke: none !important;
+  filter: url(#op-hall-gold-bloom);
 }
 
 .op-hall-shape.is-sign.is-on {
-  stroke: rgba(232, 213, 163, 0.92);
+  fill: none !important;
+  stroke: rgba(232, 213, 163, 0.88) !important;
   stroke-width: 0.2;
+  stroke-linejoin: round;
+  filter: url(#op-hall-gold-glow);
 }
 
 .op-hall-shape.is-lamp.is-on,
 .op-hall-shape.is-pulse.is-on {
-  stroke: rgba(255, 220, 150, 0.88);
-  stroke-width: 0.16;
+  fill: rgba(255, 220, 150, 0.28) !important;
+  stroke: none !important;
+  filter: url(#op-hall-gold-bloom);
 }
 
 .op-hall-shape.is-reflect.is-on {
-  fill: rgba(201, 164, 92, 0.08) !important;
-  stroke: rgba(232, 196, 128, 0.28);
-  stroke-width: 0.1;
-  filter: none;
+  fill: rgba(201, 164, 92, 0.12) !important;
+  stroke: none !important;
+  filter: url(#op-hall-gold-bloom);
 }
 
-.op-hall-shape.is-slots.is-on {
-  stroke: rgba(232, 196, 128, 0.86);
-}
-
-.op-hall-shape.is-entering {
-  fill: none !important;
-  stroke: rgba(255, 232, 186, 0.95);
+.op-hall-shape.is-entering.is-sign {
+  stroke: rgba(255, 232, 186, 0.95) !important;
 }
 
 .op-hall-glow.is-debug .op-hall-shape {
-  opacity: 0.9;
+  opacity: 0.85;
   fill: none !important;
-  stroke: rgba(232, 213, 163, 0.48);
-  stroke-width: 0.2;
+  stroke: rgba(232, 213, 163, 0.42) !important;
+  stroke-width: 0.18;
+  filter: none;
 }
 
 .op-hall-debug-id {
@@ -462,20 +458,20 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .op-hall-shape.is-on {
-    animation: opHallTrace 520ms ease-out 1;
+  .op-hall-shape.is-sign.is-on {
+    animation: opHallSignTrace 480ms ease-out 1;
   }
 }
 
-@keyframes opHallTrace {
+@keyframes opHallSignTrace {
   0% {
     opacity: 0.35;
-    stroke-dasharray: 4 72;
-    stroke-dashoffset: 76;
+    stroke-dasharray: 5 64;
+    stroke-dashoffset: 69;
   }
   100% {
     opacity: 1;
-    stroke-dasharray: none;
+    stroke-dasharray: 240 0;
     stroke-dashoffset: 0;
   }
 }
@@ -487,4 +483,16 @@
 [data-tier="LOW"] .op-hall-shape.is-on {
   filter: none;
   animation: none;
+  fill: none !important;
+}
+
+[data-tier="LOW"] .op-hall-shape.is-sign.is-on,
+[data-tier="LOW"] .op-hall-shape.is-lamp.is-on,
+[data-tier="LOW"] .op-hall-shape.is-pulse.is-on {
+  fill: rgba(255, 220, 150, 0.16) !important;
+}
+
+[data-tier="LOW"] .op-hall-shape.is-sign.is-on {
+  fill: none !important;
+  stroke: rgba(232, 213, 163, 0.7) !important;
 }

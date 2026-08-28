@@ -146,6 +146,22 @@ describe("Odessa Prime interactive hall", () => {
     view.unmount();
   });
 
+  it("keeps SVG geometry unstroked while a zone is active", () => {
+    const view = mount("/casino/lobby");
+    fireEvent.pointerEnter(screen.getByTestId("hotspot-slots"));
+    const lit = [...view.container.querySelectorAll(".op-hall-shape.is-on")];
+    expect(lit.length).toBeGreaterThan(0);
+    for (const shape of lit) {
+      expect(shape.getAttribute("stroke")).toBe("none");
+      expect(shape.getAttribute("fill")).toBe("none");
+      expect(shape.getAttribute("data-visual-zone")).toBe("slots");
+    }
+    expect(view.container.querySelector(".op-hall-shape.is-pulse.is-on")).toBeTruthy();
+    expect(view.container.querySelector(".op-hall-shape.is-reflect.is-on")).toBeTruthy();
+    expect(view.container.querySelector(".op-hall-shape.is-roulette.is-on")).toBeNull();
+    view.unmount();
+  });
+
   it("matches focus to hover and activates with keyboard", async () => {
     const view = mount("/casino/lobby");
     const roulette = screen.getByTestId("hotspot-roulette");
