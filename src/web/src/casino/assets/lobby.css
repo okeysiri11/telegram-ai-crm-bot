@@ -100,16 +100,11 @@
 }
 
 .op-hall-overlay::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: rgba(0, 0, 0, 0);
-  transition: background 160ms ease;
+  content: none;
 }
 
 .op-hall-stage.is-focused .op-hall-overlay::before {
-  background: rgba(0, 0, 0, 0.1);
+  background: transparent;
 }
 
 .op-hall-glow {
@@ -122,32 +117,57 @@
 }
 
 .op-hall-shape {
-  fill: none;
-  stroke: rgba(232, 213, 163, 0);
-  stroke-width: 0.38;
-  stroke-linejoin: round;
-  transition: fill 160ms ease, stroke 160ms ease, opacity 160ms ease;
+  fill: none !important;
+  stroke: none;
+  stroke-width: 0;
+  opacity: 0;
+  filter: none;
+  pointer-events: none;
+  transition: opacity 200ms ease;
 }
 
 .op-hall-shape.is-on {
-  fill: rgba(201, 164, 92, 0.055);
-  stroke: rgba(232, 213, 163, 0.82);
+  opacity: 1;
+  fill: none !important;
+  stroke: rgba(232, 213, 163, 0.74);
+  stroke-width: 0.26;
+  stroke-linejoin: round;
+  stroke-linecap: round;
   filter: url(#op-hall-gold-glow);
 }
 
+.op-hall-shape.is-sign.is-on {
+  stroke: rgba(232, 213, 163, 0.92);
+  stroke-width: 0.2;
+}
+
+.op-hall-shape.is-lamp.is-on,
+.op-hall-shape.is-pulse.is-on {
+  stroke: rgba(255, 220, 150, 0.88);
+  stroke-width: 0.16;
+}
+
+.op-hall-shape.is-reflect.is-on {
+  fill: rgba(201, 164, 92, 0.08) !important;
+  stroke: rgba(232, 196, 128, 0.28);
+  stroke-width: 0.1;
+  filter: none;
+}
+
 .op-hall-shape.is-slots.is-on {
-  fill: rgba(201, 140, 72, 0.07);
-  stroke: rgba(232, 190, 120, 0.92);
+  stroke: rgba(232, 196, 128, 0.86);
 }
 
 .op-hall-shape.is-entering {
-  fill: rgba(232, 213, 163, 0.1);
-  stroke: rgba(255, 232, 180, 0.95);
+  fill: none !important;
+  stroke: rgba(255, 232, 186, 0.95);
 }
 
 .op-hall-glow.is-debug .op-hall-shape {
-  fill: rgba(201, 164, 92, 0.08);
-  stroke: rgba(232, 213, 163, 0.7);
+  opacity: 0.9;
+  fill: none !important;
+  stroke: rgba(232, 213, 163, 0.48);
+  stroke-width: 0.2;
 }
 
 .op-hall-debug-id {
@@ -190,63 +210,69 @@
 }
 
 .op-hall-label {
+  --tip-x: -50%;
+  --tip-y: calc(-100% - 8px);
   position: absolute;
   z-index: 8;
   pointer-events: none;
-  min-width: 7rem;
-  max-width: 11rem;
-  padding: 0.38rem 0.58rem 0.42rem;
-  border: 1px solid rgba(201, 164, 92, 0.62);
+  min-width: 6.2rem;
+  max-width: 9.2rem;
+  padding: 0.28rem 0.44rem 0.3rem;
+  border: 1px solid rgba(201, 164, 92, 0.5);
   border-radius: 2px;
-  background: rgba(6, 7, 10, 0.9);
-  box-shadow: 0 0 12px rgba(201, 164, 92, 0.22), 0 8px 18px rgba(0, 0, 0, 0.35);
+  background: rgba(8, 9, 12, 0.86);
+  box-shadow: 0 0 10px rgba(201, 164, 92, 0.16), 0 6px 14px rgba(0, 0, 0, 0.3);
   color: var(--op-ivory, #f4ead7);
   text-align: left;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
-  opacity: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+  transform: translate(var(--tip-x), var(--tip-y)) scale(1);
   animation: opHallTip 160ms ease;
 }
 
 .op-hall-label.is-above {
-  transform: translate(-50%, calc(-100% - 8px));
+  --tip-x: -50%;
+  --tip-y: calc(-100% - 8px);
 }
 
 .op-hall-label.is-below {
-  transform: translate(-50%, 8px);
+  --tip-x: -50%;
+  --tip-y: 8px;
 }
 
 .op-hall-label.is-right {
-  transform: translate(8px, -50%);
+  --tip-x: 8px;
+  --tip-y: -50%;
 }
 
 .op-hall-label.is-left {
-  transform: translate(calc(-100% - 8px), -50%);
+  --tip-x: calc(-100% - 8px);
+  --tip-y: -50%;
 }
 
 @keyframes opHallTip {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translate(var(--tip-x), var(--tip-y)) scale(0.98); }
+  to { opacity: 1; transform: translate(var(--tip-x), var(--tip-y)) scale(1); }
 }
 
 .op-hall-label strong {
   display: block;
-  letter-spacing: 0.16em;
-  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  font-size: 0.64rem;
 }
 
 .op-hall-label small {
   display: block;
-  margin-top: 0.12rem;
-  letter-spacing: 0.14em;
-  font-size: 0.58rem;
+  margin-top: 0.08rem;
+  letter-spacing: 0.12em;
+  font-size: 0.52rem;
   color: var(--casino-gold, #c9a45c);
 }
 
 .op-hall-label span {
   display: block;
-  margin-top: 0.18rem;
-  letter-spacing: 0.12em;
-  font-size: 0.58rem;
+  margin-top: 0.1rem;
+  letter-spacing: 0.1em;
+  font-size: 0.52rem;
   color: var(--casino-muted, #b9ad96);
 }
 
@@ -436,14 +462,22 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .op-hall-shape.is-slots.is-on {
-    stroke-dasharray: 2.8 16;
-    animation: opHallSweep 2.6s linear infinite;
+  .op-hall-shape.is-on {
+    animation: opHallTrace 520ms ease-out 1;
   }
 }
 
-@keyframes opHallSweep {
-  to { stroke-dashoffset: -18.8; }
+@keyframes opHallTrace {
+  0% {
+    opacity: 0.35;
+    stroke-dasharray: 4 72;
+    stroke-dashoffset: 76;
+  }
+  100% {
+    opacity: 1;
+    stroke-dasharray: none;
+    stroke-dashoffset: 0;
+  }
 }
 
 [data-tier="LOW"] .op-hall-focus {

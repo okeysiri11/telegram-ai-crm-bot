@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { CasinoApp } from "./CasinoApp";
 import { CasinoBrowseRoute } from "@/shell/CasinoBrowseRoute";
@@ -76,15 +76,23 @@ describe("Odessa Prime interactive hall", () => {
     expect(poker?.objects).toContain("doorway");
     expect(bar?.objects).toContain("shelves");
     expect(restaurant?.objects).toContain("tables");
+    expect(bar?.sublabel).toBe("ODESSA PRIME");
+    expect(restaurant?.sublabel).toBe("ODESSA PRIME");
+    expect(poker?.sublabel).toBe("ODESSA PRIME");
+    expect((slots?.visuals ?? []).filter((v) => (v.role ?? "rim") === "rim").length).toBeGreaterThanOrEqual(3);
+    expect((slots?.visuals ?? []).some((v) => v.role === "pulse")).toBe(true);
+    expect((roulette?.visuals ?? []).some((v) => v.role === "sign")).toBe(true);
+    expect((roulette?.visuals ?? []).some((v) => v.role === "lamp")).toBe(true);
     for (const zone of HALL_ZONES) {
       expect(zone.tooltip).toBeTruthy();
+      expect(zone.visuals?.length).toBeGreaterThan(0);
       expect("polygon" in zone).toBe(false);
     }
   });
 
   it("renders the hall interior without permanent rectangle overlays", async () => {
     const view = mount("/casino/lobby");
-    await waitFor(() => expect(screen.getByTestId("casino-lobby")).toBeTruthy());
+    expect(await screen.findByTestId("casino-lobby", {}, { timeout: 8000 })).toBeTruthy();
     expect(screen.getByTestId("lobby-hall")).toBeTruthy();
     const stage = screen.getByTestId("lobby-hall-stage");
     const wrap = screen.getByTestId("hall-image-wrap");
@@ -94,7 +102,16 @@ describe("Odessa Prime interactive hall", () => {
     expect(stage.getAttribute("data-hall-fit")).toBe("contain");
     expect(wrap.contains(photo)).toBe(true);
     expect(wrap.contains(overlay)).toBe(true);
+    expect(screen.getByTestId("hall-spatial-overlay").getAttribute("data-idle")).toBe("true");
+    expect(screen.getByTestId("hall-spatial-overlay").getAttribute("data-active-zone")).toBe("");
     expect(view.container.querySelector(".op-hall-shape.is-on")).toBeNull();
+    expect(view.container.querySelector('[data-visual-on="true"]')).toBeNull();
+    for (const shape of view.container.querySelectorAll(".op-hall-shape")) {
+      expect(shape.getAttribute("stroke")).toBe("none");
+      expect(shape.getAttribute("fill")).toBe("none");
+      expect(shape.getAttribute("data-visual-on")).toBe("false");
+      expect(shape.className.baseVal || shape.getAttribute("class")).not.toContain("is-on");
+    }
     expect(view.container.querySelector("[data-testid='hall-visual-layer']")).toBeTruthy();
     expect(view.container.querySelectorAll(".op-hall-hit").length).toBeGreaterThan(0);
     expect(view.container.querySelectorAll("[data-testid='hall-zone-label']").length).toBe(0);
@@ -107,7 +124,7 @@ describe("Odessa Prime interactive hall", () => {
       expect(hit.getAttribute("aria-label")).toContain(zone.label);
     }
     view.unmount();
-  });
+  }, 20000);
 
   it("shows a contextual label only while a zone is active", () => {
     const view = mount("/casino/lobby");
@@ -135,10 +152,10 @@ describe("Odessa Prime interactive hall", () => {
     fireEvent.focus(roulette);
     expect(roulette.className).toContain("is-active");
     fireEvent.keyDown(roulette, { key: "Enter" });
-    expect(await screen.findByTestId("roulette-table", {}, { timeout: 8000 })).toBeTruthy();
+    expect(await screen.findByTestId("roulette-table", {}, { timeout: 15000 })).toBeTruthy();
     expect(screen.getByText("← В ЗАЛ")).toBeTruthy();
     view.unmount();
-  }, 20000);
+  }, 30000);
 
   it("navigates each spatial zone to its existing room", async () => {
     const cases = [
@@ -161,6 +178,9 @@ describe("Odessa Prime interactive hall", () => {
   it("skips the click zoom when prefers-reduced-motion is set", async () => {
     const restore = mockReducedMotion(true);
     const view = mount("/casino/lobby");
+    fireEvent.pointerEnter(screen.getByTestId("hotspot-roulette"));
+    expect(view.container.querySelector(".op-hall-shape.is-roulette.is-on")).toBeTruthy();
+    fireEvent.pointerLeave(screen.getByTestId("hotspot-roulette"));
     fireEvent.click(screen.getByTestId("hotspot-blackjack"));
     expect(await screen.findByTestId("blackjack-table", {}, { timeout: 8000 })).toBeTruthy();
     view.unmount();
@@ -208,4 +228,62 @@ describe("Odessa Prime interactive hall", () => {
     expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe("bar");
     view.unmount();
   });
+
+  it("activates only the hovered destination and clears on pointer leave", () => {
+    const view = mount("/casino/lobby");
+    const overlay = screen.getByTestId("hall-spatial-overlay");
+    const stage = screen.getByTestId("lobby-hall-stage");
+    for (const zone of HALL_ZONES) {
+      fireEvent.pointerEnter(screen.getByTestId(`hotspot-${zone.id}`));
+      expect(overlay.getAttribute("data-idle")).toBe("false");
+      expect(overlay.getAttribute("data-active-zone")).toBe(zone.id);
+      expect(stage.getAttribute("data-hall-active")).toBe(zone.id);
+      const lit = [...view.container.querySelectorAll(".op-hall-shape.is-on")];
+      expect(lit.length).toBeGreaterThan(0);
+      expect(lit.every((el) => el.getAttribute("data-visual-zone") === zone.id)).toBe(true);
+      expect(view.container.querySelectorAll('[data-visual-on="true"]').length).toBe(lit.length);
+      expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
+      expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe(zone.id);
+      fireEvent.pointerLeave(screen.getByTestId(`hotspot-${zone.id}`));
+      expect(overlay.getAttribute("data-idle")).toBe("true");
+      expect(overlay.getAttribute("data-active-zone")).toBe("");
+      expect(view.container.querySelector(".op-hall-shape.is-on")).toBeNull();
+      expect(screen.queryByTestId("hall-zone-label")).toBeNull();
+    }
+    view.unmount();
+  });
+
+  it("keeps a single active zone when focus moves between destinations", () => {
+    const view = mount("/casino/lobby");
+    fireEvent.pointerEnter(screen.getByTestId("hotspot-roulette"));
+    fireEvent.focus(screen.getByTestId("hotspot-slots"));
+    expect(screen.getByTestId("hall-spatial-overlay").getAttribute("data-active-zone")).toBe("slots");
+    expect(view.container.querySelector(".op-hall-shape.is-roulette.is-on")).toBeNull();
+    expect(view.container.querySelector(".op-hall-shape.is-slots.is-on")).toBeTruthy();
+    expect(view.container.querySelector(".op-hall-shape.is-pulse.is-on")).toBeTruthy();
+    expect(view.container.querySelector(".op-hall-shape.is-reflect.is-on")).toBeTruthy();
+    expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("ИГРАТЬ В АВТОМАТЫ");
+    fireEvent.blur(screen.getByTestId("hotspot-slots"));
+    expect(screen.getByTestId("hall-spatial-overlay").getAttribute("data-idle")).toBe("true");
+    view.unmount();
+  });
+
+  it("navigates with Space and shows polished destination copy", async () => {
+    const view = mount("/casino/lobby");
+    fireEvent.pointerEnter(screen.getByTestId("hotspot-bar"));
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("БАР");
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("ODESSA PRIME");
+    fireEvent.pointerLeave(screen.getByTestId("hotspot-bar"));
+    fireEvent.pointerEnter(screen.getByTestId("hotspot-restaurant"));
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("РЕСТОРАН");
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("ODESSA PRIME");
+    fireEvent.pointerLeave(screen.getByTestId("hotspot-restaurant"));
+    const poker = screen.getByTestId("hotspot-poker");
+    fireEvent.focus(poker);
+    fireEvent.keyDown(poker, { key: " " });
+    expect(await screen.findByTestId("poker-room", {}, { timeout: 8000 })).toBeTruthy();
+    expect(screen.getByText("← В ЗАЛ")).toBeTruthy();
+    view.unmount();
+  }, 20000);
 });

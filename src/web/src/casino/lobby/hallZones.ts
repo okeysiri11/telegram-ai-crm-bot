@@ -16,6 +16,14 @@ export type HallPoint = [number, number];
 
 export type HallTooltipAlign = "above" | "below" | "left" | "right";
 
+/** Stroke-only hover traces. Never used as idle geometry. */
+export type HallVisualRole = "rim" | "sign" | "lamp" | "pulse" | "reflect";
+
+export type HallVisual = {
+  polygon: HallPoint[];
+  role?: HallVisualRole;
+};
+
 export type HallZone = {
   id: HallZoneId;
   label: string;
@@ -24,8 +32,8 @@ export type HallZone = {
   route: string;
   /** Pointer hit polygons in normalized image percent (0–100). Invisible. */
   polygons: HallPoint[][];
-  /** Visible glow traces; defaults to hit polygons when omitted. */
-  visuals?: HallPoint[][];
+  /** Object-traced glow layers. Defaults to hit polygons as rim strokes. */
+  visuals?: HallVisual[];
   objects: string[];
   focus: { x: number; y: number };
   /** Tooltip anchor in image percent; must not cover the primary object. */
@@ -68,6 +76,38 @@ export const HALL_ZONES: HallZone[] = [
         [18.0, 57.8],
       ],
     ],
+    visuals: [
+      {
+        role: "sign",
+        polygon: [
+          [4.8, 29.8],
+          [24.4, 28.3],
+          [25.0, 36.8],
+          [5.4, 38.4],
+        ],
+      },
+      {
+        role: "lamp",
+        polygon: [
+          [17.0, 45.6],
+          [23.6, 44.9],
+          [24.8, 56.4],
+          [18.2, 57.4],
+        ],
+      },
+      {
+        role: "rim",
+        polygon: [
+          [2.4, 57.5],
+          [21.2, 53.8],
+          [32.6, 60.6],
+          [33.8, 71.4],
+          [28.2, 85.6],
+          [7.8, 91.4],
+          [1.6, 76.8],
+        ],
+      },
+    ],
     focus: { x: 16, y: 68 },
     tooltip: { x: 36, y: 46, align: "right" },
     zIndex: 4,
@@ -95,6 +135,28 @@ export const HALL_ZONES: HallZone[] = [
         [7.4, 32.0],
       ],
     ],
+    visuals: [
+      {
+        role: "sign",
+        polygon: [
+          [7.6, 13.5],
+          [26.4, 12.1],
+          [27.8, 17.6],
+          [8.6, 19.1],
+        ],
+      },
+      {
+        role: "rim",
+        polygon: [
+          [10.4, 23.8],
+          [26.6, 22.2],
+          [28.0, 33.6],
+          [24.4, 41.2],
+          [11.6, 42.4],
+          [9.2, 32.4],
+        ],
+      },
+    ],
     focus: { x: 18, y: 28 },
     tooltip: { x: 18, y: 10.5, align: "above" },
     zIndex: 3,
@@ -120,6 +182,26 @@ export const HALL_ZONES: HallZone[] = [
         [47.4, 35.8],
       ],
     ],
+    visuals: [
+      {
+        role: "sign",
+        polygon: [
+          [46.9, 16.7],
+          [54.1, 15.9],
+          [54.6, 20.2],
+          [47.3, 21.0],
+        ],
+      },
+      {
+        role: "rim",
+        polygon: [
+          [47.6, 21.4],
+          [54.2, 20.6],
+          [54.6, 33.8],
+          [47.8, 34.6],
+        ],
+      },
+    ],
     focus: { x: 51, y: 26 },
     tooltip: { x: 51, y: 14.2, align: "above" },
     zIndex: 1,
@@ -127,7 +209,7 @@ export const HALL_ZONES: HallZone[] = [
   {
     id: "restaurant",
     label: "РЕСТОРАН",
-    sublabel: "RESTAURANT",
+    sublabel: "ODESSA PRIME",
     cta: "ПЕРЕЙТИ В РЕСТОРАН",
     route: "/casino/restaurant",
     objects: ["sign", "tables"],
@@ -145,6 +227,26 @@ export const HALL_ZONES: HallZone[] = [
         [56.2, 36.8],
       ],
     ],
+    visuals: [
+      {
+        role: "sign",
+        polygon: [
+          [57.4, 14.6],
+          [68.2, 13.8],
+          [68.6, 18.2],
+          [57.8, 19.0],
+        ],
+      },
+      {
+        role: "rim",
+        polygon: [
+          [58.4, 20.6],
+          [69.0, 19.8],
+          [70.0, 33.4],
+          [57.8, 34.4],
+        ],
+      },
+    ],
     focus: { x: 63, y: 26 },
     tooltip: { x: 54.5, y: 16, align: "left" },
     zIndex: 1,
@@ -152,7 +254,7 @@ export const HALL_ZONES: HallZone[] = [
   {
     id: "bar",
     label: "БАР",
-    sublabel: "BAR",
+    sublabel: "ODESSA PRIME",
     cta: "ПЕРЕЙТИ В БАР",
     route: "/casino/bar",
     objects: ["sign", "shelves"],
@@ -169,6 +271,26 @@ export const HALL_ZONES: HallZone[] = [
         [93.6, 24.8],
         [77.8, 26.6],
       ],
+    ],
+    visuals: [
+      {
+        role: "sign",
+        polygon: [
+          [77.6, 3.8],
+          [88.4, 2.8],
+          [88.8, 7.2],
+          [78.0, 8.2],
+        ],
+      },
+      {
+        role: "rim",
+        polygon: [
+          [78.4, 9.2],
+          [91.4, 7.6],
+          [92.2, 23.2],
+          [79.2, 24.8],
+        ],
+      },
     ],
     focus: { x: 85, y: 16 },
     tooltip: { x: 74, y: 8, align: "left" },
@@ -201,14 +323,92 @@ export const HALL_ZONES: HallZone[] = [
         [77.6, 84.2],
       ],
     ],
+    visuals: [
+      {
+        role: "rim",
+        polygon: [
+          [59.2, 51.4],
+          [66.4, 50.2],
+          [67.2, 53.4],
+          [67.6, 78.6],
+          [66.0, 86.2],
+          [58.6, 88.0],
+          [57.8, 80.0],
+          [58.4, 54.2],
+        ],
+      },
+      {
+        role: "rim",
+        polygon: [
+          [67.6, 50.2],
+          [76.4, 48.8],
+          [77.2, 52.0],
+          [77.8, 77.2],
+          [76.2, 84.6],
+          [66.6, 86.4],
+          [66.2, 78.2],
+          [66.8, 53.0],
+        ],
+      },
+      {
+        role: "rim",
+        polygon: [
+          [77.4, 48.6],
+          [89.0, 46.8],
+          [90.2, 50.4],
+          [91.4, 75.6],
+          [89.6, 82.2],
+          [77.0, 83.8],
+          [76.4, 76.2],
+          [76.8, 51.4],
+        ],
+      },
+      {
+        role: "pulse",
+        polygon: [
+          [61.0, 56.4],
+          [65.4, 55.6],
+          [65.6, 62.2],
+          [61.2, 63.0],
+        ],
+      },
+      {
+        role: "pulse",
+        polygon: [
+          [69.8, 55.0],
+          [74.8, 54.2],
+          [75.0, 60.8],
+          [70.0, 61.6],
+        ],
+      },
+      {
+        role: "pulse",
+        polygon: [
+          [80.2, 53.4],
+          [87.0, 52.4],
+          [87.4, 59.6],
+          [80.6, 60.6],
+        ],
+      },
+      {
+        role: "reflect",
+        polygon: [
+          [58.0, 86.6],
+          [90.8, 80.6],
+          [92.2, 85.8],
+          [57.4, 91.2],
+        ],
+      },
+    ],
     focus: { x: 76, y: 68 },
     tooltip: { x: 74, y: 43.5, align: "above" },
     zIndex: 5,
   },
 ];
 
-export function zoneVisuals(zone: HallZone): HallPoint[][] {
-  return zone.visuals ?? zone.polygons;
+export function zoneVisuals(zone: HallZone): HallVisual[] {
+  if (zone.visuals?.length) return zone.visuals;
+  return zone.polygons.map((polygon) => ({ polygon, role: "rim" as const }));
 }
 
 export function hallZoneById(id: string | null | undefined): HallZone | undefined {
@@ -236,7 +436,7 @@ export function validateHallZones(zones: HallZone[] = HALL_ZONES): string[] {
     if (!zone.route.startsWith("/casino")) errors.push(`route:${zone.id}`);
     if (!zone.polygons.length) errors.push(`polygons-missing:${zone.id}`);
     if (!zone.objects.length) errors.push(`objects:${zone.id}`);
-    for (const polygon of [...zone.polygons, ...(zone.visuals ?? [])]) {
+    for (const polygon of [...zone.polygons, ...zoneVisuals(zone).map((v) => v.polygon)]) {
       if (polygon.length < 3) errors.push(`polygon-short:${zone.id}`);
       for (const [x, y] of polygon) {
         if (x < 0 || x > 100 || y < 0 || y > 100) errors.push(`bounds:${zone.id}`);
@@ -251,5 +451,8 @@ export function validateHallZones(zones: HallZone[] = HALL_ZONES): string[] {
   const slots = zones.find((z) => z.id === "slots");
   if ((roulette?.polygons.length ?? 0) < 2) errors.push("roulette-multipolygon");
   if ((slots?.polygons.length ?? 0) < 2) errors.push("slots-multipolygon");
+  if ((zoneVisuals(slots ?? HALL_ZONES[5]).filter((v) => (v.role ?? "rim") === "rim").length ?? 0) < 3) {
+    errors.push("slots-cabinet-visuals");
+  }
   return errors;
 }

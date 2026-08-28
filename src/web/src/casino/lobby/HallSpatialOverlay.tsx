@@ -101,7 +101,12 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
   const tip = zone ? clampTooltip(zone.tooltip.x, zone.tooltip.y) : null;
 
   return (
-    <div className="op-hall-overlay" data-testid="hall-spatial-overlay">
+    <div
+      className="op-hall-overlay"
+      data-testid="hall-spatial-overlay"
+      data-active-zone={focusId ?? ""}
+      data-idle={focusId ? "false" : "true"}
+    >
       <svg
         className={`op-hall-glow${debug ? " is-debug" : ""}`}
         viewBox="0 0 100 100"
@@ -111,7 +116,7 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
       >
         <defs>
           <filter id="op-hall-gold-glow" x="-12%" y="-12%" width="124%" height="124%">
-            <feGaussianBlur stdDeviation="0.28" result="blur" />
+            <feGaussianBlur stdDeviation="0.22" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
@@ -119,13 +124,22 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
           </filter>
         </defs>
         {HALL_ZONES.map((item) =>
-          zoneVisuals(item).map((polygon, index) => (
-            <polygon
-              key={`${item.id}-glow-${index}`}
-              points={polygonPoints(polygon)}
-              className={`op-hall-shape is-${item.id}${focusId === item.id ? " is-on" : ""}${entering === item.id ? " is-entering" : ""}`}
-            />
-          )),
+          zoneVisuals(item).map((visual, index) => {
+            const on = focusId === item.id;
+            const role = visual.role ?? "rim";
+            return (
+              <polygon
+                key={`${item.id}-glow-${index}`}
+                points={polygonPoints(visual.polygon)}
+                fill="none"
+                stroke={on ? undefined : "none"}
+                data-visual-zone={item.id}
+                data-visual-role={role}
+                data-visual-on={on ? "true" : "false"}
+                className={`op-hall-shape is-${item.id} is-${role}${on ? " is-on" : ""}${entering === item.id ? " is-entering" : ""}`}
+              />
+            );
+          }),
         )}
         {debug
           ? HALL_ZONES.map((item) => (
