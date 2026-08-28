@@ -79,10 +79,13 @@ describe("Odessa Prime interactive hall", () => {
     expect(bar?.sublabel).toBe("ODESSA PRIME");
     expect(restaurant?.sublabel).toBe("ODESSA PRIME");
     expect(poker?.sublabel).toBe("ODESSA PRIME");
-    expect((slots?.visuals ?? []).filter((v) => (v.role ?? "rim") === "rim").length).toBeGreaterThanOrEqual(3);
+    expect((slots?.visuals ?? []).filter((v) => (v.role ?? "object") === "object").length).toBeGreaterThanOrEqual(3);
     expect((slots?.visuals ?? []).some((v) => v.role === "pulse")).toBe(true);
+    expect((slots?.visuals ?? []).some((v) => v.role === "reflect")).toBe(false);
     expect((roulette?.visuals ?? []).some((v) => v.role === "sign")).toBe(true);
     expect((roulette?.visuals ?? []).some((v) => v.role === "lamp")).toBe(true);
+    expect(bar?.objects).toEqual(expect.arrayContaining(["sign", "shelves", "bottles"]));
+    expect(restaurant?.objects).toEqual(expect.arrayContaining(["sign", "tables", "lamps"]));
     for (const zone of HALL_ZONES) {
       expect(zone.tooltip).toBeTruthy();
       expect(zone.visuals?.length).toBeGreaterThan(0);
@@ -104,14 +107,11 @@ describe("Odessa Prime interactive hall", () => {
     expect(wrap.contains(overlay)).toBe(true);
     expect(screen.getByTestId("hall-spatial-overlay").getAttribute("data-idle")).toBe("true");
     expect(screen.getByTestId("hall-spatial-overlay").getAttribute("data-active-zone")).toBe("");
-    expect(view.container.querySelector(".op-hall-shape.is-on")).toBeNull();
+    expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe("");
+    expect(screen.getByTestId("hall-lit-overlay").getAttribute("class")).not.toContain("is-on");
+    expect(view.container.querySelector(".op-hall-lit.is-on")).toBeNull();
     expect(view.container.querySelector('[data-visual-on="true"]')).toBeNull();
-    for (const shape of view.container.querySelectorAll(".op-hall-shape")) {
-      expect(shape.getAttribute("stroke")).toBe("none");
-      expect(shape.getAttribute("fill")).toBe("none");
-      expect(shape.getAttribute("data-visual-on")).toBe("false");
-      expect(shape.className.baseVal || shape.getAttribute("class")).not.toContain("is-on");
-    }
+    expect(view.container.querySelector(".op-hall-shape")).toBeNull();
     expect(view.container.querySelector("[data-testid='hall-visual-layer']")).toBeTruthy();
     expect(view.container.querySelectorAll(".op-hall-hit").length).toBeGreaterThan(0);
     expect(view.container.querySelectorAll("[data-testid='hall-zone-label']").length).toBe(0);
@@ -140,25 +140,28 @@ describe("Odessa Prime interactive hall", () => {
     fireEvent.pointerEnter(screen.getByTestId("hotspot-blackjack"));
     expect(screen.getByTestId("hall-zone-label").textContent).toContain("BLACKJACK");
     expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe("blackjack");
-    expect(view.container.querySelector(".op-hall-shape.is-blackjack.is-on")).toBeTruthy();
+    expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe("blackjack");
+    expect(view.container.querySelector(".op-hall-mask.is-blackjack")).toBeTruthy();
     fireEvent.pointerLeave(screen.getByTestId("hotspot-blackjack"));
     expect(screen.queryByTestId("hall-zone-label")).toBeNull();
     view.unmount();
   });
 
-  it("keeps SVG geometry unstroked while a zone is active", () => {
+  it("keeps hit and mask geometry unpainted while a zone is active", () => {
     const view = mount("/casino/lobby");
     fireEvent.pointerEnter(screen.getByTestId("hotspot-slots"));
-    const lit = [...view.container.querySelectorAll(".op-hall-shape.is-on")];
+    const overlay = screen.getByTestId("hall-lit-overlay");
+    expect(overlay.getAttribute("data-lit-zone")).toBe("slots");
+    expect(overlay.className.baseVal || overlay.getAttribute("class")).toContain("is-on");
+    const lit = [...view.container.querySelectorAll("[data-visual-on='true']")];
     expect(lit.length).toBeGreaterThan(0);
     for (const shape of lit) {
       expect(shape.getAttribute("stroke")).toBe("none");
-      expect(shape.getAttribute("fill")).toBe("none");
       expect(shape.getAttribute("data-visual-zone")).toBe("slots");
     }
-    expect(view.container.querySelector(".op-hall-shape.is-pulse.is-on")).toBeTruthy();
-    expect(view.container.querySelector(".op-hall-shape.is-reflect.is-on")).toBeTruthy();
-    expect(view.container.querySelector(".op-hall-shape.is-roulette.is-on")).toBeNull();
+    expect(view.container.querySelector(".op-hall-mask.is-pulse")).toBeTruthy();
+    expect(view.container.querySelector(".op-hall-mask.is-reflect")).toBeNull();
+    expect(view.container.querySelector("[data-visual-zone='roulette'][data-visual-on='true']")).toBeNull();
     view.unmount();
   });
 
@@ -195,7 +198,8 @@ describe("Odessa Prime interactive hall", () => {
     const restore = mockReducedMotion(true);
     const view = mount("/casino/lobby");
     fireEvent.pointerEnter(screen.getByTestId("hotspot-roulette"));
-    expect(view.container.querySelector(".op-hall-shape.is-roulette.is-on")).toBeTruthy();
+    expect(view.container.querySelector(".op-hall-lit.is-on")).toBeTruthy();
+    expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe("roulette");
     fireEvent.pointerLeave(screen.getByTestId("hotspot-roulette"));
     fireEvent.click(screen.getByTestId("hotspot-blackjack"));
     expect(await screen.findByTestId("blackjack-table", {}, { timeout: 8000 })).toBeTruthy();
@@ -254,16 +258,17 @@ describe("Odessa Prime interactive hall", () => {
       expect(overlay.getAttribute("data-idle")).toBe("false");
       expect(overlay.getAttribute("data-active-zone")).toBe(zone.id);
       expect(stage.getAttribute("data-hall-active")).toBe(zone.id);
-      const lit = [...view.container.querySelectorAll(".op-hall-shape.is-on")];
+      expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe(zone.id);
+      const lit = [...view.container.querySelectorAll("[data-visual-on='true']")];
       expect(lit.length).toBeGreaterThan(0);
       expect(lit.every((el) => el.getAttribute("data-visual-zone") === zone.id)).toBe(true);
-      expect(view.container.querySelectorAll('[data-visual-on="true"]').length).toBe(lit.length);
       expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
       expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe(zone.id);
       fireEvent.pointerLeave(screen.getByTestId(`hotspot-${zone.id}`));
       expect(overlay.getAttribute("data-idle")).toBe("true");
       expect(overlay.getAttribute("data-active-zone")).toBe("");
-      expect(view.container.querySelector(".op-hall-shape.is-on")).toBeNull();
+      expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe("");
+      expect(view.container.querySelector("[data-visual-on='true']")).toBeNull();
       expect(screen.queryByTestId("hall-zone-label")).toBeNull();
     }
     view.unmount();
@@ -274,10 +279,11 @@ describe("Odessa Prime interactive hall", () => {
     fireEvent.pointerEnter(screen.getByTestId("hotspot-roulette"));
     fireEvent.focus(screen.getByTestId("hotspot-slots"));
     expect(screen.getByTestId("hall-spatial-overlay").getAttribute("data-active-zone")).toBe("slots");
-    expect(view.container.querySelector(".op-hall-shape.is-roulette.is-on")).toBeNull();
-    expect(view.container.querySelector(".op-hall-shape.is-slots.is-on")).toBeTruthy();
-    expect(view.container.querySelector(".op-hall-shape.is-pulse.is-on")).toBeTruthy();
-    expect(view.container.querySelector(".op-hall-shape.is-reflect.is-on")).toBeTruthy();
+    expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe("slots");
+    expect(view.container.querySelector("[data-visual-zone='roulette'][data-visual-on='true']")).toBeNull();
+    expect(view.container.querySelector(".op-hall-mask.is-slots")).toBeTruthy();
+    expect(view.container.querySelector(".op-hall-mask.is-pulse")).toBeTruthy();
+    expect(view.container.querySelector(".op-hall-mask.is-reflect")).toBeNull();
     expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
     expect(screen.getByTestId("hall-zone-label").textContent).toContain("ИГРАТЬ В АВТОМАТЫ");
     fireEvent.blur(screen.getByTestId("hotspot-slots"));

@@ -99,12 +99,45 @@
   pointer-events: none;
 }
 
-.op-hall-overlay::before {
-  content: none;
+.op-hall-lit {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+  overflow: visible;
+  transition: opacity 220ms ease;
 }
 
-.op-hall-stage.is-focused .op-hall-overlay::before {
-  background: transparent;
+.op-hall-lit.is-on {
+  opacity: 1;
+}
+
+.op-hall-lit-photo {
+  filter: brightness(1.26) saturate(1.16) contrast(1.08);
+}
+
+.op-hall-lit-gold {
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+.op-hall-lit-sign,
+.op-hall-lit-hot {
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.op-hall-sweep {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.op-hall-mask {
+  fill: white;
+  stroke: none;
 }
 
 .op-hall-glow {
@@ -116,54 +149,10 @@
   overflow: visible;
 }
 
-.op-hall-shape {
-  fill: none !important;
-  stroke: none !important;
-  stroke-width: 0;
-  opacity: 0;
-  filter: none;
-  pointer-events: none;
-  transition: opacity 200ms ease;
-}
-
-.op-hall-shape.is-on {
-  opacity: 1;
-  fill: rgba(201, 164, 92, 0.11) !important;
-  stroke: none !important;
-  filter: url(#op-hall-gold-bloom);
-}
-
-.op-hall-shape.is-sign.is-on {
-  fill: none !important;
-  stroke: rgba(232, 213, 163, 0.88) !important;
-  stroke-width: 0.2;
-  stroke-linejoin: round;
-  filter: url(#op-hall-gold-glow);
-}
-
-.op-hall-shape.is-lamp.is-on,
-.op-hall-shape.is-pulse.is-on {
-  fill: rgba(255, 220, 150, 0.28) !important;
-  stroke: none !important;
-  filter: url(#op-hall-gold-bloom);
-}
-
-.op-hall-shape.is-reflect.is-on {
-  fill: rgba(201, 164, 92, 0.12) !important;
-  stroke: none !important;
-  filter: url(#op-hall-gold-bloom);
-}
-
-.op-hall-shape.is-entering.is-sign {
-  stroke: rgba(255, 232, 186, 0.95) !important;
-}
-
-.op-hall-glow.is-debug .op-hall-shape {
-  opacity: 0.85;
-  fill: none !important;
-  stroke: rgba(232, 213, 163, 0.42) !important;
-  stroke-width: 0.18;
-  filter: none;
+.op-hall-debug-shape {
+  fill: rgba(255, 210, 115, 0.12);
+  stroke: rgba(255, 210, 115, 0.7);
+  stroke-width: 0.22;
 }
 
 .op-hall-debug-id {
@@ -444,8 +433,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .op-hall-focus,
-  .op-hall-overlay::before,
-  .op-hall-shape,
+  .op-hall-lit,
   .op-hall-label,
   .op-map-zone {
     transition: none !important;
@@ -458,41 +446,25 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .op-hall-shape.is-sign.is-on {
-    animation: opHallSignTrace 480ms ease-out 1;
+  .op-hall-lit.is-on .op-hall-sweep {
+    animation: opHallSweep 420ms ease-out 1;
   }
 }
 
-@keyframes opHallSignTrace {
-  0% {
-    opacity: 0.35;
-    stroke-dasharray: 5 64;
-    stroke-dashoffset: 69;
-  }
-  100% {
-    opacity: 1;
-    stroke-dasharray: 240 0;
-    stroke-dashoffset: 0;
-  }
+@keyframes opHallSweep {
+  0% { opacity: 0; transform: translateX(0); }
+  35% { opacity: 0.7; }
+  100% { opacity: 0; transform: translateX(120px); }
 }
 
 [data-tier="LOW"] .op-hall-focus {
   will-change: auto;
 }
 
-[data-tier="LOW"] .op-hall-shape.is-on {
-  filter: none;
-  animation: none;
-  fill: none !important;
+[data-tier="LOW"] .op-hall-lit-photo {
+  filter: brightness(1.14) saturate(1.06);
 }
 
-[data-tier="LOW"] .op-hall-shape.is-sign.is-on,
-[data-tier="LOW"] .op-hall-shape.is-lamp.is-on,
-[data-tier="LOW"] .op-hall-shape.is-pulse.is-on {
-  fill: rgba(255, 220, 150, 0.16) !important;
-}
-
-[data-tier="LOW"] .op-hall-shape.is-sign.is-on {
-  fill: none !important;
-  stroke: rgba(232, 213, 163, 0.7) !important;
+[data-tier="LOW"] .op-hall-sweep {
+  animation: none !important;
 }

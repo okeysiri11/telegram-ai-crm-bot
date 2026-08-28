@@ -16,8 +16,8 @@ export type HallPoint = [number, number];
 
 export type HallTooltipAlign = "above" | "below" | "left" | "right";
 
-/** Stroke-only hover traces. Never used as idle geometry. */
-export type HallVisualRole = "rim" | "sign" | "lamp" | "pulse" | "reflect";
+/** Mask roles: photographic lift only. Never painted as geometry. */
+export type HallVisualRole = "object" | "sign" | "lamp" | "pulse";
 
 export type HallVisual = {
   polygon: HallPoint[];
@@ -32,7 +32,7 @@ export type HallZone = {
   route: string;
   /** Pointer hit polygons in normalized image percent (0–100). Invisible. */
   polygons: HallPoint[][];
-  /** Object-traced glow layers. Defaults to hit polygons as rim strokes. */
+  /** Object-locked illumination masks. Defaults to hit polygons. */
   visuals?: HallVisual[];
   objects: string[];
   focus: { x: number; y: number };
@@ -42,7 +42,7 @@ export type HallZone = {
 };
 
 /**
- * Object-based spatial zones for hall.jpg (1600×1066).
+ * Object masks for hall.jpg (1600×1066).
  * Tab order: Roulette → Blackjack → Poker → Restaurant → Bar → Slots.
  */
 export const HALL_ZONES: HallZone[] = [
@@ -55,61 +55,82 @@ export const HALL_ZONES: HallZone[] = [
     objects: ["sign", "table", "lamp", "wheel"],
     polygons: [
       [
-        [4.5, 29.5],
-        [24.8, 28.0],
-        [25.4, 37.8],
-        [5.2, 39.4],
+        [4.2, 28.8],
+        [25.2, 27.4],
+        [26.0, 38.4],
+        [5.0, 39.8],
       ],
       [
-        [0.8, 51.0],
-        [22.0, 48.2],
-        [33.5, 54.0],
-        [35.8, 68.5],
-        [31.5, 99.2],
-        [0.6, 99.2],
-        [0.6, 72.0],
+        [0.6, 50.5],
+        [21.5, 47.6],
+        [34.2, 54.2],
+        [36.2, 70.0],
+        [31.8, 99.0],
+        [0.5, 99.0],
+        [0.5, 71.0],
       ],
       [
-        [16.5, 45.5],
-        [23.8, 44.8],
-        [25.2, 56.5],
-        [18.0, 57.8],
+        [16.2, 44.8],
+        [24.2, 44.0],
+        [25.6, 57.0],
+        [17.8, 58.0],
       ],
     ],
     visuals: [
       {
         role: "sign",
         polygon: [
-          [4.8, 29.8],
-          [24.4, 28.3],
-          [25.0, 36.8],
-          [5.4, 38.4],
+          [4.6, 29.4],
+          [24.6, 28.0],
+          [25.2, 37.2],
+          [5.2, 38.6],
         ],
       },
       {
         role: "lamp",
         polygon: [
-          [17.0, 45.6],
-          [23.6, 44.9],
-          [24.8, 56.4],
-          [18.2, 57.4],
+          [16.8, 45.2],
+          [23.8, 44.6],
+          [25.0, 56.8],
+          [18.0, 57.6],
         ],
       },
       {
-        role: "rim",
+        role: "object",
         polygon: [
-          [2.4, 57.5],
-          [21.2, 53.8],
-          [32.6, 60.6],
-          [33.8, 71.4],
-          [28.2, 85.6],
-          [7.8, 91.4],
-          [1.6, 76.8],
+          [1.4, 68.5],
+          [8.6, 60.8],
+          [14.8, 63.4],
+          [16.2, 78.6],
+          [11.4, 92.4],
+          [2.2, 94.8],
+          [0.8, 80.2],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [7.2, 56.8],
+          [21.6, 52.4],
+          [33.4, 59.6],
+          [34.8, 73.2],
+          [29.6, 92.8],
+          [8.8, 97.6],
+          [3.6, 78.4],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [18.8, 48.6],
+          [31.2, 47.2],
+          [33.6, 58.8],
+          [22.4, 61.2],
         ],
       },
     ],
     focus: { x: 16, y: 68 },
-    tooltip: { x: 36, y: 46, align: "right" },
+    tooltip: { x: 37.5, y: 48, align: "right" },
     zIndex: 4,
   },
   {
@@ -118,47 +139,56 @@ export const HALL_ZONES: HallZone[] = [
     sublabel: "SALON",
     cta: "ВОЙТИ",
     route: "/casino/blackjack",
-    objects: ["sign", "arch", "table"],
+    objects: ["sign", "table", "lamp"],
     polygons: [
       [
-        [7.2, 13.2],
-        [26.8, 11.8],
-        [28.6, 18.5],
-        [8.4, 20.2],
+        [7.0, 12.8],
+        [27.0, 11.4],
+        [28.8, 18.8],
+        [8.2, 20.4],
       ],
       [
-        [8.0, 19.5],
-        [27.8, 17.8],
-        [29.4, 34.0],
-        [26.0, 42.8],
-        [9.6, 44.2],
-        [7.4, 32.0],
+        [8.2, 19.2],
+        [27.6, 17.6],
+        [29.0, 34.6],
+        [25.4, 42.4],
+        [10.0, 43.6],
+        [7.6, 31.6],
       ],
     ],
     visuals: [
       {
         role: "sign",
         polygon: [
-          [7.6, 13.5],
-          [26.4, 12.1],
-          [27.8, 17.6],
-          [8.6, 19.1],
+          [7.4, 13.2],
+          [26.6, 11.8],
+          [27.8, 18.0],
+          [8.4, 19.4],
         ],
       },
       {
-        role: "rim",
+        role: "object",
         polygon: [
-          [10.4, 23.8],
-          [26.6, 22.2],
-          [28.0, 33.6],
-          [24.4, 41.2],
-          [11.6, 42.4],
-          [9.2, 32.4],
+          [10.2, 22.8],
+          [26.2, 21.2],
+          [27.6, 33.4],
+          [24.2, 41.0],
+          [11.8, 42.2],
+          [9.4, 31.6],
+        ],
+      },
+      {
+        role: "lamp",
+        polygon: [
+          [15.4, 26.8],
+          [18.8, 26.4],
+          [19.2, 31.6],
+          [15.8, 32.0],
         ],
       },
     ],
     focus: { x: 18, y: 28 },
-    tooltip: { x: 18, y: 10.5, align: "above" },
+    tooltip: { x: 18, y: 10.2, align: "above" },
     zIndex: 3,
   },
   {
@@ -167,43 +197,76 @@ export const HALL_ZONES: HallZone[] = [
     sublabel: "ODESSA PRIME",
     cta: "ВОЙТИ В ПОКЕР",
     route: "/casino/poker",
-    objects: ["sign", "doorway"],
+    objects: ["sign", "doorway", "curtains"],
     polygons: [
       [
-        [46.8, 16.6],
-        [54.2, 15.8],
-        [54.8, 20.4],
-        [47.2, 21.2],
+        [45.6, 12.8],
+        [55.8, 12.0],
+        [56.4, 20.8],
+        [46.0, 21.6],
       ],
       [
-        [47.0, 20.6],
-        [54.6, 19.8],
-        [55.0, 34.8],
-        [47.4, 35.8],
+        [46.4, 20.4],
+        [55.8, 19.6],
+        [56.2, 36.2],
+        [46.2, 37.0],
+      ],
+      [
+        [54.4, 15.6],
+        [62.2, 14.8],
+        [62.6, 21.0],
+        [54.8, 21.8],
       ],
     ],
     visuals: [
       {
         role: "sign",
         polygon: [
-          [46.9, 16.7],
-          [54.1, 15.9],
-          [54.6, 20.2],
-          [47.3, 21.0],
+          [45.8, 13.2],
+          [55.6, 12.4],
+          [56.0, 18.6],
+          [46.2, 19.4],
         ],
       },
       {
-        role: "rim",
+        role: "sign",
         polygon: [
-          [47.6, 21.4],
-          [54.2, 20.6],
-          [54.6, 33.8],
-          [47.8, 34.6],
+          [54.8, 16.0],
+          [61.8, 15.2],
+          [62.2, 20.4],
+          [55.2, 21.2],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [46.8, 19.8],
+          [55.4, 19.0],
+          [55.8, 35.4],
+          [47.0, 36.2],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [45.6, 22.4],
+          [47.4, 21.8],
+          [47.8, 35.6],
+          [45.4, 36.0],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [54.8, 21.4],
+          [56.8, 20.8],
+          [57.0, 34.8],
+          [54.6, 35.4],
         ],
       },
     ],
     focus: { x: 51, y: 26 },
-    tooltip: { x: 51, y: 14.2, align: "above" },
+    tooltip: { x: 51, y: 11.6, align: "above" },
     zIndex: 1,
   },
   {
@@ -212,61 +275,70 @@ export const HALL_ZONES: HallZone[] = [
     sublabel: "ODESSA PRIME",
     cta: "ПЕРЕЙТИ В РЕСТОРАН",
     route: "/casino/restaurant",
-    objects: ["sign", "tables"],
+    objects: ["sign", "doorway", "tables", "lamps"],
     polygons: [
       [
-        [57.2, 14.4],
-        [68.6, 13.6],
-        [69.0, 18.8],
-        [57.6, 19.6],
+        [57.0, 13.8],
+        [68.8, 13.0],
+        [69.2, 19.2],
+        [57.4, 20.0],
       ],
       [
-        [56.8, 19.2],
-        [69.8, 18.2],
-        [71.2, 35.6],
-        [56.2, 36.8],
+        [57.2, 19.6],
+        [70.2, 18.6],
+        [71.4, 36.2],
+        [56.6, 37.2],
       ],
     ],
     visuals: [
       {
         role: "sign",
         polygon: [
-          [57.4, 14.6],
-          [68.2, 13.8],
-          [68.6, 18.2],
-          [57.8, 19.0],
+          [57.4, 14.4],
+          [68.4, 13.6],
+          [68.8, 18.6],
+          [57.8, 19.4],
         ],
       },
       {
-        role: "rim",
+        role: "object",
         polygon: [
-          [58.4, 20.6],
-          [69.0, 19.8],
-          [70.0, 33.4],
-          [57.8, 34.4],
+          [58.0, 19.8],
+          [69.0, 18.8],
+          [69.6, 24.6],
+          [58.4, 25.4],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [58.2, 24.8],
+          [69.8, 23.8],
+          [70.8, 35.0],
+          [57.6, 36.0],
         ],
       },
       {
         role: "lamp",
         polygon: [
-          [60.6, 26.8],
-          [63.4, 26.4],
-          [63.8, 30.6],
-          [61.0, 31.0],
+          [60.4, 27.2],
+          [63.2, 26.8],
+          [63.6, 31.0],
+          [60.8, 31.4],
         ],
       },
       {
         role: "lamp",
         polygon: [
-          [65.2, 27.4],
-          [68.0, 27.0],
-          [68.4, 31.2],
-          [65.6, 31.6],
+          [65.0, 27.8],
+          [67.8, 27.4],
+          [68.2, 31.6],
+          [65.4, 32.0],
         ],
       },
     ],
-    focus: { x: 63, y: 26 },
-    tooltip: { x: 54.5, y: 16, align: "left" },
+    focus: { x: 63, y: 28 },
+    tooltip: { x: 54.2, y: 16.4, align: "left" },
     zIndex: 1,
   },
   {
@@ -275,52 +347,61 @@ export const HALL_ZONES: HallZone[] = [
     sublabel: "ODESSA PRIME",
     cta: "ПЕРЕЙТИ В БАР",
     route: "/casino/bar",
-    objects: ["sign", "shelves"],
+    objects: ["sign", "shelves", "bottles", "counter"],
     polygons: [
       [
-        [77.4, 3.6],
-        [88.8, 2.6],
-        [89.2, 7.8],
-        [77.8, 8.8],
+        [77.6, 4.8],
+        [88.6, 3.8],
+        [89.0, 8.6],
+        [78.0, 9.6],
       ],
       [
-        [76.6, 8.2],
-        [92.4, 6.4],
-        [93.6, 24.8],
-        [77.8, 26.6],
+        [77.2, 8.8],
+        [92.6, 7.0],
+        [93.4, 26.8],
+        [78.0, 28.2],
       ],
     ],
     visuals: [
       {
         role: "sign",
         polygon: [
-          [77.6, 3.8],
-          [88.4, 2.8],
-          [88.8, 7.2],
-          [78.0, 8.2],
+          [78.0, 5.0],
+          [88.2, 4.0],
+          [88.6, 8.4],
+          [78.4, 9.4],
         ],
       },
       {
-        role: "rim",
+        role: "object",
         polygon: [
-          [78.4, 9.2],
-          [91.4, 7.6],
-          [92.2, 23.2],
-          [79.2, 24.8],
+          [78.6, 9.6],
+          [91.8, 8.0],
+          [92.6, 22.4],
+          [79.4, 23.8],
         ],
       },
       {
         role: "pulse",
         polygon: [
-          [82.4, 12.8],
-          [88.6, 11.8],
-          [89.2, 20.4],
-          [83.0, 21.4],
+          [81.6, 11.6],
+          [90.2, 10.4],
+          [90.8, 20.8],
+          [82.4, 21.8],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [78.4, 22.6],
+          [92.4, 21.2],
+          [93.0, 27.0],
+          [78.8, 28.0],
         ],
       },
     ],
     focus: { x: 85, y: 16 },
-    tooltip: { x: 74, y: 8, align: "left" },
+    tooltip: { x: 74.2, y: 9.2, align: "left" },
     zIndex: 2,
   },
   {
@@ -329,110 +410,128 @@ export const HALL_ZONES: HallZone[] = [
     sublabel: "SLOTS",
     cta: "ИГРАТЬ",
     route: "/casino/slots",
-    objects: ["machine-1", "machine-2", "machine-3"],
+    objects: ["machine-1", "machine-2", "machine-3", "stools"],
     polygons: [
       [
-        [58.8, 50.5],
-        [67.6, 49.0],
-        [69.2, 86.5],
-        [57.6, 90.2],
+        [58.6, 49.8],
+        [67.8, 48.4],
+        [69.0, 86.8],
+        [57.4, 90.0],
       ],
       [
-        [67.6, 49.0],
-        [77.4, 47.6],
-        [79.2, 84.0],
-        [67.4, 87.0],
+        [67.6, 48.6],
+        [77.6, 47.2],
+        [79.0, 84.2],
+        [67.2, 87.0],
       ],
       [
-        [77.4, 47.6],
-        [90.6, 45.8],
-        [93.8, 80.5],
-        [77.6, 84.2],
+        [77.2, 47.0],
+        [90.8, 45.2],
+        [93.6, 80.8],
+        [77.4, 84.4],
       ],
     ],
     visuals: [
       {
-        role: "rim",
+        role: "object",
         polygon: [
-          [59.0, 54.8],
-          [62.8, 49.8],
-          [66.6, 53.6],
-          [67.4, 79.0],
-          [65.8, 86.4],
-          [58.6, 88.0],
-          [57.8, 80.2],
+          [59.0, 54.6],
+          [62.8, 49.4],
+          [66.6, 53.4],
+          [67.4, 78.4],
+          [65.6, 85.6],
+          [58.8, 87.2],
+          [57.8, 79.6],
         ],
       },
       {
-        role: "rim",
+        role: "object",
         polygon: [
-          [67.2, 53.4],
-          [71.8, 48.4],
-          [76.8, 51.8],
-          [77.6, 77.4],
-          [76.0, 84.8],
-          [66.6, 86.4],
-          [66.0, 78.6],
+          [67.2, 53.2],
+          [71.8, 48.0],
+          [76.8, 51.6],
+          [77.6, 76.8],
+          [75.8, 84.0],
+          [66.8, 85.6],
+          [66.2, 78.0],
         ],
       },
       {
-        role: "rim",
+        role: "object",
         polygon: [
-          [77.0, 51.6],
-          [83.4, 46.4],
-          [89.8, 49.8],
-          [91.2, 75.6],
-          [89.4, 82.2],
-          [77.0, 83.8],
-          [76.2, 76.4],
+          [77.0, 51.4],
+          [83.6, 45.8],
+          [90.0, 49.4],
+          [91.4, 74.8],
+          [89.4, 81.4],
+          [77.2, 83.0],
+          [76.4, 75.6],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [59.4, 84.8],
+          [64.8, 83.6],
+          [65.2, 89.2],
+          [59.0, 90.4],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [68.4, 83.6],
+          [74.2, 82.2],
+          [74.6, 87.8],
+          [68.0, 89.0],
+        ],
+      },
+      {
+        role: "object",
+        polygon: [
+          [79.0, 81.0],
+          [86.8, 79.2],
+          [87.4, 84.8],
+          [78.6, 86.2],
         ],
       },
       {
         role: "pulse",
         polygon: [
-          [61.0, 56.4],
-          [65.4, 55.6],
-          [65.6, 62.2],
-          [61.2, 63.0],
+          [61.0, 56.2],
+          [65.4, 55.4],
+          [65.8, 62.4],
+          [61.4, 63.2],
         ],
       },
       {
         role: "pulse",
         polygon: [
-          [69.8, 55.0],
-          [74.8, 54.2],
-          [75.0, 60.8],
-          [70.0, 61.6],
+          [69.8, 54.8],
+          [74.8, 54.0],
+          [75.2, 61.0],
+          [70.2, 61.8],
         ],
       },
       {
         role: "pulse",
         polygon: [
-          [80.2, 53.4],
-          [87.0, 52.4],
-          [87.4, 59.6],
-          [80.6, 60.6],
-        ],
-      },
-      {
-        role: "reflect",
-        polygon: [
-          [58.0, 86.6],
-          [90.8, 80.6],
-          [92.2, 85.8],
-          [57.4, 91.2],
+          [80.4, 53.2],
+          [87.2, 52.2],
+          [87.6, 59.4],
+          [80.8, 60.4],
         ],
       },
     ],
-    focus: { x: 76, y: 68 },
-    tooltip: { x: 74, y: 43.5, align: "above" },
+    focus: { x: 76, y: 66 },
+    tooltip: { x: 74, y: 43.2, align: "above" },
     zIndex: 5,
   },
 ];
 
 export function zoneVisuals(zone: HallZone): HallVisual[] {
   if (zone.visuals?.length) return zone.visuals;
-  return zone.polygons.map((polygon) => ({ polygon, role: "rim" as const }));
+  return zone.polygons.map((polygon) => ({ polygon, role: "object" as const }));
 }
 
 export function hallZoneById(id: string | null | undefined): HallZone | undefined {
@@ -460,6 +559,7 @@ export function validateHallZones(zones: HallZone[] = HALL_ZONES): string[] {
     if (!zone.route.startsWith("/casino")) errors.push(`route:${zone.id}`);
     if (!zone.polygons.length) errors.push(`polygons-missing:${zone.id}`);
     if (!zone.objects.length) errors.push(`objects:${zone.id}`);
+    if (!zoneVisuals(zone).length) errors.push(`visuals-missing:${zone.id}`);
     for (const polygon of [...zone.polygons, ...zoneVisuals(zone).map((v) => v.polygon)]) {
       if (polygon.length < 3) errors.push(`polygon-short:${zone.id}`);
       for (const [x, y] of polygon) {
@@ -475,8 +575,7 @@ export function validateHallZones(zones: HallZone[] = HALL_ZONES): string[] {
   const slots = zones.find((z) => z.id === "slots");
   if ((roulette?.polygons.length ?? 0) < 2) errors.push("roulette-multipolygon");
   if ((slots?.polygons.length ?? 0) < 2) errors.push("slots-multipolygon");
-  if ((zoneVisuals(slots ?? HALL_ZONES[5]).filter((v) => (v.role ?? "rim") === "rim").length ?? 0) < 3) {
-    errors.push("slots-cabinet-visuals");
-  }
+  const slotObjects = zoneVisuals(slots ?? HALL_ZONES[5]).filter((v) => (v.role ?? "object") === "object");
+  if (slotObjects.length < 3) errors.push("slots-cabinet-visuals");
   return errors;
 }

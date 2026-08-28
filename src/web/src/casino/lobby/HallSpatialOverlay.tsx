@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState, type RefObject } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { casinoSound } from "../casinoSound";
 import {
+  HALL_ART,
   HALL_ENTER_MS,
   HALL_ZONES,
   clampTooltip,
@@ -26,7 +27,7 @@ function applyStageFocus(
   entering: boolean,
 ) {
   const reduced = prefersReducedMotion();
-  const scale = reduced ? 1 : entering ? 1.015 : zone ? 1.012 : 1;
+  const scale = reduced ? 1 : entering ? 1.015 : zone ? 1.01 : 1;
   const x = String(zone?.focus.x ?? 50);
   const y = String(zone?.focus.y ?? 50);
   for (const el of [stage, focus]) {
@@ -67,6 +68,9 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
 
   const focusId = entering ?? activeId;
   const zone = hallZoneById(focusId);
+  const masks = zone ? zoneVisuals(zone) : [];
+  const signMasks = masks.filter((item) => item.role === "sign");
+  const hotMasks = masks.filter((item) => item.role === "lamp" || item.role === "pulse");
 
   useEffect(() => {
     applyStageFocus(stageRef.current, focusRef.current, zone, Boolean(entering));
@@ -108,50 +112,141 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
       data-idle={focusId ? "false" : "true"}
     >
       <svg
-        className={`op-hall-glow${debug ? " is-debug" : ""}`}
+        className={`op-hall-lit${focusId ? " is-on" : ""}`}
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
         aria-hidden
-        data-testid="hall-visual-layer"
+        data-testid="hall-lit-overlay"
+        data-lit-zone={focusId ?? ""}
       >
         <defs>
-          <filter id="op-hall-gold-bloom" x="-45%" y="-45%" width="190%" height="190%">
-            <feGaussianBlur stdDeviation="1.25" />
+          <filter id="op-hall-mask-feather" x="-8%" y="-8%" width="116%" height="116%">
+            <feGaussianBlur stdDeviation="0.32" />
           </filter>
-          <filter id="op-hall-gold-glow" x="-18%" y="-18%" width="136%" height="136%">
-            <feGaussianBlur stdDeviation="0.28" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+          <linearGradient id="op-hall-sweep-g" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stopColor="rgba(255,210,115,0)" />
+            <stop offset="0.48" stopColor="rgba(255,210,115,0.55)" />
+            <stop offset="1" stopColor="rgba(255,210,115,0)" />
+          </linearGradient>
+          <mask id="op-hall-object-mask" maskUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="black" />
+            <g filter="url(#op-hall-mask-feather)">
+              {masks.map((visual, index) => (
+                <polygon
+                  key={`${zone?.id}-mask-${index}`}
+                  points={polygonPoints(visual.polygon)}
+                  fill="white"
+                  stroke="none"
+                  data-visual-zone={zone?.id}
+                  data-visual-role={visual.role ?? "object"}
+                  data-visual-on="true"
+                  className={`op-hall-mask is-${zone?.id} is-${visual.role ?? "object"}`}
+                />
+              ))}
+            </g>
+          </mask>
+          <mask id="op-hall-sign-mask" maskUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="black" />
+            <g filter="url(#op-hall-mask-feather)">
+              {signMasks.map((visual, index) => (
+                <polygon
+                  key={`${zone?.id}-sign-${index}`}
+                  points={polygonPoints(visual.polygon)}
+                  fill="white"
+                  stroke="none"
+                />
+              ))}
+            </g>
+          </mask>
+          <mask id="op-hall-hot-mask" maskUnits="userSpaceOnUse">
+            <rect width="100" height="100" fill="black" />
+            <g filter="url(#op-hall-mask-feather)">
+              {hotMasks.map((visual, index) => (
+                <polygon
+                  key={`${zone?.id}-hot-${index}`}
+                  points={polygonPoints(visual.polygon)}
+                  fill="white"
+                  stroke="none"
+                />
+              ))}
+            </g>
+          </mask>
         </defs>
-        {HALL_ZONES.map((item) =>
-          zoneVisuals(item).map((visual, index) => {
-            const on = focusId === item.id;
-            const role = visual.role ?? "rim";
-            return (
-              <polygon
-                key={`${item.id}-glow-${index}`}
-                points={polygonPoints(visual.polygon)}
-                fill="none"
-                stroke="none"
-                data-visual-zone={item.id}
-                data-visual-role={role}
-                data-visual-on={on ? "true" : "false"}
-                className={`op-hall-shape is-${item.id} is-${role}${on ? " is-on" : ""}${entering === item.id ? " is-entering" : ""}`}
+        {focusId ? (
+          <>
+            <image
+              href={HALL_ART.src}
+              x="0"
+              y="0"
+              width="100"
+              height="100"
+              preserveAspectRatio="none"
+              mask="url(#op-hall-object-mask)"
+              className="op-hall-lit-photo"
+            />
+            <rect
+              width="100"
+              height="100"
+              fill="rgba(255, 210, 115, 0.18)"
+              mask="url(#op-hall-object-mask)"
+              className="op-hall-lit-gold"
+            />
+            {signMasks.length ? (
+              <rect
+                width="100"
+                height="100"
+                fill="rgba(245, 174, 55, 0.28)"
+                mask="url(#op-hall-sign-mask)"
+                className="op-hall-lit-sign"
               />
-            );
-          }),
-        )}
-        {debug
-          ? HALL_ZONES.map((item) => (
-              <text key={`dbg-${item.id}`} className="op-hall-debug-id" x={item.tooltip.x} y={item.tooltip.y}>
-                {item.id}
-              </text>
-            ))
-          : null}
+            ) : null}
+            {hotMasks.length ? (
+              <rect
+                width="100"
+                height="100"
+                fill="rgba(255, 210, 115, 0.22)"
+                mask="url(#op-hall-hot-mask)"
+                className="op-hall-lit-hot"
+              />
+            ) : null}
+            <rect
+              className="op-hall-sweep"
+              x="-30"
+              y="0"
+              width="40"
+              height="100"
+              fill="url(#op-hall-sweep-g)"
+              mask="url(#op-hall-object-mask)"
+            />
+          </>
+        ) : null}
       </svg>
+      {debug ? (
+        <svg
+          className="op-hall-glow is-debug"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="none"
+          aria-hidden
+          data-testid="hall-visual-layer"
+        >
+          {HALL_ZONES.map((item) =>
+            zoneVisuals(item).map((visual, index) => (
+              <polygon
+                key={`${item.id}-dbg-${index}`}
+                points={polygonPoints(visual.polygon)}
+                className={`op-hall-debug-shape is-${item.id}`}
+              />
+            )),
+          )}
+          {HALL_ZONES.map((item) => (
+            <text key={`dbg-${item.id}`} className="op-hall-debug-id" x={item.tooltip.x} y={item.tooltip.y}>
+              {item.id}
+            </text>
+          ))}
+        </svg>
+      ) : (
+        <svg className="op-hall-glow" viewBox="0 0 100 100" aria-hidden data-testid="hall-visual-layer" />
+      )}
       {HALL_ZONES.map((item) => (
         <div
           key={item.id}
