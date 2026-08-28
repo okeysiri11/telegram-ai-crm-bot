@@ -41,9 +41,10 @@ function entry(
     health?: ModuleHealth;
     kind?: RegisteredModule["kind"];
     extraRoutes?: string[];
+    route?: string;
   },
 ): RegisteredModule {
-  const route = `/workspace/${id}`;
+  const route = meta.route || `/workspace/${id}`;
   const permissions = meta.permissions?.length ? meta.permissions : ["read"];
   const nav: RegisteredModule["navigation"] = [
     { id: `nav_${id}`, label: meta.title, route },
@@ -253,6 +254,18 @@ const MODULES: Record<string, RegisteredModule> = {
     ],
     widgets: ["widget_bidex_wallets", "widget_bidex_otc"],
     dashboards: ["dash_bidex_owner", "dash_bidex_treasury"],
+  }),
+  casino: entry("casino", {
+    title: "Odessa Prime Casino",
+    purpose: "Play-money casino — roulette, blackjack, slots. Demo chips only. Canonical route /casino.",
+    apiHint: "/api/casino/v1",
+    route: "/casino",
+    extraRoutes: ["/casino/lobby", "/casino/games"],
+    version: "1.0.0",
+    widgets: ["widget_casino_lobby"],
+    dashboards: ["dash_casino_floor"],
+    dependencies: ["enterprise_web_platform"],
+    kind: "ecosystem",
   }),
   hr: entry("hr", {
     title: "HR",

@@ -1,5 +1,6 @@
 import type { SearchCategory, SearchHit } from "../types";
 import { searchIndex } from "./searchIndex";
+import { collapseCasinoSearchHits } from "@/casino/casinoPlatform";
 
 let recentSearches: string[] = ["crm", "ai", "invoice"];
 
@@ -61,9 +62,11 @@ export const searchProvider = {
     }
     const docs = searchIndex.list().filter((d) => !category || d.category === category);
     if (!q) {
-      return docs
-        .map((d) => ({ ...d, score: d.rankBoost, match: "exact" as const }))
-        .sort((a, b) => b.score - a.score);
+      return collapseCasinoSearchHits(
+        docs
+          .map((d) => ({ ...d, score: d.rankBoost, match: "exact" as const }))
+          .sort((a, b) => b.score - a.score),
+      );
     }
     const hits: SearchHit[] = docs
       .map((d) => {
@@ -78,7 +81,7 @@ export const searchProvider = {
       })
       .filter((h) => h.score > 15)
       .sort((a, b) => b.score - a.score);
-    return hits;
+    return collapseCasinoSearchHits(hits);
   },
   /** Sprint 27.4 — grouped results for Search Workspace / palette. */
   searchGrouped(query: string, limitPerGroup = 6): SearchGroup[] {

@@ -100,6 +100,14 @@ export function useCasinoPresence(venueId: string, roomId = "roulette-royale") {
   }, [loadRooms]);
 
   useEffect(() => {
+    return () => {
+      const current = activeRef.current;
+      if (!current) return;
+      void leaveCasinoRoom(venueId, current.room_id || roomId).catch(() => undefined);
+    };
+  }, [roomId, venueId]);
+
+  useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState === "visible" && activeRef.current) void reconnect();
     };

@@ -77,7 +77,6 @@ const OPS: Partial<Record<CityBuildingId, BuildingOpsMeta>> = {
     description: "Play-money казино Odessa Prime — рулетка, blackjack и Odessa Gold на PLAY / DEMO CHIPS",
     quickActions: [
       { id: "open", label: "Войти в казино", route: "/casino" },
-      { id: "venue", label: "Карточка заведения", route: "/casino/venues/odessa-prime" },
       { id: "roulette", label: "Рулетка", route: "/casino/roulette/royale-1" },
     ],
   },

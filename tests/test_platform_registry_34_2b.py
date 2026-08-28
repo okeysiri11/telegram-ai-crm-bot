@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from platform_registry.agents import all_agents
-from platform_registry.menus import MENU_CATALOG
+from platform_registry.menus import MENU_CATALOG, menu_item_by_id
 from platform_registry.navigation import filter_menu, group_menu
 from platform_registry.permissions import permissions_for_roles
 from platform_registry.roles import all_platform_roles, role_title
@@ -77,6 +77,17 @@ def test_web_and_telegram_owner_share_crm_route():
 def test_filter_menu_hides_owner_for_client():
     items = filter_menu(client=ClientId.WEB.value, roles=["client"], include_owner=False)
     assert all(not i.owner_only for i in items)
+
+
+def test_casino_is_first_class_web_entry():
+    item = menu_item_by_id("vert_casino")
+    assert item is not None
+    assert item.route == "/casino"
+    assert item.title == "Casino"
+    web = platform_registry.navigation_for(client="web", roles=["owner"], include_owner=True, simple=False)
+    casino = next((i for i in web["items"] if i["id"] == "vert_casino"), None)
+    assert casino is not None
+    assert casino["route"] == "/casino"
 
 
 def test_group_menu_structure():

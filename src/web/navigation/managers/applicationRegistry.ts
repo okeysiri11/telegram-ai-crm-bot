@@ -169,6 +169,7 @@ function buildApps(): RegisteredApplication[] {
     fromModule("agro", "agro_enterprise", "AG", "agro"),
     fromModule("drone", "drone_enterprise", "DR", "drone"),
     fromModule("crypto", "crypto_enterprise", "CR", "crypto"),
+    fromModule("casino", "casino_odessa_prime", "OP", "casino"),
     fromModule("legal", "legal_enterprise", "LE", "legal"),
     fromModule("recruiting", "recruiting_enterprise", "RC", "recruiting"),
     fromModule("finance", "finance_enterprise", "FI", "finance"),

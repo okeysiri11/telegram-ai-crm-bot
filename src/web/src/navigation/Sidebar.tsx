@@ -157,7 +157,8 @@ export function Sidebar({
                       onClick={onNavigate}
                       title={item.label}
                       aria-label={item.label}
-                      className={() => cn("ews-nav-link ews-nav-link--rail", active && "is-active")}
+                      data-testid={`nav-${item.id}`}
+                      className={() => cn("ews-nav-link ews-nav-link--rail", active && "is-active", item.id === "vert_casino" && "ews-nav-link--casino")}
                     >
                       <ShellIcon id={(item.icon || "dashboard") as ShellIconId} />
                     </NavLink>
@@ -226,7 +227,14 @@ export function Sidebar({
                               to={item.route}
                               end={item.route === "/dashboard"}
                               onClick={onNavigate}
-                              className={() => cn("ews-nav-link", active && "is-active")}
+                              data-testid={`nav-${item.id}`}
+                              className={() =>
+                                cn(
+                                  "ews-nav-link",
+                                  active && "is-active",
+                                  item.id === "vert_casino" && "ews-nav-link--casino",
+                                )
+                              }
                             >
                               <ShellIcon id={(item.icon || "dashboard") as ShellIconId} />
                               <span className="ews-nav-label">{item.label}</span>

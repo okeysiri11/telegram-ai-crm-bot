@@ -70,6 +70,7 @@ export const PLATFORM_MENU_CATALOG: PlatformMenuItem[] = [
   { id: "vert_agro", title: "Агро", icon: "marketplace", route: "/workspace/agro", group: "business" },
   { id: "vert_cafe", title: "Cafe", icon: "marketplace", route: "/workspace/cafe", group: "business" },
   { id: "vert_beauty", title: "Beauty", icon: "marketplace", route: "/workspace/beauty", group: "business" },
+  { id: "vert_casino", title: "Casino", titleEn: "Casino", icon: "marketplace", route: "/casino", group: "business", simple: true },
   { id: "own_dashboard", title: "Owner Dashboard", icon: "dashboard", route: "/owner", group: "owner", ownerOnly: true },
   { id: "own_god", title: "God Mode", icon: "security", route: "/platform-builder/god-mode", group: "owner", ownerOnly: true },
 ];

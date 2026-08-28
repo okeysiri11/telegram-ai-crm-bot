@@ -59,3 +59,7 @@
 .ews-nav-group__panel .ews-nav-list {
   padding: 0.15rem 0 0.35rem 0.15rem;
 }
+
+.ews-nav-link--casino {
+  color: color-mix(in oklab, #c9a45c 55%, var(--eds-text));
+}

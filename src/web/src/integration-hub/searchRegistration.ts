@@ -28,7 +28,11 @@ export function registerIntegrationSearch() {
     });
   }
 
+  searchIndex.remove("city_casino");
+  searchIndex.remove("hub_city_casino");
+  searchIndex.remove("idx_casino_lobby");
   for (const b of CITY_BUILDINGS) {
+    if (b.id === "casino") continue;
     searchIndex.upsert({
       id: `hub_city_${b.id}`,
       category: "modules",

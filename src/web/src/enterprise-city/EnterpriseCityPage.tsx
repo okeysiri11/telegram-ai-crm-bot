@@ -72,7 +72,10 @@ import {
 import type { QualityProfile } from "./odessa3d/types";
 
 function registerCitySearchDocs() {
+  searchIndex.remove("city_casino");
+  searchIndex.remove("hub_city_casino");
   for (const b of CITY_BUILDINGS) {
+    if (b.id === "casino") continue;
     searchIndex.upsert({
       id: `city_${b.id}`,
       category: "modules",

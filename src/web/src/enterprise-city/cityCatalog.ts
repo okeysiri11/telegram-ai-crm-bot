@@ -685,7 +685,7 @@ export const CITY_BUILDINGS: CityBuilding[] = [
     label: "Odessa Prime Casino",
     short: "Casino",
     icon: "◈",
-    route: "/casino/venues/odessa-prime",
+    route: "/casino",
     x: 50,
     y: 78,
     w: 12,

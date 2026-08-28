@@ -85,6 +85,13 @@ function CasinoShellFrame() {
     bindCasinoRoomAudio(location.pathname);
   }, [location.pathname]);
 
+  useEffect(() => {
+    return () => {
+      casinoSound.setRoom(null);
+      casinoSound.stopAmbience();
+    };
+  }, []);
+
   async function grant() {
     setGrantBusy(true);
     try {

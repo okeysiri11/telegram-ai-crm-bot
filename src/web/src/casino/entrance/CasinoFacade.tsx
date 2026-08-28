@@ -27,9 +27,9 @@ export function CasinoFacade({ entering, parallax }: Props) {
         <span className="op-col" />
         <span className="op-col" />
       </div>
-      <div className="op-doors" style={mid}>
-        <span className="op-door" />
-        <span className="op-door" />
+      <div className="op-doors" style={mid} data-testid="casino-facade-door-hits" aria-hidden>
+        <span className="op-door" data-testid="casino-facade-door-hit" />
+        <span className="op-door" data-testid="casino-facade-door-hit" />
       </div>
       <div className="op-marble" style={fg} />
       <div className="op-marble-sheen" style={fg} />

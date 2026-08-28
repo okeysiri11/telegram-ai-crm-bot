@@ -54,8 +54,17 @@ let documents: SearchDocument[] = [
   { id: "idx_mission_control", category: "dashboards", title: "Мониторинг", path: "/platform-builder/mission-control", tokens: ["мониторинг", "mission", "control", "mc", "ops"], rankBoost: 10 },
   { id: "idx_enterprise_city", category: "applications", title: "Город предприятия", path: "/city", tokens: ["город", "city", "enterprise", "map", "enterprise-city"], rankBoost: 9 },
   { id: "idx_enterprise_city_alias", category: "applications", title: "Enterprise City", path: "/enterprise-city", tokens: ["город", "city", "enterprise", "map"], rankBoost: 8 },
-  { id: "idx_casino_lobby", category: "applications", title: "Casino lobby", path: "/casino", tokens: ["casino", "казино", "roulette", "lobby", "play", "chips"], rankBoost: 9 },
-  { id: "idx_casino_odessa_prime", category: "applications", title: "Odessa Prime Casino", path: "/casino/venues/odessa-prime", tokens: ["casino", "odessa", "prime", "venue", "roulette", "казино"], rankBoost: 9 },
+  {
+    id: "idx_casino_odessa_prime",
+    category: "applications",
+    title: "Odessa Prime Casino",
+    path: "/casino",
+    tokens: ["casino", "казино", "odessa", "prime", "entertainment", "roulette", "lobby", "play", "chips", "open", "available"],
+    rankBoost: 14,
+    kind: "Casino / Entertainment",
+    status: "AVAILABLE",
+    action: "Open",
+  },
   { id: "idx_builder_studio", category: "applications", title: "Студия конструктора", path: "/platform-builder/builder-studio", tokens: ["конструктор", "builder", "studio", "ai"], rankBoost: 9 },
   { id: "idx_mkt", category: "marketplace", title: "Enterprise Marketplace", path: "/platform-builder/solution-hub", tokens: ["marketplace", "solutions", "hub", "packs"], rankBoost: 8 },
   { id: "idx_twin", category: "applications", title: "Digital Twin", path: "/platform-builder/digital-twin", tokens: ["twin", "digital", "organization", "mirror", "heatmap"], rankBoost: 10 },
@@ -101,6 +110,10 @@ export const searchIndex = {
   },
   upsert(doc: SearchDocument) {
     documents = [doc, ...documents.filter((d) => d.id !== doc.id)];
+    return documents.length;
+  },
+  remove(id: string) {
+    documents = documents.filter((d) => d.id !== id);
     return documents.length;
   },
   refresh() {

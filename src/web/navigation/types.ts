@@ -69,6 +69,9 @@ export type SearchDocument = {
   path: string;
   tokens: string[];
   rankBoost: number;
+  kind?: string;
+  status?: string;
+  action?: string;
 };
 
 export type SearchHit = SearchDocument & {

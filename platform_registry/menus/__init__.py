@@ -181,6 +181,7 @@ MENU_CATALOG: list[MenuItem] = [
             _item("vert_beauty_calendar", "Календарь", "calendar", "/workspace/beauty/calendar", vertical="beauty"),
         ],
     ),
+    _item("vert_casino", "Casino", "marketplace", "/casino", tg=None, perms=("crm.read",), group="verticals", title_en="Casino", simple=True),
     _item("vert_legal", "Legal", "legal", "/workspace/legal", tg="⚖ Юриспруденция", perms=("knowledge.read",), group="verticals", vertical="legal"),
     _item("vert_company", "Company Core", "building", "/workspace/company-core", tg="🏢 Company Core", group="verticals", vertical="company_core", roles=("owner", "administrator", "manager", "ceo")),
     _item("vert_construction", "Construction", "construction", "/workspace/construction", tg=None, group="verticals", vertical="construction", clients=WEB_DESKTOP_MOBILE),
