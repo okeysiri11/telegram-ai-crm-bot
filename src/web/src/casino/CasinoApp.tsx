@@ -1,27 +1,22 @@
-import { lazy, Suspense } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import { CasinoShell } from "./components/CasinoShell";
 import { EntranceScene } from "./scenes/EntranceScene";
 import { LobbyScene } from "./scenes/LobbyScene";
 import { CasinoGamesPage } from "./CasinoGamesPage";
 import { CasinoTableBrowserPage } from "./CasinoTableBrowserPage";
-import { RouletteHall } from "./rooms/RouletteHall";
-import { BlackjackSalon } from "./rooms/BlackjackSalon";
-import { SlotParlor } from "./rooms/SlotParlor";
-import { OdessaGoldMachine } from "./games/slots/OdessaGoldMachine";
-import { RouletteTable } from "./games/roulette/RouletteTable";
-import { RoomSkeleton } from "./components/RoomSkeleton";
 import { RoomNavigation } from "./components/RoomNavigation";
 import { CasinoSoonPage } from "./components/CasinoSoonModal";
+import { lazyCasinoPage } from "./lazyCasinoPage";
 
-const PokerRoom = lazy(() => import("./rooms/PokerRoom"));
-const VipRoom = lazy(() => import("./rooms/VipRoom"));
-const RestaurantRoom = lazy(() => import("./rooms/RestaurantRoom"));
-const BarRoom = lazy(() => import("./rooms/BarRoom"));
-
-function LiveRoulette() {
-  return <RouletteTable />;
-}
+const RouletteHall = lazyCasinoPage(() => import("./rooms/RouletteHall"));
+const BlackjackSalon = lazyCasinoPage(() => import("./rooms/BlackjackSalon"));
+const SlotParlor = lazyCasinoPage(() => import("./rooms/SlotParlor"));
+const PokerRoom = lazyCasinoPage(() => import("./rooms/PokerRoom"));
+const VipRoom = lazyCasinoPage(() => import("./rooms/VipRoom"));
+const RestaurantRoom = lazyCasinoPage(() => import("./rooms/RestaurantRoom"));
+const BarRoom = lazyCasinoPage(() => import("./rooms/BarRoom"));
+const RouletteTable = lazyCasinoPage(() => import("./games/roulette/RouletteTable"));
+const OdessaGoldMachine = lazyCasinoPage(() => import("./games/slots/OdessaGoldMachine"));
 
 function CasinoUnknown() {
   return (
@@ -48,20 +43,20 @@ export function CasinoApp() {
         <Route path="rooms/roulette" element={<RouletteHall />} />
         <Route path="rooms/blackjack" element={<BlackjackSalon />} />
         <Route path="rooms/slots" element={<SlotParlor />} />
-        <Route path="rooms/poker" element={<Suspense fallback={<RoomSkeleton />}><PokerRoom /></Suspense>} />
-        <Route path="rooms/vip" element={<Suspense fallback={<RoomSkeleton />}><VipRoom /></Suspense>} />
-        <Route path="rooms/restaurant" element={<Suspense fallback={<RoomSkeleton />}><RestaurantRoom /></Suspense>} />
-        <Route path="rooms/bar" element={<Suspense fallback={<RoomSkeleton />}><BarRoom /></Suspense>} />
+        <Route path="rooms/poker" element={<PokerRoom />} />
+        <Route path="rooms/vip" element={<VipRoom />} />
+        <Route path="rooms/restaurant" element={<RestaurantRoom />} />
+        <Route path="rooms/bar" element={<BarRoom />} />
         <Route path="blackjack" element={<BlackjackSalon />} />
         <Route path="slots" element={<SlotParlor />} />
-        <Route path="poker" element={<Suspense fallback={<RoomSkeleton />}><PokerRoom /></Suspense>} />
-        <Route path="vip" element={<Suspense fallback={<RoomSkeleton />}><VipRoom /></Suspense>} />
-        <Route path="restaurant" element={<Suspense fallback={<RoomSkeleton />}><RestaurantRoom /></Suspense>} />
-        <Route path="bar" element={<Suspense fallback={<RoomSkeleton />}><BarRoom /></Suspense>} />
+        <Route path="poker" element={<PokerRoom />} />
+        <Route path="vip" element={<VipRoom />} />
+        <Route path="restaurant" element={<RestaurantRoom />} />
+        <Route path="bar" element={<BarRoom />} />
         <Route path="roulette" element={<RouletteHall />} />
-        <Route path="roulette/table/:tableId" element={<LiveRoulette />} />
+        <Route path="roulette/table/:tableId" element={<RouletteTable />} />
         <Route path="roulette/royale-1" element={<RouletteTable />} />
-        <Route path="roulette/:tableId" element={<LiveRoulette />} />
+        <Route path="roulette/:tableId" element={<RouletteTable />} />
         <Route path="slots/odessa-gold" element={<OdessaGoldMachine />} />
         <Route path="venues/:venueId/roulette" element={<Navigate to="/casino/roulette/royale-1" replace />} />
         <Route path="venues/:venueId" element={<Navigate to="/casino" replace />} />

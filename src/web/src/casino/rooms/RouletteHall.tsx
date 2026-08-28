@@ -9,8 +9,11 @@ export function RouletteHall() {
       <div className="op-scene-live is-roulette" aria-hidden>
         <div className="op-scene-glow" />
         <div className="op-chandelier is-flicker" />
+        <div className="op-lamp-pool" />
         <div className="op-hall-table" />
+        <span className="op-wood-rail" />
         <span className="op-npc" />
+        <div className="op-fog" />
       </div>
       <DealerPortrait />
       <div className="op-hero">
@@ -25,3 +28,5 @@ export function RouletteHall() {
     </section>
   );
 }
+
+export default RouletteHall;

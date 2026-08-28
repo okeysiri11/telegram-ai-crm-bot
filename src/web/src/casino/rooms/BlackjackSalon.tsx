@@ -6,8 +6,12 @@ export function BlackjackSalon() {
       <div className="op-scene-live is-bj" aria-hidden>
         <div className="op-scene-glow" />
         <div className="op-chandelier is-flicker" />
+        <div className="op-lamp-pool" />
+        <div className="op-fog" />
       </div>
       <BlackjackTable />
     </section>
   );
 }
+
+export default BlackjackSalon;

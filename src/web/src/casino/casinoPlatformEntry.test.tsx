@@ -160,15 +160,9 @@ describe("Odessa Prime Casino platform entry", () => {
         </Routes>
       </MemoryRouter>,
     );
-    const hits = view.container.querySelectorAll("[data-testid='casino-facade-door-hit']");
-    expect(hits.length).toBe(2);
-    hits.forEach((node) => {
-      expect(node.textContent?.trim()).toBe("");
-      expect(node.classList.contains("op-door")).toBe(true);
-    });
-    const doorCss = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "assets/entrance.css"), "utf8");
-    expect(doorCss).toMatch(/\.op-door\s*\{[^}]*background:\s*transparent/s);
-    expect(doorCss).toMatch(/\.op-door\s*\{[^}]*opacity:\s*0/s);
+    expect(view.container.querySelector("[data-testid='casino-facade-door-hit']")).toBeNull();
+    expect(view.container.querySelector(".op-doors")).toBeNull();
+    expect(view.container.querySelector(".op-brass-arch")).toBeNull();
     expect(view.container.textContent).not.toContain("HOTSPOT");
     expect(view.container.textContent).not.toContain("debug");
     view.unmount();

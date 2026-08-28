@@ -49,14 +49,14 @@ describe("Sprint 22 Odessa Prime lobby", () => {
       expect(screen.getByTestId(`hotspot-${spot.id}`)).toBeTruthy();
     }
     fireEvent.click(screen.getByTestId("hotspot-roulette"));
-    expect(await screen.findByTestId("roulette-table", {}, { timeout: 2500 })).toBeTruthy();
+    expect(await screen.findByTestId("roulette-table", {}, { timeout: 8000 })).toBeTruthy();
     view.unmount();
 
     const bj = mount("/casino/lobby");
     fireEvent.click(screen.getByTestId("hotspot-blackjack"));
-    expect(await screen.findByTestId("blackjack-table", {}, { timeout: 2500 })).toBeTruthy();
+    expect(await screen.findByTestId("blackjack-table", {}, { timeout: 8000 })).toBeTruthy();
     bj.unmount();
-  });
+  }, 20000);
 
   it("opens poker, slots, VIP, bar and restaurant rooms", async () => {
     for (const [path, testid] of [
@@ -67,10 +67,10 @@ describe("Sprint 22 Odessa Prime lobby", () => {
       ["/casino/restaurant", "restaurant-room"],
     ] as const) {
       const view = mount(path);
-      expect(await screen.findByTestId(testid)).toBeTruthy();
+      expect(await screen.findByTestId(testid, {}, { timeout: 8000 })).toBeTruthy();
       view.unmount();
     }
-  });
+  }, 30000);
 
   it("renders the interactive map with clickable zones and lobby highlight", async () => {
     const view = mount("/casino/map");
@@ -80,9 +80,9 @@ describe("Sprint 22 Odessa Prime lobby", () => {
       expect(screen.getByTestId(`map-zone-${spot.id}`)).toBeTruthy();
     }
     fireEvent.click(screen.getByTestId("map-zone-vip"));
-    expect(await screen.findByTestId("vip-room", {}, { timeout: 2500 })).toBeTruthy();
+    expect(await screen.findByTestId("vip-room", {}, { timeout: 8000 })).toBeTruthy();
     view.unmount();
-  });
+  }, 20000);
 
   it("toggles ЗАЛ / КАРТА", async () => {
     const view = mount("/casino/lobby");
@@ -109,7 +109,8 @@ describe("Sprint 22 Odessa Prime lobby", () => {
     expect(casinoNavActive("/casino/lobby", "lobby", "/casino/lobby")).toBe(true);
     expect(casinoNavActive("/casino", "casino", "/casino", true)).toBe(true);
     expect(casinoNavActive("/casino/lobby", "casino", "/casino", true)).toBe(false);
-    expect(casinoNavActive("/casino/roulette/royale-1", "halls", "/casino/games")).toBe(true);
+    expect(casinoNavActive("/casino/vip", "vip", "/casino/vip")).toBe(true);
+    expect(casinoNavActive("/casino/roulette/royale-1", "casino", "/casino", true)).toBe(false);
   });
 
   it("lets a guest browse lobby without sending them home", async () => {
@@ -127,12 +128,12 @@ describe("Sprint 22 Odessa Prime lobby", () => {
 
   it("keeps deep-links and mobile lobby inside CasinoShell", async () => {
     const deep = mount("/casino/roulette/table/royale-1");
-    expect(await screen.findByTestId("roulette-table")).toBeTruthy();
+    expect(await screen.findByTestId("roulette-table", {}, { timeout: 8000 })).toBeTruthy();
     expect(screen.getByTestId("casino-shell")).toBeTruthy();
     deep.unmount();
     const mobile = mount("/casino/lobby");
     expect(mobile.container.querySelector(".op-bottom")).toBeTruthy();
     expect(screen.getByTestId("hotspot-roulette")).toBeTruthy();
     mobile.unmount();
-  });
+  }, 20000);
 });

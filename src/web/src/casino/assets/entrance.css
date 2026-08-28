@@ -14,56 +14,60 @@
   --casino-motion-slow: 980ms;
   --casino-display: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --casino-ui: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --px: 0;
+  --py: 0;
 }
 
 .op-entrance.op-facade-hero {
+  --px: 0;
+  --py: 0;
   min-height: calc(100dvh - 3.7rem);
   display: grid;
   grid-template-rows: 1fr auto;
 }
 
+.op-par-back {
+  transform: translate3d(calc(var(--px) * 3px), calc(var(--py) * 2px), 0);
+}
+.op-par-mid {
+  transform: translate3d(calc(var(--px) * 6px), calc(var(--py) * 4px), 0);
+}
+.op-par-fg {
+  transform: translate3d(calc(var(--px) * 10px), calc(var(--py) * 6px), 0);
+}
+
 .op-night-sky {
   background:
-    radial-gradient(circle at 78% 18%, rgba(201, 164, 92, 0.16), transparent 22%),
-    radial-gradient(ellipse at 50% 100%, rgba(13, 59, 46, 0.18), transparent 42%),
-    linear-gradient(180deg, #070b12 0%, #080a0e 48%, #050607 100%);
+    radial-gradient(circle at 78% 10%, rgba(255, 204, 110, 0.22), transparent 16%),
+    radial-gradient(ellipse at 72% 38%, rgba(201, 164, 92, 0.12), transparent 28%),
+    radial-gradient(ellipse at 50% 100%, rgba(8, 18, 36, 0.5), transparent 46%),
+    linear-gradient(180deg, #03050c 0%, #070b14 46%, #020308 100%);
 }
 
 .op-city-glow {
   background:
-    radial-gradient(ellipse at 82% 58%, rgba(201, 164, 92, 0.14), transparent 36%),
-    linear-gradient(90deg, rgba(5, 6, 8, 0.72) 0%, rgba(5, 6, 8, 0.12) 42%, transparent 68%);
+    radial-gradient(ellipse at 80% 48%, rgba(255, 190, 80, 0.26), transparent 30%),
+    linear-gradient(90deg, rgba(3, 5, 10, 0.78) 0%, rgba(3, 5, 10, 0.16) 34%, transparent 60%);
   pointer-events: none;
 }
 
 .op-entrance.op-cinematic .op-facade-photo {
   background:
-    linear-gradient(90deg, rgba(6, 7, 10, 0.88) 0%, rgba(6, 7, 10, 0.28) 28%, rgba(6, 7, 10, 0.04) 52%),
-    linear-gradient(180deg, transparent 58%, rgba(5, 6, 8, 0.72) 100%),
+    linear-gradient(90deg, rgba(3, 5, 10, 0.82) 0%, rgba(3, 5, 10, 0.18) 26%, transparent 52%),
+    linear-gradient(180deg, rgba(3, 5, 10, 0.12) 0%, transparent 28%, rgba(3, 5, 10, 0.55) 100%),
     url("/assets/casino/entrance/facade.jpg") 72% 42% / cover no-repeat,
-    url("/assets/casino/entrance/facade.svg") 70% 40% / cover no-repeat,
-    #07080a;
-  filter: saturate(0.95) contrast(1.12);
+    #05070c;
 }
 
-.op-facade-architecture {
+.op-gold-bloom {
   position: absolute;
-  inset: 0;
+  inset: 8% 8% 22% 48%;
   pointer-events: none;
   background:
-    radial-gradient(ellipse at 72% 42%, rgba(255, 220, 150, 0.16), transparent 32%),
-    linear-gradient(90deg, rgba(5, 6, 8, 0.55) 0%, transparent 38%);
-}
-
-.op-entrance .op-columns {
-  inset: 10% 6% 20% 44%;
-  opacity: 0.22;
-}
-
-.op-entrance .op-brass-arch {
-  inset: 18% 14% 28% 50%;
-  opacity: 0.18;
-  border-radius: 4px;
+    radial-gradient(ellipse at 58% 38%, rgba(255, 210, 120, 0.2), transparent 42%),
+    radial-gradient(ellipse at 70% 18%, rgba(232, 213, 163, 0.12), transparent 28%);
+  mix-blend-mode: screen;
+  animation: opBloom 9s ease-in-out infinite;
 }
 
 .op-entrance .op-marble {
@@ -72,14 +76,15 @@
   height: 30%;
   clip-path: none;
   background:
-    linear-gradient(180deg, transparent, rgba(8, 10, 14, 0.7)),
-    repeating-linear-gradient(105deg, rgba(232, 213, 163, 0.09) 0 1px, transparent 1px 18px),
-    linear-gradient(180deg, rgba(18, 20, 24, 0.2), #07080a);
+    linear-gradient(180deg, transparent, rgba(4, 6, 10, 0.78)),
+    repeating-linear-gradient(105deg, rgba(232, 213, 163, 0.08) 0 1px, transparent 1px 18px),
+    linear-gradient(180deg, rgba(18, 20, 24, 0.12), #05070c);
 }
 
 .op-entrance .op-marble-sheen {
   height: 22%;
-  background: linear-gradient(180deg, rgba(232, 213, 163, 0.16), transparent 70%);
+  filter: none;
+  background: linear-gradient(180deg, rgba(232, 213, 163, 0.14), transparent 70%);
   animation: opPavement 7s ease-in-out infinite;
 }
 
@@ -101,6 +106,7 @@
 .op-entrance .op-lamp-pool {
   left: 48%;
   right: 8%;
+  background: radial-gradient(ellipse at 50% 18%, rgba(255, 214, 130, 0.42), transparent 68%);
 }
 
 .op-scene.is-zooming {
@@ -109,54 +115,18 @@
   transition: transform var(--casino-motion-slow) cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
-.op-entrance.is-entering .op-doors,
 .op-entrance.is-entering .op-lamp-pool,
-.op-entrance.is-entering .op-chandelier {
-  filter: brightness(1.55);
-  transition: filter var(--casino-motion-medium) ease;
+.op-entrance.is-entering .op-chandelier,
+.op-entrance.is-entering .op-gold-bloom {
+  opacity: 1;
+  transition: opacity var(--casino-motion-medium) ease;
 }
 
-.op-marquee {
-  display: none;
-}
-
-.op-marquee-sign,
-.op-marquee-casino {
-  letter-spacing: 0.42em;
-  color: var(--casino-gold-soft);
-  text-shadow: 0 0 18px rgba(232, 213, 163, 0.45);
-  animation: opSignPulse 4.8s ease-in-out infinite;
-}
-
-.op-marquee-sign {
-  font-size: clamp(0.7rem, 1.1vw, 0.95rem);
-}
-
-.op-marquee-casino {
-  font-size: clamp(1.1rem, 2.2vw, 2rem);
-  border: 1px solid rgba(201, 164, 92, 0.55);
-  padding: 0.2rem 0.8rem;
-  background: linear-gradient(90deg, transparent, rgba(201, 164, 92, 0.16), transparent);
-  background-size: 220% 100%;
-  animation: opMarqueeSweep 6.5s linear infinite, opSignPulse 4.8s ease-in-out infinite;
-}
-
-.op-facade-hero .op-doors {
-  inset: 28% 22% 18% 52%;
-  display: flex;
-  gap: 0.35rem;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-.op-door {
-  flex: 1;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  opacity: 0;
+.op-entrance .op-fog {
+  filter: none;
+  animation: opBreathe 14s ease-in-out infinite;
+  background: radial-gradient(ellipse at 72% 72%, rgba(201, 164, 92, 0.08), transparent 58%);
+  opacity: 0.55;
 }
 
 .op-entrance .op-ropes {
@@ -207,18 +177,6 @@
 .op-entrance .op-silhouettes span:nth-child(2) { animation-delay: -3s; width: 22px; }
 .op-entrance .op-silhouettes span:nth-child(3) { animation-delay: -6s; }
 
-.op-entrance .op-dust {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    radial-gradient(circle, rgba(232, 213, 163, 0.45) 0 1px, transparent 1.6px),
-    radial-gradient(circle, rgba(255, 236, 190, 0.28) 0 1px, transparent 1.5px);
-  background-size: 180px 140px, 120px 90px;
-  animation: opDust 14s linear infinite;
-  opacity: 0.28;
-}
-
 .op-hero-facade {
   z-index: 3;
   display: grid;
@@ -238,6 +196,7 @@
   flex-direction: column;
   line-height: 0.92;
   font-size: clamp(2.4rem, 5.4vw, 5.2rem);
+  text-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
 }
 
 .op-hero-facade .op-title span {
@@ -268,7 +227,7 @@
   font-family: var(--casino-ui);
   cursor: pointer;
   box-shadow: var(--casino-shadow-gold), inset 0 1px 0 rgba(255, 255, 255, 0.35);
-  transition: transform var(--casino-motion-fast) ease, box-shadow var(--casino-motion-fast) ease, filter var(--casino-motion-fast) ease;
+  transition: transform var(--casino-motion-fast) ease, box-shadow var(--casino-motion-fast) ease;
 }
 
 .op-enter-cta::after {
@@ -281,7 +240,6 @@
 
 .op-enter-cta:hover {
   transform: translateY(-3px);
-  filter: brightness(1.08);
   box-shadow: 0 0 0 1px rgba(232, 213, 163, 0.7), 0 16px 36px rgba(201, 164, 92, 0.32);
 }
 
@@ -310,9 +268,8 @@
   border: 1px solid var(--casino-border);
   border-radius: 4px;
   padding: 0.7rem 0.75rem;
-  background: linear-gradient(180deg, rgba(18, 16, 12, 0.72), rgba(7, 8, 10, 0.62));
+  background: linear-gradient(180deg, rgba(12, 14, 18, 0.88), rgba(6, 8, 12, 0.82));
   box-shadow: inset 0 1px 0 rgba(232, 213, 163, 0.16);
-  backdrop-filter: blur(8px);
   font-family: var(--casino-ui);
 }
 
@@ -350,68 +307,111 @@
 .op-preview-strip {
   z-index: 4;
   display: grid;
-  grid-template-columns: repeat(6, minmax(140px, 1fr));
-  gap: 0.65rem;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
   padding: 0 4vw 1.4rem;
 }
 
 .op-preview-card {
   position: relative;
   overflow: hidden;
-  min-height: 8.4rem;
-  border: 1px solid var(--casino-border);
-  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  min-height: 10.5rem;
+  border: 1px solid rgba(201, 164, 92, 0.42);
+  border-radius: 6px;
   padding: 0;
   text-align: left;
   color: var(--casino-text);
-  background: #0b0c0e;
+  background: #08090c;
   cursor: pointer;
+  isolation: isolate;
   transition: transform var(--casino-motion-fast) ease, box-shadow var(--casino-motion-fast) ease, border-color var(--casino-motion-fast) ease;
 }
 
-.op-preview-art {
+.op-preview-visual {
+  position: relative;
   display: block;
-  height: 5.4rem;
+  aspect-ratio: 16 / 10;
   overflow: hidden;
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform var(--casino-motion-fast) ease;
+}
+
+.op-preview-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.42;
+}
+
+.op-preview-card.art-roulette .op-preview-photo { object-position: center 42%; }
+.op-preview-card.art-slots .op-preview-photo { object-position: center 18%; }
+
+.op-preview-art {
+  position: absolute;
+  inset: 0;
+  display: block;
 }
 
 .op-preview-svg {
   width: 100%;
   height: 100%;
   display: block;
-  transform: scale(1.02);
-  transition: transform var(--casino-motion-medium) ease;
+}
+
+.op-preview-shade {
+  position: absolute;
+  inset: auto 0 0;
+  height: 58%;
+  background: linear-gradient(180deg, transparent, rgba(4, 6, 10, 0.92));
+  pointer-events: none;
 }
 
 .op-preview-copy {
   display: flex;
   justify-content: space-between;
-  align-items: end;
-  padding: 0.45rem 0.6rem 0.55rem;
+  align-items: flex-end;
+  gap: 0.4rem;
+  padding: 0.5rem 0.65rem 0.6rem;
   font-family: var(--casino-ui);
+  background: linear-gradient(180deg, rgba(8, 10, 14, 0.2), rgba(8, 10, 14, 0.95));
 }
 
 .op-preview-copy strong {
   letter-spacing: 0.12em;
-  font-size: 0.72rem;
+  font-size: 0.74rem;
+  color: var(--casino-text);
+  transition: color var(--casino-motion-fast) ease;
 }
 
 .op-preview-copy small {
   color: var(--casino-gold);
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   font-size: 0.58rem;
+  text-align: right;
+  max-width: 46%;
 }
 
 .op-preview-card:hover,
 .op-preview-card:focus-visible {
-  transform: translateY(-3px);
-  border-color: var(--casino-gold-soft);
-  box-shadow: var(--casino-shadow-gold);
+  transform: translate3d(0, -4px, 0);
+  border-color: #e8d5a3;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(201, 164, 92, 0.55);
 }
 
-.op-preview-card:hover .op-preview-svg,
-.op-preview-card:focus-visible .op-preview-svg {
-  transform: scale(1.05);
+.op-preview-card:hover .op-preview-visual,
+.op-preview-card:focus-visible .op-preview-visual {
+  transform: scale(1.04);
+}
+
+.op-preview-card:hover .op-preview-copy strong,
+.op-preview-card:focus-visible .op-preview-copy strong {
+  color: #e8d5a3;
 }
 
 .op-preview-card:focus-visible {
@@ -446,24 +446,14 @@
   text-transform: uppercase;
 }
 
-@keyframes opSignPulse {
-  0%, 100% { opacity: 0.78; }
-  50% { opacity: 1; }
-}
-
-@keyframes opMarqueeSweep {
-  0% { background-position: 120% 0; }
-  100% { background-position: -40% 0; }
+@keyframes opBloom {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
 }
 
 @keyframes opCtaSweep {
   from { transform: translateX(-120%); }
   to { transform: translateX(120%); }
-}
-
-@keyframes opDust {
-  from { background-position: 0 0, 40px 20px; }
-  to { background-position: 40px -80px, -20px -60px; }
 }
 
 @keyframes opSilhouette {
@@ -487,9 +477,22 @@
   100% { opacity: 1; }
 }
 
+@media (min-width: 1366px) {
+  .op-hero-facade {
+    padding-left: 4.5vw;
+    padding-right: 4.5vw;
+  }
+}
+
+@media (min-width: 1600px) {
+  .op-hero-facade {
+    grid-template-columns: minmax(340px, 40%) 1fr;
+  }
+}
+
 @media (min-width: 1920px) {
   .op-hero-facade {
-    grid-template-columns: minmax(360px, 38%) 1fr;
+    grid-template-columns: minmax(380px, 36%) 1fr;
     padding-left: 5vw;
     padding-right: 5vw;
   }
@@ -498,7 +501,13 @@
 
 @media (min-width: 2560px) {
   .op-hero-facade {
-    grid-template-columns: minmax(420px, 34%) 1fr;
+    grid-template-columns: minmax(420px, 32%) 1fr;
+  }
+}
+
+@media (max-width: 1365px) {
+  .op-preview-strip {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
@@ -508,20 +517,16 @@
     min-height: auto;
     padding: 8vh 1rem 1rem;
   }
-  .op-marquee { left: 12%; right: 12%; top: 8%; }
   .op-status-row { grid-template-columns: 1fr; max-width: none; }
   .op-preview-strip {
-    grid-template-columns: repeat(6, minmax(11rem, 1fr));
-    overflow-x: auto;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     padding-bottom: 4.5rem;
   }
   .op-enter-cta { width: 100%; justify-content: center; display: inline-flex; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .op-marquee-sign,
-  .op-marquee-casino,
-  .op-entrance .op-dust,
+  .op-gold-bloom,
   .op-entrance .op-silhouettes span,
   .op-online-dot,
   .op-chandelier,
@@ -529,8 +534,11 @@
   .op-scene.is-zooming,
   .op-enter-veil,
   .op-preview-card,
+  .op-preview-visual,
   .op-enter-cta,
-  .op-preview-svg {
+  .op-par-back,
+  .op-par-mid,
+  .op-par-fg {
     animation: none !important;
     transition: none !important;
     transform: none !important;

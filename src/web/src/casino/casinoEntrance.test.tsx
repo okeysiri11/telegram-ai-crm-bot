@@ -54,6 +54,8 @@ describe("Sprint 21 Odessa Prime cinematic entrance", () => {
     expect(screen.queryByText("Enterprise Dashboard")).toBeNull();
     expect(screen.queryByTestId("mobile-favorites-row")).toBeNull();
     expect(document.querySelector(".ados-shell")).toBeNull();
+    expect(view.container.querySelectorAll("[data-testid='casino-primary-nav']").length).toBe(1);
+    expect(view.container.querySelector(".op-nav-rooms")).toBeNull();
     view.unmount();
   }, 20000);
 
@@ -63,15 +65,16 @@ describe("Sprint 21 Odessa Prime cinematic entrance", () => {
     expect(screen.getByTestId("casino-hero")).toBeTruthy();
     expect(screen.getByTestId("casino-facade")).toBeTruthy();
     expect(view.container.querySelector(".op-marble")).toBeTruthy();
-    expect(view.container.querySelector(".op-brass-arch")).toBeTruthy();
     expect(view.container.querySelector(".op-runner")).toBeTruthy();
+    expect(view.container.querySelector(".op-brass-arch")).toBeNull();
+    expect(view.container.querySelector(".op-doors")).toBeNull();
     expect(screen.getByText("Добро пожаловать в мир азарта и роскоши")).toBeTruthy();
     expect(screen.getByText("ИГРАЙТЕ НА DEMO CHIPS")).toBeTruthy();
     expect(screen.getByTestId("casino-enter-cta")).toHaveTextContent("ВОЙТИ В КАЗИНО");
     expect(screen.getByTestId("casino-status-panels")).toBeTruthy();
     expect(screen.getByText("LIVE ИГРОКИ")).toBeTruthy();
     expect(screen.getByText("128")).toBeTruthy();
-    expect(screen.getByText("DEMO БАЛАНС")).toBeTruthy();
+    expect(screen.getByText("ДЕМО БАЛАНС")).toBeTruthy();
     expect(screen.getByText("JACKPOT")).toBeTruthy();
     view.unmount();
   });
@@ -100,9 +103,9 @@ describe("Sprint 21 Odessa Prime cinematic entrance", () => {
   it("navigates a live preview card to its canonical room", async () => {
     const view = mount("/casino");
     fireEvent.click(screen.getByTestId("preview-roulette"));
-    expect(await screen.findByTestId("roulette-table")).toBeTruthy();
+    expect(await screen.findByTestId("roulette-table", {}, { timeout: 8000 })).toBeTruthy();
     view.unmount();
-  });
+  }, 20000);
 
   it("opens Скоро feedback for an unimplemented preview card", () => {
     const view = mount("/casino");
@@ -155,10 +158,10 @@ describe("Sprint 21 Odessa Prime cinematic entrance", () => {
     unknown.unmount();
 
     const deep = mount("/casino/roulette/table/royale-1");
-    expect(await screen.findByTestId("roulette-table")).toBeTruthy();
+    expect(await screen.findByTestId("roulette-table", {}, { timeout: 8000 })).toBeTruthy();
     expect(screen.getByTestId("casino-shell")).toBeTruthy();
     deep.unmount();
-  });
+  }, 20000);
 
   it("keeps a compact mobile nav and large enter CTA", () => {
     const view = mount("/casino");

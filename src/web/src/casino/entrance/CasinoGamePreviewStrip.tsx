@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { casinoSound } from "../casinoSound";
+import { CARD_VISUALS } from "./cardVisuals";
 
 export type PreviewCard = {
   id: string;
@@ -27,31 +28,50 @@ export function CasinoGamePreviewStrip({
 
   return (
     <div className="op-preview-strip" data-testid="casino-preview-strip">
-      {ENTRANCE_PREVIEWS.map((card) => (
-        <button
-          key={card.id}
-          type="button"
-          className={`op-preview-card art-${card.id}`}
-          data-testid={`preview-${card.id}`}
-          onMouseEnter={() => casinoSound.hover()}
-          onClick={() => {
-            casinoSound.click();
-            if (card.soon || !card.to) {
-              onSoon(card.title);
-              return;
-            }
-            navigate(card.to);
-          }}
-        >
-          <span className="op-preview-art" aria-hidden>
-            <PreviewArt kind={card.id} />
-          </span>
-          <span className="op-preview-copy">
-            <strong>{card.title}</strong>
-            <small>{card.status}</small>
-          </span>
-        </button>
-      ))}
+      {ENTRANCE_PREVIEWS.map((card) => {
+        const visual = CARD_VISUALS[card.id];
+        return (
+          <button
+            key={card.id}
+            type="button"
+            className={`op-preview-card art-${card.id}`}
+            data-testid={`preview-${card.id}`}
+            aria-label={`${card.title}, ${card.status}${visual?.alt ? `. ${visual.alt}` : ""}`}
+            onMouseEnter={() => casinoSound.hover()}
+            onClick={() => {
+              casinoSound.click();
+              if (card.soon || !card.to) {
+                onSoon(card.title);
+                return;
+              }
+              navigate(card.to);
+            }}
+          >
+            <span className="op-preview-visual">
+              {visual ? (
+                <img
+                  className="op-preview-photo"
+                  src={visual.src}
+                  alt=""
+                  width={320}
+                  height={200}
+                  loading="lazy"
+                  decoding="async"
+                  draggable={false}
+                />
+              ) : null}
+              <span className="op-preview-art" aria-hidden>
+                <PreviewArt kind={card.id} />
+              </span>
+              <span className="op-preview-shade" aria-hidden />
+            </span>
+            <span className="op-preview-copy">
+              <strong>{card.title}</strong>
+              <small>{card.status}</small>
+            </span>
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -59,63 +79,86 @@ export function CasinoGamePreviewStrip({
 function PreviewArt({ kind }: { kind: string }) {
   if (kind === "roulette") {
     return (
-      <svg viewBox="0 0 160 90" className="op-preview-svg">
-        <rect width="160" height="90" fill="#0b1a14" />
-        <ellipse cx="80" cy="48" rx="46" ry="46" fill="#1a140c" stroke="#c9a45c" />
-        <ellipse cx="80" cy="48" rx="28" ry="28" fill="#0d3b2e" stroke="#e8d5a3" />
-        <circle cx="80" cy="48" r="8" fill="#c9a45c" />
-        <path d="M80 20 L84 48 L76 48 Z" fill="#8c1c28" />
+      <svg viewBox="0 0 160 100" className="op-preview-svg" aria-hidden>
+        <defs>
+          <radialGradient id="rw" cx="50%" cy="48%" r="48%">
+            <stop offset="0%" stopColor="#1a3d32" />
+            <stop offset="70%" stopColor="#07140f" />
+            <stop offset="100%" stopColor="#040806" />
+          </radialGradient>
+        </defs>
+        <rect width="160" height="100" fill="#08110e" />
+        <ellipse cx="80" cy="54" rx="58" ry="38" fill="#0a241c" stroke="#c9a45c" strokeWidth="1.2" />
+        <ellipse cx="80" cy="52" rx="44" ry="30" fill="url(#rw)" stroke="#e8d5a3" strokeWidth="0.8" />
+        <g stroke="#8c1c28" strokeWidth="2">
+          <path d="M80 24 L86 52 L74 52 Z" fill="#8c1c28" stroke="none" />
+          <path d="M80 24 L82 52" />
+        </g>
+        <circle cx="80" cy="52" r="9" fill="#c9a45c" />
+        <circle cx="80" cy="52" r="3" fill="#1a140c" />
+        <circle cx="118" cy="70" r="8" fill="#5a1820" stroke="#e8d5a3" />
+        <circle cx="108" cy="78" r="7" fill="#1a140c" stroke="#c9a45c" />
       </svg>
     );
   }
   if (kind === "blackjack") {
     return (
-      <svg viewBox="0 0 160 90" className="op-preview-svg">
-        <rect width="160" height="90" fill="#0b4a36" />
-        <rect x="38" y="22" width="38" height="52" rx="4" fill="#f4ead7" transform="rotate(-12 57 48)" />
-        <rect x="70" y="18" width="38" height="52" rx="4" fill="#f4ead7" />
-        <circle cx="128" cy="62" r="14" fill="#8c1c28" stroke="#e8d5a3" />
-        <circle cx="118" cy="68" r="14" fill="#1a140c" stroke="#c9a45c" />
+      <svg viewBox="0 0 160 100" className="op-preview-svg" aria-hidden>
+        <rect width="160" height="100" fill="#06281e" />
+        <ellipse cx="80" cy="78" rx="70" ry="22" fill="#0b4a36" />
+        <rect x="42" y="22" width="36" height="50" rx="4" fill="#f4ead7" transform="rotate(-16 60 47)" />
+        <rect x="68" y="16" width="36" height="50" rx="4" fill="#f4ead7" />
+        <text x="86" y="46" fill="#8c1c28" fontSize="16" fontFamily="Georgia, serif">
+          A
+        </text>
+        <circle cx="124" cy="68" r="12" fill="#8c1c28" stroke="#e8d5a3" />
+        <circle cx="112" cy="76" r="12" fill="#c9a45c" stroke="#1a140c" />
       </svg>
     );
   }
   if (kind === "poker") {
     return (
-      <svg viewBox="0 0 160 90" className="op-preview-svg">
-        <rect width="160" height="90" fill="#07281e" />
-        <rect x="24" y="28" width="28" height="40" rx="3" fill="#f4ead7" />
-        <rect x="48" y="24" width="28" height="40" rx="3" fill="#f4ead7" />
-        <circle cx="108" cy="58" r="12" fill="#c9a45c" />
-        <circle cx="124" cy="50" r="12" fill="#8c1c28" />
-        <circle cx="118" cy="68" r="12" fill="#0d3b2e" stroke="#e8d5a3" />
+      <svg viewBox="0 0 160 100" className="op-preview-svg" aria-hidden>
+        <rect width="160" height="100" fill="#051c16" />
+        <ellipse cx="80" cy="62" rx="68" ry="28" fill="#07281e" stroke="#c9a45c" strokeWidth="0.8" />
+        <rect x="28" y="30" width="26" height="36" rx="3" fill="#f4ead7" />
+        <rect x="48" y="26" width="26" height="36" rx="3" fill="#f4ead7" />
+        <rect x="68" y="28" width="26" height="36" rx="3" fill="#f4ead7" />
+        <circle cx="112" cy="64" r="10" fill="#c9a45c" />
+        <circle cx="126" cy="58" r="10" fill="#8c1c28" />
+        <circle cx="118" cy="74" r="10" fill="#0d3b2e" stroke="#e8d5a3" />
       </svg>
     );
   }
   if (kind === "slots") {
     return (
-      <svg viewBox="0 0 160 90" className="op-preview-svg">
-        <rect width="160" height="90" fill="#12100c" />
-        <rect x="36" y="12" width="88" height="66" rx="6" fill="#1a140c" stroke="#c9a45c" />
-        <text x="80" y="56" textAnchor="middle" fill="#e8d5a3" fontSize="22" fontFamily="Georgia, serif">
+      <svg viewBox="0 0 160 100" className="op-preview-svg" aria-hidden>
+        <rect width="160" height="100" fill="#120e0a" />
+        <rect x="38" y="8" width="84" height="84" rx="8" fill="#1a140c" stroke="#c9a45c" />
+        <rect x="48" y="18" width="64" height="40" rx="4" fill="#0a1210" />
+        <text x="80" y="46" textAnchor="middle" fill="#e8d5a3" fontSize="20" fontFamily="Georgia, serif">
           777
         </text>
+        <circle cx="80" cy="76" r="8" fill="#8c1c28" stroke="#c9a45c" />
       </svg>
     );
   }
   if (kind === "live") {
     return (
-      <svg viewBox="0 0 160 90" className="op-preview-svg">
-        <rect width="160" height="90" fill="#0a1018" />
-        <ellipse cx="80" cy="70" rx="58" ry="16" fill="#0d3b2e" />
-        <rect x="58" y="22" width="44" height="36" fill="#1c1610" stroke="#c9a45c" />
-        <circle cx="80" cy="34" r="8" fill="#e8d5a3" />
+      <svg viewBox="0 0 160 100" className="op-preview-svg" aria-hidden>
+        <rect width="160" height="100" fill="#070b12" />
+        <ellipse cx="80" cy="78" rx="62" ry="16" fill="#0d3b2e" />
+        <rect x="50" y="18" width="60" height="42" rx="3" fill="#1c1610" stroke="#c9a45c" />
+        <circle cx="80" cy="34" r="10" fill="#e8d5a3" />
+        <rect x="62" y="46" width="36" height="10" fill="#3a2a18" />
       </svg>
     );
   }
   return (
-    <svg viewBox="0 0 160 90" className="op-preview-svg">
-      <rect width="160" height="90" fill="#16120c" />
-      <path d="M80 16 L88 40 H112 L92 54 L100 78 L80 64 L60 78 L68 54 L48 40 H72 Z" fill="#c9a45c" />
+    <svg viewBox="0 0 160 100" className="op-preview-svg" aria-hidden>
+      <rect width="160" height="100" fill="#14100c" />
+      <path d="M80 14 L90 42 H118 L96 58 L106 86 L80 70 L54 86 L64 58 L42 42 H70 Z" fill="#c9a45c" />
+      <ellipse cx="80" cy="86" rx="36" ry="6" fill="rgba(201,164,92,0.28)" />
     </svg>
   );
 }

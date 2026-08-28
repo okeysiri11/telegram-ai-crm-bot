@@ -159,7 +159,10 @@ export function RouletteTable() {
 
   return (
     <div className="op-table op-table-scene" data-testid="roulette-table" data-phase={phase}>
-      <div>
+      <div className="op-pit">
+        <span className="op-table-lamp" aria-hidden />
+        <span className="op-felt-bloom" aria-hidden />
+        <span className="op-wood-rail" aria-hidden />
         <DealerPortrait />
         <RouletteWheel target={result?.n ?? null} spinning={spinning} onDone={onWheelDone} />
         <p className="op-phase" data-testid="round-phase">
@@ -206,3 +209,5 @@ export function RouletteTable() {
     </div>
   );
 }
+
+export default RouletteTable;

@@ -101,3 +101,5 @@ export function OdessaGoldMachine() {
     </section>
   );
 }
+
+export default OdessaGoldMachine;

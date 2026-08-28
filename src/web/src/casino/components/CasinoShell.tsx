@@ -25,33 +25,14 @@ const GLOBAL_NAV = [
   { to: "/enterprise-city?building=casino", label: "ГОРОД", id: "city" },
   { to: "/casino", label: "КАЗИНО", id: "casino", end: true },
   { to: "/casino/promos", label: "АКЦИИ", id: "promos" },
+  { to: "/casino/vip", label: "VIP", id: "vip" },
   { to: "/casino/tournaments", label: "ТУРНИРЫ", id: "tournaments" },
   { to: "/casino/support", label: "ПОДДЕРЖКА", id: "support" },
 ];
 
-const ROOM_NAV = [
-  { to: "/casino/lobby", label: "ЛОББИ", id: "lobby" },
-  { to: "/casino/games", label: "ИГРОВЫЕ ЗАЛЫ", id: "halls" },
-  { to: "/casino/vip", label: "VIP", id: "vip" },
-  { to: "/casino/bar", label: "БАР", id: "bar" },
-  { to: "/casino/restaurant", label: "РЕСТОРАН", id: "restaurant" },
-];
-
 export function casinoNavActive(path: string, id: string, to: string, end?: boolean): boolean {
   if (id === "casino") return path === "/casino" || path === "/casino/";
-  if (id === "lobby") {
-    return path === "/casino/lobby" || path === "/casino/floor" || path === "/casino/map";
-  }
-  if (id === "halls") {
-    return (
-      path.startsWith("/casino/games") ||
-      path.startsWith("/casino/halls") ||
-      path.includes("/roulette") ||
-      path.includes("blackjack") ||
-      path.includes("/slots") ||
-      path.includes("poker")
-    );
-  }
+  if (id === "vip") return path.startsWith("/casino/vip") || path.startsWith("/casino/rooms/vip");
   if (end) return path === to || path === `${to}/`;
   return path === to || path.startsWith(`${to}/`) || path.startsWith(`${to}?`);
 }
@@ -120,24 +101,13 @@ function CasinoShellFrame() {
           <span>CASINO</span>
         </NavLink>
         <div className="op-header-stack">
-          <nav className="op-nav" aria-label="Казино">
+          <nav className="op-nav" aria-label="Казино" data-testid="casino-primary-nav">
             {GLOBAL_NAV.map((item) => (
               <NavLink
                 key={item.id}
                 to={item.to}
                 end={item.end}
                 className={() => (casinoNavActive(location.pathname, item.id, item.to, item.end) ? "is-active" : undefined)}
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-          <nav className="op-nav op-nav-rooms" aria-label="Залы">
-            {ROOM_NAV.map((item) => (
-              <NavLink
-                key={item.id}
-                to={item.to}
-                className={() => (casinoNavActive(location.pathname, item.id, item.to) ? "is-active" : undefined)}
               >
                 {item.label}
               </NavLink>

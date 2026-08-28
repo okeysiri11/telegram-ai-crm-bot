@@ -28,23 +28,45 @@ export function EntranceScene() {
   const navigate = useNavigate();
   const [entering, setEntering] = useState(false);
   const [soon, setSoon] = useState<string | null>(null);
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
   const reduced = prefersReducedMotion();
   const timer = useRef<number | null>(null);
+  const raf = useRef<number>(0);
+  const rootRef = useRef<HTMLElement>(null);
 
   useEffect(
     () => () => {
       if (timer.current != null) window.clearTimeout(timer.current);
+      if (raf.current) window.cancelAnimationFrame(raf.current);
     },
     [],
   );
 
+  function setParallax(x: number, y: number) {
+    const el = rootRef.current;
+    if (!el) return;
+    el.style.setProperty("--px", x.toFixed(3));
+    el.style.setProperty("--py", y.toFixed(3));
+  }
+
   function onMove(event: MouseEvent<HTMLElement>) {
     if (reduced || prefersReducedMotion()) return;
-    const rect = event.currentTarget.getBoundingClientRect();
+    const el = event.currentTarget;
+    const rect = el.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
     const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
-    setParallax({ x, y });
+    if (raf.current) return;
+    raf.current = window.requestAnimationFrame(() => {
+      raf.current = 0;
+      setParallax(x, y);
+    });
+  }
+
+  function onLeave() {
+    if (raf.current) {
+      window.cancelAnimationFrame(raf.current);
+      raf.current = 0;
+    }
+    setParallax(0, 0);
   }
 
   function enterCasino() {
@@ -64,13 +86,15 @@ export function EntranceScene() {
 
   return (
     <section
+      ref={rootRef}
       className={`op-entrance op-cinematic op-facade-hero${entering ? " is-entering" : ""}`}
       aria-label="Вход Odessa Prime"
       data-testid="casino-entrance"
       data-entering={entering ? "true" : "false"}
       onMouseMove={onMove}
+      onMouseLeave={onLeave}
     >
-      <CasinoFacade entering={entering} parallax={reduced ? { x: 0, y: 0 } : parallax} />
+      <CasinoFacade entering={entering} />
       <div className="op-hero op-hero-facade" data-testid="casino-hero">
         <div className="op-hero-copy">
           <p className="op-kicker op-sign-shimmer">ODESSA PRIME</p>
@@ -99,7 +123,7 @@ export function EntranceScene() {
               </small>
             </article>
             <article className="op-glass-panel">
-              <span>DEMO БАЛАНС</span>
+              <span>ДЕМО БАЛАНС</span>
               <b>{balance}</b>
               <small>{PLAY_LABEL}</small>
             </article>

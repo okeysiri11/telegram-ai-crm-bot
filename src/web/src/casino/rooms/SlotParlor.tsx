@@ -8,6 +8,8 @@ export function SlotParlor() {
       <div className="op-scene-live is-slots" aria-hidden>
         <div className="op-scene-glow" />
         <div className="op-chandelier is-flicker" />
+        <div className="op-lamp-pool" />
+        <div className="op-fog" />
       </div>
       <div className="op-slot-row">
         <article className="op-slot-cabinet is-live">
@@ -32,3 +34,5 @@ export function SlotParlor() {
     </section>
   );
 }
+
+export default SlotParlor;
