@@ -4,7 +4,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { CasinoApp } from "./CasinoApp";
 import { CasinoBrowseRoute } from "@/shell/CasinoBrowseRoute";
 import { casinoSound } from "./casinoSound";
-import { HALL_ZONES, validateHallZones } from "./lobby/hallZones";
+import { HALL_ENTER_MS, HALL_ZONES, validateHallZones } from "./lobby/hallZones";
+import { CASINO_ROUTES } from "./state/casinoRoutes";
 
 function mount(path: string) {
   return render(
@@ -57,20 +58,42 @@ describe("Odessa Prime interactive hall", () => {
       "slots",
     ]);
     expect(validateHallZones()).toEqual([]);
-    expect(HALL_ZONES.find((z) => z.id === "roulette")?.route).toBe("/casino/roulette/royale-1");
-    expect(HALL_ZONES.find((z) => z.id === "blackjack")?.route).toBe("/casino/blackjack");
-    expect(HALL_ZONES.find((z) => z.id === "poker")?.route).toBe("/casino/poker");
-    expect(HALL_ZONES.find((z) => z.id === "slots")?.route).toBe("/casino/slots");
-    expect(HALL_ZONES.find((z) => z.id === "bar")?.route).toBe("/casino/bar");
-    expect(HALL_ZONES.find((z) => z.id === "restaurant")?.route).toBe("/casino/restaurant");
+    const roulette = HALL_ZONES.find((z) => z.id === "roulette");
+    const blackjack = HALL_ZONES.find((z) => z.id === "blackjack");
+    const poker = HALL_ZONES.find((z) => z.id === "poker");
+    const slots = HALL_ZONES.find((z) => z.id === "slots");
+    const bar = HALL_ZONES.find((z) => z.id === "bar");
+    const restaurant = HALL_ZONES.find((z) => z.id === "restaurant");
+    expect(roulette?.route).toBe("/casino/roulette/royale-1");
+    expect(blackjack?.route).toBe("/casino/blackjack");
+    expect(poker?.route).toBe("/casino/poker");
+    expect(slots?.route).toBe("/casino/slots");
+    expect(bar?.route).toBe("/casino/bar");
+    expect(restaurant?.route).toBe("/casino/restaurant");
+    expect(roulette?.polygons.length).toBeGreaterThanOrEqual(2);
+    expect(slots?.polygons.length).toBeGreaterThanOrEqual(3);
+    expect(blackjack?.objects.length).toBeGreaterThanOrEqual(1);
+    expect(poker?.objects).toContain("doorway");
+    expect(bar?.objects).toContain("shelves");
+    expect(restaurant?.objects).toContain("tables");
+    for (const zone of HALL_ZONES) {
+      expect(zone.tooltip).toBeTruthy();
+      expect("polygon" in zone).toBe(false);
+    }
   });
 
   it("renders the hall interior without permanent rectangle overlays", async () => {
     const view = mount("/casino/lobby");
     await waitFor(() => expect(screen.getByTestId("casino-lobby")).toBeTruthy());
     expect(screen.getByTestId("lobby-hall")).toBeTruthy();
-    expect(screen.getByTestId("lobby-hall-stage")).toBeTruthy();
-    expect(view.container.querySelector(".op-lobby-photo")).toBeTruthy();
+    const stage = screen.getByTestId("lobby-hall-stage");
+    const wrap = screen.getByTestId("hall-image-wrap");
+    const overlay = screen.getByTestId("hall-spatial-overlay");
+    const photo = view.container.querySelector(".op-lobby-photo");
+    expect(stage.getAttribute("data-hall-full-width")).toBe("true");
+    expect(wrap.contains(photo)).toBe(true);
+    expect(wrap.contains(overlay)).toBe(true);
+    expect(view.container.querySelectorAll("[data-testid='hall-zone-label']").length).toBe(0);
     expect(view.container.querySelectorAll(".op-hotspot").length).toBe(0);
     expect(screen.queryByTestId("hall-zone-label")).toBeNull();
     expect(screen.queryByText("ВОЙТИ В РУЛЕТКУ")).toBeNull();
@@ -88,6 +111,8 @@ describe("Odessa Prime interactive hall", () => {
     fireEvent.pointerEnter(roulette);
     expect(roulette.className).toContain("is-active");
     expect(screen.getByTestId("hall-zone-label").textContent).toContain("РУЛЕТКА");
+    expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe("roulette");
+    expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
     expect(screen.getByTestId("lobby-hall-stage").className).toContain("is-focused");
     fireEvent.pointerLeave(roulette);
     expect(screen.queryByTestId("hall-zone-label")).toBeNull();
@@ -152,6 +177,25 @@ describe("Odessa Prime interactive hall", () => {
     expect(screen.queryByTestId("hall-zone-label")).toBeNull();
     fireEvent.pointerEnter(screen.getByTestId("hotspot-roulette"));
     expect(stage.getAttribute("data-hall-active")).toBe("roulette");
+    view.unmount();
+  });
+
+  it("keeps overlay bounds on the hall image and one tooltip per zone", () => {
+    const view = mount("/casino/lobby");
+    const wrap = screen.getByTestId("hall-image-wrap");
+    expect(wrap.querySelector("img.op-hall-art")?.getAttribute("width")).toBe("1600");
+    expect(wrap.querySelector("img.op-hall-art")?.getAttribute("height")).toBe("1066");
+    expect(screen.getByTestId("hall-spatial-overlay").parentElement).toBe(wrap);
+    expect(HALL_ENTER_MS).toBeGreaterThanOrEqual(150);
+    expect(HALL_ENTER_MS).toBeLessThanOrEqual(350);
+    expect(CASINO_ROUTES.lobby).toBe("/casino");
+    expect(CASINO_ROUTES.lobbyAlias).toBe("/casino/lobby");
+    expect(CASINO_ROUTES.rouletteLive).toBe("/casino/roulette/royale-1");
+    fireEvent.pointerEnter(screen.getByTestId("hotspot-slots"));
+    expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
+    fireEvent.pointerEnter(screen.getByTestId("hotspot-bar"));
+    expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
+    expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe("bar");
     view.unmount();
   });
 });
