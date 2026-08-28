@@ -7,6 +7,7 @@ import {
   clampTooltip,
   hallZoneById,
   polygonPoints,
+  zoneVisuals,
   type HallZone,
 } from "./hallZones";
 
@@ -25,7 +26,7 @@ function applyStageFocus(
   entering: boolean,
 ) {
   const reduced = prefersReducedMotion();
-  const scale = reduced ? 1 : entering ? 1.04 : zone ? 1.028 : 1;
+  const scale = reduced ? 1 : entering ? 1.015 : zone ? 1.012 : 1;
   const x = String(zone?.focus.x ?? 50);
   const y = String(zone?.focus.y ?? 50);
   for (const el of [stage, focus]) {
@@ -101,9 +102,24 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
 
   return (
     <div className="op-hall-overlay" data-testid="hall-spatial-overlay">
-      <svg className={`op-hall-glow${debug ? " is-debug" : ""}`} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
+      <svg
+        className={`op-hall-glow${debug ? " is-debug" : ""}`}
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        aria-hidden
+        data-testid="hall-visual-layer"
+      >
+        <defs>
+          <filter id="op-hall-gold-glow" x="-12%" y="-12%" width="124%" height="124%">
+            <feGaussianBlur stdDeviation="0.28" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
         {HALL_ZONES.map((item) =>
-          item.polygons.map((polygon, index) => (
+          zoneVisuals(item).map((polygon, index) => (
             <polygon
               key={`${item.id}-glow-${index}`}
               points={polygonPoints(polygon)}

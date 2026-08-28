@@ -91,8 +91,12 @@ describe("Odessa Prime interactive hall", () => {
     const overlay = screen.getByTestId("hall-spatial-overlay");
     const photo = view.container.querySelector(".op-lobby-photo");
     expect(stage.getAttribute("data-hall-full-width")).toBe("true");
+    expect(stage.getAttribute("data-hall-fit")).toBe("contain");
     expect(wrap.contains(photo)).toBe(true);
     expect(wrap.contains(overlay)).toBe(true);
+    expect(view.container.querySelector(".op-hall-shape.is-on")).toBeNull();
+    expect(view.container.querySelector("[data-testid='hall-visual-layer']")).toBeTruthy();
+    expect(view.container.querySelectorAll(".op-hall-hit").length).toBeGreaterThan(0);
     expect(view.container.querySelectorAll("[data-testid='hall-zone-label']").length).toBe(0);
     expect(view.container.querySelectorAll(".op-hotspot").length).toBe(0);
     expect(screen.queryByTestId("hall-zone-label")).toBeNull();
@@ -111,10 +115,16 @@ describe("Odessa Prime interactive hall", () => {
     fireEvent.pointerEnter(roulette);
     expect(roulette.className).toContain("is-active");
     expect(screen.getByTestId("hall-zone-label").textContent).toContain("РУЛЕТКА");
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("MONTE CARLO");
     expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe("roulette");
     expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
     expect(screen.getByTestId("lobby-hall-stage").className).toContain("is-focused");
     fireEvent.pointerLeave(roulette);
+    fireEvent.pointerEnter(screen.getByTestId("hotspot-blackjack"));
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("BLACKJACK");
+    expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe("blackjack");
+    expect(view.container.querySelector(".op-hall-shape.is-blackjack.is-on")).toBeTruthy();
+    fireEvent.pointerLeave(screen.getByTestId("hotspot-blackjack"));
     expect(screen.queryByTestId("hall-zone-label")).toBeNull();
     view.unmount();
   });
@@ -187,7 +197,7 @@ describe("Odessa Prime interactive hall", () => {
     expect(wrap.querySelector("img.op-hall-art")?.getAttribute("height")).toBe("1066");
     expect(screen.getByTestId("hall-spatial-overlay").parentElement).toBe(wrap);
     expect(HALL_ENTER_MS).toBeGreaterThanOrEqual(150);
-    expect(HALL_ENTER_MS).toBeLessThanOrEqual(350);
+    expect(HALL_ENTER_MS).toBeLessThanOrEqual(300);
     expect(CASINO_ROUTES.lobby).toBe("/casino");
     expect(CASINO_ROUTES.lobbyAlias).toBe("/casino/lobby");
     expect(CASINO_ROUTES.rouletteLive).toBe("/casino/roulette/royale-1");

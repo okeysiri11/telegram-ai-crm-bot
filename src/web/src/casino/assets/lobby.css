@@ -1,41 +1,82 @@
-.op-lobby-immersive {
-  padding: 0.55rem 0 4.2rem;
+.op-lobby-room.op-lobby-immersive {
+  padding: 0;
   width: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.op-lobby-immersive .op-toolbar,
-.op-lobby-immersive .op-status {
-  padding-left: 1rem;
-  padding-right: 1rem;
+.op-lobby-immersive .op-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.28rem 1rem;
+  min-height: 0;
+}
+
+.op-lobby-immersive .op-toolbar .op-kicker {
+  margin: 0;
+  font-size: 0.68rem;
+}
+
+.op-lobby-immersive .op-hall-hint {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.22rem 1rem 0.35rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  opacity: 0.78;
 }
 
 .op-lobby-immersive .op-lobby-pan {
-  overflow: visible;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
   width: 100%;
 }
 
 .op-lobby-hall {
   position: relative;
   width: 100%;
+  height: 100%;
+  min-height: 0;
   background: #07080a;
   border: 0;
-  border-block: 1px solid var(--casino-border, rgba(201, 164, 92, 0.38));
-  border-radius: 0;
 }
 
 .op-hall-stage {
   position: relative;
   width: 100%;
-  aspect-ratio: 1600 / 1066;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  container-type: size;
   overflow: hidden;
 }
 
+.op-hall-fit {
+  position: relative;
+  aspect-ratio: 1600 / 1066;
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+@supports (width: 1cqw) {
+  .op-hall-fit {
+    width: min(100cqw, calc(100cqh * 1600 / 1066));
+    height: auto;
+  }
+}
+
 .op-hall-focus {
-  position: absolute;
-  inset: 0;
   transform-origin: calc(var(--hall-x, 50) * 1%) calc(var(--hall-y, 50) * 1%);
   transform: scale(var(--hall-s, 1));
-  transition: transform 280ms ease;
+  transition: transform 180ms ease;
 }
 
 .op-hall-focus.is-focused {
@@ -47,20 +88,9 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
+  object-position: center center;
   pointer-events: none;
   user-select: none;
-}
-
-.op-hall-veil {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: rgba(0, 0, 0, 0);
-  transition: background 280ms ease;
-}
-
-.op-hall-stage.is-focused .op-hall-veil {
-  background: rgba(0, 0, 0, 0.16);
 }
 
 .op-hall-overlay {
@@ -79,7 +109,7 @@
 }
 
 .op-hall-stage.is-focused .op-hall-overlay::before {
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .op-hall-glow {
@@ -88,32 +118,36 @@
   width: 100%;
   height: 100%;
   pointer-events: none;
+  overflow: visible;
 }
 
 .op-hall-shape {
-  fill: rgba(201, 164, 92, 0);
+  fill: none;
   stroke: rgba(232, 213, 163, 0);
-  stroke-width: 0.45;
-  transition: fill 160ms ease, stroke 160ms ease;
+  stroke-width: 0.38;
+  stroke-linejoin: round;
+  transition: fill 160ms ease, stroke 160ms ease, opacity 160ms ease;
 }
 
 .op-hall-shape.is-on {
-  fill: rgba(201, 164, 92, 0.18);
-  stroke: rgba(232, 213, 163, 0.88);
+  fill: rgba(201, 164, 92, 0.055);
+  stroke: rgba(232, 213, 163, 0.82);
+  filter: url(#op-hall-gold-glow);
 }
 
 .op-hall-shape.is-slots.is-on {
-  fill: rgba(176, 54, 36, 0.16);
-  stroke: rgba(232, 180, 120, 0.9);
+  fill: rgba(201, 140, 72, 0.07);
+  stroke: rgba(232, 190, 120, 0.92);
 }
 
 .op-hall-shape.is-entering {
-  fill: rgba(232, 213, 163, 0.3);
+  fill: rgba(232, 213, 163, 0.1);
+  stroke: rgba(255, 232, 180, 0.95);
 }
 
 .op-hall-glow.is-debug .op-hall-shape {
-  fill: rgba(201, 164, 92, 0.1);
-  stroke: rgba(232, 213, 163, 0.75);
+  fill: rgba(201, 164, 92, 0.08);
+  stroke: rgba(232, 213, 163, 0.7);
 }
 
 .op-hall-debug-id {
@@ -126,6 +160,18 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  background: transparent;
+  outline: none;
+  box-shadow: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.op-hall-zone:focus,
+.op-hall-zone:focus-visible,
+.op-hall-zone:active {
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
 }
 
 .op-hall-hit {
@@ -134,30 +180,31 @@
   margin: 0;
   padding: 0;
   border: 0;
-  background: transparent;
+  background: transparent !important;
+  box-shadow: none;
+  outline: none;
   cursor: pointer;
   pointer-events: auto;
   appearance: none;
-}
-
-.op-hall-zone:focus-visible .op-hall-shape,
-.op-hall-zone:focus {
-  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .op-hall-label {
   position: absolute;
   z-index: 8;
   pointer-events: none;
-  min-width: 6.4rem;
-  max-width: 10.5rem;
-  padding: 0.32rem 0.5rem 0.36rem;
-  border: 1px solid rgba(201, 164, 92, 0.58);
+  min-width: 7rem;
+  max-width: 11rem;
+  padding: 0.38rem 0.58rem 0.42rem;
+  border: 1px solid rgba(201, 164, 92, 0.62);
   border-radius: 2px;
-  background: rgba(8, 9, 12, 0.88);
-  box-shadow: 0 0 10px rgba(201, 164, 92, 0.18);
+  background: rgba(6, 7, 10, 0.9);
+  box-shadow: 0 0 12px rgba(201, 164, 92, 0.22), 0 8px 18px rgba(0, 0, 0, 0.35);
   color: var(--op-ivory, #f4ead7);
   text-align: left;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  opacity: 1;
+  animation: opHallTip 160ms ease;
 }
 
 .op-hall-label.is-above {
@@ -174,6 +221,11 @@
 
 .op-hall-label.is-left {
   transform: translate(calc(-100% - 8px), -50%);
+}
+
+@keyframes opHallTip {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .op-hall-label strong {
@@ -326,6 +378,17 @@
 
 @media (min-width: 860px) {
   .op-nav-rooms { display: flex; }
+  .op-world:has(.op-lobby-immersive) .op-main {
+    height: calc(100dvh - 4.2rem);
+    min-height: 0;
+    overflow: hidden;
+    padding-left: 0;
+    padding-right: 0;
+  }
+  .op-lobby-room.op-lobby-immersive {
+    height: 100%;
+    overflow: hidden;
+  }
 }
 
 @media (min-width: 1800px), (min-aspect-ratio: 21/9) {
@@ -335,24 +398,36 @@
   }
 }
 
-@media (min-width: 1920px) {
-  .op-hall-stage { width: 100%; }
-}
-
 @media (max-width: 859px) {
   .op-header-stack { display: none; }
-  .op-lobby-immersive { padding: 0.4rem 0 4.2rem; }
-  .op-hall-stage { width: 100%; }
+  .op-lobby-room.op-lobby-immersive {
+    height: auto;
+    overflow: visible;
+  }
+  .op-lobby-immersive .op-lobby-pan {
+    overflow: visible;
+    min-height: 42vh;
+  }
+  .op-hall-stage {
+    height: auto;
+    min-height: 42vh;
+    container-type: normal;
+  }
+  .op-hall-fit {
+    width: 100%;
+  }
   .op-hall-label { min-width: 6rem; padding: 0.28rem 0.42rem; }
   .op-floorplan-stage { min-width: 720px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .op-hall-focus,
-  .op-hall-veil,
+  .op-hall-overlay::before,
   .op-hall-shape,
+  .op-hall-label,
   .op-map-zone {
     transition: none !important;
+    animation: none !important;
   }
   .op-hall-focus {
     transform: none !important;
@@ -360,6 +435,22 @@
   }
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  .op-hall-shape.is-slots.is-on {
+    stroke-dasharray: 2.8 16;
+    animation: opHallSweep 2.6s linear infinite;
+  }
+}
+
+@keyframes opHallSweep {
+  to { stroke-dashoffset: -18.8; }
+}
+
 [data-tier="LOW"] .op-hall-focus {
   will-change: auto;
+}
+
+[data-tier="LOW"] .op-hall-shape.is-on {
+  filter: none;
+  animation: none;
 }

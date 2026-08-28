@@ -8,7 +8,7 @@ export const HALL_ART = {
 } as const;
 
 /** Click focus then navigate. Keep inside 150–350ms. */
-export const HALL_ENTER_MS = 240;
+export const HALL_ENTER_MS = 200;
 
 export type HallZoneId = "roulette" | "blackjack" | "poker" | "restaurant" | "bar" | "slots";
 
@@ -22,8 +22,10 @@ export type HallZone = {
   sublabel: string;
   cta: string;
   route: string;
-  /** One or more object polygons in normalized image percent (0–100). */
+  /** Pointer hit polygons in normalized image percent (0–100). Invisible. */
   polygons: HallPoint[][];
+  /** Visible glow traces; defaults to hit polygons when omitted. */
+  visuals?: HallPoint[][];
   objects: string[];
   focus: { x: number; y: number };
   /** Tooltip anchor in image percent; must not cover the primary object. */
@@ -72,7 +74,7 @@ export const HALL_ZONES: HallZone[] = [
   },
   {
     id: "blackjack",
-    label: "BLACKJACK SALON",
+    label: "BLACKJACK",
     sublabel: "SALON",
     cta: "ВОЙТИ",
     route: "/casino/blackjack",
@@ -100,7 +102,7 @@ export const HALL_ZONES: HallZone[] = [
   {
     id: "poker",
     label: "POKER ROOM",
-    sublabel: "POKER",
+    sublabel: "ODESSA PRIME",
     cta: "ВОЙТИ В ПОКЕР",
     route: "/casino/poker",
     objects: ["sign", "doorway"],
@@ -205,6 +207,10 @@ export const HALL_ZONES: HallZone[] = [
   },
 ];
 
+export function zoneVisuals(zone: HallZone): HallPoint[][] {
+  return zone.visuals ?? zone.polygons;
+}
+
 export function hallZoneById(id: string | null | undefined): HallZone | undefined {
   if (!id) return undefined;
   return HALL_ZONES.find((z) => z.id === id);
@@ -230,7 +236,7 @@ export function validateHallZones(zones: HallZone[] = HALL_ZONES): string[] {
     if (!zone.route.startsWith("/casino")) errors.push(`route:${zone.id}`);
     if (!zone.polygons.length) errors.push(`polygons-missing:${zone.id}`);
     if (!zone.objects.length) errors.push(`objects:${zone.id}`);
-    for (const polygon of zone.polygons) {
+    for (const polygon of [...zone.polygons, ...(zone.visuals ?? [])]) {
       if (polygon.length < 3) errors.push(`polygon-short:${zone.id}`);
       for (const [x, y] of polygon) {
         if (x < 0 || x > 100 || y < 0 || y > 100) errors.push(`bounds:${zone.id}`);

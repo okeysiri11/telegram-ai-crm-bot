@@ -37,7 +37,7 @@ export function LobbyScene({ view = "hall" }: { view?: "hall" | "map" }) {
           </div>
         </div>
       )}
-      <p className="op-status">Исследуйте зал. Наведите на зону — и войдите.</p>
+      <p className="op-status op-hall-hint">Исследуйте зал. Наведите на зону — она подсветится. Нажмите, чтобы войти.</p>
     </div>
   );
 }
