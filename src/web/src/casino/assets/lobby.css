@@ -119,6 +119,14 @@
   filter: brightness(1.26) saturate(1.16) contrast(1.08);
 }
 
+.op-hall-lit[data-lit-zone="slots"] .op-hall-lit-photo {
+  filter: brightness(1.42) saturate(1.28) contrast(1.12);
+}
+
+.op-hall-slot-halo {
+  pointer-events: none;
+}
+
 .op-hall-lit-gold {
   mix-blend-mode: overlay;
   pointer-events: none;

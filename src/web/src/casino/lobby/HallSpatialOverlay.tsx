@@ -121,7 +121,10 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
       >
         <defs>
           <filter id="op-hall-mask-feather" x="-8%" y="-8%" width="116%" height="116%">
-            <feGaussianBlur stdDeviation="0.32" />
+            <feGaussianBlur stdDeviation={focusId === "slots" ? 0.12 : 0.32} />
+          </filter>
+          <filter id="op-slot-halo" x="-22%" y="-18%" width="144%" height="136%">
+            <feGaussianBlur stdDeviation="0.55" />
           </filter>
           <linearGradient id="op-hall-sweep-g" x1="0" y1="0" x2="1" y2="0">
             <stop offset="0" stopColor="rgba(255,210,115,0)" />
@@ -174,6 +177,19 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
         </defs>
         {focusId ? (
           <>
+            {focusId === "slots"
+              ? masks.map((visual, index) => (
+                  <polygon
+                    key={`slot-halo-${index}`}
+                    points={polygonPoints(visual.polygon)}
+                    fill={visual.role === "chair" ? "rgba(255, 210, 115, 0.42)" : "rgba(255, 210, 115, 0.58)"}
+                    stroke="none"
+                    filter="url(#op-slot-halo)"
+                    className={`op-hall-slot-halo is-${visual.role}`}
+                    data-slot-object={visual.role}
+                  />
+                ))
+              : null}
             <image
               href={HALL_ART.src}
               x="0"
@@ -184,14 +200,16 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
               mask="url(#op-hall-object-mask)"
               className="op-hall-lit-photo"
             />
-            <rect
-              width="100"
-              height="100"
-              fill="rgba(255, 210, 115, 0.18)"
-              mask="url(#op-hall-object-mask)"
-              className="op-hall-lit-gold"
-            />
-            {signMasks.length ? (
+            {focusId !== "slots" ? (
+              <rect
+                width="100"
+                height="100"
+                fill="rgba(255, 210, 115, 0.18)"
+                mask="url(#op-hall-object-mask)"
+                className="op-hall-lit-gold"
+              />
+            ) : null}
+            {focusId !== "slots" && signMasks.length ? (
               <rect
                 width="100"
                 height="100"
@@ -200,7 +218,7 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
                 className="op-hall-lit-sign"
               />
             ) : null}
-            {hotMasks.length ? (
+            {focusId !== "slots" && hotMasks.length ? (
               <rect
                 width="100"
                 height="100"
@@ -209,15 +227,17 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
                 className="op-hall-lit-hot"
               />
             ) : null}
-            <rect
-              className="op-hall-sweep"
-              x="-30"
-              y="0"
-              width="40"
-              height="100"
-              fill="url(#op-hall-sweep-g)"
-              mask="url(#op-hall-object-mask)"
-            />
+            {focusId !== "slots" ? (
+              <rect
+                className="op-hall-sweep"
+                x="-30"
+                y="0"
+                width="40"
+                height="100"
+                fill="url(#op-hall-sweep-g)"
+                mask="url(#op-hall-object-mask)"
+              />
+            ) : null}
           </>
         ) : null}
       </svg>

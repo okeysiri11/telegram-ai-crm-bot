@@ -79,9 +79,18 @@ describe("Odessa Prime interactive hall", () => {
     expect(bar?.sublabel).toBe("ODESSA PRIME");
     expect(restaurant?.sublabel).toBe("ODESSA PRIME");
     expect(poker?.sublabel).toBe("ODESSA PRIME");
-    expect((slots?.visuals ?? []).filter((v) => (v.role ?? "object") === "object").length).toBeGreaterThanOrEqual(3);
-    expect((slots?.visuals ?? []).some((v) => v.role === "pulse")).toBe(true);
+    expect((slots?.visuals ?? []).filter((v) => v.role === "machine")).toHaveLength(3);
+    expect((slots?.visuals ?? []).filter((v) => v.role === "chair")).toHaveLength(3);
+    expect(slots?.polygons).toHaveLength(6);
     expect((slots?.visuals ?? []).some((v) => v.role === "reflect")).toBe(false);
+    expect(slots?.objects).toEqual([
+      "machine-1",
+      "machine-2",
+      "machine-3",
+      "chair-1",
+      "chair-2",
+      "chair-3",
+    ]);
     expect((roulette?.visuals ?? []).some((v) => v.role === "sign")).toBe(true);
     expect((roulette?.visuals ?? []).some((v) => v.role === "lamp")).toBe(true);
     expect(bar?.objects).toEqual(expect.arrayContaining(["sign", "shelves", "bottles"]));
@@ -159,7 +168,8 @@ describe("Odessa Prime interactive hall", () => {
       expect(shape.getAttribute("stroke")).toBe("none");
       expect(shape.getAttribute("data-visual-zone")).toBe("slots");
     }
-    expect(view.container.querySelector(".op-hall-mask.is-pulse")).toBeTruthy();
+    expect(view.container.querySelectorAll("[data-slot-object='machine']")).toHaveLength(3);
+    expect(view.container.querySelectorAll("[data-slot-object='chair']")).toHaveLength(3);
     expect(view.container.querySelector(".op-hall-mask.is-reflect")).toBeNull();
     expect(view.container.querySelector("[data-visual-zone='roulette'][data-visual-on='true']")).toBeNull();
     view.unmount();
@@ -282,7 +292,8 @@ describe("Odessa Prime interactive hall", () => {
     expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe("slots");
     expect(view.container.querySelector("[data-visual-zone='roulette'][data-visual-on='true']")).toBeNull();
     expect(view.container.querySelector(".op-hall-mask.is-slots")).toBeTruthy();
-    expect(view.container.querySelector(".op-hall-mask.is-pulse")).toBeTruthy();
+    expect(view.container.querySelectorAll("[data-slot-object='machine']")).toHaveLength(3);
+    expect(view.container.querySelectorAll("[data-slot-object='chair']")).toHaveLength(3);
     expect(view.container.querySelector(".op-hall-mask.is-reflect")).toBeNull();
     expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
     expect(screen.getByTestId("hall-zone-label").textContent).toContain("ИГРАТЬ В АВТОМАТЫ");
