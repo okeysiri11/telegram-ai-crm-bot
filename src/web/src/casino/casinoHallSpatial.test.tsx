@@ -93,6 +93,7 @@ describe("Odessa Prime interactive hall", () => {
     ]);
     expect((roulette?.visuals ?? []).some((v) => v.role === "sign")).toBe(true);
     expect((roulette?.visuals ?? []).some((v) => v.role === "lamp")).toBe(true);
+    expect(roulette?.objects).toEqual(expect.arrayContaining(["sign", "table", "lamp", "wheel", "chair"]));
     expect(bar?.objects).toEqual(expect.arrayContaining(["sign", "shelves", "bottles"]));
     expect(restaurant?.objects).toEqual(expect.arrayContaining(["sign", "tables", "lamps"]));
     for (const zone of HALL_ZONES) {
@@ -138,6 +139,14 @@ describe("Odessa Prime interactive hall", () => {
       expect(path.getAttribute("fill")).toBe("none");
       expect(path.getAttribute("d")?.toLowerCase()).not.toContain("z");
     });
+    expect(screen.getByTestId("roulette-gold-overlay").getAttribute("class")).not.toContain("is-on");
+    expect(screen.getByTestId("roulette-gold-overlay").querySelectorAll("ellipse, circle, polygon, rect")).toHaveLength(0);
+    const idleRoulettePaths = screen.getByTestId("roulette-gold-overlay").querySelectorAll("path");
+    expect(idleRoulettePaths.length).toBeGreaterThan(0);
+    idleRoulettePaths.forEach((path) => {
+      expect(path.getAttribute("fill")).toBe("none");
+      expect(path.getAttribute("d")?.toLowerCase()).not.toContain("z");
+    });
     expect(screen.queryByTestId("slots-debug-mask")).toBeNull();
     expect(screen.queryByTestId("slots-mask-debug")).toBeNull();
     expect(view.container.querySelectorAll("[data-slot-object]").length).toBe(0);
@@ -156,8 +165,11 @@ describe("Odessa Prime interactive hall", () => {
     const roulette = screen.getByTestId("hotspot-roulette");
     fireEvent.pointerEnter(roulette);
     expect(roulette.className).toContain("is-active");
-    expect(screen.getByTestId("hall-zone-label").textContent).toContain("РУЛЕТКА");
-    expect(screen.getByTestId("hall-zone-label").textContent).toContain("MONTE CARLO");
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("ИГРАТЬ В РУЛЕТКУ");
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("ROULETTE / MONTE-CARLO");
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("ИГРАТЬ");
+    expect(screen.getByTestId("roulette-gold-overlay").getAttribute("class")).toContain("is-on");
+    expect(view.container.querySelector("[data-visual-on='true']")).toBeNull();
     expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe("roulette");
     expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
     expect(screen.getByTestId("lobby-hall-stage").className).toContain("is-focused");
@@ -292,6 +304,10 @@ describe("Odessa Prime interactive hall", () => {
       if (zone.id === "slots") {
         expect(screen.getByTestId("slots-photo-overlay").getAttribute("data-slots-hovered")).toBe("true");
         expect(view.container.querySelector("[data-visual-on='true']")).toBeNull();
+      } else if (zone.id === "roulette") {
+        expect(screen.getByTestId("roulette-gold-overlay").getAttribute("class")).toContain("is-on");
+        expect(view.container.querySelector("[data-visual-on='true']")).toBeNull();
+        expect(screen.getByTestId("slots-photo-overlay").getAttribute("data-slots-hovered")).toBe("false");
       } else {
         const lit = [...view.container.querySelectorAll("[data-visual-on='true']")];
         expect(lit.length).toBeGreaterThan(0);
@@ -305,6 +321,8 @@ describe("Odessa Prime interactive hall", () => {
       expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe("");
       expect(view.container.querySelector("[data-visual-on='true']")).toBeNull();
       expect(screen.queryByTestId("hall-zone-label")).toBeNull();
+      expect(screen.getByTestId("roulette-gold-overlay").getAttribute("class")).not.toContain("is-on");
+      expect(screen.getByTestId("slots-photo-overlay").getAttribute("data-slots-hovered")).toBe("false");
     }
     view.unmount();
   });

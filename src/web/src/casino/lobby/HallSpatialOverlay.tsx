@@ -8,10 +8,12 @@ import {
   clampTooltip,
   hallZoneById,
   polygonPoints,
+  usesGoldEdgeOverlay,
   zoneVisuals,
   type HallZone,
 } from "./hallZones";
 import { SlotsPhotoOverlay } from "./SlotRightHover";
+import { RouletteGoldSvg } from "./RouletteGoldSvg";
 
 function prefersReducedMotion(): boolean {
   return typeof window !== "undefined" && Boolean(window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches);
@@ -69,7 +71,7 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
 
   const focusId = entering ?? activeId;
   const zone = hallZoneById(focusId);
-  const masks = zone && zone.id !== "slots" ? zoneVisuals(zone) : [];
+  const masks = zone && !usesGoldEdgeOverlay(zone.id) ? zoneVisuals(zone) : [];
   const signMasks = masks.filter((item) => item.role === "sign");
   const hotMasks = masks.filter((item) => item.role === "lamp" || item.role === "pulse");
 
@@ -173,7 +175,7 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
             </g>
           </mask>
         </defs>
-        {focusId && focusId !== "slots" ? (
+        {focusId && !usesGoldEdgeOverlay(focusId) ? (
           <>
             <image
               href={HALL_ART.src}
@@ -249,6 +251,7 @@ function HallSpatialOverlayInner({ stageRef, focusRef }: OverlayProps) {
         <svg className="op-hall-glow" viewBox="0 0 100 100" aria-hidden data-testid="hall-visual-layer" />
       )}
       <SlotsPhotoOverlay active={focusId === "slots"} />
+      <RouletteGoldSvg active={focusId === "roulette"} />
       {HALL_ZONES.map((item) => (
         <div
           key={item.id}

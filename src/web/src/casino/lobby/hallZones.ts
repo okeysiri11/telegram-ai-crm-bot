@@ -52,11 +52,11 @@ export type HallZone = {
 export const HALL_ZONES: HallZone[] = [
   {
     id: "roulette",
-    label: "РУЛЕТКА",
-    sublabel: "MONTE CARLO",
-    cta: "ВОЙТИ В РУЛЕТКУ",
+    label: "ИГРАТЬ В РУЛЕТКУ",
+    sublabel: "ROULETTE / MONTE-CARLO",
+    cta: "ИГРАТЬ",
     route: CASINO_ROUTES.rouletteLive,
-    objects: ["sign", "table", "lamp", "wheel"],
+    objects: ["sign", "table", "lamp", "wheel", "chair"],
     polygons: [
       [
         [4.2, 28.8],
@@ -78,6 +78,12 @@ export const HALL_ZONES: HallZone[] = [
         [24.2, 44.0],
         [25.6, 57.0],
         [17.8, 58.0],
+      ],
+      [
+        [29.6, 70.2],
+        [36.8, 69.4],
+        [37.4, 90.6],
+        [30.8, 93.2],
       ],
     ],
     visuals: [
@@ -574,6 +580,11 @@ export function zoneVisuals(zone: HallZone): HallVisual[] {
 export function hallZoneById(id: string | null | undefined): HallZone | undefined {
   if (!id) return undefined;
   return HALL_ZONES.find((z) => z.id === id);
+}
+
+/** Slots and roulette paint open gold edges, not filled visual polygons. */
+export function usesGoldEdgeOverlay(id: string | null | undefined): boolean {
+  return id === "slots" || id === "roulette";
 }
 
 export function polygonPoints(polygon: HallPoint[]): string {

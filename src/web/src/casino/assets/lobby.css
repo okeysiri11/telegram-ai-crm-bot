@@ -144,7 +144,8 @@
   opacity: 1;
 }
 
-.op-slots-chairs {
+.op-slots-chairs,
+.op-roulette-gold {
   position: absolute;
   z-index: 2;
   inset: 0;
@@ -157,18 +158,21 @@
   transition: opacity 180ms ease-out;
 }
 
-.op-slots-chairs.is-on {
+.op-slots-chairs.is-on,
+.op-roulette-gold.is-on {
   opacity: 1;
 }
 
-.op-slots-chairs path {
+.op-slots-chairs path,
+.op-roulette-gold path {
   fill: none;
   stroke: #f7c85a;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.op-slots-chairs .op-chair-core {
+.op-slots-chairs .op-chair-core,
+.op-roulette-gold .op-gold-core {
   stroke-width: 1.25;
   stroke-opacity: 0.82;
 }
@@ -559,6 +563,7 @@
   .op-hall-lit,
   .op-slots-photo,
   .op-slots-chairs,
+  .op-roulette-gold,
   .op-hall-label,
   .op-map-zone {
     transition: none !important;
