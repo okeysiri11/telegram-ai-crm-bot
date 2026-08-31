@@ -125,6 +125,22 @@ describe("Odessa Prime interactive hall", () => {
     expect(view.container.querySelectorAll(".op-hall-hit").length).toBeGreaterThan(0);
     expect(view.container.querySelectorAll("[data-testid='hall-zone-label']").length).toBe(0);
     expect(view.container.querySelectorAll(".op-hotspot").length).toBe(0);
+    expect(screen.getByTestId("slots-photo-overlay").className).not.toContain("is-on");
+    expect(screen.getByTestId("slots-photo-overlay").getAttribute("data-slots-hovered")).toBe("false");
+    expect(screen.getByTestId("slots-photo-overlay").getAttribute("src")).toBe(
+      "/assets/casino/lobby/hall-slots-gold-edge.png",
+    );
+    expect(screen.getByTestId("slots-chair-overlay").getAttribute("class")).not.toContain("is-on");
+    expect(screen.getByTestId("slots-chair-overlay").querySelectorAll("ellipse, circle, polygon, rect")).toHaveLength(0);
+    const idleChairPaths = screen.getByTestId("slots-chair-overlay").querySelectorAll("path");
+    expect(idleChairPaths.length).toBeGreaterThan(0);
+    idleChairPaths.forEach((path) => {
+      expect(path.getAttribute("fill")).toBe("none");
+      expect(path.getAttribute("d")?.toLowerCase()).not.toContain("z");
+    });
+    expect(screen.queryByTestId("slots-debug-mask")).toBeNull();
+    expect(screen.queryByTestId("slots-mask-debug")).toBeNull();
+    expect(view.container.querySelectorAll("[data-slot-object]").length).toBe(0);
     expect(screen.queryByTestId("hall-zone-label")).toBeNull();
     expect(screen.queryByText("ВОЙТИ В РУЛЕТКУ")).toBeNull();
     expect(screen.queryByTestId("hotspot-vip")).toBeNull();
@@ -156,22 +172,26 @@ describe("Odessa Prime interactive hall", () => {
     view.unmount();
   });
 
-  it("keeps hit and mask geometry unpainted while a zone is active", () => {
+  it("activates one slots hover state without painting slot polygons", () => {
     const view = mount("/casino/lobby");
     fireEvent.pointerEnter(screen.getByTestId("hotspot-slots"));
     const overlay = screen.getByTestId("hall-lit-overlay");
     expect(overlay.getAttribute("data-lit-zone")).toBe("slots");
-    expect(overlay.className.baseVal || overlay.getAttribute("class")).toContain("is-on");
-    const lit = [...view.container.querySelectorAll("[data-visual-on='true']")];
-    expect(lit.length).toBeGreaterThan(0);
-    for (const shape of lit) {
-      expect(shape.getAttribute("stroke")).toBe("none");
-      expect(shape.getAttribute("data-visual-zone")).toBe("slots");
-    }
-    expect(view.container.querySelectorAll("[data-slot-object='machine']")).toHaveLength(3);
-    expect(view.container.querySelectorAll("[data-slot-object='chair']")).toHaveLength(3);
-    expect(view.container.querySelector(".op-hall-mask.is-reflect")).toBeNull();
-    expect(view.container.querySelector("[data-visual-zone='roulette'][data-visual-on='true']")).toBeNull();
+    expect(screen.getByTestId("slots-photo-overlay").getAttribute("data-slots-hovered")).toBe("true");
+    expect(screen.getByTestId("slots-chair-overlay").getAttribute("class")).toContain("is-on");
+    expect(screen.getByTestId("slots-chair-overlay").querySelectorAll("ellipse, circle, polygon, rect")).toHaveLength(0);
+    expect(view.container.querySelectorAll("[data-visual-on='true']")).toHaveLength(0);
+    expect(view.container.querySelectorAll("[data-slot-object]")).toHaveLength(0);
+    expect(view.container.querySelector(".op-hall-mask.is-slots")).toBeNull();
+    expect(view.container.querySelector(".op-hall-slot-halo")).toBeNull();
+    expect(screen.queryByTestId("slots-debug-mask")).toBeNull();
+    expect(screen.queryByTestId("slots-mask-debug")).toBeNull();
+    expect(screen.getByTestId("hall-zone-label").textContent).toContain("ИГРАТЬ В АВТОМАТЫ");
+    fireEvent.pointerLeave(screen.getByTestId("hotspot-slots"));
+    expect(screen.getByTestId("slots-photo-overlay").getAttribute("data-slots-hovered")).toBe("false");
+    expect(screen.getByTestId("slots-photo-overlay").className).not.toContain("is-on");
+    expect(screen.getByTestId("slots-chair-overlay").getAttribute("class")).not.toContain("is-on");
+    expect(overlay.getAttribute("data-lit-zone")).toBe("");
     view.unmount();
   });
 
@@ -269,9 +289,14 @@ describe("Odessa Prime interactive hall", () => {
       expect(overlay.getAttribute("data-active-zone")).toBe(zone.id);
       expect(stage.getAttribute("data-hall-active")).toBe(zone.id);
       expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe(zone.id);
-      const lit = [...view.container.querySelectorAll("[data-visual-on='true']")];
-      expect(lit.length).toBeGreaterThan(0);
-      expect(lit.every((el) => el.getAttribute("data-visual-zone") === zone.id)).toBe(true);
+      if (zone.id === "slots") {
+        expect(screen.getByTestId("slots-photo-overlay").getAttribute("data-slots-hovered")).toBe("true");
+        expect(view.container.querySelector("[data-visual-on='true']")).toBeNull();
+      } else {
+        const lit = [...view.container.querySelectorAll("[data-visual-on='true']")];
+        expect(lit.length).toBeGreaterThan(0);
+        expect(lit.every((el) => el.getAttribute("data-visual-zone") === zone.id)).toBe(true);
+      }
       expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
       expect(screen.getByTestId("hall-zone-label").getAttribute("data-tooltip-zone")).toBe(zone.id);
       fireEvent.pointerLeave(screen.getByTestId(`hotspot-${zone.id}`));
@@ -291,9 +316,9 @@ describe("Odessa Prime interactive hall", () => {
     expect(screen.getByTestId("hall-spatial-overlay").getAttribute("data-active-zone")).toBe("slots");
     expect(screen.getByTestId("hall-lit-overlay").getAttribute("data-lit-zone")).toBe("slots");
     expect(view.container.querySelector("[data-visual-zone='roulette'][data-visual-on='true']")).toBeNull();
-    expect(view.container.querySelector(".op-hall-mask.is-slots")).toBeTruthy();
-    expect(view.container.querySelectorAll("[data-slot-object='machine']")).toHaveLength(3);
-    expect(view.container.querySelectorAll("[data-slot-object='chair']")).toHaveLength(3);
+    expect(screen.getByTestId("slots-photo-overlay").getAttribute("data-slots-hovered")).toBe("true");
+    expect(view.container.querySelector(".op-hall-mask.is-slots")).toBeNull();
+    expect(view.container.querySelectorAll("[data-slot-object]")).toHaveLength(0);
     expect(view.container.querySelector(".op-hall-mask.is-reflect")).toBeNull();
     expect(screen.getAllByTestId("hall-zone-label")).toHaveLength(1);
     expect(screen.getByTestId("hall-zone-label").textContent).toContain("ИГРАТЬ В АВТОМАТЫ");

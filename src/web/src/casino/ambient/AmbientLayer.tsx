@@ -11,10 +11,14 @@ export function AmbientLayer({ tier }: { tier: PerformanceTier }) {
           <span className="op-bokeh" />
           <span className="op-bokeh is-2" />
           <span className="op-dust" />
+          <span className="op-fog is-ambient" />
           <span className="op-silhouettes" />
         </>
       ) : (
-        <span className="op-silhouettes is-static" />
+        <>
+          <span className="op-fog is-ambient" />
+          <span className="op-silhouettes is-static" />
+        </>
       )}
     </div>
   );

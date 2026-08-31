@@ -16,6 +16,8 @@ export function AtmosphereRoom({ kind }: { kind: AtmosphereKind }) {
       <div className={`op-scene-live is-${kind}`} aria-hidden>
         <div className="op-scene-glow" />
         <div className="op-chandelier is-flicker" />
+        <div className="op-lamp-pool" />
+        <div className="op-fog" />
         {kind === "bar" ? <BarSet /> : null}
         {kind === "restaurant" ? <RestaurantSet /> : null}
         {kind === "vip" ? <VipSet /> : null}

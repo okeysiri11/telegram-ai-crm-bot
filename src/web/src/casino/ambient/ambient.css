@@ -40,6 +40,16 @@
     radial-gradient(ellipse at 70% 140%, rgba(0,0,0,0.4) 18%, transparent 48%);
   animation: opCrowd 16s ease-in-out infinite;
 }
+.op-fog.is-ambient {
+  position: absolute;
+  inset: 8% 0 12%;
+  background:
+    radial-gradient(ellipse at 50% 70%, rgba(168, 178, 196, 0.08), transparent 62%),
+    radial-gradient(ellipse at 18% 30%, rgba(201, 164, 92, 0.05), transparent 48%);
+  filter: blur(28px);
+  animation: opBreathe 14s ease-in-out infinite;
+}
+.op-world[data-tier="LOW"] .op-fog.is-ambient { display: none; }
 .op-dust {
   position: absolute;
   inset: 0;

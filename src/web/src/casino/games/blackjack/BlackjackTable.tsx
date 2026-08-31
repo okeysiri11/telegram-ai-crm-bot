@@ -67,6 +67,9 @@ export function BlackjackTable() {
       data-phase={hand?.settled ? "result" : hand ? "dealing" : "initial"}
     >
       <div className="op-bj-stage">
+        <span className="op-bj-lamp" aria-hidden />
+        <span className="op-felt-bloom" aria-hidden />
+        <span className="op-bj-rail" aria-hidden />
         <div className="op-shoe" aria-hidden>
           <span />
           <span />

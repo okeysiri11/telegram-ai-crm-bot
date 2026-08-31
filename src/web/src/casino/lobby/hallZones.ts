@@ -24,12 +24,16 @@ export type HallVisual = {
   role?: HallVisualRole;
 };
 
+export type HallHitMode = "polygon" | "pixel-mask";
+
 export type HallZone = {
   id: HallZoneId;
   label: string;
   sublabel: string;
   cta: string;
   route: string;
+  /** Pointer hit. Default polygon. Visual paint for slots uses a PNG mask, not these polygons. */
+  hit?: HallHitMode;
   /** Pointer hit polygons in normalized image percent (0–100). Invisible. */
   polygons: HallPoint[][];
   /** Object-locked illumination masks. Defaults to hit polygons. */
