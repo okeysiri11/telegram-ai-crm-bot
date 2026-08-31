@@ -59,6 +59,7 @@ KINDS = (
     "outbound_message",
     "email_suppression",
     "whatsapp_message",
+    "whatsapp_phone_map",
 )
 
 LEAD_STATUSES = ("new", "qualified", "converted", "lost")
@@ -269,6 +270,7 @@ class RecruitingOpsService:
         else:
             get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
         self._sync_runtime_connections(org)
+        self._index_whatsapp_phone_maps()
 
     async def _persist(self, kind: str, data: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -410,7 +412,7 @@ class RecruitingOpsService:
     def health(self) -> dict[str, Any]:
         return {
             "status": "ok",
-            "sprint": "recruiting_1.11",
+            "sprint": "recruiting_1.12",
             "vanguard": {
                 "connected": False,
                 "status": "ingest_ready",
@@ -426,7 +428,33 @@ class RecruitingOpsService:
             "tracking_health": self.tracking_diagnostics(),
             "ads": {"connected": False, "message_ru": "Провайдер не подключен"},
             "telegram": {"frozen": True, "status": "DISABLED", "blocks_readiness": False},
-            "whatsapp": {"health_sends_message": False, "approval_required": True},
+            "whatsapp": self._whatsapp_health_payload(),
+        }
+
+    def _whatsapp_health_payload(self) -> dict[str, Any]:
+        from services.recruiting_ops.secret_store import get_secret_store
+        from services.recruiting_ops.whatsapp_ops import env_readiness
+
+        store = get_secret_store()
+        env = env_readiness(
+            store_present={
+                "access_token": bool(store.get("whatsapp", "access_token")),
+                "phone_number_id": bool(store.get("whatsapp", "phone_number_id")),
+                "verify_token": bool(store.get("whatsapp", "verify_token")),
+                "app_secret": bool(store.get("whatsapp", "app_secret")),
+                "business_account_id": bool(store.get("whatsapp", "business_account_id")),
+            }
+        )
+        return {
+            "health_sends_message": False,
+            "approval_required": True,
+            "env_status": env["status"],
+            "status": env["status"],
+            "present": env["present"],
+            "missing": env["missing"],
+            "alias_used": env["alias_used"],
+            "message_ru": env["message_ru"],
+            "live_verified": False,
         }
 
     def tracking_diagnostics(self) -> dict[str, Any]:
@@ -2183,6 +2211,71 @@ class RecruitingOpsService:
             connected = str(row.get("status") or "").upper() == "CONNECTED" and row.get("enabled") is not False
             set_runtime_connected(provider, connected)
 
+    def _index_whatsapp_phone_maps(self) -> None:
+        from services.recruiting_ops.whatsapp_ops import default_vanguard_org, env_value, register_phone_org
+
+        env_phone = env_value("WHATSAPP_PHONE_NUMBER_ID")
+        if env_phone:
+            register_phone_org(env_phone, default_vanguard_org())
+        for org, bag in self._mem.items():
+            for item in bag.get("whatsapp_phone_map") or []:
+                phone = _txt(item.get("phone_number_id"))
+                if phone:
+                    register_phone_org(phone, _txt(item.get("organization_id") or org))
+
+    async def _persist_whatsapp_phone_map(self, org: str, phone_number_id: str) -> None:
+        from services.recruiting_ops.whatsapp_ops import register_phone_org
+
+        pnid = _txt(phone_number_id)
+        if not pnid:
+            return
+        register_phone_org(pnid, org)
+        existing = next(
+            (item for item in self._bag(org).get("whatsapp_phone_map") or [] if _txt(item.get("phone_number_id")) == pnid),
+            None,
+        )
+        payload = {
+            "organization_id": org,
+            "tenant_id": org,
+            "phone_number_id": pnid,
+            "project_key": VANGUARD_PROJECT_KEY,
+            "status": "active",
+            "updated_at": _now(),
+        }
+        if existing:
+            existing.update(payload)
+            persisted = await self._persist_patch(org, str(existing["id"]), payload)
+            if persisted:
+                self._replace(org, "whatsapp_phone_map", persisted)
+            else:
+                self._replace(org, "whatsapp_phone_map", existing)
+            return
+        payload["id"] = str(uuid.uuid4())
+        payload["created_at"] = _now()
+        saved = await self._persist("whatsapp_phone_map", payload)
+        self._bag(org).setdefault("whatsapp_phone_map", []).insert(0, saved)
+        default_org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
+        if default_org != org:
+            mirror = dict(payload)
+            mirror["id"] = str(uuid.uuid4())
+            mirrored = await self._persist("whatsapp_phone_map", {**mirror, "organization_id": org, "tenant_id": org})
+            self._bag(default_org).setdefault("whatsapp_phone_map", []).insert(0, mirrored)
+
+    async def resolve_whatsapp_org(self, phone_number_id: str) -> str | None:
+        from services.recruiting_ops.whatsapp_ops import org_for_phone_number_id
+
+        cached = org_for_phone_number_id(phone_number_id)
+        if cached:
+            return cached
+        self._index_whatsapp_phone_maps()
+        cached = org_for_phone_number_id(phone_number_id)
+        if cached:
+            return cached
+        default_org = _org(os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
+        await self.ensure_hydrated(default_org)
+        self._index_whatsapp_phone_maps()
+        return org_for_phone_number_id(phone_number_id)
+
     async def provider_connection_center(self, organization_id: str, role: str | None = None) -> dict[str, Any]:
         denied = require(role, "list")
         if denied:
@@ -2257,9 +2350,7 @@ class RecruitingOpsService:
             }
         )
         if key == "whatsapp" and public.get("phone_number_id"):
-            from services.recruiting_ops.whatsapp_ops import register_phone_org
-
-            register_phone_org(str(public.get("phone_number_id")), org)
+            await self._persist_whatsapp_phone_map(org, str(public.get("phone_number_id")))
         from services.recruiting_ops.provider_connections import TELEGRAM_FROZEN
 
         if key == "telegram" and TELEGRAM_FROZEN:
@@ -2729,6 +2820,12 @@ class RecruitingOpsService:
         }
         if result.get("ok") is False and not adapter:
             return result
+        if _txt(provider).lower() == "whatsapp":
+            from services.recruiting_ops.secret_store import get_secret_store
+
+            pnid = _txt(get_secret_store().get("whatsapp", "phone_number_id") or os.getenv("WHATSAPP_PHONE_NUMBER_ID"))
+            if pnid:
+                await self._persist_whatsapp_phone_map(_org(organization_id), pnid)
         return self._ok(**safe)
 
     async def sync_provider_metrics(self, organization_id: str, provider: str, role: str | None = None) -> dict[str, Any]:
@@ -3157,6 +3254,11 @@ class RecruitingOpsService:
             text=item.get("body"),
             body=item.get("body"),
             subject=item.get("subject") or "Сообщение",
+            template=item.get("template") if isinstance(item.get("template"), dict) else None,
+            template_name=item.get("template_name"),
+            language=item.get("language"),
+            components=item.get("components") if isinstance(item.get("components"), list) else None,
+            parameters=item.get("parameters") if isinstance(item.get("parameters"), list) else None,
         )
         item.update(
             {
@@ -3197,8 +3299,12 @@ class RecruitingOpsService:
                     "provider_message_id": saved.get("provider_message_id"),
                     "candidate_id": saved.get("candidate_id"),
                     "outbound_id": saved.get("id"),
+                    "message_kind": saved.get("message_kind") or ("template" if saved.get("template_name") else "text"),
+                    "template_name": saved.get("template_name"),
                 },
             )
+            if saved.get("sent") and saved.get("candidate_id"):
+                await self._touch_candidate_whatsapp(org, str(saved["candidate_id"]), outbound_at=_now())
         return self._ok(item=saved, adapter={"ok": sent.get("ok"), "error": sent.get("error"), "message_ru": sent.get("message_ru")})
 
     async def _record_whatsapp_message(self, org: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -3213,6 +3319,78 @@ class RecruitingOpsService:
         saved = await self._persist("whatsapp_message", item)
         self._bag(org).setdefault("whatsapp_message", []).insert(0, saved)
         return saved
+
+    async def _touch_candidate_whatsapp(
+        self,
+        org: str,
+        candidate_id: str,
+        *,
+        inbound_at: str | None = None,
+        outbound_at: str | None = None,
+    ) -> None:
+        item = self._find(org, "candidate", candidate_id)
+        if not item:
+            return
+        patch: dict[str, Any] = {"updated_at": _now()}
+        if inbound_at:
+            patch["whatsapp_last_inbound_at"] = inbound_at
+            patch["last_inbound_whatsapp_at"] = inbound_at
+            patch["whatsapp_session_open"] = True
+        if outbound_at:
+            patch["whatsapp_last_outbound_at"] = outbound_at
+            patch["last_outbound_whatsapp_at"] = outbound_at
+        item.update(patch)
+        persisted = await self._persist_patch(org, candidate_id, patch)
+        if persisted:
+            item = persisted
+        self._replace(org, "candidate", item)
+
+    def _whatsapp_idempotency_hit(self, org: str, key: str) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
+        if not key:
+            return None, None
+        for row in self._bag(org)["idempotency"]:
+            if _txt(row.get("key")) != key:
+                continue
+            msg_id = _txt(row.get("outbound_id") or row.get("whatsapp_message_id"))
+            item = self._find(org, "outbound_message", msg_id) if msg_id else None
+            return row, item
+        return None, None
+
+    async def _store_whatsapp_idempotency(self, org: str, key: str, outbound: dict[str, Any]) -> None:
+        if not key:
+            return
+        existing, _item = self._whatsapp_idempotency_hit(org, key)
+        patch = {
+            "key": key,
+            "kind": "whatsapp_send",
+            "outbound_id": outbound.get("id"),
+            "status": outbound.get("status"),
+            "provider_message_id": outbound.get("provider_message_id"),
+            "updated_at": _now(),
+        }
+        if existing:
+            existing.update(patch)
+            persisted = await self._persist_patch(org, str(existing["id"]), patch)
+            self._replace(org, "idempotency", persisted or existing)
+            return
+        item = {
+            "id": str(uuid.uuid4()),
+            "organization_id": org,
+            "created_at": _now(),
+            **patch,
+        }
+        saved = await self._persist("idempotency", item)
+        self._bag(org)["idempotency"].insert(0, saved)
+
+    def _whatsapp_event_recorded(self, org: str, provider_message_id: str) -> bool:
+        pid = _txt(provider_message_id)
+        if not pid:
+            return False
+        for kind in ("whatsapp_message", "outbound_message"):
+            for item in self._bag(org).get(kind) or []:
+                if _txt(item.get("provider_message_id")) == pid:
+                    return True
+        return False
 
     async def list_whatsapp_conversations(self, organization_id: str, role: str | None = None, *, candidate_id: str | None = None) -> dict[str, Any]:
         denied = require(role, "list")
@@ -3265,19 +3443,93 @@ class RecruitingOpsService:
         cand = self._find(org, "candidate", candidate_id)
         if not cand:
             return {"ok": False, "error": "not_found", "message_ru": "Кандидат не найден"}
-        from services.recruiting_ops.whatsapp_ops import normalize_phone
+        from services.recruiting_ops.whatsapp_ops import (
+            ERROR_TEMPLATE_REQUIRED,
+            extract_template,
+            normalize_phone,
+            outbound_idempotency_key,
+            session_window,
+        )
 
         to = normalize_phone(_txt(body.get("to") or body.get("phone") or cand.get("phone")))
         text = _txt(body.get("body") or body.get("text"))
-        if not to or not text:
-            return {"ok": False, "error": "validation", "message_ru": "Укажите телефон и текст."}
-        created = await self.create_outbound_message(org, {"channel": "whatsapp", "to": to, "body": text, "candidate_id": candidate_id}, role=role)
+        template = extract_template(body)
+        if not to or (not text and not template):
+            return {"ok": False, "error": "validation", "message_ru": "Укажите телефон и текст или шаблон."}
+        thread = [item for item in self._bag(org).get("whatsapp_message") or [] if _txt(item.get("candidate_id")) == candidate_id]
+        window = session_window(cand, thread)
+        if not template and not window.get("text_allowed"):
+            return {
+                "ok": False,
+                "error": ERROR_TEMPLATE_REQUIRED,
+                "reason": window.get("reason"),
+                "template_required": True,
+                "window_open": False,
+                "last_inbound_at": window.get("last_inbound_at"),
+                "last_outbound_at": window.get("last_outbound_at"),
+                "message_ru": window.get("message_ru"),
+            }
+        client_key = _txt(body.get("idempotency_key") or body.get("Idempotency-Key"))
+        key = outbound_idempotency_key(
+            organization_id=org,
+            candidate_id=candidate_id,
+            to=to,
+            client_key=client_key,
+            body=text,
+            template_name=_txt((template or {}).get("name")),
+        )
+        if key:
+            _row, existing = self._whatsapp_idempotency_hit(org, key)
+            if existing and _txt(existing.get("status")).upper() in {"SENT", "SENDING", "DELIVERED", "APPROVAL_REQUIRED"}:
+                if _txt(existing.get("status")).upper() == "APPROVAL_REQUIRED" and (
+                    body.get("confirm") or _txt(body.get("decision")).upper() in {"APPROVE", "APPROVED"}
+                ):
+                    return await self.decide_outbound_message(org, str(existing["id"]), {"decision": "APPROVE"}, role=role)
+                return self._ok(
+                    item=existing,
+                    duplicate=True,
+                    sent=bool(existing.get("sent")),
+                    message_ru="Повторная отправка WhatsApp предотвращена.",
+                )
+            if existing and _txt(existing.get("status")).upper() == "FAILED" and (
+                body.get("confirm") or _txt(body.get("decision")).upper() in {"APPROVE", "APPROVED"}
+            ):
+                retried = await self.decide_outbound_message(org, str(existing["id"]), {"decision": "APPROVE"}, role=role)
+                if retried.get("ok") and retried.get("item"):
+                    await self._store_whatsapp_idempotency(org, key, retried["item"])
+                return retried
+        outbound_body = {
+            "channel": "whatsapp",
+            "to": to,
+            "body": text or (f"[template:{(template or {}).get('name')}]" if template else ""),
+            "candidate_id": candidate_id,
+            "template": template,
+            "template_name": (template or {}).get("name"),
+            "language": (template or {}).get("language"),
+            "components": (template or {}).get("components"),
+            "message_kind": "template" if template else "text",
+            "window_open": window.get("window_open"),
+            "template_required": window.get("template_required"),
+        }
+        created = await self.create_outbound_message(org, outbound_body, role=role)
         if not created.get("ok"):
             return created
         item = created["item"]
+        if key:
+            await self._store_whatsapp_idempotency(org, key, item)
         if not body.get("confirm") and _txt(body.get("decision")).upper() not in {"APPROVE", "APPROVED"}:
-            return self._ok(item=item, approval_required=True, sent=False, message_ru="Отправка WhatsApp требует подтверждения человеком.")
-        return await self.decide_outbound_message(org, str(item["id"]), {"decision": "APPROVE"}, role=role)
+            return self._ok(
+                item=item,
+                approval_required=True,
+                sent=False,
+                window_open=window.get("window_open"),
+                template_required=bool(template) or bool(window.get("template_required")),
+                message_ru="Отправка WhatsApp требует подтверждения человеком.",
+            )
+        decided = await self.decide_outbound_message(org, str(item["id"]), {"decision": "APPROVE"}, role=role)
+        if key and decided.get("item"):
+            await self._store_whatsapp_idempotency(org, key, decided["item"])
+        return decided
 
     async def whatsapp_webhook(
         self,
@@ -3291,8 +3543,12 @@ class RecruitingOpsService:
         from services.observability import inc_metric
         from services.recruiting_ops.secret_store import get_secret_store, public_secret_audit
         from services.recruiting_ops.whatsapp_ops import (
+            ERROR_MALFORMED_WEBHOOK,
+            ERROR_UNKNOWN_PHONE,
+            log_webhook_event,
+            mark_webhook_seen,
             match_candidate,
-            org_for_phone_number_id,
+            parse_event_time,
             parse_webhook,
             seen_webhook,
             verify_webhook_signature,
@@ -3312,6 +3568,7 @@ class RecruitingOpsService:
                 summary="Webhook verify не прошёл",
                 payload=public_secret_audit("webhook_verify", "whatsapp", "verify_token"),
             )
+            log_webhook_event("verify_failed")
             return {"ok": False, "error": "AUTH_ERROR", "message_ru": "Webhook verify не прошёл."}
         signed = verify_webhook_signature(raw, signature)
         if not signed.get("ok"):
@@ -3324,20 +3581,45 @@ class RecruitingOpsService:
                 summary="Подпись webhook отклонена",
                 payload={"error": signed.get("error")},
             )
+            log_webhook_event("signature_rejected", error=signed.get("error"))
             return signed
         inc_metric("whatsapp_webhook_received_total")
+        if body is not None and not isinstance(body, dict):
+            log_webhook_event("malformed", reason="body_not_object")
+            return {"ok": False, "error": ERROR_MALFORMED_WEBHOOK, "message_ru": "Некорректное тело webhook."}
         parsed = parse_webhook(body)
-        org = _org(org_for_phone_number_id(str(parsed.get("phone_number_id") or "")))
+        if parsed.get("malformed") and not parsed.get("messages") and not parsed.get("statuses"):
+            log_webhook_event("malformed", reason="unreadable_payload")
+            return {"ok": False, "error": ERROR_MALFORMED_WEBHOOK, "message_ru": "Некорректное тело webhook."}
+        phone_number_id = _txt(parsed.get("phone_number_id"))
+        has_events = bool(parsed.get("messages") or parsed.get("statuses"))
+        org = await self.resolve_whatsapp_org(phone_number_id) if phone_number_id else None
+        if has_events and phone_number_id and not org:
+            log_webhook_event("unknown_phone_number_id", phone_number_id=phone_number_id)
+            return {
+                "ok": False,
+                "error": ERROR_UNKNOWN_PHONE,
+                "received": False,
+                "ignored": True,
+                "phone_number_id": phone_number_id,
+                "message_ru": "Неизвестный phone_number_id. Сообщения не привязаны к организации.",
+            }
+        org = _org(org or os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
         await self.ensure_hydrated(org)
         events: list[dict[str, Any]] = []
         duplicates = 0
         for msg in parsed.get("messages") or []:
-            key = webhook_event_key("in", str(msg.get("provider_message_id") or ""))
-            if seen_webhook(key):
+            pid = _txt(msg.get("provider_message_id"))
+            key = webhook_event_key("in", pid)
+            if seen_webhook(key) or self._whatsapp_event_recorded(org, pid):
                 duplicates += 1
                 inc_metric("whatsapp_webhook_duplicate_total")
+                log_webhook_event("duplicate", kind="incoming", provider_message_id=pid)
                 continue
             cand = match_candidate(list(self._bag(org).get("candidate") or []), str(msg.get("from") or ""))
+            inbound_at = None
+            parsed_ts = parse_event_time(msg.get("timestamp"))
+            inbound_at = parsed_ts.isoformat() if parsed_ts else _now()
             saved = await self._record_whatsapp_message(
                 org,
                 {
@@ -3350,29 +3632,36 @@ class RecruitingOpsService:
                     "delivered": True,
                     "read": False,
                     "failed": False,
-                    "provider_message_id": msg.get("provider_message_id"),
+                    "provider_message_id": pid,
                     "candidate_id": cand.get("id") if cand else None,
                     "unresolved": cand is None,
                     "timestamp": msg.get("timestamp"),
+                    "whatsapp_last_inbound_at": inbound_at,
                 },
             )
+            mark_webhook_seen(key)
+            if cand:
+                await self._touch_candidate_whatsapp(org, str(cand["id"]), inbound_at=inbound_at)
             events.append({"kind": "incoming", "id": saved.get("id"), "unresolved": cand is None})
         for status in parsed.get("statuses") or []:
-            key = webhook_event_key(str(status.get("status") or "status"), str(status.get("provider_message_id") or ""))
+            pid = _txt(status.get("provider_message_id"))
+            st = _txt(status.get("status")).lower()
+            key = webhook_event_key(st or "status", pid)
             if seen_webhook(key):
                 duplicates += 1
                 inc_metric("whatsapp_webhook_duplicate_total")
+                log_webhook_event("duplicate", kind="status", provider_message_id=pid, status=st)
                 continue
-            pid = _txt(status.get("provider_message_id"))
-            st = _txt(status.get("status")).lower()
             if st == "delivered":
                 inc_metric("whatsapp_message_delivered_total")
             if st == "read":
                 inc_metric("whatsapp_message_read_total")
+            matched = False
             for kind in ("outbound_message", "whatsapp_message"):
                 for item in list(self._bag(org).get(kind) or []):
                     if _txt(item.get("provider_message_id")) != pid:
                         continue
+                    matched = True
                     patch = {"updated_at": _now()}
                     if st == "sent":
                         patch.update({"send_status": "SENT", "sent": True, "delivered": False})
@@ -3386,6 +3675,15 @@ class RecruitingOpsService:
                     await self._persist_patch(org, str(item.get("id")), patch)
                     self._replace(org, kind, item)
                     events.append({"kind": "status", "status": st, "id": item.get("id")})
+            mark_webhook_seen(key)
+            if not matched:
+                log_webhook_event("status_unmatched", provider_message_id=pid, status=st)
+        log_webhook_event(
+            "processed",
+            phone_number_id=phone_number_id or "none",
+            events=len(events),
+            duplicates=duplicates,
+        )
         return self._ok(items=events, received=bool(events) or duplicates > 0, duplicate_count=duplicates)
 
     async def _probe_website(self, url: str) -> tuple[str, str]:

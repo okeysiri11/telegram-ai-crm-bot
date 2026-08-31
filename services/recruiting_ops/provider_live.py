@@ -188,7 +188,7 @@ def live_health(provider: str) -> dict[str, Any]:
         packed = {**result, "ok": ok}
         return _from_http(key, packed, identity=identity)
     if key == "whatsapp":
-        token = _secret("whatsapp", "access_token", "WHATSAPP_TOKEN", "WHATSAPP_ACCESS_TOKEN")
+        token = _secret("whatsapp", "access_token", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_TOKEN")
         phone = _public("whatsapp", "phone_number_id", "WHATSAPP_PHONE_NUMBER_ID")
         if not token:
             from services.recruiting_ops.whatsapp_ops import record_health_metric
@@ -490,7 +490,18 @@ def live_write_campaign(provider: str, action: str, *, campaign_id: str, budget:
     return adapter_result(ok=False, error="UNSUPPORTED", mode="LIVE")
 
 
-def live_send_message(provider: str, *, to: str, text: str, subject: str = "") -> dict[str, Any]:
+def live_send_message(
+    provider: str,
+    *,
+    to: str,
+    text: str,
+    subject: str = "",
+    template: dict[str, Any] | None = None,
+    template_name: str | None = None,
+    language: str | None = None,
+    components: list[dict[str, Any]] | None = None,
+    parameters: list[Any] | None = None,
+) -> dict[str, Any]:
     key = _txt(provider).lower()
     if key == "telegram":
         token = _secret("telegram", "bot_token", "VANGUARD_TELEGRAM_BOT_TOKEN")
@@ -511,19 +522,42 @@ def live_send_message(provider: str, *, to: str, text: str, subject: str = "") -
     if key == "whatsapp":
         from services.observability import inc_metric
         from services.recruiting_ops.provider_http import MAX_ATTEMPTS
-        from services.recruiting_ops.whatsapp_ops import record_health_metric
+        from services.recruiting_ops.whatsapp_ops import (
+            build_template_message,
+            build_text_message,
+            extract_template,
+            record_health_metric,
+        )
 
-        token = _secret("whatsapp", "access_token", "WHATSAPP_TOKEN", "WHATSAPP_ACCESS_TOKEN")
+        token = _secret("whatsapp", "access_token", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_TOKEN")
         phone = _public("whatsapp", "phone_number_id", "WHATSAPP_PHONE_NUMBER_ID")
         if not token or not phone:
             record_health_metric("NOT_CONFIGURED")
             return _not_configured(key)
         inc_metric("whatsapp_send_attempt_total")
+        template = extract_template(
+            {
+                "template": template,
+                "template_name": template_name,
+                "language": language,
+                "components": components,
+                "parameters": parameters,
+            }
+        )
+        if template:
+            json_body = build_template_message(
+                to=to,
+                name=str(template["name"]),
+                language=str(template.get("language") or "en_US"),
+                components=list(template.get("components") or []),
+            )
+        else:
+            json_body = build_text_message(to=to, text=text)
         result = provider_request(
             "POST",
             f"https://graph.facebook.com/{graph_version()}/{phone}/messages",
             headers={"Authorization": f"Bearer {token}"},
-            json_body={"messaging_product": "whatsapp", "to": to, "type": "text", "text": {"body": text}},
+            json_body=json_body,
             attempts=MAX_ATTEMPTS,
         )
         data = result.get("json") if isinstance(result.get("json"), dict) else {}
@@ -556,7 +590,7 @@ def live_send_message(provider: str, *, to: str, text: str, subject: str = "") -
 
 
 def live_list_whatsapp_templates() -> dict[str, Any]:
-    token = _secret("whatsapp", "access_token", "WHATSAPP_TOKEN", "WHATSAPP_ACCESS_TOKEN")
+    token = _secret("whatsapp", "access_token", "WHATSAPP_ACCESS_TOKEN", "WHATSAPP_TOKEN")
     waba = _public("whatsapp", "business_account_id", "WHATSAPP_BUSINESS_ACCOUNT_ID")
     if not token:
         return adapter_result(ok=False, error=NOT_CONFIGURED, status="NOT_CONFIGURED", items=[], provider="whatsapp")

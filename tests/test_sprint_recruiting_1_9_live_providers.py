@@ -248,7 +248,7 @@ async def test_whatsapp_webhook_does_not_invent_events(client: TestClient):
 
 async def test_green_gate_sprint_and_no_live_data(client: TestClient):
     health = await (await client.get(f"{OPS}/health")).json()
-    assert health["sprint"] in {"recruiting_1.9", "recruiting_1.10", "recruiting_1.11"}
+    assert health["sprint"] in {"recruiting_1.9", "recruiting_1.10", "recruiting_1.11", "recruiting_1.12"}
     assert health["tracking_health"]["code"] == "CONNECTED"
     ads = await (await client.get(f"{OPS}/ads/control-center?project=vanguard", headers=_hdr())).json()
     assert ads["overview"]["no_live_data"] is True

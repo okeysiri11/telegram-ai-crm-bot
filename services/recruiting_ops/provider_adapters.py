@@ -143,7 +143,16 @@ class WhatsAppAdapter(LiveProviderAdapter):
     def send_message(self, **kwargs: Any) -> dict[str, Any]:
         if not kwargs.get("approved"):
             return reject_unapproved()
-        return live_send_message(self.provider, to=str(kwargs.get("to") or kwargs.get("phone") or ""), text=str(kwargs.get("text") or kwargs.get("body") or ""))
+        return live_send_message(
+            self.provider,
+            to=str(kwargs.get("to") or kwargs.get("phone") or ""),
+            text=str(kwargs.get("text") or kwargs.get("body") or ""),
+            template=kwargs.get("template") if isinstance(kwargs.get("template"), dict) else None,
+            template_name=kwargs.get("template_name"),
+            language=kwargs.get("language") or kwargs.get("language_code"),
+            components=kwargs.get("components") if isinstance(kwargs.get("components"), list) else None,
+            parameters=kwargs.get("parameters") if isinstance(kwargs.get("parameters"), list) else None,
+        )
 
 
 class EmailAdapter(LiveProviderAdapter):

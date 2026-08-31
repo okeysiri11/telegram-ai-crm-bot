@@ -57,6 +57,8 @@ def _status_for(result: dict, *, created: bool = False) -> int:
             return 503
         if err in {"RATE_LIMITED", "rate_limited"}:
             return 429
+        if err == "TEMPLATE_REQUIRED":
+            return 409
         return 400
     if result.get("duplicate"):
         return 200
@@ -530,6 +532,9 @@ async def ops_whatsapp_ai_draft_handler(request: web.Request) -> web.Response:
 
 async def ops_candidate_whatsapp_send_handler(request: web.Request) -> web.Response:
     body = await _read_json(request)
+    header_key = (request.headers.get("Idempotency-Key") or "").strip()
+    if header_key and not str(body.get("idempotency_key") or "").strip():
+        body["idempotency_key"] = header_key[:128]
     candidate_id = request.match_info.get("candidate_id") or ""
     result = await get_recruiting_ops_service().send_candidate_whatsapp(_org(request, body), candidate_id, body, _role(request, body))
     return json_response(result, status=_status_for(result))

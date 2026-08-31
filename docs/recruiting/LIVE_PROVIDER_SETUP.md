@@ -68,7 +68,7 @@ Telegram is **intentionally frozen / disabled** in Recruiting.
 ## WhatsApp
 
 1. Meta WhatsApp Cloud API (WhatsApp product on a Meta app + business phone number).
-2. From Meta obtain: `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_VERIFY_TOKEN`. Optional `WHATSAPP_APP_SECRET` for webhook signatures. `WHATSAPP_TOKEN` is an accepted alias for the access token.
+2. From Meta obtain: `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_BUSINESS_ACCOUNT_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`. `WHATSAPP_TOKEN` is a backwards-compatible alias for the access token only.
 3. Enter values in **Recruiting → Интеграции → WhatsApp → Настроить**, or as Render/server env. Do not paste tokens into chat or git.
 4. Webhook URL (production): `https://ados-web.onrender.com/api/recruiting-ops/v1/webhooks/whatsapp`
 5. Local webhook: `http://127.0.0.1:8080/api/recruiting-ops/v1/webhooks/whatsapp`

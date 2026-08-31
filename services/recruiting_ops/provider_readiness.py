@@ -23,7 +23,9 @@ SECRET_ENV_NAMES = {
     "TIKTOK_ADS_APP_SECRET",
     "VANGUARD_TELEGRAM_BOT_TOKEN",
     "WHATSAPP_TOKEN",
+    "WHATSAPP_ACCESS_TOKEN",
     "WHATSAPP_VERIFY_TOKEN",
+    "WHATSAPP_APP_SECRET",
     "SMTP_PASSWORD",
     "VANGUARD_ANTIBOT_SECRET",
     "TURNSTILE_SECRET_KEY",
@@ -58,7 +60,7 @@ MESSAGING_SPECS = {
     },
     "whatsapp": {
         "label": "WhatsApp",
-        "secret": ["WHATSAPP_TOKEN"],
+        "secret": ["WHATSAPP_ACCESS_TOKEN"],
         "public": ["WHATSAPP_PHONE_NUMBER_ID"],
     },
     "email": {
@@ -78,6 +80,8 @@ RU = {
 
 
 def _present(name: str) -> bool:
+    if name == "WHATSAPP_ACCESS_TOKEN":
+        return bool((os.getenv("WHATSAPP_ACCESS_TOKEN") or os.getenv("WHATSAPP_TOKEN") or "").strip())
     return bool((os.getenv(name) or "").strip())
 
 

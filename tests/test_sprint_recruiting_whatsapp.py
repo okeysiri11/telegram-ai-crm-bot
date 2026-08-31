@@ -26,6 +26,40 @@ def _hdr(org: str = "ados", role: str = "platform_owner") -> dict[str, str]:
     return {"X-Organization-Id": org, "X-Role": role}
 
 
+def _inbound_payload(phone_number_id: str, from_phone: str, msg_id: str = "wamid.in1", ts: str | None = None):
+    import time
+
+    return {
+        "entry": [
+            {
+                "changes": [
+                    {
+                        "value": {
+                            "metadata": {"phone_number_id": phone_number_id},
+                            "messages": [
+                                {
+                                    "id": msg_id,
+                                    "from": from_phone,
+                                    "timestamp": ts or str(int(time.time())),
+                                    "type": "text",
+                                    "text": {"body": "привет"},
+                                }
+                            ],
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+
+
+async def _open_window(client: TestClient, org: str, phone_number_id: str, from_phone: str, msg_id: str = "wamid.in1"):
+    from services.recruiting_ops.whatsapp_ops import register_phone_org
+
+    register_phone_org(phone_number_id, org)
+    return await client.post(f"{OPS}/webhooks/whatsapp", json=_inbound_payload(phone_number_id, from_phone, msg_id))
+
+
 def _wa_transport(status: int = 200, body: dict | None = None, retry_after=None):
     payload = body or {"id": "123", "verified_name": "WA", "display_phone_number": "+100"}
 
@@ -81,6 +115,10 @@ def reset_ops(monkeypatch):
 async def test_credentials_absent_not_configured(client: TestClient):
     body = await (await client.post(f"{OPS}/providers/whatsapp/test-connection", json={}, headers=_hdr())).json()
     assert body["status"] == "NOT_CONFIGURED"
+    health = await (await client.get(f"{OPS}/health")).json()
+    assert health["whatsapp"]["env_status"] == "NOT_CONFIGURED"
+    assert TOKEN not in str(health)
+    assert "wa-super" not in str(health)
 
 
 async def test_credentials_saved_not_automatically_connected(client: TestClient):
@@ -194,6 +232,7 @@ async def test_outbound_requires_human_and_accepted_not_delivered(client: TestCl
     await client.post(f"{OPS}/providers/whatsapp/test-connection", json={}, headers=_hdr(org))
     created = await client.post(f"{OPS}/candidates", json={"name": "Борис", "phone": "79005556677"}, headers=_hdr(org))
     cid = (await created.json())["item"]["id"]
+    await _open_window(client, org, "123", "79005556677", "wamid.session-out")
     pending = await (await client.post(f"{OPS}/candidates/{cid}/whatsapp", json={"body": "hello"}, headers=_hdr(org))).json()
     assert pending.get("approval_required") is True
     assert pending.get("sent") is False
@@ -226,6 +265,7 @@ async def test_delivery_read_failed_webhooks(client: TestClient):
     await client.post(f"{OPS}/providers/whatsapp/test-connection", json={}, headers=_hdr(org))
     created = await client.post(f"{OPS}/candidates", json={"name": "Кира", "phone": "79001230000"}, headers=_hdr(org))
     cid = (await created.json())["item"]["id"]
+    await _open_window(client, org, "123", "79001230000", "wamid.session-kira")
     sent = await (await client.post(f"{OPS}/candidates/{cid}/whatsapp", json={"body": "ping", "confirm": True}, headers=_hdr(org))).json()
     pid = sent["item"]["provider_message_id"]
     await client.post(
@@ -277,6 +317,7 @@ async def test_retry_and_rate_limit(client: TestClient, monkeypatch):
     await client.post(f"{OPS}/providers/whatsapp/test-connection", json={}, headers=_hdr(org))
     created = await client.post(f"{OPS}/candidates", json={"name": "Ретри", "phone": "79001110000"}, headers=_hdr(org))
     cid = (await created.json())["item"]["id"]
+    await _open_window(client, org, "123", "79001110000", "wamid.session-retry")
     sent = await (await client.post(f"{OPS}/candidates/{cid}/whatsapp", json={"body": "retry", "confirm": True}, headers=_hdr(org))).json()
     assert sent["item"]["status"] == "SENT"
     monkeypatch.setenv("WHATSAPP_SEND_RATE_LIMIT", "1")
@@ -284,6 +325,7 @@ async def test_retry_and_rate_limit(client: TestClient, monkeypatch):
     await client.post(f"{OPS}/providers/whatsapp/test-connection", json={}, headers=_hdr(org2))
     c2 = await client.post(f"{OPS}/candidates", json={"name": "Лим", "phone": "79001110001"}, headers=_hdr(org2))
     cid2 = (await c2.json())["item"]["id"]
+    await _open_window(client, org2, "123", "79001110001", "wamid.session-lim")
     first = await client.post(f"{OPS}/candidates/{cid2}/whatsapp", json={"body": "one", "confirm": True}, headers=_hdr(org2))
     assert first.status in {200, 201}
     second = await client.post(f"{OPS}/candidates/{cid2}/whatsapp", json={"body": "two", "confirm": True}, headers=_hdr(org2))
@@ -302,7 +344,7 @@ async def test_audit_and_metrics_and_telegram_frozen(client: TestClient):
     assert TOKEN not in str(activity)
     assert any("provider" in str(item.get("action") or "") or "credential" in str(item.get("action") or "") for item in activity.get("items") or [])
     health = await (await client.get(f"{OPS}/health")).json()
-    assert health["sprint"] == "recruiting_1.11"
+    assert health["sprint"] in {"recruiting_1.11", "recruiting_1.12"}
     assert health["telegram"]["frozen"] is True
     text = prometheus_text()
     for name in (
@@ -344,3 +386,202 @@ async def test_webhook_signature_failure(client: TestClient):
     )
     ok = await signed.json()
     assert ok["ok"] is True
+
+
+def test_template_message_payload_creation():
+    from services.recruiting_ops.whatsapp_ops import build_template_message, session_window
+
+    payload = build_template_message(
+        to="+7 900 111-22-33",
+        name="hello_world",
+        language="en_US",
+        components=[{"type": "body", "parameters": [{"type": "text", "text": "Anna"}]}],
+    )
+    assert payload["type"] == "template"
+    assert payload["messaging_product"] == "whatsapp"
+    assert payload["to"].endswith("9001112233")
+    assert payload["template"]["name"] == "hello_world"
+    assert payload["template"]["language"]["code"] == "en_US"
+    assert payload["template"]["components"][0]["parameters"][0]["text"] == "Anna"
+    first = session_window({}, [])
+    assert first["template_required"] is True
+    assert first["reason"] == "TEMPLATE_REQUIRED_NO_INBOUND"
+
+
+async def test_env_alias_and_readiness_states(client: TestClient, monkeypatch):
+    health = await (await client.get(f"{OPS}/health")).json()
+    assert health["whatsapp"]["env_status"] == "NOT_CONFIGURED"
+    monkeypatch.setenv("WHATSAPP_TOKEN", TOKEN)
+    monkeypatch.setenv("WHATSAPP_PHONE_NUMBER_ID", "123")
+    from services.recruiting_ops.whatsapp_ops import env_readiness
+
+    partial = env_readiness()
+    assert partial["status"] == "PARTIALLY_CONFIGURED"
+    assert partial["alias_used"] is True
+    assert TOKEN not in str(partial)
+    monkeypatch.setenv("WHATSAPP_ACCESS_TOKEN", TOKEN)
+    monkeypatch.setenv("WHATSAPP_VERIFY_TOKEN", "verify")
+    monkeypatch.setenv("WHATSAPP_APP_SECRET", "app-secret")
+    ready = env_readiness()
+    assert ready["status"] == "READY_FOR_LIVE_CHECK"
+    assert ready["live_verified"] is False
+    assert ready["health_sends_message"] is False
+
+
+async def test_template_send_success_and_meta_failure(client: TestClient):
+    org = f"tpl-{uuid.uuid4().hex[:8]}"
+    captured: dict = {}
+
+    def transport(method, url, headers, raw, timeout):
+        if "/messages" in url and method == "POST":
+            captured["raw"] = raw
+            captured["n"] = captured.get("n", 0) + 1
+            return {"status": 200, "ok": True, "json": {"messages": [{"id": "wamid.tpl"}]}, "text": "{}"}
+        return {"status": 200, "ok": True, "json": {"id": "123", "verified_name": "WA"}, "text": "{}"}
+
+    set_http_transport(transport)
+    get_secret_store().put("whatsapp", "access_token", TOKEN)
+    get_secret_store().put("whatsapp", "phone_number_id", "123")
+    await client.post(f"{OPS}/providers/whatsapp/test-connection", json={}, headers=_hdr(org))
+    created = await client.post(f"{OPS}/candidates", json={"name": "Анна", "phone": "79001112233"}, headers=_hdr(org))
+    cid = (await created.json())["item"]["id"]
+    sent = await (
+        await client.post(
+            f"{OPS}/candidates/{cid}/whatsapp",
+            json={
+                "confirm": True,
+                "template_name": "hello_world",
+                "language": "en_US",
+                "parameters": ["Anna"],
+            },
+            headers=_hdr(org),
+        )
+    ).json()
+    assert sent["ok"] is True
+    assert sent["item"]["status"] == "SENT"
+    body = json.loads(captured["raw"].decode("utf-8"))
+    assert body["type"] == "template"
+    assert body["template"]["name"] == "hello_world"
+    assert TOKEN not in str(sent)
+
+    set_http_transport(_wa_transport(status=400))
+    failed = await (
+        await client.post(
+            f"{OPS}/candidates/{cid}/whatsapp",
+            json={"confirm": True, "template_name": "hello_world", "language": "en_US"},
+            headers=_hdr(org),
+        )
+    ).json()
+    assert failed.get("item", {}).get("status") == "FAILED" or failed.get("ok") is False
+
+
+async def test_text_inside_window_and_template_outside(client: TestClient):
+    org = f"win-{uuid.uuid4().hex[:8]}"
+    set_http_transport(_wa_transport())
+    get_secret_store().put("whatsapp", "access_token", TOKEN)
+    get_secret_store().put("whatsapp", "phone_number_id", "123")
+    await client.post(f"{OPS}/providers/whatsapp/test-connection", json={}, headers=_hdr(org))
+    created = await client.post(f"{OPS}/candidates", json={"name": "Окно", "phone": "79004445566"}, headers=_hdr(org))
+    cid = (await created.json())["item"]["id"]
+    first = await (await client.post(f"{OPS}/candidates/{cid}/whatsapp", json={"body": "hello", "confirm": True}, headers=_hdr(org))).json()
+    assert first["ok"] is False
+    assert first["error"] == "TEMPLATE_REQUIRED"
+    assert first["reason"] == "TEMPLATE_REQUIRED_NO_INBOUND"
+    await _open_window(client, org, "123", "79004445566", "wamid.win")
+    inside = await (await client.post(f"{OPS}/candidates/{cid}/whatsapp", json={"body": "hello", "confirm": True}, headers=_hdr(org))).json()
+    assert inside["item"]["status"] == "SENT"
+    created2 = await client.post(f"{OPS}/candidates", json={"name": "Истекло", "phone": "79004445567"}, headers=_hdr(org))
+    cid2 = (await created2.json())["item"]["id"]
+    from datetime import datetime, timedelta, timezone
+
+    old_ts = str(int((datetime.now(timezone.utc) - timedelta(hours=25)).timestamp()))
+    await client.post(f"{OPS}/webhooks/whatsapp", json=_inbound_payload("123", "79004445567", "wamid.old", ts=old_ts))
+    expired = await (await client.post(f"{OPS}/candidates/{cid2}/whatsapp", json={"body": "later", "confirm": True}, headers=_hdr(org))).json()
+    assert expired["ok"] is False
+    assert expired["error"] == "TEMPLATE_REQUIRED"
+    assert expired["reason"] == "TEMPLATE_REQUIRED_WINDOW_EXPIRED"
+    tpl = await (
+        await client.post(
+            f"{OPS}/candidates/{cid2}/whatsapp",
+            json={"confirm": True, "template_name": "hello_world", "language": "ru"},
+            headers=_hdr(org),
+        )
+    ).json()
+    assert tpl["item"]["status"] == "SENT"
+
+
+async def test_outbound_idempotency(client: TestClient):
+    org = f"idm-{uuid.uuid4().hex[:8]}"
+    calls = {"n": 0}
+
+    def transport(method, url, headers, raw, timeout):
+        if "/messages" in url and method == "POST":
+            calls["n"] += 1
+            return {"status": 200, "ok": True, "json": {"messages": [{"id": f"wamid.idm{calls['n']}"}]}, "text": "{}"}
+        return {"status": 200, "ok": True, "json": {"id": "123"}, "text": "{}"}
+
+    set_http_transport(transport)
+    get_secret_store().put("whatsapp", "access_token", TOKEN)
+    get_secret_store().put("whatsapp", "phone_number_id", "123")
+    await client.post(f"{OPS}/providers/whatsapp/test-connection", json={}, headers=_hdr(org))
+    created = await client.post(f"{OPS}/candidates", json={"name": "Идем", "phone": "79007778899"}, headers=_hdr(org))
+    cid = (await created.json())["item"]["id"]
+    await _open_window(client, org, "123", "79007778899", "wamid.idm-in")
+    headers = {**_hdr(org), "Idempotency-Key": "send-once-1"}
+    first = await (await client.post(f"{OPS}/candidates/{cid}/whatsapp", json={"body": "same", "confirm": True}, headers=headers)).json()
+    second = await (await client.post(f"{OPS}/candidates/{cid}/whatsapp", json={"body": "same", "confirm": True}, headers=headers)).json()
+    assert first["item"]["status"] == "SENT"
+    assert second.get("duplicate") is True
+    assert calls["n"] == 1
+    fail_calls = {"n": 0}
+
+    def flaky(method, url, headers, raw, timeout):
+        if "/messages" in url and method == "POST":
+            fail_calls["n"] += 1
+            if fail_calls["n"] == 1:
+                return {"status": 400, "ok": False, "json": {"error": {"message": "fail"}}, "text": "fail"}
+            return {"status": 200, "ok": True, "json": {"messages": [{"id": "wamid.retry-ok"}]}, "text": "{}"}
+        return {"status": 200, "ok": True, "json": {"id": "123"}, "text": "{}"}
+
+    set_http_transport(flaky)
+    fail_headers = {**_hdr(org), "Idempotency-Key": "retry-failed-1"}
+    failed = await (await client.post(f"{OPS}/candidates/{cid}/whatsapp", json={"body": "retry-me", "confirm": True}, headers=fail_headers)).json()
+    assert failed["item"]["status"] == "FAILED"
+    retried = await (await client.post(f"{OPS}/candidates/{cid}/whatsapp", json={"body": "retry-me", "confirm": True}, headers=fail_headers)).json()
+    assert retried["item"]["status"] == "SENT"
+    assert fail_calls["n"] == 2
+
+
+async def test_phone_number_org_survives_cache_reset(client: TestClient):
+    org = f"map-{uuid.uuid4().hex[:8]}"
+    await client.post(
+        f"{OPS}/providers/whatsapp/configure",
+        json={"phone_number_id": "pn-restart", "access_token": TOKEN},
+        headers=_hdr(org),
+    )
+    from services.recruiting_ops import get_recruiting_ops_service
+    from services.recruiting_ops.whatsapp_ops import org_for_phone_number_id, reset_whatsapp_runtime_for_tests
+
+    reset_whatsapp_runtime_for_tests()
+    assert org_for_phone_number_id("pn-restart") is None
+    resolved = await get_recruiting_ops_service().resolve_whatsapp_org("pn-restart")
+    assert resolved == org
+    payload = _inbound_payload("pn-restart", "79990001111", "wamid.map1")
+    posted = await (await client.post(f"{OPS}/webhooks/whatsapp", json=payload)).json()
+    assert posted["ok"] is True
+    conv = await (await client.get(f"{OPS}/whatsapp/conversations", headers=_hdr(org))).json()
+    assert conv["items"]
+
+
+async def test_unknown_phone_and_malformed_webhook(client: TestClient):
+    unknown = await (
+        await client.post(
+            f"{OPS}/webhooks/whatsapp",
+            json=_inbound_payload("unknown-pn", "79000000000", "wamid.unk"),
+        )
+    ).json()
+    assert unknown["ok"] is False
+    assert unknown["error"] == "UNKNOWN_PHONE_NUMBER_ID"
+    malformed = await (await client.post(f"{OPS}/webhooks/whatsapp", json={"entry": [{"changes": "bad"}]})).json()
+    assert malformed["ok"] is False
+    assert malformed["error"] == "MALFORMED_WEBHOOK"

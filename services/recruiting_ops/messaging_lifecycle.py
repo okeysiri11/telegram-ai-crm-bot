@@ -32,8 +32,10 @@ def normalize_outbound(body: dict[str, Any], *, connected: bool) -> dict[str, An
     if channel not in CHANNELS:
         return {"ok": False, "error": "validation", "message_ru": "Канал должен быть telegram, whatsapp или email."}
     text = _txt(body.get("body") or body.get("text") or body.get("message"))
-    if not text:
-        return {"ok": False, "error": "validation", "message_ru": "Укажите текст сообщения."}
+    nested = body.get("template") if isinstance(body.get("template"), dict) else {}
+    template_name = _txt(body.get("template_name") or nested.get("name"))
+    if not text and not template_name:
+        return {"ok": False, "error": "validation", "message_ru": "Укажите текст сообщения или шаблон."}
     if not connected:
         status = WAITING_PROVIDER
     else:
@@ -45,6 +47,12 @@ def normalize_outbound(body: dict[str, Any], *, connected: bool) -> dict[str, An
             "provider": channel,
             "to": _txt(body.get("to") or body.get("chat_id") or body.get("phone") or body.get("email")) or None,
             "body": text,
+            "template_name": template_name or None,
+            "template": body.get("template") if isinstance(body.get("template"), dict) else None,
+            "language": _txt(body.get("language") or body.get("language_code")) or None,
+            "components": body.get("components") if isinstance(body.get("components"), list) else None,
+            "parameters": body.get("parameters") if isinstance(body.get("parameters"), list) else None,
+            "message_kind": "template" if template_name else "text",
             "status": status,
             "approval_required": True,
             "sent": False,

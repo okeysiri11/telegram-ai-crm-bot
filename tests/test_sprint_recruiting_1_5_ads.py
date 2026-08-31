@@ -240,7 +240,7 @@ async def test_ads_control_center_providers_not_connected(client: TestClient):
 
 async def test_health_reports_stores_and_worker(client: TestClient):
     body = await (await client.get(f"{OPS}/health")).json()
-    assert body["sprint"] in {"recruiting_1.5", "recruiting_1.6", "recruiting_1.7", "recruiting_1.8", "recruiting_1.9", "recruiting_1.10", "recruiting_1.11"}
+    assert body["sprint"] in {"recruiting_1.5", "recruiting_1.6", "recruiting_1.7", "recruiting_1.8", "recruiting_1.9", "recruiting_1.10", "recruiting_1.11", "recruiting_1.12"}
     assert body["rate_limit_store"]["backend"] in {"redis", "process_local"}
     assert body["replay_store"]["backend"] in {"redis", "process_local"}
     assert body["tracking_worker"]["enabled"] is True

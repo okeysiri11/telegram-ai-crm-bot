@@ -96,7 +96,13 @@ class EnvSecretStore:
                 return None
         env_name = _env_name(provider, field)
         if env_name:
-            return (os.getenv(env_name) or "").strip() or None
+            found = (os.getenv(env_name) or "").strip()
+            if found:
+                return found
+        if provider == "whatsapp" and field == "access_token":
+            alias = (os.getenv("WHATSAPP_TOKEN") or "").strip()
+            if alias:
+                return alias
         return None
 
     def put(
@@ -155,7 +161,7 @@ def _env_name(provider: str, field: str) -> str | None:
         ("tiktok", "app_id"): "TIKTOK_ADS_APP_ID",
         ("tiktok", "app_secret"): "TIKTOK_ADS_APP_SECRET",
         ("telegram", "bot_token"): "VANGUARD_TELEGRAM_BOT_TOKEN",
-        ("whatsapp", "access_token"): "WHATSAPP_TOKEN",
+        ("whatsapp", "access_token"): "WHATSAPP_ACCESS_TOKEN",
         ("whatsapp", "verify_token"): "WHATSAPP_VERIFY_TOKEN",
         ("whatsapp", "phone_number_id"): "WHATSAPP_PHONE_NUMBER_ID",
         ("whatsapp", "business_account_id"): "WHATSAPP_BUSINESS_ACCOUNT_ID",

@@ -2,7 +2,7 @@
 
 No real credentials belong in this file, git, the frontend, API payloads, logs, audit records, or Cursor chat.
 
-WhatsApp is the production messaging channel for Recruiting in sprint `recruiting_1.11`. Telegram remains intentionally frozen/disabled and does not block core readiness. Meta Ads / Google Ads / TikTok Ads are not connected in this sprint.
+WhatsApp is the production messaging channel for Recruiting in sprint `recruiting_1.12`. Telegram remains intentionally frozen/disabled and does not block core readiness. Meta Ads / Google Ads / TikTok Ads are not connected in this sprint.
 
 ## Required values from Meta
 
@@ -10,7 +10,8 @@ Obtain these from Meta Business / WhatsApp Cloud API (App Dashboard → WhatsApp
 
 | Name | Secret | Purpose |
 | --- | --- | --- |
-| `WHATSAPP_ACCESS_TOKEN` | **yes** | Cloud API access token (alias: `WHATSAPP_TOKEN`) |
+| `WHATSAPP_ACCESS_TOKEN` | **yes** | Cloud API access token. Canonical name. |
+| `WHATSAPP_TOKEN` | **yes** | Backwards-compatible alias for `WHATSAPP_ACCESS_TOKEN` only |
 | `WHATSAPP_PHONE_NUMBER_ID` | no | Phone number identifier used in Graph URLs |
 | `WHATSAPP_BUSINESS_ACCOUNT_ID` | no | WABA id (needed to list message templates) |
 | `WHATSAPP_VERIFY_TOKEN` | **yes** | Token you choose; Meta must send the same value on webhook GET verify |
@@ -46,6 +47,16 @@ Local: `http://127.0.0.1:8080/api/recruiting-ops/v1/webhooks/whatsapp`
 
 Missing token or phone id ⇒ **NOT_CONFIGURED**. That is valid. Do not invent CONNECTED.
 
+`GET /api/recruiting-ops/v1/health` → `whatsapp.env_status` (no secret values):
+
+| Status | Meaning |
+| --- | --- |
+| `NOT_CONFIGURED` | None of the required env/store fields are present |
+| `PARTIALLY_CONFIGURED` | Some required fields present, not all |
+| `READY_FOR_LIVE_CHECK` | Token, phone number id, verify token, and app secret are present. Graph has **not** been called |
+
+Required for `READY_FOR_LIVE_CHECK`: `WHATSAPP_ACCESS_TOKEN` (or alias `WHATSAPP_TOKEN`), `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`, `WHATSAPP_APP_SECRET`. `WHATSAPP_BUSINESS_ACCOUNT_ID` is optional (needed to list templates).
+
 ## Provider state meanings
 
 | Status | Meaning |
@@ -64,7 +75,10 @@ Missing token or phone id ⇒ **NOT_CONFIGURED**. That is valid. Do not invent C
 - Conversations: `GET /whatsapp/conversations?candidate_id=`
 - Inbound POST webhook persists incoming messages. Candidate match is by normalized phone. Unmatched senders are `unresolved`.
 - Status webhooks update sent / delivered / read / failed. Failed webhooks are not retried forever.
-- Templates: `GET /whatsapp/templates` (requires WABA id). Listing templates is not a send.
+- Templates: `GET /whatsapp/templates` lists WABA templates. Outbound template send uses the same Cloud API `/{phone_number_id}/messages` path with `type: template` (name + language + optional components/parameters). No production template name is hard-coded.
+- 24-hour window: session text is allowed only after a customer inbound within 24 hours. First outbound or expired window returns `TEMPLATE_REQUIRED` (`TEMPLATE_REQUIRED_NO_INBOUND` / `TEMPLATE_REQUIRED_WINDOW_EXPIRED`) and does **not** send a text message.
+- Idempotency: `Idempotency-Key` header or `idempotency_key` body. The same key does not create a second Meta send after `SENT`. A previous `FAILED` send with the same key may retry deterministically.
+- `phone_number_id` → organization is persisted (`whatsapp_phone_map`) and reloaded after restart. Unknown ids are rejected (`UNKNOWN_PHONE_NUMBER_ID`).
 
 UI actions: Написать, Ответить, Создать с AI, Отправить. AI draft never sends. **Отправить** still requires a second human confirmation.
 

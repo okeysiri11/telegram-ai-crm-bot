@@ -163,6 +163,19 @@ class SharedStore:
             bucket.pop(k, None)
         return True
 
+    def has_nonce(self, nonce: str) -> bool:
+        token = str(nonce or "").strip()
+        if not token:
+            return False
+        if self._redis is not None:
+            try:
+                return bool(self._redis.exists(f"{NONCE_PREFIX}{token}"))
+            except Exception:
+                return False
+        bucket = self._map.get("nonces") or {}
+        seen = float(bucket.get(token) or 0)
+        return bool(seen)
+
     def nonce_ttl(self, nonce: str) -> int | None:
         token = str(nonce or "").strip()
         if self._redis is not None:
