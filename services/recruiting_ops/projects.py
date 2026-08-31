@@ -74,7 +74,8 @@ def infer_project_key(*, source: str | None = None, project_key: str | None = No
     explicit = _txt(project_key).lower()
     if explicit:
         return explicit
-    if _txt(source).lower() == VANGUARD_PROJECT_KEY:
+    src = _txt(source).lower()
+    if src == VANGUARD_PROJECT_KEY or src == "vanguard-global" or src.startswith("vanguard-"):
         return VANGUARD_PROJECT_KEY
     return None
 

@@ -46,6 +46,9 @@ def preserve_first_touch(existing: dict[str, Any], incoming: dict[str, Any]) -> 
         "utm_term": _txt(incoming.get("utm_term")) or existing.get("utm_term"),
         "referrer": _txt(incoming.get("referrer")) or existing.get("referrer"),
         "landing_page": _txt(incoming.get("landing_page")) or existing.get("landing_page"),
+        "gclid": _txt(incoming.get("gclid")) or existing.get("gclid"),
+        "fbclid": _txt(incoming.get("fbclid")) or existing.get("fbclid"),
+        "click_id": _txt(incoming.get("click_id")) or existing.get("click_id"),
     }
     for key in ("first_touch_source", "first_touch_medium", "first_touch_campaign"):
         if not _txt(existing.get(key)):
@@ -61,7 +64,10 @@ def attribution_chain(lead: dict[str, Any], candidate: dict[str, Any] | None = N
     return {
         "provider": _txt(lead.get("provider") or lead.get("utm_source") or lead.get("first_touch_source")) or None,
         "campaign": _txt(lead.get("utm_campaign") or lead.get("campaign_id") or lead.get("first_touch_campaign")) or None,
-        "click_or_lead": _txt(lead.get("click_id") or lead.get("external_id") or lead.get("id")) or None,
+        "click_or_lead": _txt(
+            lead.get("click_id") or lead.get("gclid") or lead.get("fbclid") or lead.get("external_id") or lead.get("id")
+        )
+        or None,
         "candidate": _txt((candidate or {}).get("id") or lead.get("candidate_id")) or None,
         "qualified": qualified,
         "interview": interview,

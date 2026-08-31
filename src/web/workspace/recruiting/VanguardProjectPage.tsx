@@ -8,7 +8,15 @@ import { Badge, Button, Card, Input, Table } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import { asList, recruitingOpsGet, recruitingOpsPost, pick } from "../business-ops/opsApi";
-import { PIPELINE_LABELS, PIPELINE_STAGES, mapUiRoleToRecruiting, ruLeadStatus } from "./recruitingLabels";
+import {
+  PIPELINE_LABELS,
+  PIPELINE_STAGES,
+  mapUiRoleToRecruiting,
+  recruitingClickLabel,
+  recruitingConsentLabel,
+  recruitingUtmLabel,
+  ruLeadStatus,
+} from "./recruitingLabels";
 import { RecruitingOpsFrame, displayMetric } from "./RecruitingOpsFrame";
 
 type Row = Record<string, unknown>;
@@ -280,15 +288,19 @@ export function VanguardProjectPage() {
         <div data-testid="vanguard-leads">
         <Card title="Лиды Vanguard">
           <SimpleTable
-            headers={["Имя", "Источник", "Проект", "Reference", "Программа", "Страна", "UTM", "Статус"]}
+            headers={["Имя", "Телефон", "Возраст", "Согласие", "Источник", "Проект", "Reference", "Программа", "Страна", "UTM", "Клики", "Статус"]}
             rows={leads.map((l) => [
               pick(l, "name"),
+              pick(l, "phone"),
+              pick(l, "age"),
+              recruitingConsentLabel(l.contact_consent),
               pick(l, "source"),
               pick(l, "project_key"),
               pick(l, "external_id"),
               pick(l, "program_of_interest", "vacancy", "vacancy_id"),
               pick(l, "country"),
-              [pick(l, "utm_source"), pick(l, "utm_medium"), pick(l, "utm_campaign")].filter((x) => x && x !== "—").join(" / ") || "—",
+              recruitingUtmLabel(l),
+              recruitingClickLabel(l),
               ruLeadStatus(String(l.status || "")),
             ])}
           />
@@ -319,9 +331,12 @@ export function VanguardProjectPage() {
         <div data-testid="vanguard-candidates">
         <Card title="Кандидаты Vanguard">
           <SimpleTable
-            headers={["Имя", "Этап", "Источник"]}
+            headers={["Имя", "Телефон", "Возраст", "Согласие", "Этап", "Источник"]}
             rows={candidates.map((c) => [
               pick(c, "name"),
+              pick(c, "phone"),
+              pick(c, "age"),
+              recruitingConsentLabel(c.contact_consent),
               PIPELINE_LABELS[String(c.pipeline_stage || "")] || pick(c, "pipeline_stage"),
               pick(c, "source"),
             ])}

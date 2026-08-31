@@ -129,6 +129,16 @@ VANGUARD_CONTRACT = {
             "utm_campaign",
             "utm_content",
             "utm_term",
+            "age",
+            "contact_consent",
+            "country",
+            "preferred_language",
+            "program_of_interest",
+            "unit_of_interest",
+            "application_message",
+            "gclid",
+            "fbclid",
+            "click_id",
             "notes",
         ],
         "example": {
@@ -136,12 +146,20 @@ VANGUARD_CONTRACT = {
             "last_name": "Петров",
             "phone": "+380501112233",
             "email": "ivan@example.com",
-            "source": "vanguard",
+            "age": 24,
+            "contact_consent": True,
+            "source": "vanguard-global",
+            "project_key": "vanguard",
             "vacancy_id": "vac-1",
             "external_id": "vg-1001",
             "utm_source": "vanguard",
             "utm_medium": "website",
             "utm_campaign": "career",
+            "utm_content": "hero",
+            "utm_term": "intern",
+            "gclid": "gclid-example",
+            "fbclid": "fbclid-example",
+            "click_id": "click-example",
         },
         "duplicate_policy": "same external_id + same vacancy → handled as duplicate; different vacancy → new lead",
     },
@@ -730,6 +748,11 @@ class RecruitingOpsService:
         name = _txt(body.get("name") or body.get("full_name") or " ".join(p for p in (first, last) if p))
         if not name:
             return {"ok": False, "error": "validation", "message_ru": "Укажите имя лида"}
+        from services.recruiting_ops.ingest_fields import parse_application_fields
+
+        app_fields, app_error = parse_application_fields(body)
+        if app_error:
+            return app_error
         org = _org(organization_id, body.get("tenant_id"))
         await self.ensure_hydrated(org)
         vacancy = _txt(body.get("vacancy_id") or body.get("vacancy")) or None
@@ -740,7 +763,7 @@ class RecruitingOpsService:
             "name": name,
             "first_name": first or None,
             "last_name": last or None,
-            "phone": _txt(body.get("phone")),
+            "phone": app_fields.get("phone") if app_fields else _txt(body.get("phone")),
             "email": _txt(body.get("email")),
             "source": _txt(body.get("source")) or "manual",
             "project_key": infer_project_key(
@@ -777,6 +800,8 @@ class RecruitingOpsService:
         from services.recruiting_ops.attribution import touch_payload
 
         item.update(touch_payload(body))
+        if app_fields:
+            item.update(app_fields)
         must_be_durable = is_production_runtime() if require_durable is None else require_durable
         try:
             saved = await self._persist("lead", item)
@@ -849,6 +874,12 @@ class RecruitingOpsService:
         if not email and not phone:
             self._note_ingest_error("validation", "Укажите email или телефон")
             return {"ok": False, "error": "validation", "message_ru": "Укажите email или телефон"}
+        from services.recruiting_ops.ingest_fields import fill_missing_application_fields, parse_application_fields
+
+        app_fields, app_error = parse_application_fields(body)
+        if app_error:
+            self._note_ingest_error("validation", app_error.get("message_ru") or "")
+            return app_error
         org = _org(
             body.get("organization_id") or os.getenv("VANGUARD_ORGANIZATION_ID") or "ados",
             body.get("tenant_id"),
@@ -868,6 +899,7 @@ class RecruitingOpsService:
             from services.recruiting_ops.attribution import preserve_first_touch
 
             patch = preserve_first_touch(existing, body)
+            patch.update(fill_missing_application_fields(existing, app_fields or {}))
             patch["updated_at"] = _now()
             existing.update(patch)
             persisted = await self._persist_patch(org, str(existing["id"]), patch)
@@ -1246,18 +1278,18 @@ class RecruitingOpsService:
             return self._ok(item=existing, lead=lead, already_converted=True)
         body = body or {}
         stage = _stage(body.get("pipeline_stage") or ("QUALIFIED" if lead.get("status") == "qualified" else "NEW"))
+        from services.recruiting_ops.ingest_fields import application_fields_from_lead
+
         candidate_body = {
             "name": lead.get("name"),
-            "phone": lead.get("phone"),
             "email": lead.get("email"),
-            "source": lead.get("source"),
-            "project_key": lead.get("project_key") or infer_project_key(source=_txt(lead.get("source"))),
             "campaign_id": lead.get("campaign_id"),
             "vacancy_id": body.get("vacancy_id") or lead.get("vacancy_id"),
             "assignee": body.get("assignee") or lead.get("assignee"),
             "lead_id": lead_id,
             "pipeline_stage": stage,
             "notes": lead.get("notes"),
+            **application_fields_from_lead(lead),
         }
         created = await self.create_candidate(org, candidate_body, role)
         if not created.get("ok"):
@@ -1288,6 +1320,11 @@ class RecruitingOpsService:
         name = _txt(body.get("name") or body.get("full_name"))
         if not name:
             return {"ok": False, "error": "validation", "message_ru": "Укажите имя кандидата"}
+        from services.recruiting_ops.ingest_fields import parse_application_fields
+
+        app_fields, app_error = parse_application_fields(body)
+        if app_error:
+            return app_error
         org = _org(organization_id, body.get("tenant_id"))
         await self.ensure_hydrated(org)
         item = {
@@ -1295,7 +1332,7 @@ class RecruitingOpsService:
             "organization_id": org,
             "tenant_id": org,
             "name": name,
-            "phone": _txt(body.get("phone")),
+            "phone": (app_fields or {}).get("phone") or _txt(body.get("phone")) or None,
             "email": _txt(body.get("email")),
             "source": _txt(body.get("source")) or None,
             "project_key": infer_project_key(
@@ -1313,6 +1350,24 @@ class RecruitingOpsService:
             "created_at": _now(),
             "updated_at": _now(),
         }
+        if app_fields:
+            item.update(app_fields)
+        for key in (
+            "utm_source",
+            "utm_medium",
+            "utm_campaign",
+            "utm_content",
+            "utm_term",
+            "country",
+            "preferred_language",
+            "unit_of_interest",
+            "program_of_interest",
+            "application_message",
+        ):
+            if key not in body:
+                continue
+            value = body.get(key)
+            item[key] = _txt(value) or None if isinstance(value, str) or value is None else value
         saved = await self._persist("candidate", item)
         self._bag(org)["candidate"].insert(0, saved)
         await self._activity(

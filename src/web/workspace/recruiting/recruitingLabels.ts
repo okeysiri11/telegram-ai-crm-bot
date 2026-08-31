@@ -44,6 +44,27 @@ export const COMM_LABELS: Record<string, string> = {
   MANUAL: "Вручную",
 };
 
+export function recruitingConsentLabel(value: unknown): string {
+  if (value === true) return "да";
+  if (value === false) return "нет";
+  return "—";
+}
+
+export function recruitingUtmLabel(row: Record<string, unknown>): string {
+  const parts = [row.utm_source, row.utm_medium, row.utm_campaign, row.utm_content, row.utm_term]
+    .map((x) => (x == null ? "" : String(x).trim()))
+    .filter(Boolean);
+  return parts.join(" / ") || "—";
+}
+
+export function recruitingClickLabel(row: Record<string, unknown>): string {
+  const parts: string[] = [];
+  if (row.gclid) parts.push(`gclid:${String(row.gclid)}`);
+  if (row.fbclid) parts.push(`fbclid:${String(row.fbclid)}`);
+  if (row.click_id) parts.push(`click_id:${String(row.click_id)}`);
+  return parts.join(" · ") || "—";
+}
+
 export function ruLeadStatus(status: string): string {
   const map: Record<string, string> = {
     new: "Новый",
