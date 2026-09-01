@@ -16,11 +16,14 @@ from typing import Any
 from repositories.recruiting_ops_repository import RecruitingOpsRepository, record_to_dict
 from services.recruiting_ops.projects import (
     belongs_to_project,
+    canonical_vanguard_org,
     get_project,
     infer_project_key,
     project_catalog,
     resolve_project_key,
     status_payload,
+    vanguard_org_aliases,
+    vanguard_read_org_keys,
     vanguard_website_url,
     STATUS_CONNECTED,
     STATUS_DEGRADED,
@@ -264,6 +267,7 @@ class RecruitingOpsService:
         org = _org(organization_id)
         if org in self._hydrated:
             return
+        loaded = False
         try:
             from database.session import get_session
 
@@ -272,10 +276,16 @@ class RecruitingOpsService:
                 bag = self._bag(org)
                 for kind in KINDS:
                     rows = await repo.list_kind(org, kind)
-                    bag[kind] = [record_to_dict(r) for r in rows]
+                    db_items = [record_to_dict(r) for r in rows]
+                    merged: dict[str, dict[str, Any]] = {str(item.get("id")): item for item in bag[kind] if item.get("id")}
+                    for row in db_items:
+                        merged[str(row.get("id"))] = row
+                    bag[kind] = list(merged.values())
+            loaded = True
         except Exception as exc:
-            logger.warning("recruiting_ops hydrate skipped: %s", exc)
-        self._hydrated.add(org)
+            logger.warning("recruiting_ops hydrate skipped org=%s: %s", org, exc)
+        if loaded:
+            self._hydrated.add(org)
         from services.recruiting_ops.tracking_worker import get_tracking_worker
 
         get_tracking_worker().ensure_loop(self.process_tracking_retries)
@@ -289,6 +299,66 @@ class RecruitingOpsService:
             get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
         self._sync_runtime_connections(org)
         self._index_whatsapp_phone_maps()
+
+    def _owner_read(self, role: str | None) -> bool:
+        return normalize_role(role) in {"platform_owner", "owner"}
+
+    def _read_orgs(self, organization_id: str, role: str | None) -> list[str]:
+        requested = _org(organization_id)
+        orgs = [requested] if requested else []
+        if self._owner_read(role) and requested.lower() in set(vanguard_read_org_keys()):
+            for alias in vanguard_org_aliases():
+                if alias not in orgs:
+                    orgs.append(alias)
+        return orgs
+
+    def _collect_kind(self, orgs: list[str], kind: str) -> list[dict[str, Any]]:
+        out: list[dict[str, Any]] = []
+        seen: set[str] = set()
+        for org in orgs:
+            for item in self._bag(org).get(kind) or []:
+                item_id = str(item.get("id") or "")
+                if item_id and item_id in seen:
+                    continue
+                if item_id:
+                    seen.add(item_id)
+                out.append(item)
+        out.sort(key=lambda item: str(item.get("created_at") or item.get("submitted_at") or ""), reverse=True)
+        return out
+
+    async def _locate(
+        self,
+        organization_id: str,
+        kind: str,
+        item_id: str,
+        role: str | None,
+    ) -> tuple[str, dict[str, Any] | None]:
+        for org in self._read_orgs(organization_id, role):
+            await self.ensure_hydrated(org)
+            found = self._find(org, kind, item_id)
+            if found:
+                return org, found
+        return _org(organization_id), None
+
+    async def _reader_items(
+        self,
+        organization_id: str,
+        kind: str,
+        role: str | None,
+    ) -> tuple[str, list[str], list[dict[str, Any]]]:
+        orgs = self._read_orgs(organization_id, role)
+        for org in orgs:
+            await self.ensure_hydrated(org)
+        items = self._collect_kind(orgs, kind)
+        logger.info(
+            "RECRUITING_READ_SCOPE requested=%s orgs=%s kind=%s count=%s role=%s",
+            _org(organization_id),
+            ",".join(orgs),
+            kind,
+            len(items),
+            normalize_role(role),
+        )
+        return _org(organization_id), orgs, items
 
     async def _persist(self, kind: str, data: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -553,11 +623,13 @@ class RecruitingOpsService:
         denied = require(role, "list")
         if denied:
             return denied
-        org = _org(organization_id)
-        await self.ensure_hydrated(org)
-        bag = self._bag(org)
-        overdue, upcoming = self._task_buckets(bag["task"])
-        unassigned = [l for l in bag["lead"] if not _txt(l.get("assignee")) and l.get("status") != "converted"]
+        org, orgs, leads = await self._reader_items(organization_id, "lead", role)
+        candidates = self._collect_kind(orgs, "candidate")
+        vacancies = self._collect_kind(orgs, "vacancy")
+        tasks = self._collect_kind(orgs, "task")
+        bag = {kind: self._collect_kind(orgs, kind) for kind in ("lead", "candidate", "vacancy", "task", "campaign")}
+        overdue, upcoming = self._task_buckets(tasks)
+        unassigned = [l for l in leads if not _txt(l.get("assignee")) and l.get("status") != "converted"]
         attention = []
         if overdue:
             attention.append({"kind": "overdue_tasks", "count": len(overdue), "message_ru": f"Просрочено задач: {len(overdue)}"})
@@ -565,9 +637,9 @@ class RecruitingOpsService:
             attention.append({"kind": "unassigned_leads", "count": len(unassigned), "message_ru": f"Лиды без рекрутера: {len(unassigned)}"})
         return self._ok(
             cards={
-                "leads": len(bag["lead"]),
-                "candidates": len(bag["candidate"]),
-                "vacancies": len(bag["vacancy"]),
+                "leads": len(leads),
+                "candidates": len(candidates),
+                "vacancies": len(vacancies),
                 "overdue_tasks": len(overdue),
                 "next_tasks": len(upcoming),
             },
@@ -577,6 +649,8 @@ class RecruitingOpsService:
             visits=VISITS_UNAVAILABLE,
             vanguard=self.vanguard_contract(),
             projects=self._project_summaries(org, bag),
+            read_organization_id=org,
+            read_organization_ids=orgs,
         )
 
     def _task_buckets(self, tasks: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -597,8 +671,10 @@ class RecruitingOpsService:
         if denied:
             return denied
         org = _org(organization_id)
-        await self.ensure_hydrated(org)
-        bag = self._bag(org)
+        orgs = self._read_orgs(organization_id, role)
+        for read_org in orgs:
+            await self.ensure_hydrated(read_org)
+        bag = {kind: self._collect_kind(orgs, kind) for kind in ("lead", "candidate", "vacancy", "campaign", "tracking")}
         key = _txt(project).lower()
         leads = list(bag["lead"])
         candidates = list(bag["candidate"])
@@ -662,8 +738,18 @@ class RecruitingOpsService:
         if denied:
             return denied
         org = _org(organization_id)
-        await self.ensure_hydrated(org)
-        items = list(self._bag(org).get(kind) or [])
+        orgs = self._read_orgs(organization_id, role)
+        for read_org in orgs:
+            await self.ensure_hydrated(read_org)
+        items = self._collect_kind(orgs, kind)
+        logger.info(
+            "RECRUITING_READ_SCOPE requested=%s orgs=%s kind=%s count=%s role=%s",
+            org,
+            ",".join(orgs),
+            kind,
+            len(items),
+            normalize_role(role),
+        )
         key = _txt(project).lower()
         if key:
             items = self._filter_project_items(org, kind, items, key)
@@ -894,7 +980,7 @@ class RecruitingOpsService:
             self._note_ingest_error("validation", app_error.get("message_ru") or "")
             return app_error
         org = _org(
-            body.get("organization_id") or os.getenv("VANGUARD_ORGANIZATION_ID") or "ados",
+            body.get("organization_id") or canonical_vanguard_org(),
             body.get("tenant_id"),
         )
         await self.ensure_hydrated(org)
@@ -934,6 +1020,14 @@ class RecruitingOpsService:
                 payload={"external_id": external_id, "vacancy_id": vacancy, "last_touch_source": patch.get("last_touch_source")},
             )
             self._note_ingest_success()
+            logger.info(
+                "VANGUARD_INGEST_DUPLICATE org=%s durable=%s lead_id=%s project_key=%s source=%s",
+                org,
+                existing.get("durable"),
+                existing.get("id"),
+                existing.get("project_key"),
+                existing.get("source"),
+            )
             return self._ok(item=existing, duplicate=True, already_exists=True)
         payload = dict(body)
         payload["name"] = name
@@ -973,6 +1067,14 @@ class RecruitingOpsService:
                 },
             )
             self._note_ingest_success()
+            logger.info(
+                "VANGUARD_INGEST_PERSISTED org=%s durable=%s lead_id=%s project_key=%s source=%s",
+                org,
+                item.get("durable"),
+                item.get("id"),
+                item.get("project_key"),
+                item.get("source"),
+            )
         else:
             self._note_ingest_error(str(created.get("error") or "ingest_failed"), str(created.get("message_ru") or ""))
         return created
@@ -1212,9 +1314,10 @@ class RecruitingOpsService:
             return denied
         org = _org(organization_id)
         await self.ensure_hydrated(org)
-        item = self._find(org, "lead", lead_id)
+        located_org, item = await self._locate(organization_id, "lead", lead_id, role)
         if not item:
             return {"ok": False, "error": "not_found", "message_ru": "Лид не найден"}
+        org = located_org
         patch = dict(body)
         if "status" in patch:
             patch["status"] = _lead_status(patch.get("status"), item.get("status") or "new")
@@ -1289,9 +1392,10 @@ class RecruitingOpsService:
             return denied
         org = _org(organization_id)
         await self.ensure_hydrated(org)
-        lead = self._find(org, "lead", lead_id)
+        located_org, lead = await self._locate(organization_id, "lead", lead_id, role)
         if not lead:
             return {"ok": False, "error": "not_found", "message_ru": "Лид не найден"}
+        org = located_org
         if lead.get("candidate_id"):
             existing = self._find(org, "candidate", str(lead["candidate_id"]))
             return self._ok(item=existing, lead=lead, already_converted=True)
@@ -1635,12 +1739,14 @@ class RecruitingOpsService:
         if denied:
             return denied
         org = _org(organization_id)
-        await self.ensure_hydrated(org)
+        orgs = self._read_orgs(organization_id, role)
+        for read_org in orgs:
+            await self.ensure_hydrated(read_org)
         spec = get_project(project_key) or {"project_key": project_key}
         key = spec.get("project_key") or VANGUARD_PROJECT_KEY
-        leads = [item for item in self._bag(org)["lead"] if belongs_to_project(item, key)]
-        cands = [item for item in self._bag(org)["candidate"] if belongs_to_project(item, key)]
-        events = [item for item in self._bag(org).get("tracking") or [] if belongs_to_project(item, key)]
+        leads = [item for item in self._collect_kind(orgs, "lead") if belongs_to_project(item, key)]
+        cands = [item for item in self._collect_kind(orgs, "candidate") if belongs_to_project(item, key)]
+        events = [item for item in self._collect_kind(orgs, "tracking") if belongs_to_project(item, key)]
         campaigns = self._campaign_metrics(org, key, leads, cands, events)
         from services.recruiting_ops.ads_control import control_center
         from services.recruiting_ops.attribution import source_analytics
@@ -1881,8 +1987,10 @@ class RecruitingOpsService:
         if denied:
             return denied
         org = _org(organization_id)
-        await self.ensure_hydrated(org)
-        bag = self._bag(org)
+        orgs = self._read_orgs(organization_id, role)
+        for read_org in orgs:
+            await self.ensure_hydrated(read_org)
+        bag = {kind: self._collect_kind(orgs, kind) for kind in KINDS}
         items = []
         for summary in self._project_summaries(org, bag):
             integration = await self.project_integration(org, summary["project_key"], role)
@@ -1905,10 +2013,12 @@ class RecruitingOpsService:
         if not spec:
             return {"ok": False, "error": "not_found", "message_ru": "Проект не найден"}
         org = _org(organization_id)
-        await self.ensure_hydrated(org)
+        orgs = self._read_orgs(organization_id, role)
+        for read_org in orgs:
+            await self.ensure_hydrated(read_org)
         key = spec["project_key"]
-        leads = [item for item in self._bag(org)["lead"] if belongs_to_project(item, key)]
-        cands = [item for item in self._bag(org)["candidate"] if belongs_to_project(item, key)]
+        leads = [item for item in self._collect_kind(orgs, "lead") if belongs_to_project(item, key)]
+        cands = [item for item in self._collect_kind(orgs, "candidate") if belongs_to_project(item, key)]
         today = _today()
         today_leads = [item for item in leads if _date_only(item.get("created_at") or item.get("submitted_at")) == today]
         converted = [item for item in leads if _lead_status(item.get("status")) == "converted"]
@@ -1923,7 +2033,7 @@ class RecruitingOpsService:
         from services.recruiting_ops.attribution import source_analytics
 
         campaigns = self._campaign_metrics(org, key, leads, cands, traffic["events"])
-        comms = [item for item in self._bag(org)["communication"] if belongs_to_project(item, key)]
+        comms = [item for item in self._collect_kind(orgs, "communication") if belongs_to_project(item, key)]
         activity = await self.list_activity(org, role, project=key)
         website = (integration.get("website") if integration.get("ok") else {}) or {}
         return self._ok(

@@ -68,7 +68,8 @@ def is_public_recruiting_path(request: web.Request) -> bool:
 
 def _org_label(request: web.Request) -> str:
     return (
-        request.headers.get("X-Organization-Id")
+        request.headers.get("X-Recruiting-Organization-Id")
+        or request.headers.get("X-Organization-Id")
         or request.headers.get("X-Tenant-Id")
         or request.rel_url.query.get("organization_id")
         or "unset"

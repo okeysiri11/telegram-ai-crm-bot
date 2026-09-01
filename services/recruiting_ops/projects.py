@@ -80,6 +80,34 @@ def infer_project_key(*, source: str | None = None, project_key: str | None = No
     return None
 
 
+def canonical_vanguard_org() -> str:
+    """Org used by HMAC ingest. Recruiter reads for owners must include this identity."""
+    return (os.getenv("VANGUARD_ORGANIZATION_ID") or "ados").strip() or "ados"
+
+
+def vanguard_org_aliases() -> tuple[str, ...]:
+    """Known write identities for Vanguard ingest (never a wildcard across tenants)."""
+    seen: list[str] = []
+    for raw in (canonical_vanguard_org(), "ados", "default"):
+        key = _txt(raw)
+        if key and key not in seen:
+            seen.append(key)
+    return tuple(seen)
+
+
+def vanguard_read_org_keys() -> tuple[str, ...]:
+    """Owner UI/JWT identities that must still see Vanguard ingest rows.
+
+    ``demo-corp`` is a read alias (owner JWT / org selector), not a write target.
+    """
+    seen: list[str] = []
+    for raw in (*vanguard_org_aliases(), "demo-corp"):
+        key = _txt(raw).lower()
+        if key and key not in seen:
+            seen.append(key)
+    return tuple(seen)
+
+
 def vanguard_website_url() -> str | None:
     """Public website URL from env. Never treat localhost as a production URL."""
     url = (

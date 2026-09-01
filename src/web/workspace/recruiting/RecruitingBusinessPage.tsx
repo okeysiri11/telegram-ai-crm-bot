@@ -12,7 +12,7 @@ import {
   type OpsNavItem,
   type OpsSection,
 } from "../business-ops/BusinessCabinetShell";
-import { asList, recruitingOpsFirstError, recruitingOpsGet, recruitingOpsPost, pick } from "./recruitingApi";
+import { asList, recruitingOpsFirstError, recruitingOpsGet, recruitingOpsPost, pick, recruitingWorkspaceHeaders } from "./recruitingApi";
 import { resolveCabinetCaps } from "../business-ops/cabinetCapabilities";
 import { displayMetric } from "./RecruitingOpsFrame";
 import {
@@ -107,11 +107,7 @@ export function RecruitingBusinessPage() {
   const [whatsappCandidate, setWhatsappCandidate] = useState<Row | null>(null);
 
   const headers = useMemo(
-    () => ({
-      "X-Organization-Id": organizationId,
-      "X-Tenant-Id": organizationId,
-      "X-Role": recruitingRole,
-    }),
+    () => recruitingWorkspaceHeaders(organizationId, recruitingRole),
     [organizationId, recruitingRole],
   );
 

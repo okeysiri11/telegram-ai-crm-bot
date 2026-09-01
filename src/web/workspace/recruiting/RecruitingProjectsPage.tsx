@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Card } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
-import { asList, recruitingOpsGet, recruitingOpsUserError, pick } from "./recruitingApi";
+import { asList, recruitingOpsGet, recruitingOpsUserError, pick, recruitingWorkspaceHeaders } from "./recruitingApi";
 import { mapUiRoleToRecruiting } from "./recruitingLabels";
 import { RecruitingOpsFrame, displayMetric } from "./RecruitingOpsFrame";
 
@@ -31,11 +31,7 @@ export function RecruitingProjectsPage() {
   const [projects, setProjects] = useState<ProjectRow[]>([]);
 
   const headers = useMemo(
-    () => ({
-      "X-Organization-Id": organizationId,
-      "X-Tenant-Id": organizationId,
-      "X-Role": recruitingRole,
-    }),
+    () => recruitingWorkspaceHeaders(organizationId, recruitingRole),
     [organizationId, recruitingRole],
   );
 

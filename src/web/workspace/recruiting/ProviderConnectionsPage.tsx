@@ -8,7 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Dialog, Input } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
-import { recruitingOpsGet, recruitingOpsPost, recruitingOpsUserError } from "./recruitingApi";
+import { recruitingOpsGet, recruitingOpsPost, recruitingOpsUserError, recruitingWorkspaceHeaders } from "./recruitingApi";
 import { mapUiRoleToRecruiting } from "./recruitingLabels";
 import { RecruitingOpsFrame } from "./RecruitingOpsFrame";
 
@@ -68,11 +68,7 @@ export function ProviderConnectionsPage() {
   const [testEmailOpen, setTestEmailOpen] = useState(false);
 
   const headers = useMemo(
-    () => ({
-      "X-Organization-Id": organizationId,
-      "X-Tenant-Id": organizationId,
-      "X-Role": recruitingRole,
-    }),
+    () => recruitingWorkspaceHeaders(organizationId, recruitingRole),
     [organizationId, recruitingRole],
   );
 

@@ -7,7 +7,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Input, Table } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
-import { asList, recruitingOpsFirstError, recruitingOpsGet, recruitingOpsPost, pick } from "./recruitingApi";
+import { asList, recruitingOpsFirstError, recruitingOpsGet, recruitingOpsPost, pick, recruitingWorkspaceHeaders } from "./recruitingApi";
 import {
   PIPELINE_LABELS,
   PIPELINE_STAGES,
@@ -88,11 +88,7 @@ export function VanguardProjectPage() {
   });
 
   const headers = useMemo(
-    () => ({
-      "X-Organization-Id": organizationId,
-      "X-Tenant-Id": organizationId,
-      "X-Role": recruitingRole,
-    }),
+    () => recruitingWorkspaceHeaders(organizationId, recruitingRole),
     [organizationId, recruitingRole],
   );
 

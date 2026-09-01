@@ -8,7 +8,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Input } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
-import { asList, recruitingOpsGet, recruitingOpsPost, recruitingOpsUserError } from "./recruitingApi";
+import { asList, recruitingOpsGet, recruitingOpsPost, recruitingOpsUserError, recruitingWorkspaceHeaders } from "./recruitingApi";
 import { mapUiRoleToRecruiting } from "./recruitingLabels";
 import { RecruitingOpsFrame } from "./RecruitingOpsFrame";
 
@@ -47,11 +47,7 @@ export function AdsControlCenterPage() {
   const [aiType, setAiType] = useState("pause_campaign");
 
   const headers = useMemo(
-    () => ({
-      "X-Organization-Id": organizationId,
-      "X-Tenant-Id": organizationId,
-      "X-Role": recruitingRole,
-    }),
+    () => recruitingWorkspaceHeaders(organizationId, recruitingRole),
     [organizationId, recruitingRole],
   );
 

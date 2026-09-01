@@ -23,6 +23,7 @@ def _org(request: web.Request, body: dict | None = None) -> str:
         or body.get("tenant_id")
         or request.rel_url.query.get("organization_id")
         or request.rel_url.query.get("tenant_id")
+        or request.headers.get("X-Recruiting-Organization-Id")
         or request.headers.get("X-Organization-Id")
         or request.headers.get("X-Tenant-Id")
         or "default"
