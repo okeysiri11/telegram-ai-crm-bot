@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Card } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
-import { asList, recruitingOpsGet, pick } from "../business-ops/opsApi";
+import { asList, recruitingOpsGet, recruitingOpsUserError, pick } from "./recruitingApi";
 import { mapUiRoleToRecruiting } from "./recruitingLabels";
 import { RecruitingOpsFrame, displayMetric } from "./RecruitingOpsFrame";
 
@@ -44,7 +44,7 @@ export function RecruitingProjectsPage() {
     setError(null);
     const res = await recruitingOpsGet("/projects", headers);
     if (!res.ok) {
-      setError("Recruiting Ops API недоступен. Запустите backend (:8080).");
+      setError(recruitingOpsUserError(res.status, res.json));
       setProjects([]);
       setLoading(false);
       return;

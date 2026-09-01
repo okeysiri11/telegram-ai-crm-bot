@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge, Card } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
-import { recruitingOpsGet, recruitingOpsPost } from "../business-ops/opsApi";
+import { recruitingOpsGet, recruitingOpsPost, recruitingOpsUserError } from "./recruitingApi";
 import { mapUiRoleToRecruiting } from "./recruitingLabels";
 import { RecruitingOpsFrame } from "./RecruitingOpsFrame";
 
@@ -92,7 +92,7 @@ export function RecruitingInfraPage() {
     setError(null);
     const res = await recruitingOpsGet("/ops/diagnostics", headers);
     if (!res.ok) {
-      setError("Recruiting Ops API недоступен. Запустите backend (:8080).");
+      setError(recruitingOpsUserError(res.status, res.json));
       setData({});
       return;
     }

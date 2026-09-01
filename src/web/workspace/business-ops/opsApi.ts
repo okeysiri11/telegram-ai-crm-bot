@@ -3,6 +3,7 @@
  * MOBILE 1.2: request timeout + upload progress. Relative prefixes stay public-host compatible.
  */
 
+import { apiFetch } from "@/integrations/apiClient";
 import { webConfig } from "@/config/webConfig";
 
 export const OPS_TIMEOUT_MS = 20_000;
@@ -311,15 +312,41 @@ export function recruitingOpsPrefix(): string {
   return (webConfig as { recruitingOpsPrefix?: string }).recruitingOpsPrefix || "/api/recruiting-ops/v1";
 }
 
+/** User-safe copy — 401 is not "API unavailable". */
+export function recruitingOpsUserError(status: number, json?: unknown): string {
+  const payload = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
+  const ru = typeof payload.message_ru === "string" ? payload.message_ru.trim() : "";
+  if (status === 401) return ru || "Нет доступа к Recruiting Ops. Войдите как владелец или рекрутер.";
+  if (status === 403) return ru || "Недостаточно прав для этого раздела.";
+  if (status === 404) return ru || "Раздел Recruiting Ops не найден.";
+  if (status === 0) return "Recruiting Ops API недоступен. Проверьте соединение или запустите backend (:8080).";
+  if (status >= 500) return `Recruiting Ops API недоступен (HTTP ${status}).`;
+  return ru || `Recruiting Ops: ошибка запроса (HTTP ${status}).`;
+}
+
+export function recruitingOpsFirstError(results: OpsResult[]): string | null {
+  const failed = results.filter((r) => !r.ok);
+  if (!failed.length) return null;
+  const rank = (status: number) =>
+    status === 401 ? 50 : status === 403 ? 40 : status === 0 ? 30 : status >= 500 ? 20 : status === 404 ? 10 : 5;
+  failed.sort((a, b) => rank(b.status) - rank(a.status));
+  return recruitingOpsUserError(failed[0].status, failed[0].json);
+}
+
+async function recruitingOpsParse(res: Response): Promise<OpsResult> {
+  const json = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, json };
+}
+
+/** Canonical recruiter client: same-origin Recruiting Ops + session JWT via apiFetch. */
 export async function recruitingOpsGet(path: string, headers: Record<string, string> = {}) {
   const prefix = recruitingOpsPrefix();
   try {
-    const res = await fetch(`${prefix}${path}`, {
+    const res = await apiFetch(`${prefix}${path}`, {
       credentials: "include",
       headers: { ...headers },
     });
-    const json = await res.json().catch(() => ({}));
-    return { ok: res.ok, status: res.status, json };
+    return recruitingOpsParse(res);
   } catch (e) {
     return {
       ok: false,
@@ -332,14 +359,13 @@ export async function recruitingOpsGet(path: string, headers: Record<string, str
 export async function recruitingOpsPost(path: string, body: Record<string, unknown> = {}, headers: Record<string, string> = {}) {
   const prefix = recruitingOpsPrefix();
   try {
-    const res = await fetch(`${prefix}${path}`, {
+    const res = await apiFetch(`${prefix}${path}`, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json", ...headers },
       body: JSON.stringify(body),
     });
-    const json = await res.json().catch(() => ({}));
-    return { ok: res.ok, status: res.status, json };
+    return recruitingOpsParse(res);
   } catch (e) {
     return {
       ok: false,

@@ -1,4 +1,4 @@
-import { pick } from "../business-ops/opsApi";
+import { pick } from "./recruitingApi";
 import { recruitingClickLabel, recruitingConsentLabel, recruitingUtmLabel } from "./recruitingLabels";
 
 type Row = Record<string, unknown>;

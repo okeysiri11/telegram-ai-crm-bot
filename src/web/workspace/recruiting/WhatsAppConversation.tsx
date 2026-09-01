@@ -4,7 +4,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge, Button, Card, Input } from "@/ui";
-import { recruitingOpsGet, recruitingOpsPost } from "../business-ops/opsApi";
+import { recruitingOpsGet, recruitingOpsPost } from "./recruitingApi";
 
 type Msg = {
   id?: string;

@@ -5,10 +5,13 @@ from __future__ import annotations
 from aiohttp import web
 
 from applications.recruiting_enterprise.api import ops_handlers
+from applications.recruiting_enterprise.api.middleware import recruiting_auth_middleware
 from applications.recruiting_enterprise.config import DEFAULT_CONFIG
 
 
 def register_recruiting_enterprise_routes(app: web.Application) -> None:
+    if recruiting_auth_middleware not in app.middlewares:
+        app.middlewares.append(recruiting_auth_middleware)
     ops = DEFAULT_CONFIG.api_prefix
     app.router.add_get(f"{ops}/health", ops_handlers.ops_health_handler)
     app.router.add_get(f"{ops}/ops/diagnostics", ops_handlers.ops_diagnostics_handler)

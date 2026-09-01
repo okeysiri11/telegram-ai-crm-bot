@@ -8,7 +8,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Input } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
-import { asList, recruitingOpsGet, recruitingOpsPost } from "../business-ops/opsApi";
+import { asList, recruitingOpsGet, recruitingOpsPost, recruitingOpsUserError } from "./recruitingApi";
 import { mapUiRoleToRecruiting } from "./recruitingLabels";
 import { RecruitingOpsFrame } from "./RecruitingOpsFrame";
 
@@ -59,7 +59,7 @@ export function AdsControlCenterPage() {
     setError(null);
     const res = await recruitingOpsGet("/ads/control-center?project=vanguard", headers);
     if (!res.ok) {
-      setError("Recruiting Ops API недоступен.");
+      setError(recruitingOpsUserError(res.status, res.json));
       setData({});
       return;
     }

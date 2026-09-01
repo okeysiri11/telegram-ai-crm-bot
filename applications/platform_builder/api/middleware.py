@@ -32,6 +32,11 @@ def _allow_header_auth() -> bool:
 
 @web.middleware
 async def auth_middleware(request: web.Request, handler):
+    # Recruiting Ops owns HMAC ingest + recruiter JWT. A global X-Role check here
+    # returned 401 header_auth_disabled for every recruiter cabinet request in production.
+    if request.path.startswith("/api/recruiting-ops/"):
+        return await handler(request)
+
     # Preserve principal set by outer middlewares (e.g. auto-marketplace auth).
     prior_principal = request.get("principal")
     prior_role = request.get("platform_role")

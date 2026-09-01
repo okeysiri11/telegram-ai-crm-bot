@@ -8,7 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Dialog, Input } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
-import { recruitingOpsGet, recruitingOpsPost } from "../business-ops/opsApi";
+import { recruitingOpsGet, recruitingOpsPost, recruitingOpsUserError } from "./recruitingApi";
 import { mapUiRoleToRecruiting } from "./recruitingLabels";
 import { RecruitingOpsFrame } from "./RecruitingOpsFrame";
 
@@ -80,7 +80,7 @@ export function ProviderConnectionsPage() {
     setError(null);
     const res = await recruitingOpsGet("/providers", headers);
     if (!res.ok) {
-      setError("Recruiting Ops API недоступен.");
+      setError(recruitingOpsUserError(res.status, res.json));
       setItems([]);
       return;
     }

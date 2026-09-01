@@ -36,6 +36,9 @@ def _project(request: web.Request) -> str | None:
 
 def _role(request: web.Request, body: dict | None = None) -> str:
     body = body or {}
+    bound = request.get("recruiting_role")
+    if bound:
+        return str(bound)
     return str(
         body.get("role")
         or request.rel_url.query.get("role")

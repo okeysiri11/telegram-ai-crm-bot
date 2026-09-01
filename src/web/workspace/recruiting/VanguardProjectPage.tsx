@@ -7,7 +7,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Input, Table } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
-import { asList, recruitingOpsGet, recruitingOpsPost, pick } from "../business-ops/opsApi";
+import { asList, recruitingOpsFirstError, recruitingOpsGet, recruitingOpsPost, pick } from "./recruitingApi";
 import {
   PIPELINE_LABELS,
   PIPELINE_STAGES,
@@ -110,7 +110,7 @@ export function VanguardProjectPage() {
       recruitingOpsGet("/ads/control-center?project=vanguard", headers),
     ]);
     if (![ov, integ, leadRes].some((x) => x.ok)) {
-      setError("Recruiting Ops API недоступен. Запустите backend (:8080).");
+      setError(recruitingOpsFirstError([ov, integ, leadRes]));
       return;
     }
     const candJson = asRecord(candRes.json);

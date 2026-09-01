@@ -12,8 +12,9 @@ import {
   type OpsNavItem,
   type OpsSection,
 } from "../business-ops/BusinessCabinetShell";
-import { asList, recruitingOpsGet, recruitingOpsPost, pick } from "../business-ops/opsApi";
+import { asList, recruitingOpsFirstError, recruitingOpsGet, recruitingOpsPost, pick } from "./recruitingApi";
 import { resolveCabinetCaps } from "../business-ops/cabinetCapabilities";
+import { displayMetric } from "./RecruitingOpsFrame";
 import {
   COMM_CHANNELS,
   COMM_LABELS,
@@ -131,12 +132,7 @@ export function RecruitingBusinessPage() {
         recruitingOpsGet("/analytics", headers),
       ]);
       if (!health.ok || ![d, leads].some((x) => x.ok || x.status === 404)) {
-        const code = health.status || d.status || leads.status;
-        setError(
-          code === 0 || code === 502
-            ? "Recruiting Ops API недоступен. Запустите backend (:8080)."
-            : `Recruiting Ops API недоступен (HTTP ${code}).`,
-        );
+        setError(recruitingOpsFirstError([health, d, leads, cands, vacs]));
         setBundle(emptyBundle());
         return;
       }
