@@ -66,6 +66,8 @@ services:
           property: connectionString
       - key: VANGUARD_WEBSITE_URL
         value: https://ados-web.onrender.com/vanguard
+      - key: ADOS_CORS_ORIGINS
+        value: https://ados-web.onrender.com
       - key: IAM_JWT_SECRET
         generateValue: true
       - key: JWT_SECRET

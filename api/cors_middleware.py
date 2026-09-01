@@ -21,7 +21,7 @@ _LOCAL_ORIGINS = (
 
 _ALLOW_HEADERS = (
     "Authorization, Content-Type, X-Request-Id, X-CSRF-Token, "
-    "X-Tenant-Id, X-Organization-Id, X-Organization, X-Workspace-Id, "
+    "X-Tenant-Id, X-Organization-Id, X-Recruiting-Organization-Id, X-Organization, X-Workspace-Id, "
     "X-Workspace, X-Role, X-Role-Id, X-Principal, X-User-Id, X-Platform-Role"
 )
 _ALLOW_METHODS = "GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD"
@@ -51,6 +51,22 @@ def origin_allowed(origin: str) -> bool:
     return False
 
 
+def origin_matches_request_host(origin: str, request: web.Request) -> bool:
+    """Same-origin SPA + API (Render): Origin host equals the request Host."""
+    if not origin:
+        return False
+    from urllib.parse import urlparse
+
+    parsed = urlparse(origin)
+    origin_host = (parsed.hostname or "").lower()
+    req_host = (request.headers.get("Host") or request.host or "").split(":")[0].lower()
+    return bool(origin_host and req_host and origin_host == req_host)
+
+
+def cors_origin_ok(origin: str, request: web.Request) -> bool:
+    return origin_allowed(origin) or origin_matches_request_host(origin, request)
+
+
 def _lan_dev_origin(origin: str) -> bool:
     """Phone on the same Wi-Fi uses http://<lan-ip>:5180 — exact private HTTP origins only."""
     from urllib.parse import urlparse
@@ -76,7 +92,7 @@ def _lan_dev_origin(origin: str) -> bool:
 
 def apply_cors_headers(request: web.Request, response: web.StreamResponse) -> web.StreamResponse:
     origin = request.headers.get("Origin", "").strip()
-    if origin_allowed(origin):
+    if cors_origin_ok(origin, request):
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Headers"] = _ALLOW_HEADERS

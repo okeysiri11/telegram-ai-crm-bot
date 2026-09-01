@@ -7,6 +7,7 @@ Production Vanguard ingest never reports success for a memory-only lead.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import os
 import uuid
@@ -247,6 +248,7 @@ class RecruitingOpsService:
         self._mem: dict[str, dict[str, list[dict[str, Any]]]] = {}
         self._hydrated: set[str] = set()
         self._lifecycle_migrated: set[str] = set()
+        self._hydrate_locks: dict[str, asyncio.Lock] = {}
         self._ingest_log: dict[str, Any] = {
             "last_success_at": None,
             "last_error_at": None,
@@ -267,38 +269,42 @@ class RecruitingOpsService:
         org = _org(organization_id)
         if org in self._hydrated:
             return
-        loaded = False
-        try:
-            from database.session import get_session
+        lock = self._hydrate_locks.setdefault(org, asyncio.Lock())
+        async with lock:
+            if org in self._hydrated:
+                return
+            loaded = False
+            try:
+                from database.session import get_session
 
-            async with get_session() as session:
-                repo = RecruitingOpsRepository(session)
-                bag = self._bag(org)
-                for kind in KINDS:
-                    rows = await repo.list_kind(org, kind)
-                    db_items = [record_to_dict(r) for r in rows]
-                    merged: dict[str, dict[str, Any]] = {str(item.get("id")): item for item in bag[kind] if item.get("id")}
-                    for row in db_items:
-                        merged[str(row.get("id"))] = row
-                    bag[kind] = list(merged.values())
-            loaded = True
-        except Exception as exc:
-            logger.warning("recruiting_ops hydrate skipped org=%s: %s", org, exc)
-        if loaded:
-            self._hydrated.add(org)
-        from services.recruiting_ops.tracking_worker import get_tracking_worker
+                async with get_session() as session:
+                    repo = RecruitingOpsRepository(session)
+                    bag = self._bag(org)
+                    for kind in KINDS:
+                        rows = await repo.list_kind(org, kind)
+                        db_items = [record_to_dict(r) for r in rows]
+                        merged: dict[str, dict[str, Any]] = {str(item.get("id")): item for item in bag[kind] if item.get("id")}
+                        for row in db_items:
+                            merged[str(row.get("id"))] = row
+                        bag[kind] = list(merged.values())
+                loaded = True
+            except Exception as exc:
+                logger.warning("recruiting_ops hydrate skipped org=%s: %s", org, exc)
+            if loaded:
+                self._hydrated.add(org)
+            from services.recruiting_ops.tracking_worker import get_tracking_worker
 
-        get_tracking_worker().ensure_loop(self.process_tracking_retries)
-        if org not in self._lifecycle_migrated:
-            self._lifecycle_migrated.add(org)
-            if os.environ.get("PYTEST_CURRENT_TEST"):
-                get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
+            get_tracking_worker().ensure_loop(self.process_tracking_retries)
+            if org not in self._lifecycle_migrated:
+                self._lifecycle_migrated.add(org)
+                if os.environ.get("PYTEST_CURRENT_TEST"):
+                    get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
+                else:
+                    await self._recover_tracking_unlocked(org)
             else:
-                await self.recover_tracking_records(org)
-        else:
-            get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
-        self._sync_runtime_connections(org)
-        self._index_whatsapp_phone_maps()
+                get_tracking_worker().sync_with(self._bag(org).get("tracking") or [])
+            self._sync_runtime_connections(org)
+            self._index_whatsapp_phone_maps()
 
     def _owner_read(self, role: str | None) -> bool:
         return normalize_role(role) in {"platform_owner", "owner"}
@@ -553,10 +559,13 @@ class RecruitingOpsService:
         return build_tracking_diagnostics(events)
 
     async def recover_tracking_records(self, organization_id: str | None = None) -> dict[str, Any]:
-        from services.recruiting_ops.tracking_lifecycle import migration_patch, should_recover_to_delivered
-
         org = _org(organization_id or os.getenv("VANGUARD_ORGANIZATION_ID") or "ados")
         await self.ensure_hydrated(org)
+        return await self._recover_tracking_unlocked(org)
+
+    async def _recover_tracking_unlocked(self, org: str) -> dict[str, Any]:
+        from services.recruiting_ops.tracking_lifecycle import migration_patch, should_recover_to_delivered
+
         recovered: list[str] = []
         inspected: list[dict[str, Any]] = []
         before = {"RETRYING": 0, "DELIVERED": 0, "WAITING_PROVIDER": 0, "DEAD_LETTER": 0, "PENDING": 0, "empty": 0}

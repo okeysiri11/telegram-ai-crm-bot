@@ -63,8 +63,9 @@ describe("Recruiting 2.5 auth client", () => {
     expect(recruitingOpsUserError(401)).toMatch(/Войдите|доступа/i);
     expect(recruitingOpsUserError(401)).not.toMatch(/недоступен/i);
     expect(recruitingOpsUserError(403)).toMatch(/прав/i);
-    expect(recruitingOpsUserError(502)).toMatch(/недоступен \(HTTP 502\)/);
-    expect(recruitingOpsUserError(0)).toMatch(/соединение|backend/i);
+    expect(recruitingOpsUserError(502)).toMatch(/HTTP 502/);
+    expect(recruitingOpsUserError(0)).toMatch(/соединен|сети/i);
+    expect(recruitingOpsUserError(0)).not.toMatch(/8080/);
     expect(
       recruitingOpsFirstError([
         { ok: false, status: 502, json: {} },

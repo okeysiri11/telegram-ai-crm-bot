@@ -15,6 +15,7 @@ export {
   recruitingOpsPost,
   recruitingOpsPrefix,
   recruitingOpsUserError,
+  resolveRecruitingOpsPrefix,
 } from "../business-ops/opsApi";
 export type { OpsResult } from "../business-ops/opsApi";
 

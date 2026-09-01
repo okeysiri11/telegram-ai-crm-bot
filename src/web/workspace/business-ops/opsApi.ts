@@ -308,19 +308,78 @@ export function legalOpsFileUrl(fileId: string): string {
   return `${legalOpsPrefix()}/files/${fileId}/content`;
 }
 
-export function recruitingOpsPrefix(): string {
-  return (webConfig as { recruitingOpsPrefix?: string }).recruitingOpsPrefix || "/api/recruiting-ops/v1";
+export function resolveRecruitingOpsPrefix(
+  raw: string | undefined,
+  env: { prod: boolean; hostname?: string } = { prod: false },
+): string {
+  const fallback = "/api/recruiting-ops/v1";
+  const value = String(raw || fallback).trim() || fallback;
+  const local = /localhost|127\.0\.0\.1/i.test(value);
+  if (env.prod && local) {
+    return fallback;
+  }
+  if (value.startsWith("http://") || value.startsWith("https://")) {
+    try {
+      const url = new URL(value);
+      if (env.prod && /localhost|127\.0\.0\.1/i.test(url.hostname)) {
+        return fallback;
+      }
+      if (env.prod) {
+        const path = url.pathname.replace(/\/$/, "") || fallback;
+        return path.startsWith("/api/recruiting-ops") ? path : fallback;
+      }
+      return `${url.origin}${url.pathname}`.replace(/\/$/, "") || fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return value.startsWith("/") ? value.replace(/\/$/, "") || fallback : `/${value}`.replace(/\/$/, "");
 }
 
-/** User-safe copy — 401 is not "API unavailable". */
+export function recruitingOpsPrefix(): string {
+  const prod = Boolean(import.meta.env?.PROD);
+  return resolveRecruitingOpsPrefix((webConfig as { recruitingOpsPrefix?: string }).recruitingOpsPrefix, {
+    prod,
+    hostname: typeof window !== "undefined" ? window.location.hostname : "",
+  });
+}
+
+function recruitingNetworkError(e: unknown): OpsResult {
+  const name = e instanceof DOMException ? e.name : "";
+  const message = e instanceof Error ? e.message : "network_error";
+  const timeout =
+    name === "AbortError" || name === "TimeoutError" || /timeout/i.test(message);
+  return {
+    ok: false,
+    status: 0,
+    json: {
+      error: timeout ? "timeout" : "network_error",
+      message_ru: timeout
+        ? "Превышено время ожидания Recruiting Ops. Обновите страницу."
+        : "Нет соединения с Recruiting Ops. Проверьте сеть и обновите страницу.",
+    },
+  };
+}
+
+/** User-safe copy — 401 is not "API unavailable". Production never mentions :8080. */
 export function recruitingOpsUserError(status: number, json?: unknown): string {
   const payload = json && typeof json === "object" ? (json as Record<string, unknown>) : {};
   const ru = typeof payload.message_ru === "string" ? payload.message_ru.trim() : "";
+  const code = typeof payload.error === "string" ? payload.error : "";
   if (status === 401) return ru || "Нет доступа к Recruiting Ops. Войдите как владелец или рекрутер.";
   if (status === 403) return ru || "Недостаточно прав для этого раздела.";
-  if (status === 404) return ru || "Раздел Recruiting Ops не найден.";
-  if (status === 0) return "Recruiting Ops API недоступен. Проверьте соединение или запустите backend (:8080).";
-  if (status >= 500) return `Recruiting Ops API недоступен (HTTP ${status}).`;
+  if (status === 404) return ru || "Маршрут Recruiting Ops не найден.";
+  if (status === 0) {
+    if (code === "timeout" || /timeout/i.test(ru)) {
+      return ru || "Превышено время ожидания Recruiting Ops. Обновите страницу.";
+    }
+    const network = ru || "Нет соединения с Recruiting Ops. Проверьте сеть и обновите страницу.";
+    if (import.meta.env?.DEV) {
+      return `${network} Локально API обычно на том же origin или через proxy.`;
+    }
+    return network;
+  }
+  if (status >= 500) return ru || `Ошибка сервера Recruiting Ops (HTTP ${status}).`;
   return ru || `Recruiting Ops: ошибка запроса (HTTP ${status}).`;
 }
 
@@ -348,11 +407,7 @@ export async function recruitingOpsGet(path: string, headers: Record<string, str
     });
     return recruitingOpsParse(res);
   } catch (e) {
-    return {
-      ok: false,
-      status: 0,
-      json: { error: e instanceof Error ? e.message : "network_error" },
-    };
+    return recruitingNetworkError(e);
   }
 }
 
@@ -367,11 +422,7 @@ export async function recruitingOpsPost(path: string, body: Record<string, unkno
     });
     return recruitingOpsParse(res);
   } catch (e) {
-    return {
-      ok: false,
-      status: 0,
-      json: { error: e instanceof Error ? e.message : "network_error" },
-    };
+    return recruitingNetworkError(e);
   }
 }
 
