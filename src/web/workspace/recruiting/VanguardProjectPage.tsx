@@ -18,6 +18,7 @@ import {
   ruLeadStatus,
 } from "./recruitingLabels";
 import { RecruitingOpsFrame, displayMetric } from "./RecruitingOpsFrame";
+import { RecruitingApplicationDetails } from "./RecruitingApplicationDetails";
 
 type Row = Record<string, unknown>;
 
@@ -288,10 +289,11 @@ export function VanguardProjectPage() {
         <div data-testid="vanguard-leads">
         <Card title="Лиды Vanguard">
           <SimpleTable
-            headers={["Имя", "Телефон", "Возраст", "Согласие", "Источник", "Проект", "Reference", "Программа", "Страна", "UTM", "Клики", "Статус"]}
+            headers={["Имя", "Телефон", "Email", "Возраст", "Согласие", "Источник", "Проект", "Reference", "Программа", "Страна", "UTM", "Клики", "Статус"]}
             rows={leads.map((l) => [
               pick(l, "name"),
               pick(l, "phone"),
+              pick(l, "email"),
               pick(l, "age"),
               recruitingConsentLabel(l.contact_consent),
               pick(l, "source"),
@@ -304,6 +306,7 @@ export function VanguardProjectPage() {
               ruLeadStatus(String(l.status || "")),
             ])}
           />
+          <RecruitingApplicationDetails row={leads[0]} testId="vanguard-lead-details" />
           {leads[0] ? (
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant="secondary" onClick={() => void act(`/leads/${leads[0].id}/notes`, { notes: "Заметка рекрутера Vanguard" })}>
@@ -331,16 +334,18 @@ export function VanguardProjectPage() {
         <div data-testid="vanguard-candidates">
         <Card title="Кандидаты Vanguard">
           <SimpleTable
-            headers={["Имя", "Телефон", "Возраст", "Согласие", "Этап", "Источник"]}
+            headers={["Имя", "Телефон", "Email", "Возраст", "Согласие", "Этап", "Источник"]}
             rows={candidates.map((c) => [
               pick(c, "name"),
               pick(c, "phone"),
+              pick(c, "email"),
               pick(c, "age"),
               recruitingConsentLabel(c.contact_consent),
               PIPELINE_LABELS[String(c.pipeline_stage || "")] || pick(c, "pipeline_stage"),
               pick(c, "source"),
             ])}
           />
+          <RecruitingApplicationDetails row={candidates[0]} testId="vanguard-candidate-details" />
           {candidates.length ? (
             <div className="mt-3 flex flex-wrap gap-2">
               <Button size="sm" variant="secondary" onClick={() => void act(`/candidates/${candidates[0].id}/stage`, { pipeline_stage: "INTERVIEW" })}>

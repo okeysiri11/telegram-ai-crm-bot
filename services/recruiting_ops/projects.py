@@ -58,7 +58,7 @@ def resolve_project_key(item: dict[str, Any] | None) -> str:
     if key:
         return key
     source = _txt(item.get("source")).lower()
-    if source == VANGUARD_PROJECT_KEY:
+    if source == VANGUARD_PROJECT_KEY or source == "vanguard-global" or source.startswith("vanguard-"):
         return VANGUARD_PROJECT_KEY
     return ""
 

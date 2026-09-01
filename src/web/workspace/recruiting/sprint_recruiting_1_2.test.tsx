@@ -109,7 +109,25 @@ const fetchMock = vi.fn(async (url: string, init?: RequestInit) => {
       status: 200,
       json: async () => ({
         ok: true,
-        items: [{ id: "l1", name: "Анна", source: "vanguard", project_key: "vanguard", external_id: "VG-TEST-1", status: "new" }],
+        items: [{
+          id: "l1",
+          name: "Анна",
+          email: "anna@example.com",
+          phone: "380501112233",
+          age: 24,
+          country: "UA",
+          preferred_language: "uk",
+          program_of_interest: "logistics",
+          unit_of_interest: "fleet",
+          application_message: "Ready to join",
+          contact_consent: true,
+          source: "vanguard-global",
+          project_key: "vanguard",
+          external_id: "VG-TEST-1",
+          utm_source: "google",
+          status: "new",
+          created_at: "2026-08-31T12:00:00Z",
+        }],
       }),
     };
   }
@@ -168,6 +186,8 @@ describe("Sprint Recruiting 1.2 projects", () => {
     const tabs = screen.getByTestId("vanguard-tabs");
     fireEvent.click(within(tabs).getByRole("button", { name: "Лиды" }));
     expect(await screen.findByTestId("vanguard-leads")).toBeTruthy();
+    expect(screen.getByTestId("vanguard-lead-details").textContent).toMatch(/anna@example.com/);
+    expect(screen.getByTestId("vanguard-lead-details").textContent).toMatch(/Ready to join/);
     fireEvent.click(within(tabs).getByRole("button", { name: "Интеграция" }));
     expect(await screen.findByTestId("vanguard-integration")).toBeTruthy();
     expect(screen.getByTestId("vanguard-integration").textContent).toMatch(/Сайт Vanguard/);

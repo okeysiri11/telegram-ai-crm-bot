@@ -773,7 +773,8 @@ class RecruitingOpsService:
             "campaign_id": _txt(body.get("campaign_id")) or None,
             "vacancy_id": vacancy,
             "vacancy": _txt(body.get("vacancy")) or vacancy,
-            "external_id": _txt(body.get("external_id") or body.get("reference") or body.get("reference_id")) or None,
+            "external_id": _txt(body.get("external_id") or body.get("reference") or body.get("reference_id") or body.get("idempotency_key")) or None,
+            "idempotency_key": _txt(body.get("idempotency_key") or body.get("external_id")) or None,
             "assignee": _txt(body.get("assignee")) or None,
             "status": _lead_status(body.get("status"), "new"),
             "notes": _txt(body.get("notes")),
@@ -835,6 +836,18 @@ class RecruitingOpsService:
         )
         return self._ok(item=saved)
 
+    def _identity_keys(self, *values: Any) -> set[str]:
+        keys = {_txt(value) for value in values}
+        keys.discard("")
+        return keys
+
+    def _vacancy_same(self, item: dict[str, Any], vacancy_id: str | None) -> bool:
+        stored = _txt(item.get("vacancy_id") or item.get("vacancy"))
+        incoming = _txt(vacancy_id)
+        if stored or incoming:
+            return stored == incoming
+        return True
+
     def _find_duplicate(
         self,
         org: str,
@@ -843,15 +856,15 @@ class RecruitingOpsService:
         vacancy_id: str | None,
         email: str | None = None,
         program: str | None = None,
+        idempotency_key: str | None = None,
     ) -> dict[str, Any] | None:
-        ext = _txt(external_id)
-        vac = _txt(vacancy_id)
-        if ext:
+        incoming_ids = self._identity_keys(external_id, idempotency_key)
+        if incoming_ids:
             for item in self._bag(org)["lead"]:
-                if _txt(item.get("external_id")) != ext:
-                    continue
-                if _txt(item.get("vacancy_id") or item.get("vacancy") or item.get("program_of_interest")) == vac:
+                stored_ids = self._identity_keys(item.get("external_id"), item.get("idempotency_key"))
+                if incoming_ids & stored_ids and self._vacancy_same(item, vacancy_id):
                     return item
+            return None
         email_n = _txt(email).lower()
         prog = _txt(program or vacancy_id)
         if email_n and prog:
@@ -886,7 +899,11 @@ class RecruitingOpsService:
         )
         await self.ensure_hydrated(org)
         vacancy = _txt(body.get("vacancy_id") or body.get("vacancy")) or None
-        external_id = _txt(body.get("external_id") or body.get("reference") or body.get("reference_id")) or None
+        external_id = (
+            _txt(body.get("external_id") or body.get("reference") or body.get("reference_id") or body.get("idempotency_key"))
+            or None
+        )
+        idempotency_key = _txt(body.get("idempotency_key") or external_id) or None
         self._ingest_log["last_check_at"] = _now()
         existing = self._find_duplicate(
             org,
@@ -894,6 +911,7 @@ class RecruitingOpsService:
             vacancy_id=vacancy,
             email=email,
             program=_txt(body.get("program_of_interest") or body.get("program")),
+            idempotency_key=idempotency_key,
         )
         if existing:
             from services.recruiting_ops.attribution import preserve_first_touch
@@ -925,6 +943,7 @@ class RecruitingOpsService:
         payload["project_key"] = VANGUARD_PROJECT_KEY
         payload["vacancy_id"] = vacancy
         payload["external_id"] = external_id
+        payload["idempotency_key"] = idempotency_key
         created = await self.create_lead(
             org,
             payload,
@@ -1363,6 +1382,9 @@ class RecruitingOpsService:
             "unit_of_interest",
             "program_of_interest",
             "application_message",
+            "external_id",
+            "idempotency_key",
+            "submitted_at",
         ):
             if key not in body:
                 continue

@@ -29,6 +29,7 @@ import {
 } from "./recruitingLabels";
 import { CandidateEmailComposer } from "./CandidateEmailComposer";
 import { WhatsAppConversation } from "./WhatsAppConversation";
+import { RecruitingApplicationDetails } from "./RecruitingApplicationDetails";
 
 type Row = Record<string, unknown>;
 
@@ -328,6 +329,7 @@ export function RecruitingBusinessPage() {
       columns: [
         { key: "name", label: "Имя" },
         { key: "phone", label: "Телефон" },
+        { key: "email", label: "Email" },
         { key: "age", label: "Возраст" },
         { key: "consent", label: "Согласие" },
         { key: "source", label: "Источник" },
@@ -335,6 +337,7 @@ export function RecruitingBusinessPage() {
         { key: "utm", label: "UTM" },
         { key: "clicks", label: "Клики" },
         { key: "external_id", label: "External ID" },
+        { key: "created", label: "Создана" },
         { key: "assignee", label: "Рекрутер" },
         { key: "status", label: "Статус" },
       ],
@@ -342,13 +345,15 @@ export function RecruitingBusinessPage() {
         id: String(l.id || ""),
         name: pick(l, "name"),
         phone: pick(l, "phone"),
+        email: pick(l, "email"),
         age: pick(l, "age"),
         consent: recruitingConsentLabel(l.contact_consent),
         source: pick(l, "source"),
-        vacancy: pick(l, "vacancy_id", "vacancy"),
+        vacancy: pick(l, "vacancy_id", "vacancy", "program_of_interest"),
         utm: recruitingUtmLabel(l),
         clicks: recruitingClickLabel(l),
         external_id: pick(l, "external_id"),
+        created: pick(l, "created_at", "submitted_at"),
         assignee: pick(l, "assignee"),
         status: ruLeadStatus(String(l.status || "")),
       })),
@@ -359,7 +364,9 @@ export function RecruitingBusinessPage() {
       emptyCtaOnClick: undefined,
       quickActions: caps.canCreate ? [{ label: "Создать лид", onClick: () => setPanel("lead") }] : [],
       panel: panel === "lead" ? leadPanel : (
-        caps.canOperate && bundle.leads.length ? (
+        bundle.leads.length ? (
+          <div>
+            {caps.canOperate ? (
           <div className="flex flex-wrap gap-2">
             {bundle.leads.slice(0, 6).map((lead) => (
               <div key={String(lead.id)} className="flex flex-wrap gap-1">
@@ -399,6 +406,9 @@ export function RecruitingBusinessPage() {
               </Button>
             </form>
           </div>
+            ) : null}
+            <RecruitingApplicationDetails row={bundle.leads[0]} testId="recruiting-lead-details" />
+          </div>
         ) : null
       ),
       rowActions: caps.canOperate
@@ -416,6 +426,7 @@ export function RecruitingBusinessPage() {
       columns: [
         { key: "name", label: "Имя" },
         { key: "phone", label: "Телефон" },
+        { key: "email", label: "Email" },
         { key: "age", label: "Возраст" },
         { key: "consent", label: "Согласие" },
         { key: "stage", label: "Этап" },
@@ -426,6 +437,7 @@ export function RecruitingBusinessPage() {
         id: String(c.id || ""),
         name: pick(c, "name"),
         phone: pick(c, "phone"),
+        email: pick(c, "email"),
         age: pick(c, "age"),
         consent: recruitingConsentLabel(c.contact_consent),
         stage: PIPELINE_LABELS[String(c.pipeline_stage || "")] || pick(c, "pipeline_stage"),
@@ -448,6 +460,9 @@ export function RecruitingBusinessPage() {
         : undefined,
       panel: (
         <div className="grid gap-3">
+          {bundle.candidates[0] ? (
+            <RecruitingApplicationDetails row={bundle.candidates[0]} testId="recruiting-candidate-details" />
+          ) : null}
           {emailCandidate ? (
             <CandidateEmailComposer
               candidateId={String(emailCandidate.id || "")}
