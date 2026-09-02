@@ -80,6 +80,26 @@ def _is_opaque_bearer(token: str) -> bool:
     return bool(token) and token.count(".") != 2
 
 
+def _local_demo_jwt_claims(token: str) -> dict | None:
+    """Unsigned Vite/local Owner JWT. Valid only when header-auth (DEV/tests) is allowed."""
+    parts = token.split(".")
+    if len(parts) != 3:
+        return None
+    try:
+        import base64
+        import json
+
+        pad = "=" * (-len(parts[1]) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(parts[1] + pad).decode("utf-8"))
+    except Exception:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    if str(payload.get("iss") or "") != "ados-enterprise-local":
+        return None
+    return payload
+
+
 def _as_int(value) -> int | None:
     if value is None or value == "":
         return None
@@ -188,13 +208,36 @@ async def recruiting_auth_middleware(request: web.Request, handler):
 
         principal = await _authenticate_jwt_stateless(bearer)
         if principal is None:
-            return _auth_failure(
-                request,
-                status=401,
-                error="invalid_token",
-                message_ru="Сессия недействительна. Войдите снова.",
-                mechanism="invalid_jwt",
+            local_claims = _local_demo_jwt_claims(bearer) if _allow_header_auth() else None
+            if local_claims is None:
+                return _auth_failure(
+                    request,
+                    status=401,
+                    error="invalid_token",
+                    message_ru="Сессия недействительна. Войдите снова.",
+                    mechanism="invalid_jwt",
+                )
+            from platform_identity.models import AuthMethod, Principal
+
+            roles = [str(r) for r in (local_claims.get("roles") or [local_claims.get("role") or "platform_owner"])]
+            principal = Principal(
+                principal_id=str(local_claims.get("sub") or local_claims.get("email") or "local-owner"),
+                auth_method=AuthMethod.JWT,
+                roles=roles,
+                permissions=[str(p) for p in (local_claims.get("permissions") or ["read", "write", "admin"])],
+                user_id=str(local_claims.get("sub") or "") or None,
+                email=str(local_claims.get("email") or "") or None,
+                tenant_id=str(local_claims.get("tid") or local_claims.get("tenant_id") or "") or None,
             )
+            request["recruiting_auth_source"] = "local_demo_jwt"
+            request["iam_principal"] = principal
+            request["principal"] = principal.principal_id
+            request["recruiting_role"] = resolve_recruiting_role(
+                requested=requested_role,
+                jwt_roles=list(principal.roles or []),
+                owner_session=principal.is_owner or _roles_are_owner(roles),
+            )
+            return await handler(request)
         request["iam_principal"] = principal
         request["principal"] = principal.principal_id
         request["recruiting_auth_source"] = "jwt"

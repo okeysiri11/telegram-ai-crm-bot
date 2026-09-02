@@ -34,6 +34,7 @@ import {
   attentionHref,
   buildRecruiterOptions,
   createdLabel,
+  applicationCountLabel,
   recruiterLabel,
   vacancyLabelForLead,
   type RecruiterOption,
@@ -572,8 +573,11 @@ export function RecruitingBusinessPage() {
                   <p className="eds-type-helper">Пусто</p>
                 ) : (
                   items.map((c) => (
-                    <div key={String(c.id)} className="mb-2 flex flex-col gap-1">
+                    <div key={String(c.id)} className="mb-2 flex flex-col gap-1" data-testid={`pipeline-card-${String(c.id)}`}>
                       <strong>{pick(c, "name")}</strong>
+                      <p className="eds-type-helper">{vacancyLabelForLead(c, bundle.vacancies)}</p>
+                      <p className="eds-type-helper">{recruiterLabel(c.assignee)}</p>
+                      <p className="eds-type-helper">{applicationCountLabel(c)}</p>
                       {caps.canOperate && stage !== "HIRED" && stage !== "REJECTED" ? (
                         <Button
                           size="sm"

@@ -59,8 +59,10 @@ const fetchMock = vi.fn(async (url: string) => {
             name: "Hired Person",
             pipeline_stage: "HIRED",
             lead_id: "lead-converted",
-            lead_ids: ["lead-converted"],
-            applications: [{ lead_id: "lead-converted" }],
+            lead_ids: ["lead-converted", "lead-2"],
+            applications: [{ lead_id: "lead-converted" }, { lead_id: "lead-2" }],
+            assignee: "recruiter.owner",
+            vacancy: "дронщик",
           },
           {
             id: "cand-rejected",
@@ -75,7 +77,7 @@ const fetchMock = vi.fn(async (url: string) => {
           QUALIFIED: [],
           INTERVIEW: [],
           APPROVED: [],
-          HIRED: [{ id: "cand-hired", name: "Hired Person", pipeline_stage: "HIRED" }],
+          HIRED: [{ id: "cand-hired", name: "Hired Person", pipeline_stage: "HIRED", assignee: "recruiter.owner", vacancy: "дронщик", lead_ids: ["lead-converted", "lead-2"], applications: [{ lead_id: "lead-converted" }, { lead_id: "lead-2" }] }],
           REJECTED: [{ id: "cand-rejected", name: "Rejected Person", pipeline_stage: "REJECTED" }],
         },
       }),
@@ -130,5 +132,8 @@ describe("Sprint Recruiting 2.10 identity UX", () => {
     expect(screen.queryByTestId("pipeline-next-cand-hired")).toBeNull();
     expect(screen.queryByTestId("pipeline-next-cand-rejected")).toBeNull();
     expect(screen.queryByRole("button", { name: "Дальше" })).toBeNull();
+    expect(screen.getByText("2 заявки")).toBeTruthy();
+    expect(screen.getByText("Owner")).toBeTruthy();
+    expect(screen.getByText("дронщик")).toBeTruthy();
   });
 });

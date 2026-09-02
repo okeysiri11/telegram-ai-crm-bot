@@ -52,9 +52,25 @@ export function CandidateWorkflowPanel({ candidate, lead, vacancies, canOperate,
           <dt className="eds-type-helper">Email</dt>
           <dd>{pick(candidate, "email")}</dd>
         </div>
+        {pick(candidate, "age") !== "—" ? (
+          <div>
+            <dt className="eds-type-helper">Возраст</dt>
+            <dd>{pick(candidate, "age")}</dd>
+          </div>
+        ) : null}
+        {pick(candidate, "preferred_language") !== "—" ? (
+          <div>
+            <dt className="eds-type-helper">Язык</dt>
+            <dd>{pick(candidate, "preferred_language")}</dd>
+          </div>
+        ) : null}
         <div>
           <dt className="eds-type-helper">Вакансия</dt>
           <dd>{vacancyTitle(vacancy || { title: candidate.vacancy || lead?.vacancy })}</dd>
+        </div>
+        <div>
+          <dt className="eds-type-helper">Текущий этап</dt>
+          <dd>{CANDIDATE_FLOW.find((item) => item.id === stage)?.label || stage}</dd>
         </div>
         <div>
           <dt className="eds-type-helper">Ответственный</dt>

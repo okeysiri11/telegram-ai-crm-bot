@@ -67,6 +67,20 @@ export function createdLabel(row: WorkflowRow): string {
   return raw.replace("T", " ").replace(/\.\d+Z$/, " UTC").slice(0, 16);
 }
 
+export function applicationCount(row: WorkflowRow): number {
+  const apps = Array.isArray(row.applications) ? row.applications.length : 0;
+  const ids = Array.isArray(row.lead_ids) ? row.lead_ids.filter(Boolean).length : 0;
+  const fallback = String(row.lead_id || "").trim() ? 1 : 0;
+  return Math.max(apps, ids, fallback);
+}
+
+export function applicationCountLabel(row: WorkflowRow): string {
+  const n = applicationCount(row);
+  if (n === 1) return "1 заявка";
+  if (n >= 2 && n <= 4) return `${n} заявки`;
+  return `${n} заявок`;
+}
+
 export function buildRecruiterOptions(
   rows: WorkflowRow[],
   extra: RecruiterOption[] = [],

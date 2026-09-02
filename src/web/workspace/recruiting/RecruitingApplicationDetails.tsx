@@ -29,20 +29,35 @@ export function RecruitingApplicationDetails({
     ["Мотивация", pick(row, "application_message")],
     ["Источник", pick(row, "source")],
     ["Проект", pick(row, "project_key")],
-    ["UTM", recruitingUtmLabel(row)],
-    ["Клики", recruitingClickLabel(row)],
     ["Согласие", recruitingConsentLabel(row.contact_consent)],
     ["Создана", createdLabel(row)],
+  ];
+  const technical: [string, string][] = [
+    ["UTM", recruitingUtmLabel(row)],
+    ["Клики", recruitingClickLabel(row)],
     ["Reference", pick(row, "external_id", "idempotency_key")],
   ];
   return (
-    <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2 eds-type-small" data-testid={testId}>
-      {fields.map(([label, value]) => (
-        <div key={label}>
-          <dt className="eds-type-helper">{label}</dt>
-          <dd className="whitespace-pre-wrap break-words">{value}</dd>
-        </div>
-      ))}
-    </dl>
+    <div data-testid={testId}>
+      <dl className="mt-3 grid gap-x-6 gap-y-2 sm:grid-cols-2 eds-type-small">
+        {fields.map(([label, value]) => (
+          <div key={label}>
+            <dt className="eds-type-helper">{label}</dt>
+            <dd className="whitespace-pre-wrap break-words">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <details className="mt-2 eds-type-small" data-testid={`${testId}-attribution`}>
+        <summary className="cursor-pointer eds-type-helper">Технические детали заявки</summary>
+        <dl className="mt-2 grid gap-x-6 gap-y-2 sm:grid-cols-2">
+          {technical.map(([label, value]) => (
+            <div key={label}>
+              <dt className="eds-type-helper">{label}</dt>
+              <dd className="whitespace-pre-wrap break-words">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+    </div>
   );
 }

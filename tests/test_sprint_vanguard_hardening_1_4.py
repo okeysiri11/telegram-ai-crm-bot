@@ -174,3 +174,53 @@ async def test_safe_error_hides_internals(client: TestClient):
     assert "Traceback" not in text
     assert "DATABASE_URL" not in text
     assert "VANGUARD_INGEST_SECRET" not in text
+
+
+def _local_demo_token(*, role: str = "platform_owner") -> str:
+    import base64
+    import json
+    import time
+
+    def b64(obj: dict) -> str:
+        raw = json.dumps(obj, separators=(",", ":")).encode()
+        return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+    now = int(time.time())
+    return ".".join(
+        [
+            b64({"alg": "HS256", "typ": "JWT"}),
+            b64(
+                {
+                    "iss": "ados-enterprise-local",
+                    "aud": "enterprise-web-platform",
+                    "iat": now,
+                    "exp": now + 3600,
+                    "sub": "local_owner",
+                    "email": "owner@ados.demo",
+                    "tid": "ados",
+                    "role": role,
+                }
+            ),
+            b64({"mode": "local", "v": 1}),
+        ]
+    )
+
+
+async def test_local_demo_jwt_reads_leads_in_development(client: TestClient):
+    applied = await client.post(
+        f"{SITE}/applications",
+        json={"first_name": "E2E_HARDEN", "email": f"harden.{uuid.uuid4().hex[:8]}@example.com", "program": "Ops"},
+    )
+    assert applied.status == 201
+    reference = (await applied.json())["reference"]
+    res = await client.get(
+        f"{OPS}/leads?project=vanguard",
+        headers={
+            "Authorization": f"Bearer {_local_demo_token()}",
+            "X-Organization-Id": "ados",
+            "X-Role": "platform_owner",
+        },
+    )
+    assert res.status == 200, await res.text()
+    items = (await res.json())["items"]
+    assert any(row.get("external_id") == reference for row in items)

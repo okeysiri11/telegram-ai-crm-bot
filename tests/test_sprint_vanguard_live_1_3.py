@@ -93,14 +93,31 @@ async def test_duplicate_application_is_idempotent(client: TestClient):
         "email": f"dup.live.{uuid.uuid4().hex[:8]}@example.com",
         "program": "Same Role",
     }
-    first = await client.post(f"{SITE}/applications", json=payload)
-    second = await client.post(f"{SITE}/applications", json=payload)
+    headers = {"Idempotency-Key": f"dup-{payload['email']}"}
+    first = await client.post(f"{SITE}/applications", json=payload, headers=headers)
+    second = await client.post(f"{SITE}/applications", json=payload, headers=headers)
     assert first.status == 201
     assert second.status == 200
     a = await first.json()
     b = await second.json()
     assert b["duplicate"] is True
     assert a["item"]["id"] == b["item"]["id"]
+
+
+async def test_repeat_application_without_idempotency_stays_independent_lead(client: TestClient):
+    payload = {
+        "first_name": "Twin",
+        "email": f"twin.live.{uuid.uuid4().hex[:8]}@example.com",
+        "program": "Same Role",
+    }
+    first = await client.post(f"{SITE}/applications", json=payload)
+    second = await client.post(f"{SITE}/applications", json=payload)
+    assert first.status == 201
+    assert second.status == 201
+    a = await first.json()
+    b = await second.json()
+    assert a["item"]["id"] != b["item"]["id"]
+    assert a["item"]["external_id"] != b["item"]["external_id"]
 
 
 async def test_qualify_convert_interview_persists(client: TestClient):
