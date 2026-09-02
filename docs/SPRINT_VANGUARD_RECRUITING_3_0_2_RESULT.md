@@ -57,10 +57,12 @@ PYTEST = PASS (3.0.2 + 2.5–2.10 + 1.0/1.2/1.3/1.4/1.5/1.6/1.8/1.9/email/whatsa
 VITEST = PASS (3.0.2 + 2.5–2.10 + 1.0/1.2 locally; CI scoped vitest green)  
 VITE_BUILD = PASS (`npx vite build` in `src/web`)
 
-COMMIT_SHA = `5ee0530570e721ea2123ee8a4b8a6134d9cbfa12` (merge live on Render; follow-up snapshot-link fix may land after this report)  
+COMMIT_SHA = `7c4f7b1bd74c6dae76622ae57dcbc670d8a6f4f0`  
 PUSH_STATUS = PUSHED `origin/develop`  
-PRODUCTION_SHA = `5ee0530570e721ea2123ee8a4b8a6134d9cbfa12`  
-RENDER_DEPLOYMENT = YES (`GET /liveness` revision matched before E2E)
+PRODUCTION_SHA = `7c4f7b1bd74c6dae76622ae57dcbc670d8a6f4f0`  
+RENDER_DEPLOYMENT = YES (`GET /liveness` revision matched)
+
+Historical merge + Tests A/B/C were executed on `5ee0530570e721ea2123ee8a4b8a6134d9cbfa12` (then live). After the snapshot-link follow-up deployed as `7c4f7b1b`, production was re-checked: still 1 active candidate, 3 leads, 1 APPROVED pipeline card, idempotent rematch `already_merged`, HMAC unsigned 401, JWT missing 401.
 
 PRODUCTION_E2E = PASS  
 - Test A historical timofii merge on this SHA: ACTIVE_CANDIDATES=1, LEADS_PRESERVED=PASS, APPLICATIONS_PRESERVED=PASS (3 leads kept), PIPELINE_CARD_COUNT=1, PIPELINE_STAGE=APPROVED, RECRUITER/VACANCY/UTM/EXTERNAL_ID/NOTES/MERGE_AUDIT=PASS  
