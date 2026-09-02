@@ -7,6 +7,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button, Card, Input } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
+import { useAuthStore } from "@/auth/authStore";
 import {
   BusinessCabinetShell,
   type OpsNavItem,
@@ -23,14 +24,20 @@ import {
   RECRUITING_NAV,
   TASK_TEMPLATES,
   mapUiRoleToRecruiting,
-  recruitingClickLabel,
-  recruitingConsentLabel,
-  recruitingUtmLabel,
   ruLeadStatus,
 } from "./recruitingLabels";
 import { CandidateEmailComposer } from "./CandidateEmailComposer";
 import { WhatsAppConversation } from "./WhatsAppConversation";
-import { RecruitingApplicationDetails } from "./RecruitingApplicationDetails";
+import { LeadWorkflowPanel } from "./LeadWorkflowPanel";
+import { CandidateWorkflowPanel } from "./CandidateWorkflowPanel";
+import {
+  attentionHref,
+  buildRecruiterOptions,
+  createdLabel,
+  recruiterLabel,
+  vacancyLabelForLead,
+  type RecruiterOption,
+} from "./recruitingWorkflow";
 
 type Row = Record<string, unknown>;
 
@@ -71,13 +78,17 @@ function asRecord(json: unknown): Record<string, unknown> {
 export function RecruitingBusinessPage() {
   const caps = resolveCabinetCaps("recruiting");
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const organizationId = useOrgSelector((s) => s.organizationId);
   const orgLabel = useOrgSelector((s) => s.label());
   const activeRoleId = useRoleSwitcher((s) => s.activeRoleId);
   const roleLabel = useRoleSwitcher((s) => s.activeOption()?.label || activeRoleId);
   const recruitingRole = mapUiRoleToRecruiting(activeRoleId);
+  const currentUser = useAuthStore((s) => s.user);
+  const canConvert = caps.canOperate && recruitingRole !== "hiring_manager";
+  const selectedId = searchParams.get("id") || "";
 
+  const [hydrated, setHydrated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formMsg, setFormMsg] = useState<string | null>(null);
@@ -102,8 +113,6 @@ export function RecruitingBusinessPage() {
   });
   const [taskForm, setTaskForm] = useState({ title: "Позвонить", assignee: "", due_date: "", lead_id: "", candidate_id: "", notes: "" });
   const [commForm, setCommForm] = useState({ channel: "PHONE", body: "", lead_id: "", candidate_id: "" });
-  const [noteForm, setNoteForm] = useState({ lead_id: "", notes: "" });
-  const [vacancyAssign, setVacancyAssign] = useState({ lead_id: "", vacancy_id: "" });
   const [emailCandidate, setEmailCandidate] = useState<Row | null>(null);
   const [whatsappCandidate, setWhatsappCandidate] = useState<Row | null>(null);
 
@@ -112,8 +121,8 @@ export function RecruitingBusinessPage() {
     [organizationId, recruitingRole],
   );
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (opts?: { silent?: boolean }) => {
+    if (!opts?.silent) setLoading(true);
     setError(null);
     try {
       const health = await recruitingOpsGet("/health", headers);
@@ -152,6 +161,7 @@ export function RecruitingBusinessPage() {
       });
     } finally {
       setLoading(false);
+      setHydrated(true);
     }
   }, [headers]);
 
@@ -168,21 +178,42 @@ export function RecruitingBusinessPage() {
   async function post(path: string, body: Record<string, unknown>) {
     setFormMsg(null);
     const res = await recruitingOpsPost(path, body, headers);
+    const json = asRecord(res.json);
     if (!res.ok) {
-      const json = asRecord(res.json);
       setFormMsg(String(json.message_ru || json.error || "Не удалось сохранить"));
-      return false;
+      return { ok: false, json };
     }
     setPanel(null);
-    setFormMsg("Сохранено");
-    await load();
-    return true;
+    await load({ silent: true });
+    return { ok: true, json };
+  }
+
+  function openView(view: string, id?: string) {
+    const next = new URLSearchParams(searchParams);
+    if (view === "home") next.delete("view");
+    else next.set("view", view);
+    if (id) next.set("id", id);
+    else next.delete("id");
+    setSearchParams(next);
   }
 
   const cards = asRecord(bundle.dashboard.cards);
   const visits = asRecord(bundle.dashboard.visits || asRecord(bundle.analytics.visits));
   const funnel = asRecord(bundle.analytics.funnel);
   const attention = Array.isArray(bundle.dashboard.attention) ? (bundle.dashboard.attention as Row[]) : [];
+  const attentionItems = Array.isArray(bundle.dashboard.attention_items)
+    ? (bundle.dashboard.attention_items as Row[])
+    : [];
+  const selectedLead = bundle.leads.find((row) => String(row.id) === selectedId) || null;
+  const selectedCandidate = bundle.candidates.find((row) => String(row.id) === selectedId) || null;
+  const linkedLead = selectedCandidate
+    ? bundle.leads.find((row) => String(row.id) === String(selectedCandidate.lead_id) || String(row.candidate_id) === String(selectedCandidate.id))
+    : null;
+  const recruiters: RecruiterOption[] = buildRecruiterOptions(
+    [...bundle.leads, ...bundle.candidates, ...bundle.tasks],
+    Array.isArray(bundle.dashboard.recruiters) ? (bundle.dashboard.recruiters as RecruiterOption[]) : [],
+    currentUser,
+  );
 
   const leadPanel = caps.canCreate ? (
     <form
@@ -233,33 +264,21 @@ export function RecruitingBusinessPage() {
     home: {
       id: "home",
       title: "Рабочий стол рекрутера",
-      description: "Просроченные задачи, ближайшие действия и воронка без выдуманных визитов.",
-      columns: [
-        { key: "title", label: "Задача" },
-        { key: "due_date", label: "Срок" },
-        { key: "assignee", label: "Исполнитель" },
-        { key: "status", label: "Статус" },
-      ],
-      rows: [...bundle.overdue, ...bundle.nextTasks].map((t) => ({
-        id: String(t.id || ""),
-        title: pick(t, "title"),
-        due_date: pick(t, "due_date"),
-        assignee: pick(t, "assignee"),
-        status: pick(t, "status"),
-      })),
+      description: "Новые заявки, квалификация и воронка найма — без внутренних кодов.",
+      columns: [],
+      rows: [],
       cards: [
-        { label: "Лиды", value: error ? "Нет данных" : String(cards.leads ?? bundle.leads.length) },
+        { label: "Новые лиды", value: error ? "Нет данных" : String(cards.new_leads ?? bundle.leads.filter((l) => String(l.status) === "new").length) },
+        { label: "Квалифицированные", value: error ? "Нет данных" : String(cards.qualified ?? bundle.leads.filter((l) => ["qualified", "converted"].includes(String(l.status))).length) },
         { label: "Кандидаты", value: error ? "Нет данных" : String(cards.candidates ?? bundle.candidates.length) },
-        { label: "Просрочено", value: error ? "Нет данных" : String(cards.overdue_tasks ?? bundle.overdue.length) },
-        { label: "Ближайшие задачи", value: error ? "Нет данных" : String(cards.next_tasks ?? bundle.nextTasks.length) },
+        { label: "Интервью", value: error ? "Нет данных" : String(cards.interviews ?? bundle.candidates.filter((c) => String(c.pipeline_stage) === "INTERVIEW").length) },
+        { label: "Наняты", value: error ? "Нет данных" : String(cards.hired ?? bundle.candidates.filter((c) => String(c.pipeline_stage) === "HIRED").length) },
       ],
-      emptyTitle: "Нет задач, требующих внимания",
-      emptyDescription: "Создайте лид или задачу — дашборд покажет просроченные и ближайшие действия.",
-      emptyCtaLabel: caps.canCreate ? "Создать лид" : undefined,
-      emptyCtaOnClick: caps.canCreate ? () => setPanel("lead") : undefined,
+      emptyTitle: undefined,
+      emptyDescription: undefined,
       quickActions: caps.canCreate
         ? [
-            { label: "Создать лид", onClick: () => setPanel("lead") },
+            { label: "Создать лид", onClick: () => { setPanel("lead"); openView("leads"); } },
             { label: "Новая задача", onClick: () => setPanel("task") },
           ]
         : [],
@@ -299,18 +318,43 @@ export function RecruitingBusinessPage() {
             })()}
           </Card>
           </div>
+          <Card title="Требуют внимания" data-testid="recruiting-attention">
+            {attentionItems.length || attention.length || bundle.overdue.length ? (
+              <ul className="grid gap-2">
+                {attentionItems.map((item, idx) => (
+                  <li key={`${item.kind}-${item.entity_id}-${idx}`}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => navigate(attentionHref(item))}
+                    >
+                      {String(item.message_ru || item.name || item.kind)}
+                    </Button>
+                  </li>
+                ))}
+                {!attentionItems.length
+                  ? attention.map((item) => (
+                      <li key={String(item.kind)}>{String(item.message_ru || item.kind)}</li>
+                    ))
+                  : null}
+                {bundle.overdue.map((task) => (
+                  <li key={String(task.id)}>
+                    Просрочено: {pick(task, "title")}
+                  </li>
+                ))}
+                {bundle.nextTasks.slice(0, 3).map((task) => (
+                  <li key={`next-${String(task.id)}`}>
+                    Ближайшие задачи: {pick(task, "title")}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="eds-type-helper">Нет записей, требующих внимания</p>
+            )}
+          </Card>
           <Card title="Посещения">
             <p data-testid="recruiting-visits-empty">{String(visits.message_ru || "Нет данных о посещениях")}</p>
           </Card>
-          {attention.length ? (
-            <Card title="Требует внимания">
-              <ul>
-                {attention.map((item) => (
-                  <li key={String(item.kind)}>{String(item.message_ru || item.kind)}</li>
-                ))}
-              </ul>
-            </Card>
-          ) : null}
           {panel === "lead" ? leadPanel : null}
         </div>
       ),
@@ -318,149 +362,78 @@ export function RecruitingBusinessPage() {
     leads: {
       id: "leads",
       title: "Лиды",
-      description: "Входящие заявки. Источник и кампания сохраняются для атрибуции.",
+      description: "Заявка → ответственный → вакансия → квалификация → кандидат.",
       columns: [
         { key: "name", label: "Имя" },
         { key: "phone", label: "Телефон" },
         { key: "email", label: "Email" },
-        { key: "age", label: "Возраст" },
-        { key: "consent", label: "Согласие" },
-        { key: "source", label: "Источник" },
         { key: "vacancy", label: "Вакансия" },
-        { key: "utm", label: "UTM" },
-        { key: "clicks", label: "Клики" },
-        { key: "external_id", label: "External ID" },
-        { key: "created", label: "Создана" },
-        { key: "assignee", label: "Рекрутер" },
+        { key: "assignee", label: "Ответственный" },
         { key: "status", label: "Статус" },
+        { key: "created", label: "Создана" },
       ],
       rows: bundle.leads.map((l) => ({
         id: String(l.id || ""),
         name: pick(l, "name"),
         phone: pick(l, "phone"),
         email: pick(l, "email"),
-        age: pick(l, "age"),
-        consent: recruitingConsentLabel(l.contact_consent),
-        source: pick(l, "source"),
-        vacancy: pick(l, "vacancy_id", "vacancy", "program_of_interest"),
-        utm: recruitingUtmLabel(l),
-        clicks: recruitingClickLabel(l),
-        external_id: pick(l, "external_id"),
-        created: pick(l, "created_at", "submitted_at"),
-        assignee: pick(l, "assignee"),
+        vacancy: vacancyLabelForLead(l, bundle.vacancies),
+        assignee: recruiterLabel(l.assignee),
         status: ruLeadStatus(String(l.status || "")),
+        created: createdLabel(l),
       })),
       statusFilterKey: "status",
-      emptyTitle: "Лидов пока нет",
-      emptyDescription: "Создайте лид вручную или примите подписанную заявку Vanguard на /api/recruiting-ops/v1/vanguard/leads.",
-      emptyCtaLabel: undefined,
-      emptyCtaOnClick: undefined,
-      quickActions: caps.canCreate ? [{ label: "Создать лид", onClick: () => setPanel("lead") }] : [],
-      panel: panel === "lead" ? leadPanel : (
-        bundle.leads.length ? (
-          <div>
-            {caps.canOperate ? (
-          <div className="flex flex-wrap gap-2">
-            {bundle.leads.slice(0, 6).map((lead) => (
-              <div key={String(lead.id)} className="flex flex-wrap gap-1">
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={() => void post(`/leads/${lead.id}/assign`, { assignee: "recruiter.owner" })}
-                >
-                  Назначить {pick(lead, "name")}
-                </Button>
-                <Button size="sm" variant="secondary" onClick={() => void post(`/leads/${lead.id}/qualify`, {})}>
-                  Квалифицировать
-                </Button>
-                {String(lead.status || "") !== "converted" ? (
-                <Button size="sm" onClick={() => void post(`/leads/${lead.id}/convert`, {})}>
-                  В кандидаты
-                </Button>
-                ) : null}
-                {String(lead.status || "") !== "lost" && String(lead.status || "") !== "converted" ? (
-                <Button size="sm" variant="ghost" onClick={() => void post(`/leads/${lead.id}/status`, { status: "lost" })}>
-                  Lost
-                </Button>
-                ) : null}
-              </div>
-            ))}
-            <form
-              className="flex flex-wrap gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (noteForm.lead_id && noteForm.notes) void post(`/leads/${noteForm.lead_id}/notes`, { notes: noteForm.notes });
-              }}
-            >
-              <select className="eds-input" value={noteForm.lead_id} onChange={(e) => setNoteForm({ ...noteForm, lead_id: e.target.value })}>
-                <option value="">Лид для заметки</option>
-                {bundle.leads.map((l) => (
-                  <option key={String(l.id)} value={String(l.id)}>
-                    {pick(l, "name")}
-                  </option>
-                ))}
-              </select>
-              <Input placeholder="Заметка" value={noteForm.notes} onChange={(e) => setNoteForm({ ...noteForm, notes: e.target.value })} />
-              <Button type="submit" size="sm">
-                Добавить заметку
-              </Button>
-            </form>
-            <form
-              className="flex flex-wrap gap-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (vacancyAssign.lead_id && vacancyAssign.vacancy_id) {
-                  void post(`/leads/${vacancyAssign.lead_id}/vacancy`, { vacancy_id: vacancyAssign.vacancy_id });
-                }
-              }}
-            >
-              <select className="eds-input" value={vacancyAssign.lead_id} onChange={(e) => setVacancyAssign({ ...vacancyAssign, lead_id: e.target.value })}>
-                <option value="">Лид для вакансии</option>
-                {bundle.leads.map((l) => (
-                  <option key={String(l.id)} value={String(l.id)}>
-                    {pick(l, "name")}
-                  </option>
-                ))}
-              </select>
-              <select className="eds-input" value={vacancyAssign.vacancy_id} onChange={(e) => setVacancyAssign({ ...vacancyAssign, vacancy_id: e.target.value })}>
-                <option value="">Вакансия</option>
-                {bundle.vacancies.map((v) => (
-                  <option key={String(v.id)} value={String(v.id)}>
-                    {pick(v, "title", "name")}
-                  </option>
-                ))}
-              </select>
-              <Button type="submit" size="sm">
-                Назначить вакансию
-              </Button>
-            </form>
-          </div>
-            ) : null}
-            <RecruitingApplicationDetails row={bundle.leads[0]} testId="recruiting-lead-details" />
-          </div>
-        ) : null
+      emptyTitle: "Лидов пока нет.",
+      emptyDescription: "Новые заявки Vanguard появятся здесь автоматически.",
+      emptyCtaLabel: caps.canCreate ? "Создать лид вручную" : undefined,
+      emptyCtaOnClick: caps.canCreate ? () => setPanel("lead") : undefined,
+      quickActions: caps.canCreate ? [{ label: "Создать лид вручную", onClick: () => setPanel("lead") }] : [],
+      onRowOpen: (row) => openView("leads", String(row.id || "")),
+      panel: panel === "lead" ? leadPanel : selectedLead ? (
+        <LeadWorkflowPanel
+          lead={selectedLead}
+          vacancies={bundle.vacancies}
+          recruiters={recruiters}
+          canOperate={caps.canOperate}
+          canConvert={canConvert}
+          canCreate={caps.canCreate}
+          onAssign={async (assignee) => (await post(`/leads/${selectedLead.id}/assign`, { assignee })).ok}
+          onVacancy={async (vacancyId) => (await post(`/leads/${selectedLead.id}/vacancy`, { vacancy_id: vacancyId })).ok}
+          onStatus={async (status) => (await post(`/leads/${selectedLead.id}/status`, { status })).ok}
+          onQualify={async () => (await post(`/leads/${selectedLead.id}/qualify`, {})).ok}
+          onConvert={async () => {
+            const res = await post(`/leads/${selectedLead.id}/convert`, {});
+            return res.ok || Boolean(res.json.already_converted || res.json.duplicate);
+          }}
+          onNote={async (notes) => (await post(`/leads/${selectedLead.id}/notes`, { notes })).ok}
+          onOpenCandidate={(candidateId) => openView("candidates", candidateId)}
+          onCreateVacancy={() => {
+            setPanel("vacancy");
+            openView("vacancies");
+          }}
+        />
+      ) : bundle.leads.length ? (
+        <p className="eds-type-helper" data-testid="lead-select-hint">
+          Откройте лид в таблице, чтобы назначить ответственного и перевести в кандидаты.
+        </p>
+      ) : null,
+      rowActions: (row) => (
+        <Button size="sm" variant="secondary" onClick={() => openView("leads", String(row.id || ""))}>
+          Открыть
+        </Button>
       ),
-      rowActions: caps.canOperate
-        ? (row) =>
-            String(bundle.leads.find((l) => String(l.id) === String(row.id))?.status || "") === "converted" ? null : (
-            <Button size="sm" variant="secondary" onClick={() => void post(`/leads/${row.id}/convert`, {})}>
-              В кандидаты
-            </Button>
-            )
-        : undefined,
     },
     candidates: {
       id: "candidates",
       title: "Кандидаты",
-      description: "Быстрый доступ к людям в найме.",
+      description: "Люди в найме после перевода из лида.",
       columns: [
         { key: "name", label: "Имя" },
         { key: "phone", label: "Телефон" },
         { key: "email", label: "Email" },
-        { key: "age", label: "Возраст" },
-        { key: "consent", label: "Согласие" },
+        { key: "vacancy", label: "Вакансия" },
+        { key: "assignee", label: "Ответственный" },
         { key: "stage", label: "Этап" },
-        { key: "assignee", label: "Рекрутер" },
         { key: "source", label: "Источник" },
       ],
       rows: bundle.candidates.map((c) => ({
@@ -468,30 +441,44 @@ export function RecruitingBusinessPage() {
         name: pick(c, "name"),
         phone: pick(c, "phone"),
         email: pick(c, "email"),
-        age: pick(c, "age"),
-        consent: recruitingConsentLabel(c.contact_consent),
+        vacancy: vacancyLabelForLead(c, bundle.vacancies),
+        assignee: recruiterLabel(c.assignee),
         stage: PIPELINE_LABELS[String(c.pipeline_stage || "")] || pick(c, "pipeline_stage"),
-        assignee: pick(c, "assignee"),
         source: pick(c, "source"),
       })),
-      emptyTitle: "Кандидатов нет",
-      emptyDescription: "Квалифицируйте лид и преобразуйте его в кандидата — он появится в воронке.",
-      rowActions: caps.canOperate
-        ? (row) => (
-            <div className="flex flex-wrap gap-1">
-              <Button size="sm" variant="secondary" onClick={() => setEmailCandidate(bundle.candidates.find((c) => String(c.id) === String(row.id)) || row)}>
+      emptyTitle: "Кандидатов пока нет.",
+      emptyDescription: "Откройте лид и нажмите «Перевести в кандидаты».",
+      onRowOpen: (row) => openView("candidates", String(row.id || "")),
+      rowActions: (row) => (
+        <div className="flex flex-wrap gap-1">
+          <Button size="sm" variant="secondary" onClick={() => openView("candidates", String(row.id || ""))}>
+            Открыть
+          </Button>
+          {caps.canOperate ? (
+            <>
+              <Button size="sm" variant="ghost" onClick={() => setEmailCandidate(bundle.candidates.find((c) => String(c.id) === String(row.id)) || row)}>
                 Письмо
               </Button>
-              <Button size="sm" variant="secondary" onClick={() => setWhatsappCandidate(bundle.candidates.find((c) => String(c.id) === String(row.id)) || row)}>
+              <Button size="sm" variant="ghost" onClick={() => setWhatsappCandidate(bundle.candidates.find((c) => String(c.id) === String(row.id)) || row)}>
                 WhatsApp
               </Button>
-            </div>
-          )
-        : undefined,
+            </>
+          ) : null}
+        </div>
+      ),
       panel: (
         <div className="grid gap-3">
-          {bundle.candidates[0] ? (
-            <RecruitingApplicationDetails row={bundle.candidates[0]} testId="recruiting-candidate-details" />
+          {selectedCandidate ? (
+            <CandidateWorkflowPanel
+              candidate={selectedCandidate}
+              lead={linkedLead}
+              vacancies={bundle.vacancies}
+              canOperate={caps.canOperate}
+              onStage={async (stage) => (await post(`/candidates/${selectedCandidate.id}/stage`, { pipeline_stage: stage })).ok}
+              onOpenLead={(leadId) => openView("leads", leadId)}
+            />
+          ) : bundle.candidates.length ? (
+            <p className="eds-type-helper">Откройте кандидата, чтобы увидеть воронку и исходную заявку.</p>
           ) : null}
           {emailCandidate ? (
             <CandidateEmailComposer
@@ -529,8 +516,8 @@ export function RecruitingBusinessPage() {
         location: pick(v, "location"),
         status: pick(v, "status"),
       })),
-      emptyTitle: "Вакансий нет",
-      emptyDescription: "Создайте вакансию, чтобы атрибутировать лиды и кампании.",
+      emptyTitle: "Вакансий пока нет.",
+      emptyDescription: "Создайте вакансию, чтобы привязывать к ней заявки.",
       emptyCtaLabel: caps.canCreate ? "Создать вакансию" : undefined,
       emptyCtaOnClick: caps.canCreate ? () => setPanel("vacancy") : undefined,
       quickActions: caps.canCreate ? [{ label: "Создать вакансию", onClick: () => setPanel("vacancy") }] : [],
@@ -832,7 +819,7 @@ export function RecruitingBusinessPage() {
       nav={RECRUITING_NAV as unknown as OpsNavItem[]}
       sections={sections}
       defaultSection="home"
-      loading={loading}
+      loading={loading && !hydrated}
       error={error}
       onRefresh={() => void load()}
       testId="recruiting-business-cabinet"

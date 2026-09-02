@@ -91,7 +91,7 @@ describe("Sprint Recruiting 1.0 cabinet", () => {
   it("creates a lead through Recruiting Ops API", async () => {
     mount("/workspace/recruiting?view=leads");
     await screen.findByTestId("recruiting-business-cabinet");
-    fireEvent.click(await screen.findByRole("button", { name: /Создать лид/i }));
+    fireEvent.click((await screen.findAllByRole("button", { name: /Создать лид/i }))[0]!);
     const form = await screen.findByTestId("recruiting-lead-form");
     const nameInput = form.querySelector("input");
     fireEvent.change(nameInput!, { target: { value: "Анна" } });

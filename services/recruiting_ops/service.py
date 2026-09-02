@@ -629,6 +629,113 @@ class RecruitingOpsService:
     def _ok(self, **extra: Any) -> dict[str, Any]:
         return {"ok": True, "data_mode": "REAL", **extra}
 
+    def _hours_old(self, value: Any) -> float | None:
+        raw = _txt(value)
+        if not raw:
+            return None
+        try:
+            stamp = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=timezone.utc)
+            return (datetime.now(timezone.utc) - stamp).total_seconds() / 3600.0
+        except ValueError:
+            return None
+
+    def _recruiter_directory(self, *groups: list[dict[str, Any]]) -> list[dict[str, str]]:
+        items: list[dict[str, str]] = []
+        seen: set[str] = set()
+        for group in groups:
+            for row in group:
+                name = _txt(row.get("assignee"))
+                key = name.lower()
+                if not name or key in seen:
+                    continue
+                seen.add(key)
+                items.append({"id": name, "label": name})
+        return items
+
+    def _attention_items(
+        self,
+        leads: list[dict[str, Any]],
+        candidates: list[dict[str, Any]],
+        overdue: list[dict[str, Any]],
+    ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        summary: list[dict[str, Any]] = []
+        items: list[dict[str, Any]] = []
+        if overdue:
+            summary.append({"kind": "overdue_tasks", "count": len(overdue), "message_ru": f"Просрочено задач: {len(overdue)}"})
+            for task in overdue[:8]:
+                items.append(
+                    {
+                        "kind": "overdue_task",
+                        "entity_type": "task",
+                        "entity_id": _txt(task.get("id")),
+                        "name": _txt(task.get("title")) or "Задача",
+                        "message_ru": f"Просрочена задача: {task.get('title') or task.get('id')}",
+                    }
+                )
+        for lead in leads:
+            status = _lead_status(lead.get("status"))
+            if status == "converted":
+                continue
+            name = _txt(lead.get("name")) or "Лид"
+            lead_id = _txt(lead.get("id"))
+            if not _txt(lead.get("assignee")):
+                items.append(
+                    {
+                        "kind": "unassigned",
+                        "entity_type": "lead",
+                        "entity_id": lead_id,
+                        "name": name,
+                        "message_ru": f"Лид без ответственного: {name}",
+                    }
+                )
+            if not _txt(lead.get("vacancy_id") or lead.get("vacancy")):
+                items.append(
+                    {
+                        "kind": "no_vacancy",
+                        "entity_type": "lead",
+                        "entity_id": lead_id,
+                        "name": name,
+                        "message_ru": f"Лид без вакансии: {name}",
+                    }
+                )
+            age_h = self._hours_old(lead.get("submitted_at") or lead.get("created_at"))
+            if status == "new" and age_h is not None and age_h >= 24:
+                items.append(
+                    {
+                        "kind": "stale_new",
+                        "entity_type": "lead",
+                        "entity_id": lead_id,
+                        "name": name,
+                        "message_ru": f"Новый лид старше 24 часов: {name}",
+                    }
+                )
+        waiting = [c for c in candidates if _stage(c.get("pipeline_stage")) in {"NEW", "QUALIFIED"}]
+        for cand in waiting[:8]:
+            items.append(
+                {
+                    "kind": "awaiting_interview",
+                    "entity_type": "candidate",
+                    "entity_id": _txt(cand.get("id")),
+                    "name": _txt(cand.get("name")) or "Кандидат",
+                    "message_ru": f"Кандидат ожидает интервью: {cand.get('name') or cand.get('id')}",
+                }
+            )
+        unassigned = [l for l in leads if not _txt(l.get("assignee")) and _lead_status(l.get("status")) != "converted"]
+        if unassigned:
+            summary.append({"kind": "unassigned_leads", "count": len(unassigned), "message_ru": f"Лиды без рекрутера: {len(unassigned)}"})
+        no_vacancy = [
+            l
+            for l in leads
+            if not _txt(l.get("vacancy_id") or l.get("vacancy")) and _lead_status(l.get("status")) != "converted"
+        ]
+        if no_vacancy:
+            summary.append({"kind": "leads_without_vacancy", "count": len(no_vacancy), "message_ru": f"Лиды без вакансии: {len(no_vacancy)}"})
+        if waiting:
+            summary.append({"kind": "awaiting_interview", "count": len(waiting), "message_ru": f"Кандидаты ожидают интервью: {len(waiting)}"})
+        return summary, items
+
     async def dashboard(self, organization_id: str, role: str | None = None) -> dict[str, Any]:
         denied = require(role, "list")
         if denied:
@@ -639,12 +746,11 @@ class RecruitingOpsService:
         tasks = self._collect_kind(orgs, "task")
         bag = {kind: self._collect_kind(orgs, kind) for kind in ("lead", "candidate", "vacancy", "task", "campaign")}
         overdue, upcoming = self._task_buckets(tasks)
-        unassigned = [l for l in leads if not _txt(l.get("assignee")) and l.get("status") != "converted"]
-        attention = []
-        if overdue:
-            attention.append({"kind": "overdue_tasks", "count": len(overdue), "message_ru": f"Просрочено задач: {len(overdue)}"})
-        if unassigned:
-            attention.append({"kind": "unassigned_leads", "count": len(unassigned), "message_ru": f"Лиды без рекрутера: {len(unassigned)}"})
+        attention, attention_items = self._attention_items(leads, candidates, overdue)
+        new_leads = [l for l in leads if _lead_status(l.get("status")) == "new"]
+        qualified = [l for l in leads if _lead_status(l.get("status")) in {"qualified", "converted"}]
+        interviews = [c for c in candidates if _stage(c.get("pipeline_stage")) == "INTERVIEW"]
+        hired = [c for c in candidates if _stage(c.get("pipeline_stage")) == "HIRED"]
         return self._ok(
             cards={
                 "leads": len(leads),
@@ -652,10 +758,16 @@ class RecruitingOpsService:
                 "vacancies": len(vacancies),
                 "overdue_tasks": len(overdue),
                 "next_tasks": len(upcoming),
+                "new_leads": len(new_leads),
+                "qualified": len(qualified),
+                "interviews": len(interviews),
+                "hired": len(hired),
             },
             overdue_tasks=overdue[:10],
             next_tasks=upcoming[:10],
             attention=attention,
+            attention_items=attention_items[:20],
+            recruiters=self._recruiter_directory(leads, candidates, tasks),
             visits=VISITS_UNAVAILABLE,
             vanguard=self.vanguard_contract(),
             projects=self._project_summaries(org, bag),
@@ -1366,17 +1478,17 @@ class RecruitingOpsService:
         return self._ok(item=item)
 
     async def assign_lead(self, organization_id: str, lead_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
-        assignee = _txt(body.get("assignee"))
-        if not assignee:
+        if "assignee" not in body and "recruiter" not in body:
             return {"ok": False, "error": "validation", "message_ru": "Укажите рекрутера"}
+        assignee = _txt(body.get("assignee") or body.get("recruiter")) or None
         result = await self.update_lead(organization_id, lead_id, {"assignee": assignee}, role, "update")
         if result.get("ok"):
             await self._activity(
                 organization_id=_org(organization_id),
                 entity_type="lead",
                 entity_id=lead_id,
-                action="lead_assigned",
-                summary=f"Лид назначен рекрутеру: {assignee}",
+                action="lead_assigned" if assignee else "lead_unassigned",
+                summary=f"Лид назначен рекрутеру: {assignee}" if assignee else "Ответственный снят",
                 role=role,
             )
         return result

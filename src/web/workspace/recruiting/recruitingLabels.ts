@@ -69,8 +69,8 @@ export function ruLeadStatus(status: string): string {
   const map: Record<string, string> = {
     new: "Новый",
     qualified: "Квалифицирован",
-    converted: "Кандидат",
-    lost: "Потерян",
+    converted: "Переведён в кандидаты",
+    lost: "Отклонён",
   };
   return map[status] || status || "—";
 }

@@ -130,7 +130,6 @@ export function VanguardProjectPage() {
   const stages = Array.isArray(integration.stages) ? (integration.stages as Row[]) : [];
   const funnel = asRecord(analytics.funnel || overview.funnel);
   const funnelSteps = Array.isArray(funnel.steps) ? (funnel.steps as Row[]) : [];
-  const pipelineStages = asRecord(overview.pipeline || analytics.pipeline_stages);
   const traffic = asRecord(overview.traffic);
   const attribution = asRecord(overview.attribution);
   const recruiting = asRecord(overview.recruiting);
@@ -221,41 +220,31 @@ export function VanguardProjectPage() {
 
       {tab === "overview" ? (
         <div className="grid gap-3" data-testid="vanguard-overview">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             {[
-              ["URL сайта", cards.website_url || sitePath],
-              ["Здоровье сайта", cards.website_health],
-              ["Здоровье интеграции", cards.integration_health],
-              ["Последнее успешное соединение", cards.last_successful_connection],
+              ["Новые заявки", cards.new_leads ?? leads.filter((l) => String(l.status) === "new").length],
+              ["Кандидаты", cards.candidates ?? candidates.length],
+              ["Активные вакансии", cards.active_vacancies ?? vacancies.filter((v) => String(v.status || "open").toLowerCase() !== "closed").length],
               ["Последняя заявка", cards.last_application_at],
-              ["Заявки сегодня", cards.applications_today],
-              ["Заявки 7 дней", cards.applications_7d],
-              ["Заявки 30 дней", cards.applications_30d],
-              ["Лиды", cards.leads],
-              ["Кандидаты", cards.candidates],
-              ["Конверсия Lead → Candidate", cards.conversion_rate],
             ].map(([label, value]) => (
               <Card key={String(label)} title={String(label)}>
                 <p>{cardValue(value)}</p>
               </Card>
             ))}
           </div>
-          <Card title="Последние заявки">
-            <SimpleTable
-              headers={["Имя", "Reference", "Статус"]}
-              rows={leads.slice(0, 8).map((l) => [pick(l, "name"), pick(l, "external_id"), ruLeadStatus(String(l.status || ""))])}
-            />
-          </Card>
-          <Card title="Воронка Vanguard">
-            <div className="flex flex-wrap gap-3">
-              {PIPELINE_STAGES.map((stage) => (
-                <div key={stage}>
-                  <p className="eds-type-caption">{PIPELINE_LABELS[stage]}</p>
-                  <p>{displayMetric(pipelineStages[stage] ?? (pipeline[stage] || []).length)}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
+          <div className="flex flex-wrap gap-2" data-testid="vanguard-quick-actions">
+            <Link to="/workspace/recruiting?view=leads">
+              <Button size="sm">Открыть лиды</Button>
+            </Link>
+            <Link to="/workspace/recruiting?view=candidates">
+              <Button size="sm" variant="secondary">
+                Открыть кандидатов
+              </Button>
+            </Link>
+            <Button size="sm" variant="secondary" onClick={() => window.open(publicUrl || sitePath, "_blank", "noopener")}>
+              Открыть сайт
+            </Button>
+          </div>
         </div>
       ) : null}
 
