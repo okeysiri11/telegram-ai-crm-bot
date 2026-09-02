@@ -63,6 +63,16 @@ def _overlay(org: str, candidate_id: str, **fields: object) -> dict:
     return item
 
 
+async def _overlay_persist(org: str, candidate_id: str, **fields: object) -> dict:
+    item = _overlay(org, candidate_id, **fields)
+    svc = get_recruiting_ops_service()
+    persisted = await svc._persist_patch(org, candidate_id, dict(fields))
+    if persisted:
+        item = {**persisted, **fields}
+        svc._replace(org, "candidate", item)
+    return item
+
+
 async def _historical_pair(
     client: TestClient,
     org: str,
@@ -100,7 +110,7 @@ async def _historical_pair(
     cand_b = await _convert(client, org, lead_b["id"])
     await client.post(f"{OPS}/candidates/{cand_a['id']}/stage", json={"pipeline_stage": stage_a}, headers=_hdr(org))
     await client.post(f"{OPS}/candidates/{cand_b['id']}/stage", json={"pipeline_stage": stage_b}, headers=_hdr(org))
-    _overlay(
+    await _overlay_persist(
         org,
         cand_a["id"],
         pipeline_history=[{"action": "pipeline_moved", "to_stage": stage_a, "at": "2026-08-01"}],
@@ -113,11 +123,9 @@ async def _historical_pair(
         "notes": "note-b",
         **(overlay or {}),
     }
-    if "email" not in (overlay or {}) and "phone" not in (overlay or {}):
-        fields["email"] = EMAIL
-        fields["phone"] = PHONE
-        _overlay(org, cand_a["id"], email=EMAIL, phone=PHONE)
-    cand_b = _overlay(org, cand_b["id"], **fields)
+    if not overlay:
+        await _overlay_persist(org, cand_a["id"], email=EMAIL, phone=PHONE)
+    cand_b = await _overlay_persist(org, cand_b["id"], **fields)
     cand_a = get_recruiting_ops_service()._find(org, "candidate", cand_a["id"])
     return cand_a, cand_b, lead_a, lead_b
 
@@ -169,7 +177,7 @@ async def test_1_same_email_phone_merge(client: TestClient):
 async def test_2_normalized_phone_variants_merge(client: TestClient):
     org = f"m2-{uuid.uuid4().hex[:8]}"
     a, b, *_ = await _historical_pair(client, org, overlay={"email": EMAIL, "phone": "+372 810 93104"})
-    _overlay(org, a["id"], email=EMAIL, phone=PHONE)
+    await _overlay_persist(org, a["id"], email=EMAIL, phone=PHONE)
     res = await _merge(client, org, a["id"], b["id"])
     assert res.status == 200, await res.text()
 
@@ -177,7 +185,7 @@ async def test_2_normalized_phone_variants_merge(client: TestClient):
 async def test_3_same_email_different_phone_ambiguous(client: TestClient):
     org = f"m3-{uuid.uuid4().hex[:8]}"
     a, b, *_ = await _historical_pair(client, org, overlay={"email": EMAIL, "phone": "37000000001"})
-    _overlay(org, a["id"], email=EMAIL, phone=PHONE)
+    await _overlay_persist(org, a["id"], email=EMAIL, phone=PHONE)
     res = await _merge(client, org, a["id"], b["id"])
     assert res.status == 409
     body = await res.json()
@@ -188,7 +196,7 @@ async def test_3_same_email_different_phone_ambiguous(client: TestClient):
 async def test_4_same_phone_different_email_ambiguous(client: TestClient):
     org = f"m4-{uuid.uuid4().hex[:8]}"
     a, b, *_ = await _historical_pair(client, org, overlay={"email": "other@x.com", "phone": PHONE})
-    _overlay(org, a["id"], email=EMAIL, phone=PHONE)
+    await _overlay_persist(org, a["id"], email=EMAIL, phone=PHONE)
     res = await _merge(client, org, a["id"], b["id"])
     assert res.status == 409
     assert (await res.json())["safety"] == "ambiguous"

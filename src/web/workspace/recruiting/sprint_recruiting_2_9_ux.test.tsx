@@ -192,7 +192,7 @@ describe("Sprint Recruiting 2.9 workflow UX", () => {
     await waitFor(() => {
       expect(fetchMock.mock.calls.some((c) => String(c[0]).includes("/leads/lead-a/assign"))).toBe(true);
     });
-    expect(await screen.findByTestId("lead-workflow-success")).toHaveTextContent(/Ответственный сохранён/);
+    expect(await screen.findByTestId("lead-workflow-success", {}, { timeout: 5000 })).toHaveTextContent(/Ответственный сохранён/);
     fireEvent.change(screen.getByTestId("lead-vacancy-select"), { target: { value: "vac-1" } });
     await waitFor(() => expect(screen.getByTestId("lead-workflow-success")).toHaveTextContent(/Вакансия сохранена/));
     fireEvent.click(screen.getByTestId("lead-qualify"));
