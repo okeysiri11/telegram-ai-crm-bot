@@ -64,7 +64,7 @@ def _status_for(result: dict, *, created: bool = False) -> int:
         if err == "TEMPLATE_REQUIRED":
             return 409
         return 400
-    if result.get("duplicate"):
+    if result.get("duplicate") or result.get("already_converted"):
         return 200
     return 201 if created else 200
 
@@ -193,7 +193,31 @@ async def ops_lead_convert_handler(request: web.Request) -> web.Response:
     body = await _read_json(request)
     lead_id = request.match_info.get("lead_id") or ""
     result = await svc.convert_lead(_org(request, body), lead_id, body, _role(request, body))
-    return json_response(result, status=_status_for(result, created=True))
+    return json_response(result, status=_status_for(result, created=not result.get("already_converted")))
+
+
+async def ops_lead_status_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    body = await _read_json(request)
+    lead_id = request.match_info.get("lead_id") or ""
+    result = await svc.set_lead_status(_org(request, body), lead_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_lead_vacancy_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    body = await _read_json(request)
+    lead_id = request.match_info.get("lead_id") or ""
+    result = await svc.assign_lead_vacancy(_org(request, body), lead_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_vacancy_update_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    body = await _read_json(request)
+    vacancy_id = request.match_info.get("vacancy_id") or ""
+    result = await svc.update_vacancy(_org(request, body), vacancy_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
 
 
 async def ops_candidates_handler(request: web.Request) -> web.Response:

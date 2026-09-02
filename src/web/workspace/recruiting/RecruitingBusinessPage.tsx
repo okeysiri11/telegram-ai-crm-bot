@@ -103,6 +103,7 @@ export function RecruitingBusinessPage() {
   const [taskForm, setTaskForm] = useState({ title: "Позвонить", assignee: "", due_date: "", lead_id: "", candidate_id: "", notes: "" });
   const [commForm, setCommForm] = useState({ channel: "PHONE", body: "", lead_id: "", candidate_id: "" });
   const [noteForm, setNoteForm] = useState({ lead_id: "", notes: "" });
+  const [vacancyAssign, setVacancyAssign] = useState({ lead_id: "", vacancy_id: "" });
   const [emailCandidate, setEmailCandidate] = useState<Row | null>(null);
   const [whatsappCandidate, setWhatsappCandidate] = useState<Row | null>(null);
 
@@ -372,9 +373,16 @@ export function RecruitingBusinessPage() {
                 <Button size="sm" variant="secondary" onClick={() => void post(`/leads/${lead.id}/qualify`, {})}>
                   Квалифицировать
                 </Button>
+                {String(lead.status || "") !== "converted" ? (
                 <Button size="sm" onClick={() => void post(`/leads/${lead.id}/convert`, {})}>
                   В кандидаты
                 </Button>
+                ) : null}
+                {String(lead.status || "") !== "lost" && String(lead.status || "") !== "converted" ? (
+                <Button size="sm" variant="ghost" onClick={() => void post(`/leads/${lead.id}/status`, { status: "lost" })}>
+                  Lost
+                </Button>
+                ) : null}
               </div>
             ))}
             <form
@@ -397,6 +405,35 @@ export function RecruitingBusinessPage() {
                 Добавить заметку
               </Button>
             </form>
+            <form
+              className="flex flex-wrap gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (vacancyAssign.lead_id && vacancyAssign.vacancy_id) {
+                  void post(`/leads/${vacancyAssign.lead_id}/vacancy`, { vacancy_id: vacancyAssign.vacancy_id });
+                }
+              }}
+            >
+              <select className="eds-input" value={vacancyAssign.lead_id} onChange={(e) => setVacancyAssign({ ...vacancyAssign, lead_id: e.target.value })}>
+                <option value="">Лид для вакансии</option>
+                {bundle.leads.map((l) => (
+                  <option key={String(l.id)} value={String(l.id)}>
+                    {pick(l, "name")}
+                  </option>
+                ))}
+              </select>
+              <select className="eds-input" value={vacancyAssign.vacancy_id} onChange={(e) => setVacancyAssign({ ...vacancyAssign, vacancy_id: e.target.value })}>
+                <option value="">Вакансия</option>
+                {bundle.vacancies.map((v) => (
+                  <option key={String(v.id)} value={String(v.id)}>
+                    {pick(v, "title", "name")}
+                  </option>
+                ))}
+              </select>
+              <Button type="submit" size="sm">
+                Назначить вакансию
+              </Button>
+            </form>
           </div>
             ) : null}
             <RecruitingApplicationDetails row={bundle.leads[0]} testId="recruiting-lead-details" />
@@ -404,11 +441,12 @@ export function RecruitingBusinessPage() {
         ) : null
       ),
       rowActions: caps.canOperate
-        ? (row) => (
+        ? (row) =>
+            String(bundle.leads.find((l) => String(l.id) === String(row.id))?.status || "") === "converted" ? null : (
             <Button size="sm" variant="secondary" onClick={() => void post(`/leads/${row.id}/convert`, {})}>
               В кандидаты
             </Button>
-          )
+            )
         : undefined,
     },
     candidates: {
@@ -510,6 +548,14 @@ export function RecruitingBusinessPage() {
             <Input placeholder="Локация" value={vacancyForm.location} onChange={(e) => setVacancyForm({ ...vacancyForm, location: e.target.value })} />
             <Button type="submit">Сохранить вакансию</Button>
           </form>
+        ) : bundle.vacancies[0] && caps.canOperate ? (
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => void post(`/vacancies/${String(bundle.vacancies[0].id)}`, { status: "closed" })}
+          >
+            Закрыть {pick(bundle.vacancies[0], "title", "name")}
+          </Button>
         ) : null,
     },
     pipeline: {

@@ -249,6 +249,7 @@ class RecruitingOpsService:
         self._hydrated: set[str] = set()
         self._lifecycle_migrated: set[str] = set()
         self._hydrate_locks: dict[str, asyncio.Lock] = {}
+        self._convert_locks: dict[str, asyncio.Lock] = {}
         self._ingest_log: dict[str, Any] = {
             "last_success_at": None,
             "last_error_at": None,
@@ -1329,7 +1330,21 @@ class RecruitingOpsService:
         org = located_org
         patch = dict(body)
         if "status" in patch:
-            patch["status"] = _lead_status(patch.get("status"), item.get("status") or "new")
+            requested = _lead_status(patch.get("status"), item.get("status") or "new")
+            current = _lead_status(item.get("status"), "new")
+            if requested == "converted" and action != "convert":
+                return {
+                    "ok": False,
+                    "error": "validation",
+                    "message_ru": "Конвертация лида — только через /convert.",
+                }
+            if current == "converted" and action != "convert" and requested != "converted":
+                return {
+                    "ok": False,
+                    "error": "validation",
+                    "message_ru": "Сконвертированный лид нельзя вернуть через смену статуса.",
+                }
+            patch["status"] = requested
         if "name" in patch:
             name = _txt(patch.get("name"))
             if not name:
@@ -1395,55 +1410,151 @@ class RecruitingOpsService:
             )
         return result
 
+    def _candidate_for_lead(self, organization_id: str, lead_id: str, role: str | None) -> dict[str, Any] | None:
+        lid = _txt(lead_id)
+        if not lid:
+            return None
+        for org in self._read_orgs(organization_id, role):
+            for item in self._bag(org).get("candidate") or []:
+                if _txt(item.get("lead_id")) == lid:
+                    return item
+            lead = self._find(org, "lead", lid)
+            if lead and lead.get("candidate_id"):
+                found = self._find(org, "candidate", str(lead["candidate_id"]))
+                if found:
+                    return found
+        return None
+
+    async def set_lead_status(
+        self,
+        organization_id: str,
+        lead_id: str,
+        body: dict[str, Any],
+        role: str | None = None,
+    ) -> dict[str, Any]:
+        status = _lead_status(body.get("status"), "")
+        if status not in {"new", "qualified", "lost"}:
+            return {
+                "ok": False,
+                "error": "validation",
+                "message_ru": "Допустимые статусы: new, qualified, lost. Конвертация — только через /convert.",
+            }
+        located_org, lead = await self._locate(organization_id, "lead", lead_id, role)
+        if not lead:
+            return {"ok": False, "error": "not_found", "message_ru": "Лид не найден"}
+        if _lead_status(lead.get("status")) == "converted":
+            return {
+                "ok": False,
+                "error": "validation",
+                "message_ru": "Сконвертированный лид нельзя вернуть через смену статуса.",
+            }
+        action = "qualify" if status == "qualified" else "update"
+        result = await self.update_lead(organization_id, lead_id, {"status": status}, role, action)
+        if result.get("ok"):
+            await self._activity(
+                organization_id=_org(organization_id),
+                entity_type="lead",
+                entity_id=lead_id,
+                action="lead_status_changed",
+                summary=f"Статус лида: {status}",
+                role=role,
+                payload={"status": status},
+            )
+        return result
+
+    async def assign_lead_vacancy(
+        self,
+        organization_id: str,
+        lead_id: str,
+        body: dict[str, Any],
+        role: str | None = None,
+    ) -> dict[str, Any]:
+        vacancy_id = _txt(body.get("vacancy_id") or body.get("vacancy"))
+        if not vacancy_id:
+            return {"ok": False, "error": "validation", "message_ru": "Укажите вакансию"}
+        located_org, vacancy = await self._locate(organization_id, "vacancy", vacancy_id, role)
+        if not vacancy:
+            return {"ok": False, "error": "not_found", "message_ru": "Вакансия не найдена"}
+        result = await self.update_lead(
+            organization_id,
+            lead_id,
+            {
+                "vacancy_id": vacancy_id,
+                "vacancy": _txt(vacancy.get("title") or vacancy.get("name")) or vacancy_id,
+            },
+            role,
+            "update",
+        )
+        if result.get("ok"):
+            await self._activity(
+                organization_id=located_org,
+                entity_type="lead",
+                entity_id=lead_id,
+                action="lead_vacancy_assigned",
+                summary=f"Вакансия назначена: {vacancy.get('title') or vacancy_id}",
+                role=role,
+                payload={"vacancy_id": vacancy_id},
+            )
+        return result
+
     async def convert_lead(self, organization_id: str, lead_id: str, body: dict[str, Any] | None = None, role: str | None = None) -> dict[str, Any]:
         denied = require(role, "convert")
         if denied:
             return denied
-        org = _org(organization_id)
-        await self.ensure_hydrated(org)
-        located_org, lead = await self._locate(organization_id, "lead", lead_id, role)
-        if not lead:
-            return {"ok": False, "error": "not_found", "message_ru": "Лид не найден"}
-        org = located_org
-        if lead.get("candidate_id"):
-            existing = self._find(org, "candidate", str(lead["candidate_id"]))
-            return self._ok(item=existing, lead=lead, already_converted=True)
-        body = body or {}
-        stage = _stage(body.get("pipeline_stage") or ("QUALIFIED" if lead.get("status") == "qualified" else "NEW"))
-        from services.recruiting_ops.ingest_fields import application_fields_from_lead
+        lock = self._convert_locks.setdefault(str(lead_id), asyncio.Lock())
+        async with lock:
+            located_org, lead = await self._locate(organization_id, "lead", lead_id, role)
+            if not lead:
+                return {"ok": False, "error": "not_found", "message_ru": "Лид не найден"}
+            org = located_org
+            existing = self._candidate_for_lead(organization_id, lead_id, role)
+            if existing:
+                if _txt(lead.get("candidate_id")) != _txt(existing.get("id")) or _lead_status(lead.get("status")) != "converted":
+                    patched = await self.update_lead(
+                        org,
+                        lead_id,
+                        {"status": "converted", "candidate_id": existing["id"]},
+                        role,
+                        "convert",
+                    )
+                    lead = patched.get("item") or lead
+                return self._ok(item=existing, lead=lead, already_converted=True, duplicate=True)
+            body = body or {}
+            stage = _stage(body.get("pipeline_stage") or ("QUALIFIED" if lead.get("status") == "qualified" else "NEW"))
+            from services.recruiting_ops.ingest_fields import application_fields_from_lead
 
-        candidate_body = {
-            "name": lead.get("name"),
-            "email": lead.get("email"),
-            "campaign_id": lead.get("campaign_id"),
-            "vacancy_id": body.get("vacancy_id") or lead.get("vacancy_id"),
-            "assignee": body.get("assignee") or lead.get("assignee"),
-            "lead_id": lead_id,
-            "pipeline_stage": stage,
-            "notes": lead.get("notes"),
-            **application_fields_from_lead(lead),
-        }
-        created = await self.create_candidate(org, candidate_body, role)
-        if not created.get("ok"):
-            return created
-        candidate = created["item"]
-        patched = await self.update_lead(
-            org,
-            lead_id,
-            {"status": "converted", "candidate_id": candidate["id"]},
-            role,
-            "convert",
-        )
-        await self._activity(
-            organization_id=org,
-            entity_type="lead",
-            entity_id=lead_id,
-            action="lead_converted",
-            summary=f"Лид преобразован в кандидата: {lead.get('name')}",
-            role=role,
-            payload={"candidate_id": candidate["id"], "pipeline_stage": stage},
-        )
-        return self._ok(item=candidate, lead=patched.get("item") or lead)
+            candidate_body = {
+                "name": lead.get("name"),
+                "email": lead.get("email"),
+                "campaign_id": lead.get("campaign_id"),
+                "vacancy_id": body.get("vacancy_id") or lead.get("vacancy_id"),
+                "assignee": body.get("assignee") or lead.get("assignee"),
+                "lead_id": lead_id,
+                "pipeline_stage": stage,
+                "notes": lead.get("notes"),
+                **application_fields_from_lead(lead),
+            }
+            created = await self.create_candidate(org, candidate_body, role)
+            if not created.get("ok"):
+                return created
+            candidate = created["item"]
+            patched = await self.update_lead(
+                org,
+                lead_id,
+                {"status": "converted", "candidate_id": candidate["id"]},
+                role,
+                "convert",
+            )
+            await self._activity(
+                organization_id=org,
+                entity_type="lead",
+                entity_id=lead_id,
+                action="lead_converted",
+                summary=f"Лид преобразован в кандидата: {lead.get('name')}",
+                role=role,
+                payload={"candidate_id": candidate["id"], "pipeline_stage": stage},
+            )
+            return self._ok(item=candidate, lead=patched.get("item") or lead)
 
     async def create_candidate(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
         denied = require(role, "create")
@@ -1459,6 +1570,9 @@ class RecruitingOpsService:
             return app_error
         org = _org(organization_id, body.get("tenant_id"))
         await self.ensure_hydrated(org)
+        existing_for_lead = self._candidate_for_lead(org, _txt(body.get("lead_id")), role)
+        if existing_for_lead:
+            return self._ok(item=existing_for_lead, already_converted=True, duplicate=True)
         item = {
             "id": str(body.get("id") or uuid.uuid4()),
             "organization_id": org,
@@ -1528,9 +1642,10 @@ class RecruitingOpsService:
             return denied
         org = _org(organization_id)
         await self.ensure_hydrated(org)
-        item = self._find(org, "candidate", candidate_id)
+        located_org, item = await self._locate(organization_id, "candidate", candidate_id, role)
         if not item:
             return {"ok": False, "error": "not_found", "message_ru": "Кандидат не найден"}
+        org = located_org
         stage = _stage(body.get("pipeline_stage") or body.get("stage") or body.get("status"), item.get("pipeline_stage") or "NEW")
         patch = {"pipeline_stage": stage, "status": stage, "updated_at": _now()}
         if body.get("assignee"):
@@ -1600,6 +1715,48 @@ class RecruitingOpsService:
             role=role,
         )
         return self._ok(item=saved)
+
+    async def update_vacancy(
+        self,
+        organization_id: str,
+        vacancy_id: str,
+        body: dict[str, Any],
+        role: str | None = None,
+    ) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        located_org, item = await self._locate(organization_id, "vacancy", vacancy_id, role)
+        if not item:
+            return {"ok": False, "error": "not_found", "message_ru": "Вакансия не найдена"}
+        org = located_org
+        patch: dict[str, Any] = {"updated_at": _now()}
+        if "title" in body or "name" in body:
+            title = _txt(body.get("title") or body.get("name"))
+            if not title:
+                return {"ok": False, "error": "validation", "message_ru": "Укажите название вакансии"}
+            patch["title"] = title
+        for key in ("department", "location", "status", "notes", "project_key"):
+            if key in body:
+                patch[key] = _txt(body.get(key)) or None
+        if "project_key" in patch:
+            patch["project_key"] = infer_project_key(project_key=patch.get("project_key"))
+        item.update(patch)
+        persisted = await self._persist_patch(org, vacancy_id, patch)
+        if persisted:
+            item = persisted
+            self._replace(org, "vacancy", item)
+        else:
+            self._replace(org, "vacancy", item)
+        await self._activity(
+            organization_id=org,
+            entity_type="vacancy",
+            entity_id=vacancy_id,
+            action="vacancy_updated",
+            summary=f"Вакансия обновлена: {item.get('title')}",
+            role=role,
+        )
+        return self._ok(item=item)
 
     async def create_campaign(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
         denied = require(role, "create")
