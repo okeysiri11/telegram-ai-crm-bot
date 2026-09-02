@@ -116,3 +116,26 @@ export function attentionHref(item: WorkflowRow): string {
 export function canSelectLeadStatus(status: string): boolean {
   return status !== "converted";
 }
+
+export function recruitingCanMerge(role: string): boolean {
+  return role === "recruiter" || role === "owner" || role === "platform_owner";
+}
+
+export function recruitingCanForceMerge(role: string): boolean {
+  return role === "owner" || role === "platform_owner";
+}
+
+export function candidateSourceList(row: WorkflowRow): string {
+  const apps = Array.isArray(row.applications) ? (row.applications as WorkflowRow[]) : [];
+  const values = [sourceLabel(row), ...apps.map((app) => sourceLabel(app))].filter((value) => value && value !== "—");
+  return [...new Set(values)].join(", ") || "—";
+}
+
+export function candidateVacancyList(row: WorkflowRow, vacancies: WorkflowRow[]): string {
+  const apps = Array.isArray(row.applications) ? (row.applications as WorkflowRow[]) : [];
+  const values = [
+    vacancyLabelForLead(row, vacancies),
+    ...apps.map((app) => vacancyLabelForLead(app, vacancies)),
+  ].filter((value) => value && value !== "Не выбрана");
+  return [...new Set(values)].join(", ") || "Не выбрана";
+}

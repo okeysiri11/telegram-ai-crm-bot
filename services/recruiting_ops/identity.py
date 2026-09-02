@@ -81,6 +81,160 @@ def application_snapshot(lead: dict[str, Any]) -> dict[str, Any]:
     return snap
 
 
+def merge_safety(left: dict[str, Any], right: dict[str, Any]) -> str:
+    """match | ambiguous | unsafe. Distinct identities are unsafe, never auto-merged."""
+    decision = identity_decision(left, right)
+    if decision == "distinct":
+        return "unsafe"
+    return decision
+
+
+def is_merged_candidate(item: dict[str, Any] | None) -> bool:
+    if not item:
+        return False
+    return bool(item.get("merged") or item.get("merged_into") or str(item.get("status") or "").upper() == "MERGED")
+
+
+STAGE_RANK = {
+    "NEW": 0,
+    "QUALIFIED": 1,
+    "INTERVIEW": 2,
+    "APPROVED": 3,
+    "HIRED": 4,
+    "REJECTED": -1,
+}
+
+
+def advanced_pipeline_stage(left: dict[str, Any], right: dict[str, Any]) -> str:
+    a = str(left.get("pipeline_stage") or left.get("status") or "NEW").upper()
+    b = str(right.get("pipeline_stage") or right.get("status") or "NEW").upper()
+    ra, rb = STAGE_RANK.get(a, 0), STAGE_RANK.get(b, 0)
+    if ra == rb:
+        return a if a in STAGE_RANK else b
+    if ra > rb:
+        return a
+    return b
+
+
+def union_ids(*groups: Any) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for group in groups:
+        for raw in group or []:
+            value = _txt(raw)
+            if not value or value in seen:
+                continue
+            seen.add(value)
+            out.append(value)
+    return out
+
+
+def merge_application_snapshots(*groups: Any) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for group in groups:
+        for app in group or []:
+            if not isinstance(app, dict):
+                continue
+            lid = _txt(app.get("lead_id"))
+            key = lid or _txt(app.get("external_id")) or str(len(out))
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(dict(app))
+    return out
+
+
+def detect_duplicate_groups(candidates: list[dict[str, Any]]) -> list[list[str]]:
+    """Active candidates that share normalized email AND phone. Never auto-merges."""
+    active = [item for item in candidates if item and not is_merged_candidate(item)]
+    used: set[str] = set()
+    groups: list[list[str]] = []
+    for index, left in enumerate(active):
+        left_id = _txt(left.get("id"))
+        if not left_id or left_id in used:
+            continue
+        peers = [left_id]
+        for right in active[index + 1 :]:
+            right_id = _txt(right.get("id"))
+            if not right_id or right_id in used:
+                continue
+            if identity_decision(left, right) == "match":
+                peers.append(right_id)
+        if len(peers) > 1:
+            used.update(peers)
+            groups.append(peers)
+    return groups
+
+
+def merge_text(*values: Any) -> str:
+    parts: list[str] = []
+    for value in values:
+        text = _txt(value)
+        if not text:
+            continue
+        if any(text == existing or text in existing for existing in parts):
+            continue
+        parts.append(text)
+    return "\n".join(parts)
+
+
+def annotate_duplicate_flags(candidates: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    groups = detect_duplicate_groups(candidates)
+    peers: dict[str, list[str]] = {}
+    for group in groups:
+        for cid in group:
+            peers[cid] = [other for other in group if other != cid]
+    out: list[dict[str, Any]] = []
+    for item in candidates:
+        row = dict(item)
+        cid = _txt(row.get("id"))
+        dupes = peers.get(cid) or []
+        row["possible_duplicate"] = bool(dupes)
+        row["duplicate_candidate_ids"] = dupes
+        out.append(row)
+    return out
+
+
+def build_merge_preview(canonical: dict[str, Any], duplicate: dict[str, Any]) -> dict[str, Any]:
+    apps = merge_application_snapshots(canonical.get("applications"), duplicate.get("applications"))
+    lead_ids = union_ids(linked_lead_ids(canonical), linked_lead_ids(duplicate))
+    sources = union_ids(
+        [canonical.get("source")],
+        [duplicate.get("source")],
+        [app.get("source") for app in apps],
+    )
+    vacancies = union_ids(
+        [canonical.get("vacancy_id"), canonical.get("vacancy")],
+        [duplicate.get("vacancy_id"), duplicate.get("vacancy")],
+        [app.get("vacancy_id") for app in apps],
+        [app.get("vacancy") for app in apps],
+        canonical.get("vacancy_ids"),
+        duplicate.get("vacancy_ids"),
+    )
+    dates = [
+        _txt(canonical.get("created_at") or canonical.get("submitted_at")),
+        _txt(duplicate.get("created_at") or duplicate.get("submitted_at")),
+        *[_txt(app.get("created_at") or app.get("submitted_at")) for app in apps],
+    ]
+    dates = [d for d in dates if d]
+    assignee = _txt(canonical.get("assignee")) or _txt(duplicate.get("assignee"))
+    return {
+        "name": _txt(canonical.get("name")) or _txt(duplicate.get("name")),
+        "application_count": len(apps) or len(lead_ids),
+        "lead_count": len(lead_ids),
+        "pipeline_stage": advanced_pipeline_stage(canonical, duplicate),
+        "assignee": assignee,
+        "source_count": len(sources),
+        "sources": sources,
+        "vacancies": vacancies,
+        "first_application_at": min(dates) if dates else "",
+        "last_application_at": max(dates) if dates else "",
+        "email": normalize_email(canonical.get("email") or duplicate.get("email")),
+        "phone": _txt(canonical.get("phone") or duplicate.get("phone")),
+    }
+
+
 def linked_lead_ids(candidate: dict[str, Any]) -> list[str]:
     ids: list[str] = []
     seen: set[str] = set()

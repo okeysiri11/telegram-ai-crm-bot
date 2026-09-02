@@ -8,12 +8,12 @@ RECRUITING_ROLES: dict[str, dict[str, Any]] = {
     "owner": {
         "id": "owner",
         "label_ru": "Владелец",
-        "permissions": {"view", "create", "edit", "qualify", "convert", "admin"},
+        "permissions": {"view", "create", "edit", "qualify", "convert", "merge", "admin"},
     },
     "recruiter": {
         "id": "recruiter",
         "label_ru": "Рекрутер",
-        "permissions": {"view", "create", "edit", "qualify", "convert"},
+        "permissions": {"view", "create", "edit", "qualify", "convert", "merge"},
     },
     "hiring_manager": {
         "id": "hiring_manager",
@@ -28,7 +28,7 @@ RECRUITING_ROLES: dict[str, dict[str, Any]] = {
     "platform_owner": {
         "id": "platform_owner",
         "label_ru": "Владелец платформы",
-        "permissions": {"view", "create", "edit", "qualify", "convert", "admin"},
+        "permissions": {"view", "create", "edit", "qualify", "convert", "merge", "admin"},
     },
 }
 
@@ -39,6 +39,7 @@ ACTION_PERMISSION = {
     "update": "edit",
     "qualify": "qualify",
     "convert": "convert",
+    "merge": "merge",
     "admin": "admin",
 }
 

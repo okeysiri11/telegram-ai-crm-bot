@@ -30,12 +30,15 @@ import { CandidateEmailComposer } from "./CandidateEmailComposer";
 import { WhatsAppConversation } from "./WhatsAppConversation";
 import { LeadWorkflowPanel } from "./LeadWorkflowPanel";
 import { CandidateWorkflowPanel } from "./CandidateWorkflowPanel";
+import { CandidateMergePanel } from "./CandidateMergePanel";
 import {
   attentionHref,
   buildRecruiterOptions,
   createdLabel,
   applicationCountLabel,
   recruiterLabel,
+  recruitingCanForceMerge,
+  recruitingCanMerge,
   vacancyLabelForLead,
   type RecruiterOption,
 } from "./recruitingWorkflow";
@@ -116,6 +119,13 @@ export function RecruitingBusinessPage() {
   const [commForm, setCommForm] = useState({ channel: "PHONE", body: "", lead_id: "", candidate_id: "" });
   const [emailCandidate, setEmailCandidate] = useState<Row | null>(null);
   const [whatsappCandidate, setWhatsappCandidate] = useState<Row | null>(null);
+  const [mergePair, setMergePair] = useState<{ left: Row; right: Row } | null>(null);
+  const [mergePreview, setMergePreview] = useState<Row | null>(null);
+  const [mergeSafety, setMergeSafety] = useState("match");
+  const [mergeError, setMergeError] = useState<string | null>(null);
+  const [mergeConflict, setMergeConflict] = useState(false);
+  const [mergeSuccess, setMergeSuccess] = useState(false);
+  const [mergeBusy, setMergeBusy] = useState(false);
 
   const headers = useMemo(
     () => recruitingWorkspaceHeaders(organizationId, recruitingRole),
@@ -207,6 +217,71 @@ export function RecruitingBusinessPage() {
     : [];
   const selectedLead = bundle.leads.find((row) => String(row.id) === selectedId) || null;
   const selectedCandidate = bundle.candidates.find((row) => String(row.id) === selectedId) || null;
+  const canMerge = caps.canOperate && recruitingCanMerge(recruitingRole);
+  const canForceMerge = recruitingCanForceMerge(recruitingRole);
+
+  function resetMerge() {
+    setMergePair(null);
+    setMergePreview(null);
+    setMergeSafety("match");
+    setMergeError(null);
+    setMergeConflict(false);
+    setMergeSuccess(false);
+    setMergeBusy(false);
+  }
+
+  async function openMerge(leftId: string, rightId: string) {
+    const left = bundle.candidates.find((row) => String(row.id) === leftId);
+    const right = bundle.candidates.find((row) => String(row.id) === rightId);
+    if (!left || !right) return;
+    setMergePair({ left, right });
+    setMergePreview(null);
+    setMergeError(null);
+    setMergeConflict(false);
+    setMergeSuccess(false);
+    setMergeBusy(true);
+    const res = await recruitingOpsPost(
+      `/candidates/${leftId}/merge`,
+      { duplicate_candidate_id: rightId, preview: true, reason: "preview" },
+      headers,
+    );
+    const json = asRecord(res.json);
+    setMergePreview((json.preview && typeof json.preview === "object" ? json.preview : null) as Row | null);
+    setMergeSafety(String(json.safety || "match"));
+    if (!res.ok) {
+      setMergeConflict(res.status === 409);
+      setMergeError(String(json.message_ru || json.error || "Не удалось подготовить объединение"));
+    }
+    setMergeBusy(false);
+  }
+
+  async function confirmMerge(force: boolean) {
+    if (!mergePair) return;
+    setMergeBusy(true);
+    setMergeError(null);
+    setMergeConflict(false);
+    const res = await recruitingOpsPost(
+      `/candidates/${String(mergePair.left.id)}/merge`,
+      {
+        duplicate_candidate_id: String(mergePair.right.id),
+        reason: "operator merge",
+        force,
+      },
+      headers,
+    );
+    const json = asRecord(res.json);
+    if (!res.ok) {
+      setMergeConflict(res.status === 409);
+      setMergeError(String(json.message_ru || json.error || "Не удалось объединить кандидатов"));
+      setMergeBusy(false);
+      return;
+    }
+    setMergeSuccess(true);
+    setMergeBusy(false);
+    await load({ silent: true });
+    const item = json.item && typeof json.item === "object" ? (json.item as Row) : null;
+    openView("candidates", String(item?.id || mergePair.left.id));
+  }
   const linkedLead = selectedCandidate
     ? bundle.leads.find((row) => String(row.id) === String(selectedCandidate.lead_id) || String(row.candidate_id) === String(selectedCandidate.id))
     : null;
@@ -436,6 +511,7 @@ export function RecruitingBusinessPage() {
         { key: "assignee", label: "Ответственный" },
         { key: "stage", label: "Этап" },
         { key: "source", label: "Источник" },
+        { key: "duplicate", label: "Дубль" },
       ],
       rows: bundle.candidates.map((c) => ({
         id: String(c.id || ""),
@@ -446,6 +522,8 @@ export function RecruitingBusinessPage() {
         assignee: recruiterLabel(c.assignee),
         stage: PIPELINE_LABELS[String(c.pipeline_stage || "")] || pick(c, "pipeline_stage"),
         source: pick(c, "source"),
+        duplicate: c.possible_duplicate ? "Возможный дубль" : "",
+        duplicate_peer: String((Array.isArray(c.duplicate_candidate_ids) ? c.duplicate_candidate_ids[0] : "") || ""),
       })),
       emptyTitle: "Кандидатов пока нет.",
       emptyDescription: "Откройте лид и нажмите «Перевести в кандидаты».",
@@ -455,6 +533,19 @@ export function RecruitingBusinessPage() {
           <Button size="sm" variant="secondary" onClick={() => openView("candidates", String(row.id || ""))}>
             Открыть
           </Button>
+          {row.duplicate === "Возможный дубль" ? (
+            <span data-testid={`duplicate-badge-${String(row.id)}`}>Возможный дубль</span>
+          ) : null}
+          {canMerge && row.duplicate === "Возможный дубль" && row.duplicate_peer ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              data-testid={`merge-candidates-${String(row.id)}`}
+              onClick={() => void openMerge(String(row.id || ""), String(row.duplicate_peer || ""))}
+            >
+              Объединить кандидатов
+            </Button>
+          ) : null}
           {caps.canOperate ? (
             <>
               <Button size="sm" variant="ghost" onClick={() => setEmailCandidate(bundle.candidates.find((c) => String(c.id) === String(row.id)) || row)}>
@@ -469,7 +560,22 @@ export function RecruitingBusinessPage() {
       ),
       panel: (
         <div className="grid gap-3">
-          {selectedCandidate ? (
+          {mergePair ? (
+            <CandidateMergePanel
+              left={mergePair.left}
+              right={mergePair.right}
+              vacancies={bundle.vacancies}
+              preview={mergePreview}
+              safety={mergeSafety}
+              error={mergeError}
+              conflict={mergeConflict}
+              success={mergeSuccess}
+              busy={mergeBusy}
+              canForce={canForceMerge}
+              onCancel={resetMerge}
+              onConfirm={(force) => void confirmMerge(force)}
+            />
+          ) : selectedCandidate ? (
             <CandidateWorkflowPanel
               candidate={selectedCandidate}
               lead={linkedLead}

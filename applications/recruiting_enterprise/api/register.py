@@ -66,6 +66,7 @@ def register_recruiting_enterprise_routes(app: web.Application) -> None:
     app.router.add_get(f"{ops}/candidates", ops_handlers.ops_candidates_handler)
     app.router.add_post(f"{ops}/candidates", ops_handlers.ops_candidates_handler)
     app.router.add_post(f"{ops}/candidates/{{candidate_id}}/stage", ops_handlers.ops_candidate_stage_handler)
+    app.router.add_post(f"{ops}/candidates/{{candidate_id}}/merge", ops_handlers.ops_candidate_merge_handler)
     app.router.add_get(f"{ops}/candidates/{{candidate_id}}/emails", ops_handlers.ops_candidate_emails_handler)
     app.router.add_post(f"{ops}/candidates/{{candidate_id}}/email", ops_handlers.ops_candidate_email_send_handler)
     app.router.add_get(f"{ops}/whatsapp/conversations", ops_handlers.ops_whatsapp_conversations_handler)

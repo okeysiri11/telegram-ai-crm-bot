@@ -251,6 +251,7 @@ class RecruitingOpsService:
         self._hydrate_locks: dict[str, asyncio.Lock] = {}
         self._convert_locks: dict[str, asyncio.Lock] = {}
         self._identity_locks: dict[str, asyncio.Lock] = {}
+        self._merge_locks: dict[str, asyncio.Lock] = {}
         self._ingest_log: dict[str, Any] = {
             "last_success_at": None,
             "last_error_at": None,
@@ -741,8 +742,10 @@ class RecruitingOpsService:
         denied = require(role, "list")
         if denied:
             return denied
+        from services.recruiting_ops.identity import is_merged_candidate
+
         org, orgs, leads = await self._reader_items(organization_id, "lead", role)
-        candidates = self._collect_kind(orgs, "candidate")
+        candidates = [c for c in self._collect_kind(orgs, "candidate") if not is_merged_candidate(c)]
         vacancies = self._collect_kind(orgs, "vacancy")
         tasks = self._collect_kind(orgs, "task")
         bag = {kind: self._collect_kind(orgs, kind) for kind in ("lead", "candidate", "vacancy", "task", "campaign")}
@@ -824,7 +827,10 @@ class RecruitingOpsService:
             return out
 
         stages = {stage: 0 for stage in PIPELINE_STAGES}
-        for cand in candidates:
+        from services.recruiting_ops.identity import is_merged_candidate
+
+        active_candidates = [cand for cand in candidates if not is_merged_candidate(cand)]
+        for cand in active_candidates:
             stages[_stage(cand.get("pipeline_stage"))] = stages.get(_stage(cand.get("pipeline_stage")), 0) + 1
 
         qualified_leads = [l for l in leads if _lead_status(l.get("status")) in {"qualified", "converted"}]
@@ -881,7 +887,10 @@ class RecruitingOpsService:
             overdue, upcoming = self._task_buckets(items)
             extra = {"overdue_tasks": overdue, "next_tasks": upcoming}
         if kind == "candidate":
-            items = [self._with_application_links(item) for item in items]
+            from services.recruiting_ops.identity import annotate_duplicate_flags, is_merged_candidate
+
+            items = [self._with_application_links(item) for item in items if not is_merged_candidate(item)]
+            items = annotate_duplicate_flags(items)
             extra = {"pipeline": self._pipeline_groups(items)}
         return self._ok(items=items, project=key or None, **extra)
 
@@ -937,8 +946,12 @@ class RecruitingOpsService:
         return [item for item in items if belongs_to_project(item, project_key)]
 
     def _pipeline_groups(self, candidates: list[dict[str, Any]]) -> dict[str, list[dict[str, Any]]]:
+        from services.recruiting_ops.identity import is_merged_candidate
+
         groups = {stage: [] for stage in PIPELINE_STAGES}
         for cand in candidates:
+            if is_merged_candidate(cand):
+                continue
             groups.setdefault(_stage(cand.get("pipeline_stage")), []).append(cand)
         return groups
 
@@ -1528,17 +1541,19 @@ class RecruitingOpsService:
         lid = _txt(lead_id)
         if not lid:
             return None
+        from services.recruiting_ops.identity import is_merged_candidate, linked_lead_ids
+
         for org in self._read_orgs(organization_id, role):
             for item in self._bag(org).get("candidate") or []:
-                from services.recruiting_ops.identity import linked_lead_ids
-
+                if is_merged_candidate(item):
+                    continue
                 if lid in linked_lead_ids(item) or _txt(item.get("lead_id")) == lid:
                     return item
             lead = self._find(org, "lead", lid)
             if lead and lead.get("candidate_id"):
                 found = self._find(org, "candidate", str(lead["candidate_id"]))
                 if found:
-                    return found
+                    return self._resolved_candidate(org, found)
         return None
 
     def _candidate_for_identity(self, organization_id: str, person: dict[str, Any], role: str | None) -> dict[str, Any] | None:
@@ -1546,6 +1561,10 @@ class RecruitingOpsService:
 
         for org in self._read_orgs(organization_id, role):
             for item in self._bag(org).get("candidate") or []:
+                from services.recruiting_ops.identity import identity_decision, is_merged_candidate
+
+                if is_merged_candidate(item):
+                    continue
                 if identity_decision(person, item) == "match":
                     return item
         return None
@@ -1915,6 +1934,249 @@ class RecruitingOpsService:
             payload={"pipeline_stage": stage},
         )
         return self._ok(item=item)
+
+    async def _persist_merge_batch(self, org: str, patches: list[tuple[str, dict[str, Any]]]) -> list[dict[str, Any]] | None:
+        try:
+            from database.session import get_session
+
+            async with get_session() as session:
+                repo = RecruitingOpsRepository(session)
+                saved: list[dict[str, Any]] = []
+                for item_id, patch in patches:
+                    row = await repo.get(org, item_id)
+                    if row is None:
+                        raise PersistUnavailable(f"missing {item_id}")
+                    await repo.update(row, patch)
+                    saved.append(record_to_dict(row))
+                return saved
+        except PersistUnavailable:
+            raise
+        except Exception as exc:
+            if not memory_fallback_allowed():
+                logger.error("recruiting_ops merge persist failed in production: %s", exc)
+                raise PersistUnavailable(str(exc)) from exc
+            logger.warning("recruiting_ops merge persist skipped (NON_DURABLE_DEVELOPMENT_MODE): %s", exc)
+            return None
+
+    def _resolved_candidate(self, org: str, item: dict[str, Any] | None) -> dict[str, Any] | None:
+        from services.recruiting_ops.identity import is_merged_candidate
+
+        if not item:
+            return None
+        if is_merged_candidate(item):
+            target = _txt(item.get("merged_into"))
+            if target:
+                found = self._find(org, "candidate", target)
+                if found and not is_merged_candidate(found):
+                    return found
+        return item
+
+    async def merge_candidates(
+        self,
+        organization_id: str,
+        candidate_id: str,
+        body: dict[str, Any] | None = None,
+        role: str | None = None,
+    ) -> dict[str, Any]:
+        denied = require(role, "merge")
+        if denied:
+            return denied
+        from services.recruiting_ops.identity import (
+            build_merge_preview,
+            is_merged_candidate,
+            linked_lead_ids,
+            merge_application_snapshots,
+            merge_safety,
+            merge_text,
+            union_ids,
+        )
+
+        body = body or {}
+        duplicate_id = _txt(body.get("duplicate_candidate_id") or body.get("source_candidate_id"))
+        canonical_id = _txt(candidate_id)
+        if not duplicate_id:
+            return {"ok": False, "error": "validation", "message_ru": "Укажите кандидата-дубль для объединения."}
+        if duplicate_id == canonical_id:
+            return {"ok": False, "error": "validation", "message_ru": "Нельзя объединить кандидата с самим собой."}
+        preview_only = bool(body.get("preview") or body.get("dry_run"))
+        force = bool(body.get("force"))
+        reason = _txt(body.get("reason"))
+        pair_key = "|".join(sorted((canonical_id, duplicate_id)))
+        lock = self._merge_locks.setdefault(pair_key, asyncio.Lock())
+        async with lock:
+            located_org, canonical = await self._locate(organization_id, "candidate", canonical_id, role)
+            if not canonical:
+                return {"ok": False, "error": "not_found", "message_ru": "Кандидат не найден"}
+            org = located_org
+            _, duplicate = await self._locate(organization_id, "candidate", duplicate_id, role)
+            if not duplicate:
+                return {"ok": False, "error": "not_found", "message_ru": "Кандидат-дубль не найден"}
+            if _org(canonical.get("organization_id") or org) != _org(duplicate.get("organization_id") or org):
+                return {"ok": False, "error": "not_found", "message_ru": "Кандидат-дубль не найден"}
+
+            if is_merged_candidate(duplicate) and _txt(duplicate.get("merged_into")) in {canonical_id, _txt(canonical.get("merged_into"))}:
+                live = self._resolved_candidate(org, canonical) or canonical
+                return self._ok(
+                    item=self._with_application_links(live),
+                    already_merged=True,
+                    duplicate=True,
+                    preview=build_merge_preview(live, live),
+                )
+            if is_merged_candidate(canonical) and _txt(canonical.get("merged_into")) == duplicate_id:
+                live = self._resolved_candidate(org, duplicate) or duplicate
+                return self._ok(
+                    item=self._with_application_links(live),
+                    already_merged=True,
+                    duplicate=True,
+                    preview=build_merge_preview(live, live),
+                )
+            if is_merged_candidate(canonical) or is_merged_candidate(duplicate):
+                live = self._resolved_candidate(org, canonical) or self._resolved_candidate(org, duplicate)
+                if live:
+                    return self._ok(item=self._with_application_links(live), already_merged=True, duplicate=True)
+
+            safety = merge_safety(canonical, duplicate)
+            preview = build_merge_preview(canonical, duplicate)
+            comparison = {
+                "canonical": self._with_application_links(canonical),
+                "duplicate": self._with_application_links(duplicate),
+            }
+            if preview_only:
+                return self._ok(
+                    item=self._with_application_links(canonical),
+                    preview=preview,
+                    comparison=comparison,
+                    safety=safety,
+                    force_required=safety != "match",
+                )
+            if safety != "match":
+                if not force:
+                    return {
+                        "ok": False,
+                        "error": "conflict",
+                        "safety": safety,
+                        "preview": preview,
+                        "comparison": comparison,
+                        "message_ru": "Идентичность неоднозначна. Объединение требует подтверждения владельца.",
+                    }
+                if not can(role, "admin"):
+                    return {
+                        "ok": False,
+                        "error": "forbidden",
+                        "safety": safety,
+                        "preview": preview,
+                        "comparison": comparison,
+                        "message_ru": "Только владелец может принудительно объединить неоднозначные профили.",
+                    }
+
+            now = _now()
+            apps = merge_application_snapshots(canonical.get("applications"), duplicate.get("applications"))
+            lead_ids = union_ids(linked_lead_ids(canonical), linked_lead_ids(duplicate))
+            history = list(canonical.get("pipeline_history") or []) + list(duplicate.get("pipeline_history") or [])
+            history.append(
+                {
+                    "action": "candidate_merged",
+                    "from_stage": duplicate.get("pipeline_stage"),
+                    "to_stage": preview["pipeline_stage"],
+                    "duplicate_candidate_id": duplicate_id,
+                    "at": now,
+                }
+            )
+            assignees = union_ids([canonical.get("assignee")], [duplicate.get("assignee")])
+            vacancy_ids = union_ids(
+                [canonical.get("vacancy_id")],
+                [duplicate.get("vacancy_id")],
+                canonical.get("vacancy_ids"),
+                duplicate.get("vacancy_ids"),
+            )
+            canonical_patch = {
+                "lead_id": lead_ids[0] if lead_ids else canonical.get("lead_id"),
+                "lead_ids": lead_ids,
+                "applications": apps,
+                "pipeline_stage": preview["pipeline_stage"],
+                "status": preview["pipeline_stage"],
+                "assignee": preview["assignee"],
+                "assignee_history": assignees,
+                "vacancy_id": vacancy_ids[0] if vacancy_ids else canonical.get("vacancy_id"),
+                "vacancy_ids": vacancy_ids,
+                "vacancy": _txt(
+                    canonical.get("vacancy")
+                    or duplicate.get("vacancy")
+                    or ((preview.get("vacancies") or [None])[0])
+                ),
+                "notes": merge_text(canonical.get("notes"), duplicate.get("notes")),
+                "pipeline_history": history,
+                "merged_from": union_ids(canonical.get("merged_from"), [duplicate_id]),
+                "email": canonical.get("email") or duplicate.get("email"),
+                "phone": canonical.get("phone") or duplicate.get("phone"),
+                "name": canonical.get("name") or duplicate.get("name"),
+                "updated_at": now,
+            }
+            duplicate_patch = {
+                "merged": True,
+                "merged_into": canonical_id,
+                "merged_at": now,
+                "status": "MERGED",
+                "pipeline_stage": preview["pipeline_stage"],
+                "updated_at": now,
+            }
+            lead_patches: list[tuple[str, dict[str, Any]]] = []
+            for lid in lead_ids:
+                lead = self._find(org, "lead", lid)
+                if lead:
+                    lead_patches.append((lid, {"candidate_id": canonical_id, "updated_at": now}))
+
+            patches = [(canonical_id, canonical_patch), (duplicate_id, duplicate_patch), *lead_patches]
+            try:
+                persisted = await self._persist_merge_batch(org, patches)
+            except PersistUnavailable:
+                return {
+                    "ok": False,
+                    "error": "storage_unavailable",
+                    "message_ru": "Не удалось сохранить объединение в PostgreSQL.",
+                }
+
+            if persisted:
+                by_id = {str(row.get("id")): row for row in persisted}
+                canonical = self._with_application_links(by_id.get(canonical_id) or {**canonical, **canonical_patch})
+                duplicate = by_id.get(duplicate_id) or {**duplicate, **duplicate_patch}
+            else:
+                canonical.update(canonical_patch)
+                duplicate.update(duplicate_patch)
+                canonical = self._with_application_links(canonical)
+            self._replace(org, "candidate", canonical)
+            self._replace(org, "candidate", duplicate)
+            for lid, patch in lead_patches:
+                lead = self._find(org, "lead", lid)
+                if lead:
+                    lead.update(patch)
+                    self._replace(org, "lead", lead)
+
+            await self._activity(
+                organization_id=org,
+                entity_type="candidate",
+                entity_id=canonical_id,
+                action="candidate_merged",
+                summary=f"Кандидаты объединены: {canonical.get('name')}",
+                role=role,
+                payload={
+                    "duplicate_candidate_id": duplicate_id,
+                    "reason": reason,
+                    "force": force,
+                    "safety": safety,
+                    "application_count": len(apps),
+                    "lead_ids": lead_ids,
+                    "pipeline_stage": preview["pipeline_stage"],
+                },
+            )
+            return self._ok(
+                item=canonical,
+                already_merged=False,
+                preview=preview,
+                comparison=comparison,
+                safety=safety,
+                merged_candidate_id=duplicate_id,
+            )
 
     async def create_vacancy(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
         denied = require(role, "create")

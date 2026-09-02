@@ -61,10 +61,10 @@ def _status_for(result: dict, *, created: bool = False) -> int:
             return 503
         if err in {"RATE_LIMITED", "rate_limited"}:
             return 429
-        if err == "TEMPLATE_REQUIRED":
+        if err in {"TEMPLATE_REQUIRED", "conflict"}:
             return 409
         return 400
-    if result.get("duplicate") or result.get("already_converted") or result.get("identity_linked"):
+    if result.get("duplicate") or result.get("already_converted") or result.get("identity_linked") or result.get("already_merged"):
         return 200
     return 201 if created else 200
 
@@ -239,6 +239,14 @@ async def ops_candidate_stage_handler(request: web.Request) -> web.Response:
     body = await _read_json(request)
     candidate_id = request.match_info.get("candidate_id") or ""
     result = await svc.move_candidate(_org(request, body), candidate_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_candidate_merge_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    body = await _read_json(request)
+    candidate_id = request.match_info.get("candidate_id") or ""
+    result = await svc.merge_candidates(_org(request, body), candidate_id, body, _role(request, body))
     return json_response(result, status=_status_for(result))
 
 
