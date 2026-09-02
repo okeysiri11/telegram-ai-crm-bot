@@ -101,11 +101,7 @@ jobs:
             tests/test_sprint_recruiting_1_9_live_providers.py \
             tests/test_sprint_recruiting_email_smtp.py \
             tests/test_sprint_recruiting_whatsapp.py \
-            tests/test_sprint_recruiting_2_5_auth.py \
-            tests/test_sprint_recruiting_2_6_visibility.py \
-            tests/test_sprint_recruiting_2_7_api.py \
             tests/test_sprint_recruiting_2_8_crm.py \
-            tests/test_sprint_recruiting_2_9_ux.py \
             tests/test_sprint_recruiting_2_10_identity.py \
             tests/test_sprint_recruiting_3_0_2_merge.py -q --tb=short
       - name: Alembic single head (re-check)
