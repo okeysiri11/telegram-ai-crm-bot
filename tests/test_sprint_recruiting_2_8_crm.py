@@ -236,18 +236,20 @@ async def test_independent_leads_same_email_phone_convert_separately(client: Tes
     conv1 = await client.post(f"{OPS}/leads/{first['id']}/convert", headers=h)
     conv2 = await client.post(f"{OPS}/leads/{second['id']}/convert", headers=h)
     assert conv1.status == 201
-    assert conv2.status == 201
+    assert conv2.status == 200
     cand1 = (await conv1.json())["item"]
     cand2 = (await conv2.json())["item"]
-    assert cand1["id"] != cand2["id"]
-    assert cand1["lead_id"] == first["id"]
-    assert cand2["lead_id"] == second["id"]
+    assert cand1["id"] == cand2["id"]
+    assert {first["id"], second["id"]} <= set(cand2.get("lead_ids") or [])
+    assert len(cand2.get("applications") or []) == 2
 
-    listed = await client.get(f"{OPS}/candidates", headers=h)
-    items = (await listed.json())["items"]
-    assert {c["id"] for c in items if c.get("email") == email} == {cand1["id"], cand2["id"]}
+    listed = await client.get(f"{OPS}/leads", headers=h)
+    leads = (await listed.json())["items"]
+    assert len(leads) == 2
     assert (await _lead(client, org, first["id"]))["candidate_id"] == cand1["id"]
-    assert (await _lead(client, org, second["id"]))["candidate_id"] == cand2["id"]
+    assert (await _lead(client, org, second["id"]))["candidate_id"] == cand1["id"]
+    cands = (await (await client.get(f"{OPS}/candidates", headers=h)).json())["items"]
+    assert len([c for c in cands if c.get("email") == email]) == 1
 
 
 async def test_candidate_pipeline_transitions_persist(client: TestClient):

@@ -250,6 +250,7 @@ class RecruitingOpsService:
         self._lifecycle_migrated: set[str] = set()
         self._hydrate_locks: dict[str, asyncio.Lock] = {}
         self._convert_locks: dict[str, asyncio.Lock] = {}
+        self._identity_locks: dict[str, asyncio.Lock] = {}
         self._ingest_log: dict[str, Any] = {
             "last_success_at": None,
             "last_error_at": None,
@@ -880,6 +881,7 @@ class RecruitingOpsService:
             overdue, upcoming = self._task_buckets(items)
             extra = {"overdue_tasks": overdue, "next_tasks": upcoming}
         if kind == "candidate":
+            items = [self._with_application_links(item) for item in items]
             extra = {"pipeline": self._pipeline_groups(items)}
         return self._ok(items=items, project=key or None, **extra)
 
@@ -1528,7 +1530,9 @@ class RecruitingOpsService:
             return None
         for org in self._read_orgs(organization_id, role):
             for item in self._bag(org).get("candidate") or []:
-                if _txt(item.get("lead_id")) == lid:
+                from services.recruiting_ops.identity import linked_lead_ids
+
+                if lid in linked_lead_ids(item) or _txt(item.get("lead_id")) == lid:
                     return item
             lead = self._find(org, "lead", lid)
             if lead and lead.get("candidate_id"):
@@ -1536,6 +1540,103 @@ class RecruitingOpsService:
                 if found:
                     return found
         return None
+
+    def _candidate_for_identity(self, organization_id: str, person: dict[str, Any], role: str | None) -> dict[str, Any] | None:
+        from services.recruiting_ops.identity import identity_decision
+
+        for org in self._read_orgs(organization_id, role):
+            for item in self._bag(org).get("candidate") or []:
+                if identity_decision(person, item) == "match":
+                    return item
+        return None
+
+    def _with_application_links(self, candidate: dict[str, Any]) -> dict[str, Any]:
+        from services.recruiting_ops.identity import linked_lead_ids
+
+        item = dict(candidate)
+        ids = linked_lead_ids(item)
+        apps = [app for app in (item.get("applications") or []) if isinstance(app, dict)]
+        if ids and not apps:
+            apps = [{"lead_id": lid} for lid in ids]
+        item["lead_ids"] = ids
+        item["applications"] = apps
+        if ids and not item.get("lead_id"):
+            item["lead_id"] = ids[0]
+        return item
+
+    def _application_snapshot(self, lead: dict[str, Any]) -> dict[str, Any]:
+        from services.recruiting_ops.identity import application_snapshot
+
+        return application_snapshot(lead)
+
+    async def _attach_lead_to_candidate(
+        self,
+        organization_id: str,
+        lead: dict[str, Any],
+        candidate: dict[str, Any],
+        role: str | None,
+        *,
+        already_converted: bool = False,
+    ) -> dict[str, Any]:
+        from services.recruiting_ops.attribution import preserve_first_touch
+        from services.recruiting_ops.identity import linked_lead_ids
+
+        org = _org(organization_id)
+        lead_id = _txt(lead.get("id"))
+        candidate = self._with_application_links(candidate)
+        ids = linked_lead_ids(candidate)
+        apps = list(candidate.get("applications") or [])
+        if lead_id and lead_id not in ids:
+            ids.append(lead_id)
+            apps.append(self._application_snapshot(lead))
+        patch = preserve_first_touch(candidate, lead)
+        patch.update(
+            {
+                "lead_id": ids[0] if ids else candidate.get("lead_id"),
+                "lead_ids": ids,
+                "applications": apps,
+                "updated_at": _now(),
+            }
+        )
+        if not _txt(candidate.get("phone")) and lead.get("phone"):
+            patch["phone"] = lead.get("phone")
+        if not _txt(candidate.get("email")) and lead.get("email"):
+            patch["email"] = lead.get("email")
+        extra_notes = _txt(lead.get("notes"))
+        if extra_notes:
+            existing_notes = _txt(candidate.get("notes"))
+            if extra_notes not in existing_notes:
+                patch["notes"] = f"{existing_notes}\n{extra_notes}".strip() if existing_notes else extra_notes
+        candidate.update(patch)
+        persisted = await self._persist_patch(org, str(candidate["id"]), patch)
+        if persisted:
+            candidate = persisted
+        candidate = self._with_application_links(candidate)
+        self._replace(org, "candidate", candidate)
+        patched_lead = await self.update_lead(
+            org,
+            lead_id,
+            {"status": "converted", "candidate_id": candidate["id"]},
+            role,
+            "convert",
+        )
+        lead_out = patched_lead.get("item") or lead
+        await self._activity(
+            organization_id=org,
+            entity_type="candidate",
+            entity_id=str(candidate["id"]),
+            action="application_linked" if not already_converted else "lead_converted",
+            summary=f"Заявка связана с кандидатом: {lead.get('name')}",
+            role=role,
+            payload={"lead_id": lead_id, "application_count": len(ids)},
+        )
+        return self._ok(
+            item=candidate,
+            lead=lead_out,
+            already_converted=already_converted,
+            identity_linked=not already_converted,
+            duplicate=True,
+        )
 
     async def set_lead_status(
         self,
@@ -1613,60 +1714,68 @@ class RecruitingOpsService:
         denied = require(role, "convert")
         if denied:
             return denied
-        lock = self._convert_locks.setdefault(str(lead_id), asyncio.Lock())
-        async with lock:
+        from services.recruiting_ops.identity import identity_lock_key
+
+        lead_lock = self._convert_locks.setdefault(str(lead_id), asyncio.Lock())
+        async with lead_lock:
             located_org, lead = await self._locate(organization_id, "lead", lead_id, role)
             if not lead:
                 return {"ok": False, "error": "not_found", "message_ru": "Лид не найден"}
             org = located_org
-            existing = self._candidate_for_lead(organization_id, lead_id, role)
-            if existing:
-                if _txt(lead.get("candidate_id")) != _txt(existing.get("id")) or _lead_status(lead.get("status")) != "converted":
-                    patched = await self.update_lead(
-                        org,
-                        lead_id,
-                        {"status": "converted", "candidate_id": existing["id"]},
-                        role,
-                        "convert",
+            ident_key = identity_lock_key(org, lead.get("email"), lead.get("phone"))
+            ident_lock = self._identity_locks.setdefault(ident_key, asyncio.Lock())
+            async with ident_lock:
+                existing = self._candidate_for_lead(organization_id, lead_id, role)
+                if existing:
+                    if _txt(lead.get("candidate_id")) != _txt(existing.get("id")) or _lead_status(lead.get("status")) != "converted":
+                        return await self._attach_lead_to_candidate(org, lead, existing, role, already_converted=True)
+                    return self._ok(
+                        item=self._with_application_links(existing),
+                        lead=lead,
+                        already_converted=True,
+                        duplicate=True,
                     )
-                    lead = patched.get("item") or lead
-                return self._ok(item=existing, lead=lead, already_converted=True, duplicate=True)
-            body = body or {}
-            stage = _stage(body.get("pipeline_stage") or ("QUALIFIED" if lead.get("status") == "qualified" else "NEW"))
-            from services.recruiting_ops.ingest_fields import application_fields_from_lead
+                matched = self._candidate_for_identity(organization_id, lead, role)
+                if matched:
+                    return await self._attach_lead_to_candidate(org, lead, matched, role, already_converted=False)
+                body = body or {}
+                stage = _stage(body.get("pipeline_stage") or ("QUALIFIED" if lead.get("status") == "qualified" else "NEW"))
+                from services.recruiting_ops.ingest_fields import application_fields_from_lead
 
-            candidate_body = {
-                "name": lead.get("name"),
-                "email": lead.get("email"),
-                "campaign_id": lead.get("campaign_id"),
-                "vacancy_id": body.get("vacancy_id") or lead.get("vacancy_id"),
-                "assignee": body.get("assignee") or lead.get("assignee"),
-                "lead_id": lead_id,
-                "pipeline_stage": stage,
-                "notes": lead.get("notes"),
-                **application_fields_from_lead(lead),
-            }
-            created = await self.create_candidate(org, candidate_body, role)
-            if not created.get("ok"):
-                return created
-            candidate = created["item"]
-            patched = await self.update_lead(
-                org,
-                lead_id,
-                {"status": "converted", "candidate_id": candidate["id"]},
-                role,
-                "convert",
-            )
-            await self._activity(
-                organization_id=org,
-                entity_type="lead",
-                entity_id=lead_id,
-                action="lead_converted",
-                summary=f"Лид преобразован в кандидата: {lead.get('name')}",
-                role=role,
-                payload={"candidate_id": candidate["id"], "pipeline_stage": stage},
-            )
-            return self._ok(item=candidate, lead=patched.get("item") or lead)
+                candidate_body = {
+                    "name": lead.get("name"),
+                    "email": lead.get("email"),
+                    "campaign_id": lead.get("campaign_id"),
+                    "vacancy_id": body.get("vacancy_id") or lead.get("vacancy_id"),
+                    "assignee": body.get("assignee") or lead.get("assignee"),
+                    "lead_id": lead_id,
+                    "lead_ids": [lead_id],
+                    "applications": [self._application_snapshot(lead)],
+                    "pipeline_stage": stage,
+                    "notes": lead.get("notes"),
+                    **application_fields_from_lead(lead),
+                }
+                created = await self.create_candidate(org, candidate_body, role)
+                if not created.get("ok"):
+                    return created
+                candidate = self._with_application_links(created["item"])
+                patched = await self.update_lead(
+                    org,
+                    lead_id,
+                    {"status": "converted", "candidate_id": candidate["id"]},
+                    role,
+                    "convert",
+                )
+                await self._activity(
+                    organization_id=org,
+                    entity_type="lead",
+                    entity_id=lead_id,
+                    action="lead_converted",
+                    summary=f"Лид преобразован в кандидата: {lead.get('name')}",
+                    role=role,
+                    payload={"candidate_id": candidate["id"], "pipeline_stage": stage},
+                )
+                return self._ok(item=candidate, lead=patched.get("item") or lead)
 
     async def create_candidate(self, organization_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
         denied = require(role, "create")
@@ -1684,7 +1793,19 @@ class RecruitingOpsService:
         await self.ensure_hydrated(org)
         existing_for_lead = self._candidate_for_lead(org, _txt(body.get("lead_id")), role)
         if existing_for_lead:
-            return self._ok(item=existing_for_lead, already_converted=True, duplicate=True)
+            return self._ok(item=self._with_application_links(existing_for_lead), already_converted=True, duplicate=True)
+        matched = self._candidate_for_identity(org, body, role)
+        if matched:
+            lead_id = _txt(body.get("lead_id"))
+            lead = self._find(org, "lead", lead_id) if lead_id else None
+            if lead:
+                return await self._attach_lead_to_candidate(org, lead, matched, role)
+            return self._ok(item=self._with_application_links(matched), duplicate=True, identity_linked=True)
+        lead_id = _txt(body.get("lead_id")) or None
+        lead_ids = [str(x) for x in (body.get("lead_ids") or ([lead_id] if lead_id else [])) if x]
+        applications = body.get("applications") if isinstance(body.get("applications"), list) else []
+        if lead_id and not applications:
+            applications = [self._application_snapshot({**body, "id": lead_id})]
         item = {
             "id": str(body.get("id") or uuid.uuid4()),
             "organization_id": org,
@@ -1700,7 +1821,9 @@ class RecruitingOpsService:
             "campaign_id": _txt(body.get("campaign_id")) or None,
             "vacancy_id": _txt(body.get("vacancy_id")) or None,
             "assignee": _txt(body.get("assignee")) or None,
-            "lead_id": _txt(body.get("lead_id")) or None,
+            "lead_id": lead_id,
+            "lead_ids": lead_ids,
+            "applications": applications,
             "pipeline_stage": _stage(body.get("pipeline_stage")),
             "notes": _txt(body.get("notes")),
             "status": _stage(body.get("pipeline_stage")),
@@ -1740,7 +1863,7 @@ class RecruitingOpsService:
             role=role,
             payload={"pipeline_stage": saved.get("pipeline_stage")},
         )
-        return self._ok(item=saved)
+        return self._ok(item=self._with_application_links(saved))
 
     async def move_candidate(
         self,

@@ -578,6 +578,7 @@ export function RecruitingBusinessPage() {
                         <Button
                           size="sm"
                           variant="secondary"
+                          data-testid={`pipeline-next-${String(c.id)}`}
                           onClick={() => {
                             const idx = PIPELINE_STAGES.indexOf(stage);
                             const next = PIPELINE_STAGES[Math.min(idx + 1, PIPELINE_STAGES.length - 1)];

@@ -22,7 +22,19 @@ type Props = {
 export function CandidateWorkflowPanel({ candidate, lead, vacancies, canOperate, onStage, onOpenLead }: Props) {
   const stage = String(candidate.pipeline_stage || candidate.status || "NEW");
   const vacancy = vacancies.find((v) => String(v.id) === String(candidate.vacancy_id || lead?.vacancy_id || ""));
-  const leadId = String(candidate.lead_id || lead?.id || "").trim();
+  const applications = Array.isArray(candidate.applications)
+    ? (candidate.applications as WorkflowRow[])
+    : [];
+  const leadIds = [
+    ...new Set(
+      [
+        ...((candidate.lead_ids as string[]) || []),
+        String(candidate.lead_id || ""),
+        String(lead?.id || ""),
+        ...applications.map((app) => String(app.lead_id || "")),
+      ].filter(Boolean),
+    ),
+  ];
 
   return (
     <div className="grid gap-3" data-testid="candidate-workflow-panel">
@@ -58,12 +70,16 @@ export function CandidateWorkflowPanel({ candidate, lead, vacancies, canOperate,
         </div>
       </dl>
 
-      {leadId ? (
-        <div className="flex flex-wrap items-center gap-2" data-testid="candidate-open-lead">
-          <span className="eds-type-helper">Исходная заявка:</span>
-          <Button size="sm" variant="secondary" onClick={() => onOpenLead(leadId)}>
-            Открыть лид
-          </Button>
+      {leadIds.length ? (
+        <div data-testid="candidate-applications">
+          <p className="eds-type-helper">Заявки: {leadIds.length}</p>
+          <div className="mt-1 flex flex-wrap gap-2" data-testid="candidate-open-lead">
+            {leadIds.map((id) => (
+              <Button key={id} size="sm" variant="secondary" onClick={() => onOpenLead(id)}>
+                Открыть лид
+              </Button>
+            ))}
+          </div>
         </div>
       ) : null}
 
