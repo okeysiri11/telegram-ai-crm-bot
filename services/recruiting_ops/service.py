@@ -2013,6 +2013,8 @@ class RecruitingOpsService:
                 return {"ok": False, "error": "not_found", "message_ru": "Кандидат-дубль не найден"}
             if _org(canonical.get("organization_id") or org) != _org(duplicate.get("organization_id") or org):
                 return {"ok": False, "error": "not_found", "message_ru": "Кандидат-дубль не найден"}
+            canonical = self._with_application_links(canonical)
+            duplicate = self._with_application_links(duplicate)
 
             if is_merged_candidate(duplicate) and _txt(duplicate.get("merged_into")) in {canonical_id, _txt(canonical.get("merged_into"))}:
                 live = self._resolved_candidate(org, canonical) or canonical
@@ -2072,6 +2074,11 @@ class RecruitingOpsService:
             now = _now()
             apps = merge_application_snapshots(canonical.get("applications"), duplicate.get("applications"))
             lead_ids = union_ids(linked_lead_ids(canonical), linked_lead_ids(duplicate))
+            have = {_txt(app.get("lead_id")) for app in apps}
+            for lid in lead_ids:
+                if lid and lid not in have:
+                    apps.append({"lead_id": lid})
+                    have.add(lid)
             history = list(canonical.get("pipeline_history") or []) + list(duplicate.get("pipeline_history") or [])
             history.append(
                 {

@@ -199,6 +199,11 @@ def annotate_duplicate_flags(candidates: list[dict[str, Any]]) -> list[dict[str,
 def build_merge_preview(canonical: dict[str, Any], duplicate: dict[str, Any]) -> dict[str, Any]:
     apps = merge_application_snapshots(canonical.get("applications"), duplicate.get("applications"))
     lead_ids = union_ids(linked_lead_ids(canonical), linked_lead_ids(duplicate))
+    have = {_txt(app.get("lead_id")) for app in apps}
+    for lid in lead_ids:
+        if lid and lid not in have:
+            apps.append({"lead_id": lid})
+            have.add(lid)
     sources = union_ids(
         [canonical.get("source")],
         [duplicate.get("source")],
