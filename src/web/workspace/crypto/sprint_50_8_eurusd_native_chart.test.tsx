@@ -14,7 +14,7 @@ vi.mock("../business-ops/opsApi", () => ({
 }));
 
 vi.mock("lightweight-charts", () => {
-  const series = { setData: vi.fn() };
+  const series = { setData: vi.fn(), update: vi.fn() };
   const chart = {
     addCandlestickSeries: vi.fn(() => series),
     applyOptions: vi.fn(),
@@ -100,7 +100,7 @@ describe("sprint 50.8 EURUSD native chart", () => {
     expect(screen.queryAllByTestId("tradingview-embed")).toHaveLength(0);
     expect(screen.queryByTestId("tradingview-fallback")).toBeNull();
     expect(document.body.textContent).not.toContain("График TradingView временно недоступен");
-    expect(screen.getByTestId("eurusd-quote-line").textContent).toContain("1.1602");
+    expect(screen.getByTestId("eurusd-quote-line").textContent).toContain("1.16020");
     expect(screen.getByTestId("eurusd-quote-line").textContent).toContain("Yahoo Finance (EURUSD=X)");
     expect(screen.getByTestId("eurusd-quote-line").textContent).not.toMatch(/НБУ/i);
     for (const tf of CHART_TIMEFRAMES) {
@@ -133,7 +133,7 @@ describe("sprint 50.8 EURUSD native chart", () => {
     );
     expect(await screen.findByText("Не удалось загрузить график EURUSD")).toBeTruthy();
     expect(screen.getByTestId("eurusd-chart-retry")).toBeTruthy();
-    expect(screen.getByTestId("eurusd-quote-line").textContent).toContain("1.1602");
+    expect(screen.getByTestId("eurusd-quote-line").textContent).toContain("1.16020");
     fireEvent.click(screen.getByTestId("eurusd-chart-retry"));
     await waitFor(() => expect(vi.mocked(cryptoFxIntelGet).mock.calls.length).toBeGreaterThan(1));
   });

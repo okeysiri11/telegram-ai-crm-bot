@@ -4,6 +4,20 @@
 import { type CandlestickData, type UTCTimestamp } from "lightweight-charts";
 import { cryptoFxIntelGet } from "../business-ops/opsApi";
 
+export const LIVE_QUOTE_STALE_MS = 30_000;
+export const FX_HISTORY_REFRESH_MS = 60_000;
+export const FX_QUOTE_POLL_MS = 5_000;
+
+export type LiveFxQuote = {
+  mid?: unknown;
+  source?: string;
+  fetched_at?: string;
+  status?: string;
+  market_time?: unknown;
+};
+
+export type FxCandle = CandlestickData;
+
 export type NativeCandleBar = {
   t: string;
   o: number;
@@ -57,8 +71,105 @@ export function normalizeCandlesTimeframe(tf: string): string {
   return map[u] || "1H";
 }
 
-export async function fetchFxCandles(symbol: string, timeframe: string) {
+export async function fetchFxCandles(symbol: string, timeframe: string, signal?: AbortSignal) {
   const tf = normalizeCandlesTimeframe(timeframe);
-  const res = await cryptoFxIntelGet(`/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(tf)}`);
-  return { ok: res.ok, json: (res.json || {}) as Record<string, unknown> };
+  const res = await cryptoFxIntelGet(
+    `/candles?symbol=${encodeURIComponent(symbol)}&timeframe=${encodeURIComponent(tf)}`,
+    signal,
+  );
+  return { ok: res.ok, json: (res.json || {}) as Record<string, unknown>, cancelled: Boolean(res.cancelled) };
+}
+
+export function fxHistoryRefreshMs(timeframe: string): number {
+  const tf = normalizeCandlesTimeframe(timeframe);
+  return tf === "1m" || tf === "5m" || tf === "15m" ? FX_HISTORY_REFRESH_MS : 0;
+}
+
+export function parseQuoteMid(value: unknown): number | null {
+  if (value == null || value === "") return null;
+  const n = typeof value === "number" ? value : Number(String(value).trim().replace(",", "."));
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return n;
+}
+
+export function quoteTimeUnix(quote: LiveFxQuote | null | undefined, nowMs = Date.now()): number {
+  const fetched = Date.parse(String(quote?.fetched_at || ""));
+  if (Number.isFinite(fetched) && fetched > 0) return Math.floor(fetched / 1000);
+  const mt = Number(quote?.market_time);
+  if (Number.isFinite(mt) && mt > 1e9) return Math.floor(mt);
+  return Math.floor(nowMs / 1000);
+}
+
+export function candleBucketUnix(timeframe: string, atUnix: number): number {
+  const t = Math.floor(Number(atUnix));
+  if (!Number.isFinite(t) || t <= 0) return 0;
+  const tf = normalizeCandlesTimeframe(timeframe);
+  if (tf === "1m") return Math.floor(t / 60) * 60;
+  if (tf === "5m") return Math.floor(t / 300) * 300;
+  if (tf === "15m") return Math.floor(t / 900) * 900;
+  if (tf === "1H") return Math.floor(t / 3600) * 3600;
+  if (tf === "4H") return Math.floor(t / 14_400) * 14_400;
+  if (tf === "1D") {
+    const d = new Date(t * 1000);
+    return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) / 1000);
+  }
+  const d = new Date(t * 1000);
+  const day = d.getUTCDay();
+  const mondayOffset = day === 0 ? -6 : 1 - day;
+  return Math.floor(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + mondayOffset) / 1000);
+}
+
+export function applyQuoteToActiveCandle(
+  last: FxCandle | null,
+  quote: number,
+  quoteUnix: number,
+  timeframe: string,
+): FxCandle | null {
+  if (!Number.isFinite(quote) || quote <= 0) return null;
+  const ts = Math.floor(Number(quoteUnix));
+  if (!Number.isFinite(ts) || ts <= 0) return null;
+  const bucket = candleBucketUnix(timeframe, ts) as UTCTimestamp;
+  if (!bucket) return null;
+  if (!last) {
+    return { time: bucket, open: quote, high: quote, low: quote, close: quote };
+  }
+  const lastTime = Number(last.time);
+  const lastBucket = candleBucketUnix(timeframe, lastTime);
+  if (bucket < lastBucket) return null;
+  if (bucket === lastBucket) {
+    return {
+      time: last.time,
+      open: last.open,
+      high: Math.max(last.high, quote),
+      low: Math.min(last.low, quote),
+      close: quote,
+    };
+  }
+  const open = last.close;
+  return {
+    time: bucket,
+    open,
+    high: Math.max(open, quote),
+    low: Math.min(open, quote),
+    close: quote,
+  };
+}
+
+export function formatLiveUpdated(fetchedAt: string | undefined, locale?: string): string | null {
+  const ms = Date.parse(String(fetchedAt || ""));
+  if (!Number.isFinite(ms)) return null;
+  try {
+    return new Date(ms).toLocaleTimeString(locale, { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch {
+    const d = new Date(ms);
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mm = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+    return `${hh}:${mm}:${ss}`;
+  }
+}
+
+export function liveQuoteIsStale(lastQuoteMs: number | null, nowMs = Date.now()): boolean {
+  if (lastQuoteMs == null || !Number.isFinite(lastQuoteMs)) return true;
+  return nowMs - lastQuoteMs > LIVE_QUOTE_STALE_MS;
 }

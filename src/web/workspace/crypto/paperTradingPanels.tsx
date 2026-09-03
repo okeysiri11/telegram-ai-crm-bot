@@ -84,7 +84,7 @@ export function DualChartsPanel({
             data-fetched-at={String(eurusdQuote.fetched_at || "")}
             data-provider={String(eurusdQuote.provider || eurusdQuote.source || "")}
           >
-            Котировка: {formatFxQuote(eurusdQuote.mid, 4) ?? "Нет данных"}
+            Котировка: {formatFxQuote(eurusdQuote.mid, 5) ?? "Нет данных"}
             {eurusdQuote.fetched_at ? ` · ${String(eurusdQuote.fetched_at)}` : ""}
             {` · ${eurusdSourceLabel(eurusdQuote)}`}
           </p>

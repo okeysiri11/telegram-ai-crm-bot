@@ -68,6 +68,14 @@ _CANON_TF = {
 _HEADERS = {"User-Agent": "ADOS-FX-Intel/50.7"}
 
 
+def format_yahoo_mid(instrument: str, price: float) -> str:
+    """Keep source precision for live candles: EURUSD 5 dp, DXY 3 dp. Never fabricate ticks."""
+    value = float(price)
+    if instrument == "EUR/USD":
+        return f"{value:.5f}"
+    return f"{value:.3f}"
+
+
 def _maps_for(instrument: str | None) -> tuple[dict[str, tuple[str, str]], tuple[str, ...]]:
     if instrument == "DXY":
         return _TF_MAP_DXY, DXY_SUPPORTED_TIMEFRAMES
@@ -222,7 +230,7 @@ class YahooQuoteProvider(MarketDataProvider):
             price = meta.get("regularMarketPrice")
             if price is None:
                 raise RuntimeError("no regularMarketPrice")
-            mid = f"{float(price):.4f}" if self.instrument == "EUR/USD" else f"{float(price):.3f}"
+            mid = format_yahoo_mid(self.instrument, float(price))
             prev = meta.get("previousClose") or meta.get("chartPreviousClose")
             change = None
             if prev:

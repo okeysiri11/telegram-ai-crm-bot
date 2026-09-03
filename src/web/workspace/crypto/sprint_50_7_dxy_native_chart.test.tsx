@@ -28,7 +28,7 @@ vi.mock("../business-ops/opsApi", () => ({
 }));
 
 vi.mock("lightweight-charts", () => {
-  const series = { setData: vi.fn() };
+  const series = { setData: vi.fn(), update: vi.fn() };
   const chart = {
     addCandlestickSeries: vi.fn(() => series),
     applyOptions: vi.fn(),
@@ -133,7 +133,7 @@ describe("sprint 50.7 DXY native chart", () => {
     );
     expect(screen.getByTestId("dxy-quote-line").textContent).toContain("99.870");
     expect(screen.getByTestId("dxy-quote-line").textContent).not.toMatch(/\bNaN\b/);
-    expect(screen.getByTestId("eurusd-quote-line").textContent).toContain("1.1000");
+    expect(screen.getByTestId("eurusd-quote-line").textContent).toContain("1.10000");
     expect(screen.getByTestId("eurusd-quote-line").textContent).not.toMatch(/\bNaN\b/);
   });
 

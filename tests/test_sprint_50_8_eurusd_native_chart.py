@@ -190,3 +190,10 @@ async def test_http_eurusd_candles_native_metadata(client: TestClient, monkeypat
     assert body.get("chart_ready") is True
     assert body.get("bars")
     assert math.isfinite(float(body["bars"][0]["c"]))
+
+
+def test_yahoo_mid_keeps_eurusd_five_decimals_and_dxy_three():
+    from services.fx_market_intel.yahoo_feed import format_yahoo_mid
+
+    assert format_yahoo_mid("EUR/USD", 1.16157) == "1.16157"
+    assert format_yahoo_mid("DXY", 99.2784) == "99.278"

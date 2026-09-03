@@ -55,6 +55,7 @@ import {
   SignalNotificationsPanel,
 } from "./paperTradingPanels";
 import { formatFxQuote, fxWatchlistQuoteRow } from "./fxQuoteDisplay";
+import { FX_QUOTE_POLL_MS } from "./fxNativeChartCore";
 import { OperatorCalendarPanel } from "./operatorCalendar";
 import {
   SignalCreateForm,
@@ -88,7 +89,7 @@ const NAV_BASE: OpsNavItem[] = [
 
 const SUGGESTED = ["EUR/USD", "DXY", "GBP/USD", "USD/UAH", "EUR/UAH", "BTC/USDT"];
 /** Silent quote poll so home/quotes/charts stay live without skeleton flashes. */
-export const FX_QUOTE_POLL_MS = 15_000;
+export { FX_QUOTE_POLL_MS } from "./fxNativeChartCore";
 
 type HealthMap = Record<string, { status?: string; label?: string; message?: string; last_update?: string }>;
 
@@ -169,6 +170,7 @@ export function CryptoOtcDeskPage() {
   }>({ markets: [], portfolio: {} });
 
   const abortRef = useRef<AbortController | null>(null);
+  const quotePollInFlight = useRef(false);
 
   useEffect(() => {
     // Dual charts: native Lightweight Charts for EURUSD + DXY. No TradingView widget.
@@ -214,17 +216,23 @@ export function CryptoOtcDeskPage() {
   }, []);
 
   const refreshQuotes = useCallback(async () => {
+    if (quotePollInFlight.current) return;
+    quotePollInFlight.current = true;
     const signal = abortRef.current?.signal;
-    const [eRes, dRes] = await Promise.all([
-      cryptoFxIntelGet(`/quote?symbol=${encodeURIComponent("EUR/USD")}`, signal),
-      cryptoFxIntelGet(`/quote?symbol=${encodeURIComponent("DXY")}`, signal),
-    ]);
-    if (eRes.cancelled || dRes.cancelled) return;
-    if (eRes.ok && eRes.json && typeof eRes.json === "object") {
-      setEurusd(eRes.json as Record<string, unknown>);
-    }
-    if (dRes.ok && dRes.json && typeof dRes.json === "object") {
-      setDxy(dRes.json as Record<string, unknown>);
+    try {
+      const [eRes, dRes] = await Promise.all([
+        cryptoFxIntelGet(`/quote?symbol=${encodeURIComponent("EUR/USD")}`, signal),
+        cryptoFxIntelGet(`/quote?symbol=${encodeURIComponent("DXY")}`, signal),
+      ]);
+      if (eRes.cancelled || dRes.cancelled) return;
+      if (eRes.ok && eRes.json && typeof eRes.json === "object") {
+        setEurusd(eRes.json as Record<string, unknown>);
+      }
+      if (dRes.ok && dRes.json && typeof dRes.json === "object") {
+        setDxy(dRes.json as Record<string, unknown>);
+      }
+    } finally {
+      quotePollInFlight.current = false;
     }
   }, []);
 
@@ -345,7 +353,7 @@ export function CryptoOtcDeskPage() {
   const quoteRows = useMemo(() => {
     const rows = watchlist.map((pair) => {
       if (pair === "EUR/USD") {
-        return fxWatchlistQuoteRow(pair, eurusd, 4);
+        return fxWatchlistQuoteRow(pair, eurusd, 5);
       }
       if (pair === "DXY") {
         return fxWatchlistQuoteRow(pair, dxy, 3);
@@ -1021,7 +1029,7 @@ export function CryptoOtcDeskPage() {
         cards: [
           {
             label: "EUR/USD",
-            value: formatFxQuote(eurusd.mid, 4) ?? "нет данных",
+            value: formatFxQuote(eurusd.mid, 5) ?? "нет данных",
             testId: "eurusd-home-price",
           },
           {
@@ -1058,7 +1066,7 @@ export function CryptoOtcDeskPage() {
         rows: [
           {
             symbol: "EUR/USD",
-            mid: formatFxQuote(eurusd.mid, 4) ?? "—",
+            mid: formatFxQuote(eurusd.mid, 5) ?? "—",
             source: String(eurusd.source || eurusd.provider || "—"),
             status: statusRu(String(eurusd.status)),
           },
