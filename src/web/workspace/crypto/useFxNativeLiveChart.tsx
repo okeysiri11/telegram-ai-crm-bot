@@ -17,9 +17,12 @@ import {
   fxVisibleBarCount,
   FX_PRICE_SCALE_MARGIN_BOTTOM,
   FX_PRICE_SCALE_MARGIN_TOP,
+  lastSeriesTimestampOf,
   liveQuoteIsStale,
   parseQuoteMid,
   quoteTimeUnix,
+  safeUpdateCandlestick,
+  STALE_LIVE_UPDATES_DROPPED,
   userLeftLiveFollow,
   type FxCandle,
   type LiveFxQuote,
@@ -55,12 +58,15 @@ export function useFxNativeLiveChart({
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const lastCandleRef = useRef<FxCandle | null>(null);
+  const lastSeriesTimestampRef = useRef(0);
   const liveQuoteRef = useRef(liveQuote);
   const timeframeRef = useRef(timeframe);
   const followRef = useRef(true);
   const applyingRangeRef = useRef(false);
   const lastIndexRef = useRef(0);
   const historyReadyRef = useRef(false);
+  const liveEnabledRef = useRef(false);
+  const generationRef = useRef(0);
   liveQuoteRef.current = liveQuote;
   timeframeRef.current = timeframe;
 
@@ -69,6 +75,8 @@ export function useFxNativeLiveChart({
   const [meta, setMeta] = useState<FxNativeLiveMeta>({ barCount: 0 });
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [followLive, setFollowLive] = useState(true);
+  const [staleDropped, setStaleDropped] = useState(0);
+  const [generation, setGeneration] = useState(0);
   const [lastQuoteMs, setLastQuoteMs] = useState<number | null>(() => {
     const ms = Date.parse(String(liveQuote?.fetched_at || ""));
     return Number.isFinite(ms) ? ms : null;
@@ -89,7 +97,9 @@ export function useFxNativeLiveChart({
     applyRecentViewport(lastIndexRef.current + 1);
   }, [applyRecentViewport]);
 
-  const applyLive = (quote: LiveFxQuote | null | undefined) => {
+  const applyLive = (quote: LiveFxQuote | null | undefined, requestGeneration?: number) => {
+    if (requestGeneration != null && requestGeneration !== generationRef.current) return;
+    if (!liveEnabledRef.current) return;
     const series = seriesRef.current;
     if (!series) return;
     const mid = parseQuoteMid(quote?.mid);
@@ -97,10 +107,16 @@ export function useFxNativeLiveChart({
     const prev = lastCandleRef.current;
     const next = applyQuoteToActiveCandle(prev, mid, quoteTimeUnix(quote), String(timeframeRef.current));
     if (!next) return;
-    const appended = !prev || Number(next.time) !== Number(prev.time);
-    lastCandleRef.current = next;
-    series.update(next);
-    setMeta((curr) => ({ ...curr, lastClose: next.close }));
+    const safe = safeUpdateCandlestick(series, next, lastSeriesTimestampRef.current);
+    if (safe.result === "dropped_stale" || safe.result === "dropped_invalid" || safe.result === "dropped_error") {
+      setStaleDropped(STALE_LIVE_UPDATES_DROPPED);
+      return;
+    }
+    const bar = safe.bar ?? next;
+    const appended = safe.result === "appended";
+    lastCandleRef.current = bar;
+    lastSeriesTimestampRef.current = safe.lastSeriesTimestamp;
+    setMeta((curr) => ({ ...curr, lastClose: bar.close }));
     if (appended) {
       lastIndexRef.current = prev ? lastIndexRef.current + 1 : Math.max(0, lastIndexRef.current);
       if (historyReadyRef.current && followRef.current) applyRecentViewport(lastIndexRef.current + 1);
@@ -178,18 +194,31 @@ export function useFxNativeLiveChart({
       chartRef.current = null;
       seriesRef.current = null;
       lastCandleRef.current = null;
+      lastSeriesTimestampRef.current = 0;
+      liveEnabledRef.current = false;
     };
   }, [height, minMove, pricePrecision]);
 
   useEffect(() => {
     const ac = new AbortController();
     let inFlight = false;
+    generationRef.current += 1;
+    const requestGeneration = generationRef.current;
+    setGeneration(requestGeneration);
+    liveEnabledRef.current = false;
     lastCandleRef.current = null;
-    followRef.current = true;
+    lastSeriesTimestampRef.current = 0;
     historyReadyRef.current = false;
+    followRef.current = true;
     setFollowLive(true);
+    try {
+      seriesRef.current?.setData([]);
+    } catch {
+      /* isolation: a failed clear must not crash the desk */
+    }
 
     const loadHistory = async (silent: boolean) => {
+      if (requestGeneration !== generationRef.current) return;
       if (ac.signal.aborted || inFlight) return;
       inFlight = true;
       if (!silent) {
@@ -198,22 +227,39 @@ export function useFxNativeLiveChart({
       }
       try {
         const { ok, json, cancelled } = await fetchFxCandles(symbol, String(timeframe), ac.signal);
-        if (cancelled || ac.signal.aborted) return;
+        if (cancelled || ac.signal.aborted || requestGeneration !== generationRef.current) return;
         if (!ok || json.status === "error" || json.chart_ready === false) {
           if (!silent) {
             setStatus("error");
             setMessage(useApiErrorMessage && json.message ? String(json.message) : loadError);
-            seriesRef.current?.setData([]);
+            try {
+              seriesRef.current?.setData([]);
+            } catch {
+              /* isolation */
+            }
             lastCandleRef.current = null;
+            lastSeriesTimestampRef.current = 0;
+            liveEnabledRef.current = false;
           }
           return;
         }
         const bars = Array.isArray(json.bars) ? (json.bars as NativeCandleBar[]) : [];
         const candles = barsToCandles(bars);
-        seriesRef.current?.setData(candles);
+        try {
+          seriesRef.current?.setData(candles);
+        } catch (err) {
+          console.warn("[fx-chart] series.setData rejected", err);
+          if (!silent) {
+            setStatus("error");
+            setMessage(loadError);
+          }
+          return;
+        }
         lastCandleRef.current = candles.at(-1) ?? null;
+        lastSeriesTimestampRef.current = lastSeriesTimestampOf(candles);
         lastIndexRef.current = Math.max(0, candles.length - 1);
         historyReadyRef.current = candles.length > 0;
+        liveEnabledRef.current = true;
         if (!silent || followRef.current) {
           applyRecentViewport(Math.max(candles.length, 1));
         }
@@ -223,7 +269,7 @@ export function useFxNativeLiveChart({
           lastClose: json.last_close ?? candles.at(-1)?.close,
         });
         if (!candles.length) {
-          applyLive(liveQuoteRef.current);
+          applyLive(liveQuoteRef.current, requestGeneration);
           if (lastCandleRef.current) {
             historyReadyRef.current = true;
             lastIndexRef.current = 0;
@@ -235,14 +281,15 @@ export function useFxNativeLiveChart({
           if (!silent) {
             setStatus("error");
             setMessage(emptyError);
+            liveEnabledRef.current = false;
           }
           return;
         }
         setStatus("ready");
         setMessage(`Баров: ${candles.length}`);
-        applyLive(liveQuoteRef.current);
+        applyLive(liveQuoteRef.current, requestGeneration);
       } catch {
-        if (ac.signal.aborted) return;
+        if (ac.signal.aborted || requestGeneration !== generationRef.current) return;
         if (!silent) {
           setStatus("error");
           setMessage(loadError);
@@ -256,18 +303,20 @@ export function useFxNativeLiveChart({
     const refreshMs = fxHistoryRefreshMs(String(timeframe));
     const historyId = refreshMs ? window.setInterval(() => void loadHistory(true), refreshMs) : 0;
     return () => {
+      generationRef.current += 1;
+      liveEnabledRef.current = false;
       ac.abort();
       if (historyId) window.clearInterval(historyId);
     };
   }, [symbol, timeframe, reload, loadError, emptyError, useApiErrorMessage, applyRecentViewport]);
 
   useEffect(() => {
-    applyLive(liveQuote);
+    applyLive(liveQuote, generationRef.current);
     const mid = parseQuoteMid(liveQuote?.mid);
     if (mid == null) return;
     const ms = Date.parse(String(liveQuote?.fetched_at || ""));
     setLastQuoteMs(Number.isFinite(ms) ? ms : Date.now());
-  }, [liveQuote, timeframe]);
+  }, [liveQuote]);
 
   useEffect(() => {
     const id = window.setInterval(() => setNowMs(Date.now()), 1000);
@@ -291,6 +340,8 @@ export function useFxNativeLiveChart({
     followLive,
     goToLive,
     visibleBarCount,
+    generation,
+    staleDropped,
   };
 }
 

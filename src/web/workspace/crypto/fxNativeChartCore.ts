@@ -17,6 +17,7 @@ export type LiveFxQuote = {
 };
 
 export type FxCandle = CandlestickData;
+export type FxChartTimestamp = UTCTimestamp;
 
 export type NativeCandleBar = {
   t: string;
@@ -27,27 +28,150 @@ export type NativeCandleBar = {
   v?: number | null;
 };
 
-function toUtcTs(iso: string): UTCTimestamp {
-  const ms = Date.parse(iso);
-  return Math.floor((Number.isFinite(ms) ? ms : Date.now()) / 1000) as UTCTimestamp;
+export type SafeCandleUpdateResult = "appended" | "updated" | "dropped_stale" | "dropped_invalid" | "dropped_error";
+
+/** Diagnostic counters — never used to invent prices. */
+export let STALE_LIVE_UPDATES_DROPPED = 0;
+export let FX_INVALID_TIMESTAMPS_DROPPED = 0;
+export let FX_HISTORY_DUPLICATES_DROPPED = 0;
+
+export function resetFxChartDiagnostics(): void {
+  STALE_LIVE_UPDATES_DROPPED = 0;
+  FX_INVALID_TIMESTAMPS_DROPPED = 0;
+  FX_HISTORY_DUPLICATES_DROPPED = 0;
+}
+
+/**
+ * Canonical Lightweight Charts time: Unix seconds (UTCTimestamp).
+ * Rejects NaN/null/undefined. Converts ISO strings and BusinessDay objects
+ * so a series never mixes numeric and object times.
+ */
+export function normalizeChartTime(value: unknown): FxChartTimestamp | null {
+  if (value == null) return null;
+  if (typeof value === "boolean") return null;
+  if (typeof value === "number") {
+    if (!Number.isFinite(value) || value <= 0) return null;
+    const unix = value > 1e12 ? Math.floor(value / 1000) : Math.floor(value);
+    return unix > 0 ? (unix as FxChartTimestamp) : null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    const asNum = Number(trimmed);
+    if (Number.isFinite(asNum) && asNum > 0) return normalizeChartTime(asNum);
+    const ms = Date.parse(trimmed);
+    if (!Number.isFinite(ms) || ms <= 0) return null;
+    return Math.floor(ms / 1000) as FxChartTimestamp;
+  }
+  if (typeof value === "object") {
+    const rec = value as { timestamp?: unknown; year?: unknown; month?: unknown; day?: unknown };
+    if (rec.timestamp != null) return normalizeChartTime(rec.timestamp);
+    const year = Number(rec.year);
+    const month = Number(rec.month);
+    const day = Number(rec.day);
+    if (Number.isFinite(year) && Number.isFinite(month) && Number.isFinite(day) && year > 1970 && month >= 1 && month <= 12) {
+      const ms = Date.UTC(year, month - 1, day);
+      if (!Number.isFinite(ms) || ms <= 0) return null;
+      return Math.floor(ms / 1000) as FxChartTimestamp;
+    }
+  }
+  return null;
+}
+
+export function normalizeHistoryCandles(candles: FxCandle[]): FxCandle[] {
+  const mapped: FxCandle[] = [];
+  for (const candle of candles) {
+    const time = normalizeChartTime(candle.time);
+    const open = Number(candle.open);
+    const high = Number(candle.high);
+    const low = Number(candle.low);
+    const close = Number(candle.close);
+    if (time == null || ![open, high, low, close].every(Number.isFinite)) {
+      FX_INVALID_TIMESTAMPS_DROPPED += 1;
+      continue;
+    }
+    mapped.push({ time, open, high, low, close });
+  }
+  mapped.sort((a, b) => Number(a.time) - Number(b.time));
+  const out: FxCandle[] = [];
+  for (const candle of mapped) {
+    const prev = out.at(-1);
+    if (prev && Number(prev.time) === Number(candle.time)) {
+      out[out.length - 1] = candle;
+      FX_HISTORY_DUPLICATES_DROPPED += 1;
+      continue;
+    }
+    if (prev && Number(prev.time) >= Number(candle.time)) {
+      FX_INVALID_TIMESTAMPS_DROPPED += 1;
+      continue;
+    }
+    out.push(candle);
+  }
+  return out;
 }
 
 export function barsToCandles(bars: NativeCandleBar[]): CandlestickData[] {
-  const ordered = [...bars].sort((a, b) => Date.parse(String(a.t)) - Date.parse(String(b.t)));
-  const out: CandlestickData[] = [];
-  let prev = 0;
-  for (const b of ordered) {
-    const o = Number(b.o);
-    const h = Number(b.h);
-    const l = Number(b.l);
-    const c = Number(b.c);
-    if (![o, h, l, c].every(Number.isFinite)) continue;
-    let t = toUtcTs(b.t);
-    if (t <= prev) t = (prev + 1) as UTCTimestamp;
-    prev = t;
-    out.push({ time: t, open: o, high: h, low: l, close: c });
+  const raw: FxCandle[] = [];
+  for (const b of bars) {
+    const open = Number(b.o);
+    const high = Number(b.h);
+    const low = Number(b.l);
+    const close = Number(b.c);
+    const time = normalizeChartTime(b.t);
+    if (time == null || ![open, high, low, close].every(Number.isFinite)) {
+      FX_INVALID_TIMESTAMPS_DROPPED += 1;
+      continue;
+    }
+    raw.push({ time, open, high, low, close });
   }
-  return out;
+  return normalizeHistoryCandles(raw);
+}
+
+export function lastSeriesTimestampOf(candles: FxCandle[]): number {
+  const last = candles.at(-1);
+  if (!last) return 0;
+  return Number(last.time) || 0;
+}
+
+export function safeUpdateCandlestick(
+  series: { update: (bar: FxCandle) => void } | null | undefined,
+  bar: FxCandle | null | undefined,
+  lastSeriesTimestamp: number,
+): { result: SafeCandleUpdateResult; lastSeriesTimestamp: number; bar?: FxCandle } {
+  if (!series || !bar) return { result: "dropped_invalid", lastSeriesTimestamp };
+  const time = normalizeChartTime(bar.time);
+  if (time == null) {
+    FX_INVALID_TIMESTAMPS_DROPPED += 1;
+    return { result: "dropped_invalid", lastSeriesTimestamp };
+  }
+  const open = Number(bar.open);
+  const high = Number(bar.high);
+  const low = Number(bar.low);
+  const close = Number(bar.close);
+  if (![open, high, low, close].every(Number.isFinite)) {
+    FX_INVALID_TIMESTAMPS_DROPPED += 1;
+    return { result: "dropped_invalid", lastSeriesTimestamp };
+  }
+  const newTime = Number(time);
+  const lastTime = Number(lastSeriesTimestamp) || 0;
+  if (lastTime > 0 && newTime < lastTime) {
+    STALE_LIVE_UPDATES_DROPPED += 1;
+    console.warn("[fx-chart] dropped stale live bar", { lastTime, newTime });
+    return { result: "dropped_stale", lastSeriesTimestamp };
+  }
+  const normalized: FxCandle = { time, open, high, low, close };
+  try {
+    series.update(normalized);
+  } catch (err) {
+    STALE_LIVE_UPDATES_DROPPED += 1;
+    console.warn("[fx-chart] series.update rejected", err);
+    return { result: "dropped_error", lastSeriesTimestamp };
+  }
+  return {
+    result: lastTime > 0 && newTime === lastTime ? "updated" : "appended",
+    lastSeriesTimestamp: newTime,
+    bar: normalized,
+  };
 }
 
 export function normalizeCandlesTimeframe(tf: string): string {
@@ -128,17 +252,22 @@ export function applyQuoteToActiveCandle(
   if (!Number.isFinite(quote) || quote <= 0) return null;
   const ts = Math.floor(Number(quoteUnix));
   if (!Number.isFinite(ts) || ts <= 0) return null;
-  const bucket = candleBucketUnix(timeframe, ts) as UTCTimestamp;
+  const bucket = candleBucketUnix(timeframe, ts);
   if (!bucket) return null;
+  const bucketTime = normalizeChartTime(bucket);
+  if (bucketTime == null) return null;
   if (!last) {
-    return { time: bucket, open: quote, high: quote, low: quote, close: quote };
+    return { time: bucketTime, open: quote, high: quote, low: quote, close: quote };
   }
-  const lastTime = Number(last.time);
-  const lastBucket = candleBucketUnix(timeframe, lastTime);
+  const lastTime = normalizeChartTime(last.time);
+  if (lastTime == null) {
+    return { time: bucketTime, open: quote, high: quote, low: quote, close: quote };
+  }
+  const lastBucket = candleBucketUnix(timeframe, Number(lastTime));
   if (bucket < lastBucket) return null;
   if (bucket === lastBucket) {
     return {
-      time: last.time,
+      time: lastTime,
       open: last.open,
       high: Math.max(last.high, quote),
       low: Math.min(last.low, quote),
@@ -147,7 +276,7 @@ export function applyQuoteToActiveCandle(
   }
   const open = last.close;
   return {
-    time: bucket,
+    time: bucketTime,
     open,
     high: Math.max(open, quote),
     low: Math.min(open, quote),

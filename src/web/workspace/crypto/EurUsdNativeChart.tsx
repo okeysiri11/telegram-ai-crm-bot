@@ -21,7 +21,7 @@ export function EurUsdNativeChart({
   liveQuote?: LiveFxQuote | null;
 }) {
   const [reload, setReload] = useState(0);
-  const { hostRef, status, message, meta, liveKind, liveUpdated, followLive, goToLive, visibleBarCount } = useFxNativeLiveChart({
+  const { hostRef, status, message, meta, liveKind, liveUpdated, followLive, goToLive, visibleBarCount, generation, staleDropped } = useFxNativeLiveChart({
     symbol,
     timeframe,
     height,
@@ -44,6 +44,8 @@ export function EurUsdNativeChart({
       data-last-close={formatFxQuote(meta.lastClose, 5) ?? ""}
       data-live-follow={followLive ? "yes" : "no"}
       data-visible-range-bars={String(visibleBarCount)}
+      data-chart-generation={String(generation)}
+      data-stale-live-dropped={String(staleDropped)}
     >
       <div
         ref={hostRef}
