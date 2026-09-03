@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 import pytest
 
 from services.fx_market_intel.candle_feed import get_candles, reset_fx_market_cache
-from services.fx_market_intel.dukascopy_feed import decode_bi5_ticks, ticks_to_1m_bars
+from services.fx_market_intel.dukascopy_feed import decode_bi5_ticks, ticks_to_1m_bars, recent_hours
 from services.fx_market_intel.last_good_store import memory_get, memory_put, save_last_good
 from services.fx_market_intel.provider_router import reset_provider_health, resolve_eurusd_1m
 from services.fx_market_intel.quality import score_ohlc
@@ -65,6 +65,14 @@ def test_real_ohlc_is_healthy_with_wicks_and_bodies():
     assert score["real_wick_bars"] > 5
     assert score["zero_range_ratio"] < 0.80
     assert score["display_mode"] == "CANDLES"
+
+
+def test_recent_hours_skips_unpublished_current_hour():
+    now = datetime(2026, 9, 3, 13, 17, tzinfo=timezone.utc)
+    hours = recent_hours(3, now=now)
+    assert hours[-1] == datetime(2026, 9, 3, 12, tzinfo=timezone.utc)
+    assert datetime(2026, 9, 3, 13, tzinfo=timezone.utc) not in hours
+    assert hours[0] == datetime(2026, 9, 3, 10, tzinfo=timezone.utc)
 
 
 def test_dukascopy_ticks_aggregate_true_ohlc():

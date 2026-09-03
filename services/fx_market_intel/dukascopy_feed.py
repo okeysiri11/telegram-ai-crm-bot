@@ -23,8 +23,8 @@ DUKASCOPY_BASE = "https://datafeed.dukascopy.com/datafeed"
 EURUSD_INSTRUMENT = "EURUSD"
 PRICE_SCALE = 100_000.0
 HEADERS = {"User-Agent": "ADOS-FX-Intel/50.16"}
-HOUR_TIMEOUT_SEC = 8.0
-OVERALL_TIMEOUT_SEC = 14.0
+HOUR_TIMEOUT_SEC = 12.0
+OVERALL_TIMEOUT_SEC = 16.0
 
 _FetchHour = Callable[[datetime], Awaitable[bytes | None]]
 
@@ -102,12 +102,14 @@ async def fetch_hour_bytes(hour: datetime, *, session: aiohttp.ClientSession, in
 
 def recent_hours(count: int, *, now: datetime | None = None) -> list[datetime]:
     current = (now or datetime.now(timezone.utc)).replace(minute=0, second=0, microsecond=0)
-    return [current - timedelta(hours=i) for i in range(count - 1, -1, -1)]
+    # Current hour file is often unpublished or hangs; use completed hours only.
+    last_complete = current - timedelta(hours=1)
+    return [last_complete - timedelta(hours=i) for i in range(count - 1, -1, -1)]
 
 
 async def fetch_eurusd_1m(
     *,
-    hours: int = 6,
+    hours: int = 3,
     now: datetime | None = None,
     fetch_hour: _FetchHour | None = None,
 ) -> list[dict[str, Any]]:

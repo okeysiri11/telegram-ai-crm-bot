@@ -29,7 +29,7 @@ TradingView widgets/pages are not a backend source. NBU is never used as minute 
 
 - Extended `services/fx_market_intel` (no new `platform_*` package). `MarketDataProvider` gained `get_candles` / `health` / `capabilities`. Canonical bars only; provider payloads never reach the SPA.
 - **EURUSD 1m router:** keyed provider (if a real API key exists) → Dukascopy tick OHLC → persistent **real** last-good → degraded Yahoo (line only).
-- Dukascopy is a documented HTTP tick datafeed (`datafeed.dukascopy.com/.../h_ticks.bi5`), not HTML scraping. Hour files fetch in parallel with an 8s per-hour / 14s overall budget so the SPA 20s timeout is not exceeded.
+- Dukascopy is a documented HTTP tick datafeed (`datafeed.dukascopy.com/.../h_ticks.bi5`), not HTML scraping. Hour files fetch in parallel with a 12s per-hour / 16s overall budget so the SPA 20s timeout is not exceeded. The unpublished current hour is skipped.
 - Quality scoring: Yahoo-flat (`zero_range_ratio >= 0.80`) is **DEGRADED** and cannot beat a HEALTHY real-OHLC provider. HEALTHY 1m requires `real_body_bars > 10` and `real_wick_bars > 5` on the last 120 bars (unless the sample is genuinely too small).
 - Redis / memory keys distinguish `fx:last_good:{symbol}:{resolution}:real` vs `:degraded`. Degraded Yahoo must not overwrite real last-good.
 - Live quote (Yahoo/NBU) may update only the **active** bucket: `high=max`, `low=min`, `close=quote`. Closed history is never rewritten with flat Yahoo bars.
