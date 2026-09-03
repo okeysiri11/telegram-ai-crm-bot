@@ -5,22 +5,37 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button, Card, Input } from "@/ui";
-import { TradingViewEmbed } from "./TradingViewEmbed";
 import { DxyNativeChart } from "./DxyNativeChart";
+import { EurUsdNativeChart } from "./EurUsdNativeChart";
 import type { ChartTimeframe } from "./chartProvider";
+import { formatFxQuote } from "./fxQuoteDisplay";
+
+export { formatFxQuote, fxWatchlistQuoteRow } from "./fxQuoteDisplay";
 
 export function integrityLabel(status?: string, mid?: unknown) {
-  if (status === "connected") {
-    return mid == null ? "Нет данных" : null;
+  const hasMid = formatFxQuote(mid) != null;
+  if (status === "connected" || status === "live" || status === "delayed") {
+    return hasMid ? null : "Нет данных";
   }
   if (status === "error") return "Источник недоступен";
   if (status === "needs_config" || status === "not_connected") return "Источник недоступен";
   if (status === "insufficient_data") return "Данные неполные";
   if (status === "stale" || status === "cached") return "Данные устарели";
   if (status === "partial") return "Частичные данные";
-  if (mid == null && status) return "Нет данных";
-  if (mid == null && !status) return "Нет данных";
+  if (!hasMid && status) return "Нет данных";
+  if (!hasMid && !status) return "Нет данных";
   return null;
+}
+
+export function eurusdSourceLabel(quote: Record<string, unknown>): string {
+  const source = String(quote.source || "");
+  const provider = String(quote.provider || "");
+  if (provider === "yahoo_eurusd" || source.includes("Yahoo") || source.includes("EURUSD=X")) {
+    return source.includes("Yahoo") ? source : "Yahoo Finance (EURUSD=X)";
+  }
+  if (source && !/нбу|nbu/i.test(source)) return source;
+  if (provider && provider !== "nbu_cross") return provider;
+  return "Yahoo Finance (EURUSD=X)";
 }
 
 export function DualChartsPanel({
@@ -52,25 +67,33 @@ export function DualChartsPanel({
         <Card title="EUR/USD">
           <div className="mb-2 flex flex-wrap gap-2" data-testid="tf-EUR/USD">
             {timeframes.map((t) => (
-              <Button key={t} size="sm" variant={t === eurusdTf ? "primary" : "secondary"} onClick={() => onEurusdTf(t)}>
+              <Button
+                key={t}
+                size="sm"
+                variant={t === eurusdTf ? "primary" : "secondary"}
+                onClick={() => onEurusdTf(t)}
+                data-testid={`eurusd-tf-${t}`}
+              >
                 {t}
               </Button>
             ))}
           </div>
-          <p className="eds-type-small">
-            Котировка: {eurusdQuote.mid != null ? String(eurusdQuote.mid) : "Нет данных"}
+          <p
+            className="eds-type-small"
+            data-testid="eurusd-quote-line"
+            data-fetched-at={String(eurusdQuote.fetched_at || "")}
+            data-provider={String(eurusdQuote.provider || eurusdQuote.source || "")}
+          >
+            Котировка: {formatFxQuote(eurusdQuote.mid, 4) ?? "Нет данных"}
             {eurusdQuote.fetched_at ? ` · ${String(eurusdQuote.fetched_at)}` : ""}
-            {eurusdQuote.provider || eurusdQuote.source ? ` · ${String(eurusdQuote.provider || eurusdQuote.source)}` : ""}
+            {` · ${eurusdSourceLabel(eurusdQuote)}`}
           </p>
           {integrityLabel(String(eurusdQuote.status || ""), eurusdQuote.mid) ? (
             <p className="eds-type-caption text-[var(--eds-warning,#b45309)]">
               {integrityLabel(String(eurusdQuote.status || ""), eurusdQuote.mid)}
             </p>
           ) : null}
-          <p className="eds-type-caption text-[var(--eds-text-muted)]">
-            График TradingView не означает доступность котировки бэкенда.
-          </p>
-          <TradingViewEmbed symbol="EUR/USD" interval={eurusdTf} height={chartH} fallbackQuote={eurusdQuote} />
+          <EurUsdNativeChart symbol="EUR/USD" timeframe={eurusdTf} height={chartH} liveQuote={eurusdQuote} />
           <div className="mt-2 flex flex-wrap gap-2">
             <Button size="sm" className="ews-primary-cta" onClick={() => onCreateSignal("EUR/USD")} data-testid="chart-signal-EUR/USD">
               Создать сигнал
@@ -96,8 +119,13 @@ export function DualChartsPanel({
               </Button>
             ))}
           </div>
-          <p className="eds-type-small" data-testid="dxy-quote-line">
-            Котировка: {dxyQuote.mid != null ? String(dxyQuote.mid) : "Нет данных"}
+          <p
+            className="eds-type-small"
+            data-testid="dxy-quote-line"
+            data-fetched-at={String(dxyQuote.fetched_at || "")}
+            data-provider={String(dxyQuote.provider || dxyQuote.source || "")}
+          >
+            Котировка: {formatFxQuote(dxyQuote.mid, 3) ?? "Нет данных"}
             {dxyQuote.fetched_at ? ` · ${String(dxyQuote.fetched_at)}` : ""}
             {dxyQuote.provider || dxyQuote.source ? ` · ${String(dxyQuote.provider || dxyQuote.source)}` : ""}
             {dxyQuote.freshness === "cached" || String(dxyQuote.freshness || "").includes("stale") ? " · Данные устарели" : ""}

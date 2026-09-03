@@ -1,19 +1,16 @@
 /**
- * Sprint 50.7 — native DXY (and optional FX) candle chart via Lightweight Charts.
- * Data: backend /fx-intel/candles (Yahoo DX-Y.NYB). Never embeds TradingView for DXY.
+ * Native EUR/USD candlesticks via Lightweight Charts.
+ * Data: backend /fx-intel/candles (Yahoo EURUSD=X). TradingView is not used.
  */
 import { useEffect, useRef, useState } from "react";
 import { createChart, type IChartApi, type ISeriesApi } from "lightweight-charts";
+import { Button } from "@/ui";
 import type { ChartTimeframe } from "./chartProvider";
 import { formatFxQuote } from "./fxQuoteDisplay";
 import { barsToCandles, fetchFxCandles, type NativeCandleBar } from "./fxNativeChartCore";
 
-export const DXY_NATIVE_TIMEFRAMES: ChartTimeframe[] = ["15m", "1h", "4h", "1D"];
-export { barsToCandles, fetchFxCandles, normalizeCandlesTimeframe } from "./fxNativeChartCore";
-export type { NativeCandleBar } from "./fxNativeChartCore";
-
-export function DxyNativeChart({
-  symbol = "DXY",
+export function EurUsdNativeChart({
+  symbol = "EUR/USD",
   timeframe,
   height = 360,
   liveQuote,
@@ -28,6 +25,7 @@ export function DxyNativeChart({
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [message, setMessage] = useState<string>("Загрузка баров…");
+  const [reload, setReload] = useState(0);
   const [meta, setMeta] = useState<{ barCount: number; source?: string; lastClose?: unknown }>({ barCount: 0 });
 
   useEffect(() => {
@@ -83,7 +81,7 @@ export function DxyNativeChart({
         if (cancelled) return;
         if (!ok || json.status === "error" || json.chart_ready === false) {
           setStatus("error");
-          setMessage(String(json.message || "Не удалось загрузить бары DXY"));
+          setMessage("Не удалось загрузить график EURUSD");
           seriesRef.current?.setData([]);
           return;
         }
@@ -93,51 +91,63 @@ export function DxyNativeChart({
         chartRef.current?.timeScale().fitContent();
         setMeta({
           barCount: Number(json.bar_count ?? candles.length) || candles.length,
-          source: String(json.source || json.provider || ""),
+          source: String(json.source || json.provider || "Yahoo Finance (EURUSD=X)"),
           lastClose: json.last_close ?? candles.at(-1)?.close,
         });
         if (!candles.length) {
           setStatus("error");
-          setMessage("Нет баров для отображения");
+          setMessage("Не удалось загрузить график EURUSD");
           return;
         }
         setStatus("ready");
         setMessage(`Баров: ${candles.length}`);
-      } catch (exc) {
+      } catch {
         if (cancelled) return;
         setStatus("error");
-        setMessage(exc instanceof Error ? exc.message : "Ошибка загрузки графика");
+        setMessage("Не удалось загрузить график EURUSD");
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [symbol, timeframe]);
+  }, [symbol, timeframe, reload]);
 
   return (
-    <div className="w-full" data-testid="dxy-native-chart" data-symbol={symbol} data-engine="lightweight-charts">
+    <div
+      className="w-full"
+      data-testid="eurusd-native-chart"
+      data-symbol={symbol}
+      data-engine="lightweight-charts"
+      data-status={status}
+      data-bar-count={String(meta.barCount)}
+      data-last-close={formatFxQuote(meta.lastClose, 5) ?? ""}
+    >
       <div
         ref={hostRef}
         className="w-full overflow-hidden rounded-md border border-[var(--eds-border)] bg-white"
         style={{ height }}
-        data-testid="dxy-chart-canvas"
+        data-testid="eurusd-chart-canvas"
       />
-      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 eds-type-caption text-[var(--eds-text-muted)]">
-        <span data-testid="dxy-chart-status">
+      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 eds-type-caption text-[var(--eds-text-muted)]">
+        <span data-testid="eurusd-chart-status">
           {status === "loading" ? "Загрузка…" : status === "ready" ? "ADOS · Lightweight Charts" : "Ошибка"}
         </span>
-        <span data-testid="dxy-chart-bars">{message}</span>
+        <span data-testid="eurusd-chart-bars">{message}</span>
         {meta.source ? <span>{meta.source}</span> : null}
-        {formatFxQuote(liveQuote?.mid, 3) ? (
-          <span data-testid="dxy-live-quote">
-            Live: {formatFxQuote(liveQuote?.mid, 3)}
+        {formatFxQuote(liveQuote?.mid, 4) ? (
+          <span data-testid="eurusd-live-quote">
+            Live: {formatFxQuote(liveQuote?.mid, 4)}
             {liveQuote?.source ? ` · ${String(liveQuote.source)}` : ""}
           </span>
         ) : null}
-        {status === "error" ? <span className="text-[var(--eds-danger,#b91c1c)]">{message}</span> : null}
+        {status === "error" ? (
+          <Button size="sm" variant="secondary" data-testid="eurusd-chart-retry" onClick={() => setReload((n) => n + 1)}>
+            Повторить
+          </Button>
+        ) : null}
       </div>
       <p className="eds-type-caption text-[var(--eds-text-muted)]">
-        DXY: нативный график по барам бэкенда (Yahoo DX-Y.NYB). TradingView TVC:DXY не используется — без popup/логина.
+        EUR/USD: нативный график по барам бэкенда (Yahoo EURUSD=X). TradingView не используется.
       </p>
     </div>
   );

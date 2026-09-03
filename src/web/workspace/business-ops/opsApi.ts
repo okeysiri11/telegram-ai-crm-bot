@@ -8,45 +8,62 @@ import { webConfig } from "@/config/webConfig";
 
 export const OPS_TIMEOUT_MS = 20_000;
 
-export type OpsResult = { ok: boolean; status: number; json: unknown };
+export type OpsResult = { ok: boolean; status: number; json: unknown; cancelled?: boolean };
 export type UploadProgress = (percent: number) => void;
 
-function timeoutSignal(ms: number): AbortSignal {
-  const ctrl = new AbortController();
-  const wait = typeof window !== "undefined" ? window.setTimeout : setTimeout;
-  wait(() => ctrl.abort(), ms);
-  return ctrl.signal;
-}
-
-function fail(e: unknown): OpsResult {
+function fail(e: unknown, timedOut = false): OpsResult {
   const name = e instanceof DOMException ? e.name : "";
+  if (name === "AbortError" && !timedOut) {
+    return { ok: false, status: 0, cancelled: true, json: { error: "aborted" } };
+  }
   const msg = name === "AbortError" || name === "TimeoutError" ? "timeout" : e instanceof Error ? e.message : "network_error";
   return { ok: false, status: 0, json: { error: msg, message_ru: msg === "timeout" ? "Превышено время ожидания. Повторите запрос." : "Нет сети. Проверьте соединение." } };
 }
 
-async function getJson(url: string): Promise<OpsResult> {
+function requestSignal(timeoutMs: number, external?: AbortSignal): { signal: AbortSignal; timedOut: () => boolean } {
+  const ctrl = new AbortController();
+  let timedOut = false;
+  const wait = typeof window !== "undefined" ? window.setTimeout : setTimeout;
+  wait(() => {
+    timedOut = true;
+    ctrl.abort();
+  }, timeoutMs);
+  if (external) {
+    if (external.aborted) ctrl.abort();
+    else external.addEventListener("abort", () => ctrl.abort(), { once: true });
+  }
+  return { signal: ctrl.signal, timedOut: () => timedOut };
+}
+
+function timeoutSignal(ms: number): AbortSignal {
+  return requestSignal(ms).signal;
+}
+
+async function getJson(url: string, signal?: AbortSignal): Promise<OpsResult> {
+  const req = requestSignal(OPS_TIMEOUT_MS, signal);
   try {
-    const res = await fetch(url, { credentials: "include", signal: timeoutSignal(OPS_TIMEOUT_MS) });
+    const res = await fetch(url, { credentials: "include", signal: req.signal });
     const json = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, json };
   } catch (e) {
-    return fail(e);
+    return fail(e, req.timedOut());
   }
 }
 
-async function postJson(url: string, body: Record<string, unknown>): Promise<OpsResult> {
+async function postJson(url: string, body: Record<string, unknown>, signal?: AbortSignal): Promise<OpsResult> {
+  const req = requestSignal(OPS_TIMEOUT_MS, signal);
   try {
     const res = await fetch(url, {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: timeoutSignal(OPS_TIMEOUT_MS),
+      signal: req.signal,
     });
     const json = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, json };
   } catch (e) {
-    return fail(e);
+    return fail(e, req.timedOut());
   }
 }
 
@@ -125,10 +142,10 @@ export async function cryptoTaPost(path: string, body: Record<string, unknown>) 
   return postJson(`${prefix}${path}`, body);
 }
 
-export async function cryptoFxIntelGet(path: string) {
+export async function cryptoFxIntelGet(path: string, signal?: AbortSignal) {
   const prefix =
     (webConfig as { cryptoMiPrefix?: string }).cryptoMiPrefix || "/api/crypto-mi/v1";
-  return getJson(`${prefix}/fx-intel${path}`);
+  return getJson(`${prefix}/fx-intel${path}`, signal);
 }
 
 export async function cryptoFxIntelPost(path: string, body: Record<string, unknown> = {}) {

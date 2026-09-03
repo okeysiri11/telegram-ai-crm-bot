@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import math
 from datetime import datetime, timezone
 from typing import Any
 
 import aiohttp
 
-from services.fx_market_intel.providers import MarketDataProvider, _now
+from services.fx_market_intel.providers import MarketDataProvider, NbuCrossEurUsdProvider, _now
 from services.fx_market_intel.symbols import normalize_symbol
 
 YAHOO_SYMBOLS = {
@@ -16,6 +17,24 @@ YAHOO_SYMBOLS = {
 }
 
 _TF_MAP = {
+    "1m": ("1m", "1d"),
+    "1M": ("1m", "1d"),
+    "5m": ("5m", "5d"),
+    "5M": ("5m", "5d"),
+    "15m": ("15m", "5d"),
+    "15M": ("15m", "5d"),
+    "1h": ("60m", "10d"),
+    "1H": ("60m", "10d"),
+    "4h": ("60m", "30d"),
+    "4H": ("60m", "30d"),
+    "1d": ("1d", "6mo"),
+    "1D": ("1d", "6mo"),
+    "1w": ("1wk", "2y"),
+    "1W": ("1wk", "2y"),
+}
+
+# DXY keeps the 50.7 Yahoo intervals that already work in production.
+_TF_MAP_DXY = {
     "15m": ("15m", "5d"),
     "15M": ("15m", "5d"),
     "1h": ("60m", "10d"),
@@ -26,19 +45,42 @@ _TF_MAP = {
     "1D": ("1d", "6mo"),
 }
 
-SUPPORTED_TIMEFRAMES = ("15m", "1H", "4H", "1D")
+SUPPORTED_TIMEFRAMES = ("1m", "5m", "15m", "1H", "4H", "1D", "1W")
+DXY_SUPPORTED_TIMEFRAMES = ("15m", "1H", "4H", "1D")
+
+_CANON_TF = {
+    "1m": "1m",
+    "1M": "1m",
+    "5m": "5m",
+    "5M": "5m",
+    "15m": "15m",
+    "15M": "15m",
+    "1h": "1H",
+    "1H": "1H",
+    "4h": "4H",
+    "4H": "4H",
+    "1d": "1D",
+    "1D": "1D",
+    "1w": "1W",
+    "1W": "1W",
+}
 
 _HEADERS = {"User-Agent": "ADOS-FX-Intel/50.7"}
 
 
-def normalize_timeframe(timeframe: str) -> str:
+def _maps_for(instrument: str | None) -> tuple[dict[str, tuple[str, str]], tuple[str, ...]]:
+    if instrument == "DXY":
+        return _TF_MAP_DXY, DXY_SUPPORTED_TIMEFRAMES
+    return _TF_MAP, SUPPORTED_TIMEFRAMES
+
+
+def normalize_timeframe(timeframe: str, instrument: str | None = None) -> str:
     raw = (timeframe or "1H").strip()
-    key = raw if raw in _TF_MAP else raw.upper() if raw.upper() in _TF_MAP else raw.lower()
-    if key not in _TF_MAP:
+    maps, _supported = _maps_for(instrument)
+    key = raw if raw in maps else raw.upper() if raw.upper() in maps else raw.lower()
+    if key not in maps:
         return "1H"
-    # Canonical labels for API/UI
-    canon = {"15m": "15m", "15M": "15m", "1h": "1H", "1H": "1H", "4h": "4H", "4H": "4H", "1d": "1D", "1D": "1D"}
-    return canon.get(key, "1H")
+    return _CANON_TF.get(key, "1H")
 
 
 async def fetch_yahoo_chart(symbol_yahoo: str, *, interval: str, range_: str) -> dict[str, Any]:
@@ -59,6 +101,48 @@ async def fetch_yahoo_chart(symbol_yahoo: str, *, interval: str, range_: str) ->
     return results[0]
 
 
+def _finite(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(n):
+        return None
+    return n
+
+
+def aggregate_ohlc_4h(bars: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Aggregate real 1h (or finer) OHLC into 4h buckets. No synthetic prices."""
+    buckets: dict[str, dict[str, Any]] = {}
+    for b in bars:
+        dt = datetime.fromisoformat(b["t"])
+        key_h = (dt.hour // 4) * 4
+        key = dt.replace(hour=key_h, minute=0, second=0, microsecond=0).isoformat()
+        cur = buckets.get(key)
+        if not cur:
+            buckets[key] = {**b, "t": key, "timeframe": "4H"}
+        else:
+            cur["h"] = max(cur["h"], b["h"])
+            cur["l"] = min(cur["l"], b["l"])
+            cur["c"] = b["c"]
+            if b.get("v") is not None:
+                cur["v"] = (cur.get("v") or 0) + b["v"]
+    return [buckets[k] for k in sorted(buckets)]
+
+
+def _dedupe_sorted_bars(bars: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    ordered = sorted(bars, key=lambda b: str(b.get("t") or ""))
+    out: list[dict[str, Any]] = []
+    for b in ordered:
+        if out and out[-1].get("t") == b.get("t"):
+            out[-1] = b
+        else:
+            out.append(b)
+    return out
+
+
 def normalize_yahoo_bars(result: dict[str, Any], *, timeframe: str) -> list[dict[str, Any]]:
     ts = result.get("timestamp") or []
     quote = ((result.get("indicators") or {}).get("quote") or [{}])[0]
@@ -69,53 +153,40 @@ def normalize_yahoo_bars(result: dict[str, Any], *, timeframe: str) -> list[dict
     volumes = quote.get("volume") or []
     bars: list[dict[str, Any]] = []
     for i, t in enumerate(ts):
-        c = closes[i] if i < len(closes) else None
+        c = _finite(closes[i] if i < len(closes) else None)
         if c is None:
             continue
-        o = opens[i] if i < len(opens) and opens[i] is not None else c
-        h = highs[i] if i < len(highs) and highs[i] is not None else c
-        l = lows[i] if i < len(lows) and lows[i] is not None else c
-        v = volumes[i] if i < len(volumes) else None
+        o = _finite(opens[i] if i < len(opens) else None)
+        h = _finite(highs[i] if i < len(highs) else None)
+        l = _finite(lows[i] if i < len(lows) else None)
+        v = _finite(volumes[i] if i < len(volumes) else None)
         bars.append(
             {
                 "t": datetime.fromtimestamp(int(t), tz=timezone.utc).isoformat(),
-                "o": float(o),
-                "h": float(h),
-                "l": float(l),
-                "c": float(c),
-                "v": float(v) if v is not None else None,
+                "o": o if o is not None else c,
+                "h": h if h is not None else c,
+                "l": l if l is not None else c,
+                "c": c,
+                "v": v,
                 "timeframe": timeframe,
             }
         )
+    bars = _dedupe_sorted_bars(bars)
     if timeframe.upper() == "4H" and bars:
-        # Resample 1h → 4h buckets
-        buckets: dict[str, dict[str, Any]] = {}
-        for b in bars:
-            dt = datetime.fromisoformat(b["t"])
-            key_h = (dt.hour // 4) * 4
-            key = dt.replace(hour=key_h, minute=0, second=0, microsecond=0).isoformat()
-            cur = buckets.get(key)
-            if not cur:
-                buckets[key] = {**b, "t": key}
-            else:
-                cur["h"] = max(cur["h"], b["h"])
-                cur["l"] = min(cur["l"], b["l"])
-                cur["c"] = b["c"]
-                if b.get("v") is not None:
-                    cur["v"] = (cur.get("v") or 0) + b["v"]
-        bars = [buckets[k] for k in sorted(buckets)]
+        bars = aggregate_ohlc_4h(bars)
     return bars
 
 
 class YahooQuoteProvider(MarketDataProvider):
     """Live quote from Yahoo chart meta.regularMarketPrice."""
 
-    def __init__(self, *, instrument: str, label: str | None = None) -> None:
+    def __init__(self, *, instrument: str, label: str | None = None, quote_interval: str = "1d") -> None:
         self.instrument = normalize_symbol(instrument)
         yahoo = YAHOO_SYMBOLS.get(self.instrument)
         if not yahoo:
             raise ValueError(f"Unsupported Yahoo instrument: {instrument}")
         self.yahoo_symbol = yahoo
+        self.quote_interval = quote_interval or "1d"
         self.id = f"yahoo_{self.instrument.lower().replace('/', '')}"
         self.label = label or f"Yahoo Finance ({self.yahoo_symbol})"
 
@@ -145,7 +216,8 @@ class YahooQuoteProvider(MarketDataProvider):
                 "message": f"{sym}: этот источник обслуживает {self.instrument}",
             }
         try:
-            result = await fetch_yahoo_chart(self.yahoo_symbol, interval="1d", range_="5d")
+            range_ = "1d" if self.quote_interval in {"1m", "2m", "5m", "15m"} else "5d"
+            result = await fetch_yahoo_chart(self.yahoo_symbol, interval=self.quote_interval, range_=range_)
             meta = result.get("meta") or {}
             price = meta.get("regularMarketPrice")
             if price is None:
@@ -155,6 +227,11 @@ class YahooQuoteProvider(MarketDataProvider):
             change = None
             if prev:
                 change = f"{(float(price) - float(prev)):.4f}"
+            market_time = meta.get("regularMarketTime")
+            try:
+                market_time_unix = int(market_time) if market_time is not None else None
+            except (TypeError, ValueError):
+                market_time_unix = None
             return {
                 "symbol": self.instrument,
                 "bid": mid,
@@ -163,8 +240,9 @@ class YahooQuoteProvider(MarketDataProvider):
                 "change": change,
                 "source": self.label,
                 "status": "connected",
-                "freshness": "live_yahoo",
+                "freshness": "yahoo",
                 "fetched_at": _now(),
+                "market_time": market_time_unix,
                 "message": f"Котировка {self.yahoo_symbol}",
             }
         except Exception as exc:
@@ -178,21 +256,62 @@ class YahooQuoteProvider(MarketDataProvider):
                 "status": "error",
                 "freshness": None,
                 "fetched_at": _now(),
+                "market_time": None,
                 "message": f"Yahoo недоступен: {exc}",
             }
 
 
+class EurUsdMarketQuoteProvider(MarketDataProvider):
+    """Yahoo EURUSD=X primary; NBU cross is last-resort fallback. Never fabricates."""
+
+    id = "yahoo_eurusd"
+    label = "Yahoo Finance (EURUSD=X)"
+
+    def __init__(
+        self,
+        primary: MarketDataProvider | None = None,
+        fallback: MarketDataProvider | None = None,
+    ) -> None:
+        self._primary = primary or YahooQuoteProvider(instrument="EUR/USD", quote_interval="1m")
+        self._fallback = fallback or NbuCrossEurUsdProvider()
+        self.id = getattr(self._primary, "id", "yahoo_eurusd")
+        self.label = getattr(self._primary, "label", self.label)
+
+    async def status(self) -> dict[str, Any]:
+        q = await self.get_quote("EUR/USD")
+        return {
+            "provider_id": q.get("provider") or self.id,
+            "label": q.get("source") or self.label,
+            "status": q.get("status"),
+            "last_update": q.get("fetched_at"),
+            "message": q.get("message"),
+        }
+
+    async def get_quote(self, symbol: str) -> dict[str, Any]:
+        primary = await self._primary.get_quote(symbol)
+        primary.setdefault("provider", getattr(self._primary, "id", "yahoo_eurusd"))
+        if primary.get("status") == "connected" and primary.get("mid") is not None:
+            return primary
+        fallback = await self._fallback.get_quote(symbol)
+        fallback.setdefault("provider", getattr(self._fallback, "id", "nbu_cross"))
+        if fallback.get("status") == "connected" and fallback.get("mid") is not None:
+            fallback["fallback_from"] = primary.get("provider") or getattr(self._primary, "id", "yahoo_eurusd")
+            return fallback
+        return primary
+
+
 async def fetch_bars(instrument: str, timeframe: str = "1H") -> dict[str, Any]:
     sym = normalize_symbol(instrument)
-    tf = normalize_timeframe(timeframe)
+    tf_map, supported = _maps_for(sym)
+    tf = normalize_timeframe(timeframe, instrument=sym)
     yahoo = YAHOO_SYMBOLS.get(sym)
     base_meta = {
         "symbol": sym,
         "timeframe": tf,
-        "supported_timeframes": list(SUPPORTED_TIMEFRAMES),
+        "supported_timeframes": list(supported),
         "provider": "yahoo",
         "provider_symbol": yahoo,
-        "chart_engine": "lightweight_charts" if sym == "DXY" else "tradingview_or_native",
+        "chart_engine": "lightweight_charts",
     }
     if not yahoo:
         return {
@@ -203,7 +322,7 @@ async def fetch_bars(instrument: str, timeframe: str = "1H") -> dict[str, Any]:
             "bar_count": 0,
             "chart_ready": False,
         }
-    interval, range_ = _TF_MAP.get(tf, ("60m", "10d"))
+    interval, range_ = tf_map.get(tf, ("60m", "10d"))
     try:
         result = await fetch_yahoo_chart(yahoo, interval=interval, range_=range_)
         bars = normalize_yahoo_bars(result, timeframe=tf)

@@ -59,6 +59,8 @@ async def ta_tradingview_handler(request: web.Request) -> web.Response:
             return json_response(tv.status())
         body = await _read_json(request)
         action = body.get("action", "connect")
+        if action == "status":
+            return json_response(tv.status())
         if action == "watchlist":
             symbols = body.get("symbols") if isinstance(body.get("symbols"), list) else []
             return json_response(

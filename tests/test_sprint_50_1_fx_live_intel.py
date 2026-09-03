@@ -160,3 +160,139 @@ async def test_telegram_path_uses_service():
     assert "EUR/USD" in text or "нет данных" in text
     text2 = await svc.telegram_brief("Утренний обзор", tenant_id="tg_1")
     assert "AI-анализ" in text2
+
+
+@pytest.mark.asyncio
+async def test_quote_annotates_provider_and_dxy_mid():
+    class LiveDxy:
+        id = "yahoo_dxy"
+        label = "Yahoo Finance (DX-Y.NYB)"
+
+        async def status(self):
+            return {"provider_id": self.id, "status": "connected"}
+
+        async def get_quote(self, symbol: str):
+            return {
+                "symbol": "DXY",
+                "bid": "99.860",
+                "ask": "99.880",
+                "mid": "99.870",
+                "source": self.label,
+                "status": "connected",
+                "fetched_at": "2026-09-02T12:00:00+00:00",
+            }
+
+    class LiveEur:
+        id = "nbu_cross"
+        label = "НБУ (кросс EUR/USD)"
+
+        async def status(self):
+            return {"provider_id": self.id, "status": "connected"}
+
+        async def get_quote(self, symbol: str):
+            return {
+                "symbol": "EUR/USD",
+                "bid": "1.0850",
+                "ask": "1.0850",
+                "mid": "1.0850",
+                "source": self.label,
+                "status": "connected",
+                "fetched_at": "2026-09-02T12:00:00+00:00",
+            }
+
+    svc = FxMarketIntelService(eurusd_provider=LiveEur(), dxy_provider=LiveDxy())
+    e = await svc.quote("EUR/USD")
+    d = await svc.quote("DXY")
+    assert e["provider"] == "nbu_cross"
+    assert e["mid"] == "1.0850"
+    assert e["status"] == "delayed"
+    assert e["price"] == 1.085
+    assert d["provider"] == "yahoo_dxy"
+    assert d["mid"] == "99.870"
+    assert d["status"] == "connected"
+
+
+def test_classify_fx_quote_status_never_fakes_live():
+    import time
+
+    from services.fx_market_intel.service import classify_fx_quote_status
+
+    now = time.time()
+    assert (
+        classify_fx_quote_status(
+            {"mid": "1.08", "provider": "yahoo_eurusd", "status": "connected", "market_time": now}
+        )
+        == "live"
+    )
+    assert (
+        classify_fx_quote_status(
+            {
+                "mid": "1.08",
+                "provider": "yahoo_eurusd",
+                "status": "connected",
+                "market_time": now - 3600,
+            }
+        )
+        == "delayed"
+    )
+    assert (
+        classify_fx_quote_status(
+            {"mid": "1.08", "provider": "nbu_cross", "status": "connected", "market_time": now}
+        )
+        == "delayed"
+    )
+    assert classify_fx_quote_status({"mid": None, "provider": "yahoo_eurusd", "status": "error"}) == "error"
+
+
+@pytest.mark.asyncio
+async def test_eurusd_yahoo_primary_skips_nbu_when_yahoo_works():
+    from services.fx_market_intel.yahoo_feed import EurUsdMarketQuoteProvider
+
+    class Primary:
+        id = "yahoo_eurusd"
+
+        async def get_quote(self, symbol: str):
+            return {"symbol": symbol, "mid": "1.1710", "status": "connected", "source": "Yahoo"}
+
+    class Fallback:
+        id = "nbu_cross"
+
+        async def get_quote(self, symbol: str):
+            raise AssertionError("NBU must not run when Yahoo quote is present")
+
+    svc = FxMarketIntelService(
+        eurusd_provider=EurUsdMarketQuoteProvider(primary=Primary(), fallback=Fallback()),
+        dxy_provider=DxyStubProvider(),
+    )
+    q = await svc.quote("EUR/USD")
+    assert q["provider"] == "yahoo_eurusd"
+    assert q["mid"] == "1.1710"
+    assert q["status"] == "delayed"  # no market_time → cannot claim live
+    assert q["price"] == 1.171
+
+
+@pytest.mark.asyncio
+async def test_eurusd_falls_back_to_nbu_when_yahoo_fails():
+    from services.fx_market_intel.yahoo_feed import EurUsdMarketQuoteProvider
+
+    class Primary:
+        id = "yahoo_eurusd"
+
+        async def get_quote(self, symbol: str):
+            return {"symbol": symbol, "mid": None, "status": "error", "source": "Yahoo"}
+
+    class Fallback:
+        id = "nbu_cross"
+
+        async def get_quote(self, symbol: str):
+            return {"symbol": symbol, "mid": "1.1577", "status": "connected", "source": "НБУ"}
+
+    svc = FxMarketIntelService(
+        eurusd_provider=EurUsdMarketQuoteProvider(primary=Primary(), fallback=Fallback()),
+        dxy_provider=DxyStubProvider(),
+    )
+    q = await svc.quote("EUR/USD")
+    assert q["provider"] == "nbu_cross"
+    assert q["mid"] == "1.1577"
+    assert q["status"] == "delayed"
+    assert q["fallback_from"] == "yahoo_eurusd"

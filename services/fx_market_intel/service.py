@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
+import math
+import time
 
 from services.fx_market_intel.consensus import build_consensus
 from services.fx_market_intel.correlation import eurusd_dxy_correlation
@@ -21,7 +23,6 @@ from services.fx_market_intel.persistence import (
 from services.fx_market_intel.providers import (
     MacroCalendarProvider,
     MarketDataProvider,
-    NbuCrossEurUsdProvider,
     NewsProvider,
     NullMarketDataProvider,
 )
@@ -29,7 +30,7 @@ from services.fx_market_intel.rss_news import CuratedRssNewsProvider
 from services.fx_market_intel.signals import SIGNAL_STATUSES, assert_no_trade_execution, create_signal
 from services.fx_market_intel.symbols import CORE_INSTRUMENTS, normalize_symbol
 from services.fx_market_intel.technical import compute_indicators
-from services.fx_market_intel.yahoo_feed import YahooQuoteProvider, fetch_bars
+from services.fx_market_intel.yahoo_feed import EurUsdMarketQuoteProvider, YahooQuoteProvider, fetch_bars
 
 ANALYSIS_PRESETS = [
     {
@@ -162,6 +163,61 @@ def _signal_ru(status: str) -> str:
     }.get(status, status)
 
 
+LIVE_MAX_AGE_SEC = 15 * 60
+
+
+def _finite_float(value: Any) -> float | None:
+    if value is None or value == "":
+        return None
+    try:
+        n = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(n):
+        return None
+    return n
+
+
+def classify_fx_quote_status(quote: dict[str, Any]) -> str:
+    """Honest live/delayed/error. Never treat fetch-clock as market time."""
+    price = _finite_float(quote.get("price") if quote.get("price") is not None else quote.get("mid"))
+    raw = str(quote.get("status") or "")
+    if price is None:
+        return "error"
+    if raw in {"error", "not_connected", "needs_config"}:
+        return "error" if raw == "error" else raw
+    provider = str(quote.get("provider") or quote.get("source") or "")
+    freshness = str(quote.get("freshness") or "")
+    if "nbu" in provider.lower() or "nbu" in freshness.lower():
+        return "delayed"
+    market_time = quote.get("market_time")
+    try:
+        market_unix = float(market_time) if market_time is not None else None
+    except (TypeError, ValueError):
+        market_unix = None
+    if market_unix is None:
+        return "delayed"
+    age = time.time() - market_unix
+    if -60 <= age <= LIVE_MAX_AGE_SEC:
+        return "live"
+    return "delayed"
+
+
+def normalize_public_quote(quote: dict[str, Any]) -> dict[str, Any]:
+    """Additive public quote shape. Existing mid/bid/ask/source fields stay."""
+    out = dict(quote)
+    price = _finite_float(out.get("mid") if out.get("mid") is not None else out.get("price"))
+    out["price"] = price
+    market_time = out.get("market_time")
+    try:
+        market_unix = float(market_time) if market_time is not None else None
+    except (TypeError, ValueError):
+        market_unix = None
+    out["timestamp"] = int(market_unix * 1000) if market_unix else None
+    out["status"] = classify_fx_quote_status({**out, "price": price})
+    return out
+
+
 class FxMarketIntelService:
     def __init__(
         self,
@@ -170,7 +226,7 @@ class FxMarketIntelService:
         news_provider: NewsProvider | None = None,
         macro_provider: MacroCalendarProvider | None = None,
     ) -> None:
-        self.eurusd = eurusd_provider or NbuCrossEurUsdProvider()
+        self.eurusd = eurusd_provider or EurUsdMarketQuoteProvider()
         self.dxy = dxy_provider or YahooQuoteProvider(instrument="DXY")
         self.news = news_provider or CuratedRssNewsProvider()
         self.macro = macro_provider or FairEconomyMacroProvider()
@@ -188,7 +244,7 @@ class FxMarketIntelService:
             "tradingview": {
                 "status": "partial",
                 "label": "TradingView",
-                "message": "EUR/USD: публичный виджет. DXY: нативный Lightweight Charts (не TVC:DXY).",
+                "message": "EUR/USD и DXY: нативный Lightweight Charts (Yahoo). TradingView не используется.",
             },
             "news": n,
             "macro_calendar": m,
@@ -219,9 +275,13 @@ class FxMarketIntelService:
     async def quote(self, symbol: str) -> dict[str, Any]:
         sym = normalize_symbol(symbol)
         if sym == "DXY":
-            return await self.dxy.get_quote("DXY")
+            q = await self.dxy.get_quote("DXY")
+            q.setdefault("provider", getattr(self.dxy, "id", "yahoo_dxy"))
+            return q
         if sym == "EUR/USD":
-            return await self.eurusd.get_quote("EUR/USD")
+            q = await self.eurusd.get_quote("EUR/USD")
+            q.setdefault("provider", getattr(self.eurusd, "id", "yahoo_eurusd"))
+            return normalize_public_quote(q)
         return await NullMarketDataProvider().get_quote(sym)
 
     async def candles(self, symbol: str, timeframe: str = "1H") -> dict[str, Any]:
@@ -248,9 +308,17 @@ class FxMarketIntelService:
             "scheduler_message": health["scheduler"]["message"],
             "disclaimer": "AI-анализ, не является гарантией результата.",
             "tradingview": {
-                "EUR/USD": "FX:EURUSD",
+                "EUR/USD": None,
                 "DXY": None,
+                "EURUSD_note_ru": "EUR/USD рендерится нативным Lightweight Charts по барам Yahoo (EURUSD=X), не через FX:EURUSD.",
                 "DXY_note_ru": "DXY рендерится нативным Lightweight Charts по барам Yahoo (DX-Y.NYB), не через TVC:DXY.",
+            },
+            "eurusd_chart": {
+                "engine": "ados_lightweight_charts",
+                "endpoint": "/api/crypto-mi/v1/fx-intel/candles?symbol=EUR/USD",
+                "provider": "yahoo",
+                "yahoo_symbol": "EURUSD=X",
+                "supported_timeframes": ["1m", "5m", "15m", "1H", "4H", "1D", "1W"],
             },
             "dxy_chart": {
                 "engine": "ados_lightweight_charts",

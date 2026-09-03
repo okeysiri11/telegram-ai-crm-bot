@@ -55,6 +55,9 @@ describe("sprint 50.7 DXY native chart", () => {
     expect(normalizeCandlesTimeframe("1h")).toBe("1H");
     expect(normalizeCandlesTimeframe("15m")).toBe("15m");
     expect(normalizeCandlesTimeframe("4H")).toBe("4H");
+    expect(normalizeCandlesTimeframe("1m")).toBe("1m");
+    expect(normalizeCandlesTimeframe("5m")).toBe("5m");
+    expect(normalizeCandlesTimeframe("1W")).toBe("1W");
   });
 
   it("maps bars to ascending lightweight candles", () => {
@@ -84,10 +87,10 @@ describe("sprint 50.7 DXY native chart", () => {
     );
     expect(screen.getByTestId("dxy-native-chart")).toBeTruthy();
     expect(screen.getByTestId("dxy-native-chart").getAttribute("data-engine")).toBe("lightweight-charts");
-    // EUR/USD still uses TradingView embed
-    expect(screen.getByTestId("tradingview-embed").getAttribute("data-symbol")).toBe("FX:EURUSD");
-    // No DXY TradingView embed mounted
-    expect(screen.queryAllByTestId("tradingview-embed")).toHaveLength(1);
+    expect(screen.getByTestId("eurusd-native-chart")).toBeTruthy();
+    expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-engine")).toBe("lightweight-charts");
+    expect(screen.queryAllByTestId("tradingview-embed")).toHaveLength(0);
+    expect(document.body.textContent).not.toContain("График TradingView временно недоступен");
   });
 
   it("timeframe buttons call onDxyTf", () => {
@@ -108,6 +111,9 @@ describe("sprint 50.7 DXY native chart", () => {
     );
     fireEvent.click(screen.getByTestId("dxy-tf-4h"));
     expect(onDxyTf).toHaveBeenCalledWith("4h");
+    expect(screen.getByTestId("chart-signal-EUR/USD").textContent).toContain("Создать сигнал");
+    expect(screen.getByTestId("chart-analysis-EUR/USD").textContent).toContain("К анализу");
+    expect(screen.getByTestId("chart-paper-EUR/USD").textContent).toContain("Бумажная торговля");
   });
 
   it("shows live DXY quote line", () => {
@@ -125,6 +131,28 @@ describe("sprint 50.7 DXY native chart", () => {
         />
       </MemoryRouter>,
     );
-    expect(screen.getByTestId("dxy-quote-line").textContent).toContain("99.87");
+    expect(screen.getByTestId("dxy-quote-line").textContent).toContain("99.870");
+    expect(screen.getByTestId("dxy-quote-line").textContent).not.toMatch(/\bNaN\b/);
+    expect(screen.getByTestId("eurusd-quote-line").textContent).toContain("1.1000");
+    expect(screen.getByTestId("eurusd-quote-line").textContent).not.toMatch(/\bNaN\b/);
+  });
+
+  it("does not render NaN when quote mid is invalid", () => {
+    render(
+      <MemoryRouter>
+        <DualChartsPanel
+          eurusdTf="1h"
+          dxyTf="1h"
+          onEurusdTf={() => undefined}
+          onDxyTf={() => undefined}
+          timeframes={["1h"] as const}
+          eurusdQuote={{ mid: Number.NaN, status: "connected" }}
+          dxyQuote={{ mid: "NaN", status: "connected" }}
+          onCreateSignal={() => undefined}
+        />
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("eurusd-quote-line").textContent).not.toMatch(/\bNaN\b/);
+    expect(screen.getByTestId("dxy-quote-line").textContent).not.toMatch(/\bNaN\b/);
   });
 });

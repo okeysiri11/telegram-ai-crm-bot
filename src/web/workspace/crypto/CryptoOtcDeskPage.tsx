@@ -3,7 +3,7 @@
  * OTC ops preserved. Paper = simulation only (no broker execution).
  */
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Input } from "@/ui";
 import {
@@ -16,13 +16,11 @@ import {
   cryptoEnterpriseGet,
   cryptoFxIntelGet,
   cryptoFxIntelPost,
-  cryptoTaPost,
   pick,
 } from "../business-ops/opsApi";
 import { resolveCabinetCaps } from "../business-ops/cabinetCapabilities";
 import {
   CHART_TIMEFRAMES,
-  CryptoTaChartProvider,
   getMarketChartProvider,
   NullChartProvider,
   setMarketChartProvider,
@@ -44,7 +42,6 @@ import {
   type SpecialistPref,
 } from "./otcPrefs";
 import { useAuthStore } from "@/auth/authStore";
-import { TradingViewEmbed } from "./TradingViewEmbed";
 import {
   AnalysisResultPanel,
   NewsFeedPanel,
@@ -57,6 +54,7 @@ import {
   PaperTradingPanel,
   SignalNotificationsPanel,
 } from "./paperTradingPanels";
+import { formatFxQuote, fxWatchlistQuoteRow } from "./fxQuoteDisplay";
 import { OperatorCalendarPanel } from "./operatorCalendar";
 import {
   SignalCreateForm,
@@ -89,10 +87,14 @@ const NAV_BASE: OpsNavItem[] = [
 ];
 
 const SUGGESTED = ["EUR/USD", "DXY", "GBP/USD", "USD/UAH", "EUR/UAH", "BTC/USDT"];
+/** Silent quote poll so home/quotes/charts stay live without skeleton flashes. */
+export const FX_QUOTE_POLL_MS = 15_000;
 
 type HealthMap = Record<string, { status?: string; label?: string; message?: string; last_update?: string }>;
 
 function statusRu(s?: string) {
+  if (s === "live") return "Онлайн";
+  if (s === "delayed") return "Задержка";
   if (s === "connected") return "Подключено";
   if (s === "error") return "Источник недоступен";
   if (s === "needs_config") return "Требуется настройка";
@@ -100,6 +102,11 @@ function statusRu(s?: string) {
   if (s === "partial" || s === "insufficient_data") return "Частичные данные";
   if (s === "empty") return "Нет данных";
   return "Не подключено";
+}
+
+function quoteReady(status: unknown): boolean {
+  const s = String(status || "");
+  return s === "connected" || s === "live" || s === "delayed";
 }
 
 export function CryptoOtcDeskPage() {
@@ -161,8 +168,11 @@ export function CryptoOtcDeskPage() {
     portfolio: Record<string, unknown>;
   }>({ markets: [], portfolio: {} });
 
+  const abortRef = useRef<AbortController | null>(null);
+
   useEffect(() => {
-    setMarketChartProvider(new CryptoTaChartProvider(cryptoTaPost));
+    // Dual charts: native Lightweight Charts for EURUSD + DXY. No TradingView widget.
+    setMarketChartProvider(new NullChartProvider());
     return () => setMarketChartProvider(new NullChartProvider());
   }, []);
 
@@ -175,13 +185,15 @@ export function CryptoOtcDeskPage() {
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
+    const signal = abortRef.current?.signal;
     try {
       const [snap, m, p, sig] = await Promise.all([
-        cryptoFxIntelGet("/snapshot"),
+        cryptoFxIntelGet("/snapshot", signal),
         cryptoEnterpriseGet("/markets"),
         cryptoEnterpriseGet("/portfolio"),
-        cryptoFxIntelGet("/signals"),
+        cryptoFxIntelGet("/signals", signal),
       ]);
+      if (snap.cancelled || sig.cancelled) return;
       if (snap.ok && snap.json && typeof snap.json === "object") {
         const j = snap.json as Record<string, unknown>;
         setEurusd((j.eurusd as Record<string, unknown>) || {});
@@ -194,9 +206,25 @@ export function CryptoOtcDeskPage() {
       });
       setSignals(asList(sig.json) as Record<string, unknown>[]);
     } catch (err) {
+      if (signal?.aborted) return;
       setError(err instanceof Error ? err.message : String(err));
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) setLoading(false);
+    }
+  }, []);
+
+  const refreshQuotes = useCallback(async () => {
+    const signal = abortRef.current?.signal;
+    const [eRes, dRes] = await Promise.all([
+      cryptoFxIntelGet(`/quote?symbol=${encodeURIComponent("EUR/USD")}`, signal),
+      cryptoFxIntelGet(`/quote?symbol=${encodeURIComponent("DXY")}`, signal),
+    ]);
+    if (eRes.cancelled || dRes.cancelled) return;
+    if (eRes.ok && eRes.json && typeof eRes.json === "object") {
+      setEurusd(eRes.json as Record<string, unknown>);
+    }
+    if (dRes.ok && dRes.json && typeof dRes.json === "object") {
+      setDxy(dRes.json as Record<string, unknown>);
     }
   }, []);
 
@@ -204,6 +232,7 @@ export function CryptoOtcDeskPage() {
     const snap = await getMarketChartProvider().loadChart(selected, timeframe);
     // Overlay live FX quote when available (honest: only if connected)
     if (selected === "EUR/USD" && eurusd.mid) {
+      const ready = quoteReady(eurusd.status);
       setChart({
         ...snap,
         quote: {
@@ -214,17 +243,14 @@ export function CryptoOtcDeskPage() {
           updatedAt: String(eurusd.fetched_at || ""),
           source: String(eurusd.source || "Источник котировок"),
         },
-        status: eurusd.status === "connected" ? "connected" : snap.status,
+        status: ready ? "connected" : snap.status,
         freshnessNote: String(eurusd.freshness || eurusd.message || snap.freshnessNote),
-        message:
-          eurusd.status === "connected"
-            ? "Котировка EUR/USD от источника"
-            : snap.message,
+        message: ready ? "Котировка EUR/USD от источника" : snap.message,
       });
       return;
     }
     if (selected === "DXY") {
-      if (dxy.mid && dxy.status === "connected") {
+      if (dxy.mid && quoteReady(dxy.status)) {
         setChart({
           ...snap,
           quote: {
@@ -255,6 +281,8 @@ export function CryptoOtcDeskPage() {
   }, [selected, timeframe, eurusd, dxy]);
 
   useEffect(() => {
+    const ac = new AbortController();
+    abortRef.current = ac;
     void load();
     void loadNews("Все");
     void loadMacro();
@@ -265,7 +293,14 @@ export function CryptoOtcDeskPage() {
     void loadNotifications();
     void loadCalendarBundle();
     void loadSchedule();
-  }, [load]);
+    const id = window.setInterval(() => {
+      void refreshQuotes();
+    }, FX_QUOTE_POLL_MS);
+    return () => {
+      ac.abort();
+      window.clearInterval(id);
+    };
+  }, [load, refreshQuotes]);
 
   useEffect(() => {
     void loadChart();
@@ -310,26 +345,10 @@ export function CryptoOtcDeskPage() {
   const quoteRows = useMemo(() => {
     const rows = watchlist.map((pair) => {
       if (pair === "EUR/USD") {
-        return {
-          id: pair,
-          pair,
-          bid: eurusd.bid != null ? String(eurusd.bid) : "—",
-          ask: eurusd.ask != null ? String(eurusd.ask) : "—",
-          change: eurusd.change != null ? String(eurusd.change) : "—",
-          updated: String(eurusd.fetched_at || "нет данных"),
-          source: String(eurusd.source || statusRu(String(eurusd.status))),
-        };
+        return fxWatchlistQuoteRow(pair, eurusd, 4);
       }
       if (pair === "DXY") {
-        return {
-          id: pair,
-          pair,
-          bid: "—",
-          ask: "—",
-          change: "—",
-          updated: "нет данных",
-          source: statusRu(String(dxy.status || "needs_config")),
-        };
+        return fxWatchlistQuoteRow(pair, dxy, 3);
       }
       const hit = bundle.markets.find((m) => {
         const sym = pick(m, "symbol", "pair", "name");
@@ -351,7 +370,8 @@ export function CryptoOtcDeskPage() {
 
 
   async function loadPaper() {
-    const res = await cryptoFxIntelGet("/paper");
+    const res = await cryptoFxIntelGet("/paper", abortRef.current?.signal);
+    if (res.cancelled) return;
     const j = (res.json || {}) as Record<string, unknown>;
     setPaperOrders(Array.isArray(j.orders) ? (j.orders as Record<string, unknown>[]) : []);
     setPaperPositions(Array.isArray(j.positions) ? (j.positions as Record<string, unknown>[]) : []);
@@ -382,7 +402,8 @@ export function CryptoOtcDeskPage() {
   }
 
   async function loadNotifications() {
-    const res = await cryptoFxIntelGet("/notifications");
+    const res = await cryptoFxIntelGet("/notifications", abortRef.current?.signal);
+    if (res.cancelled) return;
     const j = (res.json || {}) as Record<string, unknown>;
     setNotifItems(Array.isArray(j.items) ? (j.items as Record<string, unknown>[]) : []);
   }
@@ -420,7 +441,8 @@ export function CryptoOtcDeskPage() {
   }
 
   async function loadJournal() {
-    const res = await cryptoFxIntelGet("/journal");
+    const res = await cryptoFxIntelGet("/journal", abortRef.current?.signal);
+    if (res.cancelled) return;
     const j = (res.json || {}) as Record<string, unknown>;
     setJournalItems(Array.isArray(j.items) ? (j.items as Record<string, unknown>[]) : []);
   }
@@ -527,7 +549,8 @@ export function CryptoOtcDeskPage() {
     setNewsLoading(true);
     setNewsFilter(filter);
     try {
-      const res = await cryptoFxIntelGet(`/news?filter=${encodeURIComponent(filter)}`);
+      const res = await cryptoFxIntelGet(`/news?filter=${encodeURIComponent(filter)}`, abortRef.current?.signal);
+      if (res.cancelled) return;
       const items = Array.isArray((res.json as { items?: unknown })?.items)
         ? ((res.json as { items: Record<string, unknown>[] }).items)
         : [];
@@ -538,7 +561,8 @@ export function CryptoOtcDeskPage() {
   }
 
   async function loadMacro() {
-    const res = await cryptoFxIntelGet("/macro");
+    const res = await cryptoFxIntelGet("/macro", abortRef.current?.signal);
+    if (res.cancelled) return;
     const events = Array.isArray((res.json as { events?: unknown })?.events)
       ? ((res.json as { events: Record<string, unknown>[] }).events)
       : [];
@@ -546,7 +570,8 @@ export function CryptoOtcDeskPage() {
   }
 
   async function loadIntelHistory() {
-    const res = await cryptoFxIntelGet("/history");
+    const res = await cryptoFxIntelGet("/history", abortRef.current?.signal);
+    if (res.cancelled) return;
     const items = Array.isArray((res.json as { items?: unknown })?.items)
       ? ((res.json as { items: Record<string, unknown>[] }).items)
       : [];
@@ -554,7 +579,8 @@ export function CryptoOtcDeskPage() {
   }
 
   async function loadSchedule() {
-    const res = await cryptoFxIntelGet("/schedule");
+    const res = await cryptoFxIntelGet("/schedule", abortRef.current?.signal);
+    if (res.cancelled) return;
     const jobs = (res.json as { jobs?: Record<string, Record<string, unknown>> } | null)?.jobs;
     setScheduleJobs(jobs && typeof jobs === "object" ? jobs : {});
   }
@@ -993,8 +1019,16 @@ export function CryptoOtcDeskPage() {
           { key: "value", label: "Значение" },
         ],
         cards: [
-          { label: "EUR/USD", value: eurusd.mid != null ? String(eurusd.mid) : "нет данных" },
-          { label: "DXY", value: dxy.mid != null ? String(dxy.mid) : "нет данных" },
+          {
+            label: "EUR/USD",
+            value: formatFxQuote(eurusd.mid, 4) ?? "нет данных",
+            testId: "eurusd-home-price",
+          },
+          {
+            label: "DXY",
+            value: formatFxQuote(dxy.mid, 3) ?? "нет данных",
+            testId: "dxy-home-price",
+          },
           { label: "Мои пары", value: String(watchlist.length) },
           { label: "Сигналы", value: String(signals.length) },
         ],
@@ -1024,14 +1058,14 @@ export function CryptoOtcDeskPage() {
         rows: [
           {
             symbol: "EUR/USD",
-            mid: eurusd.mid != null ? String(eurusd.mid) : "—",
-            source: String(eurusd.source || "—"),
+            mid: formatFxQuote(eurusd.mid, 4) ?? "—",
+            source: String(eurusd.source || eurusd.provider || "—"),
             status: statusRu(String(eurusd.status)),
           },
           {
             symbol: "DXY",
-            mid: "—",
-            source: "—",
+            mid: formatFxQuote(dxy.mid, 3) ?? "—",
+            source: String(dxy.source || dxy.provider || "—"),
             status: statusRu(String(dxy.status || "needs_config")),
           },
         ],
