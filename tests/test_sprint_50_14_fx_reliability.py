@@ -51,8 +51,8 @@ def _reset(monkeypatch):
 
 
 def test_dxy_maps_intraday_to_honest_yahoo_interval():
-    assert yahoo_interval_range("DXY", "1m") == ("60m", "10d")
-    assert yahoo_interval_range("DXY", "5m") == ("60m", "10d")
+    assert yahoo_interval_range("DXY", "1m") == ("1m", "1d")
+    assert yahoo_interval_range("DXY", "5m") == ("5m", "5d")
     assert yahoo_interval_range("DXY", "1W") == ("1wk", "2y")
     assert yahoo_interval_range("EUR/USD", "1m") == ("1m", "1d")
     assert yahoo_interval_range("EUR/USD", "4H") == ("60m", "30d")
@@ -137,19 +137,41 @@ async def test_single_flight_coalesces_ten_dxy_1h(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_dxy_1m_and_5m_unavailable_without_yahoo(monkeypatch):
+async def test_dxy_1m_and_5m_request_native_yahoo_not_60m(monkeypatch):
     from services.fx_market_intel import yahoo_feed as yf
 
-    async def boom(symbol_yahoo: str, *, interval: str, range_: str):
-        raise AssertionError("DXY 1m/5m must not call Yahoo")
+    seen: list[str] = []
 
-    monkeypatch.setattr(yf, "fetch_yahoo_chart", boom)
+    async def fake(symbol_yahoo: str, *, interval: str, range_: str):
+        seen.append(interval)
+        assert interval != "60m"
+        step = 60 if interval == "1m" else 300
+        n = 80
+        start = 1_700_000_000
+        closes = [99.2 + (i % 5) * 0.01 for i in range(n)]
+        return {
+            "timestamp": [start + i * step for i in range(n)],
+            "indicators": {
+                "quote": [
+                    {
+                        "open": [c - 0.01 for c in closes],
+                        "high": [c + 0.02 for c in closes],
+                        "low": [c - 0.02 for c in closes],
+                        "close": closes,
+                        "volume": [0] * n,
+                    }
+                ]
+            },
+        }
+
+    monkeypatch.setattr(yf, "fetch_yahoo_chart", fake)
     one = await get_candles("DXY", "1m")
     five = await get_candles("DXY", "5m")
-    assert one["source_status"] == "UNAVAILABLE_AT_SOURCE_RESOLUTION"
-    assert five["source_status"] == "UNAVAILABLE_AT_SOURCE_RESOLUTION"
-    assert one["bars"] == []
-    assert five["bars"] == []
+    assert "60m" not in seen
+    assert one["bar_count"] >= 60
+    assert five["bar_count"] >= 20
+    assert one["source_status"] != "UNAVAILABLE_AT_SOURCE_RESOLUTION"
+    assert one.get("transformation") == "native" or one.get("source_resolution") == "1m"
 
 
 @pytest.mark.asyncio

@@ -315,11 +315,11 @@ export function applyQuoteToActiveCandle(
   const bucketTime = normalizeChartTime(bucket);
   if (bucketTime == null) return null;
   if (!last) {
-    return { time: bucketTime, open: quote, high: quote, low: quote, close: quote };
+    return null;
   }
   const lastTime = normalizeChartTime(last.time);
   if (lastTime == null) {
-    return { time: bucketTime, open: quote, high: quote, low: quote, close: quote };
+    return null;
   }
   const lastBucket = candleBucketUnix(timeframe, Number(lastTime));
   if (bucket < lastBucket) return null;

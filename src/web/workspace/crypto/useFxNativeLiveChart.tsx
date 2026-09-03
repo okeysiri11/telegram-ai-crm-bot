@@ -54,6 +54,9 @@ export type FxNativeLiveMeta = {
   liveQuoteProvider?: string;
   historyProvider?: string;
   degradedReason?: string;
+  requestedTimeframe?: string;
+  transformation?: string;
+  sourceSymbol?: string;
 };
 
 function sourceBanner(json: Record<string, unknown>, candles: number): string | null {
@@ -220,7 +223,7 @@ export function useFxNativeLiveChart({
       noteStaleTickApplied();
       return;
     }
-    if (!liveEnabledRef.current) return;
+    if (!liveEnabledRef.current || !historyReadyRef.current || !lastCandleRef.current) return;
     const series = seriesRef.current;
     if (!series) return;
     const mid = parseQuoteMid(quote?.mid);
@@ -375,20 +378,33 @@ export function useFxNativeLiveChart({
           String(json.source_status || json.status || "").includes("rate_limited") ||
           String(json.cache || "") === "last_good";
         if (unavailable && !usable) {
+          try {
+            seriesRef.current?.setData([]);
+          } catch {
+            /* empty series is the honest unavailable chart */
+          }
+          lastCandleRef.current = null;
+          historyReadyRef.current = false;
+          liveEnabledRef.current = false;
+          hadBarsRef.current = false;
           setStatus("unavailable");
-          setMessage(String(json.message || "UNAVAILABLE_AT_SOURCE_RESOLUTION"));
+          setMessage(String(json.message || (symbol === "DXY" ? `DXY ${timeframe}: источник не предоставляет минутную историю` : "UNAVAILABLE_AT_SOURCE_RESOLUTION")));
           setSourceNote("UNAVAILABLE_AT_SOURCE_RESOLUTION");
           setMeta({
             barCount: 0,
             source: String(json.source || json.provider || ""),
             provider: String(json.provider || json.source || "yahoo"),
-            sourceResolution: String(json.source_resolution || json.base_resolution || ""),
+            sourceResolution: String(json.source_resolution || json.requested_timeframe || timeframe),
             sourceStatus: "UNAVAILABLE_AT_SOURCE_RESOLUTION",
-            baseResolution: String(json.base_resolution || json.source_resolution || ""),
+            baseResolution: String(json.base_resolution || json.source_resolution || timeframe),
             displayedTimeframe: String(json.displayed_timeframe || timeframe),
             aggregated: false,
+            aggregation: String(json.transformation || "none"),
+            requestedTimeframe: String(json.requested_timeframe || timeframe),
+            transformation: String(json.transformation || "none"),
+            sourceSymbol: String(json.source_symbol || json.provider_symbol || ""),
+            dataQuality: String(json.data_quality || "UNAVAILABLE_AT_SOURCE_RESOLUTION"),
           });
-          liveEnabledRef.current = false;
           return;
         }
         if (!ok && !usable) {
@@ -404,26 +420,16 @@ export function useFxNativeLiveChart({
           return;
         }
         if (!usable) {
+          try {
+            seriesRef.current?.setData([]);
+          } catch {
+            /* keep empty */
+          }
+          lastCandleRef.current = null;
+          historyReadyRef.current = false;
+          liveEnabledRef.current = false;
           if (!hadBarsRef.current) {
-            liveEnabledRef.current = true;
-            applyLive(liveQuoteRef.current, requestGeneration);
-            if (lastCandleRef.current) {
-              hadBarsRef.current = true;
-              historyReadyRef.current = true;
-              lastIndexRef.current = 0;
-              if (!silent || followRef.current) applyRecentViewport(1);
-              setStatus("ready");
-              setMessage("Баров: live");
-              setMeta((curr) => ({
-                ...curr,
-                barCount: 1,
-                lastClose: lastCandleRef.current?.close,
-                sourceStatus: "live",
-                displayedTimeframe: String(timeframe),
-              }));
-              return;
-            }
-            liveEnabledRef.current = false;
+            /* never seed a fake historical candle from a live quote */
           }
           if (!silent && !hadBarsRef.current) {
             setStatus("error");
@@ -476,7 +482,10 @@ export function useFxNativeLiveChart({
           baseResolution: String(json.base_resolution || json.source_resolution || ""),
           displayedTimeframe: String(json.displayed_timeframe || timeframe),
           aggregated: Boolean(json.aggregated),
-          aggregation: json.aggregation ? String(json.aggregation) : undefined,
+          aggregation: json.aggregation ? String(json.aggregation) : json.transformation ? String(json.transformation) : undefined,
+          requestedTimeframe: String(json.requested_timeframe || timeframe),
+          transformation: String(json.transformation || json.aggregation || "native"),
+          sourceSymbol: String(json.source_symbol || json.provider_symbol || ""),
           dataQuality: json.data_quality ? String(json.data_quality) : undefined,
           providerState: json.provider_state ? String(json.provider_state) : undefined,
           updatedAt: json.fetched_at ? String(json.fetched_at) : undefined,
@@ -587,6 +596,9 @@ export function FxLiveStatusCaption({
   quality,
   displayMode,
   degradedReason,
+  requestedTimeframe,
+  transformation,
+  sourceSymbol,
 }: {
   testIdPrefix: string;
   liveKind: "LIVE" | "STALE" | "CACHED" | "RATE_LIMITED";
@@ -605,6 +617,9 @@ export function FxLiveStatusCaption({
   quality?: string;
   displayMode?: string;
   degradedReason?: string;
+  requestedTimeframe?: string;
+  transformation?: string;
+  sourceSymbol?: string;
 }) {
   const base = baseResolution || sourceResolution;
   const display = displayedTimeframe;
@@ -628,8 +643,11 @@ export function FxLiveStatusCaption({
       )}
       {liveUpdated ? <span data-testid={`${testIdPrefix}-live-updated`}>Updated: {liveUpdated}</span> : null}
       {provider ? <span data-testid={`${testIdPrefix}-provider`}>Provider: {provider}</span> : null}
+      {sourceSymbol ? <span data-testid={`${testIdPrefix}-source-symbol`}>Source symbol: {sourceSymbol}</span> : null}
+      {requestedTimeframe ? <span data-testid={`${testIdPrefix}-requested-tf`}>Requested TF: {requestedTimeframe}</span> : null}
+      {transformation ? <span data-testid={`${testIdPrefix}-transformation`}>Transformation: {transformation}</span> : null}
       {historyKind ? (
-        <span data-testid={`${testIdPrefix}-history`}>History: {historyKind === "real_ohlc" ? "real 1m OHLC" : "quote-only"}</span>
+        <span data-testid={`${testIdPrefix}-history`}>History: {historyKind === "real_ohlc" ? "real OHLC" : "quote-only"}</span>
       ) : null}
       {liveQuoteProvider ? <span data-testid={`${testIdPrefix}-live-quote-provider`}>Live quote: {liveQuoteProvider}</span> : null}
       {quality ? <span data-testid={`${testIdPrefix}-quality`}>Quality: {quality}</span> : null}

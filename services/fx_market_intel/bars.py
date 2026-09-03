@@ -8,6 +8,65 @@ from typing import Any
 
 from services.fx_market_intel.yahoo_feed import valid_ohlc
 
+_RESOLUTION_SECONDS = {
+    "1m": 60,
+    "2m": 120,
+    "5m": 300,
+    "15m": 900,
+    "1H": 3600,
+    "4H": 14400,
+    "1D": 86400,
+    "1W": 604800,
+}
+
+_RESOLUTION_ALIASES = {
+    "1M": "1m",
+    "1m": "1m",
+    "2m": "2m",
+    "5M": "5m",
+    "5m": "5m",
+    "15M": "15m",
+    "15m": "15m",
+    "60m": "1H",
+    "1h": "1H",
+    "1H": "1H",
+    "4h": "4H",
+    "4H": "4H",
+    "1d": "1D",
+    "1D": "1D",
+    "1w": "1W",
+    "1W": "1W",
+}
+
+
+def normalize_resolution(name: str | None) -> str:
+    return _RESOLUTION_ALIASES.get((name or "").strip(), (name or "").strip())
+
+
+def resolution_seconds(name: str | None) -> int | None:
+    key = normalize_resolution(name)
+    return _RESOLUTION_SECONDS.get(key)
+
+
+def can_aggregate(source_resolution: str, target_resolution: str) -> bool:
+    """True only when source is strictly finer and divides the target. Never downsample."""
+    src = resolution_seconds(source_resolution)
+    tgt = resolution_seconds(target_resolution)
+    if src is None or tgt is None:
+        return False
+    if src >= tgt:
+        return False
+    return tgt % src == 0
+
+
+def source_covers_target(source_resolution: str, target_resolution: str) -> bool:
+    """Native or finer source may serve the target. Coarser source may not."""
+    src = resolution_seconds(source_resolution)
+    tgt = resolution_seconds(target_resolution)
+    if src is None or tgt is None:
+        return False
+    return src <= tgt
+
 
 def bar_unix(bar: dict[str, Any]) -> int | None:
     raw = bar.get("time")

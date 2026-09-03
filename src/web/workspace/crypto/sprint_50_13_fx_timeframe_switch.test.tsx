@@ -208,9 +208,9 @@ describe("sprint 50.13 timeframe switch guard", () => {
     expect(candleBucketUnix("1m", T_QUOTE)).toBe(T_1M_LAST);
     expect(candleBucketUnix("5m", T_QUOTE)).toBe(T_5M_BUCKET);
     expect(T_5M_BUCKET).toBeLessThan(T_1M_LAST);
-    const seeded = applyQuoteToActiveCandle(null, 1.1612, T_QUOTE, "5m");
-    expect(Number(seeded?.time)).toBe(T_5M_BUCKET);
-    expect(Number(seeded?.time)).not.toBe(T_1M_LAST);
+    expect(applyQuoteToActiveCandle(null, 1.1612, T_QUOTE, "5m")).toBeNull();
+    expect(candleBucketUnix("5m", T_QUOTE)).toBe(T_5M_BUCKET);
+    expect(T_5M_BUCKET).not.toBe(T_1M_LAST);
   });
 
   async function switchTf(

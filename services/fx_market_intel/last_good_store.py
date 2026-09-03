@@ -25,6 +25,10 @@ def persistent_backend_name() -> str:
 
 
 def _key(symbol: str, resolution: str, tier: str = "real") -> str:
+    if symbol == "DXY" and resolution in {"1m", "5m", "15m"}:
+        if tier in {"", "legacy"}:
+            return f"fx:last_good:v2:{symbol}:{resolution}"
+        return f"fx:last_good:v2:{symbol}:{resolution}:{tier}"
     if tier in {"", "legacy"}:
         return f"fx:last_good:{symbol}:{resolution}"
     return f"fx:last_good:{symbol}:{resolution}:{tier}"

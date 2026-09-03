@@ -178,19 +178,15 @@ describe("sprint 50.15 FX stability v2", () => {
       const u = decodeURIComponent(String(path));
       const tf = (u.match(/timeframe=([^&]+)/) || [])[1] || "1H";
       if (u.includes("DXY") && (tf === "1m" || tf === "5m")) {
-        return {
-          ok: true,
-          json: {
-            status: "unavailable",
-            source_status: "UNAVAILABLE_AT_SOURCE_RESOLUTION",
-            bars: [],
-            bar_count: 0,
-            chart_ready: false,
-            message: "UNAVAILABLE_AT_SOURCE_RESOLUTION",
-            base_resolution: "60m",
-            displayed_timeframe: tf,
-          },
-        };
+        return okPayload(barsEndingAt(T_LAST, tf === "1m" ? 60 : 300, 80, 99.2), {
+          source_resolution: tf === "1m" ? "1m" : "5m",
+          base_resolution: tf === "1m" ? "1m" : "5m",
+          displayed_timeframe: tf,
+          requested_timeframe: tf,
+          transformation: "native",
+          provider: "yahoo",
+          source_symbol: "DX-Y.NYB",
+        });
       }
       if (u.includes("DXY")) {
         return okPayload(barsEndingAt(T_LAST, tf === "4H" ? 14400 : 3600, 40, 99.2), {
@@ -320,9 +316,10 @@ describe("sprint 50.15 FX stability v2", () => {
     expect(vi.mocked(createChart).mock.calls.length).toBeGreaterThan(0);
   });
 
-  it("DXY 1m/5m are unavailable at source resolution", async () => {
+  it("DXY 1m shows native minute candles when the source provides them", async () => {
     render(<DxyNativeChart timeframe="1m" liveQuote={quote("99.27")} />);
-    await waitFor(() => expect(screen.getByTestId("dxy-native-chart").getAttribute("data-status")).toBe("unavailable"));
-    expect(screen.getByTestId("dxy-chart-status").textContent).toMatch(/UNAVAILABLE_AT_SOURCE_RESOLUTION/);
+    await waitFor(() => expect(screen.getByTestId("dxy-native-chart").getAttribute("data-status")).toBe("ready"));
+    expect(Number(screen.getByTestId("dxy-native-chart").getAttribute("data-bar-count") || "0")).toBeGreaterThan(0);
+    expect(screen.getByTestId("dxy-native-chart").getAttribute("data-source-resolution")).toBe("1m");
   });
 });

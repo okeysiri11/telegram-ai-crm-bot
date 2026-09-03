@@ -89,6 +89,9 @@ export function DxyNativeChart({
           quality={meta.dataQuality}
           displayMode={meta.displayMode}
           degradedReason={meta.degradedReason}
+          requestedTimeframe={meta.requestedTimeframe}
+          transformation={meta.transformation}
+          sourceSymbol={meta.sourceSymbol}
         />
         <span data-testid="dxy-chart-bars">{message}</span>
         {meta.source ? <span>{meta.source}</span> : null}

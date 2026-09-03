@@ -43,14 +43,12 @@ class YahooHttpError(RuntimeError):
         self.retry_after = retry_after
 
 
-# DXY keeps the 50.7 Yahoo intervals that already work in production.
-# 1m/5m/1W are requested honestly; Yahoo DX-Y.NYB has no native 1m/5m — 60m/1wk is used
-# and candle_feed reports source_resolution from actual bar spacing (never fake 1m bars).
+# DXY uses native Yahoo intervals. Never map 1m/5m/15m onto 60m.
 _TF_MAP_DXY = {
-    "1m": ("60m", "10d"),
-    "1M": ("60m", "10d"),
-    "5m": ("60m", "10d"),
-    "5M": ("60m", "10d"),
+    "1m": ("1m", "1d"),
+    "1M": ("1m", "1d"),
+    "5m": ("5m", "5d"),
+    "5M": ("5m", "5d"),
     "15m": ("15m", "5d"),
     "15M": ("15m", "5d"),
     "1h": ("60m", "30d"),

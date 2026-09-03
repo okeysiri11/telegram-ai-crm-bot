@@ -167,9 +167,16 @@ async def test_get_candles_1m_uses_router_not_yahoo_when_dukascopy_healthy(monke
 
 
 @pytest.mark.asyncio
-async def test_dxy_1m_unavailable_flag_not_fabricated():
+async def test_dxy_1m_unavailable_flag_not_fabricated(monkeypatch):
+    from services.fx_market_intel import yahoo_feed as yf
+
+    async def empty(symbol_yahoo: str, *, interval: str, range_: str):
+        return {"timestamp": [], "indicators": {"quote": [{"open": [], "high": [], "low": [], "close": [], "volume": []}]}}
+
+    monkeypatch.setattr(yf, "fetch_yahoo_chart", empty)
     pack = await get_candles("DXY", "1m")
     assert pack["source_status"] == "UNAVAILABLE_AT_SOURCE_RESOLUTION"
     assert pack["DXY_SOURCE_UNAVAILABLE"] == "yes"
     assert pack["bars"] == []
+    assert pack.get("source_resolution") != "60m" or pack.get("transformation") == "none"
 

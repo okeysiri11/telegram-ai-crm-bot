@@ -16,8 +16,10 @@ from services.fx_market_intel import yahoo_feed as yahoo_feed
 from services.fx_market_intel.bars import (
     aggregate_bars,
     bar_unix,
+    can_aggregate,
     normalize_canonical_bars,
     ohlc_range_stats,
+    source_covers_target,
 )
 from services.fx_market_intel.last_good_store import (
     load_last_good,
@@ -98,7 +100,10 @@ def _key(symbol: str, timeframe: str | None = None) -> str:
     sym = normalize_symbol(symbol)
     if timeframe is None:
         return f"quote:{sym}"
-    return f"candle:{sym}:{normalize_timeframe(timeframe, instrument=sym)}"
+    tf = normalize_timeframe(timeframe, instrument=sym)
+    if sym == "DXY" and tf in {"1m", "5m", "15m"}:
+        return f"candle:v2:{sym}:{tf}"
+    return f"candle:{sym}:{tf}"
 
 
 def _ttl_for(timeframe: str) -> float:
@@ -252,8 +257,10 @@ async def _hydrate_persistent() -> None:
         ("EUR/USD", "1m", "degraded"),
         ("EUR/USD", "1H", "real"),
         ("EUR/USD", "1D", "real"),
-        ("DXY", "1H", "real"),
+        ("DXY", "1m", "real"),
+        ("DXY", "5m", "real"),
         ("DXY", "15m", "real"),
+        ("DXY", "1H", "real"),
     ):
         payload = await load_last_good(sym, res, tier)
         if payload and payload.get("bars"):
@@ -548,6 +555,8 @@ def _derived_from(
     tf: str,
     base_resolution: str,
 ) -> dict[str, Any]:
+    if not can_aggregate(base_resolution, tf):
+        return _resolution_blocked(symbol, tf, base_resolution)
     bars = aggregate_bars(
         list(base.get("bars") or []),
         tf,
@@ -571,6 +580,9 @@ def _derived_from(
             "provider": base.get("provider") or "yahoo",
             "history_provider": base.get("history_provider") or base.get("provider") or "yahoo",
             "live_quote_provider": base.get("live_quote_provider") or "yahoo",
+            "transformation": f"aggregated {base_resolution} -> {tf}",
+            "requested_timeframe": tf,
+            "source_symbol": base.get("source_symbol") or YAHOO_SYMBOLS.get(symbol),
         },
     )
     if bars:
@@ -591,36 +603,124 @@ def _derived_from(
     return pack
 
 
-def _unavailable_dxy_intraday(tf: str) -> dict[str, Any]:
+def _resolution_blocked(symbol: str, tf: str, source_resolution: str) -> dict[str, Any]:
+    return _with_meta(
+        {
+            "symbol": symbol,
+            "timeframe": tf,
+            "requested_timeframe": tf,
+            "displayed_timeframe": tf,
+            "base_resolution": source_resolution,
+            "source_resolution": source_resolution,
+            "aggregated": False,
+            "transformation": f"blocked {source_resolution} -> {tf}",
+            "status": "unavailable",
+            "source_status": "UNAVAILABLE_AT_SOURCE_RESOLUTION",
+            "data_quality": "UNAVAILABLE_AT_SOURCE_RESOLUTION",
+            "chart_ready": False,
+            "bars": [],
+            "provider": "yahoo",
+            "provider_symbol": YAHOO_SYMBOLS.get(symbol),
+            "message": f"{symbol} {tf}: нельзя строить {tf} из {source_resolution}",
+        }
+    )
+
+
+def _unavailable_dxy_intraday(tf: str, *, reason: str | None = None) -> dict[str, Any]:
+    label = {"1m": "минутную", "5m": "5-минутную", "15m": "15-минутную"}.get(tf, "intraday")
     return _with_meta(
         {
             "symbol": "DXY",
             "timeframe": tf,
             "requested_timeframe": tf,
             "displayed_timeframe": tf,
-            "base_resolution": "60m",
-            "source_resolution": "60m",
+            "base_resolution": tf,
+            "source_resolution": tf,
             "aggregated": False,
+            "transformation": "none",
             "status": "unavailable",
             "source_status": "UNAVAILABLE_AT_SOURCE_RESOLUTION",
+            "data_quality": "UNAVAILABLE_AT_SOURCE_RESOLUTION",
             "chart_ready": False,
             "bars": [],
             "provider": "yahoo",
             "provider_symbol": YAHOO_SYMBOLS.get("DXY"),
-            "message": "UNAVAILABLE_AT_SOURCE_RESOLUTION: Yahoo DX-Y.NYB has no true 1m/5m",
+            "source_symbol": YAHOO_SYMBOLS.get("DXY"),
+            "message": reason or f"DXY {tf}: источник не предоставляет {label} историю",
             "DXY_SOURCE_UNAVAILABLE": "yes",
             "supported_timeframes": list(DXY_SUPPORTED_TIMEFRAMES),
         }
     )
 
 
+def _native_ok(pack: dict[str, Any], tf: str) -> bool:
+    bars = list(pack.get("bars") or [])
+    if not bars:
+        return False
+    detected = str(pack.get("source_resolution") or detect_source_resolution(bars))
+    pack["source_resolution"] = detected
+    pack["requested_timeframe"] = tf
+    pack["source_symbol"] = pack.get("source_symbol") or YAHOO_SYMBOLS.get(str(pack.get("symbol") or ""))
+    if not source_covers_target(detected, tf):
+        return False
+    pack["transformation"] = "native" if detected == tf or (detected == "1H" and tf == "1H") else f"native {detected}"
+    pack["aggregated"] = False
+    return True
+
+
+async def _dxy_native(tf: str, interval: str, range_: str) -> dict[str, Any]:
+    pack = await _yahoo_or_last_good("DXY", tf, interval, range_)
+    if _native_ok(pack, tf):
+        return pack
+    return {"bars": [], "source_resolution": pack.get("source_resolution") or interval, "source_status": pack.get("source_status")}
+
+
+async def _resolve_dxy(tf: str) -> dict[str, Any]:
+    if tf == "1m":
+        native = await _dxy_native("1m", "1m", "1d")
+        if native.get("bars"):
+            return native
+        return _unavailable_dxy_intraday("1m")
+    if tf == "5m":
+        native = await _dxy_native("5m", "5m", "5d")
+        if native.get("bars"):
+            return native
+        one = await _dxy_native("1m", "1m", "1d")
+        if one.get("bars") and can_aggregate(str(one.get("source_resolution") or "1m"), "5m"):
+            return _derived_from(one, symbol="DXY", tf="5m", base_resolution=str(one.get("source_resolution") or "1m"))
+        return _unavailable_dxy_intraday("5m")
+    if tf == "15m":
+        native = await _dxy_native("15m", "15m", "5d")
+        if native.get("bars"):
+            return native
+        five = await _dxy_native("5m", "5m", "5d")
+        if five.get("bars") and can_aggregate(str(five.get("source_resolution") or "5m"), "15m"):
+            return _derived_from(five, symbol="DXY", tf="15m", base_resolution=str(five.get("source_resolution") or "5m"))
+        one = await _dxy_native("1m", "1m", "1d")
+        if one.get("bars") and can_aggregate(str(one.get("source_resolution") or "1m"), "15m"):
+            return _derived_from(one, symbol="DXY", tf="15m", base_resolution=str(one.get("source_resolution") or "1m"))
+        return _unavailable_dxy_intraday("15m")
+    if tf == "1H":
+        return await _base_dxy_1h()
+    if tf == "4H":
+        hourly = await _base_dxy_1h()
+        return _derived_from(hourly, symbol="DXY", tf="4H", base_resolution=str(hourly.get("source_resolution") or "60m"))
+    if tf == "1D":
+        hourly = await _base_dxy_1h()
+        daily = _derived_from(hourly, symbol="DXY", tf="1D", base_resolution=str(hourly.get("source_resolution") or "60m"))
+        if (daily.get("bar_count") or 0) >= 20:
+            return daily
+        return await _yahoo_or_last_good("DXY", "1D", "1d", "6mo")
+    if tf == "1W":
+        daily = await _resolve_dxy("1D")
+        return _derived_from(daily, symbol="DXY", tf="1W", base_resolution=str(daily.get("source_resolution") or daily.get("base_resolution") or "1d"))
+    return _unavailable_dxy_intraday(tf)
+
+
 async def get_candles(symbol: str, timeframe: str = "1H") -> dict[str, Any]:
     await _hydrate_persistent()
     sym = normalize_symbol(symbol)
     tf = normalize_timeframe(timeframe, instrument=sym)
-
-    if sym == "DXY" and tf in {"1m", "5m"}:
-        return _unavailable_dxy_intraday(tf)
 
     key = _key(sym, tf)
     hit = _ttl_hit(key)
@@ -657,19 +757,7 @@ async def get_candles(symbol: str, timeframe: str = "1H") -> dict[str, Any]:
             return _derived_from(daily, symbol=sym, tf="1W", base_resolution=str(daily.get("base_resolution") or daily.get("source_resolution") or "1d"))
 
     if sym == "DXY":
-        if tf == "15m":
-            return await _base_dxy_15m()
-        if tf == "1H":
-            return await _base_dxy_1h()
-        if tf == "4H":
-            hourly = await _base_dxy_1h()
-            return _derived_from(hourly, symbol=sym, tf="4H", base_resolution=str(hourly.get("source_resolution") or "60m"))
-        if tf == "1D":
-            hourly = await _base_dxy_1h()
-            return _derived_from(hourly, symbol=sym, tf="1D", base_resolution=str(hourly.get("source_resolution") or "60m"))
-        if tf == "1W":
-            daily = await get_candles(sym, "1D")
-            return _derived_from(daily, symbol=sym, tf="1W", base_resolution=str(daily.get("source_resolution") or "1d"))
+        return await _resolve_dxy(tf)
 
     return await _yahoo_or_last_good(sym, tf, "60m", "10d")
 
