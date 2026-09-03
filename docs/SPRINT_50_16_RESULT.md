@@ -51,3 +51,13 @@ Rejected: manufacturing wicks from Yahoo flats; scraping TradingView; using NBU 
 - `src/web` `npx vite build`.
 
 Production PASS requires deployed SHA verification of EURUSD 1m: either real candles (`provider=dukascopy`, `REAL_BODY_BARS>10`, `REAL_WICK_BARS>5`) or a clean line + DEGRADED DATA badge — never a field of dash candlesticks.
+
+## Production verification (2026-09-03)
+
+- **SHA:** `7ffb7063db5cff748462d1a39a1e6221b594b95d` on `https://ados-web.onrender.com`
+- **EURUSD 1m:** `provider=dukascopy`, `display_mode=CANDLES`, `data_quality=HEALTHY`, `BARS=60`, `ZERO_RANGE_RATIO=0.0`, `REAL_BODY_BARS=60`, `REAL_WICK_BARS=59`. Live quote remains Yahoo. Mid-sample bar range ≈ 15 pips (not a quote point).
+- First deploy `f36eb599` had Dukascopy empty (unpublished current hour hung). Fallback was `DEGRADED_LINE` (bundle contains `addLineSeries` + `DEGRADED DATA`). After skipping the current hour, Dukascopy won.
+- **DXY 1m:** `DXY_SOURCE_UNAVAILABLE=yes` (no fabricated minute DXY).
+- Browser MCP was not available; visual acceptance is from the live candles API (real OHLC, not dash-shaped flats) plus the production JS chunk `CryptoOtcDeskPage-D7Hi5GOo.js` (`DEGRADED_LINE` / `addLineSeries` present for failover).
+- Rapid TF crash assertions are covered by vitest (`TIMEFRAME_SWITCH_CRASHES=0`).
+

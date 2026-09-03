@@ -568,6 +568,9 @@ def _derived_from(
             "source_status": base.get("source_status") or "live",
             "status": "connected" if bars else base.get("status") or "insufficient_data",
             "message": "OK" if bars else str(base.get("message") or "Нет баров для агрегации"),
+            "provider": base.get("provider") or "yahoo",
+            "history_provider": base.get("history_provider") or base.get("provider") or "yahoo",
+            "live_quote_provider": base.get("live_quote_provider") or "yahoo",
         },
     )
     if bars:
