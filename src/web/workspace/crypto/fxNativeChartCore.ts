@@ -173,3 +173,35 @@ export function liveQuoteIsStale(lastQuoteMs: number | null, nowMs = Date.now())
   if (lastQuoteMs == null || !Number.isFinite(lastQuoteMs)) return true;
   return nowMs - lastQuoteMs > LIVE_QUOTE_STALE_MS;
 }
+
+export const FX_PRICE_SCALE_MARGIN_TOP = 0.12;
+export const FX_PRICE_SCALE_MARGIN_BOTTOM = 0.12;
+export const FX_LIVE_FOLLOW_RIGHT_PAD = 4;
+
+export function fxVisibleBarCount(timeframe: string): number {
+  const tf = normalizeCandlesTimeframe(timeframe);
+  if (tf === "1m" || tf === "5m" || tf === "15m") return 120;
+  if (tf === "1H" || tf === "4H") return 100;
+  if (tf === "1D") return 90;
+  if (tf === "1W") return 70;
+  return 100;
+}
+
+export function fxInitialLogicalRange(
+  barCount: number,
+  visibleCount: number,
+  rightPad = FX_LIVE_FOLLOW_RIGHT_PAD,
+): { from: number; to: number } {
+  const last = Math.max(0, barCount - 1);
+  const window = Math.max(1, Math.min(visibleCount, Math.max(barCount, 1)));
+  const from = Math.max(0, last - window + 1);
+  return { from, to: last + rightPad };
+}
+
+export function userLeftLiveFollow(
+  range: { from: number; to: number } | null | undefined,
+  lastIndex: number,
+): boolean {
+  if (!range || !Number.isFinite(Number(range.to))) return false;
+  return Number(range.to) < lastIndex - 1;
+}

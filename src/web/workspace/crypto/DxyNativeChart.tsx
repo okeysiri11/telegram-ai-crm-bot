@@ -22,7 +22,7 @@ export function DxyNativeChart({
   height?: number;
   liveQuote?: LiveFxQuote | null;
 }) {
-  const { hostRef, status, message, meta, liveKind, liveUpdated } = useFxNativeLiveChart({
+  const { hostRef, status, message, meta, liveKind, liveUpdated, followLive, goToLive, visibleBarCount } = useFxNativeLiveChart({
     symbol,
     timeframe,
     height,
@@ -42,6 +42,8 @@ export function DxyNativeChart({
       data-engine="lightweight-charts"
       data-status={status}
       data-last-close={formatFxQuote(meta.lastClose, 3) ?? ""}
+      data-live-follow={followLive ? "yes" : "no"}
+      data-visible-range-bars={String(visibleBarCount)}
     >
       <div
         ref={hostRef}
@@ -53,7 +55,13 @@ export function DxyNativeChart({
         <span data-testid="dxy-chart-status">
           {status === "loading" ? "Загрузка…" : status === "ready" ? "ADOS · Lightweight Charts" : "Ошибка"}
         </span>
-        <FxLiveStatusCaption testIdPrefix="dxy" liveKind={liveKind} liveUpdated={liveUpdated} />
+        <FxLiveStatusCaption
+          testIdPrefix="dxy"
+          liveKind={liveKind}
+          liveUpdated={liveUpdated}
+          followLive={followLive}
+          onGoToLive={goToLive}
+        />
         <span data-testid="dxy-chart-bars">{message}</span>
         {meta.source ? <span>{meta.source}</span> : null}
         {formatFxQuote(liveQuote?.mid, 3) ? (

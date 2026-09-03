@@ -20,8 +20,15 @@ import {
 } from "./fxNativeChartCore";
 import { cryptoFxIntelGet } from "../business-ops/opsApi";
 
-const { series } = vi.hoisted(() => ({
-  series: { setData: vi.fn(), update: vi.fn() },
+const { series, timeScale } = vi.hoisted(() => ({
+  series: { setData: vi.fn(), update: vi.fn(), priceScale: () => ({ applyOptions: vi.fn() }) },
+  timeScale: {
+    fitContent: vi.fn(),
+    setVisibleLogicalRange: vi.fn(),
+    subscribeVisibleLogicalRangeChange: vi.fn(),
+    unsubscribeVisibleLogicalRangeChange: vi.fn(),
+    getVisibleLogicalRange: vi.fn(() => null),
+  },
 }));
 
 vi.mock("../business-ops/opsApi", () => ({
@@ -32,7 +39,7 @@ vi.mock("lightweight-charts", () => {
   const chart = {
     addCandlestickSeries: vi.fn(() => series),
     applyOptions: vi.fn(),
-    timeScale: () => ({ fitContent: vi.fn() }),
+    timeScale: () => timeScale,
     remove: vi.fn(),
   };
   return {
@@ -69,6 +76,8 @@ describe("sprint 50.11 live active candle", () => {
     };
     series.setData.mockClear();
     series.update.mockClear();
+    timeScale.fitContent.mockClear();
+    timeScale.setVisibleLogicalRange.mockClear();
     vi.mocked(cryptoFxIntelGet).mockResolvedValue(hourBars);
   });
 

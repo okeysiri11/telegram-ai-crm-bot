@@ -14,11 +14,18 @@ vi.mock("../business-ops/opsApi", () => ({
 }));
 
 vi.mock("lightweight-charts", () => {
-  const series = { setData: vi.fn(), update: vi.fn() };
+  const series = { setData: vi.fn(), update: vi.fn(), priceScale: () => ({ applyOptions: vi.fn() }) };
+  const timeScale = {
+    fitContent: vi.fn(),
+    setVisibleLogicalRange: vi.fn(),
+    subscribeVisibleLogicalRangeChange: vi.fn(),
+    unsubscribeVisibleLogicalRangeChange: vi.fn(),
+    getVisibleLogicalRange: vi.fn(() => null),
+  };
   const chart = {
     addCandlestickSeries: vi.fn(() => series),
     applyOptions: vi.fn(),
-    timeScale: () => ({ fitContent: vi.fn() }),
+    timeScale: () => timeScale,
     remove: vi.fn(),
   };
   return {
