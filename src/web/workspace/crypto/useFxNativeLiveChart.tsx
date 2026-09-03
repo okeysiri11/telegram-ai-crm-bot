@@ -9,6 +9,7 @@ import type { ChartTimeframe } from "./chartProvider";
 import {
   applyQuoteToActiveCandle,
   barsToCandles,
+  barsToLinePoints,
   fetchFxCandles,
   formatLiveUpdated,
   fxHistoryRefreshMs,
@@ -48,6 +49,11 @@ export type FxNativeLiveMeta = {
   dataQuality?: string;
   providerState?: string;
   updatedAt?: string;
+  displayMode?: "CANDLES" | "DEGRADED_LINE";
+  historyKind?: string;
+  liveQuoteProvider?: string;
+  historyProvider?: string;
+  degradedReason?: string;
 };
 
 function sourceBanner(json: Record<string, unknown>, candles: number): string | null {
@@ -113,7 +119,7 @@ export function useFxNativeLiveChart({
 }) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
-  const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
+  const seriesRef = useRef<ISeriesApi<"Candlestick"> | ISeriesApi<"Line"> | null>(null);
   const lastCandleRef = useRef<FxCandle | null>(null);
   const lastSeriesTimestampRef = useRef(0);
   const liveQuoteRef = useRef(liveQuote);
@@ -125,6 +131,7 @@ export function useFxNativeLiveChart({
   const liveEnabledRef = useRef(false);
   const generationRef = useRef(0);
   const hadBarsRef = useRef(false);
+  const seriesKindRef = useRef<"candles" | "line">("candles");
   const [sourceNote, setSourceNote] = useState<string | null>(null);
   liveQuoteRef.current = liveQuote;
   timeframeRef.current = timeframe;
@@ -171,7 +178,7 @@ export function useFxNativeLiveChart({
     applyRecentViewport(lastIndexRef.current + 1);
   }, [applyRecentViewport]);
 
-  const recreateSeries = useCallback(() => {
+  const recreateSeries = useCallback((kind: "candles" | "line" = "candles") => {
     const chart = chartRef.current;
     if (!chart) return;
     const prev = seriesRef.current;
@@ -182,7 +189,19 @@ export function useFxNativeLiveChart({
         /* series already detached */
       }
     }
-    const series = chart.addCandlestickSeries(candleSeriesOptions(pricePrecision, minMove));
+    seriesKindRef.current = kind;
+    const series =
+      kind === "line" && typeof chart.addLineSeries === "function"
+        ? chart.addLineSeries({
+            color: "#0f766e",
+            lineWidth: 2,
+            lastValueVisible: true,
+            priceLineVisible: true,
+            priceLineWidth: 2,
+            priceLineColor: "#0f766e",
+            priceFormat: { type: "price", precision: pricePrecision, minMove },
+          })
+        : chart.addCandlestickSeries(candleSeriesOptions(pricePrecision, minMove));
     series.priceScale().applyOptions({
       autoScale: true,
       scaleMargins: { top: FX_PRICE_SCALE_MARGIN_TOP, bottom: FX_PRICE_SCALE_MARGIN_BOTTOM },
@@ -209,7 +228,19 @@ export function useFxNativeLiveChart({
     const prev = lastCandleRef.current;
     const next = applyQuoteToActiveCandle(prev, mid, quoteTimeUnix(quote), String(timeframeRef.current), symbol);
     if (!next) return;
-    const safe = safeUpdateCandlestick(series, next, lastSeriesTimestampRef.current);
+    if (seriesKindRef.current === "line") {
+      try {
+        (series as ISeriesApi<"Line">).update({ time: next.time, value: next.close });
+      } catch {
+        setStaleDropped(STALE_LIVE_UPDATES_DROPPED);
+        return;
+      }
+      lastCandleRef.current = next;
+      lastSeriesTimestampRef.current = Number(next.time) || lastSeriesTimestampRef.current;
+      setMeta((curr) => ({ ...curr, lastClose: next.close }));
+      return;
+    }
+    const safe = safeUpdateCandlestick(series as ISeriesApi<"Candlestick">, next, lastSeriesTimestampRef.current);
     if (safe.result === "dropped_stale" || safe.result === "dropped_invalid" || safe.result === "dropped_error") {
       setStaleDropped(STALE_LIVE_UPDATES_DROPPED);
       return;
@@ -308,7 +339,7 @@ export function useFxNativeLiveChart({
     setFollowLive(true);
     hadBarsRef.current = false;
     historyReadyRef.current = false;
-    recreateSeries();
+    recreateSeries("candles");
     setStatus("loading");
     setMessage("Загрузка баров…");
     setSourceNote(null);
@@ -332,7 +363,14 @@ export function useFxNativeLiveChart({
           String(json.status || "") === "unavailable";
         const bars = Array.isArray(json.bars) ? (json.bars as NativeCandleBar[]) : [];
         const candles = barsToCandles(bars, symbol);
-        const usable = candles.length > 0;
+        const degradedLine =
+          String(json.display_mode || "") === "DEGRADED_LINE" ||
+          (String(timeframe) === "1m" && String(json.data_quality || "") === "DEGRADED" && String(json.history_kind || "") === "quote_only");
+        const mode: "candles" | "line" = degradedLine ? "line" : "candles";
+        if (seriesKindRef.current !== mode) {
+          recreateSeries(mode);
+        }
+        const usable = (degradedLine ? barsToLinePoints(bars, symbol).length : candles.length) > 0;
         const rateLimited =
           String(json.source_status || json.status || "").includes("rate_limited") ||
           String(json.cache || "") === "last_good";
@@ -400,7 +438,11 @@ export function useFxNativeLiveChart({
         }
         applyingRangeRef.current = true;
         try {
-          seriesRef.current?.setData(candles);
+          if (mode === "line") {
+            (seriesRef.current as ISeriesApi<"Line"> | null)?.setData(barsToLinePoints(bars, symbol));
+          } else {
+            (seriesRef.current as ISeriesApi<"Candlestick"> | null)?.setData(candles);
+          }
         } catch (err) {
           applyingRangeRef.current = false;
           console.warn("[fx-chart] series.setData rejected", err);
@@ -438,6 +480,11 @@ export function useFxNativeLiveChart({
           dataQuality: json.data_quality ? String(json.data_quality) : undefined,
           providerState: json.provider_state ? String(json.provider_state) : undefined,
           updatedAt: json.fetched_at ? String(json.fetched_at) : undefined,
+          displayMode: degradedLine ? "DEGRADED_LINE" : "CANDLES",
+          historyKind: String(json.history_kind || (degradedLine ? "quote_only" : "real_ohlc")),
+          liveQuoteProvider: String(json.live_quote_provider || "yahoo"),
+          historyProvider: String(json.history_provider || json.provider || json.source || ""),
+          degradedReason: json.degraded_reason ? String(json.degraded_reason) : undefined,
         });
         setStatus("ready");
         setMessage(`Баров: ${candles.length}`);
@@ -518,6 +565,7 @@ export function useFxNativeLiveChart({
     generation,
     staleDropped,
     sourceNote,
+    displayMode: meta.displayMode || "CANDLES",
   };
 }
 
@@ -534,6 +582,11 @@ export function FxLiveStatusCaption({
   baseResolution,
   displayedTimeframe,
   aggregation,
+  historyKind,
+  liveQuoteProvider,
+  quality,
+  displayMode,
+  degradedReason,
 }: {
   testIdPrefix: string;
   liveKind: "LIVE" | "STALE" | "CACHED" | "RATE_LIMITED";
@@ -547,6 +600,11 @@ export function FxLiveStatusCaption({
   baseResolution?: string;
   displayedTimeframe?: string;
   aggregation?: string;
+  historyKind?: string;
+  liveQuoteProvider?: string;
+  quality?: string;
+  displayMode?: string;
+  degradedReason?: string;
 }) {
   const base = baseResolution || sourceResolution;
   const display = displayedTimeframe;
@@ -570,8 +628,16 @@ export function FxLiveStatusCaption({
       )}
       {liveUpdated ? <span data-testid={`${testIdPrefix}-live-updated`}>Updated: {liveUpdated}</span> : null}
       {provider ? <span data-testid={`${testIdPrefix}-provider`}>Provider: {provider}</span> : null}
+      {historyKind ? (
+        <span data-testid={`${testIdPrefix}-history`}>History: {historyKind === "real_ohlc" ? "real 1m OHLC" : "quote-only"}</span>
+      ) : null}
+      {liveQuoteProvider ? <span data-testid={`${testIdPrefix}-live-quote-provider`}>Live quote: {liveQuoteProvider}</span> : null}
+      {quality ? <span data-testid={`${testIdPrefix}-quality`}>Quality: {quality}</span> : null}
+      {displayMode ? (
+        <span data-testid={`${testIdPrefix}-display-mode`}>Display: {displayMode === "DEGRADED_LINE" ? "Line" : "Candles"}</span>
+      ) : null}
       {base ? <span data-testid={`${testIdPrefix}-base-resolution`}>Base: {base}</span> : null}
-      {display ? <span data-testid={`${testIdPrefix}-displayed-timeframe`}>Display: {display}</span> : null}
+      {display ? <span data-testid={`${testIdPrefix}-displayed-timeframe`}>TF: {display}</span> : null}
       {resolutionLabel ? (
         <span data-testid={`${testIdPrefix}-source-resolution`}>
           {aggregation || (base && display && base !== display) ? resolutionLabel : `Source resolution: ${resolutionLabel}`}
@@ -579,6 +645,12 @@ export function FxLiveStatusCaption({
       ) : null}
       {barCount != null ? <span data-testid={`${testIdPrefix}-bar-meta`}>Bars: {barCount}</span> : null}
       {sourceNote && liveKind !== "RATE_LIMITED" ? <span>{sourceNote}</span> : null}
+      {displayMode === "DEGRADED_LINE" ? (
+        <span data-testid={`${testIdPrefix}-degraded-badge`} className="text-[var(--eds-warning,#b45309)]">
+          DEGRADED DATA
+          {degradedReason ? ` — ${degradedReason}` : " — Источник дает только минутные ценовые точки без полного OHLC"}
+        </span>
+      ) : null}
       {!followLive ? (
         <Button size="sm" variant="secondary" data-testid={`${testIdPrefix}-follow-live`} onClick={onGoToLive}>
           К текущей цене

@@ -138,7 +138,14 @@ export function barsToCandles(bars: NativeCandleBar[], symbol?: string): Candles
   return normalizeHistoryCandles(raw, symbol);
 }
 
-export function lastSeriesTimestampOf(candles: FxCandle[]): number {
+export type FxLinePoint = { time: FxChartTimestamp; value: number };
+
+export function barsToLinePoints(bars: NativeCandleBar[], symbol?: string): FxLinePoint[] {
+  const candles = barsToCandles(bars, symbol);
+  return candles.map((c) => ({ time: c.time as FxChartTimestamp, value: Number(c.close) }));
+}
+
+export function lastSeriesTimestampOf(candles: { time: unknown }[]): number {
   const last = candles.at(-1);
   if (!last) return 0;
   return Number(last.time) || 0;

@@ -53,6 +53,7 @@ export function DxyNativeChart({
       data-displayed-timeframe={String(meta.displayedTimeframe || timeframe)}
       data-aggregated={meta.aggregated ? "yes" : "no"}
       data-provider={String(meta.provider || "")}
+      data-display-mode={String(meta.displayMode || "CANDLES")}
     >
       <div
         ref={hostRef}
@@ -83,6 +84,11 @@ export function DxyNativeChart({
           baseResolution={meta.baseResolution}
           displayedTimeframe={meta.displayedTimeframe}
           aggregation={meta.aggregation}
+          historyKind={meta.historyKind}
+          liveQuoteProvider={meta.liveQuoteProvider}
+          quality={meta.dataQuality}
+          displayMode={meta.displayMode}
+          degradedReason={meta.degradedReason}
         />
         <span data-testid="dxy-chart-bars">{message}</span>
         {meta.source ? <span>{meta.source}</span> : null}

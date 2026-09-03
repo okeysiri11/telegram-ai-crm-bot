@@ -21,7 +21,7 @@ export function EurUsdNativeChart({
   liveQuote?: LiveFxQuote | null;
 }) {
   const [reload, setReload] = useState(0);
-  const { hostRef, status, message, meta, liveKind, liveUpdated, followLive, goToLive, visibleBarCount, generation, staleDropped, sourceNote } = useFxNativeLiveChart({
+  const { hostRef, status, message, meta, liveKind, liveUpdated, followLive, goToLive, visibleBarCount, generation, staleDropped, sourceNote, displayMode } = useFxNativeLiveChart({
     symbol,
     timeframe,
     height,
@@ -53,6 +53,7 @@ export function EurUsdNativeChart({
       data-aggregated={meta.aggregated ? "yes" : "no"}
       data-provider={String(meta.provider || "")}
       data-data-quality={String(meta.dataQuality || "")}
+      data-display-mode={String(meta.displayMode || displayMode || "CANDLES")}
     >
       <div
         ref={hostRef}
@@ -83,6 +84,11 @@ export function EurUsdNativeChart({
           baseResolution={meta.baseResolution}
           displayedTimeframe={meta.displayedTimeframe}
           aggregation={meta.aggregation}
+          historyKind={meta.historyKind}
+          liveQuoteProvider={meta.liveQuoteProvider}
+          quality={meta.dataQuality}
+          displayMode={meta.displayMode || displayMode}
+          degradedReason={meta.degradedReason}
         />
         <span data-testid="eurusd-chart-bars">{message}</span>
         {meta.source ? <span>{meta.source}</span> : null}
@@ -99,7 +105,7 @@ export function EurUsdNativeChart({
         ) : null}
       </div>
       <p className="eds-type-caption text-[var(--eds-text-muted)]">
-        EUR/USD: нативный график по барам бэкенда (Yahoo EURUSD=X). TradingView не используется.
+        EUR/USD: история — реальный 1m OHLC (Dukascopy / keyed provider) или линия при DEGRADED Yahoo. Live quote отдельно. TradingView не используется.
       </p>
     </div>
   );

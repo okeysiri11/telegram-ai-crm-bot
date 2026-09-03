@@ -48,8 +48,14 @@ def _minutes(count: int = 180) -> dict:
 
 
 @pytest.fixture(autouse=True)
-def _reset():
+def _reset(monkeypatch):
     reset_fx_market_cache()
+
+    async def no_duka(*_a, **_k):
+        return []
+
+    monkeypatch.setattr("services.fx_market_intel.provider_router.dukascopy_eurusd_1m", no_duka)
+    monkeypatch.setattr("services.fx_market_intel.dukascopy_feed.fetch_eurusd_1m", no_duka)
     yield
     reset_fx_market_cache()
 

@@ -33,6 +33,33 @@ class MarketDataProvider(ABC):
     async def get_quote(self, symbol: str) -> dict[str, Any]:
         ...
 
+    async def health(self) -> dict[str, Any]:
+        return await self.status()
+
+    async def capabilities(self) -> dict[str, Any]:
+        return {
+            "quotes": True,
+            "candles": False,
+            "eurusd_1m": False,
+            "dxy": False,
+        }
+
+    async def get_candles(
+        self,
+        symbol: str,
+        timeframe: str = "1H",
+        start: int | None = None,
+        end: int | None = None,
+        limit: int | None = None,
+    ) -> dict[str, Any]:
+        return {
+            "symbol": symbol,
+            "timeframe": timeframe,
+            "bars": [],
+            "status": "not_connected",
+            "message": "Этот источник не отдаёт исторические свечи",
+        }
+
 
 class NullMarketDataProvider(MarketDataProvider):
     id = "null"

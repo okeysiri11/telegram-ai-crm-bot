@@ -26,6 +26,12 @@ from services.fx_market_intel.last_good_store import (
     reset_last_good_store,
     save_last_good,
 )
+from services.fx_market_intel.provider_router import (
+    provider_health_snapshot,
+    reset_provider_health,
+    resolve_eurusd_1m,
+)
+from services.fx_market_intel.quality import score_ohlc
 from services.fx_market_intel.symbols import normalize_symbol
 from services.fx_market_intel.yahoo_feed import (
     DXY_SUPPORTED_TIMEFRAMES,
@@ -77,6 +83,7 @@ def reset_fx_market_cache() -> None:
     _hydrated = False
     _yahoo_lock = None
     reset_last_good_store()
+    reset_provider_health()
 
 
 def yahoo_provider_state() -> str:
@@ -152,6 +159,7 @@ def _with_meta(payload: dict[str, Any], **extra: Any) -> dict[str, Any]:
     out["chart_ready"] = len(bars) > 0
     out["provider_state"] = _yahoo_state
     out["persistent_backend"] = persistent_backend_name()
+    out["provider_health"] = provider_health_snapshot()
     if bars:
         last = bars[-1]
         out.setdefault("last_close", last.get("c") if last.get("c") is not None else last.get("close"))
@@ -239,10 +247,19 @@ async def _hydrate_persistent() -> None:
     if _hydrated:
         return
     _hydrated = True
-    for sym, res in (("EUR/USD", "1m"), ("EUR/USD", "1H"), ("EUR/USD", "1D"), ("DXY", "1H"), ("DXY", "15m")):
-        payload = await load_last_good(sym, res)
+    for sym, res, tier in (
+        ("EUR/USD", "1m", "real"),
+        ("EUR/USD", "1m", "degraded"),
+        ("EUR/USD", "1H", "real"),
+        ("EUR/USD", "1D", "real"),
+        ("DXY", "1H", "real"),
+        ("DXY", "15m", "real"),
+    ):
+        payload = await load_last_good(sym, res, tier)
         if payload and payload.get("bars"):
             key = _key(sym, res)
+            if tier == "degraded" and _candle_last_good.get(key):
+                continue
             warmed = {
                 **payload,
                 "cache": "persistent",
@@ -361,7 +378,12 @@ async def _yahoo_or_last_good(symbol: str, tf: str, interval: str, range_: str) 
             if cached:
                 cached["retry_after_sec"] = wait
                 return cached
-            persisted = memory_get(symbol, tf) or await load_last_good(symbol, tf)
+            persisted = (
+                memory_get(symbol, tf, "real")
+                or memory_get(symbol, tf, "degraded")
+                or await load_last_good(symbol, tf, "real")
+                or await load_last_good(symbol, tf, "degraded")
+            )
             if persisted and persisted.get("bars"):
                 return _with_meta(
                     persisted,
@@ -403,8 +425,16 @@ async def _yahoo_or_last_good(symbol: str, tf: str, interval: str, range_: str) 
                 }
             )
         if pack.get("bars"):
+            score = score_ohlc(list(pack["bars"]), last_n=120 if tf == "1m" else 200)
+            pack["data_quality"] = score["grade"]
+            pack["display_mode"] = "CANDLES" if score["grade"] == "HEALTHY" else ("DEGRADED_LINE" if tf == "1m" else "CANDLES")
+            pack["history_kind"] = score["history_kind"]
+            pack["real_wick_bars"] = score["real_wick_bars"]
+            pack["real_body_bars"] = score["real_body_bars"]
+            pack["zero_range_ratio"] = score["zero_range_ratio"]
             _remember(key, pack, tf)
-            asyncio.create_task(save_last_good(symbol, tf, pack))
+            tier = "real" if score["grade"] == "HEALTHY" else "degraded"
+            asyncio.create_task(save_last_good(symbol, tf, pack, tier=tier))
             return pack
         cached = _from_last_good(key, source_status="insufficient_data", message="Обновление источника…")
         return cached or pack
@@ -433,7 +463,50 @@ async def _base_eurusd_1m() -> dict[str, Any]:
     hit = _ttl_hit(key)
     if hit:
         return hit
-    return await _yahoo_or_last_good("EUR/USD", "1m", "1m", "1d")
+
+    async def yahoo_factory() -> dict[str, Any]:
+        try:
+            return await _fetch_yahoo_raw("EUR/USD", "1m", "1d", "1m")
+        except YahooHttpError as exc:
+            if _yahoo_state == "OPEN" and time.monotonic() < _yahoo_open_until:
+                wait = max(1.0, _yahoo_open_until - time.monotonic())
+            else:
+                wait = _open_breaker(exc.retry_after)
+            return _with_meta(
+                {
+                    "symbol": "EUR/USD",
+                    "timeframe": "1m",
+                    "requested_timeframe": "1m",
+                    "provider": "yahoo",
+                    "status": "rate_limited",
+                    "source_status": "rate_limited",
+                    "stale": True,
+                    "bars": [],
+                    "retry_after_sec": wait,
+                    "message": f"Источник временно ограничил запросы (Yahoo HTTP {exc.status})",
+                }
+            )
+        except Exception as exc:
+            return _with_meta(
+                {
+                    "symbol": "EUR/USD",
+                    "timeframe": "1m",
+                    "provider": "yahoo",
+                    "status": "error",
+                    "source_status": "error",
+                    "bars": [],
+                    "message": str(exc),
+                }
+            )
+
+    pack = await resolve_eurusd_1m(pack_factory=_display_pack, yahoo_factory=yahoo_factory)
+    pack["live_quote_provider"] = pack.get("live_quote_provider") or "yahoo"
+    pack["provider_health"] = provider_health_snapshot()
+    if pack.get("bars"):
+        _remember(key, pack, "1m")
+        tier = "real" if pack.get("display_mode") == "CANDLES" and pack.get("data_quality") == "HEALTHY" else "degraded"
+        asyncio.create_task(save_last_good("EUR/USD", "1m", pack, tier=tier))
+    return pack
 
 
 async def _base_eurusd_1h() -> dict[str, Any]:
@@ -498,6 +571,15 @@ def _derived_from(
         },
     )
     if bars:
+        score = score_ohlc(bars, last_n=120 if tf == "1m" else 200)
+        pack["data_quality"] = score["grade"]
+        pack["display_mode"] = "CANDLES" if score["grade"] == "HEALTHY" else ("DEGRADED_LINE" if tf == "1m" else "CANDLES")
+        pack["history_kind"] = "real_ohlc" if score["grade"] == "HEALTHY" else score["history_kind"]
+        pack["real_wick_bars"] = score["real_wick_bars"]
+        pack["real_body_bars"] = score["real_body_bars"]
+        pack["zero_range_ratio"] = score["zero_range_ratio"]
+        if score["grade"] == "HEALTHY":
+            pack["message"] = "OK" if bars else pack.get("message")
         _remember(_key(symbol, tf), pack, tf)
     elif base.get("status") in {"rate_limited", "delayed"}:
         pack["status"] = "rate_limited"
@@ -523,6 +605,7 @@ def _unavailable_dxy_intraday(tf: str) -> dict[str, Any]:
             "provider": "yahoo",
             "provider_symbol": YAHOO_SYMBOLS.get("DXY"),
             "message": "UNAVAILABLE_AT_SOURCE_RESOLUTION: Yahoo DX-Y.NYB has no true 1m/5m",
+            "DXY_SOURCE_UNAVAILABLE": "yes",
             "supported_timeframes": list(DXY_SUPPORTED_TIMEFRAMES),
         }
     )

@@ -24,8 +24,10 @@ def persistent_backend_name() -> str:
     return "redis" if (os.environ.get("REDIS_URL") or "").strip() else "memory"
 
 
-def _key(symbol: str, resolution: str) -> str:
-    return f"fx:last_good:{symbol}:{resolution}"
+def _key(symbol: str, resolution: str, tier: str = "real") -> str:
+    if tier in {"", "legacy"}:
+        return f"fx:last_good:{symbol}:{resolution}"
+    return f"fx:last_good:{symbol}:{resolution}:{tier}"
 
 
 def compact_payload(payload: dict[str, Any]) -> dict[str, Any]:
@@ -64,28 +66,41 @@ def compact_payload(payload: dict[str, Any]) -> dict[str, Any]:
         "last_close": payload.get("last_close"),
         "last_bar_at": payload.get("last_bar_at"),
         "quality": payload.get("quality"),
+        "data_quality": payload.get("data_quality"),
+        "display_mode": payload.get("display_mode"),
+        "history_kind": payload.get("history_kind"),
+        "quality_tier": payload.get("quality_tier"),
     }
 
 
-def memory_get(symbol: str, resolution: str) -> dict[str, Any] | None:
-    row = _memory.get(_key(symbol, resolution))
+def memory_get(symbol: str, resolution: str, tier: str = "real") -> dict[str, Any] | None:
+    row = _memory.get(_key(symbol, resolution, tier))
+    if not row and tier == "real":
+        row = _memory.get(_key(symbol, resolution, "legacy"))
     if not row:
         return None
     return dict(row["payload"])
 
 
-def memory_put(symbol: str, resolution: str, payload: dict[str, Any]) -> None:
-    if not payload.get("bars"):
-        return
-    _memory[_key(symbol, resolution)] = {"payload": compact_payload(payload), "stored_at": time.time()}
-
-
-async def save_last_good(symbol: str, resolution: str, payload: dict[str, Any]) -> None:
+def memory_put(symbol: str, resolution: str, payload: dict[str, Any], tier: str = "real") -> None:
     if not payload.get("bars"):
         return
     stored = compact_payload(payload)
+    stored["quality_tier"] = tier
+    _memory[_key(symbol, resolution, tier)] = {"payload": stored, "stored_at": time.time()}
+
+
+async def save_last_good(symbol: str, resolution: str, payload: dict[str, Any], tier: str = "real") -> None:
+    if not payload.get("bars"):
+        return
+    if tier == "degraded":
+        real = memory_get(symbol, resolution, "real")
+        if real and real.get("bars"):
+            return
+    stored = compact_payload(payload)
     stored["saved_at"] = stored.get("saved_at") or stored.get("fetched_at")
-    _memory[_key(symbol, resolution)] = {"payload": stored, "stored_at": time.time()}
+    stored["quality_tier"] = tier
+    _memory[_key(symbol, resolution, tier)] = {"payload": stored, "stored_at": time.time()}
     url = (os.environ.get("REDIS_URL") or "").strip()
     if not url:
         return
@@ -102,19 +117,22 @@ async def save_last_good(symbol: str, resolution: str, payload: dict[str, Any]) 
             retry=Retry(NoBackoff(), 0),
             retry_on_timeout=False,
         )
-        await client.set(_key(symbol, resolution), json.dumps(stored, default=str), ex=_TTL_SEC)
+        await client.set(_key(symbol, resolution, tier), json.dumps(stored, default=str), ex=_TTL_SEC)
         await client.aclose()
     except Exception:
         logger.warning("fx last-good redis save failed", exc_info=True)
 
 
-async def load_last_good(symbol: str, resolution: str) -> dict[str, Any] | None:
-    hit = memory_get(symbol, resolution)
+async def load_last_good(symbol: str, resolution: str, tier: str = "real") -> dict[str, Any] | None:
+    hit = memory_get(symbol, resolution, tier)
     if hit and hit.get("bars"):
         return hit
     url = (os.environ.get("REDIS_URL") or "").strip()
     if not url:
         return None
+    keys = [_key(symbol, resolution, tier)]
+    if tier == "real":
+        keys.append(_key(symbol, resolution, "legacy"))
     try:
         from redis.asyncio import Redis
         from redis.asyncio.retry import Retry
@@ -128,13 +146,19 @@ async def load_last_good(symbol: str, resolution: str) -> dict[str, Any] | None:
             retry=Retry(NoBackoff(), 0),
             retry_on_timeout=False,
         )
-        raw = await client.get(_key(symbol, resolution))
+        raw = None
+        used = keys[0]
+        for candidate in keys:
+            raw = await client.get(candidate)
+            if raw:
+                used = candidate
+                break
         await client.aclose()
         if not raw:
             return None
         payload = json.loads(raw)
         if payload.get("bars"):
-            _memory[_key(symbol, resolution)] = {"payload": payload, "stored_at": time.time()}
+            _memory[used] = {"payload": payload, "stored_at": time.time()}
             return payload
     except Exception:
         logger.warning("fx last-good redis load failed", exc_info=True)
