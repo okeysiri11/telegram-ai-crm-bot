@@ -208,13 +208,17 @@ export function useFxNativeLiveChart({
     liveEnabledRef.current = false;
     lastCandleRef.current = null;
     lastSeriesTimestampRef.current = 0;
+    lastIndexRef.current = 0;
     historyReadyRef.current = false;
     followRef.current = true;
     setFollowLive(true);
+    applyingRangeRef.current = true;
     try {
       seriesRef.current?.setData([]);
     } catch {
       /* isolation: a failed clear must not crash the desk */
+    } finally {
+      applyingRangeRef.current = false;
     }
 
     const loadHistory = async (silent: boolean) => {
@@ -245,9 +249,11 @@ export function useFxNativeLiveChart({
         }
         const bars = Array.isArray(json.bars) ? (json.bars as NativeCandleBar[]) : [];
         const candles = barsToCandles(bars);
+        applyingRangeRef.current = true;
         try {
           seriesRef.current?.setData(candles);
         } catch (err) {
+          applyingRangeRef.current = false;
           console.warn("[fx-chart] series.setData rejected", err);
           if (!silent) {
             setStatus("error");
@@ -260,6 +266,7 @@ export function useFxNativeLiveChart({
         lastIndexRef.current = Math.max(0, candles.length - 1);
         historyReadyRef.current = candles.length > 0;
         liveEnabledRef.current = true;
+        applyingRangeRef.current = false;
         if (!silent || followRef.current) {
           applyRecentViewport(Math.max(candles.length, 1));
         }

@@ -226,9 +226,11 @@ describe("sprint 50.13 timeframe switch guard", () => {
   it("survives EURUSD 1m -> 5m while a live quote is in flight", async () => {
     const { rerender } = render(<EurUsdNativeChart timeframe="1m" liveQuote={quote("1.16100")} />);
     await waitFor(() => expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-status")).toBe("ready"));
+    expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-live-follow")).toBe("yes");
     const gen1 = screen.getByTestId("eurusd-native-chart").getAttribute("data-chart-generation");
     await switchTf(rerender, EurUsdNativeChart, "5m", "1.16110");
     expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-status")).toBe("ready");
+    expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-live-follow")).toBe("yes");
     expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-chart-generation")).not.toBe(gen1);
     expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-visible-range-bars")).toBe("120");
     const lastUpdate = series.update.mock.calls.at(-1)?.[0] as FxCandle | undefined;
