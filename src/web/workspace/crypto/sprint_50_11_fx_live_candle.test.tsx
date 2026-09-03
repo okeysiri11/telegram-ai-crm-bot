@@ -113,6 +113,13 @@ describe("sprint 50.11 live active candle", () => {
     expect(applyQuoteToActiveCandle(created, 1.16, Date.parse("2026-09-03T07:30:00Z") / 1000, "1h")).toBeNull();
   });
 
+  it("paints a first live candle when history is empty", () => {
+    const created = applyQuoteToActiveCandle(null, 99.255, Date.parse("2026-09-03T07:14:37Z") / 1000, "1m");
+    expect(created?.open).toBe(99.255);
+    expect(created?.close).toBe(99.255);
+    expect(Number(created?.time)).toBe(Date.parse("2026-09-03T07:14:00Z") / 1000);
+  });
+
   it("does not invent prices and ignores non-finite quotes", () => {
     expect(parseQuoteMid("1.16157")).toBe(1.16157);
     expect(parseQuoteMid("NaN")).toBeNull();
@@ -235,5 +242,23 @@ describe("sprint 50.11 live active candle", () => {
     await waitFor(() => expect(series.update).toHaveBeenCalled());
     expect(screen.getByTestId("dxy-live-quote").textContent).toContain("99.278");
     expect(screen.getByTestId("dxy-live-indicator").textContent).toContain("LIVE");
+    expect(screen.getByTestId("dxy-native-chart").getAttribute("data-last-close")).toBe("99.278");
+  });
+
+  it("seeds an active candle from the quote when history bars are empty", async () => {
+    vi.mocked(cryptoFxIntelGet).mockResolvedValue({
+      ok: true,
+      json: { status: "connected", chart_ready: true, bar_count: 0, bars: [], source: "Yahoo Finance (DX-Y.NYB)" },
+    });
+    const { rerender } = render(
+      <DxyNativeChart timeframe="1m" liveQuote={{ mid: "99.255", fetched_at: new Date().toISOString(), status: "connected" }} />,
+    );
+    await waitFor(() => expect(series.update).toHaveBeenCalled());
+    expect(series.update.mock.calls.at(-1)?.[0].close).toBe(99.255);
+    rerender(
+      <DxyNativeChart timeframe="1m" liveQuote={{ mid: "99.252", fetched_at: new Date().toISOString(), status: "connected" }} />,
+    );
+    await waitFor(() => expect(series.update.mock.calls.at(-1)?.[0].close).toBe(99.252));
+    expect(screen.getByTestId("dxy-native-chart").getAttribute("data-last-close")).toBe("99.252");
   });
 });

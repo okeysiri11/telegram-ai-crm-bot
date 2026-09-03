@@ -62,11 +62,10 @@ export function useFxNativeLiveChart({
 
   const applyLive = (quote: LiveFxQuote | null | undefined) => {
     const series = seriesRef.current;
-    const last = lastCandleRef.current;
-    if (!series || !last) return;
+    if (!series) return;
     const mid = parseQuoteMid(quote?.mid);
     if (mid == null) return;
-    const next = applyQuoteToActiveCandle(last, mid, quoteTimeUnix(quote), String(timeframe));
+    const next = applyQuoteToActiveCandle(lastCandleRef.current, mid, quoteTimeUnix(quote), String(timeframe));
     if (!next) return;
     lastCandleRef.current = next;
     series.update(next);
@@ -157,6 +156,12 @@ export function useFxNativeLiveChart({
           lastClose: json.last_close ?? candles.at(-1)?.close,
         });
         if (!candles.length) {
+          applyLive(liveQuoteRef.current);
+          if (lastCandleRef.current) {
+            setStatus("ready");
+            setMessage("Баров: live");
+            return;
+          }
           if (!silent) {
             setStatus("error");
             setMessage(emptyError);

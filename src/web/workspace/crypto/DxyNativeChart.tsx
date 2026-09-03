@@ -35,7 +35,14 @@ export function DxyNativeChart({
   });
 
   return (
-    <div className="w-full" data-testid="dxy-native-chart" data-symbol={symbol} data-engine="lightweight-charts">
+    <div
+      className="w-full"
+      data-testid="dxy-native-chart"
+      data-symbol={symbol}
+      data-engine="lightweight-charts"
+      data-status={status}
+      data-last-close={formatFxQuote(meta.lastClose, 3) ?? ""}
+    >
       <div
         ref={hostRef}
         className="w-full overflow-hidden rounded-md border border-[var(--eds-border)] bg-white"

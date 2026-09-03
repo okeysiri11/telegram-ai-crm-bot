@@ -52,9 +52,15 @@ Do not refetch 1000+ historical candles on every quote tick.
 - Historical refresh: 60s for 1m/5m/15m; otherwise only on timeframe change
 - Overlapping quote polls skipped (`quotePollInFlight`)
 - History fetch uses AbortController; interval cleared on TF change / unmount
+- If Yahoo historical bars are empty, the first real quote still seeds the active candle (`series.update`). No invented prices.
 
-## UI
+## Production verify (2026-09-03)
 
-- Caption: `LIVE ●` + `Updated: HH:MM:SS` from last successful quote `fetched_at`
-- `STALE` if no successful quote for > 30s
-- Right-side last-value line follows `series.update` (EURUSD 5 dp, DXY 3 dp)
+`/workspace/crypto?view=charts` after SHA `66667097` then follow-up empty-history seed.
+
+EURUSD 1m: `Updated` advanced every ~5s (`10:24:48` → `10:25:08`). Close moved `1.15770` → `1.16120` when Yahoo quote changed. LIVE ● visible. 5m retained polling.
+
+DXY: quote poll ~5s; `Updated` advanced; mid moved `99.255` → `99.252`. First DXY 1m history fetch during warmup returned 0 bars; empty-history seed covers that without refetching full history every tick.
+
+Candle endpoint was called on timeframe change only (4 fetches in ~40s), not on every quote tick.
+
