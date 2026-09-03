@@ -30,6 +30,23 @@ def _register_rbac_models():
 
 
 @pytest.fixture(autouse=True)
+def _reset_fx_market_cache():
+    try:
+        from services.fx_market_intel.candle_feed import reset_fx_market_cache
+
+        reset_fx_market_cache()
+    except Exception:
+        pass
+    yield
+    try:
+        from services.fx_market_intel.candle_feed import reset_fx_market_cache
+
+        reset_fx_market_cache()
+    except Exception:
+        pass
+
+
+@pytest.fixture(autouse=True)
 async def _dispose_asyncpg_engine_after_test():
     """Close asyncpg connections on the same loop that opened them."""
     yield

@@ -17,7 +17,7 @@ export function integrityLabel(status?: string, mid?: unknown) {
   if (status === "connected" || status === "live" || status === "delayed") {
     return hasMid ? null : "Нет данных";
   }
-  if (status === "error") return "Источник недоступен";
+  if (status === "error") return hasMid ? "Источник временно ограничил запросы" : "Источник недоступен";
   if (status === "needs_config" || status === "not_connected") return "Источник недоступен";
   if (status === "insufficient_data") return "Данные неполные";
   if (status === "stale" || status === "cached") return "Данные устарели";

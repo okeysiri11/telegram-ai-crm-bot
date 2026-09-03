@@ -34,11 +34,11 @@ def test_normalize_timeframe_canonical():
     assert normalize_timeframe("4H") == "4H"
     assert normalize_timeframe("15m") == "15m"
     assert normalize_timeframe("bogus") == "1H"
-    assert list(DXY_SUPPORTED_TIMEFRAMES) == ["15m", "1H", "4H", "1D"]
+    assert list(DXY_SUPPORTED_TIMEFRAMES) == ["1m", "5m", "15m", "1H", "4H", "1D", "1W"]
     assert list(SUPPORTED_TIMEFRAMES) == ["1m", "5m", "15m", "1H", "4H", "1D", "1W"]
     assert normalize_timeframe("1m") == "1m"
     assert normalize_timeframe("1W") == "1W"
-    assert normalize_timeframe("1m", "DXY") == "1H"
+    assert normalize_timeframe("1m", "DXY") == "1m"
 
 
 def test_normalize_yahoo_bars_skips_null_closes():

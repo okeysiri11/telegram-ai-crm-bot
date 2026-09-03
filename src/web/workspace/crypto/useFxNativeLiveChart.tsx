@@ -29,7 +29,30 @@ import {
   type NativeCandleBar,
 } from "./fxNativeChartCore";
 
-export type FxNativeLiveMeta = { barCount: number; source?: string; lastClose?: unknown };
+export type FxNativeLiveMeta = {
+  barCount: number;
+  source?: string;
+  lastClose?: unknown;
+  provider?: string;
+  sourceResolution?: string;
+  sourceStatus?: string;
+  stale?: boolean;
+  cache?: string;
+};
+
+function sourceBanner(json: Record<string, unknown>, candles: number): string | null {
+  const status = String(json.source_status || json.status || "");
+  const stale = Boolean(json.stale);
+  const cache = String(json.cache || "");
+  if (status === "rate_limited" || cache === "last_good") {
+    return "RATE LIMITED — showing last received data";
+  }
+  if (stale || cache === "ttl" || status === "delayed") {
+    return cache === "ttl" ? "CACHED" : "CACHED / STALE";
+  }
+  if (candles > 0) return null;
+  return null;
+}
 
 export function useFxNativeLiveChart({
   symbol,
@@ -67,6 +90,8 @@ export function useFxNativeLiveChart({
   const historyReadyRef = useRef(false);
   const liveEnabledRef = useRef(false);
   const generationRef = useRef(0);
+  const hadBarsRef = useRef(false);
+  const [sourceNote, setSourceNote] = useState<string | null>(null);
   liveQuoteRef.current = liveQuote;
   timeframeRef.current = timeframe;
 
@@ -105,7 +130,7 @@ export function useFxNativeLiveChart({
     const mid = parseQuoteMid(quote?.mid);
     if (mid == null) return;
     const prev = lastCandleRef.current;
-    const next = applyQuoteToActiveCandle(prev, mid, quoteTimeUnix(quote), String(timeframeRef.current));
+    const next = applyQuoteToActiveCandle(prev, mid, quoteTimeUnix(quote), String(timeframeRef.current), symbol);
     if (!next) return;
     const safe = safeUpdateCandlestick(series, next, lastSeriesTimestampRef.current);
     if (safe.result === "dropped_stale" || safe.result === "dropped_invalid" || safe.result === "dropped_error") {
@@ -206,56 +231,78 @@ export function useFxNativeLiveChart({
     const requestGeneration = generationRef.current;
     setGeneration(requestGeneration);
     liveEnabledRef.current = false;
-    lastCandleRef.current = null;
-    lastSeriesTimestampRef.current = 0;
-    lastIndexRef.current = 0;
-    historyReadyRef.current = false;
     followRef.current = true;
     setFollowLive(true);
-    applyingRangeRef.current = true;
-    try {
-      seriesRef.current?.setData([]);
-    } catch {
-      /* isolation: a failed clear must not crash the desk */
-    } finally {
-      applyingRangeRef.current = false;
-    }
 
     const loadHistory = async (silent: boolean) => {
       if (requestGeneration !== generationRef.current) return;
       if (ac.signal.aborted || inFlight) return;
       inFlight = true;
       if (!silent) {
-        setStatus("loading");
-        setMessage("Загрузка баров…");
+        setStatus(hadBarsRef.current ? "ready" : "loading");
+        setMessage(hadBarsRef.current ? "Обновление источника…" : "Загрузка баров…");
+        if (hadBarsRef.current) setSourceNote("Обновление источника…");
       }
       try {
         const { ok, json, cancelled } = await fetchFxCandles(symbol, String(timeframe), ac.signal);
         if (cancelled || ac.signal.aborted || requestGeneration !== generationRef.current) return;
-        if (!ok || json.status === "error" || json.chart_ready === false) {
-          if (!silent) {
+        const bars = Array.isArray(json.bars) ? (json.bars as NativeCandleBar[]) : [];
+        const candles = barsToCandles(bars, symbol);
+        const usable = candles.length > 0;
+        const rateLimited =
+          String(json.source_status || json.status || "").includes("rate_limited") ||
+          String(json.cache || "") === "last_good";
+        if (!ok && !usable) {
+          if (!silent && !hadBarsRef.current) {
             setStatus("error");
             setMessage(useApiErrorMessage && json.message ? String(json.message) : loadError);
-            try {
-              seriesRef.current?.setData([]);
-            } catch {
-              /* isolation */
-            }
-            lastCandleRef.current = null;
-            lastSeriesTimestampRef.current = 0;
             liveEnabledRef.current = false;
+          } else if (hadBarsRef.current) {
+            setStatus("ready");
+            setSourceNote(rateLimited ? "RATE LIMITED — showing last received data" : "Обновление источника…");
+            setMessage(rateLimited ? "Источник временно ограничил запросы" : "Обновление источника…");
           }
           return;
         }
-        const bars = Array.isArray(json.bars) ? (json.bars as NativeCandleBar[]) : [];
-        const candles = barsToCandles(bars);
+        if (!usable) {
+          if (!hadBarsRef.current) {
+            liveEnabledRef.current = true;
+            applyLive(liveQuoteRef.current, requestGeneration);
+            if (lastCandleRef.current) {
+              hadBarsRef.current = true;
+              historyReadyRef.current = true;
+              lastIndexRef.current = 0;
+              if (!silent || followRef.current) applyRecentViewport(1);
+              setStatus("ready");
+              setMessage("Баров: live");
+              setMeta((curr) => ({
+                ...curr,
+                barCount: 1,
+                lastClose: lastCandleRef.current?.close,
+                sourceStatus: "live",
+              }));
+              return;
+            }
+            liveEnabledRef.current = false;
+          }
+          if (!silent && !hadBarsRef.current) {
+            setStatus("error");
+            setMessage(useApiErrorMessage && json.message ? String(json.message) : emptyError);
+            liveEnabledRef.current = false;
+          } else if (hadBarsRef.current) {
+            setStatus("ready");
+            setSourceNote(rateLimited ? "RATE LIMITED — showing last received data" : "Обновление источника…");
+            setMessage(rateLimited ? "Источник временно ограничил запросы" : "Обновление источника…");
+          }
+          return;
+        }
         applyingRangeRef.current = true;
         try {
           seriesRef.current?.setData(candles);
         } catch (err) {
           applyingRangeRef.current = false;
           console.warn("[fx-chart] series.setData rejected", err);
-          if (!silent) {
+          if (!silent && !hadBarsRef.current) {
             setStatus("error");
             setMessage(loadError);
           }
@@ -264,42 +311,37 @@ export function useFxNativeLiveChart({
         lastCandleRef.current = candles.at(-1) ?? null;
         lastSeriesTimestampRef.current = lastSeriesTimestampOf(candles);
         lastIndexRef.current = Math.max(0, candles.length - 1);
-        historyReadyRef.current = candles.length > 0;
+        historyReadyRef.current = true;
+        hadBarsRef.current = true;
         liveEnabledRef.current = true;
         applyingRangeRef.current = false;
         if (!silent || followRef.current) {
           applyRecentViewport(Math.max(candles.length, 1));
         }
+        const note = sourceBanner(json, candles.length);
+        setSourceNote(note);
         setMeta({
           barCount: Number(json.bar_count ?? candles.length) || candles.length,
           source: String(json.source || json.provider || ""),
           lastClose: json.last_close ?? candles.at(-1)?.close,
+          provider: String(json.provider || json.source || "yahoo"),
+          sourceResolution: String(json.source_resolution || ""),
+          sourceStatus: String(json.source_status || json.status || ""),
+          stale: Boolean(json.stale),
+          cache: String(json.cache || ""),
         });
-        if (!candles.length) {
-          applyLive(liveQuoteRef.current, requestGeneration);
-          if (lastCandleRef.current) {
-            historyReadyRef.current = true;
-            lastIndexRef.current = 0;
-            if (!silent || followRef.current) applyRecentViewport(1);
-            setStatus("ready");
-            setMessage("Баров: live");
-            return;
-          }
-          if (!silent) {
-            setStatus("error");
-            setMessage(emptyError);
-            liveEnabledRef.current = false;
-          }
-          return;
-        }
         setStatus("ready");
         setMessage(`Баров: ${candles.length}`);
         applyLive(liveQuoteRef.current, requestGeneration);
       } catch {
         if (ac.signal.aborted || requestGeneration !== generationRef.current) return;
-        if (!silent) {
+        if (!silent && !hadBarsRef.current) {
           setStatus("error");
           setMessage(loadError);
+        } else if (hadBarsRef.current) {
+          setStatus("ready");
+          setSourceNote("Обновление источника…");
+          setMessage("Обновление источника…");
         }
       } finally {
         inFlight = false;
@@ -333,7 +375,15 @@ export function useFxNativeLiveChart({
   const fetchedAt = liveQuote?.fetched_at;
   const updated = formatLiveUpdated(fetchedAt);
   const hasQuote = parseQuoteMid(liveQuote?.mid) != null && lastQuoteMs != null;
-  const stale = !hasQuote || liveQuoteIsStale(lastQuoteMs, nowMs);
+  const quoteStale = !hasQuote || liveQuoteIsStale(lastQuoteMs, nowMs);
+  const rateLimited =
+    meta.sourceStatus === "rate_limited" || meta.cache === "last_good" || sourceNote?.includes("RATE LIMITED");
+  const cached = Boolean(meta.stale) || meta.cache === "ttl" || meta.cache === "last_good";
+  const liveKind = (rateLimited ? "RATE_LIMITED" : cached && quoteStale ? "CACHED" : quoteStale ? "STALE" : "LIVE") as
+    | "LIVE"
+    | "STALE"
+    | "CACHED"
+    | "RATE_LIMITED";
   const visibleBarCount = fxVisibleBarCount(String(timeframe));
 
   return {
@@ -341,7 +391,7 @@ export function useFxNativeLiveChart({
     status,
     message,
     meta,
-    liveKind: (stale ? "STALE" : "LIVE") as "LIVE" | "STALE",
+    liveKind,
     liveUpdated: updated,
     lastQuoteMs,
     followLive,
@@ -349,6 +399,7 @@ export function useFxNativeLiveChart({
     visibleBarCount,
     generation,
     staleDropped,
+    sourceNote,
   };
 }
 
@@ -358,23 +409,41 @@ export function FxLiveStatusCaption({
   liveUpdated,
   followLive,
   onGoToLive,
+  provider,
+  sourceResolution,
+  barCount,
+  sourceNote,
 }: {
   testIdPrefix: string;
-  liveKind: "LIVE" | "STALE";
+  liveKind: "LIVE" | "STALE" | "CACHED" | "RATE_LIMITED";
   liveUpdated: string | null;
   followLive: boolean;
   onGoToLive: () => void;
+  provider?: string;
+  sourceResolution?: string;
+  barCount?: number;
+  sourceNote?: string | null;
 }) {
   return (
-    <span className="inline-flex items-center gap-2" data-testid={`${testIdPrefix}-live-indicator`} data-live-status={liveKind.toLowerCase()}>
+    <span className="inline-flex flex-wrap items-center gap-2" data-testid={`${testIdPrefix}-live-indicator`} data-live-status={liveKind.toLowerCase()}>
       {liveKind === "LIVE" ? (
         <span>
           LIVE <span className="text-[var(--eds-success,#15803d)]">●</span>
         </span>
+      ) : liveKind === "RATE_LIMITED" ? (
+        <span data-testid={`${testIdPrefix}-rate-limited`}>RATE LIMITED — showing last received data</span>
+      ) : liveKind === "CACHED" ? (
+        <span>CACHED / STALE</span>
       ) : (
         <span>STALE</span>
       )}
       {liveUpdated ? <span data-testid={`${testIdPrefix}-live-updated`}>Updated: {liveUpdated}</span> : null}
+      {provider ? <span data-testid={`${testIdPrefix}-provider`}>Provider: {provider}</span> : null}
+      {sourceResolution ? (
+        <span data-testid={`${testIdPrefix}-source-resolution`}>Source resolution: {sourceResolution}</span>
+      ) : null}
+      {barCount != null ? <span data-testid={`${testIdPrefix}-bar-meta`}>Bars: {barCount}</span> : null}
+      {sourceNote && liveKind !== "RATE_LIMITED" ? <span>{sourceNote}</span> : null}
       {!followLive ? (
         <Button size="sm" variant="secondary" data-testid={`${testIdPrefix}-follow-live`} onClick={onGoToLive}>
           К текущей цене

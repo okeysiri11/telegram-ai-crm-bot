@@ -21,7 +21,7 @@ export function EurUsdNativeChart({
   liveQuote?: LiveFxQuote | null;
 }) {
   const [reload, setReload] = useState(0);
-  const { hostRef, status, message, meta, liveKind, liveUpdated, followLive, goToLive, visibleBarCount, generation, staleDropped } = useFxNativeLiveChart({
+  const { hostRef, status, message, meta, liveKind, liveUpdated, followLive, goToLive, visibleBarCount, generation, staleDropped, sourceNote } = useFxNativeLiveChart({
     symbol,
     timeframe,
     height,
@@ -46,6 +46,9 @@ export function EurUsdNativeChart({
       data-visible-range-bars={String(visibleBarCount)}
       data-chart-generation={String(generation)}
       data-stale-live-dropped={String(staleDropped)}
+      data-source-status={String(meta.sourceStatus || "")}
+      data-source-resolution={String(meta.sourceResolution || "")}
+      data-provider={String(meta.provider || "")}
     >
       <div
         ref={hostRef}
@@ -55,7 +58,7 @@ export function EurUsdNativeChart({
       />
       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 eds-type-caption text-[var(--eds-text-muted)]">
         <span data-testid="eurusd-chart-status">
-          {status === "loading" ? "Загрузка…" : status === "ready" ? "ADOS · Lightweight Charts" : "Ошибка"}
+          {status === "loading" ? "Обновление источника…" : status === "ready" ? "ADOS · Lightweight Charts" : "Ошибка"}
         </span>
         <FxLiveStatusCaption
           testIdPrefix="eurusd"
@@ -63,6 +66,10 @@ export function EurUsdNativeChart({
           liveUpdated={liveUpdated}
           followLive={followLive}
           onGoToLive={goToLive}
+          provider={meta.provider || meta.source}
+          sourceResolution={meta.sourceResolution}
+          barCount={meta.barCount}
+          sourceNote={sourceNote}
         />
         <span data-testid="eurusd-chart-bars">{message}</span>
         {meta.source ? <span>{meta.source}</span> : null}

@@ -33,8 +33,24 @@ _TF_MAP = {
     "1W": ("1wk", "2y"),
 }
 
+_HEADERS = {"User-Agent": "ADOS-FX-Intel/50.7"}
+
+
+class YahooHttpError(RuntimeError):
+    def __init__(self, status: int, retry_after: str | None = None) -> None:
+        super().__init__(f"Yahoo HTTP {status}")
+        self.status = int(status)
+        self.retry_after = retry_after
+
+
 # DXY keeps the 50.7 Yahoo intervals that already work in production.
+# 1m/5m/1W are requested honestly; Yahoo DX-Y.NYB has no native 1m/5m — 60m/1wk is used
+# and candle_feed reports source_resolution from actual bar spacing (never fake 1m bars).
 _TF_MAP_DXY = {
+    "1m": ("60m", "10d"),
+    "1M": ("60m", "10d"),
+    "5m": ("60m", "10d"),
+    "5M": ("60m", "10d"),
     "15m": ("15m", "5d"),
     "15M": ("15m", "5d"),
     "1h": ("60m", "10d"),
@@ -43,10 +59,12 @@ _TF_MAP_DXY = {
     "4H": ("60m", "30d"),
     "1d": ("1d", "6mo"),
     "1D": ("1d", "6mo"),
+    "1w": ("1wk", "2y"),
+    "1W": ("1wk", "2y"),
 }
 
 SUPPORTED_TIMEFRAMES = ("1m", "5m", "15m", "1H", "4H", "1D", "1W")
-DXY_SUPPORTED_TIMEFRAMES = ("15m", "1H", "4H", "1D")
+DXY_SUPPORTED_TIMEFRAMES = ("1m", "5m", "15m", "1H", "4H", "1D", "1W")
 
 _CANON_TF = {
     "1m": "1m",
@@ -65,8 +83,6 @@ _CANON_TF = {
     "1W": "1W",
 }
 
-_HEADERS = {"User-Agent": "ADOS-FX-Intel/50.7"}
-
 
 def format_yahoo_mid(instrument: str, price: float) -> str:
     """Keep source precision for live candles: EURUSD 5 dp, DXY 3 dp. Never fabricate ticks."""
@@ -80,6 +96,12 @@ def _maps_for(instrument: str | None) -> tuple[dict[str, tuple[str, str]], tuple
     if instrument == "DXY":
         return _TF_MAP_DXY, DXY_SUPPORTED_TIMEFRAMES
     return _TF_MAP, SUPPORTED_TIMEFRAMES
+
+
+def yahoo_interval_range(instrument: str, timeframe: str) -> tuple[str, str]:
+    tf_map, _supported = _maps_for(instrument)
+    tf = normalize_timeframe(timeframe, instrument=instrument)
+    return tf_map.get(tf, ("60m", "10d"))
 
 
 def normalize_timeframe(timeframe: str, instrument: str | None = None) -> str:
@@ -98,7 +120,7 @@ async def fetch_yahoo_chart(symbol_yahoo: str, *, interval: str, range_: str) ->
     async with aiohttp.ClientSession(timeout=timeout, headers=_HEADERS) as session:
         async with session.get(url, params=params) as resp:
             if resp.status != 200:
-                raise RuntimeError(f"Yahoo HTTP {resp.status}")
+                raise YahooHttpError(resp.status, resp.headers.get("Retry-After"))
             data = await resp.json(content_type=None)
     err = (data.get("chart") or {}).get("error")
     if err:
@@ -119,6 +141,32 @@ def _finite(value: Any) -> float | None:
     if not math.isfinite(n):
         return None
     return n
+
+
+def price_in_instrument_band(instrument: str | None, price: float) -> bool:
+    """Reject unit/format corruption only (EURUSD 11610, DXY 0, etc.)."""
+    if not math.isfinite(price) or price <= 0:
+        return False
+    sym = instrument or ""
+    if sym == "DXY":
+        return 20.0 <= price <= 200.0
+    return 0.2 <= price <= 5.0
+
+
+def valid_ohlc(o: float, h: float, l: float, c: float, instrument: str | None = None) -> bool:
+    if not all(math.isfinite(x) for x in (o, h, l, c)):
+        return False
+    if min(o, h, l, c) <= 0:
+        return False
+    if h < l:
+        return False
+    if h < max(o, c) or l > min(o, c):
+        return False
+    if h / l > 20:
+        return False
+    if instrument and not all(price_in_instrument_band(instrument, x) for x in (o, h, l, c)):
+        return False
+    return True
 
 
 def aggregate_ohlc_4h(bars: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -151,7 +199,12 @@ def _dedupe_sorted_bars(bars: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return out
 
 
-def normalize_yahoo_bars(result: dict[str, Any], *, timeframe: str) -> list[dict[str, Any]]:
+def normalize_yahoo_bars(
+    result: dict[str, Any],
+    *,
+    timeframe: str,
+    instrument: str | None = None,
+) -> list[dict[str, Any]]:
     ts = result.get("timestamp") or []
     quote = ((result.get("indicators") or {}).get("quote") or [{}])[0]
     opens = quote.get("open") or []
@@ -168,20 +221,42 @@ def normalize_yahoo_bars(result: dict[str, Any], *, timeframe: str) -> list[dict
         h = _finite(highs[i] if i < len(highs) else None)
         l = _finite(lows[i] if i < len(lows) else None)
         v = _finite(volumes[i] if i < len(volumes) else None)
+        open_ = o if o is not None else c
+        high_ = h if h is not None else c
+        low_ = l if l is not None else c
+        if not valid_ohlc(open_, high_, low_, c, instrument):
+            continue
+        unix = int(t)
+        if unix > 1_000_000_000_000:
+            unix = unix // 1000
         bars.append(
             {
-                "t": datetime.fromtimestamp(int(t), tz=timezone.utc).isoformat(),
-                "o": o if o is not None else c,
-                "h": h if h is not None else c,
-                "l": l if l is not None else c,
+                "t": datetime.fromtimestamp(unix, tz=timezone.utc).isoformat(),
+                "time": unix,
+                "o": open_,
+                "h": high_,
+                "l": low_,
                 "c": c,
+                "open": open_,
+                "high": high_,
+                "low": low_,
+                "close": c,
                 "v": v,
                 "timeframe": timeframe,
+                "provider": "yahoo",
             }
         )
     bars = _dedupe_sorted_bars(bars)
     if timeframe.upper() == "4H" and bars:
         bars = aggregate_ohlc_4h(bars)
+        for b in bars:
+            unix = int(datetime.fromisoformat(str(b["t"]).replace("Z", "+00:00")).timestamp())
+            b["time"] = unix
+            b["open"] = b["o"]
+            b["high"] = b["h"]
+            b["low"] = b["l"]
+            b["close"] = b["c"]
+            b.setdefault("provider", "yahoo")
     return bars
 
 
@@ -333,7 +408,7 @@ async def fetch_bars(instrument: str, timeframe: str = "1H") -> dict[str, Any]:
     interval, range_ = tf_map.get(tf, ("60m", "10d"))
     try:
         result = await fetch_yahoo_chart(yahoo, interval=interval, range_=range_)
-        bars = normalize_yahoo_bars(result, timeframe=tf)
+        bars = normalize_yahoo_bars(result, timeframe=tf, instrument=sym)
         if not bars:
             return {
                 **base_meta,

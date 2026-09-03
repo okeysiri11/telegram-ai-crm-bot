@@ -30,7 +30,13 @@ from services.fx_market_intel.rss_news import CuratedRssNewsProvider
 from services.fx_market_intel.signals import SIGNAL_STATUSES, assert_no_trade_execution, create_signal
 from services.fx_market_intel.symbols import CORE_INSTRUMENTS, normalize_symbol
 from services.fx_market_intel.technical import compute_indicators
-from services.fx_market_intel.yahoo_feed import EurUsdMarketQuoteProvider, YahooQuoteProvider, fetch_bars
+from services.fx_market_intel.candle_feed import cached_quote, get_candles
+from services.fx_market_intel.yahoo_feed import (
+    DXY_SUPPORTED_TIMEFRAMES,
+    SUPPORTED_TIMEFRAMES,
+    EurUsdMarketQuoteProvider,
+    YahooQuoteProvider,
+)
 
 ANALYSIS_PRESETS = [
     {
@@ -275,24 +281,30 @@ class FxMarketIntelService:
     async def quote(self, symbol: str) -> dict[str, Any]:
         sym = normalize_symbol(symbol)
         if sym == "DXY":
-            q = await self.dxy.get_quote("DXY")
-            q.setdefault("provider", getattr(self.dxy, "id", "yahoo_dxy"))
-            return q
+            async def _dxy() -> dict[str, Any]:
+                q = await self.dxy.get_quote("DXY")
+                q.setdefault("provider", getattr(self.dxy, "id", "yahoo_dxy"))
+                return q
+
+            return await cached_quote("DXY", _dxy)
         if sym == "EUR/USD":
-            q = await self.eurusd.get_quote("EUR/USD")
-            q.setdefault("provider", getattr(self.eurusd, "id", "yahoo_eurusd"))
-            return normalize_public_quote(q)
+            async def _eur() -> dict[str, Any]:
+                q = await self.eurusd.get_quote("EUR/USD")
+                q.setdefault("provider", getattr(self.eurusd, "id", "yahoo_eurusd"))
+                return normalize_public_quote(q)
+
+            return await cached_quote("EUR/USD", _eur)
         return await NullMarketDataProvider().get_quote(sym)
 
     async def candles(self, symbol: str, timeframe: str = "1H") -> dict[str, Any]:
-        return await fetch_bars(symbol, timeframe)
+        return await get_candles(symbol, timeframe)
 
     async def desk_snapshot(self, tenant_id: str = "default") -> dict[str, Any]:
         eurusd = await self.quote("EUR/USD")
         dxy = await self.quote("DXY")
         health = await self.connection_health()
-        e_bars = await fetch_bars("EUR/USD", "1H")
-        d_bars = await fetch_bars("DXY", "1H")
+        e_bars = await get_candles("EUR/USD", "1H")
+        d_bars = await get_candles("DXY", "1H")
         e_closes = [b["c"] for b in (e_bars.get("bars") or [])[-40:]]
         d_closes = [b["c"] for b in (d_bars.get("bars") or [])[-40:]]
         corr = eurusd_dxy_correlation(e_closes, d_closes)
@@ -318,14 +330,14 @@ class FxMarketIntelService:
                 "endpoint": "/api/crypto-mi/v1/fx-intel/candles?symbol=EUR/USD",
                 "provider": "yahoo",
                 "yahoo_symbol": "EURUSD=X",
-                "supported_timeframes": ["1m", "5m", "15m", "1H", "4H", "1D", "1W"],
+                "supported_timeframes": list(SUPPORTED_TIMEFRAMES),
             },
             "dxy_chart": {
                 "engine": "ados_lightweight_charts",
                 "endpoint": "/api/crypto-mi/v1/fx-intel/candles?symbol=DXY",
                 "provider": "yahoo",
                 "yahoo_symbol": "DX-Y.NYB",
-                "supported_timeframes": ["15m", "1H", "4H", "1D"],
+                "supported_timeframes": list(DXY_SUPPORTED_TIMEFRAMES),
             },
         }
 
@@ -333,7 +345,7 @@ class FxMarketIntelService:
         return compute_indicators(bars or [])
 
     async def technical_live(self, symbol: str = "EUR/USD", timeframe: str = "1H") -> dict[str, Any]:
-        pack = await fetch_bars(symbol, timeframe)
+        pack = await get_candles(symbol, timeframe)
         ind = compute_indicators(pack.get("bars") or [])
         return {**ind, "symbol": symbol, "timeframe": timeframe, "bars_status": pack.get("status"), "source": pack.get("source")}
 
@@ -487,11 +499,11 @@ class FxMarketIntelService:
         if dxy.get("status") != "connected":
             missing.append(f"DXY: {dxy.get('message')}")
 
-        e_pack = await fetch_bars("EUR/USD", timeframe) if sections.get("technical", True) else {"bars": [], "status": "skipped"}
-        d_pack = await fetch_bars("DXY", timeframe) if sections.get("dxy", True) else {"bars": [], "status": "skipped"}
-        if sections.get("technical", True) and e_pack.get("status") not in {"connected", "ok"}:
+        e_pack = await get_candles("EUR/USD", timeframe) if sections.get("technical", True) else {"bars": [], "status": "skipped"}
+        d_pack = await get_candles("DXY", timeframe) if sections.get("dxy", True) else {"bars": [], "status": "skipped"}
+        if sections.get("technical", True) and e_pack.get("status") not in {"connected", "ok", "delayed"}:
             missing.append(f"Бары EUR/USD: {e_pack.get('message')}")
-        if sections.get("dxy", True) and d_pack.get("status") not in {"connected", "ok"}:
+        if sections.get("dxy", True) and d_pack.get("status") not in {"connected", "ok", "delayed"}:
             missing.append(f"Бары DXY: {d_pack.get('message')}")
 
         e_ta = compute_indicators(e_pack.get("bars") or [])

@@ -114,7 +114,9 @@ describe("sprint 50.11 live active candle", () => {
     const nextUnix = Date.parse("2026-09-03T08:03:00Z") / 1000;
     const created = applyQuoteToActiveCandle(last, 1.164, nextUnix, "1h");
     expect(Number(created?.time)).toBe(Date.parse("2026-09-03T08:00:00Z") / 1000);
-    expect(created?.open).toBe(1.1615);
+    expect(created?.open).toBe(1.164);
+    expect(created?.high).toBe(1.164);
+    expect(created?.low).toBe(1.164);
     expect(created?.close).toBe(1.164);
     expect(Number(created?.time)).toBeGreaterThan(Number(last.time));
     const times = [Number(last.time), Number(created?.time)];

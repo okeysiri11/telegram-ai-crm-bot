@@ -78,7 +78,7 @@ export function normalizeChartTime(value: unknown): FxChartTimestamp | null {
   return null;
 }
 
-export function normalizeHistoryCandles(candles: FxCandle[]): FxCandle[] {
+export function normalizeHistoryCandles(candles: FxCandle[], symbol?: string): FxCandle[] {
   const mapped: FxCandle[] = [];
   for (const candle of candles) {
     const time = normalizeChartTime(candle.time);
@@ -86,7 +86,7 @@ export function normalizeHistoryCandles(candles: FxCandle[]): FxCandle[] {
     const high = Number(candle.high);
     const low = Number(candle.low);
     const close = Number(candle.close);
-    if (time == null || ![open, high, low, close].every(Number.isFinite)) {
+    if (time == null || !fxOhlcValid(open, high, low, close, symbol)) {
       FX_INVALID_TIMESTAMPS_DROPPED += 1;
       continue;
     }
@@ -110,7 +110,7 @@ export function normalizeHistoryCandles(candles: FxCandle[]): FxCandle[] {
   return out;
 }
 
-export function barsToCandles(bars: NativeCandleBar[]): CandlestickData[] {
+export function barsToCandles(bars: NativeCandleBar[], symbol?: string): CandlestickData[] {
   const raw: FxCandle[] = [];
   for (const b of bars) {
     const open = Number(b.o);
@@ -118,13 +118,13 @@ export function barsToCandles(bars: NativeCandleBar[]): CandlestickData[] {
     const low = Number(b.l);
     const close = Number(b.c);
     const time = normalizeChartTime(b.t);
-    if (time == null || ![open, high, low, close].every(Number.isFinite)) {
+    if (time == null || !fxOhlcValid(open, high, low, close, symbol)) {
       FX_INVALID_TIMESTAMPS_DROPPED += 1;
       continue;
     }
     raw.push({ time, open, high, low, close });
   }
-  return normalizeHistoryCandles(raw);
+  return normalizeHistoryCandles(raw, symbol);
 }
 
 export function lastSeriesTimestampOf(candles: FxCandle[]): number {
@@ -149,6 +149,10 @@ export function safeUpdateCandlestick(
   const low = Number(bar.low);
   const close = Number(bar.close);
   if (![open, high, low, close].every(Number.isFinite)) {
+    FX_INVALID_TIMESTAMPS_DROPPED += 1;
+    return { result: "dropped_invalid", lastSeriesTimestamp };
+  }
+  if (Math.min(open, high, low, close) <= 0 || high < low || high / low > 20) {
     FX_INVALID_TIMESTAMPS_DROPPED += 1;
     return { result: "dropped_invalid", lastSeriesTimestamp };
   }
@@ -216,6 +220,37 @@ export function parseQuoteMid(value: unknown): number | null {
   return n;
 }
 
+/** Reject unit/format corruption only (EURUSD 11610, DXY 0 / 99230). Never cap real moves. */
+export function fxPriceSane(symbol: string | undefined, price: number, ref?: number | null): boolean {
+  if (!Number.isFinite(price) || price <= 0) return false;
+  const named = String(symbol || "");
+  const dxy = /dxy/i.test(named);
+  const eurusd = /eur/i.test(named);
+  if (dxy) {
+    if (price < 20 || price > 200) return false;
+  } else if (eurusd) {
+    if (price < 0.2 || price > 5) return false;
+  } else {
+    const inEur = price >= 0.2 && price <= 5;
+    const inDxy = price >= 20 && price <= 200;
+    if (!inEur && !inDxy) return false;
+  }
+  if (ref != null && Number.isFinite(ref) && ref > 0) {
+    const ratio = price / ref;
+    if (ratio > 50 || ratio < 1 / 50) return false;
+  }
+  return true;
+}
+
+export function fxOhlcValid(open: number, high: number, low: number, close: number, symbol?: string): boolean {
+  if (![open, high, low, close].every(Number.isFinite)) return false;
+  if (Math.min(open, high, low, close) <= 0) return false;
+  if (high < low) return false;
+  if (high < Math.max(open, close) || low > Math.min(open, close)) return false;
+  if (high / low > 20) return false;
+  return [open, high, low, close].every((p) => fxPriceSane(symbol, p));
+}
+
 export function quoteTimeUnix(quote: LiveFxQuote | null | undefined, nowMs = Date.now()): number {
   const fetched = Date.parse(String(quote?.fetched_at || ""));
   if (Number.isFinite(fetched) && fetched > 0) return Math.floor(fetched / 1000);
@@ -248,8 +283,13 @@ export function applyQuoteToActiveCandle(
   quote: number,
   quoteUnix: number,
   timeframe: string,
+  symbol?: string,
 ): FxCandle | null {
   if (!Number.isFinite(quote) || quote <= 0) return null;
+  if (!fxPriceSane(symbol, quote, last?.close)) {
+    console.warn("[fx-chart] rejected corrupt quote", { symbol, quote, ref: last?.close });
+    return null;
+  }
   const ts = Math.floor(Number(quoteUnix));
   if (!Number.isFinite(ts) || ts <= 0) return null;
   const bucket = candleBucketUnix(timeframe, ts);
@@ -274,12 +314,11 @@ export function applyQuoteToActiveCandle(
       close: quote,
     };
   }
-  const open = last.close;
   return {
     time: bucketTime,
-    open,
-    high: Math.max(open, quote),
-    low: Math.min(open, quote),
+    open: quote,
+    high: quote,
+    low: quote,
     close: quote,
   };
 }

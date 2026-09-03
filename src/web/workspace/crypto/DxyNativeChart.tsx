@@ -7,7 +7,7 @@ import { formatFxQuote } from "./fxQuoteDisplay";
 import type { LiveFxQuote } from "./fxNativeChartCore";
 import { FxLiveStatusCaption, useFxNativeLiveChart } from "./useFxNativeLiveChart";
 
-export const DXY_NATIVE_TIMEFRAMES: ChartTimeframe[] = ["15m", "1h", "4h", "1D"];
+export const DXY_NATIVE_TIMEFRAMES: ChartTimeframe[] = ["1m", "5m", "15m", "1h", "4h", "1D", "1W"];
 export { barsToCandles, fetchFxCandles, normalizeCandlesTimeframe } from "./fxNativeChartCore";
 export type { NativeCandleBar } from "./fxNativeChartCore";
 
@@ -22,7 +22,7 @@ export function DxyNativeChart({
   height?: number;
   liveQuote?: LiveFxQuote | null;
 }) {
-  const { hostRef, status, message, meta, liveKind, liveUpdated, followLive, goToLive, visibleBarCount, generation, staleDropped } = useFxNativeLiveChart({
+  const { hostRef, status, message, meta, liveKind, liveUpdated, followLive, goToLive, visibleBarCount, generation, staleDropped, sourceNote } = useFxNativeLiveChart({
     symbol,
     timeframe,
     height,
@@ -41,11 +41,15 @@ export function DxyNativeChart({
       data-symbol={symbol}
       data-engine="lightweight-charts"
       data-status={status}
+      data-bar-count={String(meta.barCount)}
       data-last-close={formatFxQuote(meta.lastClose, 3) ?? ""}
       data-live-follow={followLive ? "yes" : "no"}
       data-visible-range-bars={String(visibleBarCount)}
       data-chart-generation={String(generation)}
       data-stale-live-dropped={String(staleDropped)}
+      data-source-status={String(meta.sourceStatus || "")}
+      data-source-resolution={String(meta.sourceResolution || "")}
+      data-provider={String(meta.provider || "")}
     >
       <div
         ref={hostRef}
@@ -55,7 +59,7 @@ export function DxyNativeChart({
       />
       <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 eds-type-caption text-[var(--eds-text-muted)]">
         <span data-testid="dxy-chart-status">
-          {status === "loading" ? "Загрузка…" : status === "ready" ? "ADOS · Lightweight Charts" : "Ошибка"}
+          {status === "loading" ? "Обновление источника…" : status === "ready" ? "ADOS · Lightweight Charts" : "Ошибка"}
         </span>
         <FxLiveStatusCaption
           testIdPrefix="dxy"
@@ -63,6 +67,10 @@ export function DxyNativeChart({
           liveUpdated={liveUpdated}
           followLive={followLive}
           onGoToLive={goToLive}
+          provider={meta.provider || meta.source}
+          sourceResolution={meta.sourceResolution}
+          barCount={meta.barCount}
+          sourceNote={sourceNote}
         />
         <span data-testid="dxy-chart-bars">{message}</span>
         {meta.source ? <span>{meta.source}</span> : null}
@@ -72,7 +80,7 @@ export function DxyNativeChart({
             {liveQuote?.source ? ` · ${String(liveQuote.source)}` : ""}
           </span>
         ) : null}
-        {status === "error" ? <span className="text-[var(--eds-danger,#b91c1c)]">{message}</span> : null}
+        {status === "error" && !meta.barCount ? <span className="text-[var(--eds-danger,#b91c1c)]">{message}</span> : null}
       </div>
       <p className="eds-type-caption text-[var(--eds-text-muted)]">
         DXY: нативный график по барам бэкенда (Yahoo DX-Y.NYB). TradingView TVC:DXY не используется — без popup/логина.
