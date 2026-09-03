@@ -232,7 +232,7 @@ describe("sprint 50.13 timeframe switch guard", () => {
     expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-status")).toBe("ready");
     expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-live-follow")).toBe("yes");
     expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-chart-generation")).not.toBe(gen1);
-    expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-visible-range-bars")).toBe("120");
+    expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-visible-range-bars")).toBe("100");
     const lastUpdate = series.update.mock.calls.at(-1)?.[0] as FxCandle | undefined;
     if (lastUpdate) expect(Number(lastUpdate.time)).toBeGreaterThanOrEqual(T_5M_BUCKET);
   });
@@ -288,7 +288,7 @@ describe("sprint 50.13 timeframe switch guard", () => {
       rerender(<EurUsdNativeChart timeframe={tf} liveQuote={quote("1.16100")} />);
     }
     await waitFor(() => expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-status")).toBe("ready"));
-    expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-visible-range-bars")).toBe("120");
+    expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-visible-range-bars")).toBe("100");
   });
 
   it("survives DXY 1m -> 5m with coarser Yahoo fallback bars", async () => {

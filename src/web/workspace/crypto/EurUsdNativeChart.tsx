@@ -48,7 +48,11 @@ export function EurUsdNativeChart({
       data-stale-live-dropped={String(staleDropped)}
       data-source-status={String(meta.sourceStatus || "")}
       data-source-resolution={String(meta.sourceResolution || "")}
+      data-base-resolution={String(meta.baseResolution || "")}
+      data-displayed-timeframe={String(meta.displayedTimeframe || timeframe)}
+      data-aggregated={meta.aggregated ? "yes" : "no"}
       data-provider={String(meta.provider || "")}
+      data-data-quality={String(meta.dataQuality || "")}
     >
       <div
         ref={hostRef}
@@ -58,7 +62,13 @@ export function EurUsdNativeChart({
       />
       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 eds-type-caption text-[var(--eds-text-muted)]">
         <span data-testid="eurusd-chart-status">
-          {status === "loading" ? "Обновление источника…" : status === "ready" ? "ADOS · Lightweight Charts" : "Ошибка"}
+          {status === "loading"
+            ? "Обновление источника…"
+            : status === "ready"
+              ? "ADOS · Lightweight Charts"
+              : status === "unavailable"
+                ? "UNAVAILABLE_AT_SOURCE_RESOLUTION"
+                : "Ошибка"}
         </span>
         <FxLiveStatusCaption
           testIdPrefix="eurusd"
@@ -70,6 +80,9 @@ export function EurUsdNativeChart({
           sourceResolution={meta.sourceResolution}
           barCount={meta.barCount}
           sourceNote={sourceNote}
+          baseResolution={meta.baseResolution}
+          displayedTimeframe={meta.displayedTimeframe}
+          aggregation={meta.aggregation}
         />
         <span data-testid="eurusd-chart-bars">{message}</span>
         {meta.source ? <span>{meta.source}</span> : null}

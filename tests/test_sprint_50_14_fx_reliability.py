@@ -51,6 +51,7 @@ def test_dxy_maps_intraday_to_honest_yahoo_interval():
     assert yahoo_interval_range("DXY", "1W") == ("1wk", "2y")
     assert yahoo_interval_range("EUR/USD", "1m") == ("1m", "1d")
     assert yahoo_interval_range("EUR/USD", "4H") == ("60m", "30d")
+    assert yahoo_interval_range("EUR/USD", "1H") == ("60m", "30d")
 
 
 def test_normalize_drops_zero_low_and_unit_corruption():
@@ -112,7 +113,7 @@ async def test_ttl_cache_second_call_skips_yahoo(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_single_flight_coalesces_ten_dxy_5m(monkeypatch):
+async def test_single_flight_coalesces_ten_dxy_1h(monkeypatch):
     from services.fx_market_intel import yahoo_feed as yf
 
     calls = {"n": 0}
@@ -123,12 +124,27 @@ async def test_single_flight_coalesces_ten_dxy_5m(monkeypatch):
         return _chart([99.1, 99.2, 99.3, 99.4], start=1_700_000_000)
 
     monkeypatch.setattr(yf, "fetch_yahoo_chart", slow_chart)
-    packs = await asyncio.gather(*[get_candles("DXY", "5m") for _ in range(10)])
+    packs = await asyncio.gather(*[get_candles("DXY", "1H") for _ in range(10)])
     assert calls["n"] == 1
     assert all(p["bar_count"] == 4 for p in packs)
     assert packs[0]["source_resolution"] == "60m"
-    assert packs[0]["requested_timeframe"] == "5m"
-    assert packs[0]["yahoo_interval"] == "60m"
+    assert packs[0]["requested_timeframe"] == "1H"
+
+
+@pytest.mark.asyncio
+async def test_dxy_1m_and_5m_unavailable_without_yahoo(monkeypatch):
+    from services.fx_market_intel import yahoo_feed as yf
+
+    async def boom(symbol_yahoo: str, *, interval: str, range_: str):
+        raise AssertionError("DXY 1m/5m must not call Yahoo")
+
+    monkeypatch.setattr(yf, "fetch_yahoo_chart", boom)
+    one = await get_candles("DXY", "1m")
+    five = await get_candles("DXY", "5m")
+    assert one["source_status"] == "UNAVAILABLE_AT_SOURCE_RESOLUTION"
+    assert five["source_status"] == "UNAVAILABLE_AT_SOURCE_RESOLUTION"
+    assert one["bars"] == []
+    assert five["bars"] == []
 
 
 @pytest.mark.asyncio
@@ -140,7 +156,7 @@ async def test_yahoo_429_returns_last_good_not_empty(monkeypatch):
         return _chart([99.2, 99.25, 99.3])
 
     monkeypatch.setattr(yf, "fetch_yahoo_chart", ok_chart)
-    good = await get_candles("DXY", "1m")
+    good = await get_candles("DXY", "1H")
     assert good["chart_ready"] is True
     assert good["bars"]
 
@@ -149,18 +165,18 @@ async def test_yahoo_429_returns_last_good_not_empty(monkeypatch):
 
     monkeypatch.setattr(yf, "fetch_yahoo_chart", boom)
     cf._candle_ttl.clear()
-    stale = await get_candles("DXY", "1m")
+    stale = await get_candles("DXY", "1H")
     assert stale["bars"], "429 must not replace last-good with []"
     assert stale["chart_ready"] is True
     assert stale["source_status"] == "rate_limited"
     assert stale["stale"] is True
     assert stale["cache"] == "last_good"
     assert stale["bar_count"] == good["bar_count"]
-    key = "candle:DXY:1m"
+    key = "candle:DXY:1H"
     assert cf._candle_last_good[key]["payload"]["bars"]
     assert len(cf._candle_last_good[key]["payload"]["bars"]) > 0
 
-    again = await get_candles("DXY", "1m")
+    again = await get_candles("DXY", "1H")
     assert again["bars"]
     assert again["source_status"] == "rate_limited"
 

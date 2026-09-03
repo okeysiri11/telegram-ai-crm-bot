@@ -1,7 +1,6 @@
 /**
  * Shared live FX native chart: historical candles + quote overlay via series.update().
- * Does not refetch full history on every quote tick.
- * Viewport: recent logical window + live-follow; never fitContent on quote ticks.
+ * Timeframe-scoped candle series (hard reset on TF change). Never fitContent on quote ticks.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createChart, type IChartApi, type ISeriesApi, type LogicalRange } from "lightweight-charts";
@@ -15,10 +14,14 @@ import {
   fxHistoryRefreshMs,
   fxInitialLogicalRange,
   fxVisibleBarCount,
+  FX_BAR_SPACING,
+  FX_MIN_BAR_SPACING,
+  FX_LIVE_FOLLOW_RIGHT_PAD,
   FX_PRICE_SCALE_MARGIN_BOTTOM,
   FX_PRICE_SCALE_MARGIN_TOP,
   lastSeriesTimestampOf,
   liveQuoteIsStale,
+  noteStaleTickApplied,
   parseQuoteMid,
   quoteTimeUnix,
   safeUpdateCandlestick,
@@ -38,20 +41,51 @@ export type FxNativeLiveMeta = {
   sourceStatus?: string;
   stale?: boolean;
   cache?: string;
+  baseResolution?: string;
+  displayedTimeframe?: string;
+  aggregated?: boolean;
+  aggregation?: string;
+  dataQuality?: string;
+  providerState?: string;
+  updatedAt?: string;
 };
 
 function sourceBanner(json: Record<string, unknown>, candles: number): string | null {
   const status = String(json.source_status || json.status || "");
   const stale = Boolean(json.stale);
   const cache = String(json.cache || "");
+  if (status === "UNAVAILABLE_AT_SOURCE_RESOLUTION" || status === "unavailable") {
+    return "UNAVAILABLE_AT_SOURCE_RESOLUTION";
+  }
   if (status === "rate_limited" || cache === "last_good") {
     return "RATE LIMITED — showing last received data";
   }
-  if (stale || cache === "ttl" || status === "delayed") {
-    return cache === "ttl" ? "CACHED" : "CACHED / STALE";
+  if (cache === "persistent" || cache === "ttl") {
+    return "CACHED";
+  }
+  if (stale || status === "delayed") {
+    return "CACHED";
   }
   if (candles > 0) return null;
   return null;
+}
+
+function candleSeriesOptions(pricePrecision: number, minMove: number) {
+  return {
+    upColor: "#15803d",
+    downColor: "#b91c1c",
+    borderVisible: true,
+    borderUpColor: "#15803d",
+    borderDownColor: "#b91c1c",
+    wickVisible: true,
+    wickUpColor: "#15803d",
+    wickDownColor: "#b91c1c",
+    lastValueVisible: true,
+    priceLineVisible: true,
+    priceLineWidth: 2,
+    priceLineColor: "#0f766e",
+    priceFormat: { type: "price" as const, precision: pricePrecision, minMove },
+  };
 }
 
 export function useFxNativeLiveChart({
@@ -95,7 +129,7 @@ export function useFxNativeLiveChart({
   liveQuoteRef.current = liveQuote;
   timeframeRef.current = timeframe;
 
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "ready" | "error" | "unavailable">("loading");
   const [message, setMessage] = useState<string>("Загрузка баров…");
   const [meta, setMeta] = useState<FxNativeLiveMeta>({ barCount: 0 });
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -112,8 +146,23 @@ export function useFxNativeLiveChart({
     if (!chart || barCount <= 0) return;
     const range = fxInitialLogicalRange(barCount, fxVisibleBarCount(String(timeframeRef.current)));
     applyingRangeRef.current = true;
-    chart.timeScale().setVisibleLogicalRange(range);
-    applyingRangeRef.current = false;
+    try {
+      const ts = chart.timeScale();
+      if (typeof ts.applyOptions === "function") {
+        ts.applyOptions({
+          barSpacing: FX_BAR_SPACING,
+          minBarSpacing: FX_MIN_BAR_SPACING,
+          rightOffset: FX_LIVE_FOLLOW_RIGHT_PAD,
+        });
+      }
+      ts.setVisibleLogicalRange(range);
+      seriesRef.current?.priceScale().applyOptions({
+        autoScale: true,
+        scaleMargins: { top: FX_PRICE_SCALE_MARGIN_TOP, bottom: FX_PRICE_SCALE_MARGIN_BOTTOM },
+      });
+    } finally {
+      applyingRangeRef.current = false;
+    }
   }, []);
 
   const goToLive = useCallback(() => {
@@ -122,8 +171,36 @@ export function useFxNativeLiveChart({
     applyRecentViewport(lastIndexRef.current + 1);
   }, [applyRecentViewport]);
 
+  const recreateSeries = useCallback(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    const prev = seriesRef.current;
+    if (prev) {
+      try {
+        chart.removeSeries(prev);
+      } catch {
+        /* series already detached */
+      }
+    }
+    const series = chart.addCandlestickSeries(candleSeriesOptions(pricePrecision, minMove));
+    series.priceScale().applyOptions({
+      autoScale: true,
+      scaleMargins: { top: FX_PRICE_SCALE_MARGIN_TOP, bottom: FX_PRICE_SCALE_MARGIN_BOTTOM },
+    });
+    seriesRef.current = series;
+    lastCandleRef.current = null;
+    lastSeriesTimestampRef.current = 0;
+    lastIndexRef.current = 0;
+    historyReadyRef.current = false;
+    liveEnabledRef.current = false;
+    hadBarsRef.current = false;
+  }, [minMove, pricePrecision]);
+
   const applyLive = (quote: LiveFxQuote | null | undefined, requestGeneration?: number) => {
-    if (requestGeneration != null && requestGeneration !== generationRef.current) return;
+    if (requestGeneration != null && requestGeneration !== generationRef.current) {
+      noteStaleTickApplied();
+      return;
+    }
     if (!liveEnabledRef.current) return;
     const series = seriesRef.current;
     if (!series) return;
@@ -168,25 +245,21 @@ export function useFxNativeLiveChart({
         autoScale: true,
         scaleMargins: { top: FX_PRICE_SCALE_MARGIN_TOP, bottom: FX_PRICE_SCALE_MARGIN_BOTTOM },
       },
-      timeScale: { borderColor: "#cbd5e1", timeVisible: true, secondsVisible: false },
+      timeScale: {
+        borderColor: "#cbd5e1",
+        timeVisible: true,
+        secondsVisible: false,
+        barSpacing: FX_BAR_SPACING,
+        minBarSpacing: FX_MIN_BAR_SPACING,
+        rightOffset: 4,
+      },
       crosshair: {
         mode: 1,
         horzLine: { visible: true, labelVisible: true, color: "#0f766e", width: 1 },
         vertLine: { visible: true, labelVisible: true },
       },
     });
-    const series = chart.addCandlestickSeries({
-      upColor: "#15803d",
-      downColor: "#b91c1c",
-      borderVisible: false,
-      wickUpColor: "#15803d",
-      wickDownColor: "#b91c1c",
-      lastValueVisible: true,
-      priceLineVisible: true,
-      priceLineWidth: 2,
-      priceLineColor: "#0f766e",
-      priceFormat: { type: "price", precision: pricePrecision, minMove },
-    });
+    const series = chart.addCandlestickSeries(candleSeriesOptions(pricePrecision, minMove));
     series.priceScale().applyOptions({
       autoScale: true,
       scaleMargins: { top: FX_PRICE_SCALE_MARGIN_TOP, bottom: FX_PRICE_SCALE_MARGIN_BOTTOM },
@@ -233,9 +306,17 @@ export function useFxNativeLiveChart({
     liveEnabledRef.current = false;
     followRef.current = true;
     setFollowLive(true);
+    hadBarsRef.current = false;
+    historyReadyRef.current = false;
+    recreateSeries();
+    setStatus("loading");
+    setMessage("Загрузка баров…");
+    setSourceNote(null);
 
     const loadHistory = async (silent: boolean) => {
-      if (requestGeneration !== generationRef.current) return;
+      if (requestGeneration !== generationRef.current) {
+        return;
+      }
       if (ac.signal.aborted || inFlight) return;
       inFlight = true;
       if (!silent) {
@@ -246,12 +327,32 @@ export function useFxNativeLiveChart({
       try {
         const { ok, json, cancelled } = await fetchFxCandles(symbol, String(timeframe), ac.signal);
         if (cancelled || ac.signal.aborted || requestGeneration !== generationRef.current) return;
+        const unavailable =
+          String(json.source_status || "") === "UNAVAILABLE_AT_SOURCE_RESOLUTION" ||
+          String(json.status || "") === "unavailable";
         const bars = Array.isArray(json.bars) ? (json.bars as NativeCandleBar[]) : [];
         const candles = barsToCandles(bars, symbol);
         const usable = candles.length > 0;
         const rateLimited =
           String(json.source_status || json.status || "").includes("rate_limited") ||
           String(json.cache || "") === "last_good";
+        if (unavailable && !usable) {
+          setStatus("unavailable");
+          setMessage(String(json.message || "UNAVAILABLE_AT_SOURCE_RESOLUTION"));
+          setSourceNote("UNAVAILABLE_AT_SOURCE_RESOLUTION");
+          setMeta({
+            barCount: 0,
+            source: String(json.source || json.provider || ""),
+            provider: String(json.provider || json.source || "yahoo"),
+            sourceResolution: String(json.source_resolution || json.base_resolution || ""),
+            sourceStatus: "UNAVAILABLE_AT_SOURCE_RESOLUTION",
+            baseResolution: String(json.base_resolution || json.source_resolution || ""),
+            displayedTimeframe: String(json.displayed_timeframe || timeframe),
+            aggregated: false,
+          });
+          liveEnabledRef.current = false;
+          return;
+        }
         if (!ok && !usable) {
           if (!silent && !hadBarsRef.current) {
             setStatus("error");
@@ -280,6 +381,7 @@ export function useFxNativeLiveChart({
                 barCount: 1,
                 lastClose: lastCandleRef.current?.close,
                 sourceStatus: "live",
+                displayedTimeframe: String(timeframe),
               }));
               return;
             }
@@ -325,10 +427,17 @@ export function useFxNativeLiveChart({
           source: String(json.source || json.provider || ""),
           lastClose: json.last_close ?? candles.at(-1)?.close,
           provider: String(json.provider || json.source || "yahoo"),
-          sourceResolution: String(json.source_resolution || ""),
+          sourceResolution: String(json.source_resolution || json.base_resolution || ""),
           sourceStatus: String(json.source_status || json.status || ""),
           stale: Boolean(json.stale),
           cache: String(json.cache || ""),
+          baseResolution: String(json.base_resolution || json.source_resolution || ""),
+          displayedTimeframe: String(json.displayed_timeframe || timeframe),
+          aggregated: Boolean(json.aggregated),
+          aggregation: json.aggregation ? String(json.aggregation) : undefined,
+          dataQuality: json.data_quality ? String(json.data_quality) : undefined,
+          providerState: json.provider_state ? String(json.provider_state) : undefined,
+          updatedAt: json.fetched_at ? String(json.fetched_at) : undefined,
         });
         setStatus("ready");
         setMessage(`Баров: ${candles.length}`);
@@ -357,7 +466,16 @@ export function useFxNativeLiveChart({
       ac.abort();
       if (historyId) window.clearInterval(historyId);
     };
-  }, [symbol, timeframe, reload, loadError, emptyError, useApiErrorMessage, applyRecentViewport]);
+  }, [
+    symbol,
+    timeframe,
+    reload,
+    loadError,
+    emptyError,
+    useApiErrorMessage,
+    applyRecentViewport,
+    recreateSeries,
+  ]);
 
   useEffect(() => {
     applyLive(liveQuote, generationRef.current);
@@ -378,8 +496,8 @@ export function useFxNativeLiveChart({
   const quoteStale = !hasQuote || liveQuoteIsStale(lastQuoteMs, nowMs);
   const rateLimited =
     meta.sourceStatus === "rate_limited" || meta.cache === "last_good" || sourceNote?.includes("RATE LIMITED");
-  const cached = Boolean(meta.stale) || meta.cache === "ttl" || meta.cache === "last_good";
-  const liveKind = (rateLimited ? "RATE_LIMITED" : cached && quoteStale ? "CACHED" : quoteStale ? "STALE" : "LIVE") as
+  const cached = Boolean(meta.stale) || meta.cache === "ttl" || meta.cache === "last_good" || meta.cache === "persistent";
+  const liveKind = (rateLimited ? "RATE_LIMITED" : cached ? "CACHED" : quoteStale ? "STALE" : "LIVE") as
     | "LIVE"
     | "STALE"
     | "CACHED"
@@ -413,6 +531,9 @@ export function FxLiveStatusCaption({
   sourceResolution,
   barCount,
   sourceNote,
+  baseResolution,
+  displayedTimeframe,
+  aggregation,
 }: {
   testIdPrefix: string;
   liveKind: "LIVE" | "STALE" | "CACHED" | "RATE_LIMITED";
@@ -423,7 +544,17 @@ export function FxLiveStatusCaption({
   sourceResolution?: string;
   barCount?: number;
   sourceNote?: string | null;
+  baseResolution?: string;
+  displayedTimeframe?: string;
+  aggregation?: string;
 }) {
+  const base = baseResolution || sourceResolution;
+  const display = displayedTimeframe;
+  const resolutionLabel = aggregation
+    ? aggregation
+    : base && display && base !== display
+      ? `${base} -> aggregated ${display}`
+      : sourceResolution;
   return (
     <span className="inline-flex flex-wrap items-center gap-2" data-testid={`${testIdPrefix}-live-indicator`} data-live-status={liveKind.toLowerCase()}>
       {liveKind === "LIVE" ? (
@@ -433,14 +564,18 @@ export function FxLiveStatusCaption({
       ) : liveKind === "RATE_LIMITED" ? (
         <span data-testid={`${testIdPrefix}-rate-limited`}>RATE LIMITED — showing last received data</span>
       ) : liveKind === "CACHED" ? (
-        <span>CACHED / STALE</span>
+        <span>CACHED</span>
       ) : (
         <span>STALE</span>
       )}
       {liveUpdated ? <span data-testid={`${testIdPrefix}-live-updated`}>Updated: {liveUpdated}</span> : null}
       {provider ? <span data-testid={`${testIdPrefix}-provider`}>Provider: {provider}</span> : null}
-      {sourceResolution ? (
-        <span data-testid={`${testIdPrefix}-source-resolution`}>Source resolution: {sourceResolution}</span>
+      {base ? <span data-testid={`${testIdPrefix}-base-resolution`}>Base: {base}</span> : null}
+      {display ? <span data-testid={`${testIdPrefix}-displayed-timeframe`}>Display: {display}</span> : null}
+      {resolutionLabel ? (
+        <span data-testid={`${testIdPrefix}-source-resolution`}>
+          {aggregation || (base && display && base !== display) ? resolutionLabel : `Source resolution: ${resolutionLabel}`}
+        </span>
       ) : null}
       {barCount != null ? <span data-testid={`${testIdPrefix}-bar-meta`}>Bars: {barCount}</span> : null}
       {sourceNote && liveKind !== "RATE_LIMITED" ? <span>{sourceNote}</span> : null}

@@ -9,6 +9,7 @@ import { DxyNativeChart } from "./DxyNativeChart";
 import { EurUsdNativeChart } from "./EurUsdNativeChart";
 import type { ChartTimeframe } from "./chartProvider";
 import { formatFxQuote } from "./fxQuoteDisplay";
+import { fetchFxCandles } from "./fxNativeChartCore";
 
 export { formatFxQuote, fxWatchlistQuoteRow } from "./fxQuoteDisplay";
 
@@ -61,6 +62,11 @@ export function DualChartsPanel({
 }) {
   const grid = layout === "vertical" ? "grid gap-3" : "grid gap-3 lg:grid-cols-2";
   const chartH = layout === "vertical" ? 360 : 320;
+  useEffect(() => {
+    void fetchFxCandles("EUR/USD", "1m");
+    void fetchFxCandles("EUR/USD", "1H");
+    void fetchFxCandles("DXY", "1H");
+  }, []);
   return (
     <div className="space-y-3" data-testid="dual-charts" data-layout={layout}>
       <div className={grid}>

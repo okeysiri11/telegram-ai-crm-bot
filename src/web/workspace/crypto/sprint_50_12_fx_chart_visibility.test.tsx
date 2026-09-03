@@ -87,16 +87,16 @@ describe("sprint 50.12 chart visibility", () => {
     vi.useRealTimers();
   });
 
-  it("maps initial visible logical range per timeframe", () => {
-    expect(fxVisibleBarCount("1m")).toBe(120);
-    expect(fxVisibleBarCount("5m")).toBe(120);
-    expect(fxVisibleBarCount("15m")).toBe(120);
-    expect(fxVisibleBarCount("1h")).toBe(100);
-    expect(fxVisibleBarCount("4h")).toBe(100);
+    it("maps initial visible logical range per timeframe", () => {
+    expect(fxVisibleBarCount("1m")).toBe(100);
+    expect(fxVisibleBarCount("5m")).toBe(100);
+    expect(fxVisibleBarCount("15m")).toBe(100);
+    expect(fxVisibleBarCount("1h")).toBe(90);
+    expect(fxVisibleBarCount("4h")).toBe(80);
     expect(fxVisibleBarCount("1D")).toBe(90);
     expect(fxVisibleBarCount("1W")).toBe(70);
-    expect(fxInitialLogicalRange(500, 120)).toEqual({ from: 380, to: 503 });
-    expect(fxInitialLogicalRange(80, 120).from).toBe(0);
+    expect(fxInitialLogicalRange(500, 100)).toEqual({ from: 400, to: 503 });
+    expect(fxInitialLogicalRange(80, 100).from).toBe(0);
     expect(FX_PRICE_SCALE_MARGIN_TOP).toBe(0.12);
     expect(FX_PRICE_SCALE_MARGIN_BOTTOM).toBe(0.12);
   });
@@ -123,9 +123,9 @@ describe("sprint 50.12 chart visibility", () => {
     expect(timeScale.fitContent).not.toHaveBeenCalled();
     expect(timeScale.setVisibleLogicalRange).toHaveBeenCalled();
     const range = timeScale.setVisibleLogicalRange.mock.calls.at(-1)?.[0] as { from: number; to: number };
-    expect(range.to - range.from).toBe(123);
+    expect(range.to - range.from).toBe(103);
     expect(range.from).toBeGreaterThanOrEqual(30);
-    expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-visible-range-bars")).toBe("120");
+    expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-visible-range-bars")).toBe("100");
     expect(screen.getByTestId("eurusd-native-chart").getAttribute("data-live-follow")).toBe("yes");
     const opts = vi.mocked(createChart).mock.calls[0]?.[1] as {
       rightPriceScale?: { scaleMargins?: { top: number; bottom: number }; autoScale?: boolean };

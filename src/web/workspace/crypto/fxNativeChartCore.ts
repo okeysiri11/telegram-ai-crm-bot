@@ -34,11 +34,22 @@ export type SafeCandleUpdateResult = "appended" | "updated" | "dropped_stale" | 
 export let STALE_LIVE_UPDATES_DROPPED = 0;
 export let FX_INVALID_TIMESTAMPS_DROPPED = 0;
 export let FX_HISTORY_DUPLICATES_DROPPED = 0;
+export let STALE_TICKS_APPLIED = 0;
+export let SERIES_GENERATION_LEAKS = 0;
+export let GIANT_CANDLE_ERRORS = 0;
 
 export function resetFxChartDiagnostics(): void {
   STALE_LIVE_UPDATES_DROPPED = 0;
   FX_INVALID_TIMESTAMPS_DROPPED = 0;
   FX_HISTORY_DUPLICATES_DROPPED = 0;
+  STALE_TICKS_APPLIED = 0;
+  SERIES_GENERATION_LEAKS = 0;
+  GIANT_CANDLE_ERRORS = 0;
+}
+
+export function noteStaleTickApplied(): void {
+  STALE_TICKS_APPLIED += 1;
+  SERIES_GENERATION_LEAKS += 1;
 }
 
 /**
@@ -323,6 +334,41 @@ export function applyQuoteToActiveCandle(
   };
 }
 
+/** Quote may only mutate the active last bucket. Historical bars stay byte-stable. */
+export function applyLiveQuoteToHistory(
+  history: FxCandle[],
+  quote: number,
+  quoteUnix: number,
+  timeframe: string,
+  symbol?: string,
+): { history: FxCandle[]; mutatedHistorical: boolean } {
+  const snapshot = history.map((b) => ({ ...b }));
+  const last = snapshot.at(-1) ?? null;
+  const next = applyQuoteToActiveCandle(last, quote, quoteUnix, timeframe, symbol);
+  if (!next) return { history: snapshot, mutatedHistorical: false };
+  const body = Math.abs(next.high - next.low);
+  if (next.close > 0 && body / next.close > 0.05) {
+    GIANT_CANDLE_ERRORS += 1;
+  }
+  if (!last) return { history: [next], mutatedHistorical: false };
+  const lastTime = Number(last.time);
+  const nextTime = Number(next.time);
+  if (nextTime < lastTime) return { history: snapshot, mutatedHistorical: false };
+  if (nextTime === lastTime) {
+    const historical = snapshot.slice(0, -1);
+    const mutatedHistorical = historical.some((b, i) => {
+      const orig = history[i];
+      return !orig || orig.open !== b.open || orig.high !== b.high || orig.low !== b.low || orig.close !== b.close || Number(orig.time) !== Number(b.time);
+    });
+    return { history: [...historical, next], mutatedHistorical };
+  }
+  const mutatedHistorical = snapshot.some((b, i) => {
+    const orig = history[i];
+    return !orig || orig.open !== b.open || orig.high !== b.high || orig.low !== b.low || orig.close !== b.close || Number(orig.time) !== Number(b.time);
+  });
+  return { history: [...snapshot, next], mutatedHistorical };
+}
+
 export function formatLiveUpdated(fetchedAt: string | undefined, locale?: string): string | null {
   const ms = Date.parse(String(fetchedAt || ""));
   if (!Number.isFinite(ms)) return null;
@@ -345,11 +391,14 @@ export function liveQuoteIsStale(lastQuoteMs: number | null, nowMs = Date.now())
 export const FX_PRICE_SCALE_MARGIN_TOP = 0.12;
 export const FX_PRICE_SCALE_MARGIN_BOTTOM = 0.12;
 export const FX_LIVE_FOLLOW_RIGHT_PAD = 4;
+export const FX_BAR_SPACING = 6;
+export const FX_MIN_BAR_SPACING = 3;
 
 export function fxVisibleBarCount(timeframe: string): number {
   const tf = normalizeCandlesTimeframe(timeframe);
-  if (tf === "1m" || tf === "5m" || tf === "15m") return 120;
-  if (tf === "1H" || tf === "4H") return 100;
+  if (tf === "1m" || tf === "5m" || tf === "15m") return 100;
+  if (tf === "1H") return 90;
+  if (tf === "4H") return 80;
   if (tf === "1D") return 90;
   if (tf === "1W") return 70;
   return 100;

@@ -23,8 +23,8 @@ _TF_MAP = {
     "5M": ("5m", "5d"),
     "15m": ("15m", "5d"),
     "15M": ("15m", "5d"),
-    "1h": ("60m", "10d"),
-    "1H": ("60m", "10d"),
+    "1h": ("60m", "30d"),
+    "1H": ("60m", "30d"),
     "4h": ("60m", "30d"),
     "4H": ("60m", "30d"),
     "1d": ("1d", "6mo"),
@@ -53,8 +53,8 @@ _TF_MAP_DXY = {
     "5M": ("60m", "10d"),
     "15m": ("15m", "5d"),
     "15M": ("15m", "5d"),
-    "1h": ("60m", "10d"),
-    "1H": ("60m", "10d"),
+    "1h": ("60m", "30d"),
+    "1H": ("60m", "30d"),
     "4h": ("60m", "30d"),
     "4H": ("60m", "30d"),
     "1d": ("1d", "6mo"),
@@ -221,9 +221,14 @@ def normalize_yahoo_bars(
         h = _finite(highs[i] if i < len(highs) else None)
         l = _finite(lows[i] if i < len(lows) else None)
         v = _finite(volumes[i] if i < len(volumes) else None)
+        if o is None and h is None and l is None:
+            # Quote-only row. Do not fabricate o=h=l=c dashes.
+            continue
         open_ = o if o is not None else c
-        high_ = h if h is not None else c
-        low_ = l if l is not None else c
+        high_ = h if h is not None else max(open_, c)
+        low_ = l if l is not None else min(open_, c)
+        high_ = max(high_, open_, c)
+        low_ = min(low_, open_, c)
         if not valid_ohlc(open_, high_, low_, c, instrument):
             continue
         unix = int(t)
