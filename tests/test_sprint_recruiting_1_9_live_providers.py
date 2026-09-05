@@ -102,6 +102,41 @@ def test_oauth_state_rejects_tamper():
     assert bad["ok"] is False
 
 
+def test_oauth_state_roundtrip_when_hmac_contains_dot():
+    """Prefix HMAC so a 0x2e digest byte cannot break decode. Legacy states without
+    that byte still verify; those that already failed stay rejected."""
+    import base64
+    import hashlib
+    import hmac
+    import json
+    import time
+
+    from services.recruiting_ops import provider_oauth as oauth
+
+    found_dot = False
+    found_clean_legacy = False
+    for i in range(80):
+        parsed = decode_state(encode_state(provider="meta", organization_id=f"org-{i}"))
+        assert parsed["ok"] is True, parsed
+        raw = json.dumps(
+            {"exp": int(time.time()) + 600, "n": f"{i:016x}", "o": f"org-{i}", "p": "meta"},
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+        sig = hmac.new(oauth._sign_key(), raw, hashlib.sha256).digest()
+        current = base64.urlsafe_b64encode(sig + raw).decode("ascii")
+        assert decode_state(current)["ok"] is True
+        legacy = base64.urlsafe_b64encode(raw + b"." + sig).decode("ascii")
+        if b"." in sig:
+            found_dot = True
+            assert decode_state(current)["organization_id"] == f"org-{i}"
+        elif not found_clean_legacy:
+            found_clean_legacy = True
+            assert decode_state(legacy)["ok"] is True
+    assert found_dot is True
+    assert found_clean_legacy is True
+
+
 def test_metrics_keep_null_not_zero():
     row = normalize_metric_row("meta", {"campaign_id": "c1", "spend": "5"})
     assert row["spend"] == 5

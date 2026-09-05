@@ -16,6 +16,7 @@ from services.recruiting_ops.secret_store import get_secret_store
 
 OAUTH_PROVIDERS = ("meta", "google", "tiktok")
 STATE_TTL_SECONDS = 600
+_HMAC_LEN = 32  # SHA-256 digest; prefix framing avoids 0x2e inside the signature
 
 SCOPES = {
     "meta": "ads_management,ads_read,business_management,pages_show_list",
@@ -85,17 +86,32 @@ def encode_state(*, provider: str, organization_id: str, nonce: str | None = Non
     }
     raw = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode("utf-8")
     sig = hmac.new(_sign_key(), raw, hashlib.sha256).digest()
-    return base64.urlsafe_b64encode(raw + b"." + sig).decode("ascii")
+    # HMAC first (fixed 32 bytes). Do not join with b"." — a digest can contain 0x2e
+    # and legacy rsplit then verified the wrong slice (~12% of states).
+    return base64.urlsafe_b64encode(sig + raw).decode("ascii")
+
+
+def _payload_if_valid(raw: bytes, sig: bytes) -> dict[str, Any] | None:
+    if len(sig) != _HMAC_LEN:
+        return None
+    expected = hmac.new(_sign_key(), raw, hashlib.sha256).digest()
+    if not hmac.compare_digest(sig, expected):
+        return None
+    payload = json.loads(raw.decode("utf-8"))
+    return payload if isinstance(payload, dict) else None
 
 
 def decode_state(state: str) -> dict[str, Any]:
     try:
         blob = base64.urlsafe_b64decode(_txt(state).encode("ascii"))
-        raw, sig = blob.rsplit(b".", 1)
-        expected = hmac.new(_sign_key(), raw, hashlib.sha256).digest()
-        if not hmac.compare_digest(sig, expected):
+        payload = None
+        if len(blob) > _HMAC_LEN:
+            payload = _payload_if_valid(blob[_HMAC_LEN:], blob[:_HMAC_LEN])
+        if payload is None and b"." in blob:
+            raw, sig = blob.rsplit(b".", 1)
+            payload = _payload_if_valid(raw, sig)
+        if payload is None:
             return {"ok": False, "error": "AUTH_ERROR", "message_ru": "OAuth state недействителен."}
-        payload = json.loads(raw.decode("utf-8"))
         if int(payload.get("exp") or 0) < int(time.time()):
             return {"ok": False, "error": "TOKEN_EXPIRED", "message_ru": "OAuth state истёк."}
         return {"ok": True, "provider": payload.get("p"), "organization_id": payload.get("o"), "nonce": payload.get("n")}
