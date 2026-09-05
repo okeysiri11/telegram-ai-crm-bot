@@ -105,7 +105,7 @@ jobs:
             tests/test_sprint_recruiting_2_10_identity.py \
             tests/test_sprint_recruiting_3_0_2_merge.py \
             tests/test_sprint_recruiting_3_1_pipeline.py \
-            tests/test_sprint_recruiting_3_3_ads.py -q --tb=short
+            tests/test_sprint_recruiting_3_3_ads.py tests/test_sprint_recruiting_3_3_phase2_providers.py -q --tb=short
       - name: Alembic single head (re-check)
         run: |
           HEADS=$(python -m alembic heads | grep -c "(head)")
@@ -132,7 +132,7 @@ jobs:
         run: npm run lint
         continue-on-error: true
       - name: Vanguard / Recruiting vitest (scoped)
-        run: npx vitest run src/vanguard/vanguardCareer.test.tsx workspace/recruiting/sprint_recruiting_1_0.test.tsx workspace/recruiting/sprint_recruiting_1_2.test.tsx workspace/recruiting/sprint_recruiting_1_5.test.tsx workspace/recruiting/sprint_recruiting_1_6.test.tsx workspace/recruiting/sprint_recruiting_tracking_recovery.test.tsx workspace/recruiting/sprint_recruiting_1_8.test.tsx workspace/recruiting/sprint_recruiting_1_9.test.tsx workspace/recruiting/sprint_recruiting_email_smtp.test.tsx workspace/recruiting/sprint_recruiting_whatsapp.test.tsx workspace/recruiting/sprint_recruiting_2_10_identity.test.tsx workspace/recruiting/sprint_recruiting_3_0_2_merge.test.tsx workspace/recruiting/sprint_recruiting_3_1_pipeline.test.tsx workspace/recruiting/sprint_recruiting_3_3_ads.test.tsx
+        run: npx vitest run src/vanguard/vanguardCareer.test.tsx workspace/recruiting/sprint_recruiting_1_0.test.tsx workspace/recruiting/sprint_recruiting_1_2.test.tsx workspace/recruiting/sprint_recruiting_1_5.test.tsx workspace/recruiting/sprint_recruiting_1_6.test.tsx workspace/recruiting/sprint_recruiting_tracking_recovery.test.tsx workspace/recruiting/sprint_recruiting_1_8.test.tsx workspace/recruiting/sprint_recruiting_1_9.test.tsx workspace/recruiting/sprint_recruiting_email_smtp.test.tsx workspace/recruiting/sprint_recruiting_whatsapp.test.tsx workspace/recruiting/sprint_recruiting_2_10_identity.test.tsx workspace/recruiting/sprint_recruiting_3_0_2_merge.test.tsx workspace/recruiting/sprint_recruiting_3_1_pipeline.test.tsx workspace/recruiting/sprint_recruiting_3_3_ads.test.tsx workspace/recruiting/sprint_recruiting_3_3_phase2.test.tsx
       - name: Production build (blocking)
         run: npx vite build
 

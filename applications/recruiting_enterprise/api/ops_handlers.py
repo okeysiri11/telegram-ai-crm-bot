@@ -492,8 +492,39 @@ async def ops_oauth_callback_handler(request: web.Request) -> web.Response:
     )
     if request.rel_url.query.get("format") == "json":
         return json_response(result, status=_status_for(result))
-    status = "connected" if result.get("ok") and ((result.get("item") or {}).get("connected") if isinstance(result.get("item"), dict) else False) else "error"
+    item = result.get("item") if isinstance(result.get("item"), dict) else {}
+    if result.get("ok") and item.get("connected") and item.get("live_verified"):
+        status = "connected"
+    elif result.get("ok"):
+        status = "authorizing"
+    else:
+        status = "error"
     raise web.HTTPFound(f"/workspace/recruiting/integrations?oauth={provider}&status={status}")
+
+
+async def ops_provider_accounts_handler(request: web.Request) -> web.Response:
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().list_provider_accounts(_org(request), provider, _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_provider_diagnostics_get_handler(request: web.Request) -> web.Response:
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().provider_diagnostics(_org(request), provider, _role(request))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_provider_select_account_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    provider = request.match_info.get("provider") or ""
+    result = await get_recruiting_ops_service().select_provider_account(_org(request, body), provider, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_provider_mapping_handler(request: web.Request) -> web.Response:
+    body = await _read_json(request)
+    result = await get_recruiting_ops_service().confirm_provider_mapping(_org(request, body), body, _role(request, body))
+    return json_response(result, status=_status_for(result))
 
 
 async def ops_provider_test_handler(request: web.Request) -> web.Response:

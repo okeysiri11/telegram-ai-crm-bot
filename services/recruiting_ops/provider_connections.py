@@ -5,7 +5,9 @@ from __future__ import annotations
 from typing import Any
 
 from services.recruiting_ops.provider_adapters import LIVE_ADAPTERS, mock_providers_allowed
+from services.recruiting_ops.provider_layer import app_prerequisites, safe_diagnostics, wizard_progress
 from services.recruiting_ops.provider_readiness import ads_readiness, messaging_readiness
+from services.recruiting_ops.provider_state import normalize_provider_status, public_connection_fields, status_label_ru
 from services.recruiting_ops.secret_store import credential_presence
 
 _RUNTIME_CONNECTED: dict[str, bool] = {}
@@ -97,10 +99,16 @@ WIZARD_FIELDS: dict[str, list[dict[str, Any]]] = {
 
 STATUS_RU = {
     "NOT_CONFIGURED": "Не настроено",
-    "CONFIGURING": "Настройка",
+    "WAITING_PROVIDER": "Ожидает провайдера",
+    "AUTHORIZING": "Авторизация",
+    "CONFIGURING": "Авторизация",
     "CONNECTED": "Подключено",
+    "TOKEN_EXPIRED": "Токен истёк",
+    "PERMISSION_ERROR": "Нет прав",
+    "API_ERROR": "Ошибка API",
+    "DISCONNECTED": "Отключено",
     "DEGRADED": "Ограничено",
-    "ERROR": "Ошибка",
+    "ERROR": "Ошибка API",
     "DISABLED": "Отключено",
     "FROZEN": "Заморожено",
 }
@@ -139,49 +147,78 @@ def default_connection(provider: str) -> dict[str, Any]:
 
 def public_card(row: dict[str, Any]) -> dict[str, Any]:
     provider = _txt(row.get("provider"))
-    creds = credential_presence(provider)
-    status = _txt(row.get("status") or "NOT_CONFIGURED").upper()
+    creds = credential_presence(provider, organization_id=_txt(row.get("organization_id") or row.get("tenant_id")) or None)
+    raw_status = _txt(row.get("status") or "NOT_CONFIGURED").upper()
+    ads = provider in {"meta", "google", "tiktok"}
+    status = normalize_provider_status(raw_status) if ads else raw_status
     mode = _txt(row.get("mode") or "LIVE").upper()
-    if mode != "MOCK" and status == "CONNECTED":
+    if ads and mode != "MOCK" and status == "CONNECTED":
         from services.recruiting_ops.runtime import is_production_runtime
 
         verified = bool(row.get("live_verified"))
         injected = bool(row.get("mocked_http")) and not is_production_runtime()
         if not verified and not injected:
-            status = "CONFIGURING"
+            status = "AUTHORIZING"
             row = {**row, "status": status, "connected": False}
     tracking = "DELIVERABLE" if status == "CONNECTED" else "WAITING_PROVIDER"
+    public_fields = public_connection_fields({**row, "status": status})
+    app = app_prerequisites(provider) if provider in {"meta", "google", "tiktok"} else {"connect_available": False, "oauth_ready": False}
     card = {
         "provider": provider,
         "label": row.get("label") or LIVE_ADAPTERS.get(provider, LIVE_ADAPTERS["meta"]).label,
         "status": status,
-        "status_label_ru": STATUS_RU.get(status, status),
+        "status_label_ru": status_label_ru(status) if ads else STATUS_RU.get(status, status),
         "mode": mode,
         "mode_label_ru": "MOCK" if mode == "MOCK" else "LIVE",
         "connection_type": row.get("connection_type") or CONNECTION_TYPES.get(provider),
-        "account_id": row.get("account_id") or row.get("workspace_id"),
+        "account_id": public_fields.get("connected_account_id") or row.get("account_id") or row.get("workspace_id"),
+        "connected_account_id": public_fields.get("connected_account_id"),
+        "connected_account_name": public_fields.get("connected_account_name"),
         "workspace_id": row.get("workspace_id") or row.get("account_id"),
-        "last_successful_health_check": row.get("last_successful_request_at") or row.get("last_health_check_at"),
+        "currency": public_fields.get("currency") or row.get("currency"),
+        "timezone": public_fields.get("timezone") or row.get("timezone"),
+        "last_successful_health_check": public_fields.get("last_success_at") or row.get("last_successful_request_at") or row.get("last_health_check_at"),
+        "last_check_at": public_fields.get("last_check_at"),
+        "last_success_at": public_fields.get("last_success_at"),
+        "last_sync_at": row.get("last_sync_at"),
         "last_error": row.get("last_error"),
         "credential_presence": creds,
-        "credential_expiry": creds.get("expires_at") or row.get("credential_expiry"),
-        "permissions": list(row.get("scopes") or []),
-        "scopes": list(row.get("scopes") or []),
+        "credential_expiry": creds.get("expires_at") or row.get("credential_expiry") or public_fields.get("token_expires_at"),
+        "token_expires_at": public_fields.get("token_expires_at"),
+        "permissions": list(public_fields.get("scopes") or row.get("scopes") or []),
+        "scopes": list(public_fields.get("scopes") or row.get("scopes") or []),
+        "credential_version": public_fields.get("credential_version"),
+        "sync_enabled": bool(row.get("sync_enabled")),
+        "sync_cursor": row.get("sync_cursor"),
         "tracking_status": tracking,
         "enabled": bool(row.get("enabled")),
-        "connected": status == "CONNECTED",
+        "connected": public_fields.get("connected"),
         "mock": mode == "MOCK",
         "latency_ms": row.get("latency_ms"),
         "public": row.get("public") or {},
         "wizard": WIZARD_FIELDS.get(provider) or [],
+        "wizard_progress": wizard_progress(
+            app_ready=bool(app.get("connect_available") or app.get("oauth_ready")),
+            authorized=status in {"AUTHORIZING", "CONNECTED", "TOKEN_EXPIRED", "PERMISSION_ERROR", "API_ERROR"},
+            account_selected=bool(row.get("account_id") or public_fields.get("connected_account_id")),
+            verified=bool(public_fields.get("connected")),
+            sync_enabled=bool(row.get("sync_enabled")) and bool(public_fields.get("connected")),
+        ),
         "capabilities": list(LIVE_ADAPTERS[provider].capabilities) if provider in LIVE_ADAPTERS else [],
-        "actions": ["configure", "test", "reconnect", "disable", "diagnostics", "oauth"],
-        "live_verified": bool(row.get("live_verified")),
+        "actions": ["configure", "test", "reconnect", "disable", "diagnostics", "oauth", "select_account", "sync"],
+        "live_verified": bool(public_fields.get("live_verified")),
         "mocked_http": bool(row.get("mocked_http")),
         "identity": row.get("identity") or {},
         "consecutive_failures": row.get("consecutive_failures") or 0,
         "frozen": False,
         "connect_cta": True,
+        "connect_available": bool(app.get("connect_available")),
+        "oauth_ready": bool(app.get("oauth_ready")),
+        "developer_token_available": app.get("developer_token_available"),
+        "required_env": app.get("required_env") or [],
+        "message_ru": row.get("last_error") or app.get("message_ru"),
+        "diagnostics": safe_diagnostics({**row, "status": status}, app=app, creds=creds),
+        "secrets": None,
     }
     if provider == "telegram" and TELEGRAM_FROZEN:
         card["status"] = "DISABLED"
@@ -265,12 +302,22 @@ def wizard_spec(provider: str) -> dict[str, Any]:
     key = _txt(provider).lower()
     if key not in WIZARD_FIELDS:
         return {"ok": False, "error": "not_found", "message_ru": "Неизвестный провайдер"}
+    app = app_prerequisites(key) if key in {"meta", "google", "tiktok"} else {}
     return {
         "ok": True,
         "provider": key,
         "label": LIVE_ADAPTERS[key].label,
         "fields": WIZARD_FIELDS[key],
+        "steps": wizard_progress(
+            app_ready=bool(app.get("connect_available") or app.get("oauth_ready")),
+            authorized=False,
+            account_selected=False,
+            verified=False,
+            sync_enabled=False,
+        )["steps"],
+        "prerequisites": app,
         "test_required": True,
         "persist_browser": False,
-        "message_ru": "Секреты не сохраняются в браузере.",
+        "complete": False,
+        "message_ru": app.get("message_ru") or "Секреты не сохраняются в браузере. Готово только после живой проверки.",
     }

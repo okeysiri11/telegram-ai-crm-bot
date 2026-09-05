@@ -88,6 +88,38 @@ def require(role: str | None, action: str) -> dict[str, Any] | None:
     }
 
 
+ADS_PROVIDERS = ("meta", "google", "tiktok")
+ADS_ADMIN_ACTIONS = {
+    "connect",
+    "reconnect",
+    "disable",
+    "disconnect",
+    "configure",
+    "oauth",
+    "select_account",
+    "select",
+    "refresh",
+    "refresh_credentials",
+    "enable_sync",
+    "disable_sync",
+    "sync",
+    "sync-metrics",
+    "sync-campaigns",
+}
+
+
+def require_provider_admin(role: str | None, provider: str | None = None, action: str | None = None) -> dict[str, Any] | None:
+    """Owner/admin only for ads credential mutations. Messaging keeps update."""
+    key = (provider or "").strip().lower()
+    act = (action or "admin").strip().lower()
+    if key in ADS_PROVIDERS and (action is None or act in ADS_ADMIN_ACTIONS):
+        denied = require(role, "admin")
+        if denied:
+            denied["message_ru"] = "Только владелец или администратор может менять подключение рекламного провайдера."
+        return denied
+    return require(role, "update")
+
+
 def roles_catalog() -> list[dict[str, Any]]:
     return [
         {"id": r["id"], "label_ru": r["label_ru"], "permissions": sorted(r["permissions"])}

@@ -177,7 +177,7 @@ async def test_configure_redacts_secrets(client: TestClient):
     )
     assert res.status == 200
     item = (await res.json())["item"]
-    assert item["status"] == "CONFIGURING"
+    assert item["status"] in {"CONFIGURING", "AUTHORIZING"}
     assert item["connected"] is False
     blob = str(await res.json()) if False else str(item)
     assert "secret-live-token" not in blob

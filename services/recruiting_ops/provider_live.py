@@ -31,8 +31,8 @@ def _store():
     return get_secret_store()
 
 
-def _secret(provider: str, field: str, *env_names: str) -> str:
-    value = _store().get(provider, field)
+def _secret(provider: str, field: str, *env_names: str, organization_id: str | None = None) -> str:
+    value = _store().get(provider, field, organization_id=organization_id)
     if value:
         return value
     for name in env_names:
@@ -42,8 +42,8 @@ def _secret(provider: str, field: str, *env_names: str) -> str:
     return ""
 
 
-def _public(provider: str, field: str, *env_names: str) -> str:
-    value = _txt(_store().get(provider, field))
+def _public(provider: str, field: str, *env_names: str, organization_id: str | None = None) -> str:
+    value = _txt(_store().get(provider, field, organization_id=organization_id))
     if value:
         return value
     for name in env_names:
@@ -94,10 +94,10 @@ def meta_act_id() -> str:
     return raw if raw.startswith("act_") else f"act_{raw}"
 
 
-def live_health(provider: str) -> dict[str, Any]:
+def live_health(provider: str, *, organization_id: str | None = None) -> dict[str, Any]:
     key = _txt(provider).lower()
     if key == "meta":
-        token = _secret("meta", "access_token", "META_ADS_ACCESS_TOKEN")
+        token = _secret("meta", "access_token", "META_ADS_ACCESS_TOKEN", organization_id=organization_id)
         if not token:
             return _not_configured(key)
         result = provider_request(
@@ -108,11 +108,15 @@ def live_health(provider: str) -> dict[str, Any]:
         data = result.get("json") if isinstance(result.get("json"), dict) else {}
         identity = {"id": data.get("id"), "name": data.get("name")} if result.get("ok") else None
         account = meta_act_id()
+        if not account and organization_id:
+            account = _public("meta", "ad_account_id", "META_ADS_ACCOUNT_ID", organization_id=organization_id)
+            if account and not account.startswith("act_"):
+                account = f"act_{account}"
         if result.get("ok") and account:
             extra = provider_request(
                 "GET",
                 f"https://graph.facebook.com/{graph_version()}/{account}",
-                query={"fields": "id,name,account_status", "access_token": token},
+                query={"fields": "id,name,account_status,currency,timezone_name", "access_token": token},
             )
             if extra.get("ok"):
                 acc = extra.get("json") if isinstance(extra.get("json"), dict) else {}
@@ -121,9 +125,9 @@ def live_health(provider: str) -> dict[str, Any]:
                 return _from_http(key, extra, identity=identity)
         return _from_http(key, result, identity=identity)
     if key == "google":
-        developer = _secret("google", "developer_token", "GOOGLE_ADS_DEVELOPER_TOKEN")
-        refresh = _secret("google", "refresh_token", "GOOGLE_ADS_REFRESH_TOKEN")
-        customer = _public("google", "customer_id", "GOOGLE_ADS_CUSTOMER_ID").replace("-", "")
+        developer = _secret("google", "developer_token", "GOOGLE_ADS_DEVELOPER_TOKEN", organization_id=organization_id)
+        refresh = _secret("google", "refresh_token", "GOOGLE_ADS_REFRESH_TOKEN", organization_id=organization_id)
+        customer = _public("google", "customer_id", "GOOGLE_ADS_CUSTOMER_ID", organization_id=organization_id).replace("-", "")
         if not developer or not refresh:
             return _not_configured(key)
         token_res = refresh_google_access_token()
@@ -139,7 +143,7 @@ def live_health(provider: str) -> dict[str, Any]:
             )
         if not customer:
             return adapter_result(ok=False, error="INVALID_ACCOUNT", status="ERROR", connected=False, mode="LIVE", message_ru="Не задан Google customer ID.")
-        login = _public("google", "manager_id", "GOOGLE_ADS_LOGIN_CUSTOMER_ID").replace("-", "")
+        login = _public("google", "manager_id", "GOOGLE_ADS_LOGIN_CUSTOMER_ID", organization_id=organization_id).replace("-", "")
         headers = {"Authorization": f"Bearer {token}", "developer-token": developer, "Content-Type": "application/json"}
         if login:
             headers["login-customer-id"] = login
@@ -155,8 +159,8 @@ def live_health(provider: str) -> dict[str, Any]:
         identity = {"id": first.get("id") or customer, "name": first.get("descriptiveName") or first.get("descriptive_name")}
         return _from_http(key, result, identity=identity)
     if key == "tiktok":
-        token = _secret("tiktok", "access_token", "TIKTOK_ADS_ACCESS_TOKEN")
-        advertiser = _public("tiktok", "advertiser_id", "TIKTOK_ADS_ADVERTISER_ID")
+        token = _secret("tiktok", "access_token", "TIKTOK_ADS_ACCESS_TOKEN", organization_id=organization_id)
+        advertiser = _public("tiktok", "advertiser_id", "TIKTOK_ADS_ADVERTISER_ID", organization_id=organization_id)
         if not token:
             return _not_configured(key)
         if not advertiser:
@@ -290,26 +294,83 @@ def smtp_health() -> dict[str, Any]:
         )
 
 
-def live_list_accounts(provider: str) -> dict[str, Any]:
+def live_list_accounts(provider: str, *, organization_id: str | None = None) -> dict[str, Any]:
     key = _txt(provider).lower()
-    health = live_health(key)
-    if not health.get("ok"):
-        return {**health, "items": []}
     if key == "meta":
-        token = _secret("meta", "access_token", "META_ADS_ACCESS_TOKEN")
+        token = _secret("meta", "access_token", "META_ADS_ACCESS_TOKEN", organization_id=organization_id)
+        if not token:
+            return {**_not_configured(key), "items": []}
         result = provider_request(
             "GET",
             f"https://graph.facebook.com/{graph_version()}/me/adaccounts",
-            query={"fields": "id,name,account_id,currency", "access_token": token},
+            query={"fields": "id,name,account_id,currency,timezone_name", "access_token": token},
         )
         data = result.get("json") if isinstance(result.get("json"), dict) else {}
-        items = data.get("data") if isinstance(data.get("data"), list) else []
-        return _from_http(key, result, identity=health.get("identity"), items=items)
+        raw_items = data.get("data") if isinstance(data.get("data"), list) else []
+        items = [
+            {
+                "id": item.get("id") or (f"act_{item.get('account_id')}" if item.get("account_id") else None),
+                "name": item.get("name"),
+                "currency": item.get("currency"),
+                "timezone": item.get("timezone_name"),
+            }
+            for item in raw_items
+            if isinstance(item, dict)
+        ]
+        return _from_http(key, result, items=items)
     if key == "google":
-        return {**health, "items": [health.get("identity") or {}]}
+        developer = _secret("google", "developer_token", "GOOGLE_ADS_DEVELOPER_TOKEN", organization_id=organization_id)
+        refresh = _secret("google", "refresh_token", "GOOGLE_ADS_REFRESH_TOKEN", organization_id=organization_id)
+        if not developer or not refresh:
+            return {**_not_configured(key), "items": [], "developer_token_available": bool(developer)}
+        token_res = refresh_google_access_token()
+        token = _txt(token_res.get("access_token"))
+        if not token:
+            return adapter_result(ok=False, error=token_res.get("error") or "AUTH_ERROR", items=[], status="ERROR", mode="LIVE", message_ru=token_res.get("message_ru"))
+        result = provider_request(
+            "GET",
+            f"https://googleads.googleapis.com/{google_ads_version()}/customers:listAccessibleCustomers",
+            headers={"Authorization": f"Bearer {token}", "developer-token": developer},
+        )
+        data = result.get("json") if isinstance(result.get("json"), dict) else {}
+        names = data.get("resourceNames") or data.get("resource_names") or []
+        items = []
+        for name in names:
+            cid = str(name).split("/")[-1]
+            items.append({"id": cid, "name": cid, "customer_id": cid})
+        if not items:
+            configured = _public("google", "customer_id", "GOOGLE_ADS_CUSTOMER_ID", organization_id=organization_id).replace("-", "")
+            if configured:
+                items = [{"id": configured, "name": configured, "customer_id": configured}]
+        return _from_http(key, result, items=items)
     if key == "tiktok":
-        return {**health, "items": [health.get("identity") or {}]}
-    return {**health, "items": [health.get("identity") or {}]}
+        token = _secret("tiktok", "access_token", "TIKTOK_ADS_ACCESS_TOKEN", organization_id=organization_id)
+        if not token:
+            return {**_not_configured(key), "items": []}
+        creds_app = _txt(os.getenv("TIKTOK_ADS_APP_ID") or _store().get("tiktok", "app_id"))
+        creds_secret = _txt(os.getenv("TIKTOK_ADS_APP_SECRET") or _store().get("tiktok", "app_secret"))
+        result = provider_request(
+            "GET",
+            f"https://business-api.tiktok.com/open_api/{tiktok_version()}/oauth2/advertiser/get/",
+            headers={"Access-Token": token},
+            query={"app_id": creds_app, "secret": creds_secret} if creds_app else None,
+        )
+        data = result.get("json") if isinstance(result.get("json"), dict) else {}
+        inner = data.get("data") if isinstance(data.get("data"), dict) else data
+        raw_items = inner.get("list") if isinstance(inner.get("list"), list) else []
+        items = [
+            {
+                "id": item.get("advertiser_id") or item.get("id"),
+                "name": item.get("advertiser_name") or item.get("name"),
+                "currency": item.get("currency"),
+                "timezone": item.get("timezone"),
+            }
+            for item in raw_items
+            if isinstance(item, dict)
+        ]
+        return _from_http(key, result, items=items)
+    health = live_health(key, organization_id=organization_id)
+    return {**health, "items": [health.get("identity") or {}] if health.get("ok") else []}
 
 
 def live_list_campaigns(provider: str, *, cursor: str | None = None) -> dict[str, Any]:

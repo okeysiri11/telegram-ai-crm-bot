@@ -31,12 +31,18 @@ type ProviderCard = {
   mock?: boolean;
   wizard?: WizardField[];
   oauth_ready?: boolean;
+  connect_available?: boolean;
   redirect_uri?: string;
   identity?: { id?: string; name?: string; username?: string };
   live_verified?: boolean;
   frozen?: boolean;
   connect_cta?: boolean;
   message_ru?: string;
+  currency?: string | null;
+  timezone?: string | null;
+  token_expires_at?: string | null;
+  last_sync_at?: string | null;
+  last_check_at?: string | null;
 };
 
 function asRecord(json: unknown): Record<string, unknown> {
@@ -46,10 +52,10 @@ function asRecord(json: unknown): Record<string, unknown> {
 function tone(status?: string, mock?: boolean): "success" | "info" | "warning" | "danger" | "default" {
   if (mock) return "warning";
   if (status === "CONNECTED") return "success";
-  if (status === "NOT_CONFIGURED") return "info";
-  if (status === "CONFIGURING") return "warning";
-  if (status === "DEGRADED") return "warning";
-  if (status === "ERROR") return "danger";
+  if (status === "NOT_CONFIGURED" || status === "WAITING_PROVIDER") return "info";
+  if (status === "CONFIGURING" || status === "AUTHORIZING") return "warning";
+  if (status === "DEGRADED" || status === "TOKEN_EXPIRED") return "warning";
+  if (status === "ERROR" || status === "API_ERROR" || status === "PERMISSION_ERROR") return "danger";
   return "default";
 }
 
@@ -155,8 +161,16 @@ export function ProviderConnectionsPage() {
                 <dd>{card.connection_type || "—"}</dd>
                 <dt>Аккаунт</dt>
                 <dd>{card.account_id || card.identity?.name || card.identity?.username || "—"}</dd>
+                <dt>Валюта</dt>
+                <dd>{card.currency || "—"}</dd>
+                <dt>Часовой пояс</dt>
+                <dd>{card.timezone || "—"}</dd>
+                <dt>Срок токена</dt>
+                <dd>{card.token_expires_at || card.credential_expiry || "—"}</dd>
                 <dt>Последняя проверка</dt>
-                <dd>{card.last_successful_health_check || "—"}</dd>
+                <dd>{card.last_check_at || card.last_successful_health_check || "—"}</dd>
+                <dt>Последняя синхронизация</dt>
+                <dd>{card.last_sync_at || "—"}</dd>
                 <dt>Ошибка</dt>
                 <dd>{card.last_error || "—"}</dd>
                 <dt>Секреты</dt>
@@ -183,6 +197,7 @@ export function ProviderConnectionsPage() {
                       const json = asRecord(res.json);
                       const url = String(json.authorize_url || "");
                       if (url) window.location.assign(url);
+                      else setError(String(json.message_ru || "Не задана конфигурация приложения провайдера."));
                     }}
                   >
                     Подключить

@@ -56,22 +56,45 @@ class LiveProviderAdapter(ProviderAdapter):
     def disconnect(self, **_kwargs: Any) -> dict[str, Any]:
         return adapter_result(ok=True, status="NOT_CONFIGURED", mode=self.mode, connected=False, live_verified=False, message_ru="Подключение отключено.")
 
-    def health_check(self, **_kwargs: Any) -> dict[str, Any]:
+    def health_check(self, **kwargs: Any) -> dict[str, Any]:
         started = time.perf_counter()
-        result = live_health(self.provider)
+        result = live_health(self.provider, organization_id=kwargs.get("organization_id"))
         result.setdefault("latency_ms", int((time.perf_counter() - started) * 1000))
         result["mode"] = self.mode
         result["mock"] = False
         return result
 
-    def refresh_credentials(self, **_kwargs: Any) -> dict[str, Any]:
-        return self.health_check()
+    def refresh_credentials(self, **kwargs: Any) -> dict[str, Any]:
+        return self.health_check(**kwargs)
 
-    def list_accounts(self, **_kwargs: Any) -> dict[str, Any]:
-        return live_list_accounts(self.provider)
+    def verify_connection(self, **kwargs: Any) -> dict[str, Any]:
+        return self.health_check(**kwargs)
+
+    def list_accounts(self, **kwargs: Any) -> dict[str, Any]:
+        return live_list_accounts(self.provider, organization_id=kwargs.get("organization_id"))
+
+    def get_account_info(self, **kwargs: Any) -> dict[str, Any]:
+        health = self.health_check(**kwargs)
+        return {**health, "item": health.get("identity") or {}}
 
     def list_campaigns(self, **kwargs: Any) -> dict[str, Any]:
         return live_list_campaigns(self.provider, cursor=kwargs.get("cursor"))
+
+    def get_campaign_metrics(self, **kwargs: Any) -> dict[str, Any]:
+        return self.fetch_metrics(**kwargs)
+
+    def get_account_metrics(self, **kwargs: Any) -> dict[str, Any]:
+        return self.fetch_metrics(**kwargs)
+
+    def get_sync_health(self, **kwargs: Any) -> dict[str, Any]:
+        return adapter_result(
+            ok=True,
+            provider=self.provider,
+            last_sync=kwargs.get("last_sync"),
+            cursor=kwargs.get("cursor"),
+            rate_limit_state=kwargs.get("rate_limit_state") or "UNKNOWN",
+            mode=self.mode,
+        )
 
     def create_campaign(self, **_kwargs: Any) -> dict[str, Any]:
         return reject_unapproved()
@@ -219,6 +242,21 @@ class MockProviderAdapter(ProviderAdapter):
 
     def refresh_credentials(self, **_kwargs: Any) -> dict[str, Any]:
         return self.health_check()
+
+    def verify_connection(self, **_kwargs: Any) -> dict[str, Any]:
+        return self.health_check()
+
+    def get_account_info(self, **_kwargs: Any) -> dict[str, Any]:
+        return adapter_result(ok=self._connected, item=(self._accounts[0] if self._accounts else {}), mode="MOCK", mock=True)
+
+    def get_campaign_metrics(self, **kwargs: Any) -> dict[str, Any]:
+        return self.fetch_metrics(**kwargs)
+
+    def get_account_metrics(self, **kwargs: Any) -> dict[str, Any]:
+        return self.fetch_metrics(**kwargs)
+
+    def get_sync_health(self, **_kwargs: Any) -> dict[str, Any]:
+        return adapter_result(ok=True, mode="MOCK", mock=True, last_sync=None)
 
     def list_accounts(self, **_kwargs: Any) -> dict[str, Any]:
         if not self._connected:

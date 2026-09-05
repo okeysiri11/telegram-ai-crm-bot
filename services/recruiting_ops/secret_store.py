@@ -52,18 +52,32 @@ def _open(token: str, *, key: str) -> str:
 
 
 class SecretStore(Protocol):
-    def describe(self, provider: str, field: str) -> dict[str, Any]: ...
-    def get(self, provider: str, field: str) -> str | None: ...
-    def put(self, provider: str, field: str, value: str, *, expires_at: str | None = None, scopes: list[str] | None = None) -> dict[str, Any]: ...
-    def rotate(self, provider: str, field: str, value: str) -> dict[str, Any]: ...
-    def delete(self, provider: str, field: str) -> dict[str, Any]: ...
+    def describe(self, provider: str, field: str, *, organization_id: str | None = None) -> dict[str, Any]: ...
+    def get(self, provider: str, field: str, *, organization_id: str | None = None) -> str | None: ...
+    def put(self, provider: str, field: str, value: str, *, expires_at: str | None = None, scopes: list[str] | None = None, organization_id: str | None = None) -> dict[str, Any]: ...
+    def rotate(self, provider: str, field: str, value: str, *, organization_id: str | None = None) -> dict[str, Any]: ...
+    def delete(self, provider: str, field: str, *, organization_id: str | None = None) -> dict[str, Any]: ...
+
+
+TENANT_TOKEN_FIELDS = {
+    "meta": ("access_token",),
+    "google": ("access_token", "refresh_token"),
+    "tiktok": ("access_token", "refresh_token"),
+}
+
+
+def mask_secret(value: str | None) -> str | None:
+    raw = str(value or "").strip()
+    if not raw:
+        return None
+    return "••••"
 
 
 class EnvSecretStore:
     """Reads process env. Wizard-submitted values live in an encrypted envelope."""
 
     def __init__(self) -> None:
-        self._envelope: dict[tuple[str, str], dict[str, Any]] = {}
+        self._envelope: dict[tuple[str, str, str], dict[str, Any]] = {}
         self._key = (
             os.getenv("RECRUITING_SECRET_STORE_KEY")
             or os.getenv("IAM_JWT_SECRET")
@@ -71,24 +85,36 @@ class EnvSecretStore:
             or "recruiting-dev-secret-store"
         )
 
-    def describe(self, provider: str, field: str) -> dict[str, Any]:
+    def _key_for(self, provider: str, field: str, organization_id: str | None = None) -> tuple[str, str, str]:
+        return (str(organization_id or ""), provider, field)
+
+    def describe(self, provider: str, field: str, *, organization_id: str | None = None) -> dict[str, Any]:
         env_name = _env_name(provider, field)
-        present = bool(self.get(provider, field))
-        meta = self._envelope.get((provider, field), {})
+        present = bool(self.get(provider, field, organization_id=organization_id))
+        meta = self._envelope.get(self._key_for(provider, field, organization_id)) or self._envelope.get(self._key_for(provider, field)) or {}
+        scoped = self._key_for(provider, field, organization_id) in self._envelope or self._key_for(provider, field) in self._envelope
         return {
             "provider": provider,
             "field": field,
             "present": present,
-            "source": "envelope" if (provider, field) in self._envelope else ("env" if present else None),
+            "source": "envelope" if scoped else ("env" if present else None),
             "env_name": env_name,
             "expires_at": meta.get("expires_at"),
             "rotated_at": meta.get("rotated_at"),
             "scopes": list(meta.get("scopes") or []),
             "value": None,
+            "masked": mask_secret("x") if present else None,
         }
 
-    def get(self, provider: str, field: str) -> str | None:
-        packed = self._envelope.get((provider, field))
+    def get(self, provider: str, field: str, *, organization_id: str | None = None) -> str | None:
+        if organization_id:
+            packed = self._envelope.get(self._key_for(provider, field, organization_id))
+            if packed and packed.get("ciphertext"):
+                try:
+                    return _open(str(packed["ciphertext"]), key=self._key)
+                except Exception:
+                    return None
+        packed = self._envelope.get(self._key_for(provider, field))
         if packed and packed.get("ciphertext"):
             try:
                 return _open(str(packed["ciphertext"]), key=self._key)
@@ -113,24 +139,43 @@ class EnvSecretStore:
         *,
         expires_at: str | None = None,
         scopes: list[str] | None = None,
+        organization_id: str | None = None,
     ) -> dict[str, Any]:
-        previous = (provider, field) in self._envelope or bool(self.get(provider, field))
-        self._envelope[(provider, field)] = {
+        key = self._key_for(provider, field, organization_id)
+        previous = key in self._envelope or bool(self.get(provider, field, organization_id=organization_id))
+        self._envelope[key] = {
             "ciphertext": _seal(value, key=self._key),
             "expires_at": expires_at,
             "scopes": list(scopes or []),
             "rotated_at": _now() if previous else None,
             "updated_at": _now(),
+            "organization_id": organization_id,
         }
-        return self.describe(provider, field)
+        return self.describe(provider, field, organization_id=organization_id)
 
-    def rotate(self, provider: str, field: str, value: str) -> dict[str, Any]:
-        current = self._envelope.get((provider, field), {})
-        return self.put(provider, field, value, expires_at=current.get("expires_at"), scopes=current.get("scopes"))
+    def rotate(self, provider: str, field: str, value: str, *, organization_id: str | None = None) -> dict[str, Any]:
+        current = self._envelope.get(self._key_for(provider, field, organization_id)) or self._envelope.get(self._key_for(provider, field), {})
+        return self.put(
+            provider,
+            field,
+            value,
+            expires_at=current.get("expires_at"),
+            scopes=current.get("scopes"),
+            organization_id=organization_id,
+        )
 
-    def delete(self, provider: str, field: str) -> dict[str, Any]:
-        self._envelope.pop((provider, field), None)
-        return self.describe(provider, field)
+    def delete(self, provider: str, field: str, *, organization_id: str | None = None) -> dict[str, Any]:
+        self._envelope.pop(self._key_for(provider, field, organization_id), None)
+        if not organization_id:
+            self._envelope.pop(self._key_for(provider, field), None)
+        return self.describe(provider, field, organization_id=organization_id)
+
+    def delete_provider(self, provider: str, *, organization_id: str | None = None) -> dict[str, Any]:
+        fields = TENANT_TOKEN_FIELDS.get(provider) or SECRET_FIELDS.get(provider) or ()
+        for field in fields:
+            self.delete(provider, field, organization_id=organization_id)
+            self.delete(provider, field)
+        return {"provider": provider, "deleted": True, "fields": list(fields), "value": None}
 
 
 _STORE: EnvSecretStore | None = None
@@ -174,11 +219,11 @@ def _env_name(provider: str, field: str) -> str | None:
     return mapping.get((provider, field))
 
 
-def credential_presence(provider: str) -> dict[str, Any]:
+def credential_presence(provider: str, *, organization_id: str | None = None) -> dict[str, Any]:
     store = get_secret_store()
     fields = SECRET_FIELDS.get(provider, ())
     primary = PRIMARY_SECRET_FIELDS.get(provider, fields)
-    items = [store.describe(provider, field) for field in fields]
+    items = [store.describe(provider, field, organization_id=organization_id) for field in fields]
     present_map = {item["field"]: item["present"] for item in items}
     return {
         "provider": provider,
@@ -187,6 +232,10 @@ def credential_presence(provider: str) -> dict[str, Any]:
         "fields": {item["field"]: {"present": item["present"], "expires_at": item["expires_at"], "scopes": item["scopes"]} for item in items},
         "expires_at": next((item["expires_at"] for item in items if item.get("expires_at")), None),
     }
+
+
+def delete_tenant_credentials(provider: str, *, organization_id: str | None = None) -> dict[str, Any]:
+    return get_secret_store().delete_provider(provider, organization_id=organization_id)
 
 
 def public_secret_audit(action: str, provider: str, field: str) -> dict[str, Any]:

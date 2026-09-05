@@ -54,8 +54,8 @@ PROVIDER_CONNECT_REQUIREMENTS = {
     },
     "google": {
         "label": "Google Ads",
-        "env": ["GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET"],
-        "message_ru": "Для подключения Google Ads задайте GOOGLE_ADS_CLIENT_ID и GOOGLE_ADS_CLIENT_SECRET. OAuth не запускается без конфигурации.",
+        "env": ["GOOGLE_ADS_CLIENT_ID", "GOOGLE_ADS_CLIENT_SECRET", "GOOGLE_ADS_DEVELOPER_TOKEN"],
+        "message_ru": "Для подключения Google Ads задайте GOOGLE_ADS_CLIENT_ID, GOOGLE_ADS_CLIENT_SECRET и GOOGLE_ADS_DEVELOPER_TOKEN. OAuth не запускается без developer token.",
     },
     "tiktok": {
         "label": "TikTok Ads",
@@ -370,6 +370,10 @@ def sum_manual_spend(entries: list[dict[str, Any]], window: dict[str, Any] | Non
 
 
 def provider_connect_panel(connections: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    from services.recruiting_ops.provider_connections import public_card
+    from services.recruiting_ops.provider_layer import app_prerequisites
+    from services.recruiting_ops.provider_state import normalize_provider_status
+
     by_id = {}
     for item in connections or []:
         key = _txt(item.get("provider") or item.get("provider_id") or item.get("id")).lower()
@@ -377,24 +381,38 @@ def provider_connect_panel(connections: list[dict[str, Any]] | None = None) -> l
             by_id[key] = item
     rows = []
     for key, spec in PROVIDER_CONNECT_REQUIREMENTS.items():
-        card = by_id.get(key) or {}
-        status = _txt(card.get("status") or "NOT_CONFIGURED").upper() or "NOT_CONFIGURED"
-        if status == "CONNECTED" and not (card.get("live_verified") or card.get("mocked_http")):
-            status = "NOT_CONFIGURED"
-        if status not in {"NOT_CONFIGURED", "WAITING_PROVIDER", "CONNECTED", "ERROR"}:
-            status = "NOT_CONFIGURED"
-        connected = status == "CONNECTED"
+        raw = by_id.get(key) or {"provider": key, "status": "NOT_CONFIGURED"}
+        card = public_card(raw)
+        status = normalize_provider_status(card.get("status"))
+        if status == "CONNECTED" and not card.get("connected"):
+            status = "AUTHORIZING"
+        connected = bool(card.get("connected")) and status == "CONNECTED"
+        app = app_prerequisites(key)
         rows.append(
             {
                 "provider": key,
                 "label": spec["label"],
-                "status": status if connected else ("WAITING_PROVIDER" if status == "WAITING_PROVIDER" else status),
-                "connected": False if not connected else True,
+                "status": status if connected else status,
+                "connected": connected,
+                "live_verified": bool(card.get("live_verified")),
+                "account_id": card.get("account_id"),
+                "connected_account_name": card.get("connected_account_name"),
+                "currency": card.get("currency"),
+                "timezone": card.get("timezone"),
+                "permissions": card.get("scopes") or [],
+                "token_expires_at": card.get("token_expires_at"),
+                "last_check_at": card.get("last_check_at"),
+                "last_sync_at": card.get("last_sync_at"),
+                "last_error": card.get("last_error"),
                 "tracking_status": "WAITING_PROVIDER" if not connected else _txt(card.get("tracking_status")) or "LIVE",
-                "required_env": list(spec["env"]),
-                "message_ru": spec["message_ru"] if not connected else None,
-                "connect_available": False,
+                "required_env": list(app.get("required_env") or spec["env"]),
+                "message_ru": None if connected else (card.get("message_ru") or app.get("message_ru") or spec["message_ru"]),
+                "connect_available": bool(app.get("connect_available")),
+                "oauth_ready": bool(app.get("oauth_ready")),
+                "developer_token_available": app.get("developer_token_available"),
+                "wizard_progress": card.get("wizard_progress"),
                 "button_ru": f"Подключить {spec['label']}",
+                "spend_policy": "PREFER_PROVIDER" if connected else "MANUAL_ONLY",
             }
         )
     return rows

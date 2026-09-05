@@ -166,7 +166,7 @@ async def test_secret_not_returned_by_api(client: TestClient):
     assert token not in blob
     tested = await (await client.post(f"{OPS}/providers/meta/test-connection", json={}, headers=_hdr(org))).json()
     assert token not in str(tested)
-    assert tested.get("status") in {"NOT_CONFIGURED", "ERROR", "CONFIGURING"}
+    assert tested.get("status") in {"NOT_CONFIGURED", "ERROR", "CONFIGURING", "AUTHORIZING", "API_ERROR", "PERMISSION_ERROR"}
 
 
 async def test_meta_health_with_injected_http_is_not_live_verified(client: TestClient):

@@ -17,6 +17,7 @@ from services.recruiting_ops.secret_store import get_secret_store
 OAUTH_PROVIDERS = ("meta", "google", "tiktok")
 STATE_TTL_SECONDS = 600
 _HMAC_LEN = 32  # SHA-256 digest; prefix framing avoids 0x2e inside the signature
+_USED_NONCES: dict[str, float] = {}
 
 SCOPES = {
     "meta": "ads_management,ads_read,business_management,pages_show_list",
@@ -142,6 +143,47 @@ def oauth_ready(provider: str) -> bool:
     return bool(creds["client_id"] and creds["client_secret"])
 
 
+def consume_oauth_nonce(nonce: str) -> bool:
+    now = time.time()
+    for key, exp in list(_USED_NONCES.items()):
+        if exp < now:
+            _USED_NONCES.pop(key, None)
+    token = _txt(nonce)
+    if not token:
+        return False
+    if token in _USED_NONCES:
+        return False
+    _USED_NONCES[token] = now + STATE_TTL_SECONDS
+    return True
+
+
+def reset_oauth_nonces_for_tests() -> None:
+    _USED_NONCES.clear()
+
+
+def inspect_granted_scopes(provider: str, access_token: str | None) -> list[str]:
+    """Return scopes the provider actually granted. Never guess."""
+    key = _txt(provider).lower()
+    token = _txt(access_token)
+    if not token:
+        return []
+    if key == "meta":
+        creds = _app_credentials("meta")
+        app_token = f"{creds['client_id']}|{creds['client_secret']}" if creds["client_id"] and creds["client_secret"] else token
+        result = provider_request(
+            "GET",
+            f"https://graph.facebook.com/{graph_version()}/debug_token",
+            query={"input_token": token, "access_token": app_token},
+        )
+        data = result.get("json") if isinstance(result.get("json"), dict) else {}
+        inner = data.get("data") if isinstance(data.get("data"), dict) else {}
+        scopes = inner.get("scopes") or inner.get("granular_scopes") or []
+        if isinstance(scopes, list):
+            return [str(item.get("scope") if isinstance(item, dict) else item) for item in scopes if item]
+        return []
+    return []
+
+
 def authorize_url(provider: str, organization_id: str) -> dict[str, Any]:
     key = _txt(provider).lower()
     if key not in OAUTH_PROVIDERS:
@@ -149,6 +191,16 @@ def authorize_url(provider: str, organization_id: str) -> dict[str, Any]:
     creds = _app_credentials(key)
     if not creds["client_id"]:
         return {"ok": False, "error": "NOT_CONFIGURED", "status": "NOT_CONFIGURED", "message_ru": "Не задан app/client identifier."}
+    if key == "google":
+        developer = _txt(os.getenv("GOOGLE_ADS_DEVELOPER_TOKEN") or get_secret_store().get("google", "developer_token"))
+        if not developer:
+            return {
+                "ok": False,
+                "error": "NOT_CONFIGURED",
+                "status": "NOT_CONFIGURED",
+                "developer_token_available": False,
+                "message_ru": "Для Google Ads задайте GOOGLE_ADS_DEVELOPER_TOKEN. OAuth не запускается без developer token.",
+            }
     state = encode_state(provider=key, organization_id=organization_id)
     callback = redirect_uri(key)
     if key == "meta":
@@ -219,7 +271,14 @@ def exchange_code(provider: str, code: str) -> dict[str, Any]:
             ll = long_lived.get("json") if isinstance(long_lived.get("json"), dict) else {}
             token = _txt(ll.get("access_token")) or token
             expires = ll.get("expires_in") or data.get("expires_in")
-            return {"ok": True, "access_token": token, "expires_in": expires, "refresh_token": None, "live": result.get("live")}
+            return {
+                "ok": True,
+                "access_token": token,
+                "expires_in": expires,
+                "refresh_token": None,
+                "scopes": inspect_granted_scopes("meta", token),
+                "live": result.get("live"),
+            }
         return {"ok": False, "error": result.get("error"), "message_ru": result.get("message_ru")}
     if key == "google":
         result = provider_request(
@@ -235,11 +294,13 @@ def exchange_code(provider: str, code: str) -> dict[str, Any]:
         )
         data = result.get("json") if isinstance(result.get("json"), dict) else {}
         if result["ok"] and (_txt(data.get("refresh_token")) or _txt(data.get("access_token"))):
+            granted = [part for part in _txt(data.get("scope")).split() if part]
             return {
                 "ok": True,
                 "access_token": _txt(data.get("access_token")) or None,
                 "refresh_token": _txt(data.get("refresh_token")) or None,
                 "expires_in": data.get("expires_in"),
+                "scopes": granted,
                 "live": result.get("live"),
             }
         return {"ok": False, "error": result.get("error"), "message_ru": result.get("message_ru")}

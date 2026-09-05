@@ -99,6 +99,10 @@ export function AdsControlCenterPage() {
   const [detail, setDetail] = useState<Row | null>(null);
   const [spendForm, setSpendForm] = useState({ amount: "", currency: "EUR", spent_on: "", comment: "" });
   const [connectHint, setConnectHint] = useState<string | null>(null);
+  const [wizardProvider, setWizardProvider] = useState<string | null>(null);
+  const [accountId, setAccountId] = useState("");
+  const [accounts, setAccounts] = useState<Row[]>([]);
+  const [diag, setDiag] = useState<Row | null>(null);
 
   const headers = useMemo(
     () => recruitingWorkspaceHeaders(organizationId, recruitingRole),
@@ -223,9 +227,23 @@ export function AdsControlCenterPage() {
   }
 
   async function tryConnect(provider: string) {
+    setWizardProvider(provider);
     const res = await recruitingOpsGet(`/providers/${provider}/oauth/start`, headers);
     const body = asRecord(res.json);
+    const url = String(body.authorize_url || "");
+    if (url && body.ok) {
+      window.location.assign(url);
+      return;
+    }
     setConnectHint(String(body.message_ru || "Провайдер не настроен. OAuth не запускается без учётных данных."));
+  }
+
+  async function runProviderAction(provider: string, action: string, extra: Record<string, unknown> = {}) {
+    const res = await recruitingOpsPost(`/providers/${provider}/${action}`, extra, headers);
+    const body = asRecord(res.json);
+    setConnectHint(String(body.message_ru || body.last_error || (res.ok ? "Готово." : "Действие недоступно.")));
+    if (action === "diagnostics") setDiag(body);
+    await load();
   }
 
   const kpiCards = [
@@ -339,22 +357,124 @@ export function AdsControlCenterPage() {
               </div>
             );
           })}
-          <div className="mt-4 space-y-3" data-testid="ads-provider-connect">
+          <div className="mt-4 space-y-4" data-testid="ads-provider-connect">
             {connect.map((raw) => {
               const row = asRecord(raw);
+              const connected = Boolean(row.connected);
+              const ready = Boolean(row.connect_available || row.oauth_ready);
+              const wizard = asRecord(row.wizard_progress);
+              const steps = asList(wizard.steps);
               return (
-                <div key={String(row.provider)} data-testid={`ads-connect-${row.provider}`}>
+                <div key={String(row.provider)} className="rounded border border-[var(--eds-border)] p-3" data-testid={`ads-connect-${row.provider}`}>
                   <p>
-                    <Badge tone="info">{String(row.status || "NOT_CONFIGURED")}</Badge> {String(row.label)}
+                    <Badge tone={connected ? "success" : "info"}>{String(row.status || "NOT_CONFIGURED")}</Badge> {String(row.label)}
                   </p>
-                  <Button size="sm" className="mt-1" variant="secondary" onClick={() => void tryConnect(String(row.provider))}>
-                    {String(row.button_ru || `Подключить ${row.label}`)}
-                  </Button>
+                  <dl className="mt-2 grid grid-cols-2 gap-1 eds-type-small" data-testid={`ads-provider-meta-${row.provider}`}>
+                    <dt>Аккаунт</dt>
+                    <dd>{String(row.account_id || row.connected_account_name || "—")}</dd>
+                    <dt>Валюта</dt>
+                    <dd>{String(row.currency || "—")}</dd>
+                    <dt>Часовой пояс</dt>
+                    <dd>{String(row.timezone || "—")}</dd>
+                    <dt>Права</dt>
+                    <dd>{(Array.isArray(row.permissions) ? row.permissions.join(", ") : "") || "—"}</dd>
+                    <dt>Срок токена</dt>
+                    <dd>{String(row.token_expires_at || "—")}</dd>
+                    <dt>Последняя проверка</dt>
+                    <dd>{String(row.last_check_at || "—")}</dd>
+                    <dt>Последняя синхронизация</dt>
+                    <dd>{String(row.last_sync_at || "—")}</dd>
+                    <dt>Ошибка</dt>
+                    <dd>{String(row.last_error || "—")}</dd>
+                  </dl>
+                  {steps.length ? (
+                    <ol className="mt-2 eds-type-small" data-testid={`ads-wizard-${row.provider}`}>
+                      {steps.map((stepRaw) => {
+                        const step = asRecord(stepRaw);
+                        return (
+                          <li key={String(step.id)}>
+                            {step.complete ? "✓" : step.current ? "→" : "·"} {String(step.label_ru)}
+                          </li>
+                        );
+                      })}
+                    </ol>
+                  ) : null}
+                  {connected ? null : <p className="mt-1 eds-type-helper">Готово появится только после живой проверки провайдера.</p>}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button size="sm" variant="secondary" onClick={() => void tryConnect(String(row.provider))}>
+                      {String(row.button_ru || `Подключить ${row.label}`)}
+                    </Button>
+                    <Button size="sm" variant="ghost" disabled={!row.account_id && !connected} onClick={() => void runProviderAction(String(row.provider), "test")}>
+                      Проверить соединение
+                    </Button>
+                    <Button size="sm" variant="ghost" disabled={!ready && !connected} onClick={() => void runProviderAction(String(row.provider), "refresh")}>
+                      Обновить токен
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={async () => {
+                        const res = await recruitingOpsGet(`/providers/${row.provider}/accounts`, headers);
+                        setAccounts(asList(asRecord(res.json).items));
+                        setWizardProvider(String(row.provider));
+                      }}
+                    >
+                      Выбрать аккаунт
+                    </Button>
+                    <Button size="sm" variant="ghost" disabled={!connected} onClick={() => void runProviderAction(String(row.provider), "sync")}>
+                      Синхронизировать
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => void tryConnect(String(row.provider))}>
+                      Переподключить
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => void runProviderAction(String(row.provider), "disconnect")}>
+                      Отключить
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => void runProviderAction(String(row.provider), "diagnostics")}>
+                      Диагностика
+                    </Button>
+                  </div>
+                  {row.message_ru ? <p className="mt-2 eds-type-helper">{String(row.message_ru)}</p> : null}
                 </div>
               );
             })}
           </div>
+          {wizardProvider && accounts.length ? (
+            <div className="mt-3" data-testid="ads-account-picker">
+              <p className="eds-type-helper">Выбор аккаунта {wizardProvider}</p>
+              {accounts.map((raw) => {
+                const acc = asRecord(raw);
+                return (
+                  <Button
+                    key={String(acc.id)}
+                    size="sm"
+                    variant="secondary"
+                    className="mr-2 mt-1"
+                    onClick={() => {
+                      setAccountId(String(acc.id || ""));
+                      void recruitingOpsPost(`/providers/${wizardProvider}/select-account`, { account_id: acc.id, account_name: acc.name }, headers).then(load);
+                    }}
+                  >
+                    {String(acc.name || acc.id)}
+                  </Button>
+                );
+              })}
+            </div>
+          ) : null}
+          {wizardProvider && !accounts.length ? (
+            <div className="mt-3 flex gap-2">
+              <Input value={accountId} onChange={(e) => setAccountId(e.target.value)} placeholder="ID аккаунта" />
+              <Button size="sm" onClick={() => void recruitingOpsPost(`/providers/${wizardProvider}/select-account`, { account_id: accountId }, headers).then(load)}>
+                Сохранить аккаунт
+              </Button>
+            </div>
+          ) : null}
           {connectHint ? <p className="mt-3 eds-type-helper" data-testid="ads-connect-hint">{connectHint}</p> : null}
+          {diag ? (
+            <pre className="mt-3 eds-type-small whitespace-pre-wrap" data-testid="ads-provider-diagnostics">
+              {JSON.stringify(diag, null, 2)}
+            </pre>
+          ) : null}
         </Card>
       ) : null}
       {section === "campaigns" ? (
