@@ -17,6 +17,7 @@ const RestaurantRoom = lazyCasinoPage(() => import("./rooms/RestaurantRoom"));
 const BarRoom = lazyCasinoPage(() => import("./rooms/BarRoom"));
 const RouletteTable = lazyCasinoPage(() => import("./games/roulette/RouletteTable"));
 const OdessaGoldMachine = lazyCasinoPage(() => import("./games/slots/OdessaGoldMachine"));
+const SlotGameScreen = lazyCasinoPage(() => import("./games/slots/SlotGameScreen"));
 
 function CasinoUnknown() {
   return (
@@ -58,6 +59,7 @@ export function CasinoApp() {
         <Route path="roulette/royale-1" element={<RouletteTable />} />
         <Route path="roulette/:tableId" element={<RouletteTable />} />
         <Route path="slots/odessa-gold" element={<OdessaGoldMachine />} />
+        <Route path="slots/:machineId" element={<SlotGameScreen />} />
         <Route path="venues/:venueId/roulette" element={<Navigate to="/casino/roulette/royale-1" replace />} />
         <Route path="venues/:venueId" element={<Navigate to="/casino" replace />} />
         <Route path="promos" element={<CasinoSoonPage title="Акции" />} />

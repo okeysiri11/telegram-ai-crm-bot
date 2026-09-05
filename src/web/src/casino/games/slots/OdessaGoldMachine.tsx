@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import { spinOdessaGold, type SlotSpin } from "../../casinoApi";
 import { formatPlayBalance } from "../../currency";
 import { useCasinoWallet } from "../../useCasinoSession";
@@ -17,7 +17,9 @@ const ICONS: Record<string, string> = {
   CROWN: "♛",
 };
 
-export function SlotReels({ grid, spinning }: { grid: string[][]; spinning: boolean }) {
+export { SlotReels } from "./SlotReels";
+
+export function SlotReelsLegacy({ grid, spinning }: { grid: string[][]; spinning: boolean }) {
   return (
     <div className={`op-reels${spinning ? " is-spinning" : ""}`} data-testid="slot-reels">
       {(grid.length ? grid : Array.from({ length: 5 }, () => ["CHERRY", "BAR", "SEVEN"])).map((col, c) => (
@@ -78,8 +80,13 @@ export function OdessaGoldMachine() {
       aria-label="Odessa Gold"
     >
       <p className="op-kicker">ODESSA GOLD</p>
+      <p>
+        <Link className="op-ghost" to="/casino/slots" data-testid="slot-back-room">
+          Назад к автоматам
+        </Link>
+      </p>
       <h1 className="op-title">Чёрное море · PLAY</h1>
-      <SlotReels grid={spin?.reels || []} spinning={spinning} />
+      <SlotReelsLegacy grid={spin?.reels || []} spinning={spinning} />
       {spin && !spinning ? (
         <p data-testid="slot-result">
           {spin.outcome.toUpperCase()} · {formatPlayBalance(spin.payout_chips)}

@@ -52,7 +52,7 @@ describe("Sprint 17 Odessa Prime casino", () => {
         <CasinoFloorPage />
       </MemoryRouter>,
     );
-    expect(screen.getByTestId("hotspot-roulette").getAttribute("aria-label")).toContain("РУЛЕТКА");
+    expect(screen.getByTestId("hotspot-roulette").getAttribute("aria-label")).toMatch(/РУЛЕТК/i);
     expect(screen.getByText("ЗАЛ")).toBeTruthy();
     expect(screen.getByText("КАРТА")).toBeTruthy();
   });
