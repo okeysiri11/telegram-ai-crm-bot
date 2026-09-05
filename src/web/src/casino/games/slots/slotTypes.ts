@@ -33,6 +33,8 @@ export type SlotGameDefinition = {
   maxBet: number;
   betSteps: number[];
   demoStartingBalance: number;
+  cabinetVariant: "curved" | "square" | "slim";
+  jackpot: string;
 };
 
 export type SlotSpinResult = {

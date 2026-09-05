@@ -62,12 +62,19 @@ describe("Phase 4.0 Slots Hall", () => {
     expect(screen.getByTestId("slots-room").className).toContain("op-slots-hall");
     expect(screen.getByTestId("slots-search")).toBeTruthy();
     expect(screen.getByTestId("slots-filters").textContent).toMatch(/Classic/);
+    expect(screen.getByTestId("slots-room").querySelector(".op-slots-env")).toBeTruthy();
+    expect(screen.getByTestId("slots-room").querySelectorAll(".op-phys-cab")).toHaveLength(6);
+    expect(new Set([...screen.getByTestId("slots-catalog").querySelectorAll("[data-variant]")].map((n) => n.getAttribute("data-variant"))).size).toBe(3);
+    expect(screen.getByTestId("slots-catalog").querySelector(".op-cta")).toBeNull();
   }, 20000);
 
   it("locks the hall to a single desktop viewport in CSS", () => {
     const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "slotsHall.css"), "utf8");
     expect(css).toMatch(/overflow:\s*hidden/);
     expect(css).toMatch(/100dvh - 4\.2rem/);
+    expect(css).toMatch(/op-phys-cab/);
+    expect(css).toMatch(/op-slots-floor/);
+    expect(css).toMatch(/prefers-reduced-motion/);
     expect(css).not.toMatch(/turquoise/);
   });
 
@@ -125,8 +132,8 @@ describe("Phase 4.0 Slots Hall", () => {
     });
     const view = mount("/casino/lobby");
     fireEvent.click(await screen.findByTestId("hotspot-slots"));
-    fireEvent.click(await screen.findByTestId("slot-play-lady-emerald"));
-    expect(await screen.findByTestId("slot-game-screen")).toBeTruthy();
+    fireEvent.click(await screen.findByTestId("slot-play-lady-emerald", {}, { timeout: 8000 }));
+    expect(await screen.findByTestId("slot-game-screen", {}, { timeout: 8000 })).toBeTruthy();
     expect(useAuthStore.getState().accessToken).toBe("aaa.bbb.ccc");
     fireEvent.click(screen.getByTestId("slot-back-room"));
     expect(await screen.findByTestId("slots-room")).toBeTruthy();

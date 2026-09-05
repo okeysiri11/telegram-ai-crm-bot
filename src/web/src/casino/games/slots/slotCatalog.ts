@@ -31,6 +31,8 @@ export const SLOT_CATALOG: SlotGameDefinition[] = [
     accent: "#5ad4ff",
     accent2: "#e8d5a3",
     externalGameId: "demo-olympus-crown",
+    cabinetVariant: "curved",
+    jackpot: "1 248 600",
     tags: ["new", "popular", "jackpot"],
     symbols: [
       sym("ZEUS", "⚡", 8, 12),
@@ -51,6 +53,8 @@ export const SLOT_CATALOG: SlotGameDefinition[] = [
     accent: "#ff7ad9",
     accent2: "#c084fc",
     externalGameId: "demo-candy-fortune",
+    cabinetVariant: "slim",
+    jackpot: "886 420",
     tags: ["new", "popular"],
     symbols: [
       sym("CANDY", "🍭", 10, 9),
@@ -71,6 +75,8 @@ export const SLOT_CATALOG: SlotGameDefinition[] = [
     accent: "#e8b86d",
     accent2: "#c9a45c",
     externalGameId: "demo-pharaohs-book",
+    cabinetVariant: "square",
+    jackpot: "2 104 090",
     tags: ["classic", "jackpot"],
     symbols: [
       sym("BOOK", "📜", 8, 12),
@@ -91,6 +97,8 @@ export const SLOT_CATALOG: SlotGameDefinition[] = [
     accent: "#3da9fc",
     accent2: "#7dd3fc",
     externalGameId: "demo-big-catch",
+    cabinetVariant: "slim",
+    jackpot: "654 880",
     tags: ["popular"],
     symbols: [
       sym("FISH", "🐟", 12, 6),
@@ -111,6 +119,8 @@ export const SLOT_CATALOG: SlotGameDefinition[] = [
     accent: "#ff7a3d",
     accent2: "#f59e0b",
     externalGameId: "demo-buffalo-fortune",
+    cabinetVariant: "square",
+    jackpot: "1 772 310",
     tags: ["popular", "jackpot"],
     symbols: [
       sym("BUFFALO", "🦬", 8, 12),
@@ -131,6 +141,8 @@ export const SLOT_CATALOG: SlotGameDefinition[] = [
     accent: "#34d399",
     accent2: "#c9a45c",
     externalGameId: "demo-lady-emerald",
+    cabinetVariant: "curved",
+    jackpot: "931 050",
     tags: ["classic", "new"],
     symbols: [
       sym("LADY", "💚", 8, 12),

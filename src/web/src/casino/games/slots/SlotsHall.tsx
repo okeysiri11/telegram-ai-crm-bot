@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CASINO_ROUTES } from "../../state/casinoRoutes";
+import { PhysicalSlotMachine } from "./PhysicalSlotMachine";
 import { filterSlotCatalog, SLOT_CATALOG, SLOT_FILTERS } from "./slotCatalog";
-import { SlotMachineCabinet } from "./SlotMachineCabinet";
 import type { SlotFilterId } from "./slotTypes";
 import "./slotsHall.css";
 
@@ -17,32 +17,20 @@ export function SlotsHall() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<SlotFilterId>("all");
-  const [offset, setOffset] = useState(0);
-  const [favorites, setFavorites] = useState<string[]>(() => {
-    try {
-      return JSON.parse(sessionStorage.getItem("op-slot-favs") || "[]") as string[];
-    } catch {
-      return [];
-    }
-  });
+  const [selected, setSelected] = useState<string | null>(null);
 
   const items = useMemo(() => filterSlotCatalog(query, filter), [query, filter]);
-  const visible = items.slice(offset, offset + items.length);
-
-  function toggleFavorite(id: string) {
-    setFavorites((prev) => {
-      const next = prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id];
-      try {
-        sessionStorage.setItem("op-slot-favs", JSON.stringify(next));
-      } catch {
-        /* ignore */
-      }
-      return next;
-    });
-  }
 
   return (
     <section className="op-slots-hall" data-testid="slots-room" aria-label="Зал автоматов">
+      <div className="op-slots-env" aria-hidden>
+        <div className="op-slots-ceiling" />
+        <div className="op-slots-chandelier" />
+        <div className="op-slots-columns" />
+        <div className="op-slots-haze" />
+        <div className="op-slots-depth" />
+        <div className="op-slots-floor" />
+      </div>
       <header className="op-slots-subnav">
         <button className="op-ghost" type="button" data-testid="slots-back-hall" onClick={() => navigate(CASINO_ROUTES.lobbyAlias)}>
           ← В ЗАЛ
@@ -54,16 +42,15 @@ export function SlotsHall() {
             </Link>
           ))}
         </nav>
+        <h1 className="op-slots-title">SLOTS</h1>
         <div className="op-slots-tools">
           <input
             className="op-slots-search"
             data-testid="slots-search"
-            placeholder="Поиск игры"
+            placeholder="Поиск"
+            aria-label="Поиск игры"
             value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setOffset(0);
-            }}
+            onChange={(e) => setQuery(e.target.value)}
           />
           <div className="op-slots-filters" data-testid="slots-filters">
             {SLOT_FILTERS.map((item) => (
@@ -71,10 +58,7 @@ export function SlotsHall() {
                 key={item.id}
                 type="button"
                 className={filter === item.id ? "is-on" : undefined}
-                onClick={() => {
-                  setFilter(item.id);
-                  setOffset(0);
-                }}
+                onClick={() => setFilter(item.id)}
               >
                 {item.label}
               </button>
@@ -82,37 +66,22 @@ export function SlotsHall() {
           </div>
         </div>
       </header>
-      <div className="op-slots-heading">
-        <p className="op-kicker">SLOTS</p>
-        <h1>Выберите автомат</h1>
-        <p className="op-status">Демо-режим · PLAY не списывается</p>
-      </div>
-      <div className="op-slots-stage">
-        {items.length > 6 ? (
-          <button type="button" className="op-slots-arrow" aria-label="Назад" onClick={() => setOffset((n) => Math.max(0, n - 1))}>
-            ‹
-          </button>
-        ) : null}
+      <div className={`op-slots-stage${selected ? " is-choosing" : ""}`} data-selected={selected || undefined}>
         <div className="op-slots-row" data-testid="slots-catalog">
-          {visible.map((def) => (
-            <SlotMachineCabinet
+          {items.map((def, index) => (
+            <PhysicalSlotMachine
               key={def.id}
               def={def}
-              favorite={favorites.includes(def.id)}
-              onFavorite={toggleFavorite}
+              index={index}
+              selected={selected === def.id}
+              onSelect={(id, href, event) => {
+                event.preventDefault();
+                setSelected(id);
+                window.setTimeout(() => navigate(href), 180);
+              }}
             />
           ))}
         </div>
-        {items.length > 6 ? (
-          <button
-            type="button"
-            className="op-slots-arrow"
-            aria-label="Далее"
-            onClick={() => setOffset((n) => Math.min(items.length - 1, n + 1))}
-          >
-            ›
-          </button>
-        ) : null}
       </div>
       <p className="sr-only">{SLOT_CATALOG.length} автоматов в каталоге</p>
     </section>
