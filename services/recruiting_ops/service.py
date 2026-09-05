@@ -3696,8 +3696,10 @@ class RecruitingOpsService:
     async def provider_action(self, organization_id: str, provider: str, action: str, body: dict[str, Any] | None = None, role: str | None = None) -> dict[str, Any]:
         key = _txt(provider).lower()
         act = _txt(action).lower()
-        if act in {"diagnostics", "test", "test_connection", "health", "list_accounts"}:
+        if act == "diagnostics":
             denied = require(role, "list")
+        elif act in {"test", "test_connection", "health", "list_accounts"}:
+            denied = require(role, "update")
         else:
             denied = require_provider_admin(role, key, act if act != "disable" else "disconnect")
         if denied:
