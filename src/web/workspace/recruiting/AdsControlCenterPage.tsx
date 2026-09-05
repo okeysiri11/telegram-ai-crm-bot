@@ -4,13 +4,21 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
-import { Badge, Button, Card, Input, Table } from "@/ui";
+import { useSearchParams } from "react-router-dom";
+import { Badge, Button, Card, Dialog, Input, Table } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import { asList, recruitingOpsGet, recruitingOpsPost, recruitingOpsUserError, recruitingWorkspaceHeaders } from "./recruitingApi";
+import { ADS_PROVIDER_MISSING_CONFIG_RU, adsMissingConfigMessage } from "./providerConnectionCopy";
+import { ProviderConnectionBoundary } from "./ProviderConnectionBoundary";
 import { mapUiRoleToRecruiting } from "./recruitingLabels";
 import { RecruitingOpsFrame } from "./RecruitingOpsFrame";
+
+const WIZARD_PROVIDERS = [
+  { provider: "meta", label: "Meta Ads" },
+  { provider: "google", label: "Google Ads" },
+  { provider: "tiktok", label: "TikTok Ads" },
+] as const;
 
 const SECTIONS = [
   { id: "overview", label: "Обзор" },
@@ -99,6 +107,7 @@ export function AdsControlCenterPage() {
   const [detail, setDetail] = useState<Row | null>(null);
   const [spendForm, setSpendForm] = useState({ amount: "", currency: "EUR", spent_on: "", comment: "" });
   const [connectHint, setConnectHint] = useState<string | null>(null);
+  const [connectionsOpen, setConnectionsOpen] = useState(false);
   const [wizardProvider, setWizardProvider] = useState<string | null>(null);
   const [accountId, setAccountId] = useState("");
   const [accounts, setAccounts] = useState<Row[]>([]);
@@ -228,6 +237,8 @@ export function AdsControlCenterPage() {
 
   async function tryConnect(provider: string) {
     setWizardProvider(provider);
+    const missing = adsMissingConfigMessage(provider, "NOT_CONFIGURED");
+    if (missing) setConnectHint(missing);
     const res = await recruitingOpsGet(`/providers/${provider}/oauth/start`, headers);
     const body = asRecord(res.json);
     const url = String(body.authorize_url || "");
@@ -235,7 +246,7 @@ export function AdsControlCenterPage() {
       window.location.assign(url);
       return;
     }
-    setConnectHint(String(body.message_ru || "Провайдер не настроен. OAuth не запускается без учётных данных."));
+    setConnectHint(missing || String(body.message_ru || "Провайдер не настроен. OAuth не запускается без учётных данных."));
   }
 
   async function runProviderAction(provider: string, action: string, extra: Record<string, unknown> = {}) {
@@ -346,9 +357,44 @@ export function AdsControlCenterPage() {
       ) : null}
       {section === "providers" ? (
         <Card title="Провайдеры">
+          <ProviderConnectionBoundary>
           <p>
-            <Link to="/workspace/recruiting/integrations">Открыть подключения</Link>
+            <Button size="sm" data-testid="ads-open-connections" onClick={() => setConnectionsOpen(true)}>
+              Открыть подключения
+            </Button>
           </p>
+          <Dialog open={connectionsOpen} title="Подключения провайдеров" onClose={() => setConnectionsOpen(false)}>
+            <div data-testid="ads-connections-wizard">
+              <p className="eds-type-helper mb-3">Мастер открывается без учётных данных. OAuth не запускается, пока приложение провайдера не настроено.</p>
+              {WIZARD_PROVIDERS.map((spec) => {
+                const row = asRecord(connect.find((raw) => asRecord(raw).provider === spec.provider) || spec);
+                const status = String(row.status || "NOT_CONFIGURED");
+                const missing = adsMissingConfigMessage(spec.provider, status) || ADS_PROVIDER_MISSING_CONFIG_RU[spec.provider];
+                return (
+                  <div key={spec.provider} className="mb-3 rounded border border-[var(--eds-border)] p-3" data-testid={`ads-wizard-card-${spec.provider}`}>
+                    <p>
+                      <Badge tone="info">{status}</Badge> {String(row.label || spec.label)}
+                    </p>
+                    <p className="mt-1 eds-type-helper" data-testid={`ads-wizard-missing-${spec.provider}`}>
+                      {missing}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      <Button size="sm" onClick={() => void tryConnect(spec.provider)}>
+                        {spec.label}
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => void tryConnect(spec.provider)}>
+                        Переподключить
+                      </Button>
+                      <Button size="sm" variant="ghost" onClick={() => void runProviderAction(spec.provider, "diagnostics")}>
+                        Диагностика
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {connectHint ? <p className="mt-2 eds-type-helper" data-testid="ads-wizard-connect-hint">{connectHint}</p> : null}
+            </div>
+          </Dialog>
           {Object.entries(providers).map(([key, value]) => {
             const rec = asRecord(value);
             return (
@@ -415,7 +461,7 @@ export function AdsControlCenterPage() {
                       variant="ghost"
                       onClick={async () => {
                         const res = await recruitingOpsGet(`/providers/${row.provider}/accounts`, headers);
-                        setAccounts(asList(asRecord(res.json).items));
+                        setAccounts(asList(asRecord(res.json).items) as Row[]);
                         setWizardProvider(String(row.provider));
                       }}
                     >
@@ -475,6 +521,7 @@ export function AdsControlCenterPage() {
               {JSON.stringify(diag, null, 2)}
             </pre>
           ) : null}
+          </ProviderConnectionBoundary>
         </Card>
       ) : null}
       {section === "campaigns" ? (

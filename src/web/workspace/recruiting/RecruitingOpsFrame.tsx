@@ -5,6 +5,14 @@ import { WorkspaceLayout } from "@/layouts/WorkspaceLayout";
 import { cn } from "@/utils/cn";
 import { RECRUITING_NAV } from "./recruitingLabels";
 
+function withPreservedEmbed(href: string, search: string): string {
+  const embed = new URLSearchParams(search).get("embed");
+  if (!embed) return href;
+  const url = new URL(href, "https://ados.local");
+  url.searchParams.set("embed", embed);
+  return `${url.pathname}${url.search}`;
+}
+
 type Props = {
   title: string;
   subtitle: string;
@@ -47,7 +55,7 @@ export function RecruitingOpsFrame({ title, subtitle, children, testId, error, o
                     "rounded-md px-2 py-1.5 text-left eds-type-small",
                     active ? "bg-[var(--eds-primary-soft)] text-[var(--eds-primary)]" : "hover:bg-[var(--eds-primary-soft)]/40",
                   )}
-                  onClick={() => navigate(item.href)}
+                  onClick={() => navigate(withPreservedEmbed(item.href, location.search))}
                 >
                   {item.label}
                 </button>

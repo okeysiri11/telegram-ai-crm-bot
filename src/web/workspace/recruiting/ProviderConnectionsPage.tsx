@@ -9,6 +9,8 @@ import { Badge, Button, Card, Dialog, Input } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
 import { recruitingOpsGet, recruitingOpsPost, recruitingOpsUserError, recruitingWorkspaceHeaders } from "./recruitingApi";
+import { adsMissingConfigMessage } from "./providerConnectionCopy";
+import { ProviderConnectionBoundary } from "./ProviderConnectionBoundary";
 import { mapUiRoleToRecruiting } from "./recruitingLabels";
 import { RecruitingOpsFrame } from "./RecruitingOpsFrame";
 
@@ -112,6 +114,7 @@ export function ProviderConnectionsPage() {
   };
 
   return (
+    <ProviderConnectionBoundary>
     <RecruitingOpsFrame
       title="Подключения провайдеров"
       subtitle="Интеграции. Секреты не показываются. MOCK отличается от LIVE."
@@ -156,6 +159,11 @@ export function ProviderConnectionsPage() {
                   {card.message_ru || "Telegram намеренно отключён."}
                 </p>
               ) : null}
+              {adsMissingConfigMessage(card.provider, card.status) ? (
+                <p className="mt-2 eds-type-helper" data-testid={`provider-missing-config-${card.provider}`}>
+                  {adsMissingConfigMessage(card.provider, card.status)}
+                </p>
+              ) : null}
               <dl className="mt-2 grid grid-cols-1 gap-1 sm:grid-cols-2 eds-type-small" data-testid={`provider-meta-${card.provider}`}>
                 <dt>Тип</dt>
                 <dd>{card.connection_type || "—"}</dd>
@@ -196,8 +204,14 @@ export function ProviderConnectionsPage() {
                       const res = await recruitingOpsGet(`/providers/${card.provider}/oauth/start`, headers);
                       const json = asRecord(res.json);
                       const url = String(json.authorize_url || "");
-                      if (url) window.location.assign(url);
-                      else setError(String(json.message_ru || "Не задана конфигурация приложения провайдера."));
+                      if (url && json.ok) {
+                        window.location.assign(url);
+                        return;
+                      }
+                      setError(
+                        adsMissingConfigMessage(card.provider, card.status) ||
+                          String(json.message_ru || "Не задана конфигурация приложения провайдера."),
+                      );
                     }}
                   >
                     Подключить
@@ -254,6 +268,11 @@ export function ProviderConnectionsPage() {
       ) : null}
       <Dialog open={Boolean(wizard)} title={`Настройка: ${wizard?.label || ""}`} onClose={() => setWizard(null)}>
         <p className="eds-type-helper mb-2">Секреты не сохраняются в браузере.</p>
+        {adsMissingConfigMessage(wizard?.provider, wizard?.status) ? (
+          <p className="eds-type-helper mb-2" data-testid={`wizard-missing-config-${wizard?.provider}`}>
+            {adsMissingConfigMessage(wizard?.provider, wizard?.status)}
+          </p>
+        ) : null}
         {(wizard?.wizard || []).map((field) => (
           <label key={field.id} className="mb-2 block eds-type-small">
             {field.label_ru}
@@ -302,5 +321,6 @@ export function ProviderConnectionsPage() {
         </div>
       </Dialog>
     </RecruitingOpsFrame>
+    </ProviderConnectionBoundary>
   );
 }

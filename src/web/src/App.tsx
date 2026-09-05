@@ -4,6 +4,7 @@ import { ProtectedRoute } from "@/shell/ProtectedRoute";
 import { CasinoBrowseRoute } from "@/shell/CasinoBrowseRoute";
 import { LoadingScreen } from "@/shell/LoadingScreen";
 import { RouteErrorBoundary } from "@/shell/RouteErrorBoundary";
+import { SafeProviderConnectionsRoute } from "../workspace/recruiting/SafeProviderConnectionsRoute";
 import { DashboardPage } from "@/pages/DashboardPage";
 import { OwnerDashboardPage } from "@/navigation/OwnerDashboardPage";
 import { ClientDashboardPage } from "@/dashboard/ClientDashboardPage";
@@ -286,9 +287,6 @@ const VanguardProjectPage = lazy(() =>
 );
 const RecruitingInfraPage = lazy(() =>
   import("../workspace/recruiting/RecruitingInfraPage").then((m) => ({ default: m.RecruitingInfraPage })),
-);
-const ProviderConnectionsPage = lazy(() =>
-  import("../workspace/recruiting/ProviderConnectionsPage").then((m) => ({ default: m.ProviderConnectionsPage })),
 );
 const AdsControlCenterPage = lazy(() =>
   import("../workspace/recruiting/AdsControlCenterPage").then((m) => ({ default: m.AdsControlCenterPage })),
@@ -1260,7 +1258,7 @@ export function App() {
         path="/workspace/recruiting/integrations"
         element={
           <ProtectedRoute>
-            <ProviderConnectionsPage />
+            <SafeProviderConnectionsRoute />
           </ProtectedRoute>
         }
       />
