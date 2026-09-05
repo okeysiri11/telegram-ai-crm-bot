@@ -46,6 +46,7 @@ def _hdr(org: str, role: str = "platform_owner") -> dict[str, str]:
 def test_test_traffic_markers():
     assert is_test_traffic({"utm_source": "e2e_test", "utm_campaign": "vanguard_e2e"})
     assert is_test_traffic({"utm_campaign": "e2e-historical"})
+    assert is_test_traffic({"utm_campaign": "vanguard_pre_ads_test", "utm_source": "instagram"})
     assert is_test_traffic({"traffic_class": "TEST"})
     assert is_test_traffic({"external_id": "e2e-timofii-d88c3ef1"})
     assert not is_test_traffic({"source": "vanguard", "utm_campaign": "launch"})

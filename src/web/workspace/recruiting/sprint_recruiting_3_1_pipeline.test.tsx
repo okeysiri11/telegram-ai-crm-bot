@@ -128,6 +128,7 @@ describe("Sprint Recruiting 3.1 pipeline UX", () => {
 
   it("marks TEST traffic without treating production leads as test", () => {
     expect(isTestTraffic({ utm_source: "e2e_test", utm_campaign: "vanguard_e2e" })).toBe(true);
+    expect(isTestTraffic({ utm_source: "instagram", utm_campaign: "vanguard_pre_ads_test" })).toBe(true);
     expect(isTestTraffic({ source: "vanguard", traffic_class: "PRODUCTION" })).toBe(false);
   });
 

@@ -131,7 +131,14 @@ export function candidateSourceList(row: WorkflowRow): string {
   return [...new Set(values)].join(", ") || "—";
 }
 
-const TEST_TRAFFIC_MARKERS = ["e2e_test", "e2e-historical", "vanguard_e2e", "e2e-"];
+const TEST_TRAFFIC_MARKERS = [
+  "e2e_test",
+  "e2e-historical",
+  "vanguard_e2e",
+  "e2e-",
+  "vanguard_pre_ads_test",
+  "pre_ads_test",
+];
 
 export function isTestTraffic(row: WorkflowRow | null | undefined): boolean {
   if (!row) return false;

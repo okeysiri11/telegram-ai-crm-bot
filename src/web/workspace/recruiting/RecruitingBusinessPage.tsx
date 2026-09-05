@@ -448,6 +448,7 @@ export function RecruitingBusinessPage() {
         { key: "vacancy", label: "Вакансия" },
         { key: "assignee", label: "Ответственный" },
         { key: "status", label: "Статус" },
+        { key: "traffic", label: "Трафик" },
         { key: "created", label: "Создана" },
       ],
       rows: bundle.leads.map((l) => ({
@@ -458,6 +459,7 @@ export function RecruitingBusinessPage() {
         vacancy: vacancyLabelForLead(l, bundle.vacancies),
         assignee: recruiterLabel(l.assignee),
         status: ruLeadStatus(String(l.status || "")),
+        traffic: isTestTraffic(l) ? "TEST" : "PROD",
         created: createdLabel(l),
       })),
       statusFilterKey: "status",
@@ -513,6 +515,7 @@ export function RecruitingBusinessPage() {
         { key: "assignee", label: "Ответственный" },
         { key: "stage", label: "Этап" },
         { key: "source", label: "Источник" },
+        { key: "traffic", label: "Трафик" },
         { key: "duplicate", label: "Дубль" },
       ],
       rows: bundle.candidates.map((c) => ({
@@ -524,6 +527,7 @@ export function RecruitingBusinessPage() {
         assignee: recruiterLabel(c.assignee),
         stage: PIPELINE_LABELS[String(c.pipeline_stage || "")] || pick(c, "pipeline_stage"),
         source: pick(c, "source"),
+        traffic: isTestTraffic(c) ? "TEST" : "PROD",
         duplicate: c.possible_duplicate ? "Возможный дубль" : "",
         duplicate_peer: String((Array.isArray(c.duplicate_candidate_ids) ? c.duplicate_candidate_ids[0] : "") || ""),
       })),

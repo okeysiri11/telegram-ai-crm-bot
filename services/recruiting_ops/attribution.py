@@ -6,7 +6,14 @@ from typing import Any
 
 TEST_TRAFFIC_CLASS = "TEST"
 PRODUCTION_TRAFFIC_CLASS = "PRODUCTION"
-TEST_TRAFFIC_MARKERS = ("e2e_test", "e2e-historical", "vanguard_e2e", "e2e-")
+TEST_TRAFFIC_MARKERS = (
+    "e2e_test",
+    "e2e-historical",
+    "vanguard_e2e",
+    "e2e-",
+    "vanguard_pre_ads_test",
+    "pre_ads_test",
+)
 _TEST_TRAFFIC_FIELDS = (
     "utm_source",
     "utm_medium",
