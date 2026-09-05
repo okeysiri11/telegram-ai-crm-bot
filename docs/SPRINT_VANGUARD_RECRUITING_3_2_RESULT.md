@@ -1,134 +1,168 @@
-# Sprint Vanguard Recruiting 3.2 — production E2E + pre-ads gate
+# Sprint Vanguard Recruiting 3.2 / 3.2.1 — production E2E + deploy closure
 
 **Date:** 2026-09-05  
-**Production:** `https://ados-web.onrender.com`
+**Production:** `https://ados-web.onrender.com`  
+**Final status:** **FULL PRODUCTION E2E PASS**
 
-No auth bypass was added. HMAC was not weakened. Provider APIs were not mocked as connected.
+No auth bypass was added. HMAC was not weakened. Provider APIs were not connected or mocked as connected. Historical E2E rows were not deleted.
 
-## A. Live production SHA
+## 1. Git state before 3.2.1
 
-`GET /liveness` revision during the live cycle: `d7a56414e8c26b089c55d0c45b449418b401f7b4`  
-(includes Recruiting 3.1 `82b5f1e3`). Recruiting health `production=true`, `memory_fallback_allowed=false`. Workspace `/workspace/recruiting` returns the SPA (HTTP 200). Authenticated `GET /leads` / `/analytics` hydrate from Postgres.
-
-Follow-up commit `5e57afcb` (pre-ads UTM marker + TEST/PROD column) is on `origin/develop`. Production Gate `backend-gate` failed on an unrelated OAuth callback flake (`OAuth state недействителен`) and had not reached Render at E2E time.
-
-## B. Auth status
-
-Owner session obtained through the **already-deployed** `POST /api/enterprise-demo-auth/v1/login` (owner role `owner` / `platform_admin`, tenant `demo-corp` → ados Recruiting read/write).  
-Not added in this sprint. JWT was not hardcoded or printed.
-
-`/management/identity/login` email/password still 401 (`telegram_init_data` / `login_proof`).  
-Production frontend does not show local «Login as owner». A human already signed in can finish a browser hard-reload check (steps below).
-
-## C–F. Vanguard ingest + UTM + candidate
-
-Unsigned `POST /api/recruiting-ops/v1/vanguard/leads` → **401 `missing_signature`**.
-
-Real website path:
-
-`POST https://vanguard-global.net/api/applications` → Vercel HMAC → Render ingest → **HTTP 200** `success=true`, `duplicate=false`.
-
-Created lead `476430f9-5b20-4eed-9cd8-2a35ae189753`, `traffic_class=TEST`, `source=vanguard-global`.
-
-| Field | Persisted |
-|---|---|
-| utm_source | instagram |
-| utm_medium | paid_social |
-| utm_campaign | vanguard_pre_ads_test |
-| utm_content | creative_test_01 |
-| landing_page | `https://vanguard-global.net/apply?utm_source=instagram&…` |
-| referrer | `https://www.instagram.com/` |
-
-Candidate `1d85e804-0ca1-4377-bf06-4d008de62bfd` created on convert. `durable=true`, `storage=postgres`. One application, one `lead_id`.
-
-## G–J. Lifecycle, reload, history
-
-Same TEST row, authenticated production API (then GET reload):
-
-| Step | Result | Actor | Timestamp (UTC) |
-|---|---|---|---|
-| ingest / lead_created | NEW | platform_owner | 07:53:20 |
-| assign `recruiter.ira` | persisted | platform_owner | 07:53:22 |
-| qualify | `qualified` | platform_owner | 07:53:22 |
-| convert | QUALIFIED | platform_owner | 07:53:22 |
-| schedule interview | INTERVIEW + `interview_scheduled` | platform_owner | 07:53:23 |
-| APPROVED | APPROVED | platform_owner | 07:53:23 |
-| HIRED | HIRED | platform_owner | 07:53:23 |
-
-Reload `GET /candidates` + `GET /leads`: still **HIRED**, assignee `recruiter.ira`, UTM intact, `traffic_class=TEST`.
-
-History pairs: `QUALIFIED→INTERVIEW`, `INTERVIEW→APPROVED`, `APPROVED→HIRED`. Actions also include `vanguard_lead_ingested`, `lead_assigned`, `lead_qualified`, `lead_converted`, `interview_scheduled`.
-
-Browser Cmd+Shift+R was not run in this agent (no owner UI session). API reload after Postgres persist **did** run.
-
-## K. TEST exclusion
-
-| Metric | Before | After |
+| Location | SHA | Notes |
 |---|---|---|
-| Production funnel leads / qualified / hired | 0 / 0 / 0 | 0 / 0 / 0 |
-| `excluded_test_leads` | 7 | 8 |
-| `excluded_test_candidates` | 4 | 5 |
-| CRM lead list | 7 | 8 |
-| CRM candidate list | 3 | 4 |
-| Ads overview leads | — | 0 |
-| Ads `source_analytics` | — | empty (no instagram) |
-| Ads `fake_data` | — | false |
-| Ads spend / CPL / CPA | — | unavailable (no live ads) |
+| `origin/develop` | `5e57afcb` | Pre-ads TEST marker + TEST/PROD column. Gate **failed**. |
+| Local `HEAD` | `deb5c56a` | 3.2 RESULT + URL-quote of OAuth state (not the real flake). |
+| Render `/liveness` | `d7a56414` | Last green gate (3.1 docs). `checksPass` blocked `5e57afcb`. |
 
-All 8 operational leads are TEST-tagged (historical e2e + this pre-ads row). None enter production funnel.
+Unrelated dirty files (not committed): `BusinessCabinetShell.tsx`, `docs/SPRINT_50_13_RESULT.md`, untracked FX deploy notes.
 
-`5e57afcb` adds `vanguard_pre_ads_test` as an explicit marker and a TEST/PROD column. Until that SHA is live, this row is TEST via `external_id` / `e2e-` (3.1). Do not auto-delete historical e2e rows.
+`deb5c56a` was **safe** (test URL-encoding + docs) but **not sufficient**. The gate failure was HMAC framing, not query quoting.
 
-## L. Remaining blockers
+## 2. Why `5e57afcb` did not reach Render
 
-- Meta / Google / WhatsApp credentials (honest NOT_CONFIGURED / WAITING_PROVIDER).
-- Telegram frozen.
-- Browser hard-reload still needs the owner’s existing UI session.
-- `5e57afcb` not on Render until Production Gate is green.
+`autoDeployTrigger=checksPass`. Production Gate run `33953596635` on `5e57afcb`:
 
-## M. Pre-Ads readiness: **READY** (ingest → CRM hire). Ads APIs **BLOCKED**.
+- `web-gate` success
+- `vanguard-e2e` success
+- `backend-gate` **failure** on Recruiting 1.9  
+  `test_oauth_callback_with_injected_exchange` → `AUTH_ERROR` / «OAuth state недействителен.»
+
+Root cause: `encode_state` joined `raw || b"." || hmac_digest`. A SHA-256 digest contains `0x2e` (~12% of states). `rsplit(b".", 1)` then verified the wrong slice. Reproduced locally: 31/200 round-trips failed even when the query string was unchanged. Quoting the state did not fix it.
+
+## 3. Deployment-gate fix (3.2.1)
+
+`eb7fa140` — prefix the 32-byte HMAC, then the JSON payload. Decode tries the new frame first, then the legacy `raw||.||sig` frame when the digest has no `0x2e` (in-flight 10-minute states). HMAC algorithm, keys, JWT, tenant, and ingest auth are unchanged.
+
+Production Gate also now runs `test_sprint_recruiting_3_1_pipeline` (backend + vitest).
+
+## 4. Tests run locally
+
+| Suite | Result |
+|---|---|
+| Recruiting pytest (1.0–1.9, ingest, hardening, ads, infra, tracking, email, WhatsApp mocked, 2.8, 2.10, 3.0.2, 3.1) | **181 passed**, 3 skipped |
+| Recruiting/Vanguard vitest including 3.1 | **13 files / 44 tests** passed |
+| `npx vite build` (`src/web`) | **PASS** |
+| Security + production health | **53 passed** |
+| Playwright Vanguard E2E (this Mac) | not run (Playwright unsupported on mac13) |
+| GitHub Production Gate `eb7fa140` | **backend-gate / web-gate / vanguard-e2e success** |
+| Production Foundation `eb7fa140` | **success** |
+
+Invariants checked in those suites / live smoke: unsigned ingest 401 `missing_signature`; TEST excluded from production analytics; TEST rows remain in CRM lists; interview schedule idempotent in 3.1 tests; Telegram frozen; Meta/Google disconnected; WhatsApp NOT_CONFIGURED.
+
+## 5. Deployment
+
+Pushed `deb5c56a` + `eb7fa140` to `origin/develop`.
+
+| Check | Result |
+|---|---|
+| `GET /liveness` revision | `eb7fa14045805dbfe2dcb791d0a59de680db66c1` |
+| Includes `5e57afcb` pre-ads markers | yes (ancestor) |
+| `runtime` | production |
+| Recruiting `GET /health` `production` | `true` |
+| `memory_fallback_allowed` | `false` |
+| `/workspace/recruiting` | HTTP 200 |
+
+## 6. Human browser hard reload — **HUMAN PASS**
+
+Owner observed after production reload:
+
+- Pre Ads Test still present
+- Candidate still in the funnel
+- Expected terminal stage **HIRED / Нанят**
+- Recruiter `recruiter.ira`
+- Application/lead data, source `vanguard-global`, TEST marker
+- country EE, program logistics, project vanguard, language en, age 28
+- motivation contains `Sprint 3.2 pre-ads TEST`
+- Data rehydrated after hard reload
+
+## 7. Post-deploy API smoke (no new applicant)
+
+Authenticated via already-deployed `POST /api/enterprise-demo-auth/v1/login` (owner). Token not printed.
+
+| Check | Result |
+|---|---|
+| Unsigned `POST /vanguard/leads` | **401 `missing_signature`** |
+| Lead `476430f9-…` | `traffic_class=TEST`, `source=vanguard-global`, assignee `recruiter.ira`, UTMs intact, `status=converted` |
+| Candidate `1d85e804-…` | TEST, assignee `recruiter.ira`, one application, `durable=true`, `storage=postgres` |
+| Application | EE / logistics / vanguard / en / 28 / TEST motivation; Instagram UTMs + landing + referrer |
+| Analytics funnel leads/qualified/interviews/approved/hired | **0 / 0 / 0 / 0 / 0** |
+| `excluded_test_leads` / `excluded_test_candidates` | **8 / 5** |
+| Ads overview leads/hires / `fake_data` | **0 / 0 / false** |
+| Ads `source_analytics` | empty |
+| Ads providers meta/google/tiktok | `not_connected` |
+| Telegram | `frozen=true`, `DISABLED` |
+| WhatsApp | `NOT_CONFIGURED` / `WAITING_PROVIDER` |
+
+**Current card stage is INTERVIEW**, not HIRED. History still contains the full 3.2 path through **APPROVED → HIRED** (07:53:23Z). A later `pipeline_moved` **HIRED → INTERVIEW** at **08:01:41Z** (during the human browser session; likely the interview control). That subsequent move does not erase the HIRED proof. The row was not moved back automatically.
+
+## 8. Remaining external blockers
+
+- Meta Ads / Google Ads / TikTok Ads: NOT_CONFIGURED / not_connected
+- WhatsApp: NOT_CONFIGURED / WAITING_PROVIDER
+- Telegram: frozen / DISABLED
+- Paid-ad spend path: **BLOCKED** until real provider credentials exist
+
+## 9. Pre-Ads readiness
+
+CRM path **READY**. Ads APIs **BLOCKED**. **READY_FOR_ADS_SPEND = NO**.
 
 | Component | Status |
 |---|---|
-| Tracked Vanguard URL + UTM | READY (this run) |
-| Landing / apply page | READY |
-| HMAC signed ingest | READY |
-| Unsigned rejected | READY |
-| CRM Lead | READY |
-| Candidate + application | READY |
-| Recruiter assign | READY |
-| Qualify | READY |
-| Interview schedule + history | READY |
-| Decision APPROVED / HIRED | READY |
-| Postgres persist + reload | READY |
+| Tracked Vanguard URL + UTM | READY |
+| Landing / apply / HMAC ingest / unsigned reject | READY |
+| Lead → Candidate → Application | READY |
+| Recruiter / qualify / interview / hire | READY |
+| Postgres persist + API reload | READY |
+| Browser hard reload | **HUMAN PASS** |
 | TEST excluded from production/ads metrics | READY |
-| Meta Ads API | BLOCKED |
-| Google Ads API | BLOCKED |
-| WhatsApp | BLOCKED |
-| Telegram | BLOCKED (frozen) |
-| Browser hard reload | NOT TESTED (API reload PASS) |
+| Meta / Google / WhatsApp / Telegram | BLOCKED |
 
-### Provider honesty
+## 10. Architectural decisions
 
-- Telegram: `frozen=true`, `DISABLED`
-- WhatsApp: `NOT_CONFIGURED`, tracking `WAITING_PROVIDER`
-- Meta / Google: ads `not_connected`; cards `NOT_CONFIGURED` / `WAITING_PROVIDER`
-- No mock CONNECTED
+- Live apply used the real Vercel signing path.
+- TEST isolation uses 3.1 `e2e-` / `traffic_class` plus `5e57afcb` campaign markers (`vanguard_pre_ads_test`, `pre_ads_test`).
+- Historical e2e rows identified, not deleted.
+- OAuth state framing fixed without changing HMAC keys or auth semantics.
+- `deb5c56a` quote kept as URL hygiene; it is not the gate fix.
 
-## Human browser hard-reload (if already logged in as owner)
+---
 
-1. Open `https://ados-web.onrender.com/workspace/recruiting?view=candidates`
-2. Search `TEST` or `Pre Ads Test`
-3. Open the HIRED card — recruiter Ira, campaign `vanguard_pre_ads_test`
-4. Open Activity — QUALIFIED → INTERVIEW → APPROVED → HIRED
-5. Hard reload (Cmd+Shift+R / Ctrl+Shift+R)
-6. Confirm the same HIRED card, recruiter, UTM, and history
-7. Open Analytics — production hired stays 0; TEST excluded count includes this row
+## Sprint 3.3 — proposed backlog (DO NOT IMPLEMENT HERE)
 
-Do not submit a second live application unless it is also TEST-tagged.
+**Title:** Vanguard Advertising Control Center  
+**Rule:** do not fake provider metrics; do not connect Meta/Google/WhatsApp/Telegram until real credentials exist.
 
-## Architectural decisions
+Existing surface to **extend** (do not replace):
 
-- Live apply used the real Vercel signing path, not a local HMAC secret.
-- TEST isolation used existing 3.1 `e2e-` / `traffic_class` rules; `vanguard_pre_ads_test` marker is additive.
-- Historical e2e rows were identified, not deleted.
+- `GET /api/recruiting-ops/v1/ads/control-center`
+- `src/web/workspace/recruiting/AdsControlCenterPage.tsx`
+- `services/recruiting_ops/ads_control.py`, `attribution.py` (`source_analytics`, `production_cohort`)
+- Manual `POST /campaigns` (operator spend allowed; impressions/clicks stay empty until LIVE)
+
+### Goal
+
+Join the already-proven path:
+
+Vanguard site → UTM/campaign → application → lead → candidate → recruiter → interview → approved → hired
+
+to **campaign/source economics** without inventing clicks or spend.
+
+### Calculate (when inputs exist; otherwise `null` + «Нет живых данных»)
+
+impressions, clicks, CTR, spend, CPC, applications, CPL, qualified, interviews, approved, hired, cost per hire, conversion rates.
+
+### Dimensions
+
+campaign_id / utm_campaign / utm_source / utm_medium / utm_content  
+Sources: Meta, Facebook, Instagram, Google, TikTok, organic, direct, referral.
+
+### Suggested slices
+
+1. Campaign registry mapped to Vanguard UTMs (manual campaigns already exist).
+2. Production-only funnel already in analytics — add per-campaign / per-source table (TEST stays excluded).
+3. Honest provider cards: WAITING_PROVIDER until credentials; no CONNECTED fake.
+4. Operator-entered spend remains REAL; provider impressions/clicks stay unavailable.
+5. Cost-per-hire / CPL only when spend + production counts exist.
+6. Do not implement live Meta/Google sync in 3.3 unless credentials are provided in that sprint.
+
+Rejected for 3.3 unless explicitly requested: inventing impressions, marking providers connected, weakening TEST exclusion, new ads database.
