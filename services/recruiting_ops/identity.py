@@ -38,6 +38,7 @@ APPLICATION_SNAPSHOT_KEYS = (
     "referrer",
     "landing_page",
     "project_key",
+    "traffic_class",
 )
 
 

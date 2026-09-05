@@ -39,6 +39,7 @@ import {
   recruiterLabel,
   recruitingCanForceMerge,
   recruitingCanMerge,
+  isTestTraffic,
   vacancyLabelForLead,
   type RecruiterOption,
 } from "./recruitingWorkflow";
@@ -211,6 +212,7 @@ export function RecruitingBusinessPage() {
   const cards = asRecord(bundle.dashboard.cards);
   const visits = asRecord(bundle.dashboard.visits || asRecord(bundle.analytics.visits));
   const funnel = asRecord(bundle.analytics.funnel);
+  const analyticsTraffic = asRecord(bundle.analytics.traffic);
   const attention = Array.isArray(bundle.dashboard.attention) ? (bundle.dashboard.attention as Row[]) : [];
   const attentionItems = Array.isArray(bundle.dashboard.attention_items)
     ? (bundle.dashboard.attention_items as Row[])
@@ -450,7 +452,7 @@ export function RecruitingBusinessPage() {
       ],
       rows: bundle.leads.map((l) => ({
         id: String(l.id || ""),
-        name: pick(l, "name"),
+        name: isTestTraffic(l) ? `${pick(l, "name")} · TEST` : pick(l, "name"),
         phone: pick(l, "phone"),
         email: pick(l, "email"),
         vacancy: vacancyLabelForLead(l, bundle.vacancies),
@@ -515,7 +517,7 @@ export function RecruitingBusinessPage() {
       ],
       rows: bundle.candidates.map((c) => ({
         id: String(c.id || ""),
-        name: pick(c, "name"),
+        name: isTestTraffic(c) ? `${pick(c, "name")} · TEST` : pick(c, "name"),
         phone: pick(c, "phone"),
         email: pick(c, "email"),
         vacancy: vacancyLabelForLead(c, bundle.vacancies),
@@ -580,8 +582,11 @@ export function RecruitingBusinessPage() {
               candidate={selectedCandidate}
               lead={linkedLead}
               vacancies={bundle.vacancies}
+              recruiters={recruiters}
               canOperate={caps.canOperate}
+              onAssign={async (assignee) => (await post(`/candidates/${selectedCandidate.id}/assign`, { assignee })).ok}
               onStage={async (stage) => (await post(`/candidates/${selectedCandidate.id}/stage`, { pipeline_stage: stage })).ok}
+              onInterview={async () => (await post(`/candidates/${selectedCandidate.id}/interview`, {})).ok}
               onOpenLead={(leadId) => openView("leads", leadId)}
             />
           ) : bundle.candidates.length ? (
@@ -663,7 +668,7 @@ export function RecruitingBusinessPage() {
       ],
       rows: bundle.candidates.map((c) => ({
         id: String(c.id || ""),
-        name: pick(c, "name"),
+        name: isTestTraffic(c) ? `${pick(c, "name")} · TEST` : pick(c, "name"),
         stage: PIPELINE_LABELS[String(c.pipeline_stage || "")] || String(c.pipeline_stage || ""),
         assignee: pick(c, "assignee"),
       })),
@@ -895,7 +900,7 @@ export function RecruitingBusinessPage() {
     analytics: {
       id: "analytics",
       title: "Атрибуция",
-      description: "Воронка по сохранённым лидам. Визиты не выдумываются.",
+      description: "Воронка по production-лидам. TEST / e2e-трафик не входит в метрики.",
       columns: [
         { key: "label", label: "Разрез" },
         { key: "count", label: "Лиды" },
@@ -913,11 +918,17 @@ export function RecruitingBusinessPage() {
         { label: "Наняты", value: String(funnel.hired ?? 0) },
       ],
       emptyTitle: "Нет лидов для атрибуции",
-      emptyDescription: "Метрики считаются только из сохранённых заявок.",
+      emptyDescription: "Метрики считаются только из сохранённых production-заявок. TEST не учитывается.",
       panel: (
-        <Card title="Посещения">
-          <p data-testid="recruiting-analytics-visits">{String(asRecord(bundle.analytics.visits).message_ru || "Нет данных о посещениях")}</p>
-        </Card>
+        <div className="grid gap-3">
+          <Card title="Посещения">
+            <p data-testid="recruiting-analytics-visits">{String(asRecord(bundle.analytics.visits).message_ru || "Нет данных о посещениях")}</p>
+          </Card>
+          <p className="eds-type-helper" data-testid="recruiting-analytics-test-excluded">
+            TEST-трафик исключён: {String(analyticsTraffic.excluded_test_leads ?? 0)} лидов,{" "}
+            {String(analyticsTraffic.excluded_test_candidates ?? 0)} кандидатов.
+          </p>
+        </div>
       ),
     },
   };

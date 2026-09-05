@@ -242,6 +242,22 @@ async def ops_candidate_stage_handler(request: web.Request) -> web.Response:
     return json_response(result, status=_status_for(result))
 
 
+async def ops_candidate_assign_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    body = await _read_json(request)
+    candidate_id = request.match_info.get("candidate_id") or ""
+    result = await svc.assign_candidate(_org(request, body), candidate_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_candidate_interview_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    body = await _read_json(request)
+    candidate_id = request.match_info.get("candidate_id") or ""
+    result = await svc.schedule_interview(_org(request, body), candidate_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result))
+
+
 async def ops_candidate_merge_handler(request: web.Request) -> web.Response:
     svc = get_recruiting_ops_service()
     body = await _read_json(request)

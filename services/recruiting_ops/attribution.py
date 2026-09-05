@@ -4,9 +4,89 @@ from __future__ import annotations
 
 from typing import Any
 
+TEST_TRAFFIC_CLASS = "TEST"
+PRODUCTION_TRAFFIC_CLASS = "PRODUCTION"
+TEST_TRAFFIC_MARKERS = ("e2e_test", "e2e-historical", "vanguard_e2e", "e2e-")
+_TEST_TRAFFIC_FIELDS = (
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "source",
+    "first_touch_source",
+    "first_touch_campaign",
+    "last_touch_source",
+    "last_touch_campaign",
+    "campaign_code",
+    "external_id",
+    "traffic_class",
+    "data_mode",
+)
+
 
 def _txt(value: Any) -> str:
     return str(value or "").strip()
+
+
+def _blob_is_test(item: dict[str, Any]) -> bool:
+    if bool(item.get("is_test_traffic")):
+        return True
+    cls = _txt(item.get("traffic_class")).upper()
+    if cls in {TEST_TRAFFIC_CLASS, "E2E"}:
+        return True
+    if _txt(item.get("data_mode")).upper() == TEST_TRAFFIC_CLASS:
+        return True
+    blob = " ".join(_txt(item.get(key)).lower() for key in _TEST_TRAFFIC_FIELDS)
+    return any(marker in blob for marker in TEST_TRAFFIC_MARKERS)
+
+
+def is_test_traffic(item: dict[str, Any] | None) -> bool:
+    """True for E2E / TEST-tagged rows. Operational lists keep them; analytics drop them."""
+    if not item:
+        return False
+    if _blob_is_test(item):
+        return True
+    for app in item.get("applications") or []:
+        if isinstance(app, dict) and _blob_is_test(app):
+            return True
+    return False
+
+
+def candidate_is_test_traffic(candidate: dict[str, Any] | None, test_lead_ids: set[str] | None = None) -> bool:
+    if is_test_traffic(candidate):
+        return True
+    lids = { _txt((candidate or {}).get("lead_id")) }
+    lids.update(_txt(x) for x in ((candidate or {}).get("lead_ids") or []) if x)
+    lids.discard("")
+    return bool(test_lead_ids and lids & test_lead_ids)
+
+
+def classify_traffic(item: dict[str, Any] | None) -> str:
+    return TEST_TRAFFIC_CLASS if is_test_traffic(item) else PRODUCTION_TRAFFIC_CLASS
+
+
+def production_cohort(
+    leads: list[dict[str, Any]],
+    candidates: list[dict[str, Any]] | None = None,
+    events: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    prod_leads = [item for item in leads if not is_test_traffic(item)]
+    test_lead_ids = { _txt(item.get("id")) for item in leads if is_test_traffic(item) }
+    test_lead_ids.discard("")
+    prod_cands = None
+    if candidates is not None:
+        prod_cands = [item for item in candidates if not candidate_is_test_traffic(item, test_lead_ids)]
+    prod_events = None
+    if events is not None:
+        prod_events = [item for item in events if not is_test_traffic(item)]
+    return {
+        "leads": prod_leads,
+        "candidates": prod_cands,
+        "events": prod_events,
+        "production_only": True,
+        "excluded_test_leads": len(leads) - len(prod_leads),
+        "excluded_test_candidates": (len(candidates) - len(prod_cands)) if candidates is not None else 0,
+        "excluded_test_events": (len(events) - len(prod_events)) if events is not None else 0,
+    }
 
 
 def touch_payload(body: dict[str, Any]) -> dict[str, Any]:

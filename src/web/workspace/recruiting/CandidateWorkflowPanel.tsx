@@ -1,12 +1,15 @@
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/ui";
 import { pick } from "./recruitingApi";
 import { RecruitingApplicationDetails } from "./RecruitingApplicationDetails";
 import {
   CANDIDATE_FLOW,
   createdLabel,
+  isTestTraffic,
   recruiterLabel,
   sourceLabel,
   vacancyTitle,
+  type RecruiterOption,
   type WorkflowRow,
 } from "./recruitingWorkflow";
 
@@ -14,17 +17,45 @@ type Props = {
   candidate: WorkflowRow;
   lead?: WorkflowRow | null;
   vacancies: WorkflowRow[];
+  recruiters?: RecruiterOption[];
   canOperate: boolean;
+  onAssign?: (assignee: string) => Promise<boolean>;
   onStage: (stage: string) => Promise<boolean>;
+  onInterview?: () => Promise<boolean>;
   onOpenLead: (leadId: string) => void;
 };
 
-export function CandidateWorkflowPanel({ candidate, lead, vacancies, canOperate, onStage, onOpenLead }: Props) {
+export function CandidateWorkflowPanel({
+  candidate,
+  lead,
+  vacancies,
+  recruiters = [],
+  canOperate,
+  onAssign,
+  onStage,
+  onInterview,
+  onOpenLead,
+}: Props) {
   const stage = String(candidate.pipeline_stage || candidate.status || "NEW");
   const vacancy = vacancies.find((v) => String(v.id) === String(candidate.vacancy_id || lead?.vacancy_id || ""));
   const applications = Array.isArray(candidate.applications)
     ? (candidate.applications as WorkflowRow[])
     : [];
+  const [assignee, setAssignee] = useState(String(candidate.assignee || lead?.assignee || ""));
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setAssignee(String(candidate.assignee || lead?.assignee || ""));
+  }, [candidate.id, candidate.assignee, lead?.assignee]);
+
+  const recruiterChoices = useMemo(() => {
+    const options = [...recruiters];
+    if (assignee && !options.some((row) => row.id === assignee)) {
+      options.unshift({ id: assignee, label: recruiterLabel(assignee) });
+    }
+    return options;
+  }, [recruiters, assignee]);
+
   const leadIds = [
     ...new Set(
       [
@@ -38,7 +69,14 @@ export function CandidateWorkflowPanel({ candidate, lead, vacancies, canOperate,
 
   return (
     <div className="grid gap-3" data-testid="candidate-workflow-panel">
-      <h3 className="eds-type-title text-lg">{pick(candidate, "name")}</h3>
+      <h3 className="eds-type-title text-lg">
+        {pick(candidate, "name")}
+        {isTestTraffic(candidate) || isTestTraffic(lead) ? (
+          <span className="ml-2 eds-type-helper" data-testid="candidate-test-badge">
+            TEST
+          </span>
+        ) : null}
+      </h3>
       <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2 eds-type-small">
         <div>
           <dt className="eds-type-helper">Имя</dt>
@@ -74,7 +112,31 @@ export function CandidateWorkflowPanel({ candidate, lead, vacancies, canOperate,
         </div>
         <div>
           <dt className="eds-type-helper">Ответственный</dt>
-          <dd>{recruiterLabel(candidate.assignee || lead?.assignee)}</dd>
+          <dd>
+            {canOperate && onAssign ? (
+              <select
+                className="eds-input"
+                data-testid="candidate-assign"
+                value={assignee}
+                disabled={busy}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setAssignee(next);
+                  setBusy(true);
+                  void onAssign(next).finally(() => setBusy(false));
+                }}
+              >
+                <option value="">Не назначен</option>
+                {recruiterChoices.map((row) => (
+                  <option key={row.id} value={row.id}>
+                    {row.label}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              recruiterLabel(candidate.assignee || lead?.assignee)
+            )}
+          </dd>
         </div>
         <div>
           <dt className="eds-type-helper">Источник</dt>
@@ -118,6 +180,21 @@ export function CandidateWorkflowPanel({ candidate, lead, vacancies, canOperate,
             </span>
           ))}
         </div>
+        {canOperate && onInterview ? (
+          <Button
+            className="mt-2 mr-2"
+            size="sm"
+            variant={stage === "INTERVIEW" ? "secondary" : "primary"}
+            data-testid="candidate-schedule-interview"
+            disabled={busy}
+            onClick={() => {
+              setBusy(true);
+              void onInterview().finally(() => setBusy(false));
+            }}
+          >
+            Назначить интервью
+          </Button>
+        ) : null}
         {canOperate && stage !== "REJECTED" ? (
           <Button
             className="mt-2"

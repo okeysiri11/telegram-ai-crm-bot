@@ -156,4 +156,5 @@ def application_fields_from_lead(lead: dict[str, Any]) -> dict[str, Any]:
         "unit_of_interest": lead.get("unit_of_interest"),
         "program_of_interest": lead.get("program_of_interest"),
         "application_message": lead.get("application_message"),
+        "traffic_class": lead.get("traffic_class"),
     }

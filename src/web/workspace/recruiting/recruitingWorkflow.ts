@@ -131,6 +131,33 @@ export function candidateSourceList(row: WorkflowRow): string {
   return [...new Set(values)].join(", ") || "—";
 }
 
+const TEST_TRAFFIC_MARKERS = ["e2e_test", "e2e-historical", "vanguard_e2e", "e2e-"];
+
+export function isTestTraffic(row: WorkflowRow | null | undefined): boolean {
+  if (!row) return false;
+  const cls = String(row.traffic_class || "").toUpperCase();
+  if (cls === "TEST" || cls === "E2E") return true;
+  if (String(row.data_mode || "").toUpperCase() === "TEST") return true;
+  const blob = [
+    row.utm_source,
+    row.utm_medium,
+    row.utm_campaign,
+    row.source,
+    row.first_touch_source,
+    row.first_touch_campaign,
+    row.external_id,
+  ]
+    .map((value) => String(value || "").toLowerCase())
+    .join(" ");
+  if (TEST_TRAFFIC_MARKERS.some((marker) => blob.includes(marker))) return true;
+  const apps = Array.isArray(row.applications) ? (row.applications as WorkflowRow[]) : [];
+  return apps.some((app) => isTestTraffic(app));
+}
+
+export function trafficLabel(row: WorkflowRow): string {
+  return isTestTraffic(row) ? "TEST" : "";
+}
+
 export function candidateVacancyList(row: WorkflowRow, vacancies: WorkflowRow[]): string {
   const apps = Array.isArray(row.applications) ? (row.applications as WorkflowRow[]) : [];
   const values = [

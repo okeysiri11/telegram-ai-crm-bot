@@ -807,6 +807,11 @@ class RecruitingOpsService:
         if key:
             leads = [item for item in leads if belongs_to_project(item, key)]
             candidates = [item for item in candidates if belongs_to_project(item, key)]
+        from services.recruiting_ops.attribution import production_cohort
+
+        cohort = production_cohort(leads, candidates)
+        leads = list(cohort["leads"])
+        candidates = list(cohort["candidates"] or [])
         vacancies = {str(v.get("id")): _txt(v.get("title")) or str(v.get("id")) for v in bag["vacancy"]}
         campaigns = {str(c.get("id")): _txt(c.get("name")) or str(c.get("id")) for c in bag["campaign"]}
 
@@ -853,6 +858,11 @@ class RecruitingOpsService:
             by_campaign=_count_by(leads, "campaign_id", campaigns),
             by_vacancy=_count_by(leads + candidates, "vacancy_id", vacancies),
             project=key or None,
+            traffic={
+                "production_only": True,
+                "excluded_test_leads": cohort["excluded_test_leads"],
+                "excluded_test_candidates": cohort["excluded_test_candidates"],
+            },
         )
 
     async def list_kind(
@@ -1021,11 +1031,17 @@ class RecruitingOpsService:
             "created_at": _now(),
             "updated_at": _now(),
         }
-        from services.recruiting_ops.attribution import touch_payload
+        from services.recruiting_ops.attribution import TEST_TRAFFIC_CLASS, classify_traffic, touch_payload
 
         item.update(touch_payload(body))
         if app_fields:
             item.update(app_fields)
+        explicit = _txt(body.get("traffic_class")).upper()
+        item["traffic_class"] = (
+            TEST_TRAFFIC_CLASS
+            if classify_traffic(item) == TEST_TRAFFIC_CLASS or explicit in {TEST_TRAFFIC_CLASS, "E2E"}
+            else "PRODUCTION"
+        )
         must_be_durable = is_production_runtime() if require_durable is None else require_durable
         try:
             saved = await self._persist("lead", item)
@@ -1852,6 +1868,8 @@ class RecruitingOpsService:
         }
         if app_fields:
             item.update(app_fields)
+        from services.recruiting_ops.attribution import TEST_TRAFFIC_CLASS, classify_traffic
+
         for key in (
             "utm_source",
             "utm_medium",
@@ -1871,6 +1889,12 @@ class RecruitingOpsService:
                 continue
             value = body.get(key)
             item[key] = _txt(value) or None if isinstance(value, str) or value is None else value
+        explicit = _txt(item.get("traffic_class") or body.get("traffic_class")).upper()
+        item["traffic_class"] = (
+            TEST_TRAFFIC_CLASS
+            if classify_traffic(item) == TEST_TRAFFIC_CLASS or explicit in {TEST_TRAFFIC_CLASS, "E2E"}
+            else "PRODUCTION"
+        )
         saved = await self._persist("candidate", item)
         self._bag(org)["candidate"].insert(0, saved)
         await self._activity(
@@ -1900,12 +1924,66 @@ class RecruitingOpsService:
         if not item:
             return {"ok": False, "error": "not_found", "message_ru": "Кандидат не найден"}
         org = located_org
-        stage = _stage(body.get("pipeline_stage") or body.get("stage") or body.get("status"), item.get("pipeline_stage") or "NEW")
+        from_stage = _stage(item.get("pipeline_stage") or item.get("status") or "NEW")
+        stage = _stage(body.get("pipeline_stage") or body.get("stage") or body.get("status"), from_stage)
         patch = {"pipeline_stage": stage, "status": stage, "updated_at": _now()}
         if body.get("assignee"):
             patch["assignee"] = _txt(body.get("assignee"))
         if body.get("notes"):
             patch["notes"] = _txt(body.get("notes"))
+        if from_stage != stage or body.get("assignee") or body.get("notes"):
+            item.update(patch)
+            try:
+                persisted = await self._persist_patch(org, candidate_id, patch)
+            except PersistUnavailable:
+                return {
+                    "ok": False,
+                    "error": "storage_unavailable",
+                    "message_ru": "Не удалось сохранить этап воронки в PostgreSQL.",
+                }
+            if persisted:
+                item = persisted
+            elif not memory_fallback_allowed():
+                return {
+                    "ok": False,
+                    "error": "storage_unavailable",
+                    "message_ru": "Не удалось сохранить этап воронки в PostgreSQL.",
+                }
+            self._replace(org, "candidate", item)
+        if from_stage != stage:
+            await self._activity(
+                organization_id=org,
+                entity_type="candidate",
+                entity_id=candidate_id,
+                action="pipeline_moved",
+                summary=f"Кандидат перемещён: {from_stage} → {stage}",
+                role=role,
+                payload={"from_stage": from_stage, "to_stage": stage, "pipeline_stage": stage},
+            )
+        if stage == "INTERVIEW":
+            await self._ensure_interview_scheduled(org, item, role, from_stage=from_stage)
+        return self._ok(item=self._with_application_links(item))
+
+    async def assign_candidate(
+        self,
+        organization_id: str,
+        candidate_id: str,
+        body: dict[str, Any],
+        role: str | None = None,
+    ) -> dict[str, Any]:
+        if "assignee" not in body and "recruiter" not in body:
+            return {"ok": False, "error": "validation", "message_ru": "Укажите рекрутера"}
+        denied = require(role, "update")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        located_org, item = await self._locate(organization_id, "candidate", candidate_id, role)
+        if not item:
+            return {"ok": False, "error": "not_found", "message_ru": "Кандидат не найден"}
+        org = located_org
+        assignee = _txt(body.get("assignee") or body.get("recruiter")) or None
+        patch = {"assignee": assignee, "updated_at": _now()}
         item.update(patch)
         try:
             persisted = await self._persist_patch(org, candidate_id, patch)
@@ -1913,7 +1991,7 @@ class RecruitingOpsService:
             return {
                 "ok": False,
                 "error": "storage_unavailable",
-                "message_ru": "Не удалось сохранить этап воронки в PostgreSQL.",
+                "message_ru": "Не удалось сохранить ответственного в PostgreSQL.",
             }
         if persisted:
             item = persisted
@@ -1921,19 +1999,80 @@ class RecruitingOpsService:
             return {
                 "ok": False,
                 "error": "storage_unavailable",
-                "message_ru": "Не удалось сохранить этап воронки в PostgreSQL.",
+                "message_ru": "Не удалось сохранить ответственного в PostgreSQL.",
             }
         self._replace(org, "candidate", item)
         await self._activity(
             organization_id=org,
             entity_type="candidate",
             entity_id=candidate_id,
-            action="pipeline_moved",
-            summary=f"Кандидат перемещён в {stage}",
+            action="candidate_assigned" if assignee else "candidate_unassigned",
+            summary=f"Кандидат назначен рекрутеру: {assignee}" if assignee else "Ответственный снят",
             role=role,
-            payload={"pipeline_stage": stage},
+            payload={"assignee": assignee},
         )
-        return self._ok(item=item)
+        return self._ok(item=self._with_application_links(item))
+
+    async def schedule_interview(
+        self,
+        organization_id: str,
+        candidate_id: str,
+        body: dict[str, Any] | None = None,
+        role: str | None = None,
+    ) -> dict[str, Any]:
+        payload = dict(body or {})
+        payload.setdefault("pipeline_stage", "INTERVIEW")
+        moved = await self.move_candidate(organization_id, candidate_id, payload, role)
+        if not moved.get("ok"):
+            return moved
+        return self._ok(item=moved.get("item"), interview_scheduled=True)
+
+    async def _ensure_interview_scheduled(
+        self,
+        org: str,
+        candidate: dict[str, Any],
+        role: str | None,
+        *,
+        from_stage: str,
+    ) -> dict[str, Any] | None:
+        candidate_id = _txt(candidate.get("id"))
+        existing = [
+            task
+            for task in self._bag(org).get("task") or []
+            if _txt(task.get("candidate_id")) == candidate_id
+            and "интервью" in _txt(task.get("title")).lower()
+            and _task_status(task.get("status")) == "open"
+        ]
+        task = existing[0] if existing else None
+        if not task:
+            created = await self.create_task(
+                org,
+                {
+                    "title": "Провести интервью",
+                    "candidate_id": candidate_id,
+                    "lead_id": _txt(candidate.get("lead_id")) or None,
+                    "assignee": _txt(candidate.get("assignee")) or None,
+                    "project_key": _txt(candidate.get("project_key")) or None,
+                },
+                role,
+            )
+            task = created.get("item") if created.get("ok") else None
+        already = any(
+            _txt(row.get("action")) == "interview_scheduled" and _txt(row.get("entity_id")) == candidate_id
+            for row in self._bag(org).get("activity") or []
+        )
+        if already:
+            return task
+        await self._activity(
+            organization_id=org,
+            entity_type="candidate",
+            entity_id=candidate_id,
+            action="interview_scheduled",
+            summary="Интервью назначено",
+            role=role,
+            payload={"from_stage": from_stage, "to_stage": "INTERVIEW", "task_id": _txt((task or {}).get("id")) or None},
+        )
+        return task
 
     async def _persist_merge_batch(self, org: str, patches: list[tuple[str, dict[str, Any]]]) -> list[dict[str, Any]] | None:
         try:
@@ -2417,14 +2556,25 @@ class RecruitingOpsService:
         leads = [item for item in self._collect_kind(orgs, "lead") if belongs_to_project(item, key)]
         cands = [item for item in self._collect_kind(orgs, "candidate") if belongs_to_project(item, key)]
         events = [item for item in self._collect_kind(orgs, "tracking") if belongs_to_project(item, key)]
+        from services.recruiting_ops.attribution import production_cohort, source_analytics
+
+        cohort = production_cohort(leads, cands, events)
+        leads = list(cohort["leads"])
+        cands = list(cohort["candidates"] or [])
+        events = list(cohort["events"] or [])
         campaigns = self._campaign_metrics(org, key, leads, cands, events)
         from services.recruiting_ops.ads_control import control_center
-        from services.recruiting_ops.attribution import source_analytics
 
         payload = control_center(project_key=key, campaigns=campaigns)
         payload["source_analytics"] = source_analytics(leads, cands)
         payload["funnel"] = self._marketing_funnel(org, key, leads, cands, {})
         payload["attribution"] = self._attribution_snapshot(leads, events)
+        payload["traffic"] = {
+            "production_only": True,
+            "excluded_test_leads": cohort["excluded_test_leads"],
+            "excluded_test_candidates": cohort["excluded_test_candidates"],
+            "excluded_test_events": cohort["excluded_test_events"],
+        }
         payload["entities"] = {kind: list(self._bag(org).get(kind) or []) for kind in ("ad_account", "ad_set", "creative", "audience", "ads_metrics")}
         from services.recruiting_ops.provider_connections import connection_center_payload, provider_health_snapshot
         from services.recruiting_ops.provider_health import monitor_snapshot
@@ -2687,8 +2837,13 @@ class RecruitingOpsService:
         for read_org in orgs:
             await self.ensure_hydrated(read_org)
         key = spec["project_key"]
-        leads = [item for item in self._collect_kind(orgs, "lead") if belongs_to_project(item, key)]
-        cands = [item for item in self._collect_kind(orgs, "candidate") if belongs_to_project(item, key)]
+        leads_all = [item for item in self._collect_kind(orgs, "lead") if belongs_to_project(item, key)]
+        cands_all = [item for item in self._collect_kind(orgs, "candidate") if belongs_to_project(item, key)]
+        from services.recruiting_ops.attribution import production_cohort, source_analytics
+
+        cohort = production_cohort(leads_all, cands_all)
+        leads = list(cohort["leads"])
+        cands = list(cohort["candidates"] or [])
         today = _today()
         today_leads = [item for item in leads if _date_only(item.get("created_at") or item.get("submitted_at")) == today]
         converted = [item for item in leads if _lead_status(item.get("status")) == "converted"]
@@ -2700,7 +2855,6 @@ class RecruitingOpsService:
         traffic = self._traffic_snapshot(org, key)
         funnel = self._marketing_funnel(org, key, leads, cands, stages if isinstance(stages, dict) else {})
         attribution = self._attribution_snapshot(leads, traffic["events"])
-        from services.recruiting_ops.attribution import source_analytics
 
         campaigns = self._campaign_metrics(org, key, leads, cands, traffic["events"])
         comms = [item for item in self._collect_kind(orgs, "communication") if belongs_to_project(item, key)]
@@ -2734,7 +2888,12 @@ class RecruitingOpsService:
                 "lead_to_candidate": conversion,
                 "conversion_rate": conversion,
             },
-            traffic=traffic,
+            traffic={
+                **traffic,
+                "production_only": True,
+                "excluded_test_leads": cohort["excluded_test_leads"],
+                "excluded_test_candidates": cohort["excluded_test_candidates"],
+            },
             attribution=attribution,
             source_analytics=source_analytics(leads, cands),
             recruiting={
@@ -2747,7 +2906,7 @@ class RecruitingOpsService:
             },
             marketing={"campaigns": campaigns, "funnel": funnel, "ads_apis": {"meta": "not_connected", "google": "not_connected", "tiktok": "not_connected"}},
             funnel=funnel,
-            recent_leads=leads[:10],
+            recent_leads=leads_all[:10],
             recent_communications=comms[:10],
             recent_activity=(activity.get("items") or [])[:15] if activity.get("ok") else [],
             pipeline=stages,
@@ -2771,7 +2930,13 @@ class RecruitingOpsService:
         return round(part / whole, 4)
 
     def _traffic_snapshot(self, org: str, project_key: str) -> dict[str, Any]:
-        events = [item for item in self._bag(org).get("tracking") or [] if belongs_to_project(item, project_key)]
+        from services.recruiting_ops.attribution import is_test_traffic
+
+        events = [
+            item
+            for item in self._bag(org).get("tracking") or []
+            if belongs_to_project(item, project_key) and not is_test_traffic(item)
+        ]
         by_type: dict[str, int] = {}
         visitors: set[str] = set()
         sessions: set[str] = set()

@@ -8,6 +8,7 @@ import {
   type RecruiterOption,
   type WorkflowRow,
   isActiveVacancy,
+  isTestTraffic,
   recruiterLabel,
   vacancyTitle,
 } from "./recruitingWorkflow";
@@ -67,7 +68,12 @@ export function LeadWorkflowPanel({
     setConfirmUnassigned(false);
     setMsg(null);
     setErr(null);
-  }, [lead.id, lead.assignee, lead.vacancy_id]);
+  }, [lead.id]);
+
+  useEffect(() => {
+    setAssignee(String(lead.assignee || ""));
+    setVacancyId(String(lead.vacancy_id || ""));
+  }, [lead.assignee, lead.vacancy_id]);
 
   const recruiterChoices = useMemo(() => {
     const options = [...recruiters];
@@ -106,6 +112,11 @@ export function LeadWorkflowPanel({
       <div>
         <h3 className="eds-type-title text-lg" data-testid="lead-workflow-name">
           {pick(lead, "name")}
+          {isTestTraffic(lead) ? (
+            <span className="ml-2 eds-type-helper" data-testid="lead-test-badge">
+              TEST
+            </span>
+          ) : null}
         </h3>
         {converted ? (
           <p className="mt-1 eds-type-helper" data-testid="lead-converted-banner">
