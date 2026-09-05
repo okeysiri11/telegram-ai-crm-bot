@@ -1,7 +1,9 @@
 # Sprint Vanguard Recruiting 3.3 Phase 2 — Advertising Provider Connection Layer
 
 **Date:** 2026-09-05  
-**Baseline:** Phase 1 HUMAN E2E PASS (`b43cdf30`)
+**Baseline:** Phase 1 HUMAN E2E PASS (`b43cdf30`)  
+**Production SHA:** `c699e2a17471e568b85be81d8d8163537429bbb4`  
+**Production Gate:** success (`33959861542`)
 
 No live Meta / Google / TikTok credentials were supplied. Production must remain
 `NOT_CONFIGURED` / `WAITING_PROVIDER`. MOCKED tests are labelled. MOCKED PASS ≠ LIVE CONNECTION PASS.
