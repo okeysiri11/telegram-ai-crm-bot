@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from urllib.parse import quote
 
 import pytest
 from aiohttp import web
@@ -213,7 +214,7 @@ async def test_oauth_callback_with_injected_exchange(client: TestClient, monkeyp
     set_http_transport(_graph_transport)
     org = f"cb-{uuid.uuid4().hex[:8]}"
     state = encode_state(provider="meta", organization_id=org)
-    res = await client.get(f"{OPS}/oauth/meta/callback?code=abc&state={state}&format=json")
+    res = await client.get(f"{OPS}/oauth/meta/callback?code=abc&state={quote(state, safe='')}&format=json")
     body = await res.json()
     assert "injected-token" not in str(body)
     assert body.get("ok") is True
