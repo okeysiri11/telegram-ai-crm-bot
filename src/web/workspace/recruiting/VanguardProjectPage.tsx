@@ -3,7 +3,7 @@
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Badge, Button, Card, Input, Table } from "@/ui";
 import { useOrgSelector } from "@/navigation/orgSelectorStore";
 import { useRoleSwitcher } from "@/navigation/roleSwitcherStore";
@@ -32,6 +32,7 @@ const TABS = [
   { id: "vacancies", label: "Вакансии" },
   { id: "pipeline", label: "Воронка" },
   { id: "campaigns", label: "Кампании" },
+  { id: "ads", label: "Реклама" },
   { id: "marketing", label: "Маркетинг" },
   { id: "activity", label: "Активность" },
   { id: "website", label: "Сайт" },
@@ -63,6 +64,7 @@ function statusLabel(value: unknown): string {
 }
 
 export function VanguardProjectPage() {
+  const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
   const tab = TABS.some((item) => item.id === params.get("tab")) ? String(params.get("tab")) : "overview";
   const organizationId = useOrgSelector((s) => s.organizationId);
@@ -174,6 +176,9 @@ export function VanguardProjectPage() {
       <p className="mb-4 eds-type-helper" data-testid="vanguard-relationship">
         Сайт Vanguard → Рекрутинг → Лиды → Кандидаты
       </p>
+      <p className="mb-4">
+        <Link to="/workspace/recruiting/ads" data-testid="vanguard-ads-link">Реклама Vanguard</Link>
+      </p>
       <div data-testid="vanguard-diagnostics">
       <Card title="Интеграция" className="mb-4">
         <dl className="grid grid-cols-1 gap-2 eds-type-small sm:grid-cols-2 md:grid-cols-4">
@@ -207,6 +212,10 @@ export function VanguardProjectPage() {
             size="sm"
             variant={tab === item.id ? "primary" : "secondary"}
             onClick={() => {
+              if (item.id === "ads") {
+                navigate("/workspace/recruiting/ads");
+                return;
+              }
               const next = new URLSearchParams(params);
               if (item.id === "overview") next.delete("tab");
               else next.set("tab", item.id);

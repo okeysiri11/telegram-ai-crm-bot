@@ -64,6 +64,7 @@ KINDS = (
     "email_suppression",
     "whatsapp_message",
     "whatsapp_phone_map",
+    "campaign_spend",
 )
 
 LEAD_STATUSES = ("new", "qualified", "converted", "lost")
@@ -470,6 +471,7 @@ class RecruitingOpsService:
         return roles_catalog()
 
     def catalogs(self) -> dict[str, Any]:
+        from services.recruiting_ops.ads_economics import CAMPAIGN_SOURCES
         from services.recruiting_ops.ads_foundation import ads_foundation
 
         return {
@@ -492,6 +494,7 @@ class RecruitingOpsService:
             "ads": ads_foundation(),
             "campaign_statuses": ["DRAFT", "READY", "ACTIVE", "PAUSED", "COMPLETED", "FAILED"],
             "providers": ["meta", "google", "tiktok", "telegram", "whatsapp", "email"],
+            "campaign_sources": list(CAMPAIGN_SOURCES),
         }
 
     def vanguard_contract(self) -> dict[str, Any]:
@@ -2425,18 +2428,27 @@ class RecruitingOpsService:
             "campaign_code": _txt(body.get("campaign_code") or body.get("utm_campaign")) or None,
             "landing_url": _txt(body.get("landing_url") or body.get("landing_page")) or None,
             "utm_url": _txt(body.get("utm_url")) or None,
-            "start_date": _txt(body.get("start_date")) or None,
-            "end_date": _txt(body.get("end_date")) or None,
-            "budget": body.get("budget"),
+            "start_date": _txt(body.get("start_date") or body.get("start_at")) or None,
+            "end_date": _txt(body.get("end_date") or body.get("end_at")) or None,
+            "budget": body.get("budget") if body.get("budget") is not None else body.get("planned_budget"),
             "spend": body.get("spend"),
-            "impressions": body.get("impressions"),
-            "clicks": body.get("clicks"),
+            "impressions": None,
+            "clicks": None,
             "ads_provider": None,
             "ads_api": "not_connected",
             "vacancy_id": _txt(body.get("vacancy_id")) or None,
             "status": _txt(body.get("status")) or "active",
-            "notes": _txt(body.get("notes")),
+            "notes": _txt(body.get("notes") or body.get("comment")),
+            "country": _txt(body.get("country")) or None,
+            "program": _txt(body.get("program") or body.get("program_of_interest")) or None,
+            "utm_source": _txt(body.get("utm_source")) or None,
+            "utm_medium": _txt(body.get("utm_medium")) or None,
+            "utm_campaign": _txt(body.get("utm_campaign") or body.get("campaign_code")) or None,
+            "utm_content": _txt(body.get("utm_content")) or None,
+            "utm_term": _txt(body.get("utm_term")) or None,
+            "origin": "INTERNAL",
             "data_mode": "REAL",
+            "created_by": _txt(body.get("created_by") or role) or None,
             "created_at": _now(),
             "updated_at": _now(),
         }
@@ -2488,6 +2500,15 @@ class RecruitingOpsService:
             "project_key",
             "impressions",
             "clicks",
+            "country",
+            "program",
+            "utm_source",
+            "utm_medium",
+            "utm_campaign",
+            "utm_content",
+            "utm_term",
+            "comment",
+            "planned_budget",
         ):
             if field in body:
                 patch[field] = body.get(field)
@@ -2518,6 +2539,153 @@ class RecruitingOpsService:
         )
         return self._ok(item=item)
 
+    def _campaign_spend_entries(self, orgs: list[str], campaign_id: str | None = None) -> list[dict[str, Any]]:
+        rows = []
+        for item in self._collect_kind(orgs, "campaign_spend"):
+            if campaign_id and _txt(item.get("campaign_id")) != _txt(campaign_id):
+                continue
+            rows.append(item)
+        return rows
+
+    async def record_manual_spend(self, organization_id: str, campaign_id: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
+        denied = require(role, "update")
+        if denied:
+            return denied
+        from services.recruiting_ops.ads_economics import _num
+
+        org = _org(organization_id)
+        await self.ensure_hydrated(org)
+        campaign = self._find(org, "campaign", campaign_id)
+        if not campaign:
+            return {"ok": False, "error": "not_found", "message_ru": "Кампания не найдена"}
+        amount = _num(body.get("amount") if body.get("amount") is not None else body.get("spend"))
+        if amount is None or amount < 0:
+            return {"ok": False, "error": "validation", "message_ru": "Укажите сумму расхода"}
+        item = {
+            "id": str(body.get("id") or uuid.uuid4()),
+            "organization_id": org,
+            "tenant_id": org,
+            "campaign_id": campaign_id,
+            "amount": amount,
+            "currency": _txt(body.get("currency") or campaign.get("currency") or "EUR") or "EUR",
+            "spent_on": _txt(body.get("spent_on") or body.get("date") or body.get("period")) or _today(),
+            "period_start": _txt(body.get("period_start") or body.get("date") or body.get("spent_on")) or None,
+            "period_end": _txt(body.get("period_end")) or None,
+            "comment": _txt(body.get("comment") or body.get("notes")),
+            "entered_by": _txt(body.get("entered_by") or role) or None,
+            "source": "OPERATOR_MANUAL",
+            "label_ru": "Расход внесён оператором",
+            "provider_synced": False,
+            "data_mode": "REAL",
+            "created_at": _now(),
+            "updated_at": _now(),
+        }
+        saved = await self._persist("campaign_spend", item)
+        self._bag(org)["campaign_spend"].insert(0, saved)
+        from services.recruiting_ops.ads_economics import sum_manual_spend
+
+        total = sum_manual_spend(self._campaign_spend_entries([org], campaign_id))
+        patch = {"spend": total, "spend_source": "OPERATOR_MANUAL", "updated_at": _now()}
+        persisted = await self._persist_patch(org, campaign_id, patch)
+        if persisted:
+            campaign = persisted
+            self._replace(org, "campaign", campaign)
+        else:
+            campaign.update(patch)
+            self._replace(org, "campaign", campaign)
+        await self._activity(
+            organization_id=org,
+            entity_type="campaign",
+            entity_id=campaign_id,
+            action="manual_spend_recorded",
+            summary=f"Расход внесён оператором: {amount} {item['currency']}",
+            role=role,
+            payload={"amount": amount, "currency": item["currency"], "spend_id": saved["id"], "provider_synced": False},
+        )
+        return self._ok(item=saved, campaign=campaign)
+
+    async def campaign_detail(
+        self,
+        organization_id: str,
+        campaign_id: str,
+        role: str | None = None,
+        *,
+        date_range: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+    ) -> dict[str, Any]:
+        denied = require(role, "list")
+        if denied:
+            return denied
+        org = _org(organization_id)
+        orgs = self._read_orgs(organization_id, role)
+        for read_org in orgs:
+            await self.ensure_hydrated(read_org)
+        campaign = self._find(org, "campaign", campaign_id)
+        if not campaign:
+            for read_org in orgs:
+                campaign = self._find(read_org, "campaign", campaign_id)
+                if campaign:
+                    break
+        if not campaign:
+            return {"ok": False, "error": "not_found", "message_ru": "Кампания не найдена"}
+        from services.recruiting_ops.ads_economics import (
+            campaign_matches_lead,
+            count_stages,
+            funnel_economics,
+            item_in_window,
+            recruiter_attribution,
+            public_date_range,
+            resolve_date_window,
+            sum_manual_spend,
+        )
+        from services.recruiting_ops.attribution import production_cohort
+
+        window = resolve_date_window(preset=date_range, date_from=date_from, date_to=date_to)
+        key = _txt(campaign.get("project_key")) or VANGUARD_PROJECT_KEY
+        leads = [item for item in self._collect_kind(orgs, "lead") if belongs_to_project(item, key)]
+        cands = [item for item in self._collect_kind(orgs, "candidate") if belongs_to_project(item, key)]
+        cohort = production_cohort(leads, cands)
+        camp_leads = [item for item in cohort["leads"] if campaign_matches_lead(campaign, item) and item_in_window(item, window)]
+        lead_ids = {_txt(item.get("id")) for item in camp_leads}
+        camp_cands = [
+            item
+            for item in cohort["candidates"]
+            if (
+                campaign_matches_lead(campaign, item)
+                or _txt(item.get("lead_id")) in lead_ids
+                or lead_ids.intersection({_txt(x) for x in (item.get("lead_ids") or [])})
+            )
+            and item_in_window(item, window)
+        ]
+        spends = [item for item in self._campaign_spend_entries(orgs, campaign_id) if item_in_window(item, window)]
+        spend = sum_manual_spend(spends)
+        if spend is None and campaign.get("spend") is not None and window.get("preset") == "30d":
+            spend = campaign.get("spend")
+        stages = count_stages(camp_cands)
+        qualified_leads = [item for item in camp_leads if _txt(item.get("status")).lower() in {"qualified", "converted"}]
+        economics = funnel_economics(
+            impressions=None,
+            clicks=None,
+            applications=len(camp_leads),
+            qualified=max(len(qualified_leads), stages["qualified"]),
+            interviews=stages["interviews"],
+            approved=stages["approved"],
+            hired=stages["hired"],
+            spend=spend,
+        )
+        return self._ok(
+            item=campaign,
+            campaign=campaign,
+            funnel=economics,
+            recruiters=recruiter_attribution(camp_cands),
+            spend_entries=spends,
+            spend_source="OPERATOR_MANUAL" if spends else ("CAMPAIGN_FIELD" if spend is not None else "UNAVAILABLE"),
+            date_range=public_date_range(window),
+            traffic={"production_only": True},
+            origin_label_ru=campaign.get("origin_label_ru") or "Внутренняя кампания — рекламный кабинет не подключён.",
+        )
+
     async def upsert_ads_entity(self, organization_id: str, kind: str, body: dict[str, Any], role: str | None = None) -> dict[str, Any]:
         denied = require(role, "create")
         if denied:
@@ -2543,7 +2711,16 @@ class RecruitingOpsService:
         self._bag(org)[kind].insert(0, saved)
         return self._ok(item=saved)
 
-    async def ads_control_center(self, organization_id: str, project_key: str, role: str | None = None) -> dict[str, Any]:
+    async def ads_control_center(
+        self,
+        organization_id: str,
+        project_key: str,
+        role: str | None = None,
+        *,
+        date_range: str | None = None,
+        date_from: str | None = None,
+        date_to: str | None = None,
+    ) -> dict[str, Any]:
         denied = require(role, "list")
         if denied:
             return denied
@@ -2556,13 +2733,22 @@ class RecruitingOpsService:
         leads = [item for item in self._collect_kind(orgs, "lead") if belongs_to_project(item, key)]
         cands = [item for item in self._collect_kind(orgs, "candidate") if belongs_to_project(item, key)]
         events = [item for item in self._collect_kind(orgs, "tracking") if belongs_to_project(item, key)]
+        from services.recruiting_ops.ads_economics import (
+            item_in_window,
+            normalize_source,
+            provider_connect_panel,
+            resolve_date_window,
+            source_economics,
+            sum_manual_spend,
+        )
         from services.recruiting_ops.attribution import production_cohort, source_analytics
 
+        window = resolve_date_window(preset=date_range, date_from=date_from, date_to=date_to)
         cohort = production_cohort(leads, cands, events)
-        leads = list(cohort["leads"])
-        cands = list(cohort["candidates"] or [])
-        events = list(cohort["events"] or [])
-        campaigns = self._campaign_metrics(org, key, leads, cands, events)
+        leads = [item for item in cohort["leads"] if item_in_window(item, window)]
+        cands = [item for item in (cohort["candidates"] or []) if item_in_window(item, window)]
+        events = [item for item in (cohort["events"] or []) if item_in_window(item, window)]
+        campaigns = self._campaign_metrics(org, key, leads, cands, events, orgs=orgs, window=window)
         from services.recruiting_ops.ads_control import control_center
 
         payload = control_center(project_key=key, campaigns=campaigns)
@@ -2586,17 +2772,35 @@ class RecruitingOpsService:
             and (item.get("live_verified") or item.get("mocked_http"))
             for item in connections
         )
+        from services.recruiting_ops.ads_economics import count_stages, ratio
+
         qualified = [item for item in leads if _txt(item.get("status")).lower() in {"qualified", "converted"}]
-        interviews = [item for item in cands if _txt(item.get("pipeline_stage")).upper() == "INTERVIEW"]
-        hires = [item for item in cands if _txt(item.get("pipeline_stage")).upper() == "HIRED"]
+        stages = count_stages(cands)
+        interviews = stages["interviews"]
+        hires = stages["hired"]
+        approved = stages["approved"]
         from services.recruiting_ops.provider_metrics import aggregate_live_metrics
 
         live_rows = [item for item in self._bag(org).get("ads_metrics") or [] if item.get("source") == "LIVE"]
         live_agg = aggregate_live_metrics(live_rows)
-        spend = live_agg["spend"] if live_provider else None
         impressions = live_agg["impressions"] if live_provider else None
         clicks = live_agg["clicks"] if live_provider else None
+        operator_spend = sum_manual_spend([item for item in self._campaign_spend_entries(orgs) if item_in_window(item, window)])
+        spend = live_agg["spend"] if live_provider and live_agg.get("spend") is not None else operator_spend
+        spend_source = "LIVE" if live_provider and live_agg.get("spend") is not None else ("OPERATOR_MANUAL" if spend is not None else "UNAVAILABLE")
+        apps = len(leads)
         payload["sections"] = ["overview", "providers", "campaigns", "leads", "funnel", "attribution", "source_analytics", "automation", "ai_optimization", "diagnostics"]
+        payload["date_range"] = {"preset": window["preset"], "from": window["from"], "to": window["to"]}
+        payload["kpis"] = {
+            "spend": spend,
+            "applications": apps,
+            "cpl": ratio(spend, float(apps)) if spend is not None and apps else None,
+            "qualified": max(len(qualified), stages["qualified"]),
+            "interviews": interviews,
+            "approved": approved,
+            "hired": hires,
+            "cost_per_hire": ratio(spend, float(hires)) if spend is not None and hires else None,
+        }
         payload["overview"] = {
             "connected_providers": sum(1 for item in connections if str(item.get("status") or "").upper() == "CONNECTED"),
             "active_campaigns": len([c for c in campaigns if str(c.get("status") or "").upper() in {"ACTIVE", "active"}]),
@@ -2605,33 +2809,46 @@ class RecruitingOpsService:
             "clicks": clicks,
             "ctr": live_agg.get("ctr") if live_provider else None,
             "cpc": live_agg.get("cpc") if live_provider else None,
-            "leads": len(leads),
-            "qualified_candidates": len(qualified),
-            "interviews": len(interviews),
-            "hires": len(hires),
-            "cost_per_lead": (spend / len(leads)) if spend is not None and leads else None,
-            "cost_per_qualified_candidate": (spend / len(qualified)) if spend is not None and qualified else None,
-            "cost_per_interview": (spend / len(interviews)) if spend is not None and interviews else None,
-            "cost_per_hire": (spend / len(hires)) if spend is not None and hires else None,
+            "leads": apps,
+            "applications": apps,
+            "qualified_candidates": max(len(qualified), stages["qualified"]),
+            "interviews": interviews,
+            "approved": approved,
+            "hires": hires,
+            "cost_per_lead": ratio(spend, float(apps)) if spend is not None and apps else None,
+            "cost_per_qualified_candidate": ratio(spend, float(max(len(qualified), stages["qualified"]))) if spend is not None and (qualified or stages["qualified"]) else None,
+            "cost_per_interview": ratio(spend, float(interviews)) if spend is not None and interviews else None,
+            "cost_per_hire": ratio(spend, float(hires)) if spend is not None and hires else None,
             "live_provider_metrics": bool(live_provider and not live_agg.get("no_live_data")),
             "no_live_data": True if not live_provider else bool(live_agg.get("no_live_data")),
             "message_ru": "Нет живых данных" if not live_provider or live_agg.get("no_live_data") else None,
             "data_source": {
                 "providers": "LIVE" if live_provider else "UNAVAILABLE",
-                "spend": "LIVE" if spend is not None else "UNAVAILABLE",
+                "spend": spend_source,
                 "impressions": "LIVE" if impressions is not None else "UNAVAILABLE",
                 "clicks": "LIVE" if clicks is not None else "UNAVAILABLE",
                 "leads": "INTERNAL",
                 "qualified_candidates": "INTERNAL",
                 "interviews": "INTERNAL",
                 "hires": "INTERNAL",
-                "cost_per_lead": "CALCULATED" if spend is not None and leads else "UNAVAILABLE",
-                "cost_per_qualified_candidate": "CALCULATED" if spend is not None and qualified else "UNAVAILABLE",
+                "cost_per_lead": "CALCULATED" if spend is not None and apps else "UNAVAILABLE",
+                "cost_per_qualified_candidate": "CALCULATED" if spend is not None and (qualified or stages["qualified"]) else "UNAVAILABLE",
                 "cost_per_interview": "CALCULATED" if spend is not None and interviews else "UNAVAILABLE",
                 "cost_per_hire": "CALCULATED" if spend is not None and hires else "UNAVAILABLE",
             },
         }
+        spend_by_source: dict[str, float] = {}
+        for camp in campaigns:
+            src = normalize_source(camp.get("source") or camp.get("utm_source"))
+            amount = camp.get("spend")
+            if amount is None:
+                continue
+            spend_by_source[src] = round(spend_by_source.get(src, 0.0) + float(amount), 6)
+        payload["source_economics"] = source_economics(leads, cands, spend_by_source)
+        payload["provider_connect"] = provider_connect_panel(connections)
         payload["provider_health"] = {**provider_health_snapshot(connections), **{"monitor": monitor_snapshot(connections)}}
+        payload["title_ru"] = "РЕКЛАМА VANGUARD"
+        payload["internal_only"] = True
         payload["provider_connections"] = connection_center_payload(connections)
         payload["automation"] = {"items": list(self._bag(org).get("automation_rule") or []), "approval_required_default": True}
         payload["ai_optimization"] = {"items": list(self._bag(org).get("ai_recommendation") or []), "advisory_only": True, "live_write_access": False}
@@ -3067,45 +3284,93 @@ class RecruitingOpsService:
         leads: list[dict[str, Any]],
         cands: list[dict[str, Any]],
         events: list[dict[str, Any]],
+        *,
+        orgs: list[str] | None = None,
+        window: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         from services.recruiting_ops.ads_control import campaign_costs
+        from services.recruiting_ops.ads_economics import (
+            campaign_matches_lead,
+            count_stages,
+            funnel_economics,
+            item_in_window,
+            normalize_source,
+            provider_backed,
+            source_label,
+            sum_manual_spend,
+        )
 
+        read_orgs = orgs or [org]
         out = []
-        for camp in self._bag(org)["campaign"]:
-            if not belongs_to_project(camp, project_key) and _txt(camp.get("source")).lower() != "vanguard":
+        seen: set[str] = set()
+        camps = []
+        for read_org in read_orgs:
+            for camp in self._bag(read_org)["campaign"]:
+                cid = _txt(camp.get("id"))
+                if cid in seen:
+                    continue
+                seen.add(cid)
+                camps.append(camp)
+        for camp in camps:
+            if not belongs_to_project(camp, project_key) and _txt(camp.get("source")).lower() not in {"vanguard", "instagram", "meta", "facebook", "google", "tiktok", "organic", "direct", "referral"}:
                 continue
-            cid = _txt(camp.get("id"))
-            code = _txt(camp.get("campaign_code") or camp.get("utm_campaign") or camp.get("name"))
-            camp_leads = [
-                item
-                for item in leads
-                if _txt(item.get("campaign_id")) == cid or _txt(item.get("utm_campaign")) == code
-            ]
+            camp_leads = [item for item in leads if campaign_matches_lead(camp, item)]
+            lead_ids = {_txt(item.get("id")) for item in camp_leads}
             camp_cands = [
                 item
                 for item in cands
-                if _txt(item.get("campaign_id")) == cid or _txt(item.get("utm_campaign")) == code
+                if campaign_matches_lead(camp, item)
+                or _txt(item.get("lead_id")) in lead_ids
+                or lead_ids.intersection({_txt(x) for x in (item.get("lead_ids") or [])})
             ]
-            visits = [
-                item
-                for item in events
-                if _txt(item.get("campaign_id")) == cid or _txt(item.get("utm_campaign")) == code
-            ]
-            spend = camp.get("spend")
+            visits = [item for item in events if campaign_matches_lead(camp, item)]
+            spend_rows = [item for item in self._campaign_spend_entries(read_orgs, _txt(camp.get("id"))) if not window or item_in_window(item, window)]
+            spend = sum_manual_spend(spend_rows)
+            if spend is None:
+                spend = camp.get("spend")
+            stages = count_stages(camp_cands)
+            qualified_leads = [item for item in camp_leads if _txt(item.get("status")).lower() in {"qualified", "converted"}]
             costs = campaign_costs(
                 spend=spend,
-                impressions=camp.get("impressions"),
-                clicks=camp.get("clicks"),
+                impressions=None,
+                clicks=None,
                 applications=len(camp_leads),
                 leads=len(camp_leads),
                 candidates=len(camp_cands),
             )
+            economics = funnel_economics(
+                impressions=None,
+                clicks=None,
+                applications=len(camp_leads),
+                qualified=max(len(qualified_leads), stages["qualified"]),
+                interviews=stages["interviews"],
+                approved=stages["approved"],
+                hired=stages["hired"],
+                spend=spend,
+            )
+            src = normalize_source(camp.get("source") or camp.get("utm_source"))
             item = dict(camp)
             item["visits"] = len(visits) if visits else None
             item["applications"] = len(camp_leads)
             item["leads"] = len(camp_leads)
             item["candidates"] = len(camp_cands)
-            item["conversion"] = self._pct(len(camp_cands), len(camp_leads))
+            item["qualified"] = economics["qualified"]
+            item["interviews"] = economics["interviews"]
+            item["approved"] = economics["approved"]
+            item["hired"] = economics["hired"]
+            item["conversion"] = economics["conversion"]
+            item["cost_per_hire"] = economics["cost_per_hire"]
+            item["source"] = src
+            item["source_label_ru"] = source_label(src)
+            item["provider_backed"] = provider_backed(src)
+            item["provider_status"] = "NOT_CONFIGURED" if provider_backed(src) else None
+            item["provider_status_label_ru"] = "НЕ ПОДКЛЮЧЕНО" if provider_backed(src) else None
+            item["spend_source"] = "OPERATOR_MANUAL" if spend_rows else ("CAMPAIGN_FIELD" if spend is not None else "UNAVAILABLE")
+            item["spend_label_ru"] = "Расход внесён оператором" if spend_rows else None
+            item["origin"] = camp.get("origin") or "INTERNAL"
+            item["origin_label_ru"] = camp.get("origin_label_ru") or "Внутренняя кампания — рекламный кабинет не подключён."
+            item["funnel"] = economics
+            item["spend_entries"] = spend_rows
             item.update(costs)
             out.append(item)
         return out

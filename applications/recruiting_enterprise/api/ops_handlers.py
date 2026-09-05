@@ -299,8 +299,37 @@ async def ops_campaign_update_handler(request: web.Request) -> web.Response:
 async def ops_ads_control_center_handler(request: web.Request) -> web.Response:
     svc = get_recruiting_ops_service()
     project = _project(request) or "vanguard"
-    result = await svc.ads_control_center(_org(request), project, _role(request))
+    result = await svc.ads_control_center(
+        _org(request),
+        project,
+        _role(request),
+        date_range=request.rel_url.query.get("range"),
+        date_from=request.rel_url.query.get("from"),
+        date_to=request.rel_url.query.get("to"),
+    )
     return json_response(result, status=_status_for(result))
+
+
+async def ops_campaign_detail_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    campaign_id = request.match_info.get("campaign_id") or ""
+    result = await svc.campaign_detail(
+        _org(request),
+        campaign_id,
+        _role(request),
+        date_range=request.rel_url.query.get("range"),
+        date_from=request.rel_url.query.get("from"),
+        date_to=request.rel_url.query.get("to"),
+    )
+    return json_response(result, status=_status_for(result))
+
+
+async def ops_campaign_spend_handler(request: web.Request) -> web.Response:
+    svc = get_recruiting_ops_service()
+    body = await _read_json(request)
+    campaign_id = request.match_info.get("campaign_id") or ""
+    result = await svc.record_manual_spend(_org(request, body), campaign_id, body, _role(request, body))
+    return json_response(result, status=_status_for(result, created=True))
 
 
 async def ops_ads_entities_handler(request: web.Request) -> web.Response:
