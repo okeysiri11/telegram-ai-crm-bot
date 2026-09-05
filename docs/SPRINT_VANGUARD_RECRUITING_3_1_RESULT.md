@@ -66,13 +66,23 @@ No `/api/v1` or `/management/v1` contract changes.
 
 Local TestClient I–R (assign, QUALIFIED, interview, APPROVED, HIRED, reload, history pairs, funnel, TEST excluded): **PASS**
 
-Production I–R with a live owner JWT: **NOT_RUN** until deploy SHA matches and a real session is available. Do not treat this as production PASS.
+Production I–R (assign → HIRED → reload → funnel on a live owner session): **NOT_RUN**. `/management/identity/login` with email/password returns 401 (`telegram_init_data` / login_proof required). Demo auth is disabled in production builds. Do not report production persistence PASS.
 
-Provider honesty (no mock success): Telegram frozen; Meta/Google `not_connected`; WhatsApp/Meta/Google tracking `WAITING_PROVIDER`.
+Production regressions on SHA `82b5f1e3`:
+- `GET /api/recruiting-ops/v1/analytics` → 401 `authentication_required`
+- `POST /api/recruiting-ops/v1/vanguard/leads` unsigned → 401 `missing_signature`
+- `GET /api/recruiting-ops/v1/providers` → 401 `authentication_required`
+- `GET /health` Telegram `frozen=true` / `DISABLED`; ads `connected=false`; WhatsApp `NOT_CONFIGURED`
+
+Provider honesty: no mock CONNECTED.
 
 ## 10. DEPLOYMENT STATUS
 
-See commit footer after push. Render auto-deploys `develop` after Production Gate.
+COMMIT_SHA = `82b5f1e31d7b593842df0d3e1f8b0cf32f5db7e5`  
+PUSH_STATUS = PUSHED `origin/develop`  
+PRODUCTION_GATE = PASS (backend-gate, web-gate, vanguard-e2e, production-foundation)  
+PRODUCTION_SHA = `82b5f1e31d7b593842df0d3e1f8b0cf32f5db7e5`  
+RENDER_DEPLOYMENT = YES (`GET /liveness` revision matched)
 
 ## 11. REMAINING ISSUES
 
