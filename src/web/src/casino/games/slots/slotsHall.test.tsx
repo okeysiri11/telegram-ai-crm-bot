@@ -66,6 +66,13 @@ describe("Phase 4.0 Slots Hall", () => {
     expect(screen.getByTestId("slots-room").querySelectorAll(".op-phys-cab")).toHaveLength(6);
     expect(new Set([...screen.getByTestId("slots-catalog").querySelectorAll("[data-variant]")].map((n) => n.getAttribute("data-variant"))).size).toBe(3);
     expect(screen.getByTestId("slots-catalog").querySelector(".op-cta")).toBeNull();
+    for (const item of SLOT_CATALOG) {
+      expect(screen.getByTestId(`slot-topper-${item.id}`)).toBeTruthy();
+      expect(screen.getByTestId(`slot-reels-${item.id}`).textContent?.length).toBeGreaterThan(0);
+      expect(screen.getByTestId(`slot-controls-${item.id}`).textContent).toMatch(/SPIN/);
+      expect(screen.getByTestId(`slot-chair-${item.id}`)).toBeTruthy();
+    }
+    expect(screen.getByTestId("slots-room").querySelector(".op-slots-floor")).toBeTruthy();
   }, 20000);
 
   it("locks the hall to a single desktop viewport in CSS", () => {
@@ -73,6 +80,9 @@ describe("Phase 4.0 Slots Hall", () => {
     expect(css).toMatch(/overflow:\s*hidden/);
     expect(css).toMatch(/100dvh - 4\.2rem/);
     expect(css).toMatch(/op-phys-cab/);
+    expect(css).toMatch(/op-phys-topper/);
+    expect(css).toMatch(/op-phys-panel/);
+    expect(css).toMatch(/op-phys-stool/);
     expect(css).toMatch(/op-slots-floor/);
     expect(css).toMatch(/prefers-reduced-motion/);
     expect(css).not.toMatch(/turquoise/);
