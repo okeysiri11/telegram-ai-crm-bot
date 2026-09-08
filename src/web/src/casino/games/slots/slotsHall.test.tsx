@@ -3,7 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
@@ -13,6 +13,13 @@ import { CasinoBrowseRoute } from "@/shell/CasinoBrowseRoute";
 import { useAuthStore } from "@/auth/authStore";
 import { SLOT_CATALOG } from "./slotCatalog";
 import { SlotGameScreen } from "./SlotGameScreen";
+import { cabinetScreenRect } from "./cabinetAssets";
+import {
+  cabinetPlayLayout,
+  overlayContainedIn,
+  overlayWithinUnitSquare,
+  seatedCrop,
+} from "./cabinetPlayGeometry";
 import { RouletteHall } from "../../rooms/RouletteHall";
 import { BlackjackSalon } from "../../rooms/BlackjackSalon";
 import { PokerRoom } from "../../rooms/PokerRoom";
@@ -220,7 +227,7 @@ describe("Phase 4.0 Slots Hall", () => {
     expect(await screen.findByTestId("slot-game-screen", {}, { timeout: 8000 })).toBeTruthy();
     expect(useAuthStore.getState().accessToken).toBe("aaa.bbb.ccc");
     fireEvent.click(screen.getByTestId("slot-back-room"));
-    expect(await screen.findByTestId("slots-room")).toBeTruthy();
+    expect(await screen.findByTestId("slots-room", {}, { timeout: 8000 })).toBeTruthy();
     expect(useAuthStore.getState().accessToken).toBe("aaa.bbb.ccc");
     view.unmount();
   }, 20000);
@@ -229,7 +236,7 @@ describe("Phase 4.0 Slots Hall", () => {
     const view = mount("/casino/slots/buffalo-fortune", ["/casino/lobby", "/casino/slots", "/casino/slots/buffalo-fortune"]);
     expect(await screen.findByTestId("slot-game-screen")).toBeTruthy();
     fireEvent.click(screen.getByTestId("slot-back-room"));
-    expect(await screen.findByTestId("slots-room")).toBeTruthy();
+    expect(await screen.findByTestId("slots-room", {}, { timeout: 8000 })).toBeTruthy();
     fireEvent.click(screen.getByTestId("slots-back-hall"));
     expect(await screen.findByTestId("casino-lobby", {}, { timeout: 8000 })).toBeTruthy();
     view.unmount();
@@ -270,6 +277,123 @@ describe("Phase 4.0 Slots Hall", () => {
     expect(css).toMatch(/overflow:\s*hidden/);
     expect(css).not.toMatch(/turquoise/);
   });
+
+  it("Phase 4.6: seated composition works for all six machines with identity preserved", () => {
+    for (const item of SLOT_CATALOG) {
+      const view = render(
+        <MemoryRouter initialEntries={[`/casino/slots/${item.id}`]}>
+          <Routes>
+            <Route path="/casino/slots/:machineId" element={<SlotGameScreen />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+      const screenRoot = view.getByTestId("slot-game-screen");
+      expect(screenRoot.getAttribute("data-seated")).toBe("true");
+      expect(screenRoot.getAttribute("data-machine")).toBe(item.id);
+      expect(screenRoot.getAttribute("data-pov")).toBe("first-person");
+      expect(view.getByTestId(`slot-seated-asset-${item.id}`).getAttribute("src")).toBe(
+        `/assets/casino/slots/cabinets/${item.id}.png`,
+      );
+      expect(view.getByTestId("seated-armchair")).toBeTruthy();
+      expect(view.getByTestId("seated-ashtray")).toBeTruthy();
+      expect(view.queryByTestId(`slot-chair-${item.id}`)).toBeNull();
+      const close = Number.parseFloat(view.getByTestId("seated-cabinet").style.getPropertyValue("--seated-h"));
+      expect(close).toBeGreaterThanOrEqual(150);
+      expect(seatedCrop(item).heightPct).toBeGreaterThanOrEqual(150);
+      view.unmount();
+    }
+  });
+
+  it("Phase 4.6: physical BET 10/25/50/100, AUTO, HISTORY, and spin lock drive the shared engine", async () => {
+    vi.useFakeTimers();
+    const view = render(
+      <MemoryRouter initialEntries={["/casino/slots/olympus-crown"]}>
+        <Routes>
+          <Route path="/casino/slots/:machineId" element={<SlotGameScreen />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(view.queryByTestId("slot-web-panel")).toBeNull();
+    expect(view.getByTestId("slot-history-toggle").closest("[data-testid='seated-cabinet']")).toBeTruthy();
+    expect(view.getByTestId("slot-spin").closest("[data-testid='seated-cabinet']")).toBeTruthy();
+    expect(view.getByTestId("slot-auto").closest("[data-testid='seated-cabinet']")).toBeTruthy();
+    expect(document.querySelector(".op-seated-hud")?.textContent).not.toMatch(/SPIN|AUTO|HISTORY|Balance/);
+
+    const start = Number(view.getByTestId("slot-demo-balance").textContent);
+    for (const n of [10, 25, 50, 100] as const) {
+      fireEvent.click(view.getByTestId(`slot-bet-${n}`));
+      expect(view.getByTestId("slot-demo-bet").textContent).toBe(String(n));
+    }
+    fireEvent.click(view.getByTestId("slot-bet-50"));
+    expect(view.getByTestId("slot-demo-bet").textContent).toBe("50");
+    fireEvent.click(view.getByTestId("slot-spin"));
+    fireEvent.click(view.getByTestId("slot-spin"));
+    expect((view.getByTestId("slot-spin") as HTMLButtonElement).disabled).toBe(true);
+    expect(Number(view.getByTestId("slot-demo-balance").textContent)).toBe(start - 50);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1300);
+    });
+    expect((view.getByTestId("slot-spin") as HTMLButtonElement).disabled).toBe(false);
+    const afterSpin = Number(view.getByTestId("slot-demo-balance").textContent);
+    const win = Number(view.getByTestId("slot-demo-win").textContent);
+    expect(afterSpin).toBe(start - 50 + win);
+
+    fireEvent.click(view.getByTestId("slot-history-toggle"));
+    expect(view.getByTestId("slot-history").textContent).toMatch(/Olympus Crown/);
+    expect(view.getByTestId("slot-history").closest("[data-testid='seated-cabinet']")).toBeTruthy();
+
+    fireEvent.click(view.getByTestId("slot-auto"));
+    expect(view.getByTestId("slot-auto").className).toContain("is-on");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect((view.getByTestId("slot-spin") as HTMLButtonElement).disabled).toBe(true);
+    view.unmount();
+    vi.useRealTimers();
+  });
+
+  it("Phase 4.6: screen containment is preserved for every cabinet geometry", () => {
+    const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "seatedCabinet.css"), "utf8");
+    expect(css).toMatch(/clip-path:\s*inset/);
+    expect(css).toMatch(/contain:\s*paint/);
+    expect(css).not.toMatch(/max-width:\s*min\(46vw,\s*28rem\)/);
+    expect(css).not.toMatch(/height:\s*84%/);
+    expect(css).toMatch(/op-seated-vignette/);
+    expect(css).toMatch(/op-seated-arm/);
+    expect(css).toMatch(/100dvh - 4\.2rem/);
+    for (const item of SLOT_CATALOG) {
+      const glass = cabinetScreenRect(item);
+      const layout = cabinetPlayLayout(item);
+      expect(overlayWithinUnitSquare(layout.screen)).toBe(true);
+      expect(overlayWithinUnitSquare(layout.touch)).toBe(true);
+      expect(overlayWithinUnitSquare(layout.deck)).toBe(true);
+      expect(overlayWithinUnitSquare(layout.spin)).toBe(true);
+      expect(overlayContainedIn(glass, layout.screen)).toBe(true);
+      expect(layout.touch.topPct).toBeGreaterThan(layout.screen.topPct + layout.screen.heightPct);
+      const view = render(
+        <MemoryRouter initialEntries={[`/casino/slots/${item.id}`]}>
+          <Routes>
+            <Route path="/casino/slots/:machineId" element={<SlotGameScreen />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+      const glassEl = view.getByTestId("slot-preview-seated");
+      expect(glassEl.style.overflow).toBe("hidden");
+      expect(glassEl.contains(view.getByTestId("slot-reels"))).toBe(true);
+      view.unmount();
+    }
+  });
+
+  it("Phase 4.6: back returns to the Slots Hall without a detached web control card", async () => {
+    const view = mount("/casino/slots/candy-fortune");
+    expect(await screen.findByTestId("slot-game-screen", {}, { timeout: 8000 })).toBeTruthy();
+    expect(screen.getByTestId("slot-controls-seated")).toBeTruthy();
+    expect(screen.queryByTestId("slot-web-panel")).toBeNull();
+    fireEvent.click(screen.getByTestId("slot-back-room"));
+    expect(await screen.findByTestId("slots-room", {}, { timeout: 8000 })).toBeTruthy();
+    expect(screen.getByTestId("slots-catalog").querySelectorAll(".op-phys-cab")).toHaveLength(6);
+    view.unmount();
+  }, 20000);
 
   it("does not regress roulette, blackjack or poker rooms", () => {
     expect(render(<MemoryRouter><RouletteHall /></MemoryRouter>).getByTestId("roulette-hall")).toBeTruthy();
