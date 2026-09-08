@@ -14,6 +14,13 @@ const ROOM_LINKS = [
   { id: "poker", label: "POKER", to: "/casino/poker" },
 ] as const;
 
+function approachDelayMs(): number {
+  const media = typeof window !== "undefined" && typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)")
+    : null;
+  return media?.matches ? 140 : 720;
+}
+
 export function SlotsHall() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
@@ -82,7 +89,7 @@ export function SlotsHall() {
               onSelect={(id, href, event) => {
                 event.preventDefault();
                 setSelected(id);
-                window.setTimeout(() => navigate(href), 180);
+                window.setTimeout(() => navigate(href), approachDelayMs());
               }}
             />
           ))}

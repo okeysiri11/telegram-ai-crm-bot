@@ -235,6 +235,42 @@ describe("Phase 4.0 Slots Hall", () => {
     view.unmount();
   }, 20000);
 
+  it("Phase 4.5: seated cabinet keeps identity, clips reels, and drives the shared engine", async () => {
+    vi.useFakeTimers();
+    const view = render(
+      <MemoryRouter initialEntries={["/casino/slots/olympus-crown"]}>
+        <Routes>
+          <Route path="/casino/slots/:machineId" element={<SlotGameScreen />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(screen.getByTestId("slot-game-screen").getAttribute("data-seated")).toBe("true");
+    expect(screen.getByTestId("seated-cabinet")).toBeTruthy();
+    expect(screen.getByTestId("slot-seated-asset-olympus-crown").getAttribute("src")).toContain("olympus-crown.png");
+    expect(screen.queryByTestId("slot-chair-olympus-crown")).toBeNull();
+    const viewport = screen.getByTestId("slot-preview-seated");
+    expect(viewport.style.overflow || getComputedStyle(viewport).overflow).toBeDefined();
+    expect(screen.getByTestId("slot-reels").querySelectorAll(".op-cab-reel").length).toBe(5);
+    fireEvent.click(screen.getByTestId("slot-bet-plus"));
+    expect(screen.getByTestId("slot-demo-bet").textContent).toBe("25");
+    fireEvent.click(screen.getByTestId("slot-spin"));
+    expect((screen.getByTestId("slot-spin") as HTMLButtonElement).disabled).toBe(true);
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(1300);
+    });
+    expect((screen.getByTestId("slot-spin") as HTMLButtonElement).disabled).toBe(false);
+    view.unmount();
+    vi.useRealTimers();
+  });
+
+  it("Phase 4.5 CSS supports reduced-motion seated play", () => {
+    const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "seatedCabinet.css"), "utf8");
+    expect(css).toMatch(/prefers-reduced-motion/);
+    expect(css).toMatch(/op-seated-screen/);
+    expect(css).toMatch(/overflow:\s*hidden/);
+    expect(css).not.toMatch(/turquoise/);
+  });
+
   it("does not regress roulette, blackjack or poker rooms", () => {
     expect(render(<MemoryRouter><RouletteHall /></MemoryRouter>).getByTestId("roulette-hall")).toBeTruthy();
     expect(render(<MemoryRouter><BlackjackSalon /></MemoryRouter>).getByTestId("blackjack-room")).toBeTruthy();
