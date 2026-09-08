@@ -1,3 +1,12 @@
+/*
+ * Odessa Prime Slots — Phase 4.3 image-first rebuild.
+ * The cabinet body is a single baked PNG per machine (see cabinetAssets.ts /
+ * scripts/casino-slots/); this file only positions that image, the live
+ * screen overlay, and a handful of idle-animation overlays on top of it.
+ * It intentionally no longer draws the cabinet shell out of gradients/
+ * box-shadow layers — see docs/SPRINT_ODESSA_PRIME_SLOTS_ROOM_4_3_RESULT.md.
+ */
+
 .op-world:has(.op-slots-hall),
 .op-world:has(.op-slot-focus) {
   overflow: hidden;
@@ -72,79 +81,62 @@
   grid-template-rows: 1.55rem minmax(0, 1fr);
 }
 
+/* ---------- Hall background (one baked photo-style image) ---------- */
+
 .op-slots-env {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background:
-    radial-gradient(60% 28% at 50% 0%, rgba(232, 196, 120, 0.2), transparent 62%),
-    linear-gradient(180deg, #08090d 0%, #12131a 34%, #0c0d12 70%, #07080b 100%);
+  overflow: hidden;
+  background: #08090d;
 }
 
-.op-slots-ceiling {
+.op-slots-env-bg {
   position: absolute;
-  inset: 0 0 auto;
-  height: 14%;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0.62), transparent);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 42%;
 }
 
-.op-slots-chandelier {
+.op-slots-identity {
   position: absolute;
-  top: 0;
+  top: 4.5%;
   left: 50%;
-  width: 36rem;
-  height: 4.4rem;
   transform: translateX(-50%);
-  background: radial-gradient(ellipse at 50% 0%, rgba(232, 196, 120, 0.42), transparent 72%);
-  filter: blur(3px);
+  text-align: center;
+  color: #e8d5a3;
+  text-shadow: 0 2px 18px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
 }
 
-.op-slots-columns::before,
-.op-slots-columns::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 18%;
-  width: 3.4rem;
-  background:
-    linear-gradient(90deg, #07080a, #1a1714 46%, #07080a),
-    linear-gradient(180deg, rgba(201, 164, 92, 0.12), transparent 20%);
-  box-shadow: inset 0 0 0 1px rgba(201, 164, 92, 0.16);
+.op-slots-identity strong {
+  display: block;
+  font-family: "Iowan Old Style", Palatino, serif;
+  font-size: clamp(0.72rem, 1.15vw, 1.05rem);
+  letter-spacing: 0.34em;
 }
 
-.op-slots-columns::before { left: 0.6%; }
-.op-slots-columns::after { right: 0.6%; }
-
-.op-slots-haze {
-  position: absolute;
-  inset: 16% 6% 20%;
-  background: radial-gradient(closest-side, rgba(180, 150, 90, 0.06), transparent 76%);
-}
-
-.op-slots-depth {
-  position: absolute;
-  inset: 18% 8% 30%;
-  opacity: 0.28;
-  background:
-    radial-gradient(9% 48% at 16% 70%, #1c1620 0 38%, transparent 40%),
-    radial-gradient(9% 48% at 84% 70%, #1c1620 0 38%, transparent 40%),
-    radial-gradient(8% 42% at 38% 64%, #161218 0 38%, transparent 40%),
-    radial-gradient(8% 42% at 62% 64%, #161218 0 38%, transparent 40%);
-  filter: blur(8px);
+.op-slots-identity span {
+  display: block;
+  margin-top: 0.18rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  color: #c9b48a;
 }
 
 .op-slots-floor {
   position: absolute;
   inset: auto 0 0;
-  height: 22%;
+  height: 26%;
   background:
-    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.12) 10%, #16110e 36%, #0b0a0c),
-    repeating-linear-gradient(90deg, rgba(120, 32, 36, 0.18) 0 28px, rgba(18, 14, 16, 0.2) 28px 56px),
-    repeating-linear-gradient(118deg, transparent 0 64px, rgba(201, 164, 92, 0.07) 64px 65px);
-  box-shadow: inset 0 28px 48px rgba(0, 0, 0, 0.45);
-  transform: perspective(900px) rotateX(14deg);
-  transform-origin: 50% 0;
+    linear-gradient(180deg, transparent, rgba(8, 6, 4, 0.18) 24%, rgba(12, 8, 6, 0.35)),
+    radial-gradient(70% 80% at 50% 100%, rgba(232, 196, 120, 0.16), transparent 72%);
+  pointer-events: none;
 }
+
+/* ---------- Subnav ---------- */
 
 .op-slots-subnav {
   position: relative;
@@ -203,14 +195,16 @@
 }
 .op-slots-filters button.is-on { color: #e8d5a3; }
 
+/* ---------- Row / stage ---------- */
+
 .op-slots-stage {
   position: relative;
   z-index: 2;
   min-height: 0;
   display: flex;
   align-items: flex-end;
-  padding: 1.2% 2.4vw 0;
-  padding-bottom: 7.5%;
+  padding: 2.4% 2.2vw 0;
+  padding-bottom: 9.5%;
   perspective: 1600px;
 }
 
@@ -218,174 +212,146 @@
   width: min(1760px, 100%);
   margin: 0 auto;
   height: 100%;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: clamp(0.45rem, 0.85vw, 1.25rem);
+  /* Grid gives each cabinet a DETERMINISTIC equal-width column (unlike flex's
+     shrink algorithm, which fights aspect-ratio unpredictably). Column count
+     is set inline (style=--slot-count) to match the filtered catalog length,
+     so it isn't hardcoded to 6. Height is then auto-derived per cabinet from
+     its own aspect-ratio, so curved/square/slim machines are never squished
+     — they just land at different natural heights, like real cabinets would. */
+  display: grid;
+  grid-template-columns: repeat(var(--slot-count, 6), minmax(0, 1fr));
+  align-items: end;
+  justify-items: center;
+  gap: clamp(0.3rem, 0.6vw, 1rem);
 }
+
+/* ---------- Cabinet (image-first) ---------- */
 
 .op-phys-cab {
   position: relative;
-  flex: 1 1 0;
-  max-width: 16.2rem;
-  min-width: 11.5rem;
-  height: 86%;
+  /* Width is the grid column's (definite, never-squished) width; height is
+     auto, derived from the inline aspect-ratio (per cabinetVariant) — so the
+     baked PNG's own ratio is always respected. max-height is only a soft
+     cap for extreme viewports. Never pin both width AND height at once on
+     this rule (here or in a media query) — that reintroduces squish. */
+  width: 100%;
+  height: auto;
+  max-height: 82%;
   display: flex;
   flex-direction: column;
+  align-items: center;
   cursor: pointer;
   transform-origin: 50% 100%;
   transition: transform 220ms ease, filter 220ms ease;
 }
 
-.op-phys-cab.pos-0 { transform: rotateY(6deg) scale(0.93); }
-.op-phys-cab.pos-1 { transform: rotateY(3deg) scale(0.97); }
-.op-phys-cab.pos-2 { transform: rotateY(1deg) scale(1); }
-.op-phys-cab.pos-3 { transform: rotateY(-1deg) scale(1); }
-.op-phys-cab.pos-4 { transform: rotateY(-3deg) scale(0.97); }
-.op-phys-cab.pos-5 { transform: rotateY(-6deg) scale(0.93); }
+.op-phys-cab.pos-0 { transform: rotateY(3deg) scale(0.96); }
+.op-phys-cab.pos-1 { transform: rotateY(1.5deg) scale(0.985); }
+.op-phys-cab.pos-2 { transform: rotateY(0.5deg) scale(1); }
+.op-phys-cab.pos-3 { transform: rotateY(-0.5deg) scale(1); }
+.op-phys-cab.pos-4 { transform: rotateY(-1.5deg) scale(0.985); }
+.op-phys-cab.pos-5 { transform: rotateY(-3deg) scale(0.96); }
 
-.op-slots-row:hover .op-phys-cab { filter: brightness(0.74); }
+.op-slots-row:hover .op-phys-cab { filter: brightness(0.72) saturate(0.85); }
 .op-slots-row:hover .op-phys-cab:hover,
 .op-phys-cab.is-selected {
-  filter: brightness(1.1);
+  filter: brightness(1.12) saturate(1.05);
   z-index: 4;
 }
 
 .op-phys-cab.pos-0:hover,
-.op-phys-cab.pos-0.is-selected { transform: translateY(-8px) rotateY(4deg) scale(0.965); }
+.op-phys-cab.pos-0.is-selected { transform: translateY(-10px) rotateY(4deg) scale(0.97); }
 .op-phys-cab.pos-1:hover,
-.op-phys-cab.pos-1.is-selected { transform: translateY(-8px) rotateY(2deg) scale(0.995); }
+.op-phys-cab.pos-1.is-selected { transform: translateY(-10px) rotateY(2deg) scale(1); }
 .op-phys-cab.pos-2:hover,
 .op-phys-cab.pos-2.is-selected,
 .op-phys-cab.pos-3:hover,
-.op-phys-cab.pos-3.is-selected { transform: translateY(-8px) scale(1.025); }
+.op-phys-cab.pos-3.is-selected { transform: translateY(-10px) scale(1.035); }
 .op-phys-cab.pos-4:hover,
-.op-phys-cab.pos-4.is-selected { transform: translateY(-8px) rotateY(-2deg) scale(0.995); }
+.op-phys-cab.pos-4.is-selected { transform: translateY(-10px) rotateY(-2deg) scale(1); }
 .op-phys-cab.pos-5:hover,
-.op-phys-cab.pos-5.is-selected { transform: translateY(-8px) rotateY(-4deg) scale(0.965); }
+.op-phys-cab.pos-5.is-selected { transform: translateY(-10px) rotateY(-4deg) scale(0.97); }
+
+.op-phys-cab.is-selected {
+  transition: transform 220ms ease, filter 220ms ease;
+}
+
+.op-slots-stage.is-choosing .op-phys-cab.is-selected {
+  transform: translateY(-2%) scale(1.16) !important;
+  transition: transform 240ms cubic-bezier(0.2, 0.7, 0.2, 1), filter 240ms ease;
+}
 
 .op-phys-hit {
   display: block;
   flex: 1 1 auto;
   min-height: 0;
+  width: 100%;
   text-decoration: none;
   color: inherit;
 }
 
-.op-phys-shell {
+.op-phys-art-wrap {
   position: relative;
-  height: 100%;
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) 8% 16% 7%;
-  padding: 0 0.38rem 0.12rem;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 14%),
-    linear-gradient(90deg, #0a090b 0%, transparent 8%, transparent 92%, #0a090b),
-    linear-gradient(180deg, #2a221b, #161318 46%, #0c0d10);
-  border: 1px solid rgba(201, 164, 92, 0.4);
-  box-shadow:
-    0 26px 34px rgba(0, 0, 0, 0.58),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-}
-
-.op-phys-side {
-  position: absolute;
-  top: 7%;
-  bottom: 3%;
-  width: 0.72rem;
-  background:
-    linear-gradient(180deg, #3a3226, #161318 70%, #0a0b0e),
-    repeating-linear-gradient(180deg, transparent 0 9px, rgba(0, 0, 0, 0.18) 9px 10px);
-  box-shadow: inset 0 0 0 1px rgba(201, 164, 92, 0.16);
-}
-.op-phys-side.is-left { left: -0.55rem; transform: perspective(90px) rotateY(32deg); }
-.op-phys-side.is-right { right: -0.55rem; transform: perspective(90px) rotateY(-32deg); }
-
-.op-phys-crown {
-  position: absolute;
-  top: -0.28rem;
-  left: 12%;
-  right: 12%;
-  height: 0.34rem;
-  background: linear-gradient(90deg, transparent, var(--cab-accent, #c9a45c), transparent);
-  box-shadow: 0 0 10px var(--cab-accent, #c9a45c);
-}
-
-.op-phys-cab.variant-curved .op-phys-shell,
-.op-phys-cab.variant-curved .op-phys-topper {
-  border-radius: 1.35rem 1.35rem 0.28rem 0.28rem;
-}
-.op-phys-cab.variant-square .op-phys-shell { border-radius: 0.2rem; }
-.op-phys-cab.variant-slim .op-phys-shell {
-  border-radius: 0.75rem;
-  margin-inline: 5%;
-}
-
-.op-phys-led-rail,
-.op-phys-led-side {
-  background: linear-gradient(90deg, transparent, var(--cab-accent, #c9a45c), transparent);
-  box-shadow: 0 0 10px var(--cab-accent, #c9a45c);
-  animation: op-led-pulse 3.8s ease-in-out infinite;
-}
-
-.op-phys-led-rail.is-top { height: 0.2rem; margin-bottom: 0.12rem; }
-.op-phys-led-side {
-  width: 0.2rem;
-  background: linear-gradient(180deg, transparent, var(--cab-accent, #c9a45c), transparent);
-}
-
-.op-phys-topper {
-  text-align: center;
-  padding: 0.2rem 0.18rem 0.28rem;
-  margin: 0.28rem 0.08rem 0.2rem;
-  background:
-    linear-gradient(180deg, #4a3618, #1a120c 72%),
-    var(--cab-accent, #c9a45c);
-  border: 2px solid color-mix(in srgb, var(--cab-accent, #c9a45c) 62%, #000);
-  box-shadow: 0 0 16px color-mix(in srgb, var(--cab-accent) 28%, transparent);
-}
-
-.op-phys-marquee {
-  margin: 0;
-  font-size: clamp(0.58rem, 0.82vw, 0.78rem);
-  letter-spacing: 0.07em;
-  color: var(--cab-accent-2, #e8d5a3);
-  text-transform: uppercase;
-}
-
-.op-phys-jackpot {
-  margin: 0.06rem 0 0;
-  font-size: 0.52rem;
-  color: #c9a45c;
-}
-
-.op-phys-jackpot span {
   display: block;
-  font-size: clamp(0.7rem, 1vw, 0.95rem);
-  color: #f6e7b8;
-  animation: op-jackpot-shimmer 5.5s ease-in-out infinite;
+  width: 100%;
+  height: 100%;
+  /* .op-phys-cab itself carries the inline aspect-ratio (per cabinetVariant),
+     so this box already matches the baked PNG's ratio — no letterboxing. */
 }
 
-.op-phys-hood {
-  min-height: 0;
-  display: grid;
-  grid-template-columns: 0.28rem minmax(0, 1fr) 0.28rem;
-  gap: 0.18rem;
-  margin: 0 0.04rem 0.12rem;
+.op-phys-cabinet-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 18px 22px rgba(0, 0, 0, 0.5));
+}
+
+/* ambient "machine is alive" glow, one element instead of a live gradient stack */
+.op-phys-glow {
+  position: absolute;
+  inset: 4% 8% 8%;
+  border-radius: 12%;
+  background: radial-gradient(60% 45% at 50% 8%, color-mix(in srgb, var(--cab-accent) 55%, transparent), transparent 70%);
+  mix-blend-mode: screen;
+  opacity: 0.35;
+  animation: op-led-pulse 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.op-phys-crown-glow {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 5%;
+  height: 16%;
+  background: radial-gradient(70% 70% at 50% 40%, color-mix(in srgb, var(--cab-accent-2) 65%, transparent), transparent 75%);
+  mix-blend-mode: screen;
+  opacity: 0.5;
+  animation: op-jackpot-shimmer 5.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 .op-phys-screen {
-  position: relative;
+  position: absolute;
   overflow: hidden;
-  min-height: 0;
-  border: 2px solid #050607;
-  background: #05070c;
-  box-shadow:
-    inset 0 0 24px rgba(0, 0, 0, 0.7),
-    0 0 18px color-mix(in srgb, var(--cab-accent) 24%, transparent);
+  border-radius: 6px;
 }
 
-.op-phys-art { position: absolute; inset: 0; opacity: 0.38; }
+/* accessible name + decorative-button text only; visuals are baked into the cabinet image */
+.op-phys-topper,
+.op-phys-panel-a11y {
+  position: absolute;
+  inset: auto;
+  pointer-events: none;
+}
+
+.op-phys-cab.variant-curved .op-phys-screen { border-radius: 30px; }
+.op-phys-cab.variant-slim .op-phys-screen { border-radius: 16px; }
+
+.op-phys-art { position: absolute; inset: 0; opacity: 0.42; }
 .theme-olympus .op-phys-art { background: radial-gradient(circle at 50% 18%, #3d74ff 0 14%, transparent 42%), linear-gradient(#0b1230, #1a1030); }
 .theme-candy .op-phys-art { background: radial-gradient(circle at 30% 28%, #ff7ad9 0 16%, transparent 42%), linear-gradient(#2a1030, #120818); }
 .theme-egypt .op-phys-art { background: radial-gradient(circle at 50% 12%, #e8b86d 0 12%, transparent 38%), linear-gradient(#2a1a0a, #120c06); }
@@ -399,15 +365,14 @@
   height: 100%;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.16rem;
-  padding: 0.32rem 0.24rem;
+  gap: 0.1rem;
+  padding: 6% 5%;
 }
 
 .op-phys-reel {
   display: grid;
   grid-template-rows: repeat(3, minmax(0, 1fr));
-  background: rgba(0, 0, 0, 0.42);
-  border: 1px solid rgba(232, 213, 163, 0.14);
+  background: rgba(0, 0, 0, 0.32);
   animation: op-reel-idle 6s ease-in-out infinite;
 }
 .op-phys-reel:nth-child(2) { animation-delay: 0.4s; }
@@ -418,7 +383,7 @@
 .op-phys-reel span {
   display: grid;
   place-items: center;
-  font-size: clamp(0.95rem, 1.45vw, 1.45rem);
+  font-size: clamp(0.85rem, 1.3vw, 1.3rem);
   line-height: 1;
 }
 
@@ -432,86 +397,20 @@
 }
 
 .op-phys-glass {
-  background: linear-gradient(160deg, rgba(255, 255, 255, 0.18), transparent 28%, transparent 72%, rgba(255, 255, 255, 0.05));
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.16), transparent 28%, transparent 72%, rgba(255, 255, 255, 0.04));
   animation: op-screen-parallax 8s ease-in-out infinite;
 }
 
 .op-phys-sweep {
-  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.12), transparent 52%);
+  background: linear-gradient(100deg, transparent 35%, rgba(255, 255, 255, 0.14), transparent 52%);
   transform: translateX(-80%);
   animation: op-glass-sweep 7.5s ease-in-out infinite;
-}
-
-.op-phys-belly {
-  display: grid;
-  place-items: center;
-  background: linear-gradient(#241c16, #100e10);
-  border-top: 1px solid rgba(201, 164, 92, 0.16);
-  color: var(--cab-accent-2, #e8d5a3);
-  font-size: clamp(0.52rem, 0.7vw, 0.68rem);
-  letter-spacing: 0.06em;
-}
-
-.op-phys-deck {
-  display: grid;
-  align-items: stretch;
-  padding: 0.08rem 0.04rem 0;
-  background: linear-gradient(180deg, #2a2218, #121014);
-  border-top: 1px solid rgba(201, 164, 92, 0.22);
-  transform: perspective(240px) rotateX(16deg);
-  transform-origin: 50% 0;
-}
-
-.op-phys-panel {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1.45fr 1fr 1fr;
-  gap: 0.14rem;
-  align-content: center;
-  padding: 0.18rem 0.1rem 0.22rem;
-}
-
-.op-phys-panel span {
-  display: grid;
-  place-items: center;
-  min-height: 1.15rem;
-  border-radius: 999px;
-  border: 1px solid rgba(201, 164, 92, 0.26);
-  background: radial-gradient(circle at 50% 28%, #2a2420, #121014);
-  color: #e4d3aa;
-  font-size: 0.5rem;
-  letter-spacing: 0.03em;
-}
-
-.op-phys-spin {
-  min-height: 1.45rem !important;
-  border-radius: 1rem !important;
-  border-color: var(--cab-accent, #c9a45c) !important;
-  background: radial-gradient(circle at 50% 28%, color-mix(in srgb, var(--cab-accent) 60%, #fff), #2a140c) !important;
-  color: #fff8e8 !important;
-  box-shadow: 0 0 12px color-mix(in srgb, var(--cab-accent) 48%, transparent);
-}
-
-.op-phys-base {
-  position: relative;
-  background: linear-gradient(#3a2c1c, #121014);
-  box-shadow: 0 10px 12px rgba(0, 0, 0, 0.45);
-}
-
-.op-phys-tray {
-  position: absolute;
-  left: 16%;
-  right: 16%;
-  bottom: -0.28rem;
-  height: 0.42rem;
-  border-radius: 0 0 0.35rem 0.35rem;
-  background: linear-gradient(180deg, #2a241c, #0c0d10);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
 }
 
 .op-phys-play {
   position: absolute;
   left: 50%;
-  bottom: 16%;
+  bottom: 12%;
   transform: translateX(-50%) translateY(6px);
   opacity: 0;
   pointer-events: none;
@@ -531,49 +430,57 @@
   transform: translateX(-50%) translateY(0);
 }
 
-.op-phys-cab:hover .op-phys-screen,
-.op-phys-cab.is-selected .op-phys-screen {
-  box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.45), 0 0 24px color-mix(in srgb, var(--cab-accent) 42%, transparent);
+.op-phys-cab:hover .op-phys-glow,
+.op-phys-cab.is-selected .op-phys-glow {
+  opacity: 0.62;
 }
 
 .op-phys-stool {
-  flex: 0 0 2.35rem;
-  display: grid;
-  place-items: start center;
+  position: absolute;
+  bottom: -11%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 52%;
+  z-index: 5;
   pointer-events: none;
-  margin-top: -0.15rem;
 }
 
+.op-phys-chair-img,
 .op-phys-chair-svg {
-  width: 62%;
-  height: 2.3rem;
+  width: 100%;
+  height: auto;
+  max-height: 6.6rem;
   display: block;
-  filter: drop-shadow(0 7px 5px rgba(0, 0, 0, 0.45));
+  object-fit: contain;
+  object-position: bottom;
+  filter: drop-shadow(0 10px 8px rgba(0, 0, 0, 0.5));
 }
 
+/* floor reflection: the same baked cabinet image, flipped and faded */
 .op-phys-reflect {
   position: absolute;
-  left: 10%;
-  right: 10%;
-  bottom: 0.15rem;
-  height: 2.1rem;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--cab-accent) 20%, transparent), transparent 78%),
-    linear-gradient(180deg, rgba(20, 16, 12, 0.32), transparent);
-  filter: blur(7px);
-  opacity: 0.5;
+  left: 12%;
+  right: 12%;
+  bottom: -8%;
+  height: 30%;
+  width: 76%;
+  object-fit: cover;
+  object-position: top;
   transform: scaleY(-1);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.38), transparent 85%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.38), transparent 85%);
+  opacity: 0.5;
   pointer-events: none;
 }
 
 @keyframes op-led-pulse {
-  0%, 100% { opacity: 0.55; }
-  50% { opacity: 1; }
+  0%, 100% { opacity: 0.28; }
+  50% { opacity: 0.5; }
 }
 
 @keyframes op-jackpot-shimmer {
-  0%, 100% { opacity: 0.78; }
-  50% { opacity: 1; text-shadow: 0 0 8px rgba(232, 213, 163, 0.35); }
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 0.68; }
 }
 
 @keyframes op-reel-idle {
@@ -598,9 +505,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .op-phys-led-rail,
-  .op-phys-led-side,
-  .op-phys-jackpot span,
+  .op-phys-glow,
+  .op-phys-crown-glow,
   .op-phys-reel,
   .op-phys-reel span,
   .op-phys-glass,
@@ -613,26 +519,41 @@
 
 @media (max-width: 1440px) {
   .op-phys-cab {
-    height: 88%;
-    max-width: 14.8rem;
+    max-height: 90%;
+    max-width: 13.4rem;
   }
 }
 
 @media (max-width: 1280px) {
+  /* Below this width, cabinets no longer share equal grid columns — switch
+     to a horizontally-scrollable carousel where each cabinet has its own
+     fixed width and auto height (aspect-ratio-derived), one snap point per
+     machine. */
   .op-slots-row {
+    display: flex;
+    align-items: flex-end;
     overflow-x: auto;
     overflow-y: hidden;
     justify-content: flex-start;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
   }
   .op-phys-cab {
-    flex: 0 0 13.4rem;
-    height: 90%;
+    flex: 0 0 auto;
+    width: 12.4rem;
+    max-height: 92%;
+    scroll-snap-align: center;
   }
 }
 
+@media (max-width: 720px) {
+  .op-slots-stage { padding-bottom: 3%; }
+  .op-phys-cab { width: 68vw; max-height: 88%; }
+}
+
 @media (min-width: 2200px) {
-  .op-slots-row { max-width: 1980px; gap: 1.6rem; }
-  .op-phys-cab { max-width: 17.6rem; height: 84%; }
+  .op-slots-row { max-width: 1980px; gap: 1.2rem; }
+  .op-phys-cab { max-width: 16rem; max-height: 90%; }
   .op-slots-stage { padding-inline: 4vw; }
 }
 

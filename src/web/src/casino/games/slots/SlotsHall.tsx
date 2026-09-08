@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { CASINO_ROUTES } from "../../state/casinoRoutes";
 import { PhysicalSlotMachine } from "./PhysicalSlotMachine";
+import { HALL_BACKGROUND_URL } from "./cabinetAssets";
 import { filterSlotCatalog, SLOT_CATALOG, SLOT_FILTERS } from "./slotCatalog";
 import type { SlotFilterId } from "./slotTypes";
 import "./slotsHall.css";
@@ -24,11 +25,11 @@ export function SlotsHall() {
   return (
     <section className="op-slots-hall" data-testid="slots-room" aria-label="Зал автоматов">
       <div className="op-slots-env" aria-hidden>
-        <div className="op-slots-ceiling" />
-        <div className="op-slots-chandelier" />
-        <div className="op-slots-columns" />
-        <div className="op-slots-haze" />
-        <div className="op-slots-depth" />
+        <img className="op-slots-env-bg" src={HALL_BACKGROUND_URL} alt="" loading="eager" decoding="async" />
+        <div className="op-slots-identity">
+          <strong>ODESSA PRIME CASINO</strong>
+          <span>SIX WORLDS. ONE DESTINATION.</span>
+        </div>
         <div className="op-slots-floor" />
       </div>
       <header className="op-slots-subnav">
@@ -67,7 +68,11 @@ export function SlotsHall() {
         </div>
       </header>
       <div className={`op-slots-stage${selected ? " is-choosing" : ""}`} data-selected={selected || undefined}>
-        <div className="op-slots-row" data-testid="slots-catalog">
+        <div
+          className="op-slots-row"
+          data-testid="slots-catalog"
+          style={{ "--slot-count": items.length } as CSSProperties}
+        >
           {items.map((def, index) => (
             <PhysicalSlotMachine
               key={def.id}

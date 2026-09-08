@@ -75,6 +75,80 @@ describe("Phase 4.0 Slots Hall", () => {
     expect(screen.getByTestId("slots-room").querySelector(".op-slots-floor")).toBeTruthy();
   }, 20000);
 
+  it("Phase 4.3: every cabinet is a baked image with a positioned live screen overlay, not a CSS shell", async () => {
+    mount("/casino/slots");
+    await screen.findByTestId("slots-catalog");
+    expect(screen.getByTestId("slots-room").querySelector(".op-slots-env-bg")).toBeTruthy();
+    for (const item of SLOT_CATALOG) {
+      const asset = screen.getByTestId(`slot-cabinet-asset-${item.id}`) as HTMLImageElement;
+      expect(asset.tagName).toBe("IMG");
+      expect(asset.getAttribute("src")).toBe(`/assets/casino/slots/cabinets/${item.id}.png`);
+
+      const screenEl = screen.getByTestId(`slot-preview-${item.id}`) as HTMLElement;
+      expect(screenEl.style.left).toMatch(/%/);
+      expect(screenEl.style.top).toMatch(/%/);
+      expect(screenEl.style.width).toMatch(/%/);
+      expect(screenEl.style.height).toMatch(/%/);
+
+      const cab = screen.getByTestId(`slot-cabinet-${item.id}`) as HTMLElement;
+      expect(cab.style.getPropertyValue("aspect-ratio")).not.toBe("");
+      expect(screen.getByTestId(`slot-play-${item.id}`).getAttribute("aria-label")).toContain(item.title);
+    }
+  });
+
+  it("Phase 4.3: selecting a cabinet flags it is-selected before the route change fires", async () => {
+    vi.useFakeTimers();
+    const view = render(
+      <MemoryRouter initialEntries={["/casino/slots"]}>
+        <Routes>
+          <Route
+            path="/casino/*"
+            element={
+              <CasinoBrowseRoute>
+                <CasinoApp />
+              </CasinoBrowseRoute>
+            }
+          />
+        </Routes>
+      </MemoryRouter>,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    fireEvent.click(screen.getByTestId("slot-play-olympus-crown"));
+    expect(screen.getByTestId("slot-cabinet-olympus-crown").className).toContain("is-selected");
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(250);
+    });
+    view.unmount();
+    vi.useRealTimers();
+  });
+
+  it("Phase 4.4A: photoreal hall, six chairs, and Odessa Prime identity", async () => {
+    mount("/casino/slots");
+    await screen.findByTestId("slots-catalog");
+    const bg = screen.getByTestId("slots-room").querySelector(".op-slots-env-bg") as HTMLImageElement;
+    expect(bg.getAttribute("src")).toBe("/assets/casino/slots/hall-bg.jpg");
+    expect(screen.getByTestId("slots-room").textContent).toMatch(/ODESSA PRIME CASINO/);
+    expect(screen.getByTestId("slots-room").querySelectorAll(".op-phys-cab")).toHaveLength(6);
+    for (const item of SLOT_CATALOG) {
+      const chair = screen.getByTestId(`slot-chair-${item.id}`).querySelector("img") as HTMLImageElement;
+      expect(chair.getAttribute("src")).toBe("/assets/casino/slots/chair.png");
+      expect(screen.getByTestId(`slot-reels-${item.id}`).textContent?.length).toBeGreaterThan(0);
+    }
+  }, 20000);
+
+  it("Phase 4.3: the hall renders without crashing under a narrow (mobile) viewport", async () => {
+    const original = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", { writable: true, configurable: true, value: 375 });
+    window.dispatchEvent(new Event("resize"));
+    const view = mount("/casino/slots");
+    expect(await screen.findByTestId("slots-catalog")).toBeTruthy();
+    expect(screen.getByTestId("slots-room").querySelectorAll(".op-phys-cab")).toHaveLength(6);
+    view.unmount();
+    Object.defineProperty(window, "innerWidth", { writable: true, configurable: true, value: original });
+  });
+
   it("locks the hall to a single desktop viewport in CSS", () => {
     const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "slotsHall.css"), "utf8");
     expect(css).toMatch(/overflow:\s*hidden/);
