@@ -20,6 +20,7 @@ import {
   overlayWithinUnitSquare,
   seatedCrop,
 } from "./cabinetPlayGeometry";
+import { cabinetControls, INSERT_BILL_CREDITS } from "./cabinetControls";
 import { RouletteHall } from "../../rooms/RouletteHall";
 import { BlackjackSalon } from "../../rooms/BlackjackSalon";
 import { PokerRoom } from "../../rooms/PokerRoom";
@@ -294,8 +295,8 @@ describe("Phase 4.0 Slots Hall", () => {
       expect(view.getByTestId(`slot-seated-asset-${item.id}`).getAttribute("src")).toBe(
         `/assets/casino/slots/cabinets/${item.id}.png`,
       );
-      expect(view.getByTestId("seated-armchair")).toBeTruthy();
-      expect(view.getByTestId("seated-ashtray")).toBeTruthy();
+      expect(view.queryByTestId("seated-armchair")).toBeNull();
+      expect(view.queryByTestId("seated-ashtray")).toBeNull();
       expect(view.queryByTestId(`slot-chair-${item.id}`)).toBeNull();
       const close = Number.parseFloat(view.getByTestId("seated-cabinet").style.getPropertyValue("--seated-h"));
       expect(close).toBeGreaterThanOrEqual(150);
@@ -314,13 +315,12 @@ describe("Phase 4.0 Slots Hall", () => {
       </MemoryRouter>,
     );
     expect(view.queryByTestId("slot-web-panel")).toBeNull();
-    expect(view.getByTestId("slot-history-toggle").closest("[data-testid='seated-cabinet']")).toBeTruthy();
     expect(view.getByTestId("slot-spin").closest("[data-testid='seated-cabinet']")).toBeTruthy();
     expect(view.getByTestId("slot-auto").closest("[data-testid='seated-cabinet']")).toBeTruthy();
-    expect(document.querySelector(".op-seated-hud")?.textContent).not.toMatch(/SPIN|AUTO|HISTORY|Balance/);
+    expect(document.querySelector(".op-seated-hud")?.textContent).not.toMatch(/SPIN|AUTO|Balance/);
 
     const start = Number(view.getByTestId("slot-demo-balance").textContent);
-    for (const n of [10, 25, 50, 100] as const) {
+    for (const n of [10, 25, 50, 100, 250, 500] as const) {
       fireEvent.click(view.getByTestId(`slot-bet-${n}`));
       expect(view.getByTestId("slot-demo-bet").textContent).toBe(String(n));
     }
@@ -359,7 +359,7 @@ describe("Phase 4.0 Slots Hall", () => {
     expect(css).not.toMatch(/max-width:\s*min\(46vw,\s*28rem\)/);
     expect(css).not.toMatch(/height:\s*84%/);
     expect(css).toMatch(/op-seated-vignette/);
-    expect(css).toMatch(/op-seated-arm/);
+    expect(css).toMatch(/op-phys-hit/);
     expect(css).toMatch(/100dvh - 4\.2rem/);
     for (const item of SLOT_CATALOG) {
       const glass = cabinetScreenRect(item);
@@ -369,7 +369,7 @@ describe("Phase 4.0 Slots Hall", () => {
       expect(overlayWithinUnitSquare(layout.deck)).toBe(true);
       expect(overlayWithinUnitSquare(layout.spin)).toBe(true);
       expect(overlayContainedIn(glass, layout.screen)).toBe(true);
-      expect(layout.touch.topPct).toBeGreaterThan(layout.screen.topPct + layout.screen.heightPct);
+      expect(overlayContainedIn(layout.screen, layout.touch)).toBe(true);
       const view = render(
         <MemoryRouter initialEntries={[`/casino/slots/${item.id}`]}>
           <Routes>
@@ -394,6 +394,61 @@ describe("Phase 4.0 Slots Hall", () => {
     expect(screen.getByTestId("slots-catalog").querySelectorAll(".op-phys-cab")).toHaveLength(6);
     view.unmount();
   }, 20000);
+
+  it("Phase 4.7: physical controls, cashout, service, inserts, and six-machine open", async () => {
+    vi.useFakeTimers();
+    const view = render(
+      <MemoryRouter initialEntries={["/casino/slots/olympus-crown"]}>
+        <Routes>
+          <Route path="/casino/slots/:machineId" element={<SlotGameScreen />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(view.queryByTestId("slot-web-panel")).toBeNull();
+    expect(view.queryByTestId("seated-armchair")).toBeNull();
+    expect(document.querySelectorAll("[data-testid='seated-cabinet']")).toHaveLength(1);
+    expect(view.getByTestId("slot-spin").textContent).not.toMatch(/SPIN/);
+    expect(view.getByTestId("slot-spin").getAttribute("aria-label")).toBe("Крутить барабаны");
+    expect(view.getByTestId("slot-bet-25").getAttribute("aria-label")).toBe("Ставка 25");
+    expect(view.getByTestId("slot-service").getAttribute("aria-label")).toBe("Сервис");
+    expect(view.getByTestId("slot-cashout").getAttribute("aria-label")).toBe("Вывести демо-баланс");
+
+    const start = Number(view.getByTestId("slot-demo-balance").textContent);
+    fireEvent.click(view.getByTestId("slot-insert-bill"));
+    expect(Number(view.getByTestId("slot-demo-balance").textContent)).toBe(start + INSERT_BILL_CREDITS);
+    fireEvent.click(view.getByTestId("slot-insert-card"));
+    expect(view.getByTestId("slot-game-screen").getAttribute("data-card")).toBe("in");
+    fireEvent.click(view.getByTestId("slot-service"));
+    expect(view.getByTestId("slot-service-panel")).toBeTruthy();
+    fireEvent.click(view.getByTestId("slot-service"));
+    expect(view.queryByTestId("slot-service-panel")).toBeNull();
+    fireEvent.click(view.getByTestId("slot-cashout"));
+    expect(Number(view.getByTestId("slot-demo-balance").textContent)).toBe(0);
+    fireEvent.click(view.getByTestId("slot-insert-bill"));
+    expect(Number(view.getByTestId("slot-demo-balance").textContent)).toBe(INSERT_BILL_CREDITS);
+    view.unmount();
+    vi.useRealTimers();
+
+    for (const item of SLOT_CATALOG) {
+      const hits = cabinetControls(item);
+      expect(hits.some((h) => h.action === "spin")).toBe(true);
+      expect(hits.filter((h) => h.action === "bet").map((h) => h.bet).sort((a, b) => (a || 0) - (b || 0))).toEqual([
+        10, 25, 50, 100, 250, 500,
+      ]);
+      hits.forEach((hit) => expect(overlayWithinUnitSquare(hit)).toBe(true));
+      const opened = render(
+        <MemoryRouter initialEntries={[`/casino/slots/${item.id}`]}>
+          <Routes>
+            <Route path="/casino/slots/:machineId" element={<SlotGameScreen />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+      expect(opened.getByTestId("slot-game-screen").getAttribute("data-machine")).toBe(item.id);
+      expect(opened.getByTestId("slot-spin")).toBeTruthy();
+      expect(opened.getByTestId("slot-cashout")).toBeTruthy();
+      opened.unmount();
+    }
+  });
 
   it("does not regress roulette, blackjack or poker rooms", () => {
     expect(render(<MemoryRouter><RouletteHall /></MemoryRouter>).getByTestId("roulette-hall")).toBeTruthy();

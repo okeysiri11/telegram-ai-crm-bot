@@ -46,6 +46,26 @@ export function useSlotDemo(def: SlotGameDefinition) {
     writeStore(next);
   }, []);
 
+  const addCredits = useCallback(
+    (amount: number) => {
+      if (!Number.isFinite(amount) || amount <= 0) return store.balance;
+      const next = store.balance + Math.floor(amount);
+      persist({ ...store, balance: next });
+      setError(null);
+      return next;
+    },
+    [persist, store],
+  );
+
+  const cashOut = useCallback(() => {
+    if (lock.current || spinning) return 0;
+    const amount = store.balance;
+    persist({ ...store, balance: 0 });
+    setResult(null);
+    setError(null);
+    return amount;
+  }, [persist, spinning, store]);
+
   const spin = useCallback(
     (bet: number) => {
       if (lock.current || spinning) return null;
@@ -91,5 +111,7 @@ export function useSlotDemo(def: SlotGameDefinition) {
     result,
     error,
     spin,
+    addCredits,
+    cashOut,
   };
 }
